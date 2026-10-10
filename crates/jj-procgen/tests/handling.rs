@@ -18,9 +18,18 @@ fn loaded(seed: u64) -> LoadedMap {
         .expect("generated maps load")
 }
 
-/// The Cruz Missile, with `JJ_TUNE` overrides (`roll_influence=0.2,friction_slip=1.6`) when set.
-fn profile() -> VehicleProfile {
-    let base = VehicleProfile::cruz();
+/// Every roster vehicle (R123: the bank is parametrised over the roster data, so a new vehicle is judged by the same
+/// bank with no code), each with `JJ_TUNE` overrides (`roll_influence=0.2,friction_slip=1.6`) when set.
+fn profiles() -> Vec<(String, VehicleProfile)> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    VehicleProfile::roster(&root)
+        .expect("the roster loads")
+        .into_iter()
+        .map(|(id, p)| (id, tuned(p)))
+        .collect()
+}
+
+fn tuned(base: VehicleProfile) -> VehicleProfile {
     let Ok(tune) = std::env::var("JJ_TUNE") else {
         return base;
     };
@@ -121,7 +130,13 @@ fn throw(map: &LoadedMap, profile: &VehicleProfile, at: usize, speed: f32, how: 
 
 #[test]
 fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
-    let profile = profile();
+    for (id, profile) in profiles() {
+        eprintln!("vehicle {id}");
+        thrown_about_on_generated_roads(&id, &profile);
+    }
+}
+
+fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
     let mut table = String::from("seed point speed throw  minUpY  minClearance(m)\n");
     let (mut runs, mut grazes, mut dives, mut rolls, mut road) =
         (0, 0, Vec::new(), Vec::new(), Vec::new());
@@ -154,7 +169,7 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
             for speed in [15.0f32, 25.0, 35.0] {
                 // The road alone first: where it bottoms or flips a car going straight (a crest or jump taken too fast),
                 // that's the jump's landing envelope (br-gw74.7), not the turn's; the turns are judged where it doesn't.
-                let straight = throw(&map, &profile, at, speed, Throw::Straight);
+                let straight = throw(&map, profile, at, speed, Throw::Straight);
                 let road_ok = straight.min_clearance >= 0.02 && straight.min_up_y >= 0.5;
                 for (name, how) in [
                     ("straight", Throw::Straight),
@@ -164,7 +179,7 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
                     let r = if matches!(how, Throw::Straight) {
                         Run { ..straight }
                     } else {
-                        throw(&map, &profile, at, speed, how)
+                        throw(&map, profile, at, speed, how)
                     };
                     runs += 1;
                     table.push_str(&format!(
@@ -199,7 +214,7 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
     }
     if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(format!("{dir}/handling-bank.txt"), &table).unwrap();
+        std::fs::write(format!("{dir}/handling-bank-{vehicle}.txt"), &table).unwrap();
     }
     // Known gap (stated, not hidden): the road's own crests and jumps at speeds past their design range.
     eprintln!("road-only (br-gw74.7's landing envelope): {road:#?}");
@@ -213,7 +228,7 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
     );
     assert!(
         dives.is_empty() && rolls.is_empty(),
-        "dives: {dives:#?}\nroll-overs: {rolls:#?}"
+        "{vehicle}: dives: {dives:#?}\nroll-overs: {rolls:#?}"
     );
 }
 
@@ -223,13 +238,19 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
 /// chassis never touches the ground.
 #[test]
 fn on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills() {
+    for (id, profile) in profiles() {
+        eprintln!("vehicle {id}");
+        flat_bank(&id, &profile);
+    }
+}
+
+fn flat_bank(vehicle: &str, profile: &VehicleProfile) {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../maps/test/surface-strips.json"
     );
     let map =
         load_json(&std::fs::read(path).unwrap(), &Registry::generic()).expect("the test map loads");
-    let profile = profile();
     let hull = profile.geometry.hull.clone();
     let mut worst = (0.0f32, String::new());
     let mut failures = Vec::new();
@@ -284,6 +305,9 @@ fn on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills() {
             }
         }
     }
-    eprintln!("flat bank: worst roll {:.1} deg ({})", worst.0, worst.1);
-    assert!(failures.is_empty(), "{failures:#?}");
+    eprintln!(
+        "{vehicle} flat bank: worst roll {:.1} deg ({})",
+        worst.0, worst.1
+    );
+    assert!(failures.is_empty(), "{vehicle}: {failures:#?}");
 }

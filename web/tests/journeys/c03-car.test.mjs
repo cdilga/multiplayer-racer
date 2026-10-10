@@ -60,7 +60,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
     thumbs: document.querySelectorAll('.thumb').length,
     img: document.querySelector('.carimg.big').complete && document.querySelector('.carimg.big').naturalWidth > 0,
   }));
-  assert.deepEqual([r.name, r.tag, r.stats, r.arrows, r.thumbs, r.img], ['Cruz Missile', 'Aussie classic', 4, 0, 0, true]);
+  assert.deepEqual([r.name, r.tag, r.stats, r.arrows, r.thumbs, r.img], ['Cruz Missile', 'Aussie classic', 4, 2, 2, true]);
   await shot(page, 'c03-car-one-844x390');
   await page.getByRole('button', { name: 'Done' }).click();
   assert.equal(await picker(page), null);
@@ -76,7 +76,7 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   const name = () => page.locator('[data-car-name]').textContent();
   assert.equal(await name(), 'Cruz Missile');
   await page.getByRole('button', { name: 'Next car' }).click();
-  assert.equal(await name(), 'Test car 2');
+  assert.equal(await name(), 'Tradie Ute');
   await page.getByRole('button', { name: 'Previous car' }).click();
   await page.getByRole('button', { name: 'Previous car' }).click();
   assert.equal(await name(), 'Test car 40', 'the roster wraps');
@@ -95,7 +95,7 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   await shot(page, 'c03-car-many-844x390');
   await page.getByRole('button', { name: 'Done' }).click();
   // Kept: the next visit to the picker starts on it, and the session carries it.
-  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-7');
+  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-6');
   await page.getByRole('button', { name: /^Car/ }).click();
   assert.equal(await page.locator('.thumb[aria-selected=true]').getAttribute('data-i'), '8');
   await ctx.close();

@@ -203,8 +203,12 @@ pub struct Host {
     /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
     /// after every round start (owner playtest 1, br-gw74.1).
     session_tick: u64,
-    /// The vehicle profile every round's world is built with: the Cruz Missile, as the owner tuning menu left it.
-    profile: VehicleProfile,
+    /// The roster's vehicles in roster order, `(id, profile)` (R123): every round's world is built with all of them, as the
+    /// owner tuning menu left them, and each car takes the one its seat picked. `Vehicles` from main replaces this table;
+    /// until then it is the Cruz Missile alone.
+    vehicles: Vec<(String, VehicleProfile)>,
+    /// Which vehicle the tuning menu edits (an index into `vehicles`).
+    tuning_vehicle: usize,
     /// Why the last tuning change was refused (an unknown field, a bad value), for the menu.
     tuning_error: Option<String>,
     /// The input profile every seat's sticks are read with: the shipped one until the owner tuning menu changes it
@@ -291,7 +295,12 @@ impl Host {
     /// A host on a validated map with a seed (the generic kit registry and the Cruz Missile profile).
     pub fn from_map(map: LoadedMap, seed: u64) -> Self {
         Self {
-            sim: Sim::new(&map, &Registry::generic(), seed, VehicleProfile::cruz()),
+            sim: Sim::with_profiles(
+                &map,
+                &Registry::generic(),
+                seed,
+                vec![VehicleProfile::cruz()],
+            ),
             map,
             seats: Seats::new(SeatConfig {
                 tick_hz: TICK_HZ,
@@ -323,7 +332,8 @@ impl Host {
             seen_utility_events: 0,
             seen_damage_events: 0,
             session_tick: 0,
-            profile: VehicleProfile::cruz(),
+            vehicles: vec![("cruz-missile".into(), VehicleProfile::cruz())],
+            tuning_vehicle: 0,
             tuning_error: None,
             input_profile: jj_input::InputProfile::standard(),
             session_rev: 0,
@@ -376,9 +386,36 @@ impl Host {
                 ..
             } => self.set_pause(Pause::Manual, on),
             MainToSim::Init { .. } | MainToSim::ReturnBuffer { .. } => {}
+            MainToSim::Vehicles { vehicles } => self.set_vehicles(vehicles)?,
             other => self.queued.push(other),
         }
         Ok(())
+    }
+
+    /// Replaces the vehicle table with the roster's (R123): parsed profiles in roster order. The world is rebuilt (a
+    /// roster arrives before any round, so no car is lost; free-drive cars respawn as their picks say).
+    fn set_vehicles(&mut self, vehicles: Vec<(String, String)>) -> Result<(), HostError> {
+        let mut table = Vec::with_capacity(vehicles.len());
+        for (id, json) in vehicles {
+            let p = VehicleProfile::from_json(&json)
+                .map_err(|e| HostError::Decode(format!("vehicle {id}: {e}")))?;
+            table.push((id, p));
+        }
+        if table.is_empty() {
+            return Ok(());
+        }
+        self.vehicles = table;
+        self.tuning_vehicle = 0;
+        self.rebuild_for_vehicles();
+        Ok(())
+    }
+
+    /// The vehicle (an index into the table) a seat picked: the first one for no pick or an unknown id.
+    pub(crate) fn vehicle_of_seat(&self, seat: SeatId) -> usize {
+        self.picks
+            .get(&seat)
+            .and_then(|(id, _)| self.vehicles.iter().position(|(v, _)| v == id))
+            .unwrap_or(0)
     }
 
     /// A test/bot hook (R90 "settable"): applies `bytes` exactly at the boundary before `tick` is stepped.
@@ -983,7 +1020,13 @@ impl Host {
                         .bytes()
                         .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
                 if slug && let Some(seat) = self.seats.seat_at(conn, src) {
+                    let before = self.vehicle_of_seat(seat);
                     self.picks.insert(seat, (vehicle, open));
+                    // In free drive the seat already has a car (the Lobby has none otherwise, R110): it is rebuilt as the
+                    // new pick.
+                    if self.round.free_drive && self.vehicle_of_seat(seat) != before {
+                        self.rebuild_for_vehicles();
+                    }
                 }
                 vec![]
             }
@@ -1174,7 +1217,7 @@ impl Host {
                 // Through the placement service: a drop-in once a round is running, a grid slot in free drive; in the
                 // Lobby (R110) and the held phases the seat waits for the next Countdown's grid.
                 if self.inputs.get(&seat).is_some_and(|i| i.car.is_none()) {
-                    let car = self.car_wanted();
+                    let car = self.car_wanted(seat);
                     if let Some(input) = self.inputs.get_mut(&seat) {
                         input.car = car;
                     }
@@ -1434,7 +1477,7 @@ impl Host {
     /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting, bits 6-7 the ground under it: 0
-    /// tarmac, 1 dirt, 2 gravel), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
+    /// tarmac, 1 dirt, 2 gravel; bits 16-31 the car's roster vehicle, R123: an index into the room's `vehicles`), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
     /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
     /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
     /// wrecked and rebuilt (state 3; part 255 for a husk; the pose is the part's pivot frame, the vehicle frame for a husk).
@@ -1472,7 +1515,9 @@ impl Host {
                 | (u32::from(race.is_held(car.0, self.sim.tick())) << 3)
                 | (u32::from(action.boosting) << 4)
                 | (u32::from(action.drift > 0.0) << 5)
-                | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6);
+                | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6)
+                // Bits 16-31: the car's roster vehicle (R123), an index into the room's `vehicles`.
+                | ((self.sim.vehicle_of(car).unwrap_or(0) as u32 & 0xFFFF) << 16);
             let throttle = self.sim.applied_input(car).map_or(0.0, |i| {
                 jj_types::axis::dequantise_axis(i.throttle).clamp(0.0, 1.0)
             });
@@ -1511,13 +1556,7 @@ impl Host {
             let (p, r) = body.and_then(|i| debris.get(i as usize).copied()).map_or(
                 ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
                 |(p, r)| {
-                    let pivot = self
-                        .sim
-                        .profile()
-                        .geometry
-                        .parts
-                        .get(usize::from(part))
-                        .map_or([0.0; 3], |g| g.pivot);
+                    let pivot = self.part_pivot(car, part);
                     (add_rotated(p, r, pivot), r)
                 },
             );
@@ -1528,13 +1567,7 @@ impl Host {
             let (p, r) = debris.get(body as usize).copied().map_or(
                 ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
                 |(p, r)| {
-                    let pivot = self
-                        .sim
-                        .profile()
-                        .geometry
-                        .parts
-                        .get(usize::from(part))
-                        .map_or([0.0; 3], |g| g.pivot);
+                    let pivot = self.part_pivot(car, part);
                     // A husk (part 255) is the vehicle frame itself.
                     (
                         if part == 255 {
@@ -1553,6 +1586,16 @@ impl Host {
             p.iter().chain(&r).for_each(|&v| w.f32(v));
         }
         w.at
+    }
+}
+
+impl Host {
+    /// Part `part`'s pivot in car `car`'s own vehicle space (each roster vehicle has its own parts, R123).
+    fn part_pivot(&self, car: u32, part: u8) -> [f32; 3] {
+        self.sim
+            .profile_of(CarId(car))
+            .and_then(|p| p.geometry.parts.get(usize::from(part)))
+            .map_or([0.0; 3], |g| g.pivot)
     }
 }
 

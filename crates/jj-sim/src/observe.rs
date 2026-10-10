@@ -148,6 +148,14 @@ pub struct PartObs {
 #[serde(rename_all = "camelCase")]
 pub struct CarObs {
     pub car: u32,
+    /// The roster vehicle this car was built from (an index into the sim's profiles, R123) and what its profile gives it:
+    /// the body's mass (kg) and the engine force (N). `jj sim` and the test surface show each car's own.
+    #[serde(default)]
+    pub vehicle: u16,
+    #[serde(default)]
+    pub mass_kg: f32,
+    #[serde(default)]
+    pub max_engine_force: f32,
     pub position: [f32; 3],
     /// Quaternion x, y, z, w.
     pub rotation: [f32; 4],
@@ -198,6 +206,11 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
     let v = s.linvel;
     Some(CarObs {
         car: car.0,
+        vehicle: sim.vehicle_of(car).unwrap_or(0) as u16,
+        mass_kg: sim.car_mass(car).unwrap_or(0.0),
+        max_engine_force: sim
+            .profile_of(car)
+            .map_or(0.0, |p| p.tuning.max_engine_force),
         position: s.position,
         rotation: s.rotation,
         linvel: v,

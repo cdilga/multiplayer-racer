@@ -81,7 +81,8 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   await shot(host, 'c03-pick-tv-choosing-1280x720');
   // Walk to a car far down a 200-car roster: each look reaches the host.
   assert.equal(await p.page.locator('.thumb').count(), 200, 'two hundred cars, no cap');
-  await p.page.locator('.thumb[data-i="150"]').dispatchEvent('click');
+  // (Two real cars come first (the roster grows, R123), then the stand-ins `test-0`...: index 151 is `test-149`.)
+  await p.page.locator('.thumb[data-i="151"]').dispatchEvent('click');
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.vehicle === 'test-149');
   assert.equal((await card(host, 'Marlene', 'choosing')).state, 'choosing', 'still choosing while the picker is open');
   await shot(p.page, 'c03-pick-phone-open-844x390');

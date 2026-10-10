@@ -17,6 +17,7 @@
 use std::collections::BTreeMap;
 
 use crate::seed::Rng;
+pub use crate::tuning::CourseData;
 
 /// The lap length band (TUNE): laps of ~47–73 s at the 15 m/s reference speed.
 pub const LENGTH_BAND_M: (f64, f64) = (700.0, 1100.0);
@@ -201,7 +202,7 @@ fn range(rng: &mut Rng, (lo, hi): (f64, f64)) -> f64 {
 }
 
 /// One draw: a corner list and straights, closed exactly, or why it couldn't be.
-fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
+fn draw(rng: &mut Rng, data: &CourseData) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     // The turn budget: 360° of left-hand turning net, plus whatever an optional right-hander takes back.
     let right = (rng.unit() < 0.4).then(|| range(rng, (40.0, 75.0)));
     let total = 360.0 + right.unwrap_or(0.0);
@@ -278,7 +279,10 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
         return Err("two hairpins back to back");
     }
     // Pieces: the start straight, then each corner followed by a straight. A chicane is two opposite arcs back to back.
-    let mut pieces = vec![Piece::Straight(range(rng, START_STRAIGHT_M))];
+    let mut pieces = vec![Piece::Straight(range(
+        rng,
+        (data.start_straight_min_m, data.start_straight_max_m),
+    ))];
     for c in &corners {
         if c.kind == CornerKind::Chicane {
             let side = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
@@ -296,7 +300,10 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
                 radius: c.radius,
             });
         }
-        pieces.push(Piece::Straight(range(rng, STRAIGHT_M)));
+        pieces.push(Piece::Straight(range(
+            rng,
+            (data.straight_min_m, data.straight_max_m),
+        )));
     }
     // Close the position: of every pair of straights (not the start straight), the one whose adjustment keeps both
     // straights long enough with the least total change.
@@ -319,7 +326,7 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
             }
             let a = (ex * dj.1 - ez * dj.0) / det;
             let b = (di.0 * ez - di.1 * ex) / det;
-            if li + a < MIN_STRAIGHT_M || lj + b < MIN_STRAIGHT_M {
+            if li + a < data.min_straight_m || lj + b < data.min_straight_m {
                 continue;
             }
             let cost = a.abs() + b.abs();
@@ -362,11 +369,16 @@ fn oval() -> (Vec<Corner>, Vec<Piece>) {
     )
 }
 
-/// Designs a course from the structure stream.
+/// Designs a course from the structure stream with the shipped generator data.
 pub fn design(rng: &mut Rng) -> Course {
+    design_with(rng, &crate::tuning::GeneratorData::shipped().course)
+}
+
+/// [`design`] with explicit course data (the owner tuning menu's length band and straights).
+pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
-        let (corners, pieces) = match draw(rng) {
+        let (corners, pieces) = match draw(rng, data) {
             Ok(d) => d,
             Err(why) => {
                 *rejects.entry(why).or_default() += 1;
@@ -375,9 +387,9 @@ pub fn design(rng: &mut Rng) -> Course {
         };
         let points = sample(&pieces);
         let len = length(&points);
-        let why = if len < LENGTH_BAND_M.0 {
+        let why = if len < data.length_min_m {
             Some("shorter than the length band")
-        } else if len > LENGTH_BAND_M.1 {
+        } else if len > data.length_max_m {
             Some("longer than the length band")
         } else if !self_clear(&points) {
             Some("the road comes too close to itself")

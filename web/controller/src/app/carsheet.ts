@@ -27,8 +27,8 @@ const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 export const ROSTER: RosterCar[] = data.cars as RosterCar[];
 
 /** The roster for the state opener's `&roster=N` (a test surface for "any number of cars"): the real cars, then silhouettes. */
-export function rosterOf(extra = 0): RosterCar[] {
-  const out = [...ROSTER];
+export function rosterOf(extra = 0, cars: RosterCar[] = ROSTER): RosterCar[] {
+  const out = [...cars];
   const stand = extra - out.length;
   for (let k = 0; k < stand; k++) {
     const shape = SHAPE_NAMES[k % SHAPE_NAMES.length]!;

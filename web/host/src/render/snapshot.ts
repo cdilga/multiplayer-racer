@@ -3,7 +3,7 @@
 //
 // Header (40 B): magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32,
 // cars u32, debris u32, parts u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32 (x, y, z, w),
-// linvel 3×f32, steer f32, flags u32, boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
+// linvel 3×f32, steer f32, flags u32 (bits 16-31: the car's roster vehicle, R123), boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
 // Part (40 B, P1-R02), one per part that isn't intact: car u32, part u16 (its index in the vehicle sidecar's `parts`
 // order), state u16 (PART_LOOSE, PART_DETACHED), hinge angle f32 (radians, loose), position 3×f32 and rotation 4×f32
 // (the part's pivot frame in the world, detached). A debris record of kind 2 is a detached part's body: the decoder drops
@@ -154,6 +154,8 @@ export interface CarPose {
   rot: [number, number, number, number];
   steer?: number;
   flags?: number;
+  /** The car's roster vehicle (R123): flags bits 16-31 on the wire; 0 by default. */
+  vehicle?: number;
 }
 
 export interface PartPose {
@@ -192,7 +194,7 @@ export function encodeSnapshot(buf: ArrayBuffer, tick: number, cars: CarPose[], 
     c.rot.forEach((x, k) => v.setFloat32(at + 20 + k * 4, x, true));
     for (let k = 0; k < 3; k++) v.setFloat32(at + 36 + k * 4, c.vel?.[k] ?? 0, true);
     v.setFloat32(at + 48, c.steer ?? 0, true);
-    v.setUint32(at + 52, c.flags ?? 0, true);
+    v.setUint32(at + 52, ((c.flags ?? 0) | ((c.vehicle ?? 0) << 16)) >>> 0, true);
     v.setFloat32(at + 56, c.boost ?? 0, true);
     v.setFloat32(at + 60, c.throttle ?? 0, true);
     at += SNAPSHOT_CAR;

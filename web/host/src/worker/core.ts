@@ -38,6 +38,7 @@ export interface WasmHost<S extends Sim> {
   HostSim: new (init: Uint8Array) => S;
   canonical_map(json: string): Uint8Array;
   encode_init(mapBytes: Uint8Array, seed: number): Uint8Array;
+  encode_vehicles(listJson: string): Uint8Array;
   encode_lifecycle(visible: boolean, renderOk: boolean): Uint8Array;
   encode_local_source(source: number, dx: number, dy: number, ax: number, ay: number, buttons: number, seq: number): Uint8Array;
   encode_net_bytes(endpoint: string, state: boolean, bytes: Uint8Array): Uint8Array;
@@ -265,6 +266,7 @@ export class SimWorker<S extends Sim> {
         try {
           const map = init.mapBytes ?? this.wasm.canonical_map(init.mapJson ?? '');
           this.sim = new this.wasm.HostSim(this.wasm.encode_init(map, init.seed));
+          if (init.vehicles?.length) this.sim.handle(this.wasm.encode_vehicles(JSON.stringify(init.vehicles)));
           this.tap = new JournalTap((init as { clipEveryTicks?: number }).clipEveryTicks ?? 12, (init as { clipHashEvery?: number }).clipHashEvery ?? 600);
           this.ext.init?.(this, init);
         } catch (err) {

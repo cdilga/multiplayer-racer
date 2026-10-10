@@ -60,7 +60,21 @@ export interface PrepareStats {
 export class RoundPreparer {
   stats: PrepareStats = { requested: 0, delivered: 0, superseded: 0, failed: 0, refused: 0, committed: 0, lastPlan: '', lastError: '' };
   /** Every request in order: the preparation id and the seed that named its track. */
-  seeds: Array<{ preparation: number; seed: number; plan?: string; ms?: number; attempts?: number }> = [];
+  seeds: Array<{
+    preparation: number;
+    seed: number;
+    plan?: string;
+    ms?: number;
+    attempts?: number;
+    /** The owner tuning menu's generator document this track was built with (br-2sdu.3), absent for the shipped data. */
+    generator?: string;
+    /** The built track as measured: route length and height range, m. */
+    lengthM?: number;
+    reliefM?: number;
+  }> = [];
+  /** The tuned generator document the next tracks are built with, until it's replaced or cleared (br-2sdu.3). */
+  generator: string | undefined;
+  private reuseSeed: number | null = null;
   /** The newest preparation the sim asked for, and the newest map main handed it. */
   current = 0;
   delivered = 0;
@@ -91,6 +105,14 @@ export class RoundPreparer {
     this.o.host.input({ type: 'ui', ui: 'reroll' });
   }
 
+  /** Builds the current track's seed again with `generator` (a tuned `jj.generator` document, or none for the shipped
+   *  data): the sim is asked for a new preparation, main answers it with the same seed so only the values differ. */
+  regenerate(generator?: string): void {
+    this.generator = generator;
+    this.reuseSeed = this.seeds.at(-1)?.seed ?? null;
+    this.reroll();
+  }
+
   /** Whether a built map is waiting for the next Countdown. */
   get stagedFor(): number | null {
     return this.staged?.preparation ?? null;
@@ -111,6 +133,10 @@ export class RoundPreparer {
   private async request(preparation: number, seed: number): Promise<void> {
     this.current = preparation;
     this.stats.requested++;
+    if (this.reuseSeed !== null) {
+      seed = this.reuseSeed;
+      this.reuseSeed = null;
+    }
     const entry: RoundPreparer['seeds'][number] = { preparation, seed };
     this.seeds.push(entry);
     if (!Number.isSafeInteger(seed)) console.warn(`jj: track seed ${seed} is beyond 2^53: the generator can't name it exactly`);
@@ -130,7 +156,10 @@ export class RoundPreparer {
         }
         entry.plan = 'dev-map';
       } else {
-        const p = await this.o.procgen.prepare(seed, this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : this.o.recipe);
+        const generator = this.generator;
+        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : generator ? (JSON.parse(generator) as { recipe: string }).recipe : this.o.recipe;
+        const p = await this.o.procgen.prepare(seed, recipe, generator);
+        if (generator) entry.generator = generator;
         entry.plan = p.plan;
         entry.ms = Math.round(p.ms);
         entry.attempts = p.log.length;
@@ -138,6 +167,7 @@ export class RoundPreparer {
         if (!p.valid) throw new Error(`no valid map for seed ${seed}: ${p.log.at(-1)?.rejected.join('; ') ?? ''}`);
         json = p.mapJson;
         canonical = p.canonical;
+        Object.assign(entry, measure(JSON.parse(json) as MapJson));
       }
       if (preparation !== this.current) {
         this.stats.superseded++;
@@ -194,3 +224,18 @@ export class RoundPreparer {
 }
 
 class Refused extends Error {}
+
+/** A built track's route length and height range (m), from its millimetre route points. */
+function measure(map: MapJson): { lengthM: number; reliefM: number } {
+  const pts = (map as unknown as { route: { points: Array<{ x: number; y: number; z: number }> } }).route.points;
+  let len = 0;
+  let lo = Infinity;
+  let hi = -Infinity;
+  pts.forEach((p, i) => {
+    const q = pts[(i + 1) % pts.length]!;
+    len += Math.hypot(q.x - p.x, q.z - p.z);
+    lo = Math.min(lo, p.y);
+    hi = Math.max(hi, p.y);
+  });
+  return { lengthM: Math.round(len) / 1000, reliefM: Math.round(hi - lo) / 1000 };
+}

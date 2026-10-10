@@ -1,8 +1,9 @@
 {
   "schema": "jj.roster.v1",
-  "note": "The cars a player can pick in the lobby (P1-C03, R101/R110). Data, any number of rows, no cap. Playtest 1 ships the Cruz Missile only (R81's canonical model); a row without `art` is drawn as a silhouette in the player's colour (`shape`). Stats are 0-10 bars; the real ones are measured by the sim, not typed (master 7.6). The pick goes to the host in `Pick{vehicle: id, open}` (jj-protocol); the TV names it from this file, and shows an unknown id tidied up.",
+  "note": "The cars a player can pick in the lobby (P1-C03, R101/R110). Data, any number of rows, no cap. Every row is a drivable vehicle (R123): its profile is assets/profiles/<id>.json and its model is art/vehicles/<id>/; adding a vehicle is a row here plus those two, no code. A row without `art` is drawn as a silhouette in the player's colour (`shape`). Stats are 0-10 bars; the real ones are measured by the sim, not typed (master 7.6). The pick goes to the host in `Pick{vehicle: id, open}` (jj-protocol); the TV names it from this file, and shows an unknown id tidied up.",
   "cars": [
-    { "id": "cruz-missile", "name": "Cruz Missile", "cls": "Aussie classic", "blurb": "Honest all-rounder. Loves a kerb.", "art": "cruz-missile-hero.png", "stats": [6, 6, 7, 5] }
+    { "id": "cruz-missile", "name": "Cruz Missile", "cls": "Aussie classic", "blurb": "Honest all-rounder. Loves a kerb.", "art": "cruz-missile-hero.png", "stats": [6, 6, 7, 5] },
+    { "id": "tradie-ute", "name": "Tradie Ute", "cls": "Work horse", "blurb": "Heavy, torquey and tough. Hauls itself out of anything.", "shape": "ute", "stats": [4, 7, 4, 8] }
   ],
   "shapes": {
     "sedan": "M14 62 L22 44 L58 40 L84 22 L134 20 L160 40 L188 46 L192 62 Z",

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "what": "Generator data (R125): the course length band and straights, each biome's terrain and feature mix, and the biome mix (recipe). Tuned in the owner tuning menu and changed here, never in code; jj-procgen validates the file at load. A committed change moves the goldens: bump GENERATOR_VERSION and re-bless tests/goldens.",
+  "recipe": "town,rocks,outback-dirt,outback-bitumen",
+  "course": {
+    "lengthMinM": 700.0,
+    "lengthMaxM": 1100.0,
+    "startStraightMinM": 110.0,
+    "startStraightMaxM": 160.0,
+    "straightMinM": 18.0,
+    "straightMaxM": 90.0,
+    "minStraightM": 12.0
+  },
+  "biomes": {
+    "greybox": {
+      "terrain": {
+        "reliefM": 2.0,
+        "groundReliefM": 2.0,
+        "wavelengthM": 100.0,
+        "maxGrade": 0.03,
+        "maxCurvature": 0.002,
+        "maxBankCdeg": 200,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.0,
+        "crest": 1.5,
+        "whoops": 1.5,
+        "creek": 1.0
+      }
+    },
+    "town": {
+      "terrain": {
+        "reliefM": 3.0,
+        "groundReliefM": 3.0,
+        "wavelengthM": 60.0,
+        "maxGrade": 0.03,
+        "maxCurvature": 0.002,
+        "maxBankCdeg": 200,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 0.0,
+        "crest": 1.0,
+        "whoops": 0.0,
+        "creek": 0.0
+      }
+    },
+    "rocks": {
+      "terrain": {
+        "reliefM": 10.0,
+        "groundReliefM": 10.0,
+        "wavelengthM": 80.0,
+        "maxGrade": 0.06,
+        "maxCurvature": 0.004,
+        "maxBankCdeg": 600,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.5,
+        "crest": 2.0,
+        "whoops": 1.0,
+        "creek": 0.0
+      }
+    },
+    "outbackDirt": {
+      "terrain": {
+        "reliefM": 5.0,
+        "groundReliefM": 5.0,
+        "wavelengthM": 120.0,
+        "maxGrade": 0.05,
+        "maxCurvature": 0.003,
+        "maxBankCdeg": 500,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.0,
+        "crest": 1.0,
+        "whoops": 2.0,
+        "creek": 1.5
+      }
+    },
+    "outbackBitumen": {
+      "terrain": {
+        "reliefM": 4.0,
+        "groundReliefM": 4.0,
+        "wavelengthM": 220.0,
+        "maxGrade": 0.035,
+        "maxCurvature": 0.0015,
+        "maxBankCdeg": 400,
+        "blendM": 24.0
+      },
+      "features": {
+        "jump": 0.5,
+        "crest": 2.0,
+        "whoops": 0.0,
+        "creek": 1.0
+      }
+    }
+  }
+}

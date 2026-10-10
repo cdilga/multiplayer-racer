@@ -182,7 +182,8 @@ impl Host {
             .copied()
             .filter(|s| self.inputs.contains_key(s))
             .collect();
-        let cars = self.sim.spawn_grid(seats.len());
+        let models: Vec<usize> = seats.iter().map(|&s| self.vehicle_of_seat(s)).collect();
+        let cars = self.sim.spawn_grid_as(&models);
         for (seat, car) in seats.iter().zip(cars) {
             if let Some(input) = self.inputs.get_mut(seat) {
                 input.car = Some(car);
@@ -200,7 +201,7 @@ impl Host {
         if self.round.free_drive {
             let seats: Vec<SeatId> = self.inputs.keys().copied().collect();
             for seat in seats {
-                let car = self.sim.spawn_grid(1)[0];
+                let car = self.sim.spawn_grid_as(&[self.vehicle_of_seat(seat)])[0];
                 if let Some(input) = self.inputs.get_mut(&seat) {
                     input.car = Some(car);
                 }
@@ -209,14 +210,22 @@ impl Host {
         self.session_rev += 1;
     }
 
+    /// The vehicle table or a pick changed: in the Lobby with free drive on, the world is rebuilt so every seat's car is its
+    /// pick; otherwise a new world is built at the next Countdown anyway, and nothing happens here.
+    pub(super) fn rebuild_for_vehicles(&mut self) {
+        if self.round.round.is_none() && self.phase() == Phase::Lobby {
+            self.enter_lobby();
+        }
+    }
+
     /// A new sim on the same map and seed: every car, prop and piece of debris from before is gone with it.
     fn reset_world(&mut self) {
         // The tuned profile (owner tuning menu) carries into every round's new world.
-        self.sim = Sim::new(
+        self.sim = Sim::with_profiles(
             &self.map,
             &jj_procgen::registry(),
             self.round.seed,
-            self.profile.clone(),
+            self.vehicles.iter().map(|(_, p)| p.clone()).collect(),
         );
         for input in self.inputs.values_mut() {
             input.car = None;
@@ -229,12 +238,15 @@ impl Host {
 
     /// A seat got a car from the seat reducer (claimed, or back from sitting out): it drives now in free drive or a
     /// running round (drop-in); otherwise it waits for the next Countdown's grid.
-    pub(super) fn car_wanted(&mut self) -> Option<CarId> {
+    pub(super) fn car_wanted(&mut self, seat: SeatId) -> Option<CarId> {
+        let v = self.vehicle_of_seat(seat);
         match self.driving() {
-            Driving::FreeDrive => Some(self.sim.spawn_grid(1)[0]),
-            Driving::Racing => Some(self.sim.drop_in()),
+            Driving::FreeDrive => Some(self.sim.spawn_grid_as(&[v])[0]),
+            Driving::Racing => Some(self.sim.drop_in_as(v)),
             // A late joiner in the Countdown takes the next grid slot, held with the rest until GO (G02).
-            Driving::Held if self.phase() == Phase::Countdown => Some(self.sim.spawn_grid(1)[0]),
+            Driving::Held if self.phase() == Phase::Countdown => {
+                Some(self.sim.spawn_grid_as(&[v])[0])
+            }
             Driving::Held => None,
         }
     }
@@ -432,6 +444,8 @@ impl Host {
             "round": d.round().map(|r| r.0),
             "laps": self.round.laps,
             "freeDrive": self.round.free_drive,
+            // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
+            "vehicles": self.vehicles.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
             "armed": d.armed(),
             "preparation": {
                 "external": self.round.prepare_maps,
@@ -455,8 +469,13 @@ impl Host {
         let input: serde_json::Value =
             serde_json::from_str(&serde_json::to_string(&self.input_profile).unwrap_or_default())
                 .unwrap_or_default();
-        serde_json::json!({ "tuning": self.profile.tuning, "input": input, "error": self.tuning_error })
-            .to_string()
+        let ids: Vec<&str> = self.vehicles.iter().map(|(id, _)| id.as_str()).collect();
+        let tuned = &self.vehicles[self.tuning_vehicle];
+        serde_json::json!({
+            "tuning": tuned.1.tuning, "input": input, "error": self.tuning_error,
+            "vehicle": tuned.0, "vehicles": ids,
+        })
+        .to_string()
     }
 
     /// Reads every seat's sticks with the (changed) input profile, and tells every connected controller.
@@ -503,13 +522,24 @@ impl Host {
                 self.session_rev += 1;
             }
             UiCommand::SetTuning { field, value } => {
-                match jj_fixture::profile_from(self.profile.clone(), &[(field.clone(), value)]) {
+                let at = self.tuning_vehicle;
+                match jj_fixture::profile_from(
+                    self.vehicles[at].1.clone(),
+                    &[(field.clone(), value)],
+                ) {
                     Ok(p) => {
-                        self.sim.set_tuning(p.tuning.clone());
-                        self.profile = p;
+                        // Only cars of the tuned vehicle change (R123).
+                        self.sim.set_tuning_for(at, p.tuning.clone());
+                        self.vehicles[at].1 = p;
                         self.tuning_error = None;
                     }
                     Err(e) => self.tuning_error = Some(e),
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::TuneVehicle { vehicle } => {
+                if let Some(at) = self.vehicles.iter().position(|(id, _)| *id == vehicle) {
+                    self.tuning_vehicle = at;
                 }
                 self.session_rev += 1;
             }

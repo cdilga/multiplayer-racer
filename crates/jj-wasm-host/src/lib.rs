@@ -214,6 +214,15 @@ pub mod codec {
         .encode()
     }
 
+    /// The roster's vehicles (R123): a JSON array of `[id, profile JSON text]` in roster order, from the roster data and
+    /// `assets/profiles/<id>.json`. A car's vehicle in the snapshot is its index here.
+    #[wasm_bindgen]
+    pub fn encode_vehicles(list_json: &str) -> Result<Vec<u8>, JsError> {
+        let vehicles: Vec<(String, String)> =
+            serde_json::from_str(list_json).map_err(|e| JsError::new(&format!("vehicles: {e}")))?;
+        Ok(MainToSim::Vehicles { vehicles }.encode())
+    }
+
     #[wasm_bindgen]
     pub fn encode_lifecycle(visible: bool, render_ok: bool) -> Vec<u8> {
         MainToSim::Lifecycle { visible, render_ok }.encode()
@@ -231,6 +240,10 @@ pub mod codec {
             "reroll" => UiCommand::Reroll,
             l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {
                 seat: jj_types::SeatId(l[12..].parse().unwrap_or(0)),
+            },
+            // `tune-vehicle:<roster id>`: which vehicle's profile `tune:` edits (R123).
+            l if l.starts_with("tune-vehicle:") => UiCommand::TuneVehicle {
+                vehicle: l[13..].to_owned(),
             },
             // `tune:<field>=<json value>` (the owner tuning menu, br-2sdu.1).
             l if l.starts_with("tune:") => {
@@ -378,6 +391,16 @@ pub mod test_codec {
             build: BuildId("harness".into()),
             endpoint: EndpointId(endpoint.into()),
             resume: None,
+        }
+        .encode()
+    }
+
+    /// The lobby's car pick (R123): a roster id, and whether the picker is still open.
+    #[wasm_bindgen]
+    pub fn controller_pick(vehicle: &str, open: bool) -> Vec<u8> {
+        ControllerCmd::Pick {
+            vehicle: vehicle.into(),
+            open,
         }
         .encode()
     }

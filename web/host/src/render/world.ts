@@ -23,6 +23,7 @@ import { Interpolator, type Sampled } from './interp';
 import { decodeSnapshot } from './snapshot';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
+import { rosterSources } from './vehicles/registry';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
@@ -264,7 +265,8 @@ export class World {
 
   /** Loads the baked vehicle (P1-V02) and draws cars with it. */
   async loadVehicles(): Promise<VehicleRenderer> {
-    this.vehicles = await VehicleRenderer.load(this.scene);
+    this.vehicles = await VehicleRenderer.load(this.scene, rosterSources());
+    this.vehicles.onLoaded = () => this.invalidate();
     return this.vehicles;
   }
 

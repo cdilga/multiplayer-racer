@@ -157,7 +157,7 @@ export class SimClient {
   }
 
   /** The vehicle tuning as the sim holds it now, and the last refusal (the owner tuning menu, br-2sdu.1). */
-  tuning(): Promise<{ tuning: Record<string, unknown>; error: string | null }> {
+  tuning(): Promise<{ tuning: Record<string, unknown>; error: string | null; vehicle?: string; vehicles?: string[] }> {
     const id = this.nextStats++;
     return new Promise((resolve) => {
       this.tuningWaiters.set(id, (json) => resolve(JSON.parse(json)));
@@ -183,6 +183,8 @@ export interface RoomView {
   round: number | null;
   laps: number;
   freeDrive: boolean;
+  /** The roster's vehicle ids in the host's table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123). */
+  vehicles?: string[];
   /** Round preparation (P1-M08a, the R90 readout): main prepares maps, the pending job and its seed, whether a map is waiting for the next Countdown, stale `MapReady`s dropped, and the last validator verdict. */
   preparation?: { external: boolean; pending: { id: number; seed: number } | null; prepared: boolean; staleDropped: number; verdict: string };
   armed: boolean;

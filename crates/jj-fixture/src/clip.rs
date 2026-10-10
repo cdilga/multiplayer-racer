@@ -365,6 +365,12 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::SpawnCar { pose, .. } => {
             sim.spawn_car(*pose);
         }
+        Setup::SpawnCarAs { pose, vehicle, .. } => {
+            sim.spawn_car_as(*pose, usize::from(*vehicle));
+        }
+        Setup::DropInAs { vehicle } => {
+            sim.drop_in_as(usize::from(*vehicle));
+        }
         Setup::PlaceCar {
             car,
             pose,

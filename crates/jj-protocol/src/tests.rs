@@ -383,6 +383,9 @@ fn main_samples() -> Vec<MainToSim> {
             map_bytes: b"jj.map.v1\0".to_vec(),
         },
         MainToSim::ReturnBuffer { buf: vec![0; 16] },
+        MainToSim::Vehicles {
+            vehicles: vec![("tradie-ute".into(), "{}".into())],
+        },
     ]
 }
 
@@ -395,9 +398,10 @@ fn main_variant(m: &MainToSim) -> &'static str {
         MainToSim::Lifecycle { .. } => "lifecycle",
         MainToSim::MapReady { .. } => "map-ready",
         MainToSim::ReturnBuffer { .. } => "return-buffer",
+        MainToSim::Vehicles { .. } => "vehicles",
     }
 }
-const MAIN_VARIANTS: [&str; 7] = [
+const MAIN_VARIANTS: [&str; 8] = [
     "init",
     "net-bytes",
     "local-source",
@@ -405,6 +409,7 @@ const MAIN_VARIANTS: [&str; 7] = [
     "lifecycle",
     "map-ready",
     "return-buffer",
+    "vehicles",
 ];
 
 fn ui_samples() -> Vec<UiCommand> {
@@ -420,6 +425,9 @@ fn ui_samples() -> Vec<UiCommand> {
         UiCommand::Pause { on: true },
         UiCommand::RemoveEndpoint {
             endpoint: "c-77".into(),
+        },
+        UiCommand::TuneVehicle {
+            vehicle: "tradie-ute".into(),
         },
     ]
 }
@@ -697,7 +705,7 @@ fn every_variant_has_a_golden() {
         names(sim_samples().iter().map(sim_variant).collect()),
         SIM_VARIANTS.into_iter().collect()
     );
-    assert_eq!(ui_samples().len(), 7, "every UiCommand variant");
+    assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
         12,

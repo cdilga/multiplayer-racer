@@ -2,7 +2,7 @@
 // bytes (what the sim validates and races), the map JSON (what the renderer builds from) and the fallback ladder's log.
 // The sim worker owns colliders and main owns the GPU upload (master §11.2a).
 import type { FromProcgen, ToProcgen } from './messages';
-import init, { defaultRecipe, prepare, validateMap } from './pkg/jj_wasm_procgen';
+import init, { defaultRecipe, prepareTuned, validateMap } from './pkg/jj_wasm_procgen';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const ready = init();
@@ -13,7 +13,7 @@ scope.onmessage = async (e: MessageEvent<ToProcgen>) => {
   try {
     if (msg.kind === 'prepare') {
       const t = performance.now();
-      const p = prepare(msg.seed, msg.recipe ?? defaultRecipe());
+      const p = prepareTuned(msg.seed, msg.recipe ?? defaultRecipe(), msg.generator ?? '');
       const out: FromProcgen = { kind: 'prepared', job: msg.job, seed: msg.seed, canonical: p.canonical, mapJson: p.mapJson, log: p.log, plan: p.plan, valid: p.valid, ms: performance.now() - t };
       p.free();
       scope.postMessage(out, [out.canonical.buffer]);

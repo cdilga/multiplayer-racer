@@ -1,6 +1,6 @@
 {
  "scenario": "control-after-t-bone",
- "what": "\u00a77.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does.",
+ "what": "\u00a77.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does. (R124 br-xlvx.1: launch speeds 10.4 and 12.5 m/s, up from 10 and 12, because the yard is off-track and its rolling drag takes about that much off before the strike, so the closing speed and contact are as blessed.)",
  "map": "scenarios/damage/yard.json",
  "seed": 1,
  "cars": [
@@ -9,7 +9,7 @@
    "z": -30.0,
    "headingDeg": 90,
    "linvel": [
-    10,
+    10.4,
     0,
     0
    ]
@@ -21,7 +21,7 @@
    "linvel": [
     0,
     0,
-    -12
+    -12.5
    ]
   }
  ],

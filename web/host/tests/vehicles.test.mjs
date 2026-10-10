@@ -73,7 +73,8 @@ test('a car with loose and detached parts renders in adjacent tiles at different
   }
   // Interior blocks (P1-V03) draw only where exposed: car 2's front, rear door and back expose engine, cabin and boot
   // for that car alone; the undamaged car 0 exposes none (car 1's loose door adds a cabin).
-  assert.deepEqual(v.interiors, { engine: 1, cabin: 2, boot: 0 });
+  // Keys are namespaced by vehicle (R123): two vehicles may both have an `engine` block.
+  assert.deepEqual(v.interiors, { 'cruz-missile.engine': 1, 'cruz-missile.cabin': 2, 'cruz-missile.boot': 0 });
   const near = Math.hypot(byPart.wheel_FL.position[0] - byPart.core.position[0], byPart.wheel_FL.position[2] - byPart.core.position[2]);
   assert.ok(near < 2, 'an intact wheel is on the car');
   assert.deepEqual(errors, []);

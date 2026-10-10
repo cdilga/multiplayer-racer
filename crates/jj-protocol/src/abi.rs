@@ -64,6 +64,11 @@ pub enum UiCommand {
         field: String,
         value: String,
     },
+    /// Which roster vehicle's profile the tuning menu edits (R123): `SetTuning` changes that vehicle's rows only, and the
+    /// menu reads its tuning back. An unknown id is ignored.
+    TuneVehicle {
+        vehicle: String,
+    },
 }
 
 /// Main → sim.
@@ -108,6 +113,12 @@ pub enum MainToSim {
     /// A pooled snapshot buffer back to the worker.
     ReturnBuffer {
         buf: Vec<u8>,
+    },
+    /// The roster's vehicles (R123), in roster order: `(id, profile JSON)` each (`assets/profiles/<id>.json`, loaded by
+    /// main from the roster data). A car's vehicle in the snapshot is its index here. Sent before the first round; the
+    /// host's built-in first vehicle stands until then.
+    Vehicles {
+        vehicles: Vec<(String, String)>,
     },
 }
 

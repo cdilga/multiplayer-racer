@@ -25,7 +25,7 @@ export type SimInput =
    *  performance.now()`) lets the worker measure host-applied input age. */
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}` | `tune:${string}`; on?: boolean }
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}` | `tune:${string}` | `tune-vehicle:${string}`; on?: boolean }
   /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
   | { type: 'map-ready'; preparation: number; bytes: Uint8Array };
 
@@ -34,6 +34,8 @@ export interface InitOptions {
   mapBytes?: Uint8Array;
   seed: number;
   poolSize?: number;
+  /** The roster's vehicles in roster order, `[id, profile JSON text]` (R123): the sim builds each car from the one its seat picked. */
+  vehicles?: Array<[string, string]>;
 }
 
 /** `LocalSource.buttons` bits (`jj_wasm_host::host::LOCAL_*`). */

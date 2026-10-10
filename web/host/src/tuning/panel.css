@@ -18,5 +18,8 @@
 .jj-tune input[type=number], .jj-tune input[type=text] { width: 100%; box-sizing: border-box; padding: 3px 5px; border: 1px solid rgb(21 32 58 / .4); border-radius: 4px; font: inherit; background: #fff; }
 .jj-tune input[type=checkbox] { justify-self: start; }
 .jj-tune .reset { border: 0; background: none; cursor: pointer; font-size: 14px; padding: 0; }
+.jj-tune .built { margin: 0; padding: 6px 12px 0; font-size: 12px; border-top: 1px solid rgb(21 32 58 / .2); }
+.jj-tune .built:empty { display: none; }
+.jj-tune footer button[data-tune-regenerate] { background: var(--c-saffron, #ffb400); }
 .jj-tune footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-top: 1px solid rgb(21 32 58 / .2); }
 .jj-tune footer button { min-height: 30px; padding: 0 12px; border: 2px solid var(--c-ink, #15203a); border-radius: 6px; background: var(--c-paper, #fff8e6); font: 800 13px/1 system-ui, sans-serif; cursor: pointer; }

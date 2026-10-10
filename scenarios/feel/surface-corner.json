@@ -1,0 +1,228 @@
+{
+ "scenario": "surface-corner",
+ "what": "R124 (br-xlvx.1): the same full-throttle corner (steer 0.6 left from 18 m/s for 1 s) on off-track, tarmac, packed dirt, gravel and rock. Dirt slides further (more slip angle), turns less and holds less speed than bitumen.",
+ "map": "maps/test/surface-strips.json",
+ "seed": 17,
+ "ticks": 150,
+ "cars": [
+  {
+   "pose": {
+    "x": 2,
+    "y": 0.1,
+    "z": -38,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 2,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 42,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 82,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 122,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 3,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 4,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 1.0
+  }
+ ],
+ "expect": [
+  {
+   "car": 1,
+   "metric": "slipDeg",
+   "min": 12.6,
+   "max": 14.0
+  },
+  {
+   "car": 2,
+   "metric": "slipDeg",
+   "min": 14.3,
+   "max": 15.2
+  },
+  {
+   "car": 3,
+   "metric": "slipDeg",
+   "min": 15.2,
+   "max": 15.9
+  },
+  {
+   "car": 0,
+   "metric": "slipDeg",
+   "min": 16.0,
+   "max": 16.8
+  },
+  {
+   "car": 1,
+   "metric": "headingChangeDeg",
+   "min": 41,
+   "max": 46
+  },
+  {
+   "car": 2,
+   "metric": "headingChangeDeg",
+   "min": 28.5,
+   "max": 33
+  },
+  {
+   "car": 3,
+   "metric": "headingChangeDeg",
+   "min": 25.5,
+   "max": 29.5
+  },
+  {
+   "car": 0,
+   "metric": "headingChangeDeg",
+   "min": 18.5,
+   "max": 22.5
+  },
+  {
+   "car": 1,
+   "metric": "speed",
+   "min": 19.3,
+   "max": 19.7
+  },
+  {
+   "car": 2,
+   "metric": "speed",
+   "min": 18.9,
+   "max": 19.3
+  },
+  {
+   "car": 3,
+   "metric": "speed",
+   "min": 18.3,
+   "max": 18.9
+  },
+  {
+   "car": 0,
+   "metric": "speed",
+   "min": 17.3,
+   "max": 18.2
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 2,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 3,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 4,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 1,
+    "metric": "headingChangeDeg",
+    "by": 5.0
+   },
+   {
+    "car": 2,
+    "metric": "headingChangeDeg",
+    "by": 5.0
+   }
+  ]
+ }
+}

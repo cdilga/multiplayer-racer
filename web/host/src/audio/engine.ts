@@ -2,8 +2,8 @@
 // ground speed and the applied throttle give rpm and gear through the package's drivetrain, the boost meter, the drift flag,
 // the ground class under the car and the count of loose or missing parts give the rest. A car's engine starts when it goes
 // on (the round's countdown, a respawn's end of hold) and stops when it goes off (a wreck, the round's end): the A04c
-// start and stop play out by themselves. The Cruz Missile's profile has no `boost` section, so it makes no turbo sound while
-// a profile with one does (the synth never builds the layer).
+// start and stop play out by themselves. Each car's engine is its roster vehicle's profile (R123); the Cruz Missile's profile
+// has no `boost` section, so it makes no turbo sound while a profile with one does (the synth never builds the layer).
 //
 // The mix favours the most active cars and every local player's own car, within a voice budget set by measured cost: the
 // synth's graphs are built and driven on the main thread, so the budget follows how long a frame's update takes. It is a
@@ -16,9 +16,13 @@ import type { Mix } from './mix';
 import { MOTION } from './motion';
 
 const profileFiles = import.meta.glob('../../../../assets/audio/engine/*.json', { eager: true, import: 'default' }) as Record<string, unknown>;
+/** The engine sound profiles by id: the manifest's files (assets/audio/engine/manifest.json), one per vehicle (a car takes the
+ *  profile named by its roster vehicle's id, R123) plus any extra voices. */
 export const PROFILES: Record<string, EngineProfile> = {};
-for (const [path, json] of Object.entries(profileFiles)) {
-  if (path.endsWith('manifest.json')) continue;
+const manifest = profileFiles['../../../../assets/audio/engine/manifest.json'] as { files: string[] };
+for (const file of manifest.files) {
+  const json = profileFiles[`../../../../assets/audio/engine/${file}`];
+  if (!json) throw new Error(`engine manifest lists ${file}, which is not in assets/audio/engine/`);
   const p = assertProfile(json);
   PROFILES[p.id] = p;
 }
@@ -35,6 +39,8 @@ export interface CarFact {
   /** Loose plus detached parts as a fraction of the ten. */
   damage: number;
   held: boolean;
+  /** The car's roster vehicle: an index into the room's `vehicles` (R123); absent in scripted facts that predate it. */
+  vehicle?: number;
   /** Derived on the host from the car record (br-0uqj); absent in scripted facts that predate them. */
   slip?: number;
   airborne?: boolean;
@@ -63,7 +69,7 @@ const COST_TARGET_MS = 0.8;
 
 export class EngineBank {
   private slots = new Map<number, Slot>();
-  /** Which profile a car uses (a vehicle's data; every car is the Cruz Missile today). */
+  /** Which profile a car uses: its roster vehicle's id (the director sets this from the snapshot); a vehicle with no engine profile is voiced as the default. */
   profileOf: (car: number) => string = () => DEFAULT_PROFILE;
   /** Cars whose engine is wanted on, by the director (the round's phases). */
   wantOn: (car: number) => boolean = () => true;

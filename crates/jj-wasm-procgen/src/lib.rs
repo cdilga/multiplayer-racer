@@ -88,9 +88,45 @@ impl Prepared {
 /// `seed` is an integer below 2^53 (it crosses from JS as a number).
 #[wasm_bindgen]
 pub fn prepare(seed: f64, recipe: &str) -> Result<Prepared, JsError> {
+    prepare_tuned(seed, recipe, "")
+}
+
+/// The shipped generator data (`assets/profiles/generator.json`) as JSON: the owner tuning menu's rows and defaults.
+#[wasm_bindgen(js_name = generatorDefaults)]
+pub fn generator_defaults() -> String {
+    serde_json::to_string(jj_procgen::tuning::GeneratorData::shipped()).unwrap_or_default()
+}
+
+/// The shipped generator data with `set` applied: `[["course.lengthMinM","800"],…]` (dotted paths as in the file, JSON
+/// values as text). Returns the whole document, or the validator's lines as the error; nothing is partly applied.
+#[wasm_bindgen(js_name = generatorWith)]
+pub fn generator_with(set: &str) -> Result<String, JsError> {
+    let set: Vec<(String, String)> =
+        serde_json::from_str(set).map_err(|e| JsError::new(&format!("not a change list: {e}")))?;
+    let doc = jj_procgen::tuning::GeneratorData::shipped()
+        .with_fields(&set)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    serde_json::to_string(&doc).map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// [`prepare`] with tuned generator data (br-2sdu.3): a full `jj.generator` document, or empty for the shipped one.
+/// An invalid document is refused with the validator's lines.
+#[wasm_bindgen(js_name = prepareTuned)]
+pub fn prepare_tuned(seed: f64, recipe: &str, generator: &str) -> Result<Prepared, JsError> {
     let recipe = parse_recipe(recipe).map_err(|e| JsError::new(&e))?;
+    let data = if generator.is_empty() {
+        jj_procgen::tuning::GeneratorData::shipped().clone()
+    } else {
+        jj_procgen::tuning::GeneratorData::from_json(generator)
+            .map_err(|e| JsError::new(&e.to_string()))?
+    };
     // The Playtest-1 course-draw budget: every track keeps all four biomes (a few tens of milliseconds a draw).
-    let p = jj_procgen::prepare_with(seed as u64, &recipe, jj_procgen::playtest::PLAYTEST_DRAWS);
+    let p = jj_procgen::prepare_tuned(
+        seed as u64,
+        &recipe,
+        jj_procgen::playtest::PLAYTEST_DRAWS,
+        &data,
+    );
     let log = serde_json::json!(
         p.attempts
             .iter()

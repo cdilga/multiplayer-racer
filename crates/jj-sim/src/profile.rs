@@ -285,6 +285,27 @@ impl VehicleProfile {
         Self::from_json(TRADIE_UTE_JSON).expect("the compiled-in Tradie Ute profile parses")
     }
 
+    /// Every roster vehicle's profile, in roster order (R123): `(id, profile)` for each row of `web/shared/src/roster.json`,
+    /// read from `assets/profiles/<id>.json` under `repo_root`. Adding a vehicle is a roster row and its profile file: no
+    /// code lists vehicles. Native only (tests, tools); the browser sends the same files to the host as `Vehicles`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn roster(repo_root: &std::path::Path) -> Result<Vec<(String, Self)>, String> {
+        let read = |p: std::path::PathBuf| {
+            std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()))
+        };
+        let roster: serde_json::Value =
+            serde_json::from_str(&read(repo_root.join("web/shared/src/roster.json"))?)
+                .map_err(|e| format!("roster.json: {e}"))?;
+        let cars = roster["cars"].as_array().ok_or("roster.json has no cars")?;
+        cars.iter()
+            .map(|c| {
+                let id = c["id"].as_str().ok_or("a roster row without an id")?;
+                let json = read(repo_root.join(format!("assets/profiles/{id}.json")))?;
+                Ok((id.to_owned(), Self::from_json(&json)?))
+            })
+            .collect()
+    }
+
     /// The hull's axis-aligned box: (min, max).
     pub fn hull_bounds(&self) -> ([f32; 3], [f32; 3]) {
         let mut lo = [f32::INFINITY; 3];

@@ -16,12 +16,12 @@
   {
    "faster": "plain",
    "slower": "over",
-   "byS": 0.2
+   "byS": 0.05
   },
   {
    "faster": "well",
    "slower": "over",
-   "byS": 0.2
+   "byS": 0.1
   },
   {
    "faster": "well",

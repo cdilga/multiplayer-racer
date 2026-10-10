@@ -8,7 +8,7 @@
 import type { RoomView, SimEventJson } from '../worker/client';
 import { SNAPSHOT_CAR, SNAPSHOT_DEBRIS, SNAPSHOT_HEADER } from '../render/snapshot';
 import { Announcer } from './announcer';
-import { EngineBank, type CarFact } from './engine';
+import { DEFAULT_PROFILE, EngineBank, type CarFact } from './engine';
 import type { Mix } from './mix';
 import { MOTION, MotionBank, MotionTracker, SURFACE_NAMES, type MotionCar } from './motion';
 import { Music, type MusicCue } from './music';
@@ -62,6 +62,8 @@ export class AudioDirector {
     this.engines = engines ?? new EngineBank(mix);
     this.engines.own = () => new Set(this.room?.seats.filter((s) => s.local && s.car !== null).map((s) => s.car as number) ?? []);
     this.engines.wantOn = (car) => this.engineWanted(car);
+    // Each car's engine is its roster vehicle's profile (R123): the snapshot says which vehicle, the room names them.
+    this.engines.profileOf = (car) => this.vehicleIds[this.vehicleByCar.get(car) ?? 0] ?? DEFAULT_PROFILE;
     this.motion = new MotionBank(mix);
     this.motion.voiced = (car) => this.engines.isVoiced(car);
   }
@@ -80,9 +82,14 @@ export class AudioDirector {
 
   // --- room views -----------------------------------------------------------------------------------------------------
 
+  /** The roster's vehicle ids in the host's table order (from the room view), and each car's vehicle index (from the snapshot). */
+  private vehicleIds: string[] = [];
+  private vehicleByCar = new Map<number, number>();
+
   onRoom(room: RoomView, nowMs = performance.now()): void {
     const prev = this.phase;
     this.room = room;
+    if (room.vehicles) this.vehicleIds = room.vehicles;
     this.phase = room.phase;
     if (!this.flags.welcome) {
       this.flags.welcome = true;
@@ -290,7 +297,9 @@ export class AudioDirector {
           surface: (flags >> 6) & 3,
           damage: Math.min(1, (loose.get(car) ?? 0) / 10),
           held: (flags & FLAG_HELD) !== 0,
+          vehicle: flags >>> 16,
         };
+        this.vehicleByCar.set(car, fact.vehicle!);
         // What the record implies and the sim does not say: slip against the heading, take-off, air time, height.
         const prevTick = this.lastTick.get(car);
         this.lastTick.set(car, tick);

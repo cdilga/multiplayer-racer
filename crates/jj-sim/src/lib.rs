@@ -16,6 +16,7 @@ pub mod profile;
 pub mod race;
 pub mod rng;
 pub mod sim;
+pub mod surface;
 pub mod utility;
 pub mod vehicle;
 

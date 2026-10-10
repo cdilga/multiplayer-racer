@@ -34,6 +34,7 @@ use crate::placement::{
 use crate::profile::VehicleProfile;
 use crate::race::{Course, Effect, Race, Respawned};
 use crate::rng::Rng;
+use crate::surface;
 use crate::utility::{self, PropKind, UtilityEvent, UtilityKind, rules};
 use crate::vehicle;
 
@@ -113,6 +114,8 @@ const SPEED_HISTORY_TICKS: usize = 150;
 pub struct CarId(pub u32);
 
 struct Car {
+    /// Which profile builds and drives this car: an index into `Sim::profiles` (R123, the roster's vehicle).
+    model: usize,
     body: RigidBodyHandle,
     /// The core's collider (the cabin, which carries the car's mass properties).
     collider: ColliderHandle,
@@ -201,9 +204,8 @@ pub struct WheelState {
 
 pub struct Sim {
     world: PhysicsWorld,
-    profile: VehicleProfile,
-    /// The hull's half extents (footprints and clearances).
-    chassis_half: [f32; 3],
+    /// One profile per roster vehicle (R123), indexed by a car's `vehicle`; a car is built from and driven by its own.
+    profiles: Vec<VehicleProfile>,
     /// The ground classes under the wheels (per-surface grip).
     terrain: Terrain,
     cars: Vec<Car>,
@@ -220,7 +222,7 @@ pub struct Sim {
     /// Fresh part debris and the tick it starts colliding with cars again.
     fresh_debris: Vec<(u32, u64)>,
     /// Per-part mass, centre of mass and hinge, from the profile.
-    part_phys: Vec<PartPhys>,
+    part_phys: Vec<Vec<PartPhys>>,
     /// Work the sim itself authorises into the bodies, J: engine force, air control, flip assist, wheelie lift, the roll
     /// correction and detach kicks. The energy accounting subtracts it (`Sim::energy_j`).
     ledger: f64,
@@ -260,6 +262,20 @@ fn proxy_collider(fp: Footprint) -> (ColliderBuilder, f32) {
 impl Sim {
     /// A world for `map` (already validated and canonical) with `registry`'s collider proxies, seeded with `seed`.
     pub fn new(map: &LoadedMap, registry: &Registry, seed: u64, profile: VehicleProfile) -> Self {
+        Self::with_profiles(map, registry, seed, vec![profile])
+    }
+
+    /// A world whose cars each pick one of `profiles` (R123): `spawn_car_as` takes an index into this list.
+    pub fn with_profiles(
+        map: &LoadedMap,
+        registry: &Registry,
+        seed: u64,
+        profiles: Vec<VehicleProfile>,
+    ) -> Self {
+        assert!(
+            !profiles.is_empty(),
+            "a sim needs at least one vehicle profile"
+        );
         let mut world = PhysicsWorld::new();
         world.integration_parameters.dt = DT;
         let m = &map.map;
@@ -383,11 +399,10 @@ impl Sim {
             setup: Vec::new(),
             entries: Vec::new(),
         };
-        let phys = part_phys(&profile);
+        let phys = profiles.iter().map(part_phys).collect();
         Self {
             world,
-            chassis_half: profile.chassis_half(),
-            profile,
+            profiles,
             terrain: m.terrain.clone(),
             cars: Vec::new(),
             prop_kinds: vec![PropKind::Debris; props.len()],
@@ -430,11 +445,26 @@ impl Sim {
 
     /// Spawns a car (a journaled setup command) and returns its id.
     pub fn spawn_car(&mut self, pose: SpawnPose) -> CarId {
+        self.spawn_car_as(pose, 0)
+    }
+
+    /// Spawns a car built from profile `vehicle` (R123: an index into the profiles the sim was made with; one past the
+    /// end is clamped to the last, so an unknown pick still drives). Vehicle 0 journals as the original `SpawnCar`, so
+    /// single-vehicle journals are unchanged.
+    pub fn spawn_car_as(&mut self, pose: SpawnPose, vehicle: usize) -> CarId {
+        let vehicle = vehicle.min(self.profiles.len() - 1);
         let id = CarId(self.cars.len() as u32);
-        self.journal
-            .setup
-            .push((self.tick, Setup::SpawnCar { car: id.0, pose }));
-        self.add_car(pose);
+        let cmd = if vehicle == 0 {
+            Setup::SpawnCar { car: id.0, pose }
+        } else {
+            Setup::SpawnCarAs {
+                car: id.0,
+                pose,
+                vehicle: vehicle as u16,
+            }
+        };
+        self.journal.setup.push((self.tick, cmd));
+        self.add_car(pose, vehicle);
         self.race.add_car(pose);
         self.protect(id);
         id
@@ -447,6 +477,14 @@ impl Sim {
             .collect()
     }
 
+    /// The start grid for one more car per entry of `vehicles`, each built from that profile index (R123).
+    pub fn spawn_grid_as(&mut self, vehicles: &[usize]) -> Vec<CarId> {
+        vehicles
+            .iter()
+            .map(|&v| self.spawn_car_as(self.grid_pose(self.cars.len()), v))
+            .collect()
+    }
+
     /// The `k`-th car's start-grid pose.
     pub fn grid_pose(&self, k: usize) -> SpawnPose {
         grid_pose(&self.slots, k)
@@ -456,20 +494,33 @@ impl Sim {
     /// car's gate state, marked late, immediately controllable under protection. Before the race has that much
     /// history, it takes the next grid slot.
     pub fn drop_in(&mut self) -> CarId {
-        self.journal.setup.push((self.tick, Setup::DropIn));
+        self.drop_in_as(0)
+    }
+
+    /// [`Sim::drop_in`] for a car built from profile `vehicle` (R123).
+    pub fn drop_in_as(&mut self, vehicle: usize) -> CarId {
+        let vehicle = vehicle.min(self.profiles.len() - 1);
+        let cmd = if vehicle == 0 {
+            Setup::DropIn
+        } else {
+            Setup::DropInAs {
+                vehicle: vehicle as u16,
+            }
+        };
+        self.journal.setup.push((self.tick, cmd));
         let id = CarId(self.cars.len() as u32);
         match self.race.drop_in_progress(self.tick) {
             Some(p) => {
                 let target = self
                     .line
                     .pose_at(self.race.finish_s() + p, 0.0, SPAWN_LIFT_M);
-                let pose = self.clear_pose_near(None, target);
-                self.add_car(pose);
+                let pose = self.clear_pose_near(None, target, vehicle);
+                self.add_car(pose, vehicle);
                 self.race.add_late_car(pose, p, self.tick);
             }
             None => {
                 let pose = self.grid_pose(self.cars.len());
-                self.add_car(pose);
+                self.add_car(pose, vehicle);
                 if self.race.started_at.is_some() {
                     self.race.add_late_car(pose, -1.0, self.tick);
                 } else {
@@ -509,7 +560,10 @@ impl Sim {
             .push((self.tick, Setup::Utility { car: car.0, kind }));
         let held = self.race.is_held(car.0, self.tick) || self.race.is_finished(car.0);
         let tick = self.tick;
-        let rear_z = self.profile.hull_bounds().0[2];
+        let rear_z = self
+            .cars
+            .get(car.0 as usize)
+            .map_or(0.0, |c| self.profiles[c.model].hull_bounds().0[2]);
         let Some(c) = self.cars.get_mut(car.0 as usize) else {
             return false;
         };
@@ -596,16 +650,15 @@ impl Sim {
         self.cars.get(car.0 as usize)?.autopilot.as_ref()?.state()
     }
 
-    /// The ground class under car `car` (for the engine audio's surface layer): 0 tarmac, 1 dirt (packed dirt, off track),
-    /// 2 gravel (gravel, rock).
+    /// The ground class under car `car` (for the engine audio's surface layer): 0 tarmac, 1 dirt (packed dirt), 2 gravel (gravel,
+    /// rock), 3 off track (R124: the host tells off-track from dirt).
     pub fn car_surface(&self, car: CarId) -> Option<u8> {
         use jj_map::model::Surface;
         let b = self.world.bodies.get(self.cars.get(car.0 as usize)?.body)?;
         let t = b.position().translation;
         Some(match vehicle::surface_at(&self.terrain, t.x, t.z) {
             Surface::Tarmac => 0,
-            Surface::PackedDirt | Surface::OffTrack => 1,
-            Surface::Gravel | Surface::Rock => 2,
+            s => surface::audio_class(s),
         })
     }
 
@@ -643,12 +696,13 @@ impl Sim {
         let c = self.cars.get(car.0 as usize)?;
         let b = self.world.bodies.get(c.body)?;
         let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
+        let half = self.profiles[c.model].chassis_half();
         Some(Rect {
             x: t.x,
             z: t.z,
             heading: libm::atan2f(fwd.x, fwd.z),
-            half_w: self.chassis_half[0] + CLEARANCE_M,
-            half_l: self.chassis_half[2] + CLEARANCE_M,
+            half_w: half[0] + CLEARANCE_M,
+            half_l: half[2] + CLEARANCE_M,
         })
     }
 
@@ -676,19 +730,25 @@ impl Sim {
             .collect()
     }
 
-    fn pose_footprint(&self, pose: SpawnPose) -> Rect {
+    fn pose_footprint(&self, pose: SpawnPose, vehicle: usize) -> Rect {
+        let half = self.profiles[vehicle].chassis_half();
         Rect {
             x: pose.x,
             z: pose.z,
             heading: pose.heading,
-            half_w: self.chassis_half[0] + CLEARANCE_M,
-            half_l: self.chassis_half[2] + CLEARANCE_M,
+            half_w: half[0] + CLEARANCE_M,
+            half_l: half[2] + CLEARANCE_M,
         }
     }
 
     /// The first clear pose near `target` (itself, then steps back along its heading and to either side), checked
     /// against every other car, debris and solid dressing; `target` itself if none is clear (the car then waits out protection).
-    fn clear_pose_near(&self, exclude: Option<CarId>, target: SpawnPose) -> SpawnPose {
+    fn clear_pose_near(
+        &self,
+        exclude: Option<CarId>,
+        target: SpawnPose,
+        vehicle: usize,
+    ) -> SpawnPose {
         let others: Vec<Rect> = self
             .cars()
             .filter(|&c| Some(c) != exclude)
@@ -699,7 +759,7 @@ impl Sim {
         for step in 0..SEARCH_STEPS {
             for side in SEARCH_LATERAL_M {
                 let pose = offset(target, step as f32 * SEARCH_STEP_M, side);
-                let fp = self.pose_footprint(pose);
+                let fp = self.pose_footprint(pose, vehicle);
                 if !others.iter().any(|o| overlaps(&fp, o)) {
                     return pose;
                 }
@@ -849,7 +909,11 @@ impl Sim {
                 preload_ms,
             },
         ));
-        let t = self.profile.tuning.clone();
+        let Some(vehicle) = self.cars.get(car.0 as usize).map(|c| c.model) else {
+            return false;
+        };
+        let t = self.profiles[vehicle].tuning.clone();
+        let front_z = self.profiles[vehicle].axle_front_z();
         let held = self.race.is_held(car.0, self.tick);
         let Some(c) = self.cars.get_mut(car.0 as usize) else {
             return false;
@@ -878,7 +942,7 @@ impl Sim {
         };
         let lift = (f32::from(preload_ms) / t.wheelie_full_preload_ms).min(1.0);
         let iso = *b.position();
-        let front = iso * Vector::new(0.0, 0.0, self.profile.axle_front_z());
+        let front = iso * Vector::new(0.0, 0.0, front_z);
         let up = iso.rotation * Vector::Y;
         let impulse = up * (t.wheelie_lift_impulse * lift);
         self.ledger += f64::from(impulse.dot(b.velocity_at_point(front)));
@@ -945,7 +1009,8 @@ impl Sim {
                     self.wreck_car(car as usize, why);
                 }
                 // Through the placement service: a clear pose near the anchor, then spawn protection.
-                let pose = self.clear_pose_near(Some(CarId(car)), pose);
+                let vehicle = self.cars[car as usize].model;
+                let pose = self.clear_pose_near(Some(CarId(car)), pose, vehicle);
                 self.teleport(CarId(car), pose, 0.0, [0.0; 3]);
                 self.protect(CarId(car));
             }
@@ -990,8 +1055,8 @@ impl Sim {
     /// Builds a car from the profile (P1-S03a): the body frame is the sidecar's vehicle space (origin on the ground
     /// between the axles), the chassis is the convex hull of the sidecar's core proxy with the sidecar's centre of mass,
     /// and the wheels hang from their sidecar pivots.
-    fn add_car(&mut self, pose: SpawnPose) {
-        let p = &self.profile;
+    fn add_car(&mut self, pose: SpawnPose, model: usize) {
+        let p = &self.profiles[model];
         let t = &p.tuning;
         let body = RigidBodyBuilder::dynamic()
             .translation(Vector::new(pose.x, pose.y, pose.z))
@@ -1035,6 +1100,7 @@ impl Sim {
             );
         }
         self.cars.push(Car {
+            model,
             body: handle,
             collider,
             parts,
@@ -1073,12 +1139,13 @@ impl Sim {
 
     /// Advances one fixed tick.
     pub fn step(&mut self) {
-        let p = self.profile.clone();
         let tick = self.tick;
-        let wheelbase = p.wheelbase();
         let mut stuck = Vec::new();
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
+            // Each car is driven by its own profile (R123).
+            let p = &self.profiles[car.model];
+            let wheelbase = p.wheelbase();
             // A held car (the 2 s respawn penalty) gets no controls; an autopiloted one gets the autopilot's, blending
             // to the player's during a handback.
             let mut input = car.input;
@@ -1140,15 +1207,20 @@ impl Sim {
                     })
                     .fold(0.0, f32::max);
                 car.action
-                    .update(&p, input, rear_slip, b.linvel().length(), DT);
+                    .update(p, input, rear_slip, b.linvel().length(), DT);
                 let mut grip = [1.0; 4];
+                let mut side_stiffness = [1.0; 4];
                 for (i, g) in grip.iter_mut().enumerate() {
                     let [x, y, z] = p.geometry.wheels[i];
                     let at = iso * Vector::new(x, y, z);
-                    *g = p.grip(vehicle::surface_at(&self.terrain, at.x, at.z));
+                    let ground = vehicle::surface_at(&self.terrain, at.x, at.z);
+                    *g = p.grip(ground);
+                    // R124: the ground's slip curve (dirt resolves less of the sideways slip per tick).
+                    side_stiffness[i] = p.tuning.side_friction_stiffness
+                        * surface::table().tyre(ground).side_stiffness;
                 }
                 let commands =
-                    vehicle::wheel_commands(&p, input, car.action, forward_speed, grip, DT);
+                    vehicle::wheel_commands(p, input, car.action, forward_speed, grip, DT);
                 let dt_ = &p.tuning.damage;
                 let t_ = &p.tuning;
                 for (i, (w, c)) in car
@@ -1162,6 +1234,7 @@ impl Sim {
                     w.engine_force = c.engine_force;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
+                    w.side_friction_stiffness = side_stiffness[i];
                     match car.damage.state(damage::WHEEL_FL + i, dt_) {
                         PartState::Intact => w.max_suspension_force = t_.max_suspension_force,
                         // A loose wheel grips less.
@@ -1186,7 +1259,7 @@ impl Sim {
                     .iter()
                     .all(|w| !w.raycast_info().is_in_contact);
                 if airborne && !input.is_neutral() {
-                    let [tx, ty, tz] = vehicle::air_torque(&p, input);
+                    let [tx, ty, tz] = vehicle::air_torque(p, input);
                     let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
                     self.ledger += f64::from(ti.dot(b.angvel()));
                     b.apply_torque_impulse(ti, true);
@@ -1264,6 +1337,45 @@ impl Sim {
                 filter,
             );
             car.vehicle.update_vehicle(DT, queries);
+            // R124 rolling drag: each wheel in contact drags against its ground velocity by the ground under it. One
+            // impulse of force × dt per tick, never more than stops the wheel's quarter of the car.
+            if let Some(b) = self.world.bodies.get_mut(car.body) {
+                let quarter = b.mass() * 0.25;
+                let mut ground = [(Vector::ZERO, Vector::ZERO); 4];
+                let mut n = 0;
+                for w in car.vehicle.wheels() {
+                    let ri = w.raycast_info();
+                    if !ri.is_in_contact || w.wheel_suspension_force <= 0.0 {
+                        continue;
+                    }
+                    let at = ri.contact_point_ws;
+                    let surf = vehicle::surface_at(&self.terrain, at.x, at.z);
+                    let tyre = surface::table().tyre(surf);
+                    let nrm = ri.contact_normal_ws;
+                    // Along the wheel's rolling direction only: sideways slip is the tyre's grip, not rolling drag.
+                    let fwd = b.position().rotation * Vector::Z;
+                    let fwd = (fwd - nrm * fwd.dot(nrm)).normalize_or_zero();
+                    let along = b.velocity_at_point(at).dot(fwd);
+                    let speed = along.abs();
+                    if speed < 1e-3 {
+                        continue;
+                    }
+                    let load = w.wheel_suspension_force;
+                    let force = load * (tyre.rolling_resistance + tyre.speed_drag * speed);
+                    let impulse = (force * DT).min(quarter * speed);
+                    ground[n] = (at, fwd * (-impulse * along.signum()));
+                    n += 1;
+                }
+                // Drag acts through the centre of mass's height, not the ground: a drag at the contact patch would
+                // pitch the nose down by its lever arm (R122: a car never dives).
+                let up = b.position().rotation * Vector::Y;
+                let com = b.center_of_mass();
+                for &(at, j) in &ground[..n] {
+                    let at = at + up * up.dot(com - at);
+                    // Dissipative only (it opposes the velocity), so the energy ledger needs no entry.
+                    b.apply_impulse_at_point(j, at, true);
+                }
+            }
             // Rapier applied each side impulse at a point moved (1 − 0.1) of its height up toward the centre of mass;
             // a `roll_influence` of r would have moved it (1 − r). The difference is a moment about the moved points:
             // (up · h · (r − 0.1)) × J per wheel, h the contact's height relative to the centre of mass.
@@ -1330,11 +1442,15 @@ impl Sim {
                 parts: &c.parts,
             })
             .collect();
-        let t = &self.profile.tuning.damage;
+        let ts: Vec<&crate::profile::DamageTuning> = self
+            .cars
+            .iter()
+            .map(|c| &self.profiles[c.model].tuning.damage)
+            .collect();
         self.episodes
-            .scan(&self.world, &self.pre_step, &cars, t, self.tick);
+            .scan(&self.world, &self.pre_step, &cars, &ts, self.tick);
         let mut health: Vec<CarDamage> = self.cars.iter().map(|c| c.damage.clone()).collect();
-        let events = self.episodes.close(self.tick, t, &mut health);
+        let events = self.episodes.close(self.tick, &ts, &mut health);
         for (c, h) in self.cars.iter_mut().zip(health) {
             c.damage = h;
         }
@@ -1359,8 +1475,9 @@ impl Sim {
 
     /// Integrates every loose part's hinge spring on the chassis' acceleration this tick (P1-S04b).
     fn step_springs(&mut self) {
-        let t = &self.profile.tuning.damage;
         for car in &mut self.cars {
+            let t = &self.profiles[car.model].tuning.damage;
+            let part_phys = &self.part_phys[car.model];
             let Some(b) = self.world.bodies.get(car.body) else {
                 continue;
             };
@@ -1369,9 +1486,11 @@ impl Sim {
             let accel = (b.linvel() - car.last_linvel) / DT;
             car.last_linvel = b.linvel();
             let force = b.position().rotation.inverse() * (Vector::new(0.0, -9.81, 0.0) - accel);
+            #[allow(clippy::needless_range_loop)]
+            // `part` indexes the springs, the profile's parts and the health
             for part in 1..PARTS {
                 let spring = &mut car.springs[part];
-                match (car.damage.state(part, t), self.part_phys[part].hinge) {
+                match (car.damage.state(part, t), part_phys[part].hinge) {
                     (PartState::Loose, Some(h)) => {
                         spring.step(&h, force, t.spring_stiffness, t.spring_damping, DT);
                     }
@@ -1387,8 +1506,8 @@ impl Sim {
     /// and the chassis' velocity at its centre (`v + ω × r`) plus a small outward kick. The chassis' mass properties are
     /// recomputed. The debris stays a dynamic body for the round.
     fn detach_parts(&mut self) {
-        let t = self.profile.tuning.damage.clone();
         for ci in 0..self.cars.len() {
+            let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
             for part in 1..PARTS {
                 if self.cars[ci].removed[part]
                     || self.cars[ci].damage.state(part, &t) != PartState::Detached
@@ -1419,13 +1538,15 @@ impl Sim {
         );
         // The chassis keeps the rest: total mass minus every part gone, the centre of mass moved off them, the
         // inertia scaled with the mass.
-        let p = &self.profile;
+        let vehicle = self.cars[ci].model;
+        let p = &self.profiles[vehicle];
+        let part_phys = &self.part_phys[vehicle];
         let (m0, [cx, cy, cz]) = (p.tuning.mass, p.geometry.com);
         let (mut gone, mut moment) = (0.0f32, Vector::ZERO);
         for (i, &r) in self.cars[ci].removed.iter().enumerate() {
             if r {
-                gone += self.part_phys[i].mass;
-                moment += self.part_phys[i].com * self.part_phys[i].mass;
+                gone += part_phys[i].mass;
+                moment += part_phys[i].com * part_phys[i].mass;
             }
         }
         let rest = (m0 - gone).max(1.0);
@@ -1446,7 +1567,7 @@ impl Sim {
         }
         // The debris: the proxy's convex hull in vehicle space on a body at the chassis' pose, so a renderer draws the
         // part mesh at the body's pose. Fresh debris touches only the world until it has cleared the chassis.
-        let phys = self.part_phys[part];
+        let phys = part_phys[part];
         let points: Vec<Vector> = p.geometry.parts[part]
             .points
             .iter()
@@ -1486,9 +1607,9 @@ impl Sim {
     /// A car that loses a wheel drives on for `wheel_loss_respawn_s`, then is wrecked and respawns as a fresh car (R121,
     /// owner playtest 1: a car on three wheels was too punishing; amends P1-S04c's two-wheel rule).
     fn check_wheel_wrecks(&mut self) {
-        let t = self.profile.tuning.damage.clone();
-        let after = libm::roundf(t.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
         for ci in 0..self.cars.len() {
+            let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
+            let after = libm::roundf(t.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
             let gone = (damage::WHEEL_FL..PARTS)
                 .any(|i| self.cars[ci].damage.state(i, &t) == PartState::Detached);
             if !gone {
@@ -1522,7 +1643,7 @@ impl Sim {
     /// dynamic body for the round, never despawned), and the car itself is rebuilt fresh and intact for the respawn the
     /// caller places at its anchor (same identity, same progress). Wreck event, with its cause and instigator, follows.
     fn wreck_car(&mut self, ci: usize, why: Respawned) {
-        let t = self.profile.tuning.damage.clone();
+        let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
         for part in 1..PARTS {
             if !self.cars[ci].removed[part] {
                 self.cars[ci].damage.health[part] = 0.0;
@@ -1569,8 +1690,8 @@ impl Sim {
             b.center_of_mass(),
             b.mass(),
         );
-        let phys = self.part_phys[damage::CORE];
-        let points: Vec<Vector> = self.profile.geometry.parts[damage::CORE]
+        let phys = self.part_phys[self.cars[ci].model][damage::CORE];
+        let points: Vec<Vector> = self.profiles[self.cars[ci].model].geometry.parts[damage::CORE]
             .points
             .iter()
             .map(|&[x, y, z]| Vector::new(x, y, z))
@@ -1611,13 +1732,14 @@ impl Sim {
             })
         };
         let before = energy(self);
+        let vehicle = self.cars[ci].model;
         for i in 1..PARTS {
-            let builder = part_builder(&self.profile, i)
+            let builder = part_builder(&self.profiles[vehicle], i)
                 .collision_groups(Solidity::Protected.groups(damage::is_wheel(i)));
             self.cars[ci].parts[i] = self.world.insert_collider(builder, Some(body));
         }
         let core = self.cars[ci].collider;
-        let mp = chassis_mass_props(&self.profile);
+        let mp = chassis_mass_props(&self.profiles[vehicle]);
         if let Some(col) = self.world.colliders.get_mut(core) {
             col.set_mass_properties(mp);
         }
@@ -1627,7 +1749,7 @@ impl Sim {
         // The mass coming back is the respawn's, not the sim's doing.
         self.ledger += energy(self) - before;
         let c = &mut self.cars[ci];
-        c.damage = CarDamage::new(&self.profile.tuning.damage);
+        c.damage = CarDamage::new(&self.profiles[vehicle].tuning.damage);
         c.springs = [Spring::default(); PARTS];
         c.removed = [false; PARTS];
         c.incarnation += 1;
@@ -1692,10 +1814,10 @@ impl Sim {
                 health,
             },
         ));
-        let t = &self.profile.tuning.damage;
         if let Some(c) = self.cars.get_mut(car.0 as usize)
             && (1..PARTS).contains(&usize::from(part))
         {
+            let t = &self.profiles[c.model].tuning.damage;
             let i = usize::from(part);
             let was = c.damage.state(i, t);
             c.damage.health[i] = health.clamp(0.0, c.damage.start[i]);
@@ -1747,9 +1869,9 @@ impl Sim {
     /// The part records for the snapshot (P1-S04b): every part that isn't intact, as `(car, part, state, hinge angle,
     /// debris body index)`, in car then part order. A detached part's pose is its debris body's (`debris_poses`).
     pub fn part_records(&self) -> Vec<(u32, u8, PartState, f32, Option<u32>)> {
-        let t = &self.profile.tuning.damage;
         let mut out = Vec::new();
         for (ci, c) in self.cars.iter().enumerate() {
+            let t = &self.profiles[c.model].tuning.damage;
             for part in 1..PARTS {
                 let state = c.damage.state(part, t);
                 if state == PartState::Intact {
@@ -1879,7 +2001,7 @@ impl Sim {
     pub fn part_states(&self, car: CarId) -> Option<[PartState; PARTS]> {
         self.cars
             .get(car.0 as usize)
-            .map(|c| c.damage.states(&self.profile.tuning.damage))
+            .map(|c| c.damage.states(&self.profiles[c.model].tuning.damage))
     }
 
     /// A part's state by name (`front`, `door_FL`…).
@@ -1991,14 +2113,45 @@ impl Sim {
         self.cars.get(car.0 as usize).map(|c| c.applied)
     }
 
+    /// The first vehicle's profile (a one-vehicle sim's only one); see [`Sim::profile_of`] and [`Sim::profile_at`].
     pub fn profile(&self) -> &VehicleProfile {
-        &self.profile
+        &self.profiles[0]
     }
 
-    /// Replaces the vehicle tuning (the owner tuning menu, br-2sdu.1); geometry stays. Every field acts from the next
-    /// tick except mass and inertia, which a car's body takes when it spawns.
+    /// The profile roster vehicle `vehicle` builds its cars from.
+    pub fn profile_at(&self, vehicle: usize) -> Option<&VehicleProfile> {
+        self.profiles.get(vehicle)
+    }
+
+    /// The profile `car` was built from and is driven by (R123).
+    pub fn profile_of(&self, car: CarId) -> Option<&VehicleProfile> {
+        self.cars
+            .get(car.0 as usize)
+            .map(|c| &self.profiles[c.model])
+    }
+
+    /// Which roster vehicle (profile index) `car` is.
+    pub fn vehicle_of(&self, car: CarId) -> Option<usize> {
+        self.cars.get(car.0 as usize).map(|c| c.model)
+    }
+
+    /// How many vehicle profiles this sim was made with.
+    pub fn vehicle_count(&self) -> usize {
+        self.profiles.len()
+    }
+
+    /// Replaces the tuning of roster vehicle `vehicle` (the owner tuning menu, br-2sdu.1): only cars of that vehicle
+    /// change; geometry stays. Every field acts from the next tick except mass and inertia, which a car's body takes
+    /// when it spawns.
+    pub fn set_tuning_for(&mut self, vehicle: usize, tuning: crate::profile::Tuning) {
+        if let Some(p) = self.profiles.get_mut(vehicle) {
+            p.tuning = tuning;
+        }
+    }
+
+    /// [`Sim::set_tuning_for`] vehicle 0.
     pub fn set_tuning(&mut self, tuning: crate::profile::Tuning) {
-        self.profile.tuning = tuning;
+        self.set_tuning_for(0, tuning);
     }
 
     /// SHA-256 over the whole simulated state: tick, RNG, every car (pose, velocities, wheels) and every prop, in a
@@ -2090,7 +2243,19 @@ impl Sim {
         journal: &Journal,
         ticks: u64,
     ) -> Self {
-        let mut sim = Self::new(map, registry, journal.seed, profile);
+        Self::replay_with(map, registry, vec![profile], journal, ticks)
+    }
+
+    /// [`Sim::replay`] for a sim made with several vehicle profiles (R123): the journal's `SpawnCarAs`/`DropInAs`
+    /// pick among them.
+    pub fn replay_with(
+        map: &LoadedMap,
+        registry: &Registry,
+        profiles: Vec<VehicleProfile>,
+        journal: &Journal,
+        ticks: u64,
+    ) -> Self {
+        let mut sim = Self::with_profiles(map, registry, journal.seed, profiles);
         let (mut setup, mut entries) = (
             journal.setup.iter().peekable(),
             journal.entries.iter().peekable(),
@@ -2100,6 +2265,12 @@ impl Sim {
                 match s {
                     Setup::SpawnCar { pose, .. } => {
                         sim.spawn_car(*pose);
+                    }
+                    Setup::SpawnCarAs { pose, vehicle, .. } => {
+                        sim.spawn_car_as(*pose, usize::from(*vehicle));
+                    }
+                    Setup::DropInAs { vehicle } => {
+                        sim.drop_in_as(usize::from(*vehicle));
                     }
                     Setup::PlaceCar {
                         car,

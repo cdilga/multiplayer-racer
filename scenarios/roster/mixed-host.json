@@ -1,0 +1,8 @@
+{
+  "hash": "6f0f9c4e732a35ac2fb6251bbedc8ef50a2d04b4d835bc0c6a865f9483097508",
+  "map": "maps/greybox-loop.json",
+  "scenario": "mixed-host",
+  "seed": 1,
+  "ticks": 900,
+  "what": "R123 (br-bwju.7): a mixed-roster round through the host: the roster's vehicles sent to the host, two phones claim and pick the roster's first two vehicles in free drive, both drive (the second steering) for `ticks`. The native test (crates/jj-wasm-host/src/host/testing.rs) and the WASM build (web/host/tests/roster-wasm.test.mjs) both reach `hash`; JJ_BLESS=1 on the native test rewrites it."
+}

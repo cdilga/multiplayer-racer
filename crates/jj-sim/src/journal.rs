@@ -120,6 +120,17 @@ pub enum Setup {
     /// running order, unfinished cars ranked by legal progress, and the race rules emit `RaceOver`. Refused before the
     /// start or once the race is over.
     EndRace,
+    /// A car built from roster vehicle `vehicle` (an index into the sim's profiles, R123). Vehicle 0 journals as
+    /// `SpawnCar`, so single-vehicle journals keep their bytes. Appended: variant order is the wire format.
+    SpawnCarAs {
+        car: u32,
+        pose: SpawnPose,
+        vehicle: u16,
+    },
+    /// [`Setup::DropIn`] for roster vehicle `vehicle` (R123).
+    DropInAs {
+        vehicle: u16,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -24,6 +24,7 @@ import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
 import { SyntheticSource } from './render/synthetic';
+import { rosterProfiles } from './render/vehicles/registry';
 import { World } from './render/world';
 import { SimClient } from './worker/client';
 
@@ -139,6 +140,7 @@ async function boot(): Promise<void> {
       freezeAt: freeze === null ? undefined : Number(freeze),
       damage: params.has('damage'),
       strip: params.get('damage') === 'strip',
+      mixed: params.get('vehicles') === 'mixed',
     });
     world.attach(source);
     if (freeze !== null) world.interp.fixedTick = Number(freeze) - 0.5;
@@ -158,7 +160,7 @@ async function boot(): Promise<void> {
   }
   const seed = 1;
   const client = new SimClient(testing?.createWorker());
-  await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live', describe: true } : {});
+  await client.start({ mapJson: greybox, seed, vehicles: rosterProfiles() }, testing ? { live: params.get('test') === 'live', describe: true } : {});
   client.followVisibility();
   // Bug clips and the dev session recorder (P1-F07, P1-F12): Ctrl/Cmd+Shift+B saves a clip; the test surface attaches
   // its own recorders.
@@ -268,6 +270,8 @@ async function boot(): Promise<void> {
     }
     seatPaint = new Map(room.seats.filter((st) => st.car !== null).map((st) => [st.car!, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`]));
     const v = world.vehicles;
+    // The cars the seats picked in the lobby load their models now, so they are ready when the grid forms (R123).
+    for (const st of room.seats) if (st.vehicle) void v?.ensureId(st.vehicle);
     if (!v || painted) return;
     painted = true;
     const palette = v.paintOf;
@@ -278,7 +282,10 @@ async function boot(): Promise<void> {
   // (remembered; `?tune=off` switches it off). Its code is a separate chunk that a production build never contains.
   if (__JJ_OWNER_TOOLS__ && ownerTools(params)) {
     void import('./tuning/panel').then(async (m) => {
-      const panel = await m.mountTuningPanel(client);
+      const prep = (window as unknown as { __jjPrepare?: { seeds(): Array<{ preparation: number; seed: number; lengthM?: number; reliefM?: number }>; regenerate(g?: string): void } }).__jjPrepare;
+      // The generator rows exist where rounds are prepared in the procgen worker (the real room), not on free-drive pages.
+      const generator = prep ? await import('./tuning/generator').then((g) => g.generatorHooks(prep)) : undefined;
+      const panel = await m.mountTuningPanel(client, generator);
       (window as unknown as { __jjTune: unknown }).__jjTune = panel;
     });
   }

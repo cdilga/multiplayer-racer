@@ -336,6 +336,160 @@ mod tests {
         h.test_command(&v.to_string()).unwrap()
     }
 
+    const MIXED_HOST: &str = include_str!("../../../../scenarios/roster/mixed-host.json");
+
+    /// The roster's `(id, profile JSON)` pairs from the data files (R123: no vehicle is named in code).
+    fn roster_files() -> Vec<(String, String)> {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let roster: Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("web/shared/src/roster.json")).unwrap(),
+        )
+        .unwrap();
+        roster["cars"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| {
+                let id = c["id"].as_str().unwrap().to_owned();
+                let json = std::fs::read_to_string(root.join(format!("assets/profiles/{id}.json")))
+                    .unwrap();
+                (id, json)
+            })
+            .collect()
+    }
+
+    /// The mixed-roster script (scenarios/roster/mixed-host.json; web/host/tests/roster-wasm.test.mjs runs the same
+    /// steps through the WASM build): free drive, the roster's vehicles sent to the host, two phones claim and pick the
+    /// roster's first two vehicles, both drive (the second steering) for `ticks`; returns the full-state hash.
+    fn mixed_host_hash(ticks: u64) -> String {
+        use jj_protocol::abi::UiCommand;
+        use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
+        use jj_types::{CommandId, SourceHandle};
+        let roster = roster_files();
+        let mut h = host();
+        cmd(&mut h, json!({ "cmd": "hold", "on": true }));
+        h.handle(
+            &MainToSim::Vehicles {
+                vehicles: roster.clone(),
+            }
+            .encode(),
+        )
+        .unwrap();
+        let net = |ep: &str, ch: Channel, bytes: Vec<u8>| {
+            MainToSim::NetBytes {
+                endpoint: EndpointId(ep.into()),
+                channel: ch,
+                bytes,
+            }
+            .encode()
+        };
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(1),
+                ui: UiCommand::FreeDrive { on: true },
+            }
+            .encode(),
+        )
+        .unwrap();
+        for k in 0..2 {
+            let ep = format!("fake-{k}");
+            let hello = ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("harness".into()),
+                endpoint: EndpointId(ep.clone()),
+                resume: None,
+            };
+            let claim = ControllerCmd::Claim {
+                request: RequestId(1),
+                name: format!("P{k}"),
+            };
+            for c in [hello, claim] {
+                h.handle(&net(&ep, Channel::Cmd, c.encode())).unwrap();
+            }
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": 30 }));
+        for (k, (id, _)) in roster.iter().take(2).enumerate() {
+            let pick = ControllerCmd::Pick {
+                vehicle: id.clone(),
+                open: false,
+            };
+            h.handle(&net(&format!("fake-{k}"), Channel::Cmd, pick.encode()))
+                .unwrap();
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": 30 }));
+        let seen = cmd(&mut h, json!({ "cmd": "observe" }));
+        let source = |k: usize| {
+            let seats = seen["host"]["seats"].as_array().unwrap();
+            let s = seats
+                .iter()
+                .find(|s| s["endpoint"] == format!("fake-{k}"))
+                .unwrap();
+            s["source"].as_u64().unwrap() as u16
+        };
+        let start = h.tick();
+        for t in (0..ticks).step_by(6) {
+            for k in 0..2usize {
+                let drive = [if k == 1 { -9_000 } else { 0 }, 32_767];
+                let batch = StateBatch {
+                    minor: STATE_MINOR,
+                    batch_seq: (t / 6) as u16 + 1,
+                    sent_at_ms: 0,
+                    records: vec![StateRecord {
+                        source: SourceHandle(source(k)),
+                        seq: (t / 6) as u16 + 1,
+                        drive,
+                        action: [0, 0],
+                        flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+                    }],
+                };
+                let bytes = net(
+                    &format!("fake-{k}"),
+                    Channel::State,
+                    batch.encode().unwrap(),
+                );
+                h.schedule(start + t, &bytes).unwrap();
+            }
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": ticks }));
+        let seen = cmd(&mut h, json!({ "cmd": "observe" }));
+        let vehicles: Vec<u64> = seen["cars"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["vehicle"].as_u64().unwrap())
+            .collect();
+        assert_eq!(vehicles, [0, 1], "each seat's car is the vehicle it picked");
+        let hash = h.state_hash();
+        jj_map::hex(&hash)
+    }
+
+    /// R123 determinism: a mixed-roster round through the host (vehicles table, picks, free-drive cars) replays to the
+    /// committed hash; web/host/tests/roster-wasm.test.mjs holds the WASM build to the same hash.
+    /// `JJ_BLESS=1` rewrites the committed hash.
+    #[test]
+    fn a_mixed_roster_through_the_host_hashes_to_the_committed_value() {
+        let mut fx: Value = serde_json::from_str(MIXED_HOST).unwrap();
+        let ticks = fx["ticks"].as_u64().unwrap();
+        let hash = mixed_host_hash(ticks);
+        assert_eq!(hash, mixed_host_hash(ticks), "the run repeats");
+        if std::env::var_os("JJ_BLESS").is_some() {
+            fx["hash"] = json!(hash);
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../scenarios/roster/mixed-host.json");
+            std::fs::write(
+                path,
+                format!("{}\n", serde_json::to_string_pretty(&fx).unwrap()),
+            )
+            .unwrap();
+            return;
+        }
+        assert_eq!(
+            hash,
+            fx["hash"].as_str().unwrap(),
+            "re-bless with JJ_BLESS=1 only for a deliberate change"
+        );
+    }
+
     /// The `jj sim` loop (crates/jj-tools/src/sim) over the whole fixture: the native reference hash.
     fn native_hash(fixture: &str) -> String {
         let fx: Fixture = serde_json::from_str(fixture).unwrap();

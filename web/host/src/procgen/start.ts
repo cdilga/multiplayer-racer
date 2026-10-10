@@ -76,6 +76,8 @@ export async function startPreparation(client: SimClient, world: World, params: 
         : null;
     },
     reroll: () => preparer.reroll(),
+    /** The owner tuning menu's Regenerate (br-2sdu.3): the current seed again with a tuned `jj.generator` document. */
+    regenerate: (generator?: string) => preparer.regenerate(generator),
     failure: () => ({ visible: failure.visible }),
   };
   return preparer;

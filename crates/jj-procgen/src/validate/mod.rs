@@ -17,10 +17,10 @@
 
 use jj_map::{Biome, Map, Registry, validate};
 
+use crate::Report;
 use crate::biome::{self, SelectError};
 use crate::features;
 use crate::seed::Streams;
-use crate::{Report, generate_recipe_from};
 
 /// Course draws tried with the full recipe (the seed's own, then derived ones).
 pub const MAX_DRAWS: u32 = 3;
@@ -92,6 +92,16 @@ pub fn prepare(seed: u64, recipe: &[Biome]) -> Prepared {
 /// [`prepare`] with `draws` course draws for the full recipe (the Playtest-1 recipe allows more, so every track keeps all
 /// four biomes: [`crate::playtest`]). The ladder stays bounded: `draws` + recipe length + `draws` generations at most.
 pub fn prepare_with(seed: u64, recipe: &[Biome], draws: u32) -> Prepared {
+    prepare_tuned(seed, recipe, draws, crate::tuning::GeneratorData::shipped())
+}
+
+/// [`prepare_with`] with explicit generator data (br-2sdu.3).
+pub fn prepare_tuned(
+    seed: u64,
+    recipe: &[Biome],
+    draws: u32,
+    data: &crate::tuning::GeneratorData,
+) -> Prepared {
     let registry = biome::registry();
     let mut lap: Vec<Biome> = Vec::new();
     for &b in recipe {
@@ -104,7 +114,7 @@ pub fn prepare_with(seed: u64, recipe: &[Biome], draws: u32) -> Prepared {
     }
     let mut attempts: Vec<Attempt> = Vec::new();
     let mut try_one = |rec: &[Biome], draw: u32| -> Option<(Map, Report)> {
-        let (map, course) = match generate_recipe_from(streams(seed, draw), rec) {
+        let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
             Ok(m) => m,
             Err(e) => {
                 attempts.push(Attempt {
@@ -171,7 +181,7 @@ pub fn prepare_with(seed: u64, recipe: &[Biome], draws: u32) -> Prepared {
         }
     }
     // Never silent: hand back the seed's own conservative map, flagged invalid, with every rejection logged.
-    let (map, course) = generate_recipe_from(streams(seed, 0), &lap[..1])
+    let (map, course) = crate::generate_tuned_from(streams(seed, 0), &lap[..1], data)
         .expect("a single biome needs no boundary");
     Prepared {
         map,

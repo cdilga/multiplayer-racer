@@ -2703,10 +2703,10 @@
     "air_level_damping": 3500.0,
     "surfaces": {
       "tarmac": 1.0,
-      "packed_dirt": 0.8,
-      "gravel": 0.7,
+      "packed_dirt": 0.7,
+      "gravel": 0.62,
       "rock": 0.9,
-      "off_track": 0.6
+      "off_track": 0.45
     },
     "damage": {
       "health_front": 120.0,

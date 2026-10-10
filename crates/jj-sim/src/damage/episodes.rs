@@ -113,10 +113,11 @@ impl Episodes {
         world: &PhysicsWorld,
         pre: &PreStep,
         cars: &[CarParts<'_>],
-        t: &DamageTuning,
+        ts: &[&DamageTuning],
         tick: u64,
     ) {
         for car in cars {
+            let t = ts[car.car as usize];
             let Some(me) = car
                 .parts
                 .first()
@@ -219,14 +220,16 @@ impl Episodes {
     pub(crate) fn close(
         &mut self,
         tick: u64,
-        t: &DamageTuning,
+        ts: &[&DamageTuning],
         damage: &mut [CarDamage],
     ) -> Vec<DamageEvent> {
-        let window = (libm::roundf(t.window_ms * 0.001 * TICK_HZ as f32) as u64).max(1);
+        let window_of = |car: u32| {
+            (libm::roundf(ts[car as usize].window_ms * 0.001 * TICK_HZ as f32) as u64).max(1)
+        };
         let due: Vec<_> = self
             .open
             .iter()
-            .filter(|(_, e)| tick + 1 >= e.start + window)
+            .filter(|(k, e)| tick + 1 >= e.start + window_of(k.0))
             .map(|(k, _)| *k)
             .collect();
         let mut events = Vec::new();
@@ -235,6 +238,7 @@ impl Episodes {
                 continue;
             };
             let (car, part) = (key.0, key.1 as usize);
+            let t = ts[car as usize];
             let Some(d) = damage.get_mut(car as usize) else {
                 continue;
             };

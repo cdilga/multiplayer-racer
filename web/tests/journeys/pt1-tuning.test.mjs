@@ -5,7 +5,10 @@
 // $JJ_CAPTURE_DIR when set.
 //   node --test web/tests/journeys/pt1-tuning.test.mjs
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
@@ -192,4 +195,103 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
     await phone.waitForTimeout(30);
   }
   assert.deepEqual(errors, []);
+});
+
+// Part 3 (br-2sdu.3): the generator data in the same panel. Length band and relief are changed, a value the generator's
+// validator refuses is shown and kept out, Regenerate builds the same seed again with them, and the measured track
+// matches; a second Regenerate with the same values builds the identical track (the journalled values replay it).
+test('?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export', { timeout: 300_000 }, async () => {
+  const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
+  const errors = [];
+  host.on('pageerror', (e) => errors.push(e.message));
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9&tune`);
+  await wait(host, () => window.__jjRoom?.view()?.phase === 'Lobby' && !!window.__jjTune, undefined, 90_000);
+  const built = () => host.evaluate(() => window.__jjPrepare.seeds().filter((s) => s.lengthM !== undefined).at(-1) ?? null);
+  await host.evaluate(() => window.__jjPrepare.reroll()); // the Lobby asks for its first track (the shipped data)
+  await wait(host, () => window.__jjPrepare.seeds().some((s) => s.lengthM !== undefined), undefined, 90_000);
+  const first = await built();
+  assert.equal(first.generator, undefined, 'the first track is built with the shipped data');
+
+  await host.locator('.jj-tune-toggle').click();
+  const field = (path) => host.locator(`[data-field="generator.${path}"]`);
+  const setField = async (path, value) => {
+    await field(path).fill(String(value));
+    await field(path).dispatchEvent('change');
+  };
+  await field('course.lengthMinM').waitFor();
+  assert.equal(Number(await field('course.lengthMinM').inputValue()), 700, 'the generator rows come from the shipped data file');
+  assert.equal(await host.locator('[data-tune-regenerate]').count(), 1);
+
+  // Relief first: the course is the same (its band is unchanged), so only the heights differ.
+  await host.evaluate(() => document.querySelectorAll('.jj-tune details').forEach((d) => (d.open = true)));
+  for (const b of ['town', 'rocks', 'outbackDirt', 'outbackBitumen']) {
+    await setField(`biomes.${b}.terrain.reliefM`, 40);
+    await setField(`biomes.${b}.terrain.maxGrade`, 0.12);
+  }
+  const regenerate = async () => {
+    const n = await host.evaluate(() => window.__jjPrepare.seeds().length);
+    await host.locator('[data-tune-regenerate]').click();
+    await wait(host, (n) => { const s = window.__jjPrepare.seeds(); return s.length > n && s.at(-1).lengthM !== undefined; }, n, 60_000);
+    return built();
+  };
+  const taller = await regenerate();
+  assert.equal(taller.seed, first.seed, 'Regenerate builds the current seed again');
+  assert.ok(taller.generator, 'the preparer records the generator document it used');
+  assert.equal(taller.lengthM, first.lengthM, 'the same course: the length did not move');
+  assert.ok(taller.reliefM > first.reliefM * 1.3, `measured relief ${first.reliefM} -> ${taller.reliefM} m`);
+
+  // Then the length band. A band whose minimum is above its maximum is refused by the generator's own validator:
+  // shown, never kept.
+  await setField('course.lengthMinM', 720);
+  await setField('course.lengthMaxM', 820);
+  await setField('course.lengthMinM', 5000);
+  await host.locator('[data-tune-error]').getByText('lengthMinM').waitFor({ timeout: 5000 });
+  assert.equal(Number(await field('course.lengthMinM').inputValue()), 720, 'the row goes back to the last good value');
+  const held = (await host.evaluate(() => window.__jjTune.inspect())).patch;
+  assert.equal(held.generator, 'assets/profiles/generator.json');
+  assert.equal(held.generatorSet.length, 10);
+  assert.ok(held.generatorSet.some(([f, v]) => f === 'course.lengthMinM' && v === '720'));
+  if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-refused-1920x1080.png` });
+  const tuned = await regenerate();
+  assert.equal(tuned.seed, first.seed);
+  assert.ok(tuned.lengthM >= 720 && tuned.lengthM <= 820, `measured length ${tuned.lengthM} m is inside the tuned band 720-820`);
+  console.log(`# seed ${first.seed}: length ${first.lengthM} -> ${tuned.lengthM} m, relief ${first.reliefM} -> ${taller.reliefM} m (same course) -> ${tuned.reliefM} m`);
+  await host.locator('[data-tune-built]').getByText(`${tuned.lengthM} m long`).waitFor({ timeout: 5000 });
+  if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-built-1920x1080.png` });
+
+  // Replay: the same values on the same seed build the same track, bit for bit.
+  const again = await regenerate();
+  assert.deepEqual([again.seed, again.generator, again.lengthM, again.reliefM], [tuned.seed, tuned.generator, tuned.lengthM, tuned.reliefM]);
+  const journal = (await host.evaluate(() => window.__jjTune.inspect())).generatorJournal;
+  assert.equal(journal.length, 3);
+  assert.deepEqual(journal[1].set, journal[2].set);
+
+  // Reset puts a row back and out of the export; the export downloads with the generator patch.
+  await host.locator('[data-reset="generator.course.lengthMaxM"]').click();
+  assert.equal(Number(await field('course.lengthMaxM').inputValue()), 1100);
+  const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
+  assert.ok(!patch.generatorSet.some(([f]) => f === 'course.lengthMaxM'));
+  if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-reset-1920x1080.png` });
+  const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
+  assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);
+  assert.deepEqual(errors, []);
+});
+
+// Parent AC1 (br-2sdu): a production build (JJ_PRODUCTION=1) contains none of the tuning code, the generator rows included.
+test('a production build contains no tuning panel code', { timeout: 300_000 }, () => {
+  const web = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+  const out = join('dist-test', 'pt1prod');
+  execFileSync(process.execPath, [join(web, 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--outDir', out, '--logLevel', 'error'], {
+    cwd: web,
+    env: { ...process.env, JJ_PRODUCTION: '1' },
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  const files = [];
+  const walk = (d) => readdirSync(d, { withFileTypes: true }).forEach((e) => (e.isDirectory() ? walk(join(d, e.name)) : /\.(js|css|html)$/.test(e.name) && files.push(join(d, e.name))));
+  walk(join(web, out));
+  assert.ok(files.length > 5);
+  for (const f of files) {
+    const text = readFileSync(f, 'utf8');
+    for (const marker of ['jj-tune', 'jj.tuning-patch', 'Owner tuning', 'generatorWith', 'data-tune-regenerate']) assert.ok(!text.includes(marker), `${f} contains ${marker}`);
+  }
 });

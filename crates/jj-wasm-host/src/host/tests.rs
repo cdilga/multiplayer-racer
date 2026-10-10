@@ -2828,3 +2828,135 @@ fn a_host_pads_right_stick_steers_and_its_left_stick_drives() {
     assert!(i.throttle > 15_000, "the left stick drives: {i:?}");
     assert!(i.steer.abs() > 15_000, "the right stick steers: {i:?}");
 }
+
+/// The roster's `(id, profile JSON)` pairs, in roster order, read from the data files (R123: no vehicle is named in code).
+fn roster_files() -> Vec<(String, String)> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let roster: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("web/shared/src/roster.json")).unwrap(),
+    )
+    .unwrap();
+    roster["cars"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| {
+            let id = c["id"].as_str().unwrap().to_owned();
+            let json =
+                std::fs::read_to_string(root.join(format!("assets/profiles/{id}.json"))).unwrap();
+            (id, json)
+        })
+        .collect()
+}
+
+/// br-bwju.7 (R123): two phones pick different roster vehicles; each car is built from its own profile, the snapshot
+/// names each car's vehicle, and the tuning menu edits one vehicle's profile only.
+#[test]
+fn each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicle() {
+    let roster = roster_files();
+    assert!(roster.len() >= 2, "the roster has at least two vehicles");
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    h.handle(
+        &MainToSim::Vehicles {
+            vehicles: roster.clone(),
+        }
+        .encode(),
+    )
+    .unwrap();
+    let mut now = 0;
+    let mut step = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    for (k, who) in ["phone-a", "phone-b"].into_iter().enumerate() {
+        let phone = |c: ControllerCmd| net(who, Channel::Cmd, c.encode());
+        h.handle(&phone(ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(who.into()),
+            resume: None,
+        }))
+        .unwrap();
+        h.handle(&phone(ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("P{k}"),
+        }))
+        .unwrap();
+        step(&mut h, 30);
+        h.handle(&phone(ControllerCmd::Pick {
+            vehicle: roster[k].0.clone(),
+            open: false,
+        }))
+        .unwrap();
+        step(&mut h, 30);
+    }
+    let sim = h.sim();
+    let cars: Vec<CarId> = sim.cars().collect();
+    assert_eq!(cars.len(), 2);
+    for (k, &c) in cars.iter().enumerate() {
+        let want = jj_sim::VehicleProfile::from_json(&roster[k].1).unwrap();
+        assert_eq!(sim.vehicle_of(c), Some(k));
+        assert_eq!(sim.profile_of(c).unwrap().tuning.mass, want.tuning.mass);
+        assert_eq!(
+            sim.profile_of(c).unwrap().tuning.max_engine_force,
+            want.tuning.max_engine_force
+        );
+    }
+    // The snapshot carries each car's vehicle in the top half of its flags (record 64 B after the 40 B header).
+    let mut buf = vec![0; h.snapshot_size()];
+    assert_eq!(h.write_snapshot(&mut buf), buf.len());
+    let flags = |k: usize| {
+        let at = SNAPSHOT_HEADER + k * SNAPSHOT_CAR + 52;
+        u32::from_le_bytes(buf[at..at + 4].try_into().unwrap())
+    };
+    assert_eq!((flags(0) >> 16, flags(1) >> 16), (0, 1));
+    // The room names the table, so a renderer maps the index to a roster id.
+    let tuning: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        tuning["vehicles"],
+        serde_json::json!(roster.iter().map(|r| &r.0).collect::<Vec<_>>())
+    );
+    // Tuning follows the selected vehicle: the second one's rows change only its cars.
+    let before = h.sim().profile_at(0).unwrap().tuning.max_engine_force;
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(1),
+            ui: UiCommand::TuneVehicle {
+                vehicle: roster[1].0.clone(),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(2),
+            ui: UiCommand::SetTuning {
+                field: "max_engine_force".into(),
+                value: "12345".into(),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    step(&mut h, 5);
+    assert_eq!(
+        h.sim().profile_of(cars[1]).unwrap().tuning.max_engine_force,
+        12345.0
+    );
+    assert_eq!(
+        h.sim().profile_of(cars[0]).unwrap().tuning.max_engine_force,
+        before
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        (
+            shown["vehicle"].as_str(),
+            shown["tuning"]["max_engine_force"].as_f64()
+        ),
+        (Some(roster[1].0.as_str()), Some(12345.0))
+    );
+}

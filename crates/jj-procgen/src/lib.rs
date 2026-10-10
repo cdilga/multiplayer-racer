@@ -25,9 +25,10 @@ pub mod scatter;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
+pub mod tuning;
 pub mod validate;
 
-pub use validate::{Plan, Prepared, prepare, prepare_with};
+pub use validate::{Plan, Prepared, prepare, prepare_tuned, prepare_with};
 
 use std::collections::BTreeMap;
 
@@ -75,10 +76,20 @@ pub fn generate_recipe(seed: u64, recipe: &[Biome]) -> Result<(Map, Report), bio
 /// [`generate_recipe`] from explicit streams. The pipeline: course, biome selection, assembly (route surfaces by biome),
 /// terrain, features, the shared wayfinding family, then each biome's scatter.
 pub fn generate_recipe_from(
-    mut st: Streams,
+    st: Streams,
     recipe: &[Biome],
 ) -> Result<(Map, Report), biome::SelectError> {
-    let course = course::design(&mut st.structure);
+    generate_tuned_from(st, recipe, tuning::GeneratorData::shipped())
+}
+
+/// [`generate_recipe_from`] with explicit generator data (the owner tuning menu's regenerate): the course's length band
+/// and straights, each biome's terrain and feature mix. With the shipped data this is the untuned generator.
+pub fn generate_tuned_from(
+    mut st: Streams,
+    recipe: &[Biome],
+    data: &tuning::GeneratorData,
+) -> Result<(Map, Report), biome::SelectError> {
+    let course = course::design_with(&mut st.structure, &data.course);
     let centerline = centred(&resample(&course.points));
     let sel = biome::select(&centerline, recipe, &mut st.structure)?;
     let props = placeholder_props(&mut st, &centerline);
@@ -103,7 +114,7 @@ pub fn generate_recipe_from(
     });
     let along: Vec<terrain::TerrainParams> = blend
         .iter()
-        .map(|&(a, b, t)| terrain::params(a).lerp(&terrain::params(b), t))
+        .map(|&(a, b, t)| data.terrain(a).lerp(&data.terrain(b), t))
         .collect();
     terrain::undulate_along(&mut map, &mut st.terrain, &along);
     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
@@ -122,7 +133,7 @@ pub fn generate_recipe_from(
             } else {
                 sel.total
             };
-            (lo, hi, features::density(b))
+            (lo, hi, data.density(b))
         })
         .collect();
     features::place_in(&mut map, &mut st.features, &ranges);

@@ -1,7 +1,7 @@
 //! `jj vehicle sync` and profile validation (P1-S03a): a vehicle profile's geometry (`assets/profiles/<car>.json`) is
 //! derived from the baked sidecar it names (P1-V02), never typed in. Sync rewrites the geometry and the source hashes;
 //! validate re-derives them and fails when the bake has moved on.
-//! `jj vehicle tune <patch.json>` applies the host's tuning export (`jj.tuning-patch.v1`) to a profile's `tuning`.
+//! `jj vehicle tune <patch.json>` applies the host's tuning export (`jj.tuning-patch.v1`) to a profile's `tuning`, the input profile and the generator data.
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -265,6 +265,11 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         input_profile: Option<String>,
         #[serde(default)]
         input_set: Vec<(String, String)>,
+        /// The generator data file and its changes (br-2sdu.3), paths as in that file (`course.lengthMinM`).
+        #[serde(default)]
+        generator: Option<String>,
+        #[serde(default)]
+        generator_set: Vec<(String, String)>,
     }
     let raw: Value = serde_json::from_str(&read_text(patch_path)?)
         .map_err(|e| format!("{}: {e}", patch_path.display()))?;
@@ -316,7 +321,28 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         }
         _ => None,
     };
+    let generator_write = match (&patch.generator, patch.generator_set.is_empty()) {
+        (Some(path), false) => {
+            let old = jj_procgen::tuning::GeneratorData::from_json(&read_text(Path::new(path))?)
+                .map_err(|e| format!("{path}: {e}"))?;
+            let new = old
+                .with_fields(&patch.generator_set)
+                .map_err(|e| format!("{path}: {e}"))?;
+            for (field, raw) in &patch.generator_set {
+                changes.push(format!("generator {field}: -> {raw}"));
+            }
+            let out = serde_json::to_string_pretty(&new).map_err(|e| e.to_string())? + "\n";
+            Some((path.clone(), out))
+        }
+        (None, false) => {
+            return Err("the patch has generator changes but no generator file".to_owned());
+        }
+        _ => None,
+    };
     if !check {
+        if let Some((path, out)) = generator_write {
+            std::fs::write(&path, out).map_err(|e| format!("{path}: {e}"))?;
+        }
         std::fs::write(profile_path, text)
             .map_err(|e| format!("{}: {e}", profile_path.display()))?;
         if let Some((path, out)) = input_write {
@@ -374,6 +400,52 @@ mod tests {
             json!({ "contract": contract, "profile": profile.to_str().unwrap(), "set": set });
         std::fs::write(&patch, body.to_string()).unwrap();
         (profile, patch)
+    }
+
+    #[test]
+    fn tune_applies_generator_changes_and_refuses_invalid_ones_whole() {
+        let (profile, patch) = fixture("generator", TUNING_PATCH, json!([]));
+        let file = profile.with_file_name("generator.json");
+        std::fs::copy(
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../assets/profiles/generator.json"
+            ),
+            &file,
+        )
+        .unwrap();
+        let write = |set: Value| {
+            let body = json!({ "contract": TUNING_PATCH, "profile": profile.to_str().unwrap(),
+                "set": [], "generator": file.to_str().unwrap(), "generatorSet": set });
+            std::fs::write(&patch, body.to_string()).unwrap();
+        };
+        let original = std::fs::read_to_string(&file).unwrap();
+        // A band whose minimum is above its maximum, and an unknown field: refused, nothing written.
+        for bad in [
+            json!([["course.lengthMinM", "5000"]]),
+            json!([["course.nope", "1"]]),
+        ] {
+            write(bad);
+            assert!(tune(&patch, false).is_err());
+            assert_eq!(std::fs::read_to_string(&file).unwrap(), original);
+        }
+        write(json!([
+            ["course.lengthMinM", "800"],
+            ["biomes.town.terrain.reliefM", "9"]
+        ]));
+        assert_eq!(tune(&patch, true).unwrap().len(), 2);
+        assert_eq!(
+            std::fs::read_to_string(&file).unwrap(),
+            original,
+            "--check writes nothing"
+        );
+        assert_eq!(tune(&patch, false).unwrap().len(), 2);
+        let after =
+            jj_procgen::tuning::GeneratorData::from_json(&std::fs::read_to_string(&file).unwrap())
+                .expect("the written file validates");
+        assert_eq!(after.course.length_min_m, 800.0);
+        assert_eq!(after.biomes.town.terrain.relief_m, 9.0);
+        assert_eq!(after.course.length_max_m, 1100.0, "the rest is kept");
     }
 
     #[test]
