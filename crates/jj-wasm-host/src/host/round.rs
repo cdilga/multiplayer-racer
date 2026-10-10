@@ -404,6 +404,8 @@ impl Host {
                     "choosing": self.picks.get(&s.id).is_some_and(|p| p.1),
                     "presence": format!("{:?}", s.presence),
                     "local": s.endpoint.0.starts_with("local:"),
+                    // The transport endpoint (an id, never the secret): diagnostics match it to the peer's path.
+                    "endpoint": (!s.endpoint.0.starts_with("local:")).then_some(s.endpoint.0.as_str()),
                     "car": car,
                     "laps": race.map(|r| r.laps),
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),

@@ -13,7 +13,7 @@ import { enterFullscreen, fullscreenSupport } from '../layout/fullscreen';
 import { setPositions } from '../layout/positions';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
 
-type Seat = RoomView['seats'][number] & { endpoint?: string };
+type Seat = RoomView['seats'][number];
 type UiInput = Extract<SimInput, { type: 'ui' }>['ui'];
 
 export interface ChromeOptions {
@@ -320,9 +320,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       let rtt = '–';
       if (s.local) cell = 'Host keys or pad (local)';
       else {
-        const p = s.endpoint === undefined ? undefined : paths[s.endpoint];
-        if (s.endpoint !== undefined) mapped.add(s.endpoint);
-        cell = s.presence === 'Left' ? 'Away' : s.endpoint === undefined ? 'unknown' : pathLabel(p);
+        const p = s.endpoint ? paths[s.endpoint] : undefined;
+        if (s.endpoint) mapped.add(s.endpoint);
+        cell = s.presence === 'Left' ? 'Away' : !s.endpoint ? 'unknown' : pathLabel(p);
         if (p?.rttMs !== null && p?.rttMs !== undefined) rtt = `${p.rttMs} ms`;
       }
       return `<tr data-seat="${s.seat}"><td><span class="badge" style="${colour(s)}">#${s.number}</span></td><td class="nm">${esc(shortName(seatName(s), 16))}</td><td data-path>${esc(cell)}</td><td data-rtt>${rtt}</td></tr>`;

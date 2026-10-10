@@ -60,6 +60,7 @@ test('diagnostics: a direct phone with a measured RTT and the host frame time; c
   await wait(host, () => !!document.querySelector('.jj-diag [data-diag-host]'), undefined, 10_000);
   const p = await panel(host);
   assert.equal(p.hidden, false);
+  assert.equal(p.paths.length, 1, `one row: the phone's seat, not an unclaimed viewer too: ${JSON.stringify(p)}`);
   assert.match(p.paths[0], /^Direct/, `the phone's path: ${JSON.stringify(p)}`);
   assert.match(p.rtts[0], /^\d+ ms$/, 'a measured RTT');
   assert.match(p.host, /Host frame [\d.]+ ms/, 'the host frame time');
