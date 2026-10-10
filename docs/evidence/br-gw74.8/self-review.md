@@ -6,7 +6,7 @@ Two wiring gaps, not missing code: the real room page mounted the round screens 
 each seat's transport endpoint, so even with paths a phone's seat read "unknown" and its connection showed again as an
 unclaimed "Viewer". The panel also stayed up across screen changes.
 
-## Fix
+## Defects found and fixed
 - Real room: paths, Disband's `hub.end()` and the host's own numbers are passed to the round screens.
 - Room view seats carry `endpoint` (an id, never the secret; null for host pads), so seats match their peers.
 - The panel adds a host line: frame time and p95, and host pads' input age (p50, worst pad).

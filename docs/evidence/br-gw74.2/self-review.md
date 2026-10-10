@@ -5,7 +5,7 @@ The "Back to full screen" prompt (z-index 6) shows when full screen is lost mid-
 so the prompt sat over the sheet's Steering row and its dismiss X over Reset controls (the owner's screenshot). The sheet
 itself already scrolled, but a row cut at the bottom edge with no cue read as broken.
 
-## Fix
+## Defects found and fixed
 - Any sheet over the sticks (settings, which has its own full-screen switch; cars; the scanner) hides the prompt; it
   returns when the sheet closes.
 - The sheet's bottom edge fades while there's more to scroll to (`data-more`), and the fade goes at the end.
