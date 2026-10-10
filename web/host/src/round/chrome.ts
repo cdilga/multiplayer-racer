@@ -26,6 +26,14 @@ export interface ChromeOptions {
   paths?: () => Promise<Record<string, PathStats | null>>;
   /** Ends the room for everyone on the network side (`HostHub.end()`): called with Disband room. */
   onDisband?: () => void;
+  /** The host's own numbers for diagnostics: frame time and its p95 (ms), and host pads' input age p50 (ms). */
+  hostStats?: () => Promise<HostStats>;
+}
+
+export interface HostStats {
+  frameMs: number;
+  p95Ms: number | null;
+  padAgeMs: number | null;
 }
 
 export interface Chrome {
@@ -322,7 +330,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     // Peers that no seat claims yet (opened the page, not claimed): their path is still useful.
     const extra = Object.entries(paths).filter(([ep]) => !mapped.has(ep));
     const loose = extra.map(([, p], i) => `<tr class="loose"><td>–</td><td class="nm">Viewer ${i + 1}</td><td data-path>${esc(pathLabel(p))}</td><td data-rtt>${p?.rttMs ?? '–'}${p?.rttMs == null ? '' : ' ms'}</td></tr>`);
-    const html = `<h3 class="display">Diagnostics</h3><p class="dg-line">Room <b data-diag-code>${esc(opts.code)}</b> · ${esc(room.phase)}${room.round ? ` · round ${room.round}` : ''} · ${seats.length} in the room</p>
+    const hs = opts.hostStats ? await opts.hostStats().catch(() => null) : null;
+    const ms = (v: number) => `${v < 10 ? v.toFixed(1) : Math.round(v)} ms`;
+    const hostLine = hs
+      ? `<p class="dg-line" data-diag-host>Host frame <b>${ms(hs.frameMs)}</b>${hs.p95Ms !== null ? ` · p95 ${ms(hs.p95Ms)}` : ''}${hs.padAgeMs !== null ? ` · host pads' input age ${ms(hs.padAgeMs)}` : ''}</p>`
+      : '';
+    if (!state.diagnostics) return; // closed while the numbers were fetched
+    const html = `<h3 class="display">Diagnostics</h3><p class="dg-line">Room <b data-diag-code>${esc(opts.code)}</b> · ${esc(room.phase)}${room.round ? ` · round ${room.round}` : ''} · ${seats.length} in the room</p>${hostLine}
       <table><thead><tr><th></th><th>Player</th><th>Path</th><th>RTT</th></tr></thead><tbody>${rows.join('')}${loose.join('')}</tbody></table>
       <p class="dg-note">Addresses are never shown.</p>`;
     if (diagEl.dataset.last !== html) {
@@ -377,6 +391,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     askRemove: (seat) => confirm('remove', seat),
     toggleDiagnostics,
     update(r) {
+      // A screen change (the phase moves) closes diagnostics, so it never hangs half-open over the next screen.
+      if (state.diagnostics && room && room.phase !== r.phase) toggleDiagnostics(false);
       room = r;
       const n = r.seats.length;
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;

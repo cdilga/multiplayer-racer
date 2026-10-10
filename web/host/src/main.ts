@@ -307,7 +307,14 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   }
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
   // The round screens (P1-R07) own the lobby and results; the per-tile HUD follows the tile rects the grid reports.
-  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl }) : null;
+  // Diagnostics read the real network paths and the host's own numbers (owner playtest 1: the panel showed none);
+  // Disband ends the room on the network side too.
+  const hostStats = async () => {
+    const pads = await client.inputStats().catch(() => []);
+    const ages = pads.filter((p) => p.samples > 0).map((p) => p.p50);
+    return { frameMs: world.stats.frameMs, p95Ms: world.stats.p95Ms ?? null, padAgeMs: ages.length ? Math.max(...ages) : null };
+  };
+  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl, paths: () => bridge.hub.paths(), onDisband: () => void bridge.hub.end(), hostStats }) : null;
   roundScreens = screens;
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);

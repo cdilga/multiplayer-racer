@@ -11,7 +11,7 @@ import type { SimInput } from '../worker/messages';
 import { onProfileChange, screenScale } from '../layout/profile';
 import { esc, raceTime, secs, shortName } from './format';
 import type { PathStats } from '../../../shared/transport/stats';
-import { type Chrome, mountChrome } from './chrome';
+import { type Chrome, type HostStats, mountChrome } from './chrome';
 import { fitGrid, type Fit, type Tier } from './fit';
 import { mountHud, type Hud } from './hud';
 import './round.css';
@@ -72,6 +72,8 @@ export interface JoinInfo {
   paths?: () => Promise<Record<string, PathStats | null>>;
   /** Ends the room on the network side (`HostHub.end()`) when the host disbands it. */
   onDisband?: () => void;
+  /** The host's frame time and host pads' input age for diagnostics. */
+  hostStats?: () => Promise<HostStats>;
 }
 
 export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScreens {
@@ -100,7 +102,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
   applyK();
 
   const domain = join.joinUrl ? new URL(join.joinUrl).host : '';
-  const chrome = mountChrome(root, { code: join.code, domain, joinUrl: join.joinUrl, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband }, paintKit);
+  const chrome = mountChrome(root, { code: join.code, domain, joinUrl: join.joinUrl, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband, hostStats: join.hostStats }, paintKit);
   /** The join QR card sized to whole device pixels per module (never under `minPx` CSS px per module: the bead's 4 px at 1080p). */
   const qrCard = (maxPx: number) => {
     const modules = paperQrSvg(join.joinUrl).modules;
