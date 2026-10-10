@@ -73,7 +73,7 @@ test('?tune: a live change mid-race reaches the sim and the cars; reset; export'
   const t0 = Date.now();
   await field.fill('0');
   await field.dispatchEvent('change');
-  await wait(host, () => window.__jjTune.inspect().current.max_engine_force === 0, undefined, 1_000);
+  await wait(host, () => window.__jjTune.inspect().current.max_engine_force === 0, undefined, 5_000); // inside 1 s on the Mac (self-review); CI runners are several times slower
   const appliedMs = Date.now() - t0;
   await host.waitForTimeout(4000);
   const after = await meanSpeed(host);
@@ -87,12 +87,12 @@ test('?tune: a live change mid-race reaches the sim and the cars; reset; export'
   if (await gravel.count()) {
     await gravel.fill('0.5');
     await gravel.dispatchEvent('change');
-    await wait(host, () => window.__jjTune.inspect().current['surfaces.gravel'] === 0.5, undefined, 1_000);
+    await wait(host, () => window.__jjTune.inspect().current['surfaces.gravel'] === 0.5, undefined, 5_000);
   }
 
   // Reset puts the engine back and it drops out of the export.
   await host.locator('[data-reset="max_engine_force"]').click();
-  await wait(host, (v) => window.__jjTune.inspect().current.max_engine_force === v, original, 1_000);
+  await wait(host, (v) => window.__jjTune.inspect().current.max_engine_force === v, original, 5_000);
   const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
   assert.ok(!patch.set.some(([f]) => f === 'max_engine_force'), `reset leaves it out of the export: ${JSON.stringify(patch)}`);
 
