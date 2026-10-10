@@ -262,6 +262,24 @@ fn host_samples() -> Vec<HostCmd> {
                 source: SourceHandle(4),
             }),
         },
+        HostCmd::InputProfile(InputThresholds {
+            steer_radial_deadzone: 400,
+            steer_gamma: 1000,
+            drift_enter_angle: 7000,
+            drift_enter_deflection: 9000,
+            drift_exit_angle: 5800,
+            drift_exit_deflection: 7500,
+            drift_max_pull_back: 3500,
+            launch_snap_to: 9000,
+            launch_snap_window_ms: 250,
+            launch_cooldown_ms: 4000,
+            launch_reverse_delay_ms: 900,
+            flick_rim: 9000,
+            flick_arm_below: 3500,
+            flick_max_travel_ms: 180,
+            flick_max_angle: 3000,
+            flick_cooldown_ms: 350,
+        }),
     ]
 }
 
@@ -276,9 +294,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::IdleCue { .. } => "idle-cue",
         HostCmd::Removed => "removed",
         HostCmd::ForSource { .. } => "for-source",
+        HostCmd::InputProfile(_) => "input-profile",
     }
 }
-const HOST_VARIANTS: [&str; 9] = [
+const HOST_VARIANTS: [&str; 10] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -288,6 +307,7 @@ const HOST_VARIANTS: [&str; 9] = [
     "idle-cue",
     "removed",
     "for-source",
+    "input-profile",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.

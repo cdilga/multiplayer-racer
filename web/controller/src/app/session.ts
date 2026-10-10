@@ -134,6 +134,9 @@ export class Session {
   onAction: (kind: number) => void = () => {};
 
   private endpoint: wasm.WasmEndpoint | null = null;
+  /** The host's last `InputProfile` (owner tuning menu): whether the endpoint accepted it, and when it arrived. */
+  private inputProfileApplied: boolean | null = null;
+  private inputProfileAt: number | null = null;
   private srcIdx = -1;
   private stored: Stored | null = null;
   private store = storage();
@@ -390,6 +393,15 @@ export class Session {
       return;
     }
     if (typeof cmd !== 'object') return;
+    if ('InputProfile' in cmd) {
+      // The owner tuning menu changed the input thresholds (br-2sdu.2): every source of this connection reads them from
+      // its next sample. Endpoint-wide, so it reaches the hub's shared endpoint as well as this session's own.
+      const json = JSON.stringify(cmd.InputProfile);
+      this.inputProfileApplied = (this.endpoint?.setInputProfile(json) ?? true) && (this.shared?.setInputProfile(json) ?? true);
+      this.inputProfileAt = performance.now();
+      this.onChange();
+      return;
+    }
     if ('Welcome' in cmd) {
       const w = cmd.Welcome as { seat: number; number: number; colour: { rgb: [number, number, number] }; source: number };
       this.you = { seat: w.seat, number: w.number, rgb: w.colour.rgb, source: w.source };
@@ -402,6 +414,7 @@ export class Session {
       } else {
         this.endpoint?.free();
         this.endpoint = new wasm.WasmEndpoint();
+        this.inputProfileApplied = null; // a new endpoint reads the shipped thresholds until the host sends a tuned profile
         this.srcIdx = this.endpoint.addSource(w.source);
       }
       this.endpoint.setClassic(this.srcIdx, this.classicLayout);
@@ -673,6 +686,9 @@ export class Session {
       link: this.link?.inspect() ?? null,
       source: this.parent ? this.via : null,
       kids: [...this.kids.keys()],
+      inputProfile: this.endpoint
+        ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown, driftHeld: this.srcIdx >= 0 ? this.endpoint.driftHeld(this.srcIdx) : false }
+        : null,
       inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
     };

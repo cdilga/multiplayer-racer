@@ -3,16 +3,30 @@
 // groups), so a new profile field shows up without touching this file. A change goes to the sim as a `tune:` UI command,
 // applied at a tick boundary and journalled like every UI command, so a tuned session replays. Export downloads a
 // `jj.tuning-patch.v1` file that `jj vehicle tune <patch.json>` writes into assets/profiles/ as data.
+// Part 2 (br-2sdu.2) adds the input profile (assets/profiles/input.json: drift, deadzones, launch, flick) as `input.*`
+// rows. Those travel the same `tune:` command; the host reads its seats with the new value at once and sends the whole
+// profile to every connected controller, so a mid-race change reaches phones, hubs and host pads. The export carries
+// them as `inputProfile` + `inputSet` (paths as in input.json).
 import './panel.css';
 
 type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 
 export interface TuningClient {
   input(i: { type: 'ui'; ui: `tune:${string}` }): void;
-  tuning(): Promise<{ tuning: Record<string, unknown>; error: string | null }>;
+  tuning(): Promise<{ tuning: Record<string, unknown>; input?: Record<string, unknown>; error: string | null }>;
 }
 
 const PROFILE_FILE = 'assets/profiles/cruz-missile.json';
+const INPUT_FILE = 'assets/profiles/input.json';
+const INPUT = 'input.';
+/** The input file's own prose and version are not tunable. */
+const NOT_TUNABLE = new Set(['version', 'what']);
+
+/** The sim's vehicle tuning plus the input profile, as one flat list of leaves (input paths carry the `input.` prefix). */
+function allLeaves(t: { tuning: Record<string, unknown>; input?: Record<string, unknown> }): Array<[string, Json]> {
+  const input = Object.fromEntries(Object.entries(t.input ?? {}).filter(([k]) => !NOT_TUNABLE.has(k)));
+  return [...leaves(t.tuning as Record<string, Json>), ...leaves(input as Record<string, Json>, 'input')];
+}
 /** Built into a car's body when it spawns: a change shows on the next car (next round or respawn). */
 const AT_SPAWN = new Set(['mass', 'inertia_scale']);
 
@@ -37,7 +51,7 @@ const step = (v: number) => {
 
 export async function mountTuningPanel(client: TuningClient): Promise<{ inspect: () => unknown }> {
   const first = await client.tuning();
-  const defaults = new Map(leaves(first.tuning as Record<string, Json>));
+  const defaults = new Map(allLeaves(first));
   const current = new Map(defaults);
   /** Changes in the order made: the export's `set` list (a field changed twice keeps its last value, at its first place). */
   const changed = new Map<string, string>();
@@ -62,7 +76,11 @@ export async function mountTuningPanel(client: TuningClient): Promise<{ inspect:
     .map(([g, fields]) => {
       const body = fields
         .map(([path, v]) => {
-          const name = path.slice(path.lastIndexOf('.') + 1).replace(/_/g, ' ');
+          const name = path
+            .slice(path.lastIndexOf('.') + 1)
+            .replace(/_/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .toLowerCase();
           const note = AT_SPAWN.has(path) ? ' <small>next car</small>' : '';
           const input =
             typeof v === 'number'
@@ -76,7 +94,7 @@ export async function mountTuningPanel(client: TuningClient): Promise<{ inspect:
       return `<details open><summary>${g.replace(/_/g, ' ')}</summary>${body}</details>`;
     })
     .join('');
-  panel.innerHTML = `<header><h3>Owner tuning</h3><span class="note">Cruz Missile · live · journalled</span></header>
+  panel.innerHTML = `<header><h3>Owner tuning</h3><span class="note">Cruz Missile + controls · live · journalled</span></header>
     <p class="err" data-tune-error hidden></p>
     <div class="rows">${rows}</div>
     <footer><button type="button" data-tune-export>Export patch</button><span data-tune-count>No changes</span></footer>`;
@@ -85,9 +103,18 @@ export async function mountTuningPanel(client: TuningClient): Promise<{ inspect:
   const countEl = panel.querySelector<HTMLElement>('[data-tune-count]')!;
   const refresh = async () => {
     const t = await client.tuning();
-    for (const [path, v] of leaves(t.tuning as Record<string, Json>)) current.set(path, v);
+    for (const [path, v] of allLeaves(t)) current.set(path, v);
     errEl.hidden = !t.error;
     errEl.textContent = t.error ?? '';
+    // A refused input value never reaches the controllers: its row goes back to what the host holds, out of the export.
+    for (const path of [...changed.keys()]) {
+      if (path.startsWith(INPUT) && t.error?.startsWith(`${path}:`)) {
+        changed.delete(path);
+        const el = panel.querySelector<HTMLInputElement>(`[data-field="${path}"]`);
+        const v = current.get(path);
+        if (el && typeof v === 'number') el.value = shown(v);
+      }
+    }
     for (const [path] of defaults) {
       const dirty = JSON.stringify(current.get(path)) !== JSON.stringify(defaults.get(path));
       panel.querySelector(`[data-row="${path}"]`)?.classList.toggle('dirty', dirty);
@@ -147,6 +174,15 @@ export async function mountTuningPanel(client: TuningClient): Promise<{ inspect:
     if (!panel.hidden) void refresh();
   });
 
-  const exportPatch = () => ({ contract: 'jj.tuning-patch.v1', profile: PROFILE_FILE, set: [...changed] });
+  const exportPatch = () => {
+    const all = [...changed];
+    const inputs = all.filter(([f]) => f.startsWith(INPUT)).map(([f, v]) => [f.slice(INPUT.length), v]);
+    return {
+      contract: 'jj.tuning-patch.v1',
+      profile: PROFILE_FILE,
+      set: all.filter(([f]) => !f.startsWith(INPUT)),
+      ...(inputs.length ? { inputProfile: INPUT_FILE, inputSet: inputs } : {}),
+    };
+  };
   return { inspect: () => ({ open: !panel.hidden, current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), error: errEl.hidden ? null : errEl.textContent }) };
 }

@@ -193,6 +193,9 @@ pub struct Host {
     profile: VehicleProfile,
     /// Why the last tuning change was refused (an unknown field, a bad value), for the menu.
     tuning_error: Option<String>,
+    /// The input profile every seat's sticks are read with: the shipped one until the owner tuning menu changes it
+    /// (br-2sdu.2). Held in its wire (fixed-point) form so the host and every controller resolve the same thresholds.
+    input_profile: jj_input::InputProfile,
     session_rev: u32,
     /// The party loop (G01): director, standings, laps, free drive.
     round: round::RoundState,
@@ -308,6 +311,7 @@ impl Host {
             session_tick: 0,
             profile: VehicleProfile::cruz(),
             tuning_error: None,
+            input_profile: jj_input::InputProfile::standard(),
             session_rev: 0,
             round: round::RoundState::new(seed),
             #[cfg(feature = "testing")]
@@ -1099,8 +1103,9 @@ impl Host {
                     .iter()
                     .find(|(_, c)| **c == conn)
                     .map_or(Origin::Net(conn), |(&l, _)| Origin::Local(l));
+                let tuned = self.input_profile.resolve();
                 self.inputs.entry(seat).or_insert_with(|| SeatInput {
-                    state: SourceState::new(source),
+                    state: SourceState::with_profile(source, tuned),
                     car: None,
                     seen_actions: Vec::new(),
                     dropped: false,
@@ -1122,10 +1127,18 @@ impl Host {
                         },
                     );
                     self.out.push(SimToMain::Outbound {
-                        endpoint,
+                        endpoint: endpoint.clone(),
                         channel: Channel::Cmd,
                         bytes,
                     });
+                    // A tuned input profile (owner tuning menu) reaches a controller that joins after the change.
+                    if self.input_profile != jj_input::InputProfile::standard() {
+                        self.out.push(SimToMain::Outbound {
+                            endpoint,
+                            channel: Channel::Cmd,
+                            bytes: HostCmd::InputProfile(self.input_profile.to_wire()).encode(),
+                        });
+                    }
                 }
                 self.events.push(SimEvent::SeatJoined { seat, number });
                 self.session_rev += 1;

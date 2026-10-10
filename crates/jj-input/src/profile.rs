@@ -5,6 +5,7 @@
 //! the layout changes (tuned at the playtest, not in code). [`InputProfile::resolve`] turns the floats into the quantised
 //! integer thresholds the machines compare against, so a decision made on a phone and the host's agree exactly.
 
+use jj_protocol::cmd::InputThresholds;
 use jj_types::axis::{AxisThreshold, quantise_axis};
 use serde::{Deserialize, Serialize};
 
@@ -201,6 +202,88 @@ impl InputProfile {
         }
     }
 
+    /// This profile with each `(path, json value)` set, paths as in the file (`drift.enterDeflection`): the owner tuning
+    /// menu's change (br-2sdu.2). Refuses an unknown field, a value of the wrong type or one the validator rejects.
+    pub fn with_fields(&self, set: &[(String, String)]) -> Result<Self, ProfileError> {
+        let err = |m: String| ProfileError(vec![m]);
+        let mut v = serde_json::to_value(self).map_err(|e| err(e.to_string()))?;
+        for (path, raw) in set {
+            let value: serde_json::Value =
+                serde_json::from_str(raw).map_err(|e| err(format!("{path}: {e}")))?;
+            let (section, field) = path
+                .split_once('.')
+                .ok_or_else(|| err(format!("{path}: expected section.field")))?;
+            let slot = v
+                .get_mut(section)
+                .and_then(|s| s.get_mut(field))
+                .ok_or_else(|| err(format!("no input field {path:?}")))?;
+            *slot = value;
+        }
+        let p: Self = serde_json::from_value(v).map_err(|e| err(e.to_string()))?;
+        p.validate()?;
+        Ok(p)
+    }
+
+    /// The fixed-point wire form every controller receives (and the host adopts itself, so both resolve identical numbers).
+    pub fn to_wire(&self) -> InputThresholds {
+        let frac = |v: f32| (v * 10_000.0).round().clamp(0.0, 65_535.0) as u16;
+        let angle = |v: f32| (v * 100.0).round().clamp(0.0, 65_535.0) as u16;
+        InputThresholds {
+            steer_radial_deadzone: frac(self.steer.radial_deadzone),
+            steer_gamma: (self.steer.gamma * 1000.0).round().clamp(0.0, 65_535.0) as u16,
+            drift_enter_angle: angle(self.drift.enter_angle_deg),
+            drift_enter_deflection: frac(self.drift.enter_deflection),
+            drift_exit_angle: angle(self.drift.exit_angle_deg),
+            drift_exit_deflection: frac(self.drift.exit_deflection),
+            drift_max_pull_back: frac(self.drift.max_pull_back),
+            launch_snap_to: frac(self.launch.snap_to),
+            launch_snap_window_ms: self.launch.snap_window_ms,
+            launch_cooldown_ms: self.launch.cooldown_ms,
+            launch_reverse_delay_ms: self.launch.reverse_delay_ms,
+            flick_rim: frac(self.flick.rim),
+            flick_arm_below: frac(self.flick.arm_below),
+            flick_max_travel_ms: self.flick.max_travel_ms,
+            flick_max_angle: angle(self.flick.max_angle_deg),
+            flick_cooldown_ms: self.flick.cooldown_ms,
+        }
+    }
+
+    /// The profile a wire form carries, validated (a controller refuses a profile the host should never have sent).
+    pub fn from_wire(w: &InputThresholds) -> Result<Self, ProfileError> {
+        let frac = |v: u16| f32::from(v) / 10_000.0;
+        let angle = |v: u16| f32::from(v) / 100.0;
+        let p = Self {
+            version: 1,
+            what: String::new(),
+            steer: SteerProfile {
+                radial_deadzone: frac(w.steer_radial_deadzone),
+                gamma: f32::from(w.steer_gamma) / 1000.0,
+            },
+            drift: DriftProfile {
+                enter_angle_deg: angle(w.drift_enter_angle),
+                enter_deflection: frac(w.drift_enter_deflection),
+                exit_angle_deg: angle(w.drift_exit_angle),
+                exit_deflection: frac(w.drift_exit_deflection),
+                max_pull_back: frac(w.drift_max_pull_back),
+            },
+            launch: LaunchProfile {
+                snap_to: frac(w.launch_snap_to),
+                snap_window_ms: w.launch_snap_window_ms,
+                cooldown_ms: w.launch_cooldown_ms,
+                reverse_delay_ms: w.launch_reverse_delay_ms,
+            },
+            flick: FlickProfile {
+                rim: frac(w.flick_rim),
+                arm_below: frac(w.flick_arm_below),
+                max_travel_ms: w.flick_max_travel_ms,
+                max_angle_deg: angle(w.flick_max_angle),
+                cooldown_ms: w.flick_cooldown_ms,
+            },
+        };
+        p.validate()?;
+        Ok(p)
+    }
+
     /// The quantised integer form the machines compare against.
     pub fn resolve(&self) -> Resolved {
         let tan = |deg: f32| ((deg.to_radians().tan() * ONE as f32).round() as i64).max(0);
@@ -303,6 +386,32 @@ mod tests {
         assert!(
             InputProfile::from_json(&DEFAULT_JSON.replace("\"gamma\"", "\"gamm\"")).is_err(),
             "unknown or misspelt keys are refused"
+        );
+    }
+
+    #[test]
+    fn the_wire_form_round_trips_and_with_fields_validates() {
+        let p = InputProfile::standard();
+        let w = p.to_wire();
+        let back = InputProfile::from_wire(&w).unwrap();
+        assert_eq!(back.to_wire(), w);
+        assert_eq!(
+            back.resolve(),
+            p.resolve(),
+            "fixed point keeps the shipped thresholds"
+        );
+        let q = p
+            .with_fields(&[("drift.enterDeflection".into(), "0.8".into())])
+            .unwrap();
+        assert_eq!(q.drift.enter_deflection, 0.8);
+        assert!(p.with_fields(&[("drift.nope".into(), "1".into())]).is_err());
+        assert!(
+            p.with_fields(&[("flick.rim".into(), "0.1".into())])
+                .is_err()
+        );
+        assert!(
+            p.with_fields(&[("flick.rim".into(), "\"x\"".into())])
+                .is_err()
         );
     }
 

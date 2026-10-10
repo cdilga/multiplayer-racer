@@ -1067,6 +1067,7 @@ version = "0.2.0"
 dependencies = [
  "jj-contracts",
  "jj-fixture",
+ "jj-input",
  "jj-map",
  "jj-procgen",
  "jj-session",

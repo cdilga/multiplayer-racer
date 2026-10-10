@@ -4,7 +4,7 @@
 use jj_map::{Registry, load_json};
 use jj_protocol::PROTOCOL_VERSION;
 use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimToMain, UiCommand};
-use jj_protocol::cmd::{ControllerCmd, HostCmd};
+use jj_protocol::cmd::{ControllerCmd, HostCmd, InputThresholds};
 use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
 use jj_types::{BuildId, CommandId, EndpointId, LocalSourceId, RequestId, SourceHandle};
 
@@ -152,6 +152,118 @@ fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
             .unwrap_or("")
             .contains("no_such_field"),
         "a bad field is refused: {shown}"
+    );
+}
+
+/// The owner tuning menu part 2 (br-2sdu.2): an input-profile change is a journalled UI command; the host reads its
+/// seats' sticks with it at once, every connected controller is sent the whole profile, one that joins later is sent it
+/// after its Welcome, a refused value changes nothing, and the same script replays bit for bit.
+#[test]
+fn an_input_profile_change_reaches_the_host_and_every_controller() {
+    let tune = |field: &str, value: &str| {
+        MainToSim::Ui {
+            command: CommandId(8),
+            ui: UiCommand::SetTuning {
+                field: field.into(),
+                value: value.into(),
+            },
+        }
+        .encode()
+    };
+    let join = |ep: &str| {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(ep.into()),
+            resume: Some(format!("secret-{ep}")),
+        };
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        };
+        [
+            net(ep, Channel::Cmd, hello.encode()),
+            net(ep, Channel::Cmd, claim.encode()),
+        ]
+    };
+    let mut h = driving_host();
+    for m in join("early") {
+        h.schedule(0, &m).unwrap();
+    }
+    h.schedule(30, &tune("input.drift.enterDeflection", "0.8"))
+        .unwrap();
+    h.schedule(31, &tune("input.drift.enterAngleDeg", "65"))
+        .unwrap();
+    // exitDeflection must stay under the entry deflection: refused, nothing changes.
+    h.schedule(32, &tune("input.drift.exitDeflection", "0.99"))
+        .unwrap();
+    for m in join("late") {
+        h.schedule(60, &m).unwrap();
+    }
+    h.stop_at(120);
+    let mut now = 0;
+    let mut got: std::collections::BTreeMap<String, Vec<InputThresholds>> = Default::default();
+    let mut welcomed = std::collections::BTreeSet::new();
+    while h.tick() < 120 {
+        h.advance(now);
+        now += 16_667;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes,
+            } = m
+            {
+                match HostCmd::decode(&bytes) {
+                    Ok(HostCmd::Welcome { .. }) => {
+                        welcomed.insert(endpoint.0.clone());
+                    }
+                    Ok(HostCmd::InputProfile(w)) => {
+                        assert!(
+                            welcomed.contains(&endpoint.0),
+                            "the profile follows the Welcome"
+                        );
+                        got.entry(endpoint.0).or_default().push(w);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    let early = &got["early"];
+    assert_eq!(early.len(), 2, "one message per accepted change: {early:?}");
+    assert_eq!(early[0].drift_enter_deflection, 8000);
+    assert_eq!(early[1].drift_enter_angle, 6500);
+    assert_eq!(early[1].drift_enter_deflection, 8000, "the whole profile");
+    assert_eq!(
+        got["late"],
+        vec![early[1]],
+        "a later joiner gets the tuned profile"
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(shown["input"]["drift"]["enterDeflection"], 0.8);
+    assert!(
+        shown["error"]
+            .as_str()
+            .unwrap_or("")
+            .contains("exitDeflection"),
+        "a value the validator refuses is shown: {shown}"
+    );
+    // Replays bit for bit, and the host's own reading of a drift push changes with the threshold.
+    let drift_push = |extra: &[(u64, Vec<u8>)]| {
+        let mut s = Vec::new();
+        for t in (0..300u64).step_by(6) {
+            s.push((t, local(7, [26_000, 6_000])));
+        }
+        s.extend_from_slice(extra);
+        run(16_667, 300, &s)
+    };
+    let tuned = [(2u64, tune("input.drift.enterDeflection", "0.8"))];
+    assert_eq!(drift_push(&tuned), drift_push(&tuned), "replays");
+    assert_ne!(
+        drift_push(&tuned).1,
+        drift_push(&[]).1,
+        "and the threshold changed the run"
     );
 }
 

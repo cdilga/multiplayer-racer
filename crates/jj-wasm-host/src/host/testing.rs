@@ -131,6 +131,8 @@ impl Host {
             .map(|s| {
                 let input = self.inputs.get(&s.id);
                 let age = input.and_then(|i| i.state.age_ms(now_ms));
+                // What the host reads this seat's sticks as, with the input profile in force (br-2sdu.2).
+                let sem = input.map(|i| i.state.semantics());
                 json!({
                     "seat": s.id.0,
                     "number": s.number.0,
@@ -142,6 +144,8 @@ impl Host {
                     "presence": format!("{:?}", s.presence),
                     "car": input.and_then(|i| i.car).map(|c| c.0),
                     "inputAgeMs": age,
+                    "drifting": sem.map(|s| s.drift),
+                    "boosting": sem.map(|s| s.boost),
                     "fresh": age.is_some_and(|a| a <= STALE_MS),
                 })
             })

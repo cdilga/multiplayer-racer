@@ -121,6 +121,8 @@ pub struct WasmEndpoint {
     /// Per source: the player chose the old one-stick layout (it rides every record's flags; default R116 dual-stick).
     classic: Vec<bool>,
     scheduler: SendScheduler,
+    /// The host's tuned input thresholds (br-2sdu.2), if it sent any: every source, now and later, reads them.
+    profile: Option<(jj_input::Resolved, String)>,
 }
 
 #[wasm_bindgen]
@@ -131,13 +133,47 @@ impl WasmEndpoint {
             sources: Vec::new(),
             classic: Vec::new(),
             scheduler: SendScheduler::new(),
+            profile: None,
         }
+    }
+
+    /// The host changed the input profile (`HostCmd::InputProfile`'s JSON: `InputThresholds`). Validated like the shipped
+    /// file; returns false (and keeps the current thresholds) when it is refused. Applies to every source of the endpoint
+    /// from its next sample.
+    #[wasm_bindgen(js_name = setInputProfile)]
+    pub fn set_input_profile(&mut self, json: &str) -> bool {
+        let Ok(wire) = serde_json::from_str::<jj_protocol::cmd::InputThresholds>(json) else {
+            return false;
+        };
+        let Ok(p) = jj_input::InputProfile::from_wire(&wire) else {
+            return false;
+        };
+        let resolved = p.resolve();
+        for s in &mut self.sources {
+            s.set_profile(resolved);
+        }
+        self.profile = Some((resolved, serde_json::to_string(&p).unwrap_or_default()));
+        true
+    }
+
+    /// The input profile the sources read now, as the profile file's JSON (`null`-free: the shipped one until the host
+    /// tunes it). For the controller's introspection (R90).
+    #[wasm_bindgen(js_name = inputProfileJson)]
+    pub fn input_profile_json(&self) -> String {
+        self.profile.as_ref().map_or_else(
+            || serde_json::to_string(&jj_input::InputProfile::standard()).unwrap_or_default(),
+            |(_, j)| j.clone(),
+        )
     }
 
     /// Adds a source for a handle the host assigned on claim; returns its index (uncapped).
     #[wasm_bindgen(js_name = addSource)]
     pub fn add_source(&mut self, handle: u16) -> usize {
-        self.sources.push(SourceState::new(SourceHandle(handle)));
+        let mut src = SourceState::new(SourceHandle(handle));
+        if let Some((resolved, _)) = &self.profile {
+            src.set_profile(*resolved);
+        }
+        self.sources.push(src);
         self.classic.push(false);
         self.sources.len() - 1
     }

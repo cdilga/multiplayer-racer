@@ -108,6 +108,12 @@ impl SourceState {
         s
     }
 
+    /// Swaps the thresholds this source reads (the owner tuning menu, br-2sdu.2). The machines keep their state; the next
+    /// sample compares against the new numbers.
+    pub fn set_profile(&mut self, profile: Resolved) {
+        self.profile = profile;
+    }
+
     /// A source the host assigned `handle` to on claim.
     pub fn new(handle: SourceHandle) -> Self {
         Self {

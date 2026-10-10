@@ -233,6 +233,34 @@ pub enum HostCmd {
         source: SourceHandle,
         cmd: Box<HostCmd>,
     },
+    /// The owner tuning menu (br-2sdu.2) changed the input profile: every threshold the controller's `jj-input` reads,
+    /// whole, in fixed point. Endpoint-wide (never wrapped), and sent again to a controller that joins afterwards. Only a
+    /// host with a tuned profile sends it; the shipped profile is compiled into the controller.
+    InputProfile(InputThresholds),
+}
+
+/// The input profile (`assets/profiles/input.json`) on the wire, in fixed point so the host and every controller resolve
+/// the very same thresholds: fractions in 1/10000, angles in 1/100 degree, gamma in 1/1000, times in ms.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+#[serde(rename_all = "camelCase")]
+pub struct InputThresholds {
+    pub steer_radial_deadzone: u16,
+    pub steer_gamma: u16,
+    pub drift_enter_angle: u16,
+    pub drift_enter_deflection: u16,
+    pub drift_exit_angle: u16,
+    pub drift_exit_deflection: u16,
+    pub drift_max_pull_back: u16,
+    pub launch_snap_to: u16,
+    pub launch_snap_window_ms: u32,
+    pub launch_cooldown_ms: u32,
+    pub launch_reverse_delay_ms: u32,
+    pub flick_rim: u16,
+    pub flick_arm_below: u16,
+    pub flick_max_travel_ms: u32,
+    pub flick_max_angle: u16,
+    pub flick_cooldown_ms: u32,
 }
 
 macro_rules! codec {

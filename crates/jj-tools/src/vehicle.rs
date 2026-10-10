@@ -256,9 +256,15 @@ fn changed_fields(old: &Tuning, new: &Tuning) -> Result<Vec<String>, String> {
 /// Applies a tuning patch to its profile. Returns one line per changed field; writes the profile unless `check`.
 pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
     #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
     struct Patch {
         profile: String,
         set: Vec<(String, String)>,
+        /// The input profile file and its changes (br-2sdu.2), paths as in that file (`drift.enterDeflection`).
+        #[serde(default)]
+        input_profile: Option<String>,
+        #[serde(default)]
+        input_set: Vec<(String, String)>,
     }
     let raw: Value = serde_json::from_str(&read_text(patch_path)?)
         .map_err(|e| format!("{}: {e}", patch_path.display()))?;
@@ -289,10 +295,33 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         )
     })?;
 
-    let changes = changed_fields(&before.tuning, &after.tuning)?;
+    let mut changes = changed_fields(&before.tuning, &after.tuning)?;
+    // The input profile is checked before anything is written: a patch applies whole or not at all.
+    let input_write = match (&patch.input_profile, patch.input_set.is_empty()) {
+        (Some(path), false) => {
+            let text = read_text(Path::new(path))?;
+            let old =
+                jj_input::InputProfile::from_json(&text).map_err(|e| format!("{path}: {e}"))?;
+            let new = old
+                .with_fields(&patch.input_set)
+                .map_err(|e| format!("{path}: {e}"))?;
+            for (field, raw) in &patch.input_set {
+                changes.push(format!("input {field}: -> {raw}"));
+            }
+            let out = serde_json::to_string_pretty(&new).map_err(|e| e.to_string())? + "\n";
+            Some((path.clone(), out))
+        }
+        (None, false) => {
+            return Err("the patch has input changes but no inputProfile file".to_owned());
+        }
+        _ => None,
+    };
     if !check {
         std::fs::write(profile_path, text)
             .map_err(|e| format!("{}: {e}", profile_path.display()))?;
+        if let Some((path, out)) = input_write {
+            std::fs::write(&path, out).map_err(|e| format!("{path}: {e}"))?;
+        }
     }
     Ok(changes)
 }
@@ -345,6 +374,41 @@ mod tests {
             json!({ "contract": contract, "profile": profile.to_str().unwrap(), "set": set });
         std::fs::write(&patch, body.to_string()).unwrap();
         (profile, patch)
+    }
+
+    #[test]
+    fn tune_applies_input_profile_changes_and_refuses_invalid_ones_whole() {
+        let (profile, patch) = fixture("input", TUNING_PATCH, json!([]));
+        let input = profile.with_file_name("input.json");
+        std::fs::copy(
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../assets/profiles/input.json"
+            ),
+            &input,
+        )
+        .unwrap();
+        let write = |set: Value| {
+            let body = json!({ "contract": TUNING_PATCH, "profile": profile.to_str().unwrap(),
+                "set": [], "inputProfile": input.to_str().unwrap(), "inputSet": set });
+            std::fs::write(&patch, body.to_string()).unwrap();
+        };
+        let original = std::fs::read_to_string(&input).unwrap();
+        // Entry deflection under the exit deflection breaks the hysteresis rule: refused, nothing written.
+        write(json!([["drift.enterDeflection", "0.5"]]));
+        assert!(tune(&patch, false).is_err());
+        assert_eq!(std::fs::read_to_string(&input).unwrap(), original);
+        write(json!([
+            ["drift.enterDeflection", "0.8"],
+            ["flick.cooldownMs", "500"]
+        ]));
+        let lines = tune(&patch, false).unwrap();
+        assert_eq!(lines.len(), 2, "{lines:?}");
+        let after = jj_input::InputProfile::from_json(&std::fs::read_to_string(&input).unwrap())
+            .expect("the written file validates");
+        assert_eq!(after.drift.enter_deflection, 0.8);
+        assert_eq!(after.flick.cooldown_ms, 500);
+        assert_eq!(after.drift.enter_angle_deg, 70.0, "the rest is kept");
     }
 
     #[test]

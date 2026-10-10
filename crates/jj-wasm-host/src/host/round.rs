@@ -449,7 +449,28 @@ impl Host {
     /// The vehicle tuning as the owner tuning menu shows it (br-2sdu.1): every field, and why the last change was
     /// refused, if it was.
     pub fn tuning_json(&self) -> String {
-        serde_json::json!({ "tuning": self.profile.tuning, "error": self.tuning_error }).to_string()
+        // Through text, so the f32 thresholds read as 0.8 and not 0.800000011.
+        let input: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&self.input_profile).unwrap_or_default())
+                .unwrap_or_default();
+        serde_json::json!({ "tuning": self.profile.tuning, "input": input, "error": self.tuning_error })
+            .to_string()
+    }
+
+    /// Reads every seat's sticks with the (changed) input profile, and tells every connected controller.
+    fn apply_input_profile(&mut self) {
+        let resolved = self.input_profile.resolve();
+        for seat in self.inputs.values_mut() {
+            seat.state.set_profile(resolved);
+        }
+        let bytes = HostCmd::InputProfile(self.input_profile.to_wire()).encode();
+        for endpoint in self.net_endpoints() {
+            self.out.push(SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes: bytes.clone(),
+            });
+        }
     }
 
     /// A host UI command for the round loop.
@@ -463,6 +484,22 @@ impl Host {
             // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
             UiCommand::Reroll => self.director_apply(DirIn::Reroll),
             UiCommand::RemoveSeat { seat } => self.remove_seat(seat),
+            // `input.<section>.<field>`: the input profile (br-2sdu.2), live to every seat and controller.
+            UiCommand::SetTuning { field, value } if field.starts_with("input.") => {
+                match self
+                    .input_profile
+                    .with_fields(&[(field["input.".len()..].to_owned(), value)])
+                    .and_then(|p| jj_input::InputProfile::from_wire(&p.to_wire()))
+                {
+                    Ok(p) => {
+                        self.input_profile = p;
+                        self.tuning_error = None;
+                        self.apply_input_profile();
+                    }
+                    Err(e) => self.tuning_error = Some(format!("{field}: {e}")),
+                }
+                self.session_rev += 1;
+            }
             UiCommand::SetTuning { field, value } => {
                 match jj_fixture::profile_from(self.profile.clone(), &[(field.clone(), value)]) {
                     Ok(p) => {
