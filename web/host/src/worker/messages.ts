@@ -25,7 +25,7 @@ export type SimInput =
    *  performance.now()`) lets the worker measure host-applied input age. */
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}`; on?: boolean }
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}` | `tune:${string}`; on?: boolean }
   /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
   | { type: 'map-ready'; preparation: number; bytes: Uint8Array };
 
@@ -62,7 +62,8 @@ export type ToWorker =
   | { kind: 'input'; input: SimInput }
   | { kind: 'lifecycle'; visible: boolean; renderOk: boolean }
   | { kind: 'return'; buf: ArrayBuffer }
-  | { kind: 'inputStats'; id: number };
+  | { kind: 'inputStats'; id: number }
+  | { kind: 'tuning'; id: number };
 
 export type FromWorker =
   | { kind: 'ready' }
@@ -78,4 +79,5 @@ export type FromWorker =
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
   | { kind: 'fault'; message: string }
-  | { kind: 'inputStats'; id: number; sources: InputStat[] };
+  | { kind: 'inputStats'; id: number; sources: InputStat[] }
+  | { kind: 'tuning'; id: number; json: string };

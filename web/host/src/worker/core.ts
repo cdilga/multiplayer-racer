@@ -26,6 +26,8 @@ export interface Sim {
   countdown_ms(): number;
   state_hash(): string;
   room_json(): string;
+  /** The vehicle tuning for the owner tuning menu: `{ tuning, error }` (br-2sdu.1). */
+  tuning_json(): string;
   /** What the journal gained since the last call (bug clips, P1-F07): JSON. */
   journal_poll(hash: boolean): string;
 }
@@ -295,6 +297,9 @@ export class SimWorker<S extends Sim> {
       }
       case 'inputStats':
         this.post({ kind: 'inputStats', id: (msg as { id: number }).id, sources: this.inputStats() });
+        return;
+      case 'tuning':
+        this.post({ kind: 'tuning', id: (msg as { id: number }).id, json: this.sim?.tuning_json() ?? '{}' });
         return;
       case 'lifecycle': {
         const { visible, renderOk } = msg as { visible: boolean; renderOk: boolean };

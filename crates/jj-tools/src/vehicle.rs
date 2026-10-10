@@ -1,13 +1,22 @@
 //! `jj vehicle sync` and profile validation (P1-S03a): a vehicle profile's geometry (`assets/profiles/<car>.json`) is
 //! derived from the baked sidecar it names (P1-V02), never typed in. Sync rewrites the geometry and the source hashes;
 //! validate re-derives them and fails when the bake has moved on.
+//! `jj vehicle tune <patch.json>` applies the host's tuning export (`jj.tuning-patch.v1`) to a profile's `tuning`.
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use jj_contracts::vehicle::{PhysicsGeometry, parse_sidecar, physics_geometry};
-use jj_sim::profile::{PROFILE, PartGeometry, ProfileFile, Source, VehicleGeometry};
+use jj_fixture::profile_from;
+use jj_sim::profile::{
+    PROFILE, PartGeometry, ProfileFile, Source, Tuning, VehicleGeometry, VehicleProfile,
+};
+use serde::Deserialize;
+use serde_json::Value;
 use sha2::{Digest, Sha256};
+
+const TUNING_PATCH: &str = "jj.tuning-patch.v1";
+const USAGE: &str = "usage: jj vehicle sync <assets/profiles/<car>.json>…\n       jj vehicle tune <patch.json> [--check]";
 
 fn sha256(bytes: &[u8]) -> String {
     jj_map::hex(&Sha256::digest(bytes))
@@ -110,7 +119,10 @@ pub fn check(profile: &Path) -> Result<Vec<String>, String> {
 
 /// `jj vehicle sync <profile.json>…`: rewrites each profile's geometry and source from its sidecar.
 pub fn command(args: &[String]) -> ExitCode {
-    let usage = "usage: jj vehicle sync <assets/profiles/<car>.json>…";
+    if args.first().map(String::as_str) == Some("tune") {
+        return tune_command(&args[1..]);
+    }
+    let usage = USAGE;
     let (Some("sync"), files) = (args.first().map(String::as_str), &args[1.min(args.len())..])
     else {
         eprintln!("{usage}");
@@ -146,4 +158,263 @@ pub fn command(args: &[String]) -> ExitCode {
         }
     }
     ExitCode::SUCCESS
+}
+
+fn read_text(path: &Path) -> Result<String, String> {
+    std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// The byte span of the top-level `"key"`'s object value, and the byte where the key starts. Only ASCII
+/// delimiters are matched, so every span lands on a character boundary.
+fn top_level_object(text: &str, key: &str) -> Option<(usize, usize, usize)> {
+    let b = text.as_bytes();
+    let string_end = |mut j: usize| {
+        j += 1;
+        while j < b.len() && b[j] != b'"' {
+            j += if b[j] == b'\\' { 2 } else { 1 };
+        }
+        (j + 1).min(b.len())
+    };
+    let (mut depth, mut i) = (0usize, 0usize);
+    while i < b.len() {
+        match b[i] {
+            b'"' => {
+                let end = string_end(i);
+                if depth == 1 && text.get(i + 1..end - 1) == Some(key) {
+                    let colon = text[end..].find(|c: char| !c.is_whitespace())? + end;
+                    if b[colon] != b':' {
+                        i = end;
+                        continue;
+                    }
+                    let start = text[colon + 1..].find(|c: char| !c.is_whitespace())? + colon + 1;
+                    if b[start] != b'{' {
+                        return None;
+                    }
+                    let (mut inner, mut j) = (0usize, start);
+                    while j < b.len() {
+                        match b[j] {
+                            b'"' => {
+                                j = string_end(j);
+                                continue;
+                            }
+                            b'{' | b'[' => inner += 1,
+                            b'}' | b']' => inner -= 1,
+                            _ => {}
+                        }
+                        j += 1;
+                        if inner == 0 {
+                            return Some((i, start, j));
+                        }
+                    }
+                    return None;
+                }
+                i = end;
+            }
+            b'{' | b'[' => {
+                depth += 1;
+                i += 1;
+            }
+            b'}' | b']' => {
+                depth = depth.saturating_sub(1);
+                i += 1;
+            }
+            _ => i += 1,
+        }
+    }
+    None
+}
+
+/// `text` with its top-level `tuning` object replaced by `tuning_json`, indented to the key's depth. Every other byte
+/// (keys, their order, formatting) stays as it was.
+fn splice_tuning(text: &str, tuning_json: &str) -> Result<String, String> {
+    let (key_at, start, end) =
+        top_level_object(text, "tuning").ok_or("the profile has no top-level tuning object")?;
+    let line = text[..key_at].rfind('\n').map_or(0, |i| i + 1);
+    let indent: String = text[line..key_at]
+        .chars()
+        .take_while(|c| *c == ' ')
+        .collect();
+    let indented = tuning_json.replace('\n', &format!("\n{indent}"));
+    Ok(format!("{}{indented}{}", &text[..start], &text[end..]))
+}
+
+/// `(field, old, new)` for every tuning field whose value differs.
+fn changed_fields(old: &Tuning, new: &Tuning) -> Result<Vec<String>, String> {
+    let to_map = |t: &Tuning| match serde_json::to_value(t) {
+        Ok(Value::Object(m)) => Ok(m),
+        Ok(_) => Err("tuning is not an object".to_owned()),
+        Err(e) => Err(e.to_string()),
+    };
+    let (old, new) = (to_map(old)?, to_map(new)?);
+    Ok(new
+        .iter()
+        .filter(|(k, v)| old.get(*k) != Some(v))
+        .map(|(k, v)| format!("{k}: {} -> {v}", old.get(k).unwrap_or(&Value::Null)))
+        .collect())
+}
+
+/// Applies a tuning patch to its profile. Returns one line per changed field; writes the profile unless `check`.
+pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
+    #[derive(Deserialize)]
+    struct Patch {
+        profile: String,
+        set: Vec<(String, String)>,
+    }
+    let raw: Value = serde_json::from_str(&read_text(patch_path)?)
+        .map_err(|e| format!("{}: {e}", patch_path.display()))?;
+    let contract = raw
+        .get("contract")
+        .and_then(Value::as_str)
+        .unwrap_or("<none>");
+    if contract != TUNING_PATCH {
+        return Err(format!(
+            "{}: contract {contract:?}, expected {TUNING_PATCH:?}",
+            patch_path.display()
+        ));
+    }
+    let patch: Patch =
+        serde_json::from_value(raw).map_err(|e| format!("{}: {e}", patch_path.display()))?;
+
+    let profile_path = Path::new(&patch.profile);
+    let original = read_text(profile_path)?;
+    let before = VehicleProfile::from_json(&original)
+        .map_err(|e| format!("{}: {e}", profile_path.display()))?;
+    let after = profile_from(before.clone(), &patch.set)?;
+    let tuning = serde_json::to_string_pretty(&after.tuning).map_err(|e| e.to_string())?;
+    let text = splice_tuning(&original, &tuning)?;
+    VehicleProfile::from_json(&text).map_err(|e| {
+        format!(
+            "{}: not written, the result is invalid: {e}",
+            profile_path.display()
+        )
+    })?;
+
+    let changes = changed_fields(&before.tuning, &after.tuning)?;
+    if !check {
+        std::fs::write(profile_path, text)
+            .map_err(|e| format!("{}: {e}", profile_path.display()))?;
+    }
+    Ok(changes)
+}
+
+/// `jj vehicle tune <patch.json> [--check]`: applies an owner tuning export to its profile.
+fn tune_command(args: &[String]) -> ExitCode {
+    let check = args.iter().any(|a| a == "--check");
+    let files: Vec<&String> = args.iter().filter(|a| a.as_str() != "--check").collect();
+    let [patch] = files.as_slice() else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match tune(Path::new(patch), check) {
+        Ok(changes) if changes.is_empty() => {
+            println!("no changes");
+            ExitCode::SUCCESS
+        }
+        Ok(changes) => {
+            for line in changes {
+                println!("{line}");
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("jj vehicle tune: {e}");
+            ExitCode::from(2)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    const CRUZ: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../assets/profiles/cruz-missile.json"
+    );
+
+    /// A fresh temp copy of the Cruz Missile's profile, and a patch file naming it.
+    fn fixture(name: &str, contract: &str, set: Value) -> (PathBuf, PathBuf) {
+        let dir = std::env::temp_dir().join(format!("jj-tune-{}-{name}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let profile = dir.join("cruz-missile.json");
+        std::fs::copy(CRUZ, &profile).unwrap();
+        let patch = dir.join("patch.json");
+        let body =
+            json!({ "contract": contract, "profile": profile.to_str().unwrap(), "set": set });
+        std::fs::write(&patch, body.to_string()).unwrap();
+        (profile, patch)
+    }
+
+    #[test]
+    fn tune_writes_changed_field_and_keeps_the_rest() {
+        let (profile, patch) = fixture(
+            "writes",
+            TUNING_PATCH,
+            json!([["max_engine_force", "9000"]]),
+        );
+        let original = std::fs::read_to_string(CRUZ).unwrap();
+        let changes = tune(&patch, false).unwrap();
+        assert_eq!(
+            changes.len(),
+            1,
+            "only max_engine_force changed: {changes:?}"
+        );
+        assert!(changes[0].starts_with("max_engine_force: "), "{changes:?}");
+
+        let written = std::fs::read_to_string(&profile).unwrap();
+        let after = VehicleProfile::from_json(&written).expect("written profile parses");
+        let before = VehicleProfile::from_json(&original).unwrap();
+        assert_eq!(after.tuning.max_engine_force, 9000.0);
+        assert_eq!(after.tuning.mass, before.tuning.mass, "untouched field");
+        assert_eq!(after.geometry, before.geometry);
+        // Everything above `tuning` is byte-identical, so key order and formatting stay as they were.
+        assert_eq!(
+            original.split("\"tuning\"").next(),
+            written.split("\"tuning\"").next()
+        );
+    }
+
+    #[test]
+    fn tune_check_reports_without_writing() {
+        let (profile, patch) =
+            fixture("check", TUNING_PATCH, json!([["max_engine_force", "9000"]]));
+        let changes = tune(&patch, true).unwrap();
+        assert_eq!(changes.len(), 1);
+        assert_eq!(
+            std::fs::read_to_string(&profile).unwrap(),
+            std::fs::read_to_string(CRUZ).unwrap()
+        );
+    }
+
+    #[test]
+    fn tune_unknown_field_errors_and_leaves_file_unchanged() {
+        let (profile, patch) = fixture(
+            "unknown",
+            TUNING_PATCH,
+            json!([["max_engine_forse", "9000"]]),
+        );
+        let err = tune(&patch, false).unwrap_err();
+        assert!(err.contains("no tuning field"), "{err}");
+        assert_eq!(
+            std::fs::read_to_string(&profile).unwrap(),
+            std::fs::read_to_string(CRUZ).unwrap()
+        );
+    }
+
+    #[test]
+    fn tune_wrong_contract_errors_and_leaves_file_unchanged() {
+        let (profile, patch) = fixture(
+            "contract",
+            "jj.tuning-patch.v0",
+            json!([["max_engine_force", "9000"]]),
+        );
+        let err = tune(&patch, false).unwrap_err();
+        assert!(err.contains(TUNING_PATCH), "{err}");
+        assert_eq!(
+            std::fs::read_to_string(&profile).unwrap(),
+            std::fs::read_to_string(CRUZ).unwrap()
+        );
+    }
 }

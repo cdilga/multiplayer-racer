@@ -58,6 +58,12 @@ pub enum UiCommand {
     RemoveSeat {
         seat: SeatId,
     },
+    /// The owner tuning menu (br-2sdu.1): one vehicle-profile tuning field by name (`max_engine_force`,
+    /// `surfaces.gravel`), the value as JSON. Applied at a tick boundary like every UI command, so it is journalled.
+    SetTuning {
+        field: String,
+        value: String,
+    },
 }
 
 /// Main → sim.

@@ -8,6 +8,7 @@
 //! jj sim --compare <accepted> <current> [<tuned>]           ACCEPTED | CURRENT | TUNED trace table
 //! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
 //! jj vehicle sync <profile.json>…               derive a vehicle profile's geometry from its baked sidecar
+//! jj vehicle tune <patch.json> [--check]        write an owner tuning export into its vehicle profile
 //! jj --version
 //! ```
 //! Exit: 0 everything valid, 1 a file failed validation, 2 usage or I/O.
@@ -19,7 +20,7 @@ mod procgen;
 mod sim;
 mod vehicle;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj vehicle sync <profile.json>…\n       jj --version";
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj vehicle sync <profile.json>…\n       jj vehicle tune <patch.json> [--check]\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();

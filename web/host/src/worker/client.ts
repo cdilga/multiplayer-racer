@@ -22,6 +22,7 @@ export class SimClient {
   private fault: string | null = null;
   private mask = 0;
   private statsWaiters = new Map<number, (s: InputStat[]) => void>();
+  private tuningWaiters = new Map<number, (json: string) => void>();
   private nextStats = 1;
   /** Milliseconds left on the resume countdown when it last changed second (0: none). */
   countdownMs = 0;
@@ -101,6 +102,10 @@ export class SimClient {
         this.statsWaiters.get(m.id)?.(m.sources);
         this.statsWaiters.delete(m.id);
         return;
+      case 'tuning':
+        this.tuningWaiters.get(m.id)?.(m.json);
+        this.tuningWaiters.delete(m.id);
+        return;
       case 'ready':
         return;
       default:
@@ -148,6 +153,15 @@ export class SimClient {
     return new Promise((resolve) => {
       this.statsWaiters.set(id, resolve);
       this.send({ kind: 'inputStats', id });
+    });
+  }
+
+  /** The vehicle tuning as the sim holds it now, and the last refusal (the owner tuning menu, br-2sdu.1). */
+  tuning(): Promise<{ tuning: Record<string, unknown>; error: string | null }> {
+    const id = this.nextStats++;
+    return new Promise((resolve) => {
+      this.tuningWaiters.set(id, (json) => resolve(JSON.parse(json)));
+      this.send({ kind: 'tuning', id });
     });
   }
 

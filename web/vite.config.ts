@@ -28,7 +28,9 @@ function commit(): string {
 
 export default defineConfig({
   base: process.env.JJ_BASE ?? './',
-  define: { __JJ_COMMIT__: JSON.stringify(process.env.JJ_COMMIT ?? commit()) },
+  // __JJ_OWNER_TOOLS__: the owner's temporary tools (the tuning menu, br-2sdu); a production build (JJ_PRODUCTION=1)
+  // drops them and their chunks entirely.
+  define: { __JJ_COMMIT__: JSON.stringify(process.env.JJ_COMMIT ?? commit()), __JJ_OWNER_TOOLS__: JSON.stringify(process.env.JJ_PRODUCTION !== '1') },
   worker: { format: 'es', rollupOptions: { output } },
   build: {
     outDir: 'dist',

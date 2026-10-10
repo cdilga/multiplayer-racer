@@ -271,6 +271,14 @@ async function boot(): Promise<void> {
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
   });
   world.attach(client);
+  // The owner tuning menu (br-2sdu.1): previews only, and only in a browser the owner switched on with `?tune`
+  // (remembered; `?tune=off` switches it off). Its code is a separate chunk that a production build never contains.
+  if (__JJ_OWNER_TOOLS__ && ownerTools(params)) {
+    void import('./tuning/panel').then(async (m) => {
+      const panel = await m.mountTuningPanel(client);
+      (window as unknown as { __jjTune: unknown }).__jjTune = panel;
+    });
+  }
   // Paused means paused (owner playtest 1): the world stops drawing while the worker holds the sim, and wakes for a
   // moment when the room, an event, a setting or the page changes so menus and resizes still show.
   client.onPause = (reasons) => world.hold(reasons.length > 0);
@@ -328,5 +336,19 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     dropPeer: (ep: string) => bridge.hub.dropPeer(ep),
   };
 }
+
+/** The owner flag: `?tune` switches the owner's tools on in this browser, `?tune=off` off; storage may be missing. */
+function ownerTools(params: URLSearchParams): boolean {
+  const KEY = 'jj-owner-tools';
+  try {
+    if (params.get('tune') === 'off') localStorage.removeItem(KEY);
+    else if (params.has('tune')) localStorage.setItem(KEY, '1');
+    return localStorage.getItem(KEY) === '1';
+  } catch {
+    return params.has('tune') && params.get('tune') !== 'off';
+  }
+}
+
+declare const __JJ_OWNER_TOOLS__: boolean;
 
 void boot();

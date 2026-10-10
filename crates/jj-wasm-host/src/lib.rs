@@ -82,6 +82,11 @@ impl HostSim {
         self.0.room_json()
     }
 
+    /// The vehicle tuning for the owner tuning menu (br-2sdu.1): `{ tuning, error }`.
+    pub fn tuning_json(&self) -> String {
+        self.0.tuning_json()
+    }
+
     /// The full-state hash as hex.
     pub fn state_hash(&self) -> String {
         self.0
@@ -227,6 +232,14 @@ pub mod codec {
             l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {
                 seat: jj_types::SeatId(l[12..].parse().unwrap_or(0)),
             },
+            // `tune:<field>=<json value>` (the owner tuning menu, br-2sdu.1).
+            l if l.starts_with("tune:") => {
+                let (field, value) = l[5..].split_once('=').unwrap_or((&l[5..], ""));
+                UiCommand::SetTuning {
+                    field: field.to_owned(),
+                    value: value.to_owned(),
+                }
+            }
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

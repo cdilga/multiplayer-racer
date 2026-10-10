@@ -211,11 +211,12 @@ impl Host {
 
     /// A new sim on the same map and seed: every car, prop and piece of debris from before is gone with it.
     fn reset_world(&mut self) {
+        // The tuned profile (owner tuning menu) carries into every round's new world.
         self.sim = Sim::new(
             &self.map,
             &jj_procgen::registry(),
             self.round.seed,
-            VehicleProfile::cruz(),
+            self.profile.clone(),
         );
         for input in self.inputs.values_mut() {
             input.car = None;
@@ -445,6 +446,12 @@ impl Host {
         .to_string()
     }
 
+    /// The vehicle tuning as the owner tuning menu shows it (br-2sdu.1): every field, and why the last change was
+    /// refused, if it was.
+    pub fn tuning_json(&self) -> String {
+        serde_json::json!({ "tuning": self.profile.tuning, "error": self.tuning_error }).to_string()
+    }
+
     /// A host UI command for the round loop.
     pub(super) fn round_ui(&mut self, ui: UiCommand) {
         match ui {
@@ -456,6 +463,17 @@ impl Host {
             // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
             UiCommand::Reroll => self.director_apply(DirIn::Reroll),
             UiCommand::RemoveSeat { seat } => self.remove_seat(seat),
+            UiCommand::SetTuning { field, value } => {
+                match jj_fixture::profile_from(self.profile.clone(), &[(field.clone(), value)]) {
+                    Ok(p) => {
+                        self.sim.set_tuning(p.tuning.clone());
+                        self.profile = p;
+                        self.tuning_error = None;
+                    }
+                    Err(e) => self.tuning_error = Some(e),
+                }
+                self.session_rev += 1;
+            }
             UiCommand::FreeDrive { on } => {
                 self.round.free_drive = on;
                 let cfg = DirectorConfig {

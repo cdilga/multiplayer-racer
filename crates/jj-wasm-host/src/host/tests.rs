@@ -101,6 +101,60 @@ fn pad_script() -> Vec<(u64, Vec<u8>)> {
     s
 }
 
+/// The owner tuning menu (br-2sdu.1): a tuning change is a journalled UI command applied at a tick boundary, so it
+/// changes the run, the same script replays bit for bit, and a bad field is refused without touching the car.
+#[test]
+fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
+    let tune = |field: &str, value: &str| {
+        MainToSim::Ui {
+            command: CommandId(7),
+            ui: UiCommand::SetTuning {
+                field: field.into(),
+                value: value.into(),
+            },
+        }
+        .encode()
+    };
+    let plain = pad_script();
+    let mut tuned = pad_script();
+    tuned.push((60, tune("max_engine_force", "14000")));
+    let a = run(16_667, 720, &tuned);
+    let b = run(16_667, 720, &tuned);
+    assert_eq!(a, b, "the tuned run replays bit for bit");
+    assert_ne!(
+        a.1,
+        run(16_667, 720, &plain).1,
+        "and the tuning changed the run"
+    );
+
+    let mut h = driving_host();
+    h.schedule(5, &tune("max_engine_force", "9000")).unwrap();
+    h.schedule(6, &tune("no_such_field", "1")).unwrap();
+    h.stop_at(10);
+    let mut now = 0;
+    while h.tick() < 10 {
+        h.advance(now);
+        now += 16_667;
+    }
+    assert_eq!(
+        h.sim.profile().tuning.max_engine_force,
+        9000.0,
+        "the sim drives with the new value"
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        shown["tuning"]["max_engine_force"], 9000.0,
+        "the menu reads it back"
+    );
+    assert!(
+        shown["error"]
+            .as_str()
+            .unwrap_or("")
+            .contains("no_such_field"),
+        "a bad field is refused: {shown}"
+    );
+}
+
 #[test]
 fn render_and_worker_cadence_never_change_the_simulation() {
     // The worker's timer at 30, 60 and 144 Hz and an irregular one: whole ticks, the same hash at the same tick.
@@ -1221,7 +1275,10 @@ fn identify_answers_every_press_after_a_long_lobby_and_a_round_start() {
             now += 8_334;
             while let Some(m) = h.next_message() {
                 if let SimToMain::Events { batch } = m {
-                    *flashes += batch.iter().filter(|e| matches!(e, SimEvent::Identify { .. })).count();
+                    *flashes += batch
+                        .iter()
+                        .filter(|e| matches!(e, SimEvent::Identify { .. }))
+                        .count();
                 }
             }
         }
@@ -1229,8 +1286,12 @@ fn identify_answers_every_press_after_a_long_lobby_and_a_round_start() {
     // A long Lobby (60 s): the sim ticks far ahead of where the round's new world will start.
     step(&mut h, 120 * 60, &mut flashes);
     for p in ["p1", "p2"] {
-        h.handle(&net(p, Channel::Cmd, ControllerCmd::Ready { on: true }.encode()))
-            .unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
     }
     let mut guard = 0;
     while h.phase() != jj_session::director::Phase::Running {
@@ -1244,7 +1305,11 @@ fn identify_answers_every_press_after_a_long_lobby_and_a_round_start() {
         h.handle(&net("p1", Channel::Cmd, ControllerCmd::Identify.encode()))
             .unwrap();
         step(&mut h, 30, &mut flashes);
-        assert!(flashes > before, "press {press} in the race flashed (sim tick {})", h.tick());
+        assert!(
+            flashes > before,
+            "press {press} in the race flashed (sim tick {})",
+            h.tick()
+        );
         step(&mut h, 2 * 120, &mut flashes); // 2 s between presses
     }
 }

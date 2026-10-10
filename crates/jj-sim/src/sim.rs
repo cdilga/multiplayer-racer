@@ -1915,6 +1915,12 @@ impl Sim {
         &self.profile
     }
 
+    /// Replaces the vehicle tuning (the owner tuning menu, br-2sdu.1); geometry stays. Every field acts from the next
+    /// tick except mass and inertia, which a car's body takes when it spawns.
+    pub fn set_tuning(&mut self, tuning: crate::profile::Tuning) {
+        self.profile.tuning = tuning;
+    }
+
     /// SHA-256 over the whole simulated state: tick, RNG, every car (pose, velocities, wheels) and every prop, in a
     /// stable order. Same build + same inputs + same seed → same hash.
     pub fn state_hash(&self) -> [u8; 32] {
