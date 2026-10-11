@@ -151,3 +151,12 @@
 - A route's segment list can name a biome twice (town at both ends of the lap); `filter(name)[0]` picks the first.
 - Z-fighting between a decal slab and its wall shows up as "dithered" textures; push decals 5 mm or more proud.
 - A power line is a linked span between consecutive poles (`Lineside.link`), not a per-pole piece.
+# 2026-10-11 · Exact nearest-segment pruning
+
+Segment boxes must enclose the *computed* projection endpoints: `a + (b - a)`
+can round differently from `b`. Seed an upper bound from an actual projection's
+original hypot, reject only coordinate lower bounds above it, and retain original
+segment order and strict distance comparisons. Squared-distance comparisons can
+change rounded ties. The exhaustive bit oracle and canonical 24-seed WASM bank
+qualify the optimisation; the 1500 ms preparation budget remains unchanged.
+

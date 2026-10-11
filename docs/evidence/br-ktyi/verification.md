@@ -110,3 +110,43 @@ profile hash and attribution: nearest inclusive **1.722 seconds**, self **1.413 
 
 The bead remains open until green CI containing this change. Rollback is a normal
 revert of the immutable segment cache commit.
+
+## Segment-box pruning after CI 3339/3342
+
+The cache still misses the original budget in CI: run 3339 worst **1529 ms**, mean
+**384 ms**; run 3342 worst **1670 ms**, mean **410 ms**. The raw Rapier native/WASM
+qualification passes in run 3342; the generator budget remains its Rust-lane failure.
+
+The next candidate avoids projecting the entire route twice for every query. A
+cheap pass selects the closest segment start by max-coordinate distance, and its
+actual projection/hypot seeds the upper bound. The ordered second pass rejects
+segments whose coordinate box distance already exceeds that bound, before doing
+projection arithmetic. Surviving candidates retain the exact projection, hypot,
+strict comparison and original order. Boxes use the *computed* `a + (b - a)`
+endpoint, preserving the bound even when endpoint arithmetic rounds. This is
+exact pruning, with no changed map geometry, scatter or acceptance tolerances.
+
+Mac Apple M1 Pro, macOS 27.0.1, Node 26.10.0, release WASM: sequential shared-machine
+24-seed banks change mean **114.82 → 84.19 ms**, median **92.86 → 65.84 ms**, maximum
+**457.86 → 328.64 ms**. A throttled Chromium diagnostic ran in the background;
+these are comparison samples, not isolated hardware qualification. Timing covers
+`prepare`, excluding module setup. Raw rows are `box-before.jsonl`/`box-after.jsonl`.
+All 24 canonical hashes, validity and fallback plans match exactly. An initial
+box-selection candidate was slower and was discarded; a concurrent comparison is
+also excluded from the quoted sequential measurements.
+
+`cargo test --locked -p jj-map --lib` on the Mac passes **3/3**, comparing every
+returned field's bits with the original exhaustive oracle across generated open
+and closed routes, duplicates, shared endpoints, rounded-distance ties, endpoint
+ULPs and extreme coordinates. Log `/tmp/jj-map-box-native-mac.log`.
+Remote opt-level-1 WASM map/procgen parity passes **5/5** on eris, including the
+unchanged 24-seed 1500 ms budget and original seed/recipe/arena goldens:
+`RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --config profile.dev.opt-level=1
+--config profile.test.opt-level=1 --locked --target wasm32-unknown-unknown -p jj-map
+-p jj-procgen --lib --test wasm_parity`. Log `/tmp/jj-procgen-box-wasm-opt1.log`.
+Green CI is still required before close.
+
+The broad native map/procgen bank on eris, using the same explicit opt-level-1
+profiles, passes **89 tests, 1 ignored across 24 suites**, exit 0. This includes
+the exhaustive geometry oracle and all seed/recipe/arena, terrain, handling and
+autopilot banks. Log `/tmp/jj-procgen-box-native-bank.log`, 11:43–11:48 UTC.

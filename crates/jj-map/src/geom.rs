@@ -30,6 +30,23 @@ struct Segment {
     dz: f64,
     len2: f64,
     len: f64,
+    min: (f64, f64),
+    max: (f64, f64),
+}
+
+impl Segment {
+    /// Reject only when a coordinate lower bound exceeds the actual candidate distance.
+    fn outside_bound(&self, x: f64, z: f64, bound: f64) -> bool {
+        self.min.0 - x > bound
+            || x - self.max.0 > bound
+            || self.min.1 - z > bound
+            || z - self.max.1 > bound
+    }
+
+    fn projection(&self, x: f64, z: f64) -> (f64, f64, f64) {
+        let t = (((x - self.a.0) * self.dx + (z - self.a.1) * self.dz) / self.len2).clamp(0.0, 1.0);
+        (self.a.0 + t * self.dx, self.a.1 + t * self.dz, t)
+    }
 }
 
 fn segments(pts: &[(f64, f64)], count: usize) -> Vec<Segment> {
@@ -38,12 +55,17 @@ fn segments(pts: &[(f64, f64)], count: usize) -> Vec<Segment> {
             let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
             let (dx, dz) = (b.0 - a.0, b.1 - a.1);
             let len2 = dx * dx + dz * dz;
+            // Bound the *computed* endpoint, including its rounding, rather than assuming
+            // a + (b - a) == b. Projection arithmetic is monotone between these endpoints.
+            let end = (a.0 + dx, a.1 + dz);
             Segment {
                 a,
                 dx,
                 dz,
                 len2,
                 len: len2.sqrt(),
+                min: (a.0.min(end.0), a.1.min(end.1)),
+                max: (a.0.max(end.0), a.1.max(end.1)),
             }
         })
         .collect()
@@ -91,25 +113,24 @@ impl RouteGeom {
 
     pub fn nearest(&self, x: f64, z: f64) -> Near {
         let n = self.pts.len();
-        // Seed an upper bound with the projection closest in max-coordinate distance. This cheap
-        // pass avoids evaluating software hypot for every successively closer segment on a long
-        // route. The bound is an actual candidate's hypot, not an approximation to the answer.
-        let mut closest = (f64::INFINITY, f64::INFINITY);
+        // Select a promising start point without projecting every segment twice. Its actual
+        // projection supplies an upper bound; the start distance never substitutes for the answer.
+        let mut closest = None;
         let mut closest_max = f64::INFINITY;
         for seg in &self.segments {
-            let (a, dx, dz, len2) = (seg.a, seg.dx, seg.dz, seg.len2);
-            if len2 == 0.0 {
+            if seg.len2 == 0.0 {
                 continue;
             }
-            let t = (((x - a.0) * dx + (z - a.1) * dz) / len2).clamp(0.0, 1.0);
-            let delta = (x - (a.0 + t * dx), z - (a.1 + t * dz));
-            let max = delta.0.abs().max(delta.1.abs());
+            let max = (x - seg.a.0).abs().max((z - seg.a.1).abs());
             if max < closest_max {
                 closest_max = max;
-                closest = delta;
+                closest = Some(seg);
             }
         }
-        let mut bound = closest.0.hypot(closest.1);
+        let mut bound = closest.map_or(f64::INFINITY, |seg| {
+            let (px, pz, _) = seg.projection(x, z);
+            (x - px).hypot(z - pz)
+        });
         let mut best = Near {
             s: 0.0,
             lateral: f64::INFINITY,
@@ -117,12 +138,10 @@ impl RouteGeom {
         };
         let mut best_d = f64::INFINITY;
         for (i, seg) in self.segments.iter().enumerate() {
-            let (a, dx, dz, len2) = (seg.a, seg.dx, seg.dz, seg.len2);
-            if len2 == 0.0 {
+            if seg.len2 == 0.0 || seg.outside_bound(x, z, bound) {
                 continue;
             }
-            let t = (((x - a.0) * dx + (z - a.1) * dz) / len2).clamp(0.0, 1.0);
-            let (px, pz) = (a.0 + t * dx, a.1 + t * dz);
+            let (px, pz, t) = seg.projection(x, z);
             // Either coordinate alone is a lower bound on the Euclidean distance. Keep the exact hypot
             // comparison (and its first-segment tie break) for every candidate that can still win; distant
             // projections need no software hypot/FMA in WASM.
@@ -134,7 +153,7 @@ impl RouteGeom {
                 best_d = d;
                 bound = bound.min(d);
                 let len = seg.len;
-                let (tx, tz) = (dx / len, dz / len);
+                let (tx, tz) = (seg.dx / len, seg.dz / len);
                 let lateral = (x - px) * -tz + (z - pz) * tx;
                 let half = self.half[i] + t * (self.half[(i + 1) % n] - self.half[i]);
                 best = Near {
@@ -321,6 +340,45 @@ mod tests {
                                 expected.half.to_bits()
                             ],
                             "seed {seed}, closed {closed}, ({x}, {z})"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn boxes_keep_exhaustive_bits_at_endpoints_and_extreme_coordinates() {
+        for base in [0.0_f64, 2_147_000_000.0, -2_147_000_000.0, 1e20, -1e20] {
+            let pts = vec![
+                (base, base),
+                (base + 131_071.25, base + 65_535.125),
+                (base + 131_071.25, base - 65_535.125),
+                (base, base - 65_535.125),
+                (base, base),
+            ];
+            let mut s = vec![0.0];
+            for i in 0..pts.len() {
+                let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+                s.push(s[i] + (b.0 - a.0).hypot(b.1 - a.1));
+            }
+            let g = RouteGeom {
+                segments: segments(&pts, pts.len()),
+                half: vec![1.0, 2.0, 3.0, 4.0, 5.0],
+                total: *s.last().unwrap(),
+                s,
+                closed: true,
+                pts,
+            };
+            for &(x, z) in &g.pts {
+                for x in [x.next_down(), x, x.next_up(), x + 1e9] {
+                    for z in [z.next_down(), z, z.next_up(), z - 1e9] {
+                        let a = g.nearest(x, z);
+                        let e = exhaustive(&g, x, z);
+                        assert_eq!(
+                            [a.s.to_bits(), a.lateral.to_bits(), a.half.to_bits()],
+                            [e.s.to_bits(), e.lateral.to_bits(), e.half.to_bits()],
+                            "base {base}, ({x}, {z})"
                         );
                     }
                 }
