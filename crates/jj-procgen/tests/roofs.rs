@@ -95,37 +95,37 @@ fn town_seed_lots_are_reachable_clear_and_land_a_real_car() {
                 "seed {seed} roof {count}: release {lip_speed:?} m/s, landed {:?}",
                 c.position
             );
-            if lots == 1 {
-                if let (Ok(map_path), Ok(script_path)) = (
+            if lots == 1
+                && let (Ok(map_path), Ok(script_path)) = (
                     std::env::var("JJ_ROOF_MAP"),
                     std::env::var("JJ_ROOF_SCRIPT"),
-                ) {
-                    std::fs::write(
-                        &map_path,
-                        serde_json::to_string_pretty(&loaded.map).unwrap(),
-                    )
+                )
+            {
+                std::fs::write(
+                    &map_path,
+                    serde_json::to_string_pretty(&loaded.map).unwrap(),
+                )
+                .unwrap();
+                let entries = &sim.journal().entries;
+                let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../..")
+                    .canonicalize()
                     .unwrap();
-                    let entries = &sim.journal().entries;
-                    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                        .join("../..")
-                        .canonicalize()
-                        .unwrap();
-                    let fixture_map = std::path::Path::new(&map_path)
-                        .strip_prefix(&repo)
-                        .unwrap_or(std::path::Path::new(&map_path));
-                    let inputs: Vec<serde_json::Value> = entries.iter().enumerate().map(|(i, e)| {
+                let fixture_map = std::path::Path::new(&map_path)
+                    .strip_prefix(&repo)
+                    .unwrap_or(std::path::Path::new(&map_path));
+                let inputs: Vec<serde_json::Value> = entries.iter().enumerate().map(|(i, e)| {
                         let end = entries.get(i + 1).map_or(sim.tick(), |next| next.tick);
                         serde_json::json!({"car":e.car,"fromTick":e.tick,"toTick":end,
                             "throttle":e.input.throttle as f64 / i16::MAX as f64,"steer":e.input.steer as f64 / i16::MAX as f64,
                             "brake":e.input.brake as f64 / i16::MAX as f64,"noReverse":e.input.no_reverse})
                     }).collect();
-                    let fixture = serde_json::json!({"scenario":"generated-roof-kicker","what":"P1-PT-rooftop: town seed 0's first real rooftop lot, full generated map and exact native/WASM replay",
+                let fixture = serde_json::json!({"scenario":"generated-roof-kicker","what":"P1-PT-rooftop: town seed 0's first real rooftop lot, full generated map and exact native/WASM replay",
                         "map":fixture_map,"seed":seed,"ticks":sim.tick(),"grid":1,
                         "place":[{"tick":240,"car":0,"pose":{"x":x,"y":jj_map::jump::ground_height_m(&loaded.map.terrain, x as f64, z as f64) as f32 + 0.1,"z":z,"headingDeg":(std::f32::consts::FRAC_PI_2-a).to_degrees()},"linvel":[18.0*tx,0,18.0*tz]}],
                         "inputs":inputs,"observe":[240,300,360,480,720,sim.tick()],"expect":[{"car":0,"metric":"husks","min":0,"max":0}]});
-                    std::fs::write(script_path, serde_json::to_string_pretty(&fixture).unwrap())
-                        .unwrap();
-                }
+                std::fs::write(script_path, serde_json::to_string_pretty(&fixture).unwrap())
+                    .unwrap();
             }
             let replay = Sim::replay(
                 &loaded,
