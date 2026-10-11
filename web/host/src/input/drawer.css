@@ -14,7 +14,7 @@
 [data-jj-input-drawer] .dr-options a { color: inherit; text-decoration: underline; }
 [data-jj-input-drawer] .dr-options .qr-card { margin: 8px 0 0; }
 /* Opening the keyboard actions makes room for their legends and QR on a phone host. The panel still scrolls. */
-html [data-jj-input-drawer]:has([data-keyboard-options][open]) { max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px); }
+html [data-jj-input-drawer]:has([data-keyboard-options][open]) { max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px - var(--jj-caption-space, 0px)); }
 :is([data-jj-phase='Countdown'], [data-jj-phase='Running'], [data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) .dr-options { display: none; }
 :is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards) { display: none; }
 @media (max-width: 960px), (max-height: 500px) { [data-jj-input-drawer] .dr-cards { font-size: 9px; } }
@@ -22,7 +22,7 @@ html [data-jj-input-drawer]:has([data-keyboard-options][open]) { max-width: min(
 /* In a room the round screens (z 4) cover the page, so the drawer docks above the footer and rides over them (P1-C14): bottom right in
    every phase (the lobby's roster and its controls cards fill the left; a race's boost meters sit bottom left of each tile), folded
    to its head in a race. It steps aside for the host menu. */
-html[data-jj-phase] [data-jj-input-drawer] { z-index: 5; top: auto; left: auto; right: 8px; bottom: calc(max(5vh, 30px) + 8px); translate: none; width: max-content; max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100vh - max(5vh, 30px) - 24px); }
+html[data-jj-phase] [data-jj-input-drawer] { z-index: 5; top: auto; left: auto; right: 8px; bottom: calc(max(5vh, 30px) + 8px + var(--jj-caption-space, 0px)); translate: none; width: max-content; max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px - var(--jj-caption-space, 0px)); }
 html:is([data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards, .dr-rows) { display: none; }
 html[data-jj-phase] [data-jj-input-drawer] .dr-cards { display: none; }
 html[data-jj-menu] [data-jj-input-drawer] { display: none; }

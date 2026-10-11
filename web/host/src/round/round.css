@@ -282,7 +282,10 @@ html[data-grid-dock~=positions] .jj-foot:has(.foot-pos:not([data-count="0"])) .f
 body:has(.jj-foot) .jj-chip { display: none; }
 
 /* The announcer's caption (audio/announcer.ts sets bottom:28px inline) stays above the footer, never over its buttons. */
-#jj-caption { bottom: calc(max(5vh, 30px) + 12px) !important; }
+#jj-caption { bottom: calc(max(5vh, 30px) + 12px) !important; --capt-size: clamp(13px, 4vw, 18px); }
+#jj-caption .capt > span { -webkit-line-clamp: unset; }
+/* The always-available free-drive join card shares this edge; its room code must stay readable too. */
+body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + var(--jj-caption-space, 0px)) !important; }
 
 /* First-drive prompt on a tile (P1-C06): a paper caption low in the tile, above the boost meter; it ticks as the host sees the control. */
 .hud-prompt { position: absolute; left: 50%; top: calc(var(--hud) * 2.8); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: .45em; max-width: 92%; padding: .3em .7em; background: var(--c-paper); color: var(--c-ink); border: .12em solid var(--c-ink); box-shadow: 0 .2em 0 var(--c-ink); font-size: calc(var(--hud) * .75); line-height: 1.15; pointer-events: none; }

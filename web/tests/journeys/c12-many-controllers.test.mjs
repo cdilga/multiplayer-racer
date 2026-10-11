@@ -129,11 +129,11 @@ function pads() {
   };
 }
 
-async function hostPage(b = browser, query = '') {
+async function hostPage(b = browser, query = '', mode = 'drive') {
   const p = await (await b.newContext({ viewport: { width: 1366, height: 768 } })).newPage();
   p.on('pageerror', (e) => console.error('C12 host error:', e.message));
   await p.addInitScript(pads);
-  await p.goto(`${server.origin}${BASE}host?drive&test=live${query}`);
+  await p.goto(`${server.origin}${BASE}host?${mode}&test=live${query}`);
   await wait(p, () => (window.__jjNet?.code() && window.__jjTest) || document.documentElement.dataset.jjHost === 'unsupported', undefined, 180_000);
   assert.notEqual(await p.evaluate(() => document.documentElement.dataset.jjHost), 'unsupported', await p.locator('body').innerText());
   return p;
@@ -432,6 +432,15 @@ async function drawerPaintBounds(page) {
     if ([0, 1, 2].some((c) => Math.abs(visible.data[at + c] - hidden.data[at + c]) > 4)) changed++;
     sampled++;
   }
+  if (changed / sampled >= 0.01) {
+    const out = process.env.JJ_CAPTURE_DIR ?? evidencePath('br-dx0e');
+    mkdirSync(out, { recursive: true });
+    const name = `drawer-paint-failure-${Date.now()}`;
+    writeFileSync(join(out, `${name}-visible.png`), PNG.sync.write(visible));
+    writeFileSync(join(out, `${name}-hidden.png`), PNG.sync.write(hidden));
+    writeFileSync(join(out, `${name}.json`), JSON.stringify({ viewport: page.viewportSize(), frame: r, y, end, changed, sampled,
+      state: await page.evaluate(() => ({ caption: window.__jjAudio.captionShown(), phase: document.documentElement.dataset.jjPhase })) }, null, 2));
+  }
   assert.ok(changed / sampled < 0.01, `drawer paint stays inside its frame and shadow: ${changed}/${sampled} pixels changed below it`);
   return { viewport: page.viewportSize(), frame: r, changed, sampled };
 }
@@ -444,6 +453,8 @@ for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint
     await host.evaluate(() => { for (let i = 0; i < 4; i++) window.__padAdd(i); });
     await host.locator('[data-keyboard-options] summary').click();
     await host.evaluate(() => window.__jjTest.hold(true));
+    // Caption motion/expiry changes this strip independently of the drawer compositor. Its coexistence is tested below.
+    await host.waitForFunction(() => !document.querySelector('#jj-caption')?.textContent, undefined, { timeout: 10_000 });
     // This order matters: the old opaque scroller leaves a hole after growing and shrinking the viewport.
     for (const [width, height] of [[1920, 1080], [412, 915], [915, 412], [375, 667], [1366, 768]]) {
       await host.setViewportSize({ width, height }); await host.waitForTimeout(600);
@@ -476,5 +487,60 @@ for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint
       renderer: await host.evaluate(() => { const gl = document.querySelector('.jj-world').getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); }),
       measurements,
     }, null, 2)}\n`);
+  } finally { await host.context().close(); await wk?.close(); }
+});
+
+for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room']) test(`${engine} ${mode} welcome caption leaves the expanded drawer readable while visible`, { timeout: 180_000 }, async () => {
+  const wk = engine === 'WebKit' ? await webkit.launch() : null;
+  const host = await hostPage(wk ?? browser, '', mode);
+  const checks = [];
+  let cue = 0;
+  try {
+    if (mode === 'room') await host.waitForFunction(() => window.__jjRoom?.view()?.phase === 'Lobby' && document.documentElement.dataset.jjPhase === 'Lobby');
+    await host.evaluate(() => { for (let i = 0; i < 4; i++) window.__padAdd(i); });
+    await host.waitForFunction(() => document.querySelectorAll('.dr-rows li').length === 7);
+    await host.locator('[data-keyboard-options] summary').click();
+    for (const [width, height] of [[412, 915], [915, 412], [375, 667], [1366, 768], [1920, 1080]]) {
+      await host.setViewportSize({ width, height });
+      // Existing announcer seam: trigger the real cue and its real lifetime, rather than fabricated caption markup.
+      for (const position of ['top', 'bottom']) {
+        await host.evaluate((i) => window.__jjAudio.say('welcome', 1e9 + i * 10_000), cue++);
+        // ResizeObserver settles before paint; don't sample the previous cue's reservation in the same DOM turn.
+        await host.waitForFunction(() => {
+          const painted = document.querySelector('#jj-caption .capt')?.getBoundingClientRect();
+          const space = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--jj-caption-space'));
+          return !!painted && space >= Math.ceil(painted.height) + 16;
+        });
+        await host.locator('.drawer-scroll').evaluate((el, position) => { el.scrollTop = position === 'top' ? 0 : el.scrollHeight; }, position);
+        for (let sample = 0; sample < 6; sample++) {
+          const data = await host.evaluate(() => {
+            const d = document.querySelector('[data-jj-input-drawer]').getBoundingClientRect();
+            const c = document.querySelector('#jj-caption .capt')?.getBoundingClientRect();
+            const text = document.querySelector('#jj-caption .capt > span');
+            return { drawer: d.toJSON(), caption: c?.toJSON(), text: window.__jjAudio.captionShown(),
+              textClipped: !!text && text.scrollHeight > text.clientHeight + 1,
+              textHeight: [text?.clientHeight, text?.scrollHeight], rows: document.querySelectorAll('.dr-rows li').length };
+          });
+          assert.ok(data.caption && data.text.length > 3, 'the cue remains visible while sampled');
+          assert.equal(data.textClipped, false, `the complete welcome caption fits its strip: ${JSON.stringify(data)}`);
+          assert.equal(data.rows, 7, 'all three clusters and four sample pads remain in the drawer');
+          const overlap = Math.min(data.drawer.right, data.caption.right) > Math.max(data.drawer.left, data.caption.left)
+            && Math.min(data.drawer.bottom + 3, data.caption.bottom) > Math.max(data.drawer.top, data.caption.top);
+          assert.equal(overlap, false, `caption clear of drawer and shadow: ${JSON.stringify(data)}`);
+          if (mode === 'drive') {
+            const qr = await host.locator('.jj-drive-qr').boundingBox();
+            assert.ok(qr.y + qr.height + 3 < data.caption.top, `the separate free-drive room code stays above the caption: ${JSON.stringify({ qr, ...data })}`);
+          }
+          checks.push({ viewport: { width, height }, position, sample, ...data });
+          await host.waitForTimeout(100);
+        }
+        await shot(host, `${engine.toLowerCase()}-${mode}-caption-${position}-${width}x${height}`);
+      }
+      // The complete text was checked in every live sample. Screenshots may outlast a short cue's natural lifetime.
+      await host.waitForFunction(() => !document.querySelector('#jj-caption')?.textContent, undefined, { timeout: 10_000 });
+      await host.waitForFunction(() => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--jj-caption-space')) === 0);
+      await shot(host, `${engine.toLowerCase()}-${mode}-caption-cleared-${width}x${height}`);
+    }
+    if (process.env.JJ_CAPTURE_DIR) writeFileSync(join(process.env.JJ_CAPTURE_DIR, `${engine.toLowerCase()}-${mode}-caption-checks.json`), `${JSON.stringify({ engine, mode, version: (wk ?? browser).version(), hardware: `${process.platform}/${process.arch}`, checks }, null, 2)}\n`);
   } finally { await host.context().close(); await wk?.close(); }
 });

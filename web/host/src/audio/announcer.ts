@@ -97,6 +97,7 @@ export class Announcer {
   private speaking: { moment: string; until: number } | null = null;
   private pending: Pending | null = null;
   private captionEl: HTMLElement | null = null;
+  private captionObserver: ResizeObserver | null = null;
   private captionTimer = 0;
   private canOgg = canPlayOggOpus();
   /** Decoded clip lengths, s, by source. */
@@ -218,11 +219,20 @@ export class Announcer {
       el.id = 'jj-caption';
       el.setAttribute('role', 'status');
       el.setAttribute('aria-live', 'polite');
-      el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:6;max-width:min(80vw,900px);text-align:center;pointer-events:none';
+      el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:6;width:min(80vw,900px);text-align:center;pointer-events:none';
       this.host.append(el);
       this.captionEl = el;
+      // Reserve the caption's actual painted height, including its brush rotation. The input drawer may
+      // fill the rest of the screen, so a fixed caption offset alone covers its lower controls (br-m5l0).
+      this.captionObserver = new ResizeObserver(() => {
+        const painted = el.firstElementChild?.getBoundingClientRect();
+        el.ownerDocument.documentElement.style.setProperty('--jj-caption-space', `${painted ? Math.ceil(painted.height) + 16 : 0}px`);
+      });
     }
     this.captionEl.replaceChildren(caption(v.caption, { tone: 'saffron', id: `${moment}-${v.variant}` }));
+    // A different brush width changes its rotated bounds even if the container's line count stays the same.
+    this.captionObserver?.disconnect();
+    this.captionObserver?.observe(this.captionEl);
     this.captionEl.dataset.moment = moment;
     window.clearTimeout(this.captionTimer);
     this.captionTimer = window.setTimeout(() => this.captionEl?.replaceChildren(), seconds * 1000 + CAPTION_TAIL_MS);
