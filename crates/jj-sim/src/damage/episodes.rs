@@ -27,6 +27,8 @@ use crate::sim::TICK_HZ;
 /// `RigidBody::user_data` tags: the high bits say what a body is, the low 32 which one.
 pub const TAG_CAR: u128 = 1 << 32;
 pub const TAG_PROP: u128 = 2 << 32;
+/// Owner's compliant guard rails absorb a hit without costing car parts (br-gw74.9).
+pub const TAG_RAIL: u128 = 3 << 32;
 const TAG_MASK: u128 = 0xffff_ffff << 32;
 
 /// A body's state just before the step.
@@ -142,6 +144,12 @@ impl Episodes {
                         continue;
                     };
                     let other_body = other.parent();
+                    if other_body
+                        .and_then(|b| world.bodies.get(b))
+                        .is_some_and(|b| b.user_data & TAG_MASK == TAG_RAIL)
+                    {
+                        continue;
+                    }
                     let other_snap = other_body.and_then(|b| pre.get(b));
                     let kind = match other_body.and_then(|b| world.bodies.get(b)) {
                         Some(b) if b.user_data & TAG_MASK == TAG_CAR => OtherBody::Car {

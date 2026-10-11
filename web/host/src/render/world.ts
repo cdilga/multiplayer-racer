@@ -590,6 +590,7 @@ export class World {
     for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
     const f = s.frame;
     this.props.update(f);
+    this.map?.updateRails(f);
     // With cars on the field the camera frames them and the props; with none, the whole map (or the props).
     if (s.cars > 0 || !this.mapBox) for (let i = 0; f && i < f.debris; i++) grow(f.debrisPos[i * 3]!, f.debrisPos[i * 3 + 2]!);
     else [box[0], box[1], box[2], box[3]] = this.mapBox;

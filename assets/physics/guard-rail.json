@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "massKgPerM": 50.0,
+  "stiffnessNPerMPerM": 30000.0,
+  "dampingRatio": 0.65,
+  "travelM": 0.6,
+  "sleepSpeedMps": 0.001,
+  "solverIterations": 8,
+  "joinStiffnessNPerM": 150000.0,
+  "joinDampingRatio": 0.8,
+  "joinDistanceM": 0.4,
+  "friction": 0.04,
+  "restitution": 0.0,
+  "endRadiusM": 0.08
+}

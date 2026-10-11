@@ -28,7 +28,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use jj_fixture::{CarSpec, Fixture, Harness, InputSpan, PoseSpec, Until};
-use jj_map::{Registry, load_json};
+use jj_map::load_json;
 use jj_sim::observe::{RouteGeom, observe_cars};
 
 use super::{Host, STALE_MS, tick_ms};
@@ -69,6 +69,12 @@ enum Command {
         car: u32,
         part: String,
         health: f32,
+    },
+    #[serde(rename_all = "camelCase")]
+    Rail {
+        dressing: u32,
+        displacement_m: f32,
+        velocity_mps: f32,
     },
     /// Teleports a car with a velocity (the F05b setup, a journaled `place_car`): the staged collisions of P1-G05.
     #[serde(rename_all = "camelCase")]
@@ -169,6 +175,7 @@ impl Host {
                 "tick": self.sim.tick(),
                 "cars": observe_cars(&self.sim, &RouteGeom::new(&self.map.map)),
                 "debris": jj_fixture::debris(&self.sim),
+                "rails": self.sim.rail_states(),
             }),
         };
         state["host"] = json!({
@@ -194,7 +201,7 @@ impl Host {
             Command::Load { fixture, map_json } => {
                 let map = match map_json {
                     Some(text) => {
-                        load_json(text.as_bytes(), &Registry::generic()).map_err(|r| {
+                        load_json(text.as_bytes(), &jj_procgen::registry()).map_err(|r| {
                             format!(
                                 "the map doesn't validate: {:?}",
                                 r.violations
@@ -239,6 +246,16 @@ impl Host {
                 self.sim
                     .set_part_health(jj_sim::CarId(car), i as u8, health);
                 json!({ "tick": self.sim.tick(), "part": part, "health": health })
+            }
+            Command::Rail {
+                dressing,
+                displacement_m,
+                velocity_mps,
+            } => {
+                if !self.sim.set_rail(dressing, displacement_m, velocity_mps) {
+                    return Err("unknown rail dressing index or nonfinite rail state".into());
+                }
+                json!({ "tick": self.sim.tick(), "rails": self.sim.rail_states() })
             }
             Command::Place { car, pose, linvel } => {
                 self.sim.place_car(

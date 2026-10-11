@@ -17,6 +17,7 @@ pub mod observe;
 pub mod placement;
 pub mod profile;
 pub mod race;
+pub mod rails;
 pub mod rng;
 pub mod sim;
 pub mod surface;

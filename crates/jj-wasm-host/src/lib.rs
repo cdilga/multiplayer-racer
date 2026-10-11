@@ -171,7 +171,7 @@ impl HostSim {
 
 /// Typed encoders for the worker ABI, so the worker (and its test harness) never hand-roll postcard in JS.
 pub mod codec {
-    use jj_map::{Registry, load_json};
+    use jj_map::load_json;
     use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, UiCommand};
     use jj_types::{CommandId, EndpointId, LocalSourceId};
     use wasm_bindgen::prelude::*;
@@ -179,7 +179,7 @@ pub mod codec {
     /// Validates a `jj.map.v1` JSON document and returns its canonical bytes (what `Init` carries).
     #[wasm_bindgen]
     pub fn canonical_map(json: &str) -> Result<Vec<u8>, JsError> {
-        load_json(json.as_bytes(), &Registry::generic())
+        load_json(json.as_bytes(), &jj_procgen::registry())
             .map(|m| m.canonical)
             .map_err(|r| {
                 JsError::new(&format!(

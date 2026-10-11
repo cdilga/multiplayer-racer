@@ -1,0 +1,12 @@
+{
+  "format": "jj-rail-sweep.v1",
+  "what": "Cruz Missile contacts a compliant W-beam at low, autopilot and boost entry speeds, from glancing to head-on. Every row must actually move a rail, retain all health and parts, cause no wreck or recovery, and replay exactly. Entry speeds are samples, not gameplay limits.",
+  "map": "scenarios/rails/yard.json",
+  "speedsMps": [3, 8, 15, 25, 40],
+  "anglesDeg": [5, 15, 30, 60, 90],
+  "ticks": 240,
+  "boostEntryMps": 40,
+  "travelToleranceM": 0.02,
+  "minMeasuredDeflectionM": 0.001,
+  "knownGaps": ["Corner assistance is asserted by a separate differential fixture.", "This sweep samples one car model on flat terrain; other roster vehicles and banked terrain require separate rows."]
+}

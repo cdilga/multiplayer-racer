@@ -1,0 +1,139 @@
+{
+  "browser": "chromium",
+  "fixture": "scenarios/rails/steering-help.json",
+  "native": "cb3e0f83abbf0d20a423d2d3481fab98db17373bf4024232c7963f6c3292c11d",
+  "wasm": {
+    "stateHash": "cb3e0f83abbf0d20a423d2d3481fab98db17373bf4024232c7963f6c3292c11d",
+    "tick": 840
+  },
+  "rails": [
+    {
+      "displacementM": 0.00000762939453125,
+      "dressing": 0,
+      "fixed": false,
+      "springEnergyJ": 0.00000235741026699543,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.000045924341975478455,
+      "dressing": 1,
+      "fixed": false,
+      "springEnergyJ": 0.00008541632996639237,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00006660520739387721,
+      "dressing": 2,
+      "fixed": false,
+      "springEnergyJ": 0.0001796682772692293,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00004825113865081221,
+      "dressing": 3,
+      "fixed": false,
+      "springEnergyJ": 0.0000942909755394794,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.000058098059525946155,
+      "dressing": 4,
+      "fixed": false,
+      "springEnergyJ": 0.00013670306361746043,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00004448033723747358,
+      "dressing": 5,
+      "fixed": false,
+      "springEnergyJ": 0.00008012926991796121,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00003281419776612893,
+      "dressing": 6,
+      "fixed": false,
+      "springEnergyJ": 0.000043609248677967116,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00005670890095643699,
+      "dressing": 7,
+      "fixed": false,
+      "springEnergyJ": 0.0001302439341088757,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00006748370651621372,
+      "dressing": 8,
+      "fixed": false,
+      "springEnergyJ": 0.00018443904991727322,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": 0.000013742910596192814,
+      "dressing": 9,
+      "fixed": false,
+      "springEnergyJ": 0.000007649137842236087,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": 0.00008209788938984275,
+      "dressing": 10,
+      "fixed": false,
+      "springEnergyJ": 0.0002729725674726069,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": 0.00004609177995007485,
+      "dressing": 11,
+      "fixed": false,
+      "springEnergyJ": 0.00008604031609138474,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": 0.000004217396053718403,
+      "dressing": 12,
+      "fixed": false,
+      "springEnergyJ": 7.203504424069251e-7,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.000019449804312898777,
+      "dressing": 13,
+      "fixed": false,
+      "springEnergyJ": 0.000015320943930419162,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.000032646043109707534,
+      "dressing": 14,
+      "fixed": false,
+      "springEnergyJ": 0.00004316344711696729,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    },
+    {
+      "displacementM": -0.00003814696901827119,
+      "dressing": 15,
+      "fixed": false,
+      "springEnergyJ": 0.00005893524576094933,
+      "travelM": 0.6000000238418579,
+      "velocityMps": 0
+    }
+  ]
+}

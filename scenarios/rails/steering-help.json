@@ -1,0 +1,55 @@
+{
+  "scenario": "rail-steering-help",
+  "what": "br-gw74.9: compliant 90-degree corner, same open-loop script as the rigid/absent comparison in the native bank.",
+  "map": "scenarios/rails/corner-map.json",
+  "seed": 197,
+  "ticks": 840,
+  "cars": [
+    {
+      "pose": {
+        "x": -70,
+        "y": 0.1,
+        "z": -30
+      }
+    }
+  ],
+  "place": [
+    {
+      "tick": 240,
+      "car": 0,
+      "pose": {
+        "x": -58,
+        "y": 0.05,
+        "z": -42,
+        "headingDeg": 90
+      },
+      "linvel": [
+        25,
+        0,
+        0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 240,
+      "toTick": 840,
+      "throttle": 0.6103701895199438,
+      "steer": -0.17999816888943143
+    }
+  ],
+  "observe": [
+    240,
+    715,
+    840
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "husks",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

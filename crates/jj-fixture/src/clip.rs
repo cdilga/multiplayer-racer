@@ -407,6 +407,16 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::PickupItem { car, seat, item } => {
             let _ = sim.pickup_item(CarId(*car), *seat, *item);
         }
+        Setup::RailState {
+            dressing,
+            displacement_m,
+            velocity_mps,
+        } => {
+            sim.set_rail(*dressing, *displacement_m, *velocity_mps);
+        }
+        Setup::RailFixed { dressing, fixed } => {
+            sim.set_rail_fixed(*dressing, *fixed);
+        }
     }
 }
 

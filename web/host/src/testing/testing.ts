@@ -206,6 +206,7 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     input: (input: TestInput) => test.input(input),
     hold: (on: boolean) => test.command({ cmd: 'hold', on }),
     load: (fixture: Json, mapJson?: string) => test.command({ cmd: 'load', fixture, mapJson }),
+    rail: (dressing: number, displacementM: number, velocityMps = 0) => test.command({ cmd: 'rail', dressing, displacementM, velocityMps }),
     spawn: (cars: Json[]) => test.command<{ cars: number[] }>({ cmd: 'spawn', cars }),
     inputs: (spans: Json[]) => test.command({ cmd: 'inputs', spans }),
     step,

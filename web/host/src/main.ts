@@ -98,6 +98,7 @@ async function boot(): Promise<void> {
     hold: () => world.stop(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
+    rails: () => world.map?.railPoses() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
     cameras: () => world.rig.inspect(),

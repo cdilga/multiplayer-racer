@@ -9,6 +9,7 @@
 // (the part's pivot frame in the world, detached). A debris record of kind 2 is a detached part's body: the decoder drops
 // it (the part record draws it; the debris list holds only what is drawn as debris). The header's last u32 was reserved and written 0, so a worker that sends no part records
 // still reads as "every part intact".
+// Flags bit 0 adds a trailer after all part records: count u32, then count × (dressing index u32, normal offset f32).
 
 export const SNAPSHOT_MAGIC = 0x4a4a5331;
 export const SNAPSHOT_HEADER = 40;
@@ -61,6 +62,9 @@ export interface Frame {
   piecePart: Uint8Array;
   piecePos: Float32Array;
   pieceRot: Float32Array;
+  rails: number;
+  railDressing: Uint32Array;
+  railOffset: Float32Array;
 }
 
 /** Copies a snapshot out of its pooled buffer (so the buffer can go straight back to the worker). */
@@ -99,6 +103,9 @@ export function decodeSnapshot(view: DataView): Frame {
     piecePart: new Uint8Array(parts),
     piecePos: new Float32Array(parts * 3),
     pieceRot: new Float32Array(parts * 4),
+    rails: 0,
+    railDressing: new Uint32Array(0),
+    railOffset: new Float32Array(0),
   };
   let at = SNAPSHOT_HEADER;
   for (let i = 0; i < cars; i++, at += SNAPSHOT_CAR) {
@@ -140,6 +147,17 @@ export function decodeSnapshot(view: DataView): Frame {
     for (let k = 0; k < 4; k++) f.partRot[n * 4 + k] = view.getFloat32(at + 24 + k * 4, true);
   }
   f.parts = living;
+  if (view.getUint16(6, true) & 1) {
+    const count = view.getUint32(at, true); at += 4;
+    if (count > Math.floor((view.byteLength - at) / 8)) throw new Error('truncated rail snapshot trailer');
+    f.rails = count;
+    f.railDressing = new Uint32Array(count);
+    f.railOffset = new Float32Array(count);
+    for (let i = 0; i < count; i++, at += 8) {
+      f.railDressing[i] = view.getUint32(at, true);
+      f.railOffset[i] = view.getFloat32(at + 4, true);
+    }
+  }
   return f;
 }
 

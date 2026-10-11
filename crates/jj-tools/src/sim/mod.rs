@@ -98,6 +98,13 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     let kit = crate::find_kit(map_path.parent().unwrap_or(Path::new(".")))
         .ok_or("no assets/kit for the map")?;
     let registry = crate::load_registry(&kit).map_err(|e| e.to_string())?;
+    // Generated routes use the complete wayfinding kit before assets/kit carries those families.
+    // Match `jj procgen` and the browser host, so R90 fixtures can drive their actual guard rails.
+    let registry = if registry.get("wayfinding/chevron-post").is_some() {
+        registry
+    } else {
+        jj_procgen::registry()
+    };
     let map = jj_map::load_json(
         &std::fs::read(&map_path).map_err(|e| format!("{}: {e}", map_path.display()))?,
         &registry,

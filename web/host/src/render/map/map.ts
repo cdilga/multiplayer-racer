@@ -147,6 +147,34 @@ export class MapRenderer {
   private material = toon(new MeshLambertMaterial({ vertexColors: true }), { halftone: true, grit: true });
   /** Printed sign faces (`decor.face`): unlit, in the haze like everything else. */
   private faceMaterial = new MeshBasicMaterial({ vertexColors: true });
+  private railInstances = new Map<number, { index: number; rest: Matrix4; normal: Vector3 }[]>();
+  private railMatrix = new Matrix4();
+
+  /** Simulated W-beam motion, indexed by the map's dressing entries. Still one instanced draw for the family. */
+  updateRails(f: Frame | null): void {
+    const im = this.kit.get('wayfinding/guard-rail');
+    if (!im || !f) return;
+    for (let i = 0; i < f.rails; i++) {
+      for (const rail of this.railInstances.get(f.railDressing[i]!) ?? []) {
+        this.railMatrix.copy(rail.rest);
+        this.railMatrix.elements[12]! += rail.normal.x * f.railOffset[i]!;
+        this.railMatrix.elements[14]! += rail.normal.z * f.railOffset[i]!;
+        im.setMatrixAt(rail.index, this.railMatrix);
+      }
+    }
+    if (f.rails) im.instanceMatrix.needsUpdate = true;
+  }
+
+  /** R90: the matrices actually drawn, rather than the map's rest poses. */
+  railPoses(): { dressing: number; instance: number; position: number[] }[] {
+    const im = this.kit.get('wayfinding/guard-rail');
+    const out: { dressing: number; instance: number; position: number[] }[] = [];
+    if (im) for (const [dressing, instances] of this.railInstances) for (const rail of instances) {
+      im.getMatrixAt(rail.index, this.railMatrix);
+      out.push({ dressing, instance: rail.index, position: this.railMatrix.elements.slice(12, 15) });
+    }
+    return out;
+  }
 
   /** `repeat`: draw the dressing this many times over (offset copies), to show draws don't grow with placements. */
   constructor(
@@ -438,12 +466,12 @@ export class MapRenderer {
   }
 
   private dressing(repeat: number): number {
-    const byType = new Map<string, { pose: Pose; params: Params }[]>();
+    const byType = new Map<string, { pose: Pose; params: Params; dressing: number }[]>();
     for (let r = 0; r < repeat; r++) {
-      for (const d of this.map.dressing) {
+      for (const [dressing, d] of this.map.dressing.entries()) {
         // Copies shift 3 m sideways per repeat: a draw-count probe, never a shipped placement.
         const pose = r === 0 ? d.pose : { ...d.pose, x: d.pose.x + r * 3000, z: d.pose.z + r * 3000 };
-        (byType.get(d.kitPiece) ?? byType.set(d.kitPiece, []).get(d.kitPiece)!).push({ pose, params: d.params ?? {} });
+        (byType.get(d.kitPiece) ?? byType.set(d.kitPiece, []).get(d.kitPiece)!).push({ pose, params: d.params ?? {}, dressing });
       }
     }
     const m = new Matrix4();
@@ -460,9 +488,14 @@ export class MapRenderer {
       im.castShadow = true;
       im.receiveShadow = true;
       im.frustumCulled = false;
-      list.forEach(({ pose, params }, i) => {
+      list.forEach(({ pose, params, dressing }, i) => {
         const p = withDefaults(entry, params);
         im.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.scale(p))));
+        if (id === 'wayfinding/guard-rail') {
+          const instances = this.railInstances.get(dressing) ?? [];
+          instances.push({ index: i, rest: m.clone(), normal: new Vector3(0, 0, 1).applyQuaternion(q) });
+          this.railInstances.set(dressing, instances);
+        }
       });
       this.kit.set(id, im);
       this.group.add(im);

@@ -152,6 +152,17 @@ pub enum Setup {
         seat: jj_types::SeatId,
         item: jj_types::items::ItemId,
     },
+    /// R90 guard-rail setup. Appended: existing postcard variant indices stay stable.
+    RailState {
+        dressing: u32,
+        displacement_m: f32,
+        velocity_mps: f32,
+    },
+    /// R90 rigid comparison of the same beam/road/input fixture (br-gw74.9 steering-help differential).
+    RailFixed {
+        dressing: u32,
+        fixed: bool,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

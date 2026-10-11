@@ -66,6 +66,9 @@ pub struct Fixture {
     /// Part health set at a tick (R90 "settable", P1-S04b): the damage state without a crash.
     #[serde(default)]
     pub damage: Vec<PartHealthSpec>,
+    /// Guard-rail motion set at a tick (R90); dressing index in the map, metres and metres/second.
+    #[serde(default)]
+    pub rails: Vec<RailSpec>,
     /// Cars wrecked at a tick, as the stuck-flip rule would (P1-S04c).
     #[serde(default)]
     pub wreck: Vec<RecoverSpec>,
@@ -251,6 +254,17 @@ pub struct PartHealthSpec {
     pub car: u32,
     pub part: String,
     pub health: f32,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RailSpec {
+    pub tick: u64,
+    pub dressing: u32,
+    pub displacement_m: f32,
+    pub velocity_mps: f32,
+    #[serde(default)]
+    pub fixed: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -591,6 +605,10 @@ impl Harness {
                 sim.set_part_health(CarId(d.car), part as u8, d.health);
             }
         }
+        for r in fx.rails.iter().filter(|r| r.tick == t) {
+            sim.set_rail_fixed(r.dressing, r.fixed);
+            sim.set_rail(r.dressing, r.displacement_m, r.velocity_mps);
+        }
         for r in fx.wreck.iter().filter(|r| r.tick == t) {
             sim.wreck(CarId(r.car));
         }
@@ -718,7 +736,7 @@ impl Harness {
 
     /// The full state now: cars (`jj_sim::observe`), debris footprints and the fixture's session.
     pub fn observe(&self, sim: &Sim) -> Value {
-        let mut state = json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim),
+        let mut state = json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim), "rails": sim.rail_states(),
                 "session": self.session.observe() });
         if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
             state["items"] = items(sim);
@@ -747,7 +765,7 @@ impl Harness {
         let tick = sim.tick();
         self.check(tick, end);
         if end || self.fx.observe.contains(&tick) {
-            let mut state = json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": self.session.observe() });
+            let mut state = json!({ "tick": tick, "cars": cars, "debris": debris(sim), "rails": sim.rail_states(), "session": self.session.observe() });
             if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
                 state["items"] = items(sim);
             }
@@ -781,7 +799,7 @@ impl Harness {
         self.check(tick, true);
         if !self.fx.observe.contains(&tick) {
             self.observations.push(json!({ "tick": tick, "cars": observe_cars(sim, &self.route),
-                                            "debris": debris(sim), "session": self.session.observe() }));
+                                            "debris": debris(sim), "rails": sim.rail_states(), "session": self.session.observe() }));
         }
     }
 

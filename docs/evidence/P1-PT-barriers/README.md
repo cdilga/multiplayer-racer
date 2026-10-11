@@ -1,0 +1,21 @@
+# Compliant W-beam rails — br-gw74.9
+
+Only `wayfinding/guard-rail` becomes compliant. Concrete barriers, buildings and other scenery retain normal damage. The existing W-beam/post model and instancing are reused (R105); no vehicle geometry changes. No car velocity/steering override, count cap or expiring debris is introduced.
+
+A section is a dynamic Rapier body on a force-based prismatic joint: local-normal translation only, ±0.6 m mechanical travel. The shipped SI profile lives in `assets/physics/guard-rail.json`: section mass and spring stiffness scale with length, damping is a ratio of critical damping, and endpoint joins use passive normal springs. Rounded collider ends stay inside the authored outer footprint. Mounted sections do not collide with ground or neighbouring overlapped sections, which otherwise pin their return. Extra solver iterations keep the measured contact bank within 0.01 m of mechanical travel. Rails remain solid to cars/debris, including during spawn protection. Rail contact episodes charge zero part health; ordinary collision momentum/friction still applies.
+
+The simulation reports rail dressing index, displacement, normal velocity, spring energy, travel and rigid comparison mode. Setup/fixed-mode mutations journal and replay; state hashes and total energy include the rails and joining springs. The fixture runner and browser probe expose the same data. Snapshot trailer flag 1 carries dressing/displacement pairs, and the map renderer moves existing instances. Old no-rail snapshots remain byte-identical.
+
+## Behaviour measured
+
+- `contact-sweep.json`: 25 seeded contacts, speeds 3/8/15/25/40 m/s and angles 5/15/30/60/90°. Every sample actually moves its rail; all car health remains exactly unchanged, all parts remain intact, no husk/recovery occurs, and full-state journal replay matches. The 40 m/s rows actually boost. Glancing-damage threshold is **zero health lost**. Samples are a test cohort, never gameplay limits.
+- `corners.json`: the authored 90° road/rail fixture uses identical open-loop inputs for compliant, rigid and absent rails. At 25 m/s entry the compliant car crosses the exit at x=-27.814 m, heading=-0.195 rad (road points north); the rigid car exits at x=-36.546 m, heading=-1.262 rad and spins away from the road. Without rails it misses the exit at x=1.542 m. At 3 m/s entry, the compliant car crosses the exit at 3.497 m/s, with peak speed 4.702 m/s; health/life stay unchanged. Low-speed comparison is not claimed to require give: a rigid rail also completes that case. Every mode replays exactly.
+- Single-section and bolted-neighbour passive tests count spring energy, create no net energy within the 2 J solver allowance, return unloaded displacement below 0.002 m in 600 ticks, and match replay. The neighbour moves from the join force, without a car override.
+- `chromium-render-contact.json` / `webkit-render-contact.json`: actual collision → WASM observation → transferred snapshot → drawn matrix, unloaded return, exact setup setter and next stepped drawing, five viewports, fullscreen and rotation. All car parts/health remain unchanged. The fixture runs via the real local Rust server without a controller connection.
+- `cli-steering-help.json`: `jj sim --json --out /tmp/jj-rail-cli scenarios/rails/steering-help.json` completes 840 ticks, keeps every part intact and replays to `cb3e0f83abbf0d20a423d2d3481fab98db17373bf4024232c7963f6c3292c11d`. `chromium-corner-parity.json` and `webkit-corner-parity.json` independently reach that exact full-state hash through the running browser worker; all observed rail states match the native CLI.
+
+## Validation to date
+
+Local macOS/arm64 working tree based on 1d527e3a, with the rail changes dirty and the release WASM rebuilt. Native bank: 4 passes (`cargo test -p jj-sim --test rails`, optimized test profile, invoked via RCH; this run executed locally). Browser matrix: 2 passes, 58.908 s (Playwright Chromium/WebKit, local Rust server `/tmp/jj-macos-server-w01`). Affected-crate clippy with all targets/features and denied warnings passes; web typecheck passes. All 30 final captures were inspected; see `self-review.md`.
+
+Remote workspace matrix, CI, deployment and deployed self-review remain pending. These are agent work, not owner blockers. No physical-device/Safari or remote-GPU results are claimed here.

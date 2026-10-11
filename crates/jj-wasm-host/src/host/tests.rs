@@ -14,6 +14,55 @@ const GREYBOX: &str = include_str!("../../../../maps/greybox-loop.json");
 const MS: u64 = 1000;
 
 #[test]
+fn snapshot_transfers_compliant_rails_by_map_dressing_index() {
+    let map = load_json(
+        include_bytes!("../../../../scenarios/rails/yard.json"),
+        &jj_procgen::registry(),
+    )
+    .unwrap();
+    let mut h = Host::new(
+        &MainToSim::Init {
+            abi_version: ABI_VERSION,
+            rules_hash: [0; 32],
+            map_bytes: map.canonical,
+            vehicle_sidecars: vec![],
+            seed: 91,
+        }
+        .encode(),
+    )
+    .unwrap();
+    assert!(h.sim.set_rail(0, 0.25, 0.0));
+    let mut buf = vec![0; h.snapshot_size()];
+    assert_eq!(h.write_snapshot(&mut buf), buf.len());
+    assert_eq!(
+        u16::from_le_bytes(buf[6..8].try_into().unwrap()),
+        1,
+        "rail trailer flag"
+    );
+    let at = SNAPSHOT_HEADER;
+    assert_eq!(
+        u32::from_le_bytes(buf[at..at + 4].try_into().unwrap()),
+        1,
+        "all rail sections"
+    );
+    assert_eq!(
+        u32::from_le_bytes(buf[at + 4..at + 8].try_into().unwrap()),
+        0,
+        "dressing index"
+    );
+    assert_eq!(
+        f32::from_le_bytes(buf[at + 8..at + 12].try_into().unwrap()),
+        0.25,
+        "physical displacement"
+    );
+    assert_eq!(
+        h.write_snapshot(&mut buf[..SNAPSHOT_HEADER]),
+        0,
+        "never truncate entities to fit a buffer"
+    );
+}
+
+#[test]
 fn race_classification_preserves_crossing_fraction_progress_and_exact_ties() {
     use jj_session::results::{RoundFacts, Ruleset, classify};
     use jj_types::{RoundId, SeatId};

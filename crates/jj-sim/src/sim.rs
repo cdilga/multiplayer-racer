@@ -216,6 +216,8 @@ pub struct Sim {
     /// The ground footprints of the map's solid dressing (barriers, posts, buildings): a placed car must clear them too,
     /// since protection ghosts a car against cars and debris only and terrain and barriers stay solid.
     statics: Vec<Rect>,
+    rails: Vec<crate::rails::Rail>,
+    rail_joins: Vec<crate::rails::Join>,
     /// What each prop is, for renderers (P1-S08: map props and debris, or dropped cones).
     prop_kinds: Vec<PropKind>,
     /// Which car's part each `Part` debris body is, by prop index (P1-S04b).
@@ -347,7 +349,9 @@ impl Sim {
 
         // Static dressing with `collides`: the registry's collider proxies, standing on the ground at their pose.
         let mut statics = Vec::new();
-        for d in m.dressing.iter().filter(|d| d.collides) {
+        let mut rails = Vec::new();
+        let rail_profile = crate::rails::RailProfile::standard();
+        for (index, d) in m.dressing.iter().enumerate().filter(|(_, d)| d.collides) {
             let Some(fp) = registry
                 .get(&d.kit_piece)
                 .and_then(|p| p.footprint(&d.params))
@@ -372,6 +376,43 @@ impl Sim {
                 },
             });
             let (builder, hy) = proxy_collider(fp);
+            if d.kit_piece == "wayfinding/guard-rail" {
+                let length = match fp {
+                    Footprint::Rect { x, .. } => x as f32 / 1000.0,
+                    _ => unreachable!(),
+                };
+                // Rolled beam ends have no sharp box corner to snag a tyre at a displaced overlap.
+                // Keep the authored outer dimensions, rounding inward from that envelope.
+                let depth = match fp {
+                    Footprint::Rect { z, .. } => z as f32 / 1000.0,
+                    _ => unreachable!(),
+                };
+                let profile = rail_profile;
+                let radius = profile.end_radius_m.min(depth / 4.0).min(hy / 2.0);
+                let builder = ColliderBuilder::round_cuboid(
+                    length / 2.0 - radius,
+                    hy - radius,
+                    depth / 2.0 - radius,
+                    radius,
+                );
+                rails.push(crate::rails::Rail::insert(
+                    &mut world,
+                    index as u32,
+                    Vector::new(
+                        d.pose.x as f32 / 1000.0,
+                        d.pose.y as f32 / 1000.0 + hy,
+                        d.pose.z as f32 / 1000.0,
+                    ),
+                    // Sections are mounted, not resting on terrain, and adjoining beams overlap at their joins.
+                    // Let cars/debris hit them without ground friction or beam/beam contacts pinning the spring.
+                    yaw_rotation(d.pose.yaw),
+                    builder
+                        .collision_groups(groups(GROUP_WORLD, Group::ALL.difference(SOLID_WORLD))),
+                    length,
+                    profile,
+                ));
+                continue;
+            }
             let c = builder
                 .translation(Vector::new(
                     d.pose.x as f32 / 1000.0,
@@ -382,6 +423,8 @@ impl Sim {
                 .collision_groups(WORLD_GROUPS);
             world.insert_collider(c, None);
         }
+
+        let rail_joins = crate::rails::connect(&mut world, &rails, rail_profile);
 
         // Props: initial dynamic bodies (cones, bins) with their proxies; they stay for the round.
         let mut props = Vec::new();
@@ -431,6 +474,8 @@ impl Sim {
             item_refusals: Vec::new(),
             props,
             statics,
+            rails,
+            rail_joins,
             episodes: Episodes::default(),
             damage_events: Vec::new(),
             derby: None,
@@ -453,6 +498,62 @@ impl Sim {
 
     pub fn journal(&self) -> &Journal {
         &self.journal
+    }
+
+    pub fn rail_count(&self) -> usize {
+        self.rails.len()
+    }
+
+    pub fn rail_states(&self) -> Vec<crate::rails::RailState> {
+        self.rails
+            .iter()
+            .map(|r| r.state(&self.world.bodies))
+            .collect()
+    }
+
+    /// R90: set a section's displacement and normal velocity, journalled for replay. Unknown indices/nonfinite
+    /// values are refused; travel is the physical joint limit, never a gameplay count limit.
+    pub fn set_rail(&mut self, dressing: u32, displacement_m: f32, velocity_mps: f32) -> bool {
+        if !displacement_m.is_finite() || !velocity_mps.is_finite() {
+            return false;
+        }
+        let Some(rail) = self.rails.iter().find(|r| r.dressing == dressing) else {
+            return false;
+        };
+        let before = self.energy_j().0;
+        self.journal.setup.push((
+            self.tick,
+            Setup::RailState {
+                dressing,
+                displacement_m,
+                velocity_mps,
+            },
+        ));
+        rail.set(&mut self.world.bodies, displacement_m, velocity_mps);
+        self.ledger += self.energy_j().0 - before;
+        true
+    }
+
+    /// R90 comparison seam: fix the same rail at rest without changing its collider, friction or damage policy.
+    pub fn set_rail_fixed(&mut self, dressing: u32, fixed: bool) -> bool {
+        let Some(rail) = self.rails.iter().find(|r| r.dressing == dressing) else {
+            return false;
+        };
+        let before = self.energy_j().0;
+        rail.set(&mut self.world.bodies, 0.0, 0.0);
+        self.world.bodies[rail.body].set_body_type(
+            if fixed {
+                RigidBodyType::Fixed
+            } else {
+                RigidBodyType::Dynamic
+            },
+            true,
+        );
+        self.ledger += self.energy_j().0 - before;
+        self.journal
+            .setup
+            .push((self.tick, Setup::RailFixed { dressing, fixed }));
+        true
     }
 
     pub fn rng(&mut self) -> &mut Rng {
@@ -2311,14 +2412,24 @@ impl Sim {
     /// bug candidate.
     pub fn energy_j(&self) -> (f64, f64) {
         let g = self.world.gravity;
-        let e = self
+        let e: f64 = self
             .world
             .bodies
             .iter()
             .filter(|(_, b)| b.is_dynamic())
             .map(|(_, b)| f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)))
             .sum();
-        (e, self.ledger)
+        let spring: f64 = self
+            .rails
+            .iter()
+            .map(|r| f64::from(r.state(&self.world.bodies).spring_energy_j))
+            .sum();
+        let joins: f64 = self
+            .rail_joins
+            .iter()
+            .map(|j| j.energy(&self.world.bodies))
+            .sum();
+        (e + spring + joins, self.ledger)
     }
 
     /// Scales the solver's iterations (the TGS substeps) for the stress rerun of the energy tests; not a journaled
@@ -2526,7 +2637,13 @@ impl Sim {
         for &p in &self.props {
             body(p);
         }
+        for rail in &self.rails {
+            body(rail.body);
+        }
         let mut race = Vec::new();
+        for rail in &self.rails {
+            race.push(u8::from(self.world.bodies[rail.body].is_fixed()));
+        }
         self.race.hash_into(&mut race);
         for c in &self.cars {
             c.damage.hash_into(&mut race);
@@ -2675,6 +2792,16 @@ impl Sim {
                     Setup::StartDerby { limit_ticks } => sim.start_derby(*limit_ticks),
                     Setup::PickupItem { car, seat, item } => {
                         let _ = sim.pickup_item(CarId(*car), *seat, *item);
+                    }
+                    Setup::RailState {
+                        dressing,
+                        displacement_m,
+                        velocity_mps,
+                    } => {
+                        sim.set_rail(*dressing, *displacement_m, *velocity_mps);
+                    }
+                    Setup::RailFixed { dressing, fixed } => {
+                        sim.set_rail_fixed(*dressing, *fixed);
                     }
                 }
             }

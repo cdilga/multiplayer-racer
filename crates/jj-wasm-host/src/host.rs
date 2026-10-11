@@ -22,7 +22,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
-use jj_map::{LoadedMap, Registry, load_canonical};
+use jj_map::{LoadedMap, load_canonical};
 use jj_protocol::abi::{
     ABI_VERSION, Channel, DamageCause, EpisodeRecord, HitBody, MainToSim, SimEvent, SimToMain,
     UiCommand,
@@ -288,7 +288,7 @@ impl Host {
         if abi_version != ABI_VERSION {
             return Err(HostError::Abi(abi_version));
         }
-        let map: LoadedMap = load_canonical(&map_bytes, &Registry::generic()).map_err(|r| {
+        let map: LoadedMap = load_canonical(&map_bytes, &jj_procgen::registry()).map_err(|r| {
             HostError::Map(format!(
                 "{:?}",
                 r.violations
@@ -300,12 +300,12 @@ impl Host {
         Ok(Self::from_map(map, seed))
     }
 
-    /// A host on a validated map with a seed (the generic kit registry and the Cruz Missile profile).
+    /// A host on a validated map with a seed (the complete kit registry and the Cruz Missile profile).
     pub fn from_map(map: LoadedMap, seed: u64) -> Self {
         Self {
             sim: Sim::with_profiles(
                 &map,
-                &Registry::generic(),
+                &jj_procgen::registry(),
                 seed,
                 vec![VehicleProfile::cruz()],
             ),
@@ -1519,6 +1519,11 @@ impl Host {
             + SNAPSHOT_CAR * self.sim.cars().count()
             + SNAPSHOT_DEBRIS * self.sim.debris_poses().len()
             + SNAPSHOT_PART * (self.sim.part_records().len() + self.sim.piece_records().len())
+            + if self.sim.rail_count() == 0 {
+                0
+            } else {
+                4 + 8 * self.sim.rail_count()
+            }
     }
 
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
@@ -1543,7 +1548,9 @@ impl Host {
         let debris = self.sim.debris_poses();
         w.u32(SNAPSHOT_MAGIC);
         w.u16(1);
-        w.u16(0);
+        // JJS1 flags bit 0: a rail trailer after the part records (count u32, dressing u32/offset f32 each).
+        let rails = self.sim.rail_states();
+        w.u16(u16::from(!rails.is_empty()));
         w.u64(self.sim.tick());
         w.u32(self.session_rev);
         w.u32(self.pause_mask());
@@ -1636,6 +1643,13 @@ impl Host {
             w.u16(3);
             w.f32(0.0);
             p.iter().chain(&r).for_each(|&v| w.f32(v));
+        }
+        if !rails.is_empty() {
+            w.u32(rails.len() as u32);
+            for rail in rails {
+                w.u32(rail.dressing);
+                w.f32(rail.displacement_m);
+            }
         }
         w.at
     }
