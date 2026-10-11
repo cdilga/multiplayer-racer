@@ -21,6 +21,32 @@ pub struct RouteGeom {
     s: Vec<f64>,
     closed: bool,
     pub total: f64,
+    segments: Vec<Segment>,
+}
+
+struct Segment {
+    a: (f64, f64),
+    dx: f64,
+    dz: f64,
+    len2: f64,
+    len: f64,
+}
+
+fn segments(pts: &[(f64, f64)], count: usize) -> Vec<Segment> {
+    (0..count)
+        .map(|i| {
+            let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+            let len2 = dx * dx + dz * dz;
+            Segment {
+                a,
+                dx,
+                dz,
+                len2,
+                len: len2.sqrt(),
+            }
+        })
+        .collect()
 }
 
 impl RouteGeom {
@@ -43,12 +69,14 @@ impl RouteGeom {
             s.push(s[i] + (b.0 - a.0).hypot(b.1 - a.1));
         }
         let total = *s.last().unwrap_or(&0.0);
+        let segments = segments(&pts, segs);
         Self {
             pts,
             half,
             s,
             closed: route.closed,
             total,
+            segments,
         }
     }
 
@@ -68,10 +96,8 @@ impl RouteGeom {
         // route. The bound is an actual candidate's hypot, not an approximation to the answer.
         let mut closest = (f64::INFINITY, f64::INFINITY);
         let mut closest_max = f64::INFINITY;
-        for i in 0..self.segs() {
-            let (a, b) = (self.pts[i], self.pts[(i + 1) % n]);
-            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
-            let len2 = dx * dx + dz * dz;
+        for seg in &self.segments {
+            let (a, dx, dz, len2) = (seg.a, seg.dx, seg.dz, seg.len2);
             if len2 == 0.0 {
                 continue;
             }
@@ -90,10 +116,8 @@ impl RouteGeom {
             half: 0.0,
         };
         let mut best_d = f64::INFINITY;
-        for i in 0..self.segs() {
-            let (a, b) = (self.pts[i], self.pts[(i + 1) % n]);
-            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
-            let len2 = dx * dx + dz * dz;
+        for (i, seg) in self.segments.iter().enumerate() {
+            let (a, dx, dz, len2) = (seg.a, seg.dx, seg.dz, seg.len2);
             if len2 == 0.0 {
                 continue;
             }
@@ -109,7 +133,7 @@ impl RouteGeom {
             if d < best_d {
                 best_d = d;
                 bound = bound.min(d);
-                let len = len2.sqrt();
+                let len = seg.len;
                 let (tx, tz) = (dx / len, dz / len);
                 let lateral = (x - px) * -tz + (z - pz) * tx;
                 let half = self.half[i] + t * (self.half[(i + 1) % n] - self.half[i]);
@@ -273,6 +297,7 @@ mod tests {
                     s.push(s[i] + (b.0 - a.0).hypot(b.1 - a.1));
                 }
                 let g = RouteGeom {
+                    segments: segments(&points, count),
                     half: (0..points.len()).map(|i| 2000.0 + i as f64).collect(),
                     pts: points.clone(),
                     total: *s.last().unwrap(),
@@ -306,14 +331,16 @@ mod tests {
     #[test]
     fn nearest_keeps_equal_distance_order_and_interpolated_widths() {
         // An asymmetric-width rectangle with a duplicate point (zero-length segment).
+        let pts = vec![
+            (-10.0, -5.0),
+            (10.0, -5.0),
+            (10.0, 5.0),
+            (-10.0, 5.0),
+            (-10.0, 5.0),
+        ];
         let g = RouteGeom {
-            pts: vec![
-                (-10.0, -5.0),
-                (10.0, -5.0),
-                (10.0, 5.0),
-                (-10.0, 5.0),
-                (-10.0, 5.0),
-            ],
+            segments: segments(&pts, pts.len()),
+            pts,
             half: vec![2.0, 4.0, 6.0, 8.0, 8.0],
             s: vec![0.0, 20.0, 30.0, 50.0, 50.0, 60.0],
             closed: true,

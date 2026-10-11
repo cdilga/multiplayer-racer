@@ -1,0 +1,43 @@
+{
+  "sampleCount": 1817,
+  "profileSha256": "29c94b715a01567a6bb8d22c6aa93a3aeb21dc355590231d7fc7676f67c4bddb",
+  "selfUs": {
+    "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 1413453,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 290941,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 162349,
+    "libm[f079cffcae4a324f]::math::sqrt::sqrt": 154293,
+    "jj_procgen[51dd9ee2394ba8a4]::terrain::undulate_along": 84480,
+    "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 74177,
+    "__multi3": 71399,
+    "libm[f079cffcae4a324f]::math::hypot::hypot": 58446,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 28294,
+    "libm[f079cffcae4a324f]::math::rem_pio2::rem_pio2": 26703,
+    "libm[f079cffcae4a324f]::math::floor::floor": 23516,
+    "libm[f079cffcae4a324f]::math::cos::cos": 22702,
+    "jj_procgen[51dd9ee2394ba8a4]::course::self_clear": 22440,
+    "serde_json[4b0dee0d8ea46fbf]::ser::format_escaped_str::<&mut alloc[cb2b8d99256f33df]::vec::Vec<u8>, serde_json[4b0dee0d8ea46fbf]::ser::CompactFormatter>": 19093,
+    "jj_procgen[51dd9ee2394ba8a4]::features::place_in": 18755
+  },
+  "inclusiveUs": {
+    "prepare": 5012528,
+    "(root)": 2713015,
+    "": 2660374,
+    "js-to-wasm": 2507793,
+    "jj_wasm_procgen[84ad8ed6936a98a9]::prepare_tuned": 2504763,
+    "prepare multivalue shim": 2504763,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned": 2446638,
+    "jj_procgen[51dd9ee2394ba8a4]::playtest::prepare_data": 2446638,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned::{closure#0}": 2443646,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::check": 1744725,
+    "jj_map[89926c83db9c7924]::validate::validate": 1732856,
+    "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 1722314,
+    "jj_procgen[51dd9ee2394ba8a4]::generate_tuned_from": 698921,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::scatter_masked": 401091,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 309279,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 290941,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 217113,
+    "libm[f079cffcae4a324f]::math::hypot::hypot": 168149,
+    "libm[f079cffcae4a324f]::math::sqrt::sqrt": 162884,
+    "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 139902
+  }
+}
