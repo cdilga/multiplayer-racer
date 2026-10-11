@@ -78,6 +78,12 @@ impl RouteGeom {
             }
             let t = (((x - a.0) * dx + (z - a.1) * dz) / len2).clamp(0.0, 1.0);
             let (px, pz) = (a.0 + t * dx, a.1 + t * dz);
+            // Either coordinate alone is a lower bound on the Euclidean distance. Keep the exact hypot
+            // comparison (and its first-segment tie break) for every candidate that can still win; distant
+            // projections need no software hypot/FMA in WASM.
+            if (x - px).abs() > best_d || (z - pz).abs() > best_d {
+                continue;
+            }
             let d = (x - px).hypot(z - pz);
             if d < best_d {
                 best_d = d;
@@ -184,4 +190,43 @@ pub fn footprint_points(fp: &Footprint, pose: &Pose) -> Vec<(f64, f64)> {
         .into_iter()
         .map(|(lx, lz)| (x0 + lx * c - lz * s, z0 + lx * s + lz * c))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nearest_keeps_equal_distance_order_and_interpolated_widths() {
+        // An asymmetric-width rectangle with a duplicate point (zero-length segment).
+        let g = RouteGeom {
+            pts: vec![
+                (-10.0, -5.0),
+                (10.0, -5.0),
+                (10.0, 5.0),
+                (-10.0, 5.0),
+                (-10.0, 5.0),
+            ],
+            half: vec![2.0, 4.0, 6.0, 8.0, 8.0],
+            s: vec![0.0, 20.0, 30.0, 50.0, 50.0, 60.0],
+            closed: true,
+            total: 60.0,
+        };
+        for (x, z, s, lateral, half) in [
+            (0.0, 0.0, 10.0, 5.0, 3.0), // Equal top/bottom: first segment wins.
+            (0.0, -5.0, 10.0, 0.0, 3.0),
+            (0.0, 5.0, 40.0, 0.0, 7.0),
+            (10.0, 0.0, 25.0, 0.0, 5.0),
+            (-10.0, 0.0, 55.0, 0.0, 5.0),
+            (15.0, 9.0, 30.0, -5.0, 6.0), // Shared endpoint: first adjacent segment wins.
+            (1e9, 0.0, 20.0, 5.0, 4.0), // Rounded distances tie here too; don't change to squared distances.
+        ] {
+            let near = g.nearest(x, z);
+            assert_eq!(
+                (near.s, near.lateral, near.half),
+                (s, lateral, half),
+                "({x}, {z})"
+            );
+        }
+    }
 }

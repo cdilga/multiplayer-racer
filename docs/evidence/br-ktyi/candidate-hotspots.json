@@ -1,0 +1,40 @@
+{
+  "sampleCount": 4648,
+  "profileSha256": "d127b4336f8e51a6d6f3046dd559888094322fd60b1200ae3fd7d7a7bf56b817",
+  "selfUs": {
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 3860464,
+    "<jj_map[7d567bfdb117d4c2]::geom::RouteGeom>::nearest": 948423,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 381322,
+    "jj_procgen[5f87c87a1b0a2f75]::scatter::poisson": 203767,
+    "libm[ee2594f572a3c6a7]::math::sqrt::sqrt": 199660,
+    "jj_procgen[5f87c87a1b0a2f75]::terrain::undulate_along": 118909,
+    "__multi3": 108005,
+    "<jj_procgen[5f87c87a1b0a2f75]::scatter::RoadIndex>::nearest": 92182,
+    "": 72812,
+    "libm[ee2594f572a3c6a7]::math::hypot::hypot": 64942,
+    "libm[ee2594f572a3c6a7]::math::rem_pio2::rem_pio2": 49302,
+    "(idle)": 39268
+  },
+  "inclusiveUs": {
+    "(root)": 6561408,
+    "": 6185868,
+    "processTicksAndRejections": 6183075,
+    "evaluate": 6179202,
+    "run": 6179202,
+    "runMicrotasks": 6179202,
+    "prepare": 6080489,
+    "js-to-wasm": 6079292,
+    "jj_wasm_procgen[fb8d1e576a3d68f8]::prepare_tuned": 6078022,
+    "prepare multivalue shim": 6078022,
+    "jj_procgen[5f87c87a1b0a2f75]::validate::prepare_tuned": 6008240,
+    "jj_procgen[5f87c87a1b0a2f75]::playtest::prepare_data": 6008240,
+    "jj_procgen[5f87c87a1b0a2f75]::validate::prepare_tuned::{closure#0}": 6003152,
+    "jj_procgen[5f87c87a1b0a2f75]::validate::check": 5102969,
+    "jj_map[7d567bfdb117d4c2]::validate::validate": 5087983,
+    "<jj_map[7d567bfdb117d4c2]::geom::RouteGeom>::nearest": 5045051,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 4132107,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 3860464,
+    "jj_procgen[5f87c87a1b0a2f75]::generate_tuned_from": 900183,
+    "jj_procgen[5f87c87a1b0a2f75]::scatter::scatter_masked": 499065
+  }
+}
