@@ -24,18 +24,31 @@ canvas coverage and host controls. The keyboard drawer scrolls within its bounde
 - `live-check/roof-1920x1080.jpg`: TV, parked car/roof and caption.
 - `live-check/roof-1920x1080-after-resize.jpg`: TV after resize, unchanged scene.
 
+Also opened individually all 18 final generated-map captures in `generated/`:
+Chromium and WebKit each at 412x915, 915x412, 375x667, 1366x768 and 1920x1080,
+plus each fullscreen 1920x1080 capture; `generated/live-check` at 412x915, 915x412
+and 1920x1080 before/after resize. Each shows the parked intact car following the
+roof's pitch, corrugated roof/ridge/chimney, a clear surrounding lot and no blank canvas.
+The drawer has its bounded scroll region on small screens. The generated Town road and
+unchanged scenery remain visible beside the lot in wider captures.
+
 ## Defects found and fixed
 
 The first scratch live-check adapter captured the road before the fixture snapshot reached the renderer on portrait.
 Awaiting actual render tick 960 fixed capture timing; all six final live-check images show the roof state. No production
 layout was changed for this. Braking at rest originally reversed off the roof; the fixture now uses `noReverse`.
+The generated map takes longer to load, so live-check's initial 800ms wait again captured
+spawn before the stepped state. Added optional `--ready <CSS selector>` and set the scratch
+adapter's marker only after tick 960 is painted. Repeated the full six-image matrix; every
+final image shows the roof before and after resize. Earlier images are excluded from evidence.
 
 ## Remaining defects
 
-No visible defect found in this authored landing. Generated town rooftop approaches and comprehensive reachability
-coverage remain unfinished under br-gw74.11; they are not represented as completed by these captures.
+No visible defect found in the judged authored/generated landings. Native ten-seed fixtures
+check every generated lot's reachability/landing and the moved-target defect. Containing green
+CI and deployed review remain outstanding; br-gw74.11 stays open.
 
 ## Not covered
 
-Deployed preview, generated town stunts, a connected touchscreen controller, physical phone/Safari and WAN/GPU
+Deployed preview, a connected touchscreen controller, physical phone/Safari and WAN/GPU
 performance. One car at browser viewports is the fixture cohort. CI and deployed self-review remain required before close.

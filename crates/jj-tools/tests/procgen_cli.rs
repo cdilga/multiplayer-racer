@@ -37,6 +37,25 @@ fn jj_procgen_generates_validates_and_dumps() {
         serde_json::from_slice(&std::fs::read(out.join("report.json")).unwrap()).unwrap();
     assert_eq!(written, report);
 
+    // Exercise the actual authored-map command, whose disk registry must also resolve the
+    // generated chevrons, guard rails and finish gantry. Use --kit for outputs outside the repo.
+    let validate = Command::new(env!("CARGO_BIN_EXE_jj"))
+        .args(["validate", "--json", "--kit"])
+        .arg(repo.join("assets/kit"))
+        .arg(out.join("map.json"))
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+    assert!(
+        validate.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&validate.stdout),
+        String::from_utf8_lossy(&validate.stderr)
+    );
+    let validated: serde_json::Value = serde_json::from_slice(&validate.stdout).unwrap();
+    assert_eq!(validated.as_array().unwrap().len(), 1);
+    assert_eq!(validated[0]["ok"], true, "{validated}");
+
     // The course design is in the report.
     assert!(report["course"]["lengthM"].as_f64().unwrap() >= 700.0);
     assert!(report["course"]["corners"]["hairpin"].as_u64().unwrap() >= 1);

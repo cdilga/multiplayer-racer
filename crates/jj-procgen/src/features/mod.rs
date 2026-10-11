@@ -584,6 +584,16 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
+        if f.kind == FeatureKind::Jump && f.params.contains_key("roofTarget") {
+            // Free-standing rooftop kickers have their own heading and receiving house, rather
+            // than a tabletop envelope along the centreline. The shared map validator checks it.
+            bad.extend(
+                jj_map::roof::problems(map, f)
+                    .into_iter()
+                    .map(|p| format!("{name}: {p}")),
+            );
+            continue;
+        }
         let get = |key: &str| f.params.get(key).copied();
         let base = zone_base(&line, f);
         let z = zone_of(f.kind, base, &f.params);

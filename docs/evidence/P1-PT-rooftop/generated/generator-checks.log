@@ -1,0 +1,91 @@
+  [2m2026-10-11T20:50:17.862398Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:18.518996Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:18.519036Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:19.536321Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:19.536440Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:25.886584Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 3 files, 933606 bytes in 6093ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:26.321370Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test -p jj-procgen --test biome --test tuning --test features --test scatter --config 'env.RCH_BUILD_SOURCE.value="0b6b91e2bcab71bda7a154eb765dfa72abf2060d-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:26.328812Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:50:26.328846Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+
+running 8 tests
+test the_trait_is_all_a_biome_needs_and_every_biome_is_pure_data ... ok
+test writes_the_capture ... ok
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+[1m[92m     Running[0m tests/biome.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/biome-5f98513786047358)
+test missing_or_shortened_rail_sections_are_rejected_as_gaps ... ok
+test a_transition_blends_the_terrain_and_switches_the_road_in_the_middle ... ok
+test chevrons_and_rail_stand_on_the_outside_of_the_turn ... ok
+test two_biome_recipes_hash_to_the_committed_goldens ... ok
+test every_corner_has_chevrons_and_rail_and_the_finish_has_a_gantry_on_every_route ... ok
+test a_two_biome_placeholder_track_validates_with_its_transition ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.65s
+
+
+running 2 tests
+test writes_the_profile_image ... ok
+[1m[92m     Running[0m tests/features.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/features-be8b6713a9531e9d)
+[1m[92m     Running[0m tests/scatter.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/scatter-04d30b1132288eb3)
+test every_placed_feature_passes_its_envelope_and_the_validator_across_the_seed_bank ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.43s
+
+
+running 5 tests
+test writes_the_capture ... ok
+test scatter_is_a_pure_function_of_the_dressing_stream ... ok
+test bitumen_poisson_radius_confirms_m02s_recommendation ... ok
+test poisson_biomes_are_even_and_cluster_biomes_clump_with_clearings ... ok
+test nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank has been running for over 60 seconds
+test nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.14s
+
+
+running 4 tests
+test a_tuned_mix_draws_the_biome_counts_it_is_given ... ok
+[1m[92m     Running[0m tests/tuning.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/tuning-b4612fd74f9fa01c)
+test a_tuned_length_class_builds_tracks_inside_its_band ... ok
+test a_tuned_relief_changes_the_built_height_range ... ok
+test the_shipped_data_builds_the_same_tracks_as_the_untuned_generator ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.76s
+
+  [2m2026-10-11T20:52:17.943944Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 111398ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:52:18.099561Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:52:18.099620Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:52:18.340347Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:52:18.618486Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 518ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:52:18.637893Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 518ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

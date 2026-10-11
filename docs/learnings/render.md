@@ -32,3 +32,11 @@
 - Symptom: Chromium SwiftShader shows navy below the drawer, while DOM hit testing reports the world canvas there. Fresh portrait-only navigation can pass; laptop → TV → phone resizing reproduces it.
 - Cause isolated: raw WebGL pixel is road colour but composited screenshot is page ink. Shadows, containment, clip-path, border radius and layer promotion do not fix it; making the opaque aside non-scrolling does.
 - Fix: opaque non-scrolling flex frame with a transparent inner scroll element (min-height 0). All rows remain reachable. Test real screenshot pixels outside the frame against the same page with the frame visibility hidden; DOM bounds alone missed the defect.
+
+## 2026-10-12 · Stepped fixture captures need explicit readiness (P1-PT-rooftop)
+
+- Symptom: the full generated Town map passes live-check but its initial image shows grid spawn,
+  while after-resize shows the rooftop. An 800ms post-load delay does not imply worker/render readiness.
+- Fix: optional `live-check.mjs --ready <CSS selector>`. The scratch adapter sets its marker only
+  after the fixture reaches tick 960 and the renderer paints that tick. Judge every resulting image;
+  a nonblank canvas alone does not prove the intended state. Do not raise arbitrary capture sleeps.

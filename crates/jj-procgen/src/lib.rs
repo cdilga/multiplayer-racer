@@ -22,6 +22,7 @@ pub mod course;
 pub mod features;
 pub mod lineside;
 pub mod playtest;
+pub mod roofs;
 pub mod scatter;
 pub mod seed;
 pub mod signs;
@@ -41,7 +42,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "13";
+pub const GENERATOR_VERSION: &str = "14";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -182,6 +183,11 @@ pub fn generate_tuned_from(
         );
     }
     map.route.segments = sel.route_segments();
+    // Last: check the complete street/scatter before adding stunt lots. Canonicalisation rebases
+    // their dressing references; no earlier placement pass may fill the approach afterwards.
+    roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
+        sel.weight(Biome::Town, i)
+    });
     Ok((map, report(&course)))
 }
 

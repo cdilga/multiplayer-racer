@@ -142,6 +142,7 @@ pub struct GeneratorData {
     pub mix: MixData,
     pub course: CourseData,
     pub biomes: Biomes,
+    pub roof_stunts: crate::roofs::RoofStunts,
 }
 
 /// Why a document or a change was refused: one line per problem.
@@ -205,6 +206,7 @@ impl GeneratorData {
     /// The checks every generator document passes before the generator reads it.
     pub fn validate(&self) -> Result<(), GeneratorError> {
         let mut bad = Vec::new();
+        bad.extend(self.roof_stunts.problems());
         if self.version != VERSION {
             bad.push(format!("version {} (expected {VERSION})", self.version));
         }

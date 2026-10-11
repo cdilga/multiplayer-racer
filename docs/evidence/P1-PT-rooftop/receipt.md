@@ -40,9 +40,43 @@ The browser journey earns its keep by enforcing real WASM parity and collision/d
 unit assertion cannot establish. Native tests provide drive-off/recovery and placement coverage without duplicating
 those longer sequences in every browser.
 
+## Generated Town stunt access
+
+Generator version 14 adds empty run-in/kicker/house lots after the complete street/scatter pass.
+No scenery is removed or route moved. Placement preserves existing circumscribed-footprint
+spacing, straight-street house placement, road-facing fronts, Town masks and transition exclusion.
+It samples the entire lot's ground grade, road clearance and bounds. Previously accepted stunt
+lots reserve their approaches too. Density and dimensions live in `assets/profiles/generator.json`;
+there is no stunt-count budget.
+
+Ten actual Town seeds produce 20 lots (5,5,1,0,1,1,2,2,2,1). Every real Rapier landing remains
+on the roof with four wheel contacts, upY >0.9, tarmac grip, zero husks and no life/recovery change.
+Each run replays bit-identically. Nominal design speed is 15m/s; measured release speeds span
+13.979932–15.246225m/s, not a claim that every release is within ±0.5m/s.
+Moving the receiving house 60m away is rejected for every generated lot. Invalid dimensions
+and sub-millimetre/nonadvancing offset steps are refused. The native suite passes 2/2 in 81.64s.
+
+The first seed's full generated map and exact script are in `generated/{map,scenario}.json`.
+Chromium and WebKit replay it through the real WASM worker, with native state hash
+`6855953a4139a5842739a49fcc5db278d97b9bb82ad664db7aa36617a715c48b`, four roof contacts
+and collision/draw geometry parity for all jumps (2/2 browser tests, 144.463s total).
+The journey accepts explicit map/script inputs so it can review generated and authored fixtures.
+
+The probe exposed `jj validate`'s disk registry missing generator-owned chevrons/rails/gantry.
+It now fills only missing procedural contracts, preserving explicit `--kit` entries. The actual
+CLI regression generates, saves and validates the map (1/1). Town's original scenery-spacing
+test first rejected a tree/house overlap; preserving its conservative discs fixed it (1/1).
+No acceptance assertion was weakened.
+
+Remote eris checks pass: biome 8, features 2, scatter 5, tuning 4; workspace all-features check
+passes. Intentional version-14 golden rebuild passes 5. Production/testing WASM and TypeScript/Vite
+builds pass. Goldens, exports and per-crate CLI/landing runs used the permitted Mac lane through
+RCH. Logs in `generated/` name commands/worker paths and retain the results.
+
 ## Remaining scope
 
 The reachability rule checks declared `roofTarget` stunt landings. It does not claim every decorative house has a
-reachable approach. Generated town courses still have zero ordinary jump density and no targeted roof kickers; their
-roofs are physical, but generated stunt access needs further work before calling the entire bead done. Final remote
-workspace checks, CI and deployed visual review are pending. No acceptance has been ticked or narrowed.
+reachable approach. Generated Town courses now offer targeted stunt lots where complete clearance
+permits them; a seed may have none. Containing green CI and deployed visual review remain pending.
+The older broad workspace test hit the remote 30-minute deadline; it is not recorded as green.
+The CI matrix remains the required whole-workspace test receipt. No acceptance has been narrowed.

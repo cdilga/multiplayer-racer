@@ -5,7 +5,7 @@
 // canvases that are zero-sized or one flat colour (a blank render surface). It saves a screenshot of each for the agent
 // to LOOK at (Read the PNGs) before it reports; passing is necessary, not sufficient.
 // Usage: node art/ui/lib/live-check.mjs [--base <url>] [--local] [--out <dir>] [--viewports 412x915,915x412,1920x1080]
-//                                       [--fullscreen] [--tv] [path ...]
+//                                       [--fullscreen] [--tv] [--ready <CSS selector>] [path ...]
 //   --tv checks every TV mock state (poc/tv/states.js) at phone portrait/landscape, tablet and 1920x1080.
 //   default base https://jammers-preview.dilger.dev (the deployed copy: deploys can miss files); --local serves art/ui
 //   from this checkout instead. Default out docs/evidence/design-live/. --fullscreen reloads the check after a
@@ -25,6 +25,9 @@ const fullscreen = has('--fullscreen');
 let base = take('--base', 'https://jammers-preview.dilger.dev').replace(/\/$/, '');
 const out = take('--out', join(here, '..', '..', '..', 'docs', 'evidence', 'design-live'));
 const tv = has('--tv');
+// R90 stepped fixtures (P1-PT-rooftop) can finish after page load. Capture their explicit
+// ready marker instead of increasing a blind delay or judging the initial spawn as the outcome.
+const ready = take('--ready', null);
 const viewports = take('--viewports', tv ? '412x915,915x412,820x1180,1920x1080' : '1600x900').split(',').map((v) => v.split('x').map(Number));
 const paths = argv.length ? argv : ['/sheets/components.html', '/sheets/brand.html', '/poc/phone/index.html#race'];
 // --tv adds every TV mock state (poc/tv/states.js) on the phone, tablet and TV matrix: the pages the owner reviews.
@@ -100,6 +103,7 @@ try {
       // Live rooms keep a signalling SSE fetch open. Load completion works for both live pages and design sheets.
       await page.goto(base + path, { waitUntil: 'load' });
       await page.evaluate(() => document.fonts.ready);
+      if (ready) await page.locator(ready).waitFor({ state: 'attached' });
       await page.waitForTimeout(800);
       const check = async (label) => {
         for (const src of await page.evaluate(() => [...document.images].filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.currentSrc || i.src))) problems.push(`${label}image did not load: ${src}`);

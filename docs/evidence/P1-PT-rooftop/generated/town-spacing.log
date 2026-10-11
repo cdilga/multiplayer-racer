@@ -1,0 +1,54 @@
+  [2m2026-10-11T20:49:02.148088Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:02.898053Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:02.898117Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:03.964142Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:03.964448Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:10.731402Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 3 files, 933623 bytes in 6470ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:11.237462Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test -p jj-procgen --test biomes town_houses_face_straight_streets_with_junctions_and_signs --config 'env.RCH_BUILD_SOURCE.value="0b6b91e2bcab71bda7a154eb765dfa72abf2060d-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:11.245221Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:11.245256Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+
+running 1 test
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 1.88s
+[1m[92m     Running[0m tests/biomes.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/biomes-179cdce56e1dc738)
+test town_houses_face_straight_streets_with_junctions_and_signs ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 6.95s
+
+  [2m2026-10-11T20:49:21.693407Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 10235ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:21.859570Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:21.859757Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:22.120432Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:22.369300Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 509ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:49:22.389656Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 509ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

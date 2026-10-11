@@ -1,0 +1,58 @@
+  [2m2026-10-11T20:59:11.033744Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:11.854384Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:11.854438Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:13.085890Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:13.086760Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:25.885722Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 179 files, 43237867 bytes in 12498ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:26.410970Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test -p jj-procgen --test procgen --config 'env.RCH_BUILD_SOURCE.value="18f8cc131cb7d4657aff976556f0f56ee720f60f-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:26.418394Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:26.418432Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+
+running 5 tests
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+[1m[92m     Running[0m tests/procgen.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/procgen-8a2338a58ac4ee58)
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.79s
+
+  [2m2026-10-11T20:59:54.982406Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 28344ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:55.142545Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:55.143632Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:55.419912Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:55.683663Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 539ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T20:59:55.708798Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 539ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

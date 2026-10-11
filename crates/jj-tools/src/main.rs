@@ -65,6 +65,13 @@ fn load_registry(dir: &Path) -> std::io::Result<jj_map::Registry> {
             }
         }
     }
+    // Procedural wayfinding contracts live with the generator. Fill missing entries while
+    // preserving explicit --kit overrides (including their schema errors).
+    for (id, json) in jj_procgen::biome::WAYFINDING_PIECES {
+        if !files.iter().any(|(existing, _)| existing == id) {
+            files.push((id.into(), json.as_bytes().to_vec()));
+        }
+    }
     files.sort();
     Ok(jj_map::Registry::from_json(
         files

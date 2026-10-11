@@ -1,0 +1,13 @@
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.80s
+     Running tests/procgen.rs (target/aarch64-apple-darwin/debug/deps/procgen-2e5009fbd9e2e60a)
+
+running 5 tests
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.57s
+

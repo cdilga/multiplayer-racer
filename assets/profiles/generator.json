@@ -120,5 +120,22 @@
         "creek": 1.0
       }
     }
+  },
+  "roofStunts": {
+    "spacingM": 120.0,
+    "offsetMinM": 28.0,
+    "offsetMaxM": 70.0,
+    "offsetStepM": 14.0,
+    "runInM": 20.0,
+    "maxGroundGrade": 0.1,
+    "houseWidthM": 14.0,
+    "houseDepthM": 10.0,
+    "houseHeightM": 2.8,
+    "rampLengthM": 8.0,
+    "rampWidthM": 4.0,
+    "lipHeightM": 2.1,
+    "blendM": 2.0,
+    "lipToHouseM": 16.0,
+    "designSpeedMps": 15.0
   }
 }
