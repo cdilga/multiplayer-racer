@@ -70,6 +70,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let sticks: { drive: StickHandle; action: StickHandle } | null = null;
   let tutorial: Tutorial | null = null;
   let tutorialOffered = false;
+  // Orientation is the first choice; coaching starts once it is settled, without opening a hidden menu.
+  const showTutorial = () => {
+    if (!app.querySelector('[data-overlay=rotate]')) tutorial?.show();
+  };
   let firstPerson = false;
   let shown: string | null = null;
   let prefs: Preferences | null = null;
@@ -168,6 +172,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const playScreen = () => {
+    // Rebuilding on orientation must release the old card's Menu state before deferring a new one.
+    tutorial?.close(false, true);
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
@@ -205,13 +211,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       area.querySelector('[data-act=upright]')!.addEventListener('click', (e) => {
         uprightOk = true;
         (e.target as HTMLElement).closest('.rotate-card')?.remove();
+        updateHud();
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
     tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic);
     if (session.roomPhase === 'Lobby') {
-      tutorialOffered = true;
-      if (Tutorial.wanted()) tutorial.show();
+      tutorialOffered = !app.querySelector('[data-overlay=rotate]');
+      if (tutorialOffered && Tutorial.wanted()) tutorial.show();
     }
     session.onAction = (kind) => tutorial?.action(kind);
     session.onSticks = (d, a) => {
@@ -246,7 +253,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       fsNote = !fsNote;
       updateFullscreen();
     });
-    app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
+    app.querySelector('[data-act=help]')!.addEventListener('click', showTutorial);
     app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
     app.querySelector('[data-act=car]')!.addEventListener('click', () => openCars(screenEl));
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
@@ -345,7 +352,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const carBtn = app.querySelector<HTMLButtonElement>('[data-act=car]');
     if (carBtn) carBtn.hidden = session.roomPhase !== 'Lobby';
     // The Lobby state can arrive just after the play screen: offer the tutorial once then.
-    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby') {
+    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby' && !app.querySelector('[data-overlay=rotate]')) {
       tutorialOffered = true;
       if (Tutorial.wanted() && !tutorial.open) tutorial.show();
     }
@@ -416,7 +423,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   (window as unknown as { __jjFullscreen: unknown }).__jjFullscreen = {
     inspect: () => ({ mode: fs.mode, active: fs.active, lost: fs.lostUnasked, prompt: !!app.querySelector('[data-overlay=fs-prompt]'), note: !!app.querySelector('[data-overlay=fs-note]') }),
   };
-  (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
+  (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: showTutorial };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {
     // Turning the phone rebuilds the play screen; an open settings sheet moves onto the new one (still open, Menu still held).
     const keep = sheet?.open ? sheet : null;
