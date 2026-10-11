@@ -99,6 +99,8 @@ async function boot(): Promise<void> {
     hold: () => world.stop(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
+    /** Actual scene haze after the last viewport render (overview/chase regression probe, R90). */
+    haze: () => world.scene.fog && 'near' in world.scene.fog ? { near: world.scene.fog.near, far: world.scene.fog.far } : null,
     rails: () => world.map?.railPoses() ?? [],
     jumpShapes: () => world.map?.jumpShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
@@ -120,6 +122,11 @@ async function boot(): Promise<void> {
     tileRects: () => world.tileRects(),
     /** The cars the grid's tiles follow, tile 1 first (a room's seated cars in seat-number order). */
     follow: () => world.tiles?.follow?.slice() ?? null,
+    /** Renderer setup probe (R90): switch the same scene between an overview and a grid following explicit cars. */
+    setFollow: (cars: number[] | null) => {
+      world.tiles = cars === null ? null : { count: cars.length, follow: cars.slice() };
+      world.invalidate();
+    },
     /** Cars showing Identify's number over them now (P1-R06). */
     identifyMarks: () => world.identifyMarks.active(),
     /** Every Identify mark put up over a car (car, label), oldest first. */

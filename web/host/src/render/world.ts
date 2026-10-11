@@ -134,6 +134,8 @@ export class World {
   private v = new Vector3();
   private target = new Vector3();
   private half: [number, number] = [25, 25];
+  private overviewDepth = 0;
+  private mapBottom = 0;
   readonly stats: WorldStats;
   private userScale: number;
   /** Set only by a measured frame-budget miss; always below the user's choice; cleared only by choosing a setting. */
@@ -248,7 +250,8 @@ export class World {
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
-    this.ground.position.y = Math.min(0, ...map.terrain.heights.map((h) => h / 100)) - 0.05;
+    this.mapBottom = Math.min(0, ...map.terrain.heights.map((h) => h / 100));
+    this.ground.position.y = this.mapBottom - 0.05;
     const t = map.terrain;
     this.invalidate();
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
@@ -435,7 +438,7 @@ export class World {
       useLod(this.camera, lod);
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
-      this.backend.render(this.scene, this.camera);
+      this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
       st.lods = [lod];
     }
     st.frames++;
@@ -650,6 +653,9 @@ export class World {
       }
       if (fits) break;
     }
+    // Camera-space depth of the far ground edge. Near/far haze follows the overview's actual framing after resize;
+    // chase and replay cameras pass no override and retain the accepted road-level look.
+    this.overviewDepth = dist + hz * Math.cos(tilt) - this.mapBottom * Math.sin(tilt);
   }
 }
 

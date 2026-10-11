@@ -4,7 +4,7 @@
 //   webgl   the classic WebGLRenderer.
 // `?renderer=` picks one; otherwise DEFAULT_BACKEND, the measured decision in docs/evidence/P1-R01/bench.md.
 import { SRGBColorSpace as SRGB, Vector4, WebGLRenderer, type Camera, type Scene } from 'three';
-import { look, prepareScene } from './look';
+import { look, prepareScene, frameHaze } from './look';
 
 export type BackendKind = 'webgpu' | 'webgl2' | 'webgl';
 export const BACKENDS: BackendKind[] = ['webgpu', 'webgl2', 'webgl'];
@@ -43,7 +43,7 @@ export interface Backend {
   drawCalls(): number;
   /** Triangles drawn since the last reset. */
   triangles(): number;
-  render(scene: Scene, camera: Camera): void;
+  render(scene: Scene, camera: Camera, opts?: { hazeBeyond?: number }): void;
 }
 
 export function backendFromQuery(q: URLSearchParams): BackendKind {
@@ -55,8 +55,9 @@ const px = new Uint8Array(4);
 const vp = new Vector4();
 
 /** The look's per-viewport switch (P1-R10): the rig on first sight of a scene, then the cost tier of this viewport. */
-function lookFor(r: { getViewport?: (v: Vector4) => Vector4 }, scene: Scene): void {
+function lookFor(r: { getViewport?: (v: Vector4) => Vector4 }, scene: Scene, hazeBeyond?: number): void {
   prepareScene(scene);
+  frameHaze(scene, hazeBeyond);
   if (r.getViewport) {
     r.getViewport(vp);
     look.tile(vp.z, vp.w);
@@ -88,7 +89,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
       drawCalls: () => r.info.render.calls,
       triangles: () => r.info.render.triangles,
-      render: (s, c) => (lookFor(r, s), r.render(s, c)),
+      render: (s, c, o) => (lookFor(r, s, o?.hazeBeyond), r.render(s, c)),
     };
   }
   look.enabled = false;
@@ -112,7 +113,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       finish: () => device.queue.onSubmittedWorkDone(),
       drawCalls: () => r.info.render.drawCalls,
       triangles: () => r.info.render.triangles,
-      render: (s, c) => (lookFor(r, s), r.render(s, c)),
+      render: (s, c, o) => (lookFor(r, s, o?.hazeBeyond), r.render(s, c)),
     };
   }
   const gl = be.gl!;
@@ -124,6 +125,6 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
     finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
     drawCalls: () => r.info.render.drawCalls,
     triangles: () => r.info.render.triangles,
-    render: (s, c) => (lookFor(r, s), r.render(s, c)),
+    render: (s, c, o) => (lookFor(r, s, o?.hazeBeyond), r.render(s, c)),
   };
 }

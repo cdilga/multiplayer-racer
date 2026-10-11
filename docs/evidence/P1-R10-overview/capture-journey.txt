@@ -1,0 +1,10 @@
+✔ chromium: all course families remain visible and chase haze restores (149047.684ms)
+✔ webkit: all course families remain visible and chase haze restores (20845.11ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 171022.962417
