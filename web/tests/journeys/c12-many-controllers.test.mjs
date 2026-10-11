@@ -521,7 +521,9 @@ for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room'
             const d = document.querySelector('[data-jj-input-drawer]').getBoundingClientRect();
             const c = document.querySelector('#jj-caption .capt')?.getBoundingClientRect();
             const text = document.querySelector('#jj-caption .capt > span');
+            const qr = document.querySelector('.jj-drive-qr')?.getBoundingClientRect();
             return { drawer: d.toJSON(), caption: c?.toJSON(), text: window.__jjAudio.captionShown(),
+              qr: qr?.toJSON(),
               textClipped: !!text && text.scrollHeight > text.clientHeight + 1,
               textHeight: [text?.clientHeight, text?.scrollHeight], rows: document.querySelectorAll('.dr-rows li').length };
           });
@@ -532,8 +534,9 @@ for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room'
             && Math.min(data.drawer.bottom + 3, data.caption.bottom) > Math.max(data.drawer.top, data.caption.top);
           assert.equal(overlap, false, `caption clear of drawer and shadow: ${JSON.stringify(data)}`);
           if (mode === 'drive') {
-            const qr = await host.locator('.jj-drive-qr').boundingBox();
-            assert.ok(qr.y + qr.height + 3 < data.caption.top, `the separate free-drive room code stays above the caption: ${JSON.stringify({ qr, ...data })}`);
+            // Capture both in one DOM turn. The real cue can expire between two browser round trips,
+            // returning the QR to its normal position while the first read still contains the old caption.
+            assert.ok(data.qr.bottom + 3 < data.caption.top, `the separate free-drive room code stays above the caption: ${JSON.stringify(data)}`);
           }
           checks.push({ viewport: { width, height }, position, sample, ...data });
           await host.waitForTimeout(100);
