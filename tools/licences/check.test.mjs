@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { licenceAllowed, problems } from './lib.mjs';
+import { vendoredCargoPackages } from './vendor.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const read = (p) => readFileSync(resolve(repo, p), 'utf8');
@@ -13,6 +14,7 @@ const inputs = () => ({
   cargoLock: read('Cargo.lock'),
   npmLock: JSON.parse(read('web/package-lock.json')),
   policy: JSON.parse(read('tools/licences/policy.json')),
+  vendored: vendoredCargoPackages(repo),
 });
 
 test('the committed list matches the lockfiles and every shipped dependency is within the policy', () => {
@@ -24,6 +26,16 @@ test('a shipped dependency with no licence entry fails', () => {
   i.list.rust.push({ name: 'mystery-crate', version: '1.0.0', licence: null, url: '' });
   i.cargoLock += '\n[[package]]\nname = "mystery-crate"\nversion = "1.0.0"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\n';
   assert.deepEqual(problems(i), ['mystery-crate@1.0.0 ships with no licence entry']);
+});
+
+test('vendored dependencies remain attributed and checked when the registry source is absent', () => {
+  const i = inputs();
+  assert.ok(i.vendored.includes('rapier3d@0.36.0'));
+  i.list.rust = i.list.rust.filter((p) => p.name !== 'rapier3d');
+  assert.match(problems(i)[0], /rapier3d@0\.36\.0 is locked but has no entry/);
+  const j = inputs();
+  j.list.rust.find((p) => p.name === 'rapier3d').licence = null;
+  assert.deepEqual(problems(j), ['rapier3d@0.36.0 ships with no licence entry']);
 });
 
 test('a dependency added to the lockfile but not to the list fails', () => {

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { problems } from './lib.mjs';
+import { vendoredCargoPackages } from './vendor.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -14,6 +15,7 @@ const found = problems({
   cargoLock: read('Cargo.lock'),
   npmLock: JSON.parse(read('web/package-lock.json')),
   policy: JSON.parse(read('tools/licences/policy.json')),
+  vendored: vendoredCargoPackages(repo),
 });
 if (found.length) {
   for (const p of found) console.error(`licences: ${p}`);

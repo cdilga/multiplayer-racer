@@ -51,3 +51,14 @@ Playwright Chromium/SwiftShader, actual local Rust server:
 CI now runs the raw API test under WASM whenever jj-sim is selected. This repair
 must pass a genuine green CI containing the commit before either bead closes.
 It does not deliver the W03 buff, boomerang scaling, particles or timers.
+# Vendored licence bookkeeping follow-up
+
+CI [3342](http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/3342)
+failed checks because Cargo.lock omits `source` for the path-patched Rapier crate,
+and the credits checker incorrectly read that as removal of a dependency.
+The generator and checker now identify third-party path crates from `vendor/*/Cargo.toml`.
+Rapier remains in the shipped credits under Apache-2.0; the generated list is byte-identical
+to the committed list. `node tools/licences/check.mjs` passes, and `node --test
+tools/licences/` passes 6/6 on the Mac/Node 26.10.0, including defect injection for a
+missing vendored credit and a missing licence. CI is still required.
+

@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cargoLockPackages, npmAllPackages, npmShippedPackages } from './lib.mjs';
+import { vendoredCargoPackages } from './vendor.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -39,11 +40,12 @@ while (queue.length) {
     }
   }
 }
-const lockedCargo = cargoLockPackages(readFileSync(resolve(repo, 'Cargo.lock'), 'utf8'));
+const vendored = vendoredCargoPackages(repo);
+const lockedCargo = cargoLockPackages(readFileSync(resolve(repo, 'Cargo.lock'), 'utf8'), vendored);
 const rust = [];
 for (const id of seen) {
   const p = byId.get(id);
-  if (!p.source) continue; // our own crates
+  if (!p.source && !vendored.includes(`${p.name}@${p.version}`)) continue; // our own crates
   rust.push({ name: p.name, version: p.version, licence: p.license ?? (p.license_file ? `see ${p.license_file}` : null) });
 }
 rust.sort((a, b) => (a.name + a.version).localeCompare(b.name + b.version));
