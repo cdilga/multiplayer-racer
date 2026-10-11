@@ -152,11 +152,9 @@ pub fn place(map: &mut Map) {
         // The outside of a left turn is the right of travel (+ lateral, along (-tz, tx)); of a right turn, the left.
         let side = if c.left { 1.0 } else { -1.0 };
         let mut dist = 0.0;
-        let mut rail_dist = 0.0;
         let mut last = pts[c.from];
         for i in c.from..=c.to.min(n - 1) {
             dist += libm::hypot(pts[i].0 - last.0, pts[i].1 - last.1);
-            rail_dist += libm::hypot(pts[i].0 - last.0, pts[i].1 - last.1);
             last = pts[i];
             if i == c.from || dist >= CHEVRON_SPACING_M {
                 dist = 0.0;
@@ -175,20 +173,37 @@ pub fn place(map: &mut Map) {
                     collides: false,
                 });
             }
-            if i == c.from || rail_dist >= RAIL_SECTION_M {
-                rail_dist = 0.0;
-                let (pose, _) = pose_at(map, &pts, i, side * (half + RAIL_OFFSET_M));
-                placed.push(Dressing {
-                    kit_piece: GUARD_RAIL.into(),
-                    pose,
-                    params: BTreeMap::from([
-                        ("lengthMm".into(), (RAIL_SECTION_M * 1000.0) as i64),
-                        ("heightCm".into(), 80),
-                        ("thicknessMm".into(), 300),
-                    ]),
-                    collides: true,
-                });
-            }
+        }
+        // Join the actual outside-edge points, rather than dropping fixed-length sections at sampled centres.
+        // Route spacing and outer-bend arc length differ: centre spacing left visible holes in the old W-beam.
+        for i in c.from..c.to.min(n - 1) {
+            let (a, _) = pose_at(map, &pts, i, side * (half + RAIL_OFFSET_M));
+            let (b, _) = pose_at(map, &pts, i + 1, side * (half + RAIL_OFFSET_M));
+            let (dx, dz) = (f64::from(b.x - a.x), f64::from(b.z - a.z));
+            let x = (a.x + b.x) / 2;
+            let z = (a.z + b.z) / 2;
+            let pose = Pose {
+                x,
+                z,
+                y: libm::round(
+                    ground_height_m(&map.terrain, f64::from(x) / 1000.0, f64::from(z) / 1000.0)
+                        * 1000.0,
+                ) as i32,
+                yaw: libm::round(libm::atan2(dz, dx).to_degrees() * 100.0) as i32,
+            };
+            placed.push(Dressing {
+                kit_piece: GUARD_RAIL.into(),
+                pose,
+                params: BTreeMap::from([
+                    (
+                        "lengthMm".into(),
+                        libm::ceil(libm::hypot(dx, dz)) as i64 + 20,
+                    ),
+                    ("heightCm".into(), 80),
+                    ("thicknessMm".into(), 300),
+                ]),
+                collides: true,
+            });
         }
     }
     // The finish gantry: one leg each side of the road at the finish gate.
@@ -250,6 +265,17 @@ pub fn check(map: &Map) -> Vec<String> {
                 ));
             }
         }
+        let outside = if c.left { 1.0 } else { -1.0 } * (half + RAIL_OFFSET_M);
+        for i in c.from..c.to.min(pts.len() - 1) {
+            let (a, _) = pose_at(map, &pts, i, outside);
+            let (b, _) = pose_at(map, &pts, i + 1, outside);
+            let gap = uncovered_rail_m(map, (a.x, a.z), (b.x, b.z));
+            if gap > 0.005 {
+                bad.push(format!(
+                    "corner {k}: guard rail gap {gap:.3} m at outside-edge segment {i}"
+                ));
+            }
+        }
     }
     let legs = map
         .dressing
@@ -271,4 +297,52 @@ pub fn check(map: &Map) -> Vec<String> {
         bad.push(format!("a checkpoint piece {name:?} (R106)"));
     }
     bad
+}
+
+/// Exact coverage of an outside-edge segment by the rendered W-beam strips, not a few proximity samples.
+/// Clip the segment against each oriented strip, union its covered intervals and measure the largest gap.
+fn uncovered_rail_m(map: &Map, a: (i32, i32), b: (i32, i32)) -> f64 {
+    let delta = (f64::from(b.0 - a.0) / 1000.0, f64::from(b.1 - a.1) / 1000.0);
+    let length = libm::hypot(delta.0, delta.1);
+    let mut spans = Vec::new();
+    for rail in map.dressing.iter().filter(|d| d.kit_piece == GUARD_RAIL) {
+        let yaw = (f64::from(rail.pose.yaw) / 100.0).to_radians();
+        let (cos, sin) = (libm::cos(yaw), libm::sin(yaw));
+        let rel = (
+            f64::from(a.0 - rail.pose.x) / 1000.0,
+            f64::from(a.1 - rail.pose.z) / 1000.0,
+        );
+        let position = [rel.0 * cos + rel.1 * sin, -rel.0 * sin + rel.1 * cos];
+        let velocity = [
+            delta.0 * cos + delta.1 * sin,
+            -delta.0 * sin + delta.1 * cos,
+        ];
+        let bounds = [
+            *rail.params.get("lengthMm").unwrap_or(&4000) as f64 / 2000.0 + 0.002,
+            *rail.params.get("thicknessMm").unwrap_or(&300) as f64 * 0.14 / 1000.0 + 0.002,
+        ];
+        let (mut from, mut to) = (0.0_f64, 1.0_f64);
+        for axis in 0..2 {
+            if velocity[axis].abs() < 1e-9 {
+                if position[axis].abs() > bounds[axis] {
+                    to = -1.0;
+                }
+            } else {
+                let first = (-bounds[axis] - position[axis]) / velocity[axis];
+                let last = (bounds[axis] - position[axis]) / velocity[axis];
+                from = from.max(first.min(last));
+                to = to.min(first.max(last));
+            }
+        }
+        if from <= to {
+            spans.push((from, to));
+        }
+    }
+    spans.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let (mut covered, mut largest) = (0.0_f64, 0.0_f64);
+    for (from, to) in spans {
+        largest = largest.max(from - covered);
+        covered = covered.max(to);
+    }
+    largest.max(1.0 - covered) * length
 }

@@ -350,6 +350,38 @@ fn chevrons_and_rail_stand_on_the_outside_of_the_turn() {
     }
 }
 
+#[test]
+fn missing_or_shortened_rail_sections_are_rejected_as_gaps() {
+    let map = generate(0);
+    assert!(wayfinding::check(&map).is_empty());
+    let rail = map
+        .dressing
+        .iter()
+        .enumerate()
+        .filter(|(_, d)| d.kit_piece == GUARD_RAIL)
+        .max_by_key(|(_, d)| d.params["lengthMm"])
+        .unwrap()
+        .0;
+    let mut missing = map.clone();
+    missing.dressing.remove(rail);
+    assert!(
+        wayfinding::check(&missing)
+            .iter()
+            .any(|b| b.contains("guard rail gap")),
+        "removing a middle section must leave a rejected gap"
+    );
+    let mut shortened = map;
+    shortened.dressing[rail]
+        .params
+        .insert("lengthMm".into(), 1000);
+    assert!(
+        wayfinding::check(&shortened)
+            .iter()
+            .any(|b| b.contains("guard rail gap")),
+        "a nearby post must not hide a short beam"
+    );
+}
+
 /// The recipes' goldens (`goldens/recipes.txt`), pinned like the seeds', checked in WASM too.
 const RECIPE_SEEDS: [u64; 4] = [0, 1, 2, 4];
 

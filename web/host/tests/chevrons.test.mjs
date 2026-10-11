@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { build } from 'vite';
+import { build as buildPages } from '../../landing/tests/lib/site.mjs';
 import { PNG } from 'pngjs';
 import { serve, openHost } from './lib/surface.mjs';
 import { chromiumArgs } from '../../tests/journeys/lib/chromium.mjs';
@@ -20,7 +21,7 @@ before(async () => {
   code = (Array.isArray(result) ? result[0] : result).output[0].code;
   browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   report.browser = `Chromium ${browser.version()}`;
-  server = await serve(process.env.JJ_DIST ?? join(root, 'web/dist'));
+  server = await serve(process.env.JJ_DIST ?? buildPages('/', 'chevrons'));
   if (out) mkdirSync(out, { recursive: true });
 });
 after(async () => {
@@ -84,6 +85,11 @@ test('generated corner row shows the raised single boards from the real chase ca
     return { target, at, turn: best, state: await s.observe() };
   });
   await page.waitForTimeout(1200);
+  report.renderer = await page.evaluate(() => {
+    const gl = document.querySelector('canvas.jj-world').getContext('webgl2');
+    const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+    return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl?.getParameter(gl.RENDERER);
+  });
   const kit = await page.evaluate(() => window.__jjRender.map().kit);
   assert.ok(kit['wayfinding/chevron-post'] > 0, 'generated map contains real chevron instances');
   report.generated = { setup, kit, stats: await page.evaluate(() => window.__jjRender.stats()) };
