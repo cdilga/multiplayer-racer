@@ -10,7 +10,7 @@ This prevents software rendering from consuming the entire intermission while th
 The click still uses ordinary Playwright actionability and its existing 30-second timeout.
 
 Results reserve room for Keys & Pads and announcer captions. Compact footers keep QR and actions adjacent;
-the QR retains whole modules with a minimum four CSS pixels per module. Portrait results use a 46/54 split,
+the QR retains whole modules with a minimum four CSS pixels per module. Portrait results use a 44/56 split,
 keeping a dominant replay near half the display while two placings stay readable with a two-line caption.
 A ResizeObserver refits standings when the caption changes available space.
 
@@ -20,4 +20,13 @@ The same final UI is judged in `../P1-R09/{chromium,webkit,live-check}` and its 
 The real two-phone one-lap round-loop journey also passes in 161.222 seconds (`round-loop.log`), including the ordinary
 Start next round now click that failed in CI 3498. An earlier concurrent local run missed its 5-second Identify pulse
 wait before reaching results; the isolated rerun above passes. No Identify timing or wait was changed.
-CI and deployed visual review remain pending; this is local evidence, not a close receipt.
+Deployed Chromium/WebKit journeys on preview `v02-cc9b2c81` passed, but the image review found
+375x667 WebKit standings squeezed by the denser pinned-preview QR plus captions. The same long
+join URL reproduced 10.2703px text in the focused test. The 44/56 split fixes that case without
+reducing the unchanged >=12px assertion or removing placings/QR/actions.
+
+The revised focused checks pass 5/5 (`long-preview-qr/layout.log`). Revised real-controller
+journeys pass Chromium (80.87s) and WebKit (18.48s), asserting >=12px rows at every viewport and
+fullscreen attempt. All 32 journey images and four dense-QR live-check images were inspected
+individually; the latter reserve 64px caption space without rendering caption text.
+New containing green CI and a deployed recapture of this correction remain pending.

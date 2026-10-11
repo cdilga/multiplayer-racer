@@ -97,9 +97,13 @@ test('two real controllers: retained damage plays beside results and QR; Hide le
     await host.evaluate(()=>window.__jjReel.seek(3.7));
     for(const [width,height] of [[412,915],[915,412],[375,667],[1920,1080],[1366,768]]){
       await host.setViewportSize({width,height}); await host.waitForTimeout(120);
+      assert.ok(await host.locator('[data-row]').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=12,
+        `${width}x${height}: two-player results remain readable`);
       await host.screenshot({path:join(out,`reel-${width}x${height}.jpg`),type:'jpeg',quality:85});
       await host.evaluate(async()=>{try{await document.documentElement.requestFullscreen();}catch{}});
       await host.waitForTimeout(120);
+      assert.ok(await host.locator('[data-row]').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=12,
+        `${width}x${height}: fullscreen two-player results remain readable`);
       await host.screenshot({path:join(out,`reel-fullscreen-${width}x${height}.jpg`),type:'jpeg',quality:85});
       await host.evaluate(async()=>{if(document.fullscreenElement)await document.exitFullscreen();});
     }

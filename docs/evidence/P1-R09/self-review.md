@@ -53,15 +53,21 @@ Chromium and WebKit are browser automation, not physical devices. Contact sheets
 - Timer intrinsic digit widths moved Start; fixed timer width and tabular numerals. Regression checks bounds across countdown changes.
 - Keys & Pads covered Return; reserve its 36px strip beneath actions.
 - Announcer captions covered the results edge; reserve the caption band, refit on resize, and keep its background paper.
-- A two-line caption still made small-phone placings tiny; compact QR room-code typography and a portrait 46/54 split retain readable rows. The 64px-caption regression passes >=12px.
+- A two-line caption still made small-phone placings tiny; compact QR room-code typography helped.
+  Deployed review on v02-cc9b2c81 then found the long preview join URL squeezed WebKit 375x667
+  rows again. The portrait split is now 44/56. The long-URL 64px-caption regression passes >=12px.
+  Every revised local image (32 journeys plus four live-check captures) was inspected individually;
+  the detailed review is in [br-61po self-review](../br-61po/self-review.md).
 
 ## Remaining defects
 
-No unresolved local layout defect in these judged states. Deployed visual review and green CI are still outstanding and the beads remain open.
+No unresolved local layout defect in the revised judged states. Deployed Chromium/WebKit journeys
+passed on v02-cc9b2c81, and all 36 deployed images were inspected individually. The new font
+correction still needs containing green CI and deployed recapture; the beads remain open.
 
 ## Not covered
 
 - Physical phones/TV, Safari, WAN TURN, a full cohort GPU performance run and owner taste review.
 - The no-replay fixture intentionally has a decorative paper slot; it is not a failed replay render.
 - Fullscreen API calls are attempts in headless browsers; before/after viewport captures and explicit resizes are recorded, not a claim of physical fullscreen behavior.
-- Remote preview publication is pending green CI; deployed images must be added before close.
+- Publication of the latest correction and deployed recapture are pending green CI.

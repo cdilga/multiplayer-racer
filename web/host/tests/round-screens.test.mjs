@@ -112,7 +112,8 @@ for (const [vpName, vp] of [['1080p', VP['1080p']], ['21x9', VP['21x9']], ['phon
 
 test('results: countdown labels keep the Start button stationary; captions leave every placing and action visible', async () => {
   for (const vp of [[1280,720],[375,667],[412,915],[915,412]]) {
-    const page=await open('results-2',vp);
+    const joinUrl='https://jammers-preview.dilger.dev/p/v02-cc9b2c81/j/ROO7';
+    const page=await open(`results-2&joinfixture=${encodeURIComponent(joinUrl)}`,vp);
     try {
       await page.evaluate(() => document.fonts.ready);
       const bounds=await page.evaluate(async () => {
