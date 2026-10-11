@@ -32,10 +32,12 @@ A software capture briefly read the canvas before its rendered frame reached the
 
 ## Remaining defects
 
-No chevron-specific defect in this matrix. Existing gaps between guardrail sections are tracked in br-gw74.9. They remain visible and were not hidden for the capture.
+No chevron-specific defect in this matrix. Joined rail geometry from br-gw74.9.1 is visible in the latest frames. Collision compliance remains unfinished on br-gw74.9.
 
 ## Not covered
 
 Physical phones, Safari on a device and physical TV output. This renderer change is not touch UI. WebKit-specific controller coverage is in P1-C12; these world captures use Chromium. The small-tile check is a close-board readability sample, not a claim that distant signs have fixed pixel size.
 
 Deployed pinned-preview matrix pending publication and will be added before close.
+
+Latest capture refresh: both browser tests passed in 18.63 s using the real Rust jj-server on this Mac. A test-source join through the existing simulation probe precedes normal room Start; this is not physical-controller evidence. The mounted room HUD, seat border, lap/place and footer are visible. All seven chase frames and five isolated kit frames inspected after the refresh. Generator 12, 160 joined rails, 48 chevrons.

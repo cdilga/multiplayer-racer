@@ -10,7 +10,7 @@
     "chase-fullscreen",
     "chase-after-fullscreen"
   ],
-  "readability": {},
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
   "generated": {
     "setup": {
       "target": 181,
@@ -29,10 +29,10 @@
             },
             "angvel": [
               0.0001924660464283079,
-              -3.0290032704272107e-9,
-              5.314680606716138e-7
+              -3.0290032704272107e-09,
+              5.314680606716138e-07
             ],
-            "authorisedJ": -13104.766737292133,
+            "authorisedJ": -13105.1263556825,
             "autopilot": null,
             "car": 0,
             "derby": null,
@@ -46,7 +46,7 @@
               "throttle": 0
             },
             "linvel": [
-              0.000011115620509372093,
+              1.1115620509372093e-05,
               -0.03188943490386009,
               0.0009681358351372182
             ],
@@ -128,7 +128,7 @@
             "progress": {
               "distanceM": 432.8206577441105,
               "fraction": 0.33211433317471345,
-              "lateralM": 0.000010753732717617247,
+              "lateralM": 1.0753732717617247e-05,
               "routePoint": 173
             },
             "race": {
@@ -148,7 +148,7 @@
             "rotation": [
               0.0019818642176687717,
               0.01778441108763218,
-              0.00003575278242351487,
+              3.575278242351487e-05,
               0.9998399615287781
             ],
             "speed": 0.031904127448797226,
@@ -323,7 +323,7 @@
           ],
           "refusals": []
         },
-        "tick": 1288
+        "tick": 1287
       }
     },
     "kit": {
@@ -365,12 +365,12 @@
       "nativeWidth": 1366,
       "nativeHeight": 768,
       "autoEvents": [],
-      "frameMs": 8.400000000001455,
-      "p95Ms": 9.800000000001091,
+      "frameMs": 9.600000000000364,
+      "p95Ms": 9.799999999999272,
       "budgetMs": 50,
       "limitedBy": null,
-      "frames": 1327,
-      "tick": 1288,
+      "frames": 1328,
+      "tick": 1287,
       "cars": 1,
       "debris": 11,
       "snapped": 0,
@@ -381,6 +381,6 @@
       ]
     }
   },
-  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
-  "rendererReceipt": "Same native Chromium launch and generated map, separate metadata capture after adding renderer introspection."
+  "server": "real jj-server, local macOS arm64",
+  "join": "test-source join through existing probe; normal room Start"
 }

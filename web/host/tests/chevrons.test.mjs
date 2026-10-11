@@ -8,7 +8,7 @@ import { chromium } from 'playwright';
 import { build } from 'vite';
 import { build as buildPages } from '../../landing/tests/lib/site.mjs';
 import { PNG } from 'pngjs';
-import { serve, openHost } from './lib/surface.mjs';
+import { serveReal, openHost } from './lib/surface.mjs';
 import { chromiumArgs } from '../../tests/journeys/lib/chromium.mjs';
 
 const root = resolve(import.meta.dirname, '../../..');
@@ -21,11 +21,11 @@ before(async () => {
   code = (Array.isArray(result) ? result[0] : result).output[0].code;
   browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   report.browser = `Chromium ${browser.version()}`;
-  server = await serve(process.env.JJ_DIST ?? buildPages('/', 'chevrons'));
+  server = await serveReal(process.env.JJ_DIST ?? buildPages('/', 'chevrons'));
   if (out) mkdirSync(out, { recursive: true });
 });
 after(async () => {
-  await browser?.close(); server?.close();
+  await browser?.close(); await server?.close();
   if (out) writeFileSync(join(out, 'browser-run.json'), `${JSON.stringify(report, null, 2)}\n`);
 });
 async function capture(page, name) {

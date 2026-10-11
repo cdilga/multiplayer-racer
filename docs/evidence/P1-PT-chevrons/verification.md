@@ -15,3 +15,5 @@ Reuse: existing kit/decor instancing, route dressing, Rust procgen validation/go
 Committed frames/browser-run.json records the setup, 48 generated chevron instances, dimensions, renderer and pixel counts. The cohort is one car for a sign-placement check; it imposes no gameplay limit.
 
 Deployed preview check: pending publication of this commit; recorded separately before closing.
+
+Latest capture refresh: both browser tests passed in 18.63 s using the real Rust jj-server on this Mac. A test-source join through the existing simulation probe precedes normal room Start; this is not physical-controller evidence. The mounted room HUD, seat border, lap/place and footer are visible. All seven chase frames and five isolated kit frames inspected after the refresh. Generator 12, 160 joined rails, 48 chevrons.

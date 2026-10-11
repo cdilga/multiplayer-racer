@@ -22,3 +22,5 @@ The captured map has 160 joined sections versus 101 before; instancing still use
 An initial capture used stale web/dist and still showed 101 sections. That exposed a harness trap: building the isolated kit did not rebuild the live pages. The capture test now builds fresh live pages unless JJ_DIST explicitly supplies a build. Only fresh 160-section captures are the after evidence.
 
 Deployed preview check pending publication before close. Collision compliance is unfinished parent work, not a human blocker.
+
+Latest capture refresh: both browser tests passed in 18.63 s using the real Rust jj-server on this Mac. A test-source join through the existing simulation probe precedes normal room Start; this is not physical-controller evidence. The mounted room HUD, seat border, lap/place and footer are visible. All seven chase frames and five isolated kit frames inspected after the refresh. Generator 12, 160 joined rails, 48 chevrons.

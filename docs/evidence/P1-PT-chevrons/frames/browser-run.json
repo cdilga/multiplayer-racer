@@ -43,8 +43,8 @@
             },
             "angvel": [
               0.0001924660464283079,
-              -3.0290032704272107e-9,
-              5.314680606716138e-7
+              -3.0290032704272107e-09,
+              5.314680606716138e-07
             ],
             "authorisedJ": -13105.1263556825,
             "autopilot": null,
@@ -60,7 +60,7 @@
               "throttle": 0
             },
             "linvel": [
-              0.000011115620509372093,
+              1.1115620509372093e-05,
               -0.03188943490386009,
               0.0009681358351372182
             ],
@@ -142,7 +142,7 @@
             "progress": {
               "distanceM": 432.8206577441105,
               "fraction": 0.33211433317471345,
-              "lateralM": 0.000010753732717617247,
+              "lateralM": 1.0753732717617247e-05,
               "routePoint": 173
             },
             "race": {
@@ -162,7 +162,7 @@
             "rotation": [
               0.0019818642176687717,
               0.01778441108763218,
-              0.00003575278242351487,
+              3.575278242351487e-05,
               0.9998399615287781
             ],
             "speed": 0.031904127448797226,
@@ -310,7 +310,7 @@
               "endpoint": "fake-0",
               "fresh": false,
               "idleCued": false,
-              "idleForMs": 1067,
+              "idleForMs": 1075,
               "inputAgeMs": null,
               "inputDropped": false,
               "inputSeq": null,
@@ -345,7 +345,7 @@
       "outback_bitumen/centre-line": 74,
       "outback_bitumen/reflector-post": 22,
       "outback_dirt/desert-oak": 50,
-      "outback_dirt/spinifex": 528,
+      "outback_dirt/spinifex": 527,
       "rocks/dome": 14,
       "rocks/shrub": 21,
       "rocks/spinifex": 83,
@@ -364,7 +364,7 @@
       "town/water-tower": 2,
       "wayfinding/chevron-post": 48,
       "wayfinding/finish-gantry": 2,
-      "wayfinding/guard-rail": 101
+      "wayfinding/guard-rail": 160
     },
     "stats": {
       "backend": "WebGL2 (WebGLRenderer)",
@@ -379,20 +379,22 @@
       "nativeWidth": 1366,
       "nativeHeight": 768,
       "autoEvents": [],
-      "frameMs": 8,
-      "p95Ms": 10.199999999998909,
+      "frameMs": 9.600000000000364,
+      "p95Ms": 9.799999999999272,
       "budgetMs": 50,
       "limitedBy": null,
-      "frames": 1327,
+      "frames": 1328,
       "tick": 1287,
       "cars": 1,
       "debris": 11,
       "snapped": 0,
       "drawCalls": 90,
-      "triangles": 813422,
+      "triangles": 834294,
       "lods": [
         0
       ]
     }
-  }
+  },
+  "server": "real jj-server, local macOS arm64",
+  "join": "test-source join through existing probe; normal room Start"
 }

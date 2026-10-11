@@ -28,3 +28,5 @@ Collision compliance and forgiving rail use remain on br-gw74.9. These are stati
 ## Not covered
 
 Physical phones, physical TV, device Safari, impacts or spring deflection. No touch UI changed. Deployed pinned preview matrix will be recorded before close.
+
+Latest capture refresh: both browser tests passed in 18.63 s using the real Rust jj-server on this Mac. A test-source join through the existing simulation probe precedes normal room Start; this is not physical-controller evidence. The mounted room HUD, seat border, lap/place and footer are visible. All seven chase frames and five isolated kit frames inspected after the refresh. Generator 12, 160 joined rails, 48 chevrons.
