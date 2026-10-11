@@ -26,6 +26,15 @@ tarmac grip/rolling drag/audio rather than the off-track terrain below the house
   used RCH's local fallback on the Mac, which is permitted within the target budget; the workspace test uses
   `RCH_REQUIRE_REMOTE=1` and its receipt names eris. `cargo fmt --all -- --check` and `git diff --check` pass.
 
+## Canonical target repair
+
+The two-house regression failed before the repair: sorting dressing silently redirected `roofTarget=0` from the
+house at x=50 m to the one at x=32 m. Canonicalisation now rebases the target against the original dressing before
+sorting features. The regression passes, canonical bytes round-trip, reversed authoring order yields the same bytes,
+and canonicalisation is idempotent. The complete native `jj-map` crate suite passes 19 tests; old greybox hashes remain
+unchanged. The single-house landing fixture's geometry/state are unaffected. Per-crate Mac execution is identified in
+`canonical-before.log` and `canonical-after.log`; no local workspace build is claimed.
+
 The scenario bank explicitly includes the roof script, leaving its adjacent map JSON out of fixture enumeration.
 The browser journey earns its keep by enforcing real WASM parity and collision/draw-buffer agreement, which a native
 unit assertion cannot establish. Native tests provide drive-off/recovery and placement coverage without duplicating

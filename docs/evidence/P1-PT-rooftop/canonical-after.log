@@ -1,0 +1,65 @@
+[RCH] Cargo target sync active; forcing worker CARGO_TARGET_DIR to an isolated remote target and syncing back to /Users/cdilga/Documents/dev/multiplayer-racer/target
+[RCH] local (no admissible workers: os_gate_excluded=2 required_os=darwin (no worker declares `os = "darwin"` in workers.toml))
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.14s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/jj_map-835afb0f05673172)
+
+running 3 tests
+test geom::tests::nearest_keeps_equal_distance_order_and_interpolated_widths ... ok
+test geom::tests::boxes_keep_exhaustive_bits_at_endpoints_and_extreme_coordinates ... ok
+test geom::tests::nearest_bound_matches_exhaustive_bits_across_generated_routes ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests/broken.rs (target/aarch64-apple-darwin/debug/deps/broken-33dc3dbb4e1fb7d9)
+
+running 2 tests
+test the_unpatched_greybox_passes_the_same_harness ... ok
+test every_broken_fixture_fails_with_the_rule_it_names ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/greybox.rs (target/aarch64-apple-darwin/debug/deps/greybox-ac6a7852492d8138)
+
+running 3 tests
+test greybox_validates_and_hashes_to_its_golden ... ok
+test greybox_carries_the_duel_segments ... ok
+test canonical_bytes_round_trip_and_only_canonical_bytes_load ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/roofs.rs (target/aarch64-apple-darwin/debug/deps/roofs-770986ab9f5dd1a1)
+
+running 1 test
+test sorting_and_reordering_dressing_preserve_the_reachable_house ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/v01_cases.rs (target/aarch64-apple-darwin/debug/deps/v01_cases-9d10fc17036b836d)
+
+running 10 tests
+test reachable_checkpoints_need_a_real_loop ... ok
+test start_rows_are_clear_and_spaced ... ok
+test nothing_stands_in_the_start_corridor ... ok
+test drivable_width ... ok
+test reachable_checkpoints_need_a_clear_road ... ok
+test reachable_checkpoints_need_gates_and_a_finish ... ok
+test the_baseline_loop_is_valid ... ok
+test missing_terrain_is_a_schema_error ... ok
+test wall_thickness ... ok
+test landing_checks ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/wasm_parity.rs (target/aarch64-apple-darwin/debug/deps/wasm_parity-638180ec5d49a75d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests jj_map
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -15,8 +15,25 @@ pub fn canonicalise(map: &Map) -> Map {
     m.route.gates.sort();
     m.route.recovery.sort();
     m.route.segments.sort();
-    m.features.sort();
     m.dressing.sort();
+    // `roofTarget` refers to the author's dressing order. Rebase before sorting features so a
+    // canonical load, or another authoring order of the same map, keeps the same receiving house.
+    for f in &mut m.features {
+        if f.kind != crate::FeatureKind::Jump {
+            continue;
+        }
+        let Some(target) = f
+            .params
+            .get("roofTarget")
+            .and_then(|i| usize::try_from(*i).ok())
+            .and_then(|i| map.dressing.get(i))
+        else {
+            continue;
+        };
+        let index = m.dressing.binary_search(target).expect("cloned dressing");
+        f.params.insert("roofTarget".into(), index as i64);
+    }
+    m.features.sort();
     m.props.sort();
     m
 }

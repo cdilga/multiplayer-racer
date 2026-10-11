@@ -186,3 +186,10 @@ journey compares every jump's actual draw buffer with the Rust collision mesh, t
 state. Captures use full resolution and keep real UI visible; wait for captions to finish naturally rather than
 following the older chrome-hiding advice above.
 
+# 2026-10-12 · Index references must follow canonical sorting (br-gw74.11)
+
+Roof kickers reference dressing indices, but dressing is an unordered collection sorted on load. Rebase `roofTarget`
+to the same house before sorting features, or a multi-house map validates against one house and loads another. The
+regression uses two houses, reverses authoring order with the reference adjusted, compares canonical bytes and checks
+idempotence/round-trip. Generator stages that sort dressing must preserve these references too.
+
