@@ -25,7 +25,7 @@ Opportunity score: impact 5 × confidence 5 / effort 1 = 25. Before evaluating `
 
 - `cargo test --locked --target wasm32-unknown-unknown -p jj-procgen --test wasm_parity`, RCH eris, dev/test opt level 1: **4/4 pass**, including the unchanged preparation budget and unchanged seed/recipe/arena goldens.
 - Mac release WASM profiled bank: mean **267.0 ms**, p50 **196.0 ms**, p95 **682.2 ms**, maximum **1102.2 ms**. Raw rows: `candidate.jsonl`; profile totals/hash: `candidate-hotspots.json`.
-- `jj-map` native checks including the new geometry case pass. The broader native map/procgen run is still in progress at authoring time; CI is required before closing the bead.
+- `RCH_REQUIRE_REMOTE=1 rch exec -- cargo test -p jj-map -p jj-procgen`, eris, unoptimized native test profile: **87 pass, 1 ignored across 24 suites**, exit 0. This includes the geometry regression, seed/recipe/arena goldens and biome/autopilot banks. RCH build `30055395930145049`; run 08:45–09:15 UTC. CI is still required before closing the bead.
 
 The timed region is `prepare` in both Mac banks; module initialization is outside it. The candidate uses synchronous initialization because the asynchronous Node loader stalled before reaching WASM (not a generator time). The initial unoptimized probe is excluded from the comparison.
 
