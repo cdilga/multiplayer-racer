@@ -65,3 +65,10 @@ omits that header. A host-freshness age also omits upstream transport delay.
   nothing by itself: it says to press a pad button or a cluster key, and the next source's press claims the seat (the prompt then
   clears; Cancel puts it back). It is on the join card and other non-driving screens; the driving screen's slim tray only shows it
   while armed.
+# 2026-10-12 · Retransmit an unanswered offer before replacing its generation (br-j5fc)
+
+- JN5 stalled locally under an 8× host CPU throttle: nine ICE restart/rebuild cycles left the host eight generations behind the phone. A slow host's eventual answer was always stale. With no remote description yet, resend the same offer and preserve the peer/generation; restart ICE once an established negotiation actually fails. Recognize same-generation offer retransmissions even when trickled candidates have changed the stored remote SDP.
+- One global host signal promise also blocked unrelated phones behind an awaited answer POST. A real WebRTC test that holds one answer and joins another endpoint fails before the per-endpoint queues and passes afterwards. Preserve ordering within an endpoint and release completed queue entries.
+- Page resume must cancel an outstanding deferred recovery timer and recover immediately; otherwise a shown phone waits behind its background watchdog. The strict C03 same-seat 3-second envelope stays in place.
+- Full local transport bank passes (including coturn packet-loss injection); JN5 grows to 12 and shrinks to 2 at 8× CPU throttle without widening waits. These are browser emulation measurements, not physical-device results.
+

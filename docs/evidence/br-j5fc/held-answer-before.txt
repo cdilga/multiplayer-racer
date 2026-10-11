@@ -1,0 +1,24 @@
+connect failure: {"state":"connecting","gen":917362653,"endpointId":"c-c9ef85caf16c","roomId":"rm-622c41788fa629be","code":"72FA","pc":"new","ice":"new","signaling":"have-local-offer","early":0,"sse":"open","sseReconnects":0,"registrations":1,"restarts":0,"rebuilds":0,"iceExpiresAt":1791743465000,"relayFallback":{"state":"unavailable","reason":"no-relay-candidate","requests":1,"credentialHeld":false},"channels":{"state":"connecting","cmd":"connecting"}}
+▶ hello room over loopback WebRTC
+  ✖ one pending answer does not block another endpoint negotiation (5366.093917ms)
+✖ hello room over loopback WebRTC (5587.248125ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6288.686666
+
+✖ failing tests:
+
+test at web/shared/transport/tests/transport.test.mjs:132:3
+✖ one pending answer does not block another endpoint negotiation (5366.093917ms)
+  page.waitForFunction: Timeout 5000ms exceeded.
+      at until (/Users/cdilga/Documents/dev/multiplayer-racer/web/shared/transport/tests/transport.test.mjs:28:14)
+      at startController (/Users/cdilga/Documents/dev/multiplayer-racer/web/shared/transport/tests/transport.test.mjs:48:11)
+      at async TestContext.<anonymous> (/Users/cdilga/Documents/dev/multiplayer-racer/web/shared/transport/tests/transport.test.mjs:152:16) {
+    name: 'TimeoutError',
+    log: []
+  }

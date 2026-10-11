@@ -23,6 +23,7 @@ const CAPTURE = process.env.JJ_CAPTURE_DIR;
 const EVIDENCE = evidencePath('P1-G02');
 let browser;
 let server;
+let profiler;
 
 before(async () => {
   server = await serve(build('./', ID), BASE, { JJ_STUN_URLS: '' });
@@ -30,6 +31,10 @@ before(async () => {
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
+  if (profiler) {
+    const { profile } = await profiler.send('Profiler.stop');
+    writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
+  }
   await browser?.close();
   await server?.close();
 });
@@ -160,6 +165,11 @@ async function dropIn(host, url, name) {
 test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   hostPage = host;
+  if (process.env.JJ_HOST_PROFILE) {
+    profiler = await host.context().newCDPSession(host);
+    await profiler.send('Profiler.enable');
+    await profiler.send('Profiler.start');
+  }
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   // JJ_HOST_CPU_THROTTLE=<n> slows the host page n times (a CDP CPU throttle), to reproduce a slow CI runner on a fast box.

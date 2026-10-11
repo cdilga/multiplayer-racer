@@ -2,7 +2,8 @@
 // channels (id 0 `state`: unordered, no retransmits; id 1 `cmd`: reliable, ordered). Every offer, answer and
 // candidate carries the negotiation generation `gen`; the host fences older generations. Recovery on the controller:
 // 3 s `disconnected` (or a page resume) → `restartIce()` with a new offer at gen + 1; still not connected 5 s later →
-// a new peer connection at gen + 1. The server never sees gameplay (R77); nothing here caps peers (R66).
+// a new peer connection at gen + 1. An unanswered initial offer is retransmitted at the same generation, so a
+// slow host's eventual answer stays valid. The server never sees gameplay (R77); nothing here caps peers (R66).
 import { api, ApiError, type IceServer, newId, newSecret, secretHash, type SignalMessage, withBackoff } from './api';
 import { underBase } from '../src/base';
 import { FallbackTrigger, type FallbackReason, mergeServers } from './fallback';
@@ -90,6 +91,7 @@ export class ControllerLink {
   registrations = 0;
   restarts = 0;
   rebuilds = 0;
+  offerRetries = 0;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private recoveryTimer: ReturnType<typeof setTimeout> | undefined;
   private ended = false;
@@ -321,6 +323,17 @@ export class ControllerLink {
     if (this.healthy(pc)) return void (this.recoveryTimer = undefined);
     // A closed connection or channel can't be restarted: straight to a new connection.
     if (this.dead(pc)) return this.rebuild();
+    // A slow host can take longer than the watchdog to answer. Replacing the still-unanswered generation
+    // makes its eventual answer stale forever. Retransmit the same SDP instead (also repairs a lost offer).
+    if (!pc.remoteDescription && pc.localDescription?.type === 'offer') {
+      this.offerRetries += 1;
+      await this.send('offer', pc.localDescription.sdp);
+      this.recoveryTimer = setTimeout(() => {
+        this.recoveryTimer = undefined;
+        if (this.pc === pc && !this.healthy(pc) && !this.ended) void this.recover();
+      }, CONNECT_AFTER_MS);
+      return;
+    }
     this.restarts += 1;
     this.set('restarting');
     this.gen += 1;
@@ -347,7 +360,11 @@ export class ControllerLink {
 
   /** Page resume: check the link and recover straight away if it isn't connected. */
   resume(): void {
-    if (this.pc && !this.healthy(this.pc) && this.recoveryTimer === undefined) void this.recover();
+    if (this.pc && !this.healthy(this.pc)) {
+      clearTimeout(this.recoveryTimer);
+      this.recoveryTimer = undefined;
+      void this.recover();
+    }
   }
 
   private async onSignal(m: SignalMessage): Promise<void> {
@@ -401,6 +418,7 @@ export class ControllerLink {
       registrations: this.registrations,
       restarts: this.restarts,
       rebuilds: this.rebuilds,
+      offerRetries: this.offerRetries,
       iceExpiresAt: this.iceExpiresAt,
       relayFallback: { ...this.relay, credentialHeld: this.fallbackValid() },
       channels: this.channels
@@ -423,6 +441,7 @@ export interface HostPeer {
   /** Candidates that arrived for a generation we haven't seen the offer for yet. */
   pending: Map<number, RTCIceCandidateInit[]>;
   staleIgnored: number;
+  negotiation?: { gen: number; stage: string; startedAt: number; stageAt: number; error?: string };
 }
 
 export interface HostEvents {
@@ -490,11 +509,15 @@ export class HostHub {
     if (got && peer.pc.connectionState !== 'closed') peer.pc.setConfiguration({ ...peer.pc.getConfiguration(), iceServers: this.servers() });
   }
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
-  private signals: Promise<void> = Promise.resolve();
+  private readonly signals = new Map<string, Promise<void>>();
 
-  /** Signals apply one at a time, in order: a candidate must never race ahead of its description. */
+  /** Order each endpoint's signals; another phone must not wait for its answer POST or ICE work. */
   private enqueue(m: SignalMessage): void {
-    this.signals = this.signals.then(() => this.onSignal(m)).catch(() => undefined);
+    const next = (this.signals.get(m.from) ?? Promise.resolve()).then(() => this.onSignal(m)).catch(() => undefined);
+    this.signals.set(m.from, next);
+    void next.then(() => {
+      if (this.signals.get(m.from) === next) this.signals.delete(m.from);
+    });
   }
 
   constructor(
@@ -649,6 +672,11 @@ export class HostHub {
       return;
     }
     if (m.kind === 'offer' || m.kind === 'restart') {
+      if (peer && m.kind === 'offer' && m.gen === peer.gen && peer.pc.remoteDescription?.type === 'offer') {
+        // The controller retransmitted while our answer was in flight. Keep its existing ICE/DTLS work.
+        if (peer.pc.localDescription?.type === 'answer') void this.send(ep, 'answer', m.gen, peer.pc.localDescription.sdp);
+        return;
+      }
       const held = peer?.pending ?? new Map<number, RTCIceCandidateInit[]>();
       if (!peer || m.kind === 'offer' || peer.pc.connectionState === 'closed') {
         // A new connection (first contact or the controller's rebuild).
@@ -656,14 +684,30 @@ export class HostHub {
       }
       peer.gen = m.gen;
       peer.pending = held;
-      await peer.pc.setRemoteDescription({ type: 'offer', sdp: m.payload });
-      const answer = await peer.pc.createAnswer();
-      await peer.pc.setLocalDescription(answer);
-      this.triggers.get(ep)?.offerSent();
-      await this.send(ep, 'answer', m.gen, peer.pc.localDescription!.sdp);
-      for (const [g, list] of held) {
-        if (g === m.gen) for (const c of list) await peer.pc.addIceCandidate(c).catch(() => undefined);
-        if (g <= m.gen) held.delete(g);
+      peer.negotiation = { gen: m.gen, stage: 'remote-description', startedAt: performance.now(), stageAt: performance.now() };
+      const negotiation = peer.negotiation;
+      const stage = (name: string) => {
+        negotiation.stage = name;
+        negotiation.stageAt = performance.now();
+      };
+      try {
+        await peer.pc.setRemoteDescription({ type: 'offer', sdp: m.payload });
+        stage('create-answer');
+        const answer = await peer.pc.createAnswer();
+        stage('local-description');
+        await peer.pc.setLocalDescription(answer);
+        this.triggers.get(ep)?.offerSent();
+        stage('send-answer');
+        await this.send(ep, 'answer', m.gen, peer.pc.localDescription!.sdp);
+        stage('candidates');
+        for (const [g, list] of held) {
+          if (g === m.gen) for (const c of list) await peer.pc.addIceCandidate(c).catch(() => undefined);
+          if (g <= m.gen) held.delete(g);
+        }
+        stage('done');
+      } catch (e) {
+        negotiation.error = e instanceof Error ? e.name : 'unknown-error';
+        throw e;
       }
     }
   }
@@ -746,6 +790,7 @@ export class HostHub {
           gen: p.gen,
           pc: p.pc.connectionState,
           staleIgnored: p.staleIgnored,
+          negotiation: p.negotiation && { ...p.negotiation, ageMs: performance.now() - p.negotiation.startedAt, stageAgeMs: performance.now() - p.negotiation.stageAt },
           channels: {
             state: p.channels.state.readyState,
             cmd: p.channels.cmd.readyState,

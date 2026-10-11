@@ -129,6 +129,72 @@ describe('hello room over loopback WebRTC', () => {
     for (const x of [host, c]) await x.ctx.close();
   });
 
+  test('one pending answer does not block another endpoint negotiation', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const first = await browser.newContext();
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    let answerHeld = false;
+    let second;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async (route) => {
+        const message = route.request().postDataJSON();
+        if (message?.kind === 'answer' && !answerHeld) {
+          answerHeld = true;
+          await held;
+        }
+        await route.continue();
+      });
+      const page = await first.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      for (let i = 0; !answerHeld && i < 100; i++) await page.waitForTimeout(20);
+      assert.equal(answerHeld, true, 'the first endpoint is awaiting its answer POST');
+      second = await startController(origin, host.code, '', 5000);
+      await moveAndSee(host, second, 0.2, -0.4);
+      release();
+      await until(page, () => window.__jjHello.link().state === 'connected');
+    } finally {
+      release();
+      await second?.ctx.close();
+      await first.close();
+      await host.ctx.close();
+    }
+  });
+
+  test('an answer delayed past the watchdog still connects on the original generation', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    let release;
+    const held = new Promise(resolve => { release = resolve; });
+    let answerHeld = false;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async route => {
+        if (route.request().postDataJSON()?.kind === 'answer') {
+          answerHeld = true;
+          await held;
+        }
+        await route.continue();
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().signaling === 'have-local-offer');
+      const initial = await page.evaluate(() => window.__jjHello.link());
+      await until(page, () => window.__jjHello.link().offerRetries >= 1, undefined, 12_000);
+      assert.equal(answerHeld, true);
+      assert.equal((await page.evaluate(() => window.__jjHello.link())).gen, initial.gen, 'waiting for an answer preserves the negotiation');
+      release();
+      await until(page, () => window.__jjHello.link().state === 'connected', undefined, 5000);
+      const connected = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(connected.gen, initial.gen);
+      assert.equal(connected.rebuilds, 0);
+      assert.equal(connected.registrations, 1);
+      assert.equal((await host.page.evaluate(() => window.__jjHello.transport())).peers.length, 1);
+    } finally {
+      release();
+      await ctx.close(); await host.ctx.close();
+    }
+  });
+
   test('a lost initial offer recovers on the same endpoint without a test retry', { timeout: 30_000 }, async () => {
     const host = await startHost(origin);
     const ctx = await browser.newContext();
@@ -152,7 +218,7 @@ describe('hello room over loopback WebRTC', () => {
       const link = await page.evaluate(() => window.__jjHello.link());
       assert.equal(lost, 1);
       assert.equal(link.registrations, 1, 'same registered endpoint');
-      assert.ok(link.restarts >= 1, 'product restarted ICE itself');
+      assert.ok(link.offerRetries >= 1, 'product retransmitted its unanswered offer itself');
       await moveAndSee(host, { page, link: () => page.evaluate(() => window.__jjHello.link()) }, 0.2, -0.4);
     } finally {
       await ctx.close(); await host.ctx.close();
