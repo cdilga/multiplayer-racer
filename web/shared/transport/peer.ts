@@ -718,7 +718,9 @@ export class HostHub {
         await peer.pc.setLocalDescription(answer);
         this.triggers.get(ep)?.offerSent();
         stage('send-answer');
-        await this.send(ep, 'answer', m.gen, peer.pc.localDescription!.sdp);
+        // The description is installed already. A slow HTTP response must not hold this endpoint's incoming
+        // candidates behind it after the answer reached the controller. Candidate-before-answer is buffered there.
+        void this.send(ep, 'answer', m.gen, peer.pc.localDescription!.sdp);
         stage('candidates');
         for (const [g, list] of held) {
           if (g === m.gen) for (const c of list) await peer.pc.addIceCandidate(c).catch(() => undefined);

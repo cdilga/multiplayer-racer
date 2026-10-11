@@ -1,0 +1,11 @@
+▶ hello room over loopback WebRTC
+  ✔ a delivered answer with a pending POST response still applies this endpoint ICE candidates (335.559334ms)
+✔ hello room over loopback WebRTC (482.465ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2258.952917

@@ -1,0 +1,31 @@
+# back to the same seat 344 ms after the page was shown (30 s hidden, network cut)
+✔ the page hidden for 30 s with its network cut, then shown: the same seat within 3 s (32956.293208ms)
+✔ reloading the tab returns the same seat; a second tab fences the first and "Use this one" takes it back (3790.726209ms)
+✔ a Claim retried with the same request id (a lost reply) yields one seat (3286.582209ms)
+# §11 step: unknown code
+# §11 step: expired preview
+# §11 step: relay 429/503
+# §11 step: host hidden
+# §11 step: protocol mismatch
+✖ every §11 state is reached by a scripted cause and shows its wording (57555.553583ms)
+✔ an edited name is remembered per device and realm and prefilled on the next join (4986.507666ms)
+✔ Leave asks for a second tap, then the seat goes; Sit out from Settings parks the car and the seat stays (2757.8795ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106312.38075
+
+✖ failing tests:
+
+test at web/tests/journeys/c03-resume.test.mjs:118:1
+✖ every §11 state is reached by a scripted cause and shows its wording (57555.553583ms)
+  page.waitForFunction: Timeout 30000ms exceeded.
+      at wait (/Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/c03-resume.test.mjs:25:51)
+      at TestContext.<anonymous> (/Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/c03-resume.test.mjs:200:9) {
+    name: 'TimeoutError',
+    log: []
+  }

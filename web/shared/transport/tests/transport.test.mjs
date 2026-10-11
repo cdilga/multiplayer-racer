@@ -161,6 +161,38 @@ describe('hello room over loopback WebRTC', () => {
     }
   });
 
+  test('a delivered answer with a pending POST response still applies this endpoint ICE candidates', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    let release;
+    const held = new Promise(resolve => { release = resolve; });
+    let delivered = false;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async route => {
+        const message = route.request().postDataJSON();
+        // Remove the reverse trickle path so connectivity proves the host processed the incoming candidates.
+        if (message?.kind === 'candidate') return route.fulfill({status:200,contentType:'application/json',body:'{}'});
+        if (message?.kind === 'answer') {
+          message.payload = message.payload.split('\r\n').filter(line => !line.startsWith('a=candidate:')).join('\r\n');
+          const response = await route.fetch({postData:JSON.stringify(message)});
+          delivered = true;
+          await held;
+          return route.fulfill({response});
+        }
+        return route.continue();
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 5000);
+      assert.equal(delivered, true, 'the answer reached the controller while its POST response remains held');
+      const link = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(link.restarts,0); assert.equal(link.rebuilds,0);
+      await moveAndSee(host, {page,link:()=>page.evaluate(()=>window.__jjHello.link())}, .3, -.2);
+    } finally {
+      release(); await ctx.close(); await host.ctx.close();
+    }
+  });
+
   test('an answer delayed past the watchdog still connects on the original generation', { timeout: 30_000 }, async () => {
     const host = await startHost(origin);
     const ctx = await browser.newContext();

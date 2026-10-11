@@ -1,0 +1,22 @@
+▶ hello room over loopback WebRTC
+  ✖ a delivered answer with a pending POST response still applies this endpoint ICE candidates (5263.744292ms)
+✖ hello room over loopback WebRTC (5500.777458ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6270.762125
+
+✖ failing tests:
+
+test at web/shared/transport/tests/transport.test.mjs:164:3
+✖ a delivered answer with a pending POST response still applies this endpoint ICE candidates (5263.744292ms)
+  page.waitForFunction: Timeout 5000ms exceeded.
+      at until (/Users/cdilga/Documents/dev/multiplayer-racer/web/shared/transport/tests/transport.test.mjs:28:14)
+      at TestContext.<anonymous> (/Users/cdilga/Documents/dev/multiplayer-racer/web/shared/transport/tests/transport.test.mjs:186:13) {
+    name: 'TimeoutError',
+    log: []
+  }

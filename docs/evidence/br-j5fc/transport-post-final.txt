@@ -1,0 +1,38 @@
+▶ hello room over loopback WebRTC
+  ✔ two controllers join and each moves its own marker; diagnostics show the selected path (1180.825833ms)
+  ✔ a lost connection restarts, then rebuilds at gen + 1 on the same endpoint without re-registering; stale gens are fenced (497.603292ms)
+  ✔ a dropped signalling stream reconnects with Last-Event-ID and keeps working (981.956917ms)
+  ✔ one pending answer does not block another endpoint negotiation (451.676333ms)
+  ✔ a delivered answer with a pending POST response still applies this endpoint ICE candidates (293.607958ms)
+  ✔ an answer delayed past the watchdog still connects on the original generation (8246.111667ms)
+  ✔ an answer still applying past the watchdog is not interrupted by recovery (9308.584667ms)
+  ✔ a lost initial offer recovers on the same endpoint without a test retry (8297.970166ms)
+✔ hello room over loopback WebRTC (29442.220458ms)
+▶ server restart mid-session
+  ✔ the data channel stays up, the host re-registers its code and the controller its endpoint (858.165667ms)
+✔ server restart mid-session (858.376625ms)
+▶ ICE credential refresh
+  ✔ credentials refresh at 75 % of the TTL through /ice without dropping the data channels (6094.214834ms)
+✔ ICE credential refresh (6094.35375ms)
+✔ WebKit joins and exchanges input with the configured coturn UDP URL present (br-gm11) (1552.480041ms)
+# lost Allocate: {"connectedMs":8170,"loss":{"dropped":6,"events":[{"at":1791742585757,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742586022,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742586530,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742587553,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742589564,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742593579,"event":"drop-allocate","transaction":"42514a56374c3658546b7455"},{"at":1791742593751,"event":"forward-allocate","transaction":"4a697736627a796753533850"},{"at":1791742593751,"event":"forward-allocate","transaction":"4a645579644d44687839585a"}]},"link":{"state":"connected","gen":917425858,"endpointId":"c-decb384a2a05","roomId":"rm-84a92f907bd51772","code":"2JXZ","pc":"connected","ice":"connected","signaling":"stable","applyingAnswer":false,"early":0,"sse":"open","sseReconnects":0,"registrations":1,"restarts":1,"rebuilds":0,"offerRetries":0,"iceExpiresAt":1791749785000,"relayFallback":{"state":"unavailable","reason":"offer-timeout","requests":1,"credentialHeld":false},"channels":{"state":"open","cmd":"open"}}}
+▶ relay through a local coturn
+  ✔ a lost initial TURN Allocate transaction recovers without a fresh controller or test retry (9117.007625ms)
+# stats dump (IPs redacted): host {"local":"relay","remote":"relay","kind":"coturn-relay","protocol":"udp","relayProtocol":"udp","rttMs":1} controller {"local":"relay","remote":"relay","kind":"coturn-relay","protocol":"udp","relayProtocol":"udp","rttMs":1}
+  ✔ iceTransportPolicy relay connects host and controller through coturn (1072.8795ms)
+✔ relay through a local coturn (10190.140959ms)
+▶ Cloudflare fallback triggers (P1-N04b)
+  ✔ a healthy connection never asks for Cloudflare credentials (10261.527292ms)
+  ✔ relay-only with coturn unreachable asks exactly once, later than 3 s; a 503 keeps the existing path (no broker) (11240.073792ms)
+✔ Cloudflare fallback triggers (P1-N04b) (21501.984458ms)
+▶ Cloudflare fallback merges and connects (P1-N04b)
+  ✔ coturn unreachable in the initial list, a scripted fallback answer carries working TURN entries: setConfiguration + ICE restart connects (9087.000375ms)
+✔ Cloudflare fallback merges and connects (P1-N04b) (9087.145ms)
+ℹ tests 16
+ℹ suites 6
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80532.888

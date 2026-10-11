@@ -36,3 +36,26 @@ CI 3475 JN3 completed its button click but timed out while Playwright waited for
 software-rendered repeat passes the full two-round journey in 135.17 seconds. No button bypass or wider acceptance
 timeout was added. A simultaneous native-GPU-mode run exceeded the 150 ms Identify budget on this Mac; this is
 not evidence that the GPU latency gate passed. The actual GPU CI lane passed at the previous committed source.
+
+## Follow-up: answer POST response and ICE queue (2026-10-12)
+
+CI 3487 still failed JN5 while Jonesy joined a heavily loaded host. The host had installed and sent its answer,
+but awaited the HTTP reply before releasing that endpoint's signal queue. This unnecessarily held its incoming
+ICE candidates even when the answer had already reached the controller. A real-WebRTC regression delivers the
+answer while holding the POST response, and removes the reverse trickle path so connectivity requires the host to
+apply incoming candidates. It times out at 5 s before the change and passes in 336 ms afterwards, with input exchange
+and zero restart/rebuild. This is controlled signalling fault injection, not a physical WAN measurement.
+
+The host now sends its installed answer without blocking the signal queue on the HTTP response. The controller's
+existing early-candidate queue already handles candidates arriving before an answer. Signal ordering within each
+endpoint and generation fencing remain intact; no recovery or acceptance timeout increased.
+
+- Full transport suite: 16 pass in 80.533 s, including real coturn and recovery (`transport-post-final.txt`).
+- 8× CPU-throttled software-rendered JN5: 12 seats to 2, every round phase, pass in 385.057 s
+  (`jn5-post-final.txt`). This local tree also contains the in-progress presentation recorder; no reel acceptance
+  is claimed from this churn run.
+- C03 hidden/offline 30 s: same-seat recovery within the existing 3 s envelope, plus reload/fencing and idempotent
+  Claim checks pass (`resume-post-final.txt`).
+
+The defect injections prove two independent queue/race repairs; the slowed journey proves the whole join path.
+CI on the committed fix and deployed validation remain required.
