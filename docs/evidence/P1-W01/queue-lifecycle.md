@@ -37,3 +37,18 @@ restored the Mach-O binary; the successful run uses its saved copy via JJ_SERVER
 failed launch is not behavioral evidence.
 
 CI and the full physical/presentation acceptance are still required before closing P1-W01/P1-W01.3. No participant/effect/debris caps were added; the two held slots are the owner's game rule.
+
+
+CI 3331 passed the unchanged generator WASM budget but its native run found the
+persistent-debris keyword guard treating item card `lifetime_ms` and
+`self.items.expire(self.tick)` as debris TTL. The guard now recognizes only the
+pure item ledger and that exact typed call for expiry words. Every rigid-body
+removal/count-budget ban still scans all sim modules, and its existing minute-long
+moving-debris behavior check remains unchanged. The item round-end/debris replay
+case also remains mandatory. This scope correction does not authorize timed debris.
+
+The corrected guard passes in the remote native workspace bank on eris (explicit
+dev/test opt-level 1): **455 passed, 0 failed, 1 ignored across 77 suites**, exit 0.
+The six debris tests, including the source guard and minute-long dynamic persistence
+check, all pass. Log: `/tmp/jj-dominance-workspace-bank.log`. This bank tests the item
+foundation and Rapier repair before Sanga integration; it does not claim W03 delivered.

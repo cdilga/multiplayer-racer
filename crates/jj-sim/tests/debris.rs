@@ -213,12 +213,19 @@ fn nothing_converts_deletes_merges_or_budgets_debris() {
     let mut hits = Vec::new();
     for f in &files {
         let text = std::fs::read_to_string(f).unwrap();
+        // R58 forbids debris expiry; W01 explicitly requires natural expiry of item effects.
+        // The item ledger owns no physics bodies. Keep the body-deletion/count bans below
+        // everywhere, but do not mistake its card timing or the typed ledger call for debris TTL.
+        let item_ledger = f.starts_with(Path::new(env!("CARGO_MANIFEST_DIR")).join("src/items"));
         for (n, line) in text.lines().enumerate() {
             let code = line.split("//").next().unwrap_or("");
             for pat in FORBIDDEN {
                 if code.contains(pat) {
                     hits.push(format!("{}:{}: {pat}", f.display(), n + 1));
                 }
+            }
+            if item_ledger || code.trim() == "self.items.expire(self.tick);" {
+                continue;
             }
             let lower = code.to_lowercase();
             for word in ["ttl", "expire", "lifetime"] {
