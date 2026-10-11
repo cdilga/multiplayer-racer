@@ -2,19 +2,22 @@
 // each key cluster's legend. Wheels (P1-C05.2) show their profile and live steering and pedals, and any device can be
 // mapped as a wheel here: the prompts walk the calibration and the profile is saved for that device. Its visual design belongs to the accepted TV mocks (R07); this is the plain version the
 // host shows until then, and the data the designed one will read.
-import { controlsCard } from '../../../shared/ui';
+import { controlsCard, keyLabel, paperQrCard } from '../../../shared/ui';
+import { morePadsHint } from '../../../shared/ui/controller-options';
 import { controlsData } from './controls-data';
 import type { LocalInput } from './local';
 import './drawer.css';
 
-const key = (code: string) => code.replace(/^Key/, '').replace(/^Arrow/, '');
+const key = keyLabel;
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Renders the drawer into `root` and keeps it current. */
-export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500): () => void {
+export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?: number; joinUrl?: string; code?: string } = {}): () => void {
   const el = document.createElement('aside');
   el.dataset.jjInputDrawer = '';
   el.setAttribute('aria-label', 'Input drawer');
   root.append(el);
+  const qr = o.joinUrl && o.code ? paperQrCard({ url: o.joinUrl, code: o.code, domain: new URL(o.joinUrl).host, size: 112 }).outerHTML : '';
   const render = () => {
     const rows = input.list().map((s) => {
       const keysOff = s.kind === 'keys' && !input.keyboardPlayers();
@@ -62,15 +65,26 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
     const seated = input.list().filter((s) => s.connected && s.claimed && !s.left).length;
     const on = input.keyboardPlayers();
     const data = controlsData();
+    const padsHint = morePadsHint([...(navigator.getGamepads?.() ?? [])]);
+    const legends = input.clusters().map((c) => `<li><b>${esc(c.label)}</b>: drive ${Object.values(c.drive).map(key).join(' / ')}, action ${Object.values(c.action).map(key).join(' / ')}, Identify ${key(c.identify)}, Ready ${key(c.ready)}</li>`).join('');
     const html = `<div class="drawer-head" tabindex="0">Keys &amp; pads${seated ? ` · ${seated} playing` : ''}</div>
       <div class="dr-bar"><button type="button" data-act="keys-toggle" aria-pressed="${on}">Keyboard players: ${on ? 'on' : 'off'}</button><button type="button" data-act="controls">Controls</button></div>
+      ${padsHint ? `<p class="dr-options" data-more-pads>${padsHint}</p>` : ''}
+      <details class="dr-options" data-keyboard-options><summary>Add another keyboard</summary>
+        <p>Use a different cluster on each keyboard:</p><ul class="dr-legends">${legends}</ul>
+        ${o.joinUrl ? `<p>Or plug it into a phone or laptop and <a href="${esc(o.joinUrl)}" target="_blank" rel="noopener">join this room there</a>.</p>${qr}` : ''}
+      </details>
       <ul class="dr-rows">${rows.join('')}</ul><div class="dr-cards">${input
       .clusters()
       .map((c) => controlsCard({ kind: 'keys', cluster: c.id }, data, { compact: true }))
       .join('')}</div>`;
     // Only when something changed: rebuilding every tick swaps the buttons out from under a pointer (or a
     // Playwright click) on a host whose frames are slow.
-    if (html !== last) el.innerHTML = last = html;
+    if (html !== last) {
+      const open = el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')?.open ?? false;
+      el.innerHTML = last = html;
+      el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')!.open = open;
+    }
   };
   let last = '';
   // Sit out / Return and Leave act on that source's seat at the next tick boundary (plan §9).
@@ -92,6 +106,6 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
     render();
   });
   render();
-  const t = setInterval(render, everyMs);
+  const t = setInterval(render, o.everyMs ?? 500);
   return () => clearInterval(t);
 }

@@ -1,5 +1,36 @@
 # Controllers: traps
 
+## Browser device facts and paths around them (P1-C12, 2026-10-11)
+
+| Browser/OS | Device fact | This build's evidence and action |
+|---|---|---|
+| Chromium (Chrome/Edge), macOS/Windows/Linux | The Gamepad API's four entries are Chromium's `kItemsLengthCap`, not our seat limit (P1-C12 contract). | Full-slot guidance is exercised on Mac Chromium; put extra pads on another normally joined laptop/phone, or use Firefox. Six pads on a joined Chromium page in the journey override the API and are **emulation**, not a hardware-slot claim. |
+| Firefox, macOS | No project pad cap; the API is scanned in full. | Eight emulated host pads claim eight distinct seats/cars. Actual USB/Bluetooth device enumeration remains owner qualification. |
+| Firefox, Windows/Linux | The project uses the same unbounded scanner. | CI now installs Firefox on Linux; Windows hardware enumeration not measured. |
+| Safari/iOS and Android browsers | Hardware/OS pairing and enumeration vary. | Phone viewports with emulated paired pads are journey evidence only; actual device/OS limits not measured here. WebKit is not Safari. |
+| Any browser, any OS | KeyboardEvent has no keyboard device identity; two keyboards share one key space. | Pick separate clusters (A, B, or C on a numpad), or join another laptop/phone carrying its keyboard. Truly independent identical WASD layouts on one computer belong to the native helper, P1-C12.1. |
+
+WebHID verdict: keep Gamepad API as the portable browser path and use the native
+helper for independent keyboards and pads beyond browser/OS enumeration. WebHID
+blocks ordinary keyboard collections; exposing `navigator.hid` does not remove
+that restriction. HID-visible gamepads can be eligible in Chromium, but require
+per-device reports/mapping and do not cover Windows XInput pads or Firefox/Safari.
+No hardware HID reports were available in this session, so no WebHID device support
+is claimed or shipped. The real joined-page path already carries extra players
+without a special hub mode; the helper child remains the broader device path.
+
+Keyboard rollover: the added Keys C numpad layout uses ten distinct `code` values
+and excludes NumpadEnter (host UI). Cluster validation proves no shared/reserved
+keys; simultaneous key-event journeys prove independent cars. These tests do **not**
+measure a physical keyboard's rollover. Each actual keyboard's simultaneous-key
+result remains in the owner device row; no rollover number is invented.
+
+For input-age probes, `SourceState.seq()` counts host interpretations and is not
+the source's wire sequence. Match a send to the actual latest received wire/local
+sequence exposed by the host readout. Packet header attribution is per actual
+packet (7 bytes divided among its records); a child's 13-byte record counter alone
+omits that header. A host-freshness age also omits upstream transport delay.
+
 ## WebKit TURN URLs (br-gm11, 2026-10-11)
 
 - Playwright 1.62.1 WebKit on Linux and macOS rejects the configured `turn:…?transport=udp` at the peer constructor,

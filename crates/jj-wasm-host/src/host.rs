@@ -120,6 +120,8 @@ impl SeatInput {
 
 struct SeatInput {
     state: SourceState,
+    /// Latest source sequence received from the wire/local sampler, for send-to-apply probes (P1-C12).
+    wire_seq: Option<u16>,
     car: Option<CarId>,
     /// The controller's recent discrete action ids: a resent `Action` applies once (§5.4).
     seen_actions: Vec<ActionId>,
@@ -800,6 +802,7 @@ impl Host {
                             classic: r.flags.has(StateFlags::CLASSIC),
                         };
                         input.state.sample(r.drive, r.action, flags, now_ms);
+                        input.wire_seq = Some(r.seq);
                         input.note_plug(flags.available, now_ms);
                         // Seen the moment it arrives: a short deflection between two ticks still counts for the prompts.
                         if input.prompt.on {
@@ -812,7 +815,7 @@ impl Host {
                 source,
                 axes,
                 buttons,
-                ..
+                seq,
             } => {
                 let neutral = axes == [0; 4] && buttons & !LOCAL_UNAVAILABLE == 0;
                 // After leaving and letting go, the next press is a new player: forget the old connection so the
@@ -889,6 +892,7 @@ impl Host {
                         input
                             .state
                             .sample([axes[0], axes[1]], [axes[2], axes[3]], flags, now_ms);
+                    input.wire_seq = Some(seq);
                     input.note_plug(flags.available, now_ms);
                     // A host pad's gestures are detected here (a controller sends its own as `Action`).
                     if let Some(car) = input.car {
@@ -1211,6 +1215,7 @@ impl Host {
                 let tuned = self.input_profile.resolve();
                 self.inputs.entry(seat).or_insert_with(|| SeatInput {
                     state: SourceState::with_profile(source, tuned),
+                    wire_seq: None,
                     car: None,
                     seen_actions: Vec::new(),
                     dropped: false,

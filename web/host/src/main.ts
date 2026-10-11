@@ -177,7 +177,6 @@ async function boot(): Promise<void> {
   const input = new LocalInput(client);
   input.start();
   attachLocalInput(input);
-  mountDrawer(document.body, input);
   testing?.attach(client, { mapJson: greybox, seed, input });
   // The round loop (P1-G01) runs in the worker. A host page opens a room: the Lobby has no driving cars (R110) and a
   // round puts the players on the grid. Free drive (P1-G04, `?drive`) is the dev/test mode where claimed seats drive at
@@ -188,7 +187,8 @@ async function boot(): Promise<void> {
   const laps = Number(params.get('laps'));
   if (laps > 0) client.input({ type: 'ui', ui: `laps:${laps}` });
   const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
-  if (online) await openRoom(client, world, params, freeDrive);
+  if (online) await openRoom(client, world, params, freeDrive, input);
+  else mountDrawer(document.body, input);
   // The real room prepares each round's map in the procgen worker (P1-M08a); free drive and plain test pages race the start map.
   if (online && !freeDrive) await (await import('./procgen/start')).startPreparation(client, world, params);
   // Test and probe surface (R90, P1-C14): the data the controls cards read, swappable so a test can change it and see the page follow.
@@ -312,7 +312,7 @@ async function boot(): Promise<void> {
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
 
-async function openRoom(client: SimClient, world: World, params: URLSearchParams, freeDrive: boolean): Promise<void> {
+async function openRoom(client: SimClient, world: World, params: URLSearchParams, freeDrive: boolean, input: LocalInput): Promise<void> {
   const bridge = new NetBridge(client, () => {}, { iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   world.tiles = { count: 1, auto: true };
   try {
@@ -325,6 +325,7 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     console.warn('jj: no room server; free drive is local only', e);
   }
   const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
+  mountDrawer(document.body, input, { joinUrl, code: bridge.hub.code });
   const overlay = mountGridOverlay(app, joinUrl);
   // Free drive always shows the paper QR with the code, so phones can join any time; a real room's join panel is the
   // round screens' (R07).

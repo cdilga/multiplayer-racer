@@ -26,9 +26,8 @@
    between the sticks (below). Only its Leave and Remove buttons take a touch. */
 .hub-tray { position: fixed; left: 50%; transform: translateX(-50%); bottom: 8px; z-index: 8; width: min(520px, 94%); max-height: 42vh; overflow: hidden auto; }
 /* Off the driving screen the list takes touches (scroll, Leave, Remove) and the card above it makes room: it never sits on the card. */
-body:has(.hub-tray .hub-row):not(:has(.screen.play)) .card-screen { padding-bottom: calc(42vh + 16px); }
+body:not(:has(.screen.play)) .card-screen { bottom: var(--jj-source-tray-height, 0px); align-items: safe center; scroll-padding-block: 24px; }
 body:has(.screen.play) .hub-tray { pointer-events: none; }
-.hub-tray:not(:has(.hub-row)) { max-height: none; }
 .hub-tray .hub-path { display: none; }
 .hub-tray .hub-hint { margin: 0 0 4px; padding: 0 var(--sp-2); text-align: center; font-weight: 600; font-size: var(--fs-label); color: var(--c-paper-shade); }
 .hub-tray .hub-panel.panel-ink { padding: var(--sp-2); }

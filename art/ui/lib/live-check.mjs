@@ -97,7 +97,9 @@ try {
       page.on('pageerror', (e) => problems.push(`error: ${e.message}`));
       page.on('response', (r) => r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`));
       page.on('requestfailed', (r) => problems.push(`request failed: ${r.url()}`));
-      await page.goto(base + path, { waitUntil: 'networkidle' });
+      // Live rooms keep a signalling SSE fetch open. Load completion works for both live pages and design sheets.
+      await page.goto(base + path, { waitUntil: 'load' });
+      await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(800);
       const check = async (label) => {
         for (const src of await page.evaluate(() => [...document.images].filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.currentSrc || i.src))) problems.push(`${label}image did not load: ${src}`);

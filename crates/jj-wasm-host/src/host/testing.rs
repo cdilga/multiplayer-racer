@@ -149,6 +149,7 @@ impl Host {
                     "presence": format!("{:?}", s.presence),
                     "car": input.and_then(|i| i.car).map(|c| c.0),
                     "inputAgeMs": age,
+                    "inputSeq": input.and_then(|i| i.wire_seq),
                     "menuOpen": input.map(|i| i.menu_open),
                     "inputDropped": input.map(|i| i.dropped),
                     "idleCued": input.map(|i| i.idle_cued),

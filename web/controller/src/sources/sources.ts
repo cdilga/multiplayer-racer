@@ -10,6 +10,8 @@
 // is a `Session` attached to it (`Session.attach`) that claims, identifies, readies, leaves and drops out under its own source
 // handle (`ForSource`), and all their input shares the carrier's batches.
 import { icon, tokenData } from '../../../shared/ui';
+import { keyLabel } from '../../../shared/ui';
+import { morePadsHint } from '../../../shared/ui/controller-options';
 import { Session } from '../app/session';
 import { pathLabel } from './badge';
 import { CLUSTERS, KeyCluster, LEAVE_HOLD_MS, NEUTRAL, isPress, padSample, type Sample } from './input';
@@ -29,6 +31,7 @@ const PAD_HANDLE = 16;
 
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const clustersHint = CLUSTERS.map((c) => Object.values(c.drive).map(keyLabel).join(' ')).join(' or ');
 
 export class Source {
   session: Session | null = null;
@@ -88,6 +91,7 @@ export class Sources {
   private lastHtml = '';
   private nextPad = 0;
   private nextHandle = PAD_HANDLE;
+  private traySize: ResizeObserver | null = null;
 
   /** `carrier` is the page's own session: its connection carries every source, whether or not its touch player has joined. */
   constructor(
@@ -106,10 +110,16 @@ export class Sources {
       s.keys = new KeyCluster(c);
       this.sources.set(s.id, s);
     }
+    this.nextHandle = Math.max(PAD_HANDLE, KEYS_HANDLE + CLUSTERS.length);
   }
 
   start(): void {
     this.mount();
+    // Reserve the actual hint/list height on the join card, including when there are no seated players yet.
+    this.traySize = new ResizeObserver(() => {
+      document.body.style.setProperty('--jj-source-tray-height', `${Math.ceil(this.root.getBoundingClientRect().height) + 16}px`);
+    });
+    this.traySize.observe(this.root);
     addEventListener('keydown', this.onKey);
     addEventListener('keyup', this.onKey);
     addEventListener('blur', this.onBlur);
@@ -117,6 +127,9 @@ export class Sources {
   }
 
   stop(): void {
+    this.traySize?.disconnect();
+    this.traySize = null;
+    document.body.style.removeProperty('--jj-source-tray-height');
     for (const t of this.timers) clearInterval(t);
     this.timers = [];
     removeEventListener('keydown', this.onKey);
@@ -287,7 +300,8 @@ export class Sources {
 
   private mount(): void {
     this.root.innerHTML = `<section class="hub tray" data-sources>
-      <p class="hub-hint" data-hint>Plug in a pad, or press a key cluster (W A S D or I J K L), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
+      <p class="hub-hint" data-hint>Plug in a pad, or press a key cluster (${clustersHint}), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
+      <p class="hub-hint" data-more-pads hidden></p>
       <div class="panel panel-ink hub-panel" data-sources-panel hidden><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div></section>`;
     this.list = this.root.querySelector('[data-hub-list]');
     // One player per touchscreen (R65): "Add a player" cannot make a second touch player. It says how to add one (a pad or a key
@@ -307,8 +321,8 @@ export class Sources {
     const hint = this.root.querySelector<HTMLElement>('[data-hint]');
     if (!hint) return;
     hint.innerHTML = on
-      ? '<b data-adding>Press a button on a pad, or a key on a cluster (W A S D or I J K L), to add a player.</b> <button type="button" class="btn quiet hub-add" data-add-cancel>Cancel</button>'
-      : 'Plug in a pad, or press a key cluster (W A S D or I J K L), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button>';
+      ? `<b data-adding>Press a button on a pad, or a key on a cluster (${clustersHint}), to add a player.</b> <button type="button" class="btn quiet hub-add" data-add-cancel>Cancel</button>`
+      : `Plug in a pad, or press a key cluster (${clustersHint}), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button>`;
     hint.querySelector('[data-add]')?.addEventListener('click', () => this.arm(true));
     hint.querySelector('[data-add-cancel]')?.addEventListener('click', () => this.arm(false));
   }
@@ -352,6 +366,10 @@ export class Sources {
 
   private render(): void {
     if (!this.list) return;
+    const hint = this.root.querySelector<HTMLElement>('[data-more-pads]')!;
+    const text = morePadsHint([...(navigator.getGamepads?.() ?? [])]);
+    hint.hidden = !text;
+    if (hint.textContent !== text) hint.textContent = text;
     const rows = this.visible();
     const panel = this.list.closest<HTMLElement>('[data-sources-panel]')!;
     panel.hidden = rows.length === 0;

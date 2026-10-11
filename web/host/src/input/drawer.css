@@ -6,6 +6,16 @@
 [data-jj-input-drawer] button { font: inherit; cursor: pointer; }
 [data-jj-input-drawer] button[aria-pressed='false'] { opacity: .8; }
 [data-jj-input-drawer] .dr-cards { display: grid; gap: 8px; margin: 8px 0 4px; font-size: 12px; }
+[data-jj-input-drawer] .dr-options { max-width: 29rem; margin: 8px 0 0; border-top: 1px solid currentColor; padding-top: 6px; }
+[data-jj-input-drawer] .dr-options summary { cursor: pointer; }
+[data-jj-input-drawer] .dr-options p { margin: 6px 0; }
+[data-jj-input-drawer] .dr-legends { padding-left: 18px; font-size: 12px; }
+[data-jj-input-drawer] .dr-legends li { margin-bottom: 6px; }
+[data-jj-input-drawer] .dr-options a { color: inherit; text-decoration: underline; }
+[data-jj-input-drawer] .dr-options .qr-card { margin: 8px 0 0; }
+/* Opening the keyboard actions makes room for their legends and QR on a phone host. The panel still scrolls. */
+html [data-jj-input-drawer]:has([data-keyboard-options][open]) { max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px); }
+:is([data-jj-phase='Countdown'], [data-jj-phase='Running'], [data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) .dr-options { display: none; }
 :is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards) { display: none; }
 @media (max-width: 960px), (max-height: 500px) { [data-jj-input-drawer] .dr-cards { font-size: 9px; } }
 
