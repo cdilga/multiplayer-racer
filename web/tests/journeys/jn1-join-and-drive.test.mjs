@@ -90,6 +90,22 @@ async function driveTicks(host, ticks) {
   return { start, now };
 }
 
+// Advance the held worker just enough to process the real join commands, independently of how
+// long the browser/ICE takes. Network traffic still uses the actual WebRTC controller path.
+async function joinWhileHeld(host, p, url, name) {
+  let done = false;
+  const joining = joinAndClaim(p, url, name)
+    .then((value) => ({ value }), (error) => ({ error }))
+    .finally(() => { done = true; });
+  while (!done) {
+    await host.evaluate(() => window.__jjTest.step(1));
+    await host.waitForTimeout(50);
+  }
+  const result = await joining;
+  if (result.error) throw result.error;
+  return result.value;
+}
+
 const turn = (a, b) => {
   const d = Math.abs(a - b) % 360;
   return Math.min(d, 360 - d);
@@ -188,12 +204,32 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.equal(tiles, 3);
 
   at('phone C joins mid-drive');
+  // CI 3319: A still carried throttle=1, but travelled from x=174 m into the bend's barrier
+  // at x=185 m and detached its bumper. Stage a clear straight, then compare a fixed simulation
+  // interval: a slower join must not turn the undisturbed-driver check into a crash test.
+  await host.evaluate(() => window.__jjTest.hold(true));
+  const runningA = carOf(await observe(host), epA);
+  assert.ok(runningA.forwardSpeed > 4, `A is driving before the late join: ${JSON.stringify(runningA)}`);
+  await host.evaluate(({ car, y, speed }) => window.__jjTest.command({
+    cmd: 'place', car, pose: { x: 0, y, z: -3.5, headingDeg: 90 }, linvel: [speed, 0, 0],
+  }), { car: runningA.car, y: runningA.position[1], speed: runningA.forwardSpeed });
+  const beforeJoin = await observe(host);
   const c = await phone();
-  const youC = await joinAndClaim(c, joinUrl, 'Robbo');
-  const after1 = await driveTicks(host, 120);
+  const youC = await joinWhileHeld(host, c, joinUrl, 'Robbo');
+  // Keep the actual phones sending fresh input while those ticks run. A single synchronous
+  // 120-tick jump would correctly age the last packet out before another browser frame arrives.
+  for (let i = 0; i < 20; i++) {
+    await host.evaluate(() => window.__jjTest.step(6));
+    await host.waitForTimeout(50);
+  }
+  const after1 = { start: beforeJoin, now: await observe(host) };
   assert.equal(after1.now.host.seats.length, 4);
   assert.ok(carOf(after1.now, youC.link.endpointId), 'C has a car');
+  assert.equal(carOf(after1.now, epA).car, runningA.car, 'A keeps its own car across the join');
+  assert.equal(carOf(after1.now, epA).input.throttle, 1, 'A keeps its own real controller input');
+  assert.deepEqual(carOf(after1.now, epA).parts.map((p) => [p.state, p.health]), runningA.parts.map((p) => [p.state, p.health]), 'the late join does not damage A');
   assert.ok(carOf(after1.now, epA).forwardSpeed > 4, `A undisturbed: before ${JSON.stringify(carOf(after1.start, epA))}, after ${JSON.stringify(carOf(after1.now, epA))}`);
+  await host.evaluate(() => window.__jjTest.hold(false));
   await wait(host, () => window.__jjRender.tileRects().length === 4);
   await shot(host, 'tv-1280x720-four-seats');
   if (CAPTURE) {

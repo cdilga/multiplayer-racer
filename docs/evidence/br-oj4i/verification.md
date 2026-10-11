@@ -20,3 +20,11 @@ without waiting for stable animation frames; the actual Lobby transition remains
 The original 12-player growth, own-input drive, Leave/Sit out, standings and final two-player
 assertions are preserved. Drop-in p95 was 13,255 ms on software WebGL; this is not GPU timing
 qualification. Log: `/tmp/jj-jn5-standalone-forced-pointer.log`.
+
+
+Fresh standalone R07b join-card run on the same Mac/Chromium/SwiftShader:
+**2/2 pass**, 320 seconds total. The docked footer QR pauses the live race; a
+real phone joins from its decoded screen QR; Resume and pause-menu QR are
+verified. The original TV/desk/handheld/auto sizes and full-screen matrix
+fit and decode without changing the assertions. Log `/tmp/jj-r07b-standalone.log`.
+This focused passing rerun does not relabel the earlier full run as green.
