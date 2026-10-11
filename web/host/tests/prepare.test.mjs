@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath as testEvidencePath } from '../../tests/lib/evidence.mjs';
 // P1-M08a browser tests: round preparation on main. The real RoundPreparer over the real procgen worker (jj-wasm-procgen)
 // and the test chunk's sim worker (jj-wasm-host) in headless Chromium: a stale job never commits, a reroll replaces a
 // prepared map (and supersedes one in flight), a failed preparation retries conservatively and then settles in the Lobby,
 // a broken dev map is refused with the validator's message, and every track names its seed.
 //   scripts/build-host-wasm.sh && npx --prefix web vite build --config web/host/tests/vite.config.ts
 //   node --test web/host/tests/prepare.test.mjs
-// Writes what it measured to docs/evidence/P1-M08a/browser-run.json (JJ_EVIDENCE overrides the path).
+// Set JJ_EVIDENCE explicitly to recapture P1-M08a/browser-run.json; default OS scratch.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -14,7 +16,7 @@ import { chromium } from 'playwright';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const dist = process.env.JJ_DIST_TEST ?? join(repo, 'web/dist-test');
-const evidencePath = process.env.JJ_EVIDENCE ?? join(repo, 'docs/evidence/P1-M08a/browser-run.json');
+const evidencePath = testEvidencePath('P1-M08a/browser-run.json', 'JJ_EVIDENCE');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 const SEED = 3;
 const evidence = { browser: '', runs: {} };
