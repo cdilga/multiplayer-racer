@@ -35,3 +35,16 @@ Before these final runs, the first staging attempt used an invalid pose field an
 failed before the late-join assertion; the next one exposed the stale-input jump
 above. Neither is passing evidence. Green CI containing this repair is required
 before closing br-udkg.
+
+CI 3331 exposed a separate Recover fixture failure before the late join: `A never
+stopped` at line 190. Down brakes and then becomes reverse near rest; a wall-clock
+poll can skip the brief stopped interval. Recover now samples three-tick intervals
+with the worker held while the real phone continues sending, then releases the
+stick and acknowledges neutral input before returning to the live clock. The
+original speed threshold and real Recover action remain. This diagnosis follows
+the pinned vehicle rule and the failed CI stage; that run did not capture the
+car's braking trajectory, so missed sampling is an inference, not a measured trace.
+
+Final repaired journey, same Mac/Chromium/SwiftShader and native server, host CDP
+CPU throttle 4: **1/1 passed, 28.84 seconds**. Log:
+`/tmp/jj-jn1-recover-fixed-throttled.log`. Green CI is still required before closing.

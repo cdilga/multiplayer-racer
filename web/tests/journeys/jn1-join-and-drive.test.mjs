@@ -185,11 +185,26 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
 
   at('recover');
   // Recover is for a stuck car (slow for a second, or upside down): brake to a stop first, then ask.
+  // Down becomes reverse once the car is slow. CI 3331 missed the short stopped window
+  // between two wall-clock observations and then waited for a reversing car to stop.
+  // Sample small fixed intervals while the real phone sends its brake/release frames.
+  await host.evaluate(() => window.__jjTest.hold(true));
   await hold(a, { x: 0, y: 1 });
-  for (const t0 = Date.now(); Math.abs(carOf(await observe(host), epA).forwardSpeed) > 0.5; await host.waitForTimeout(100)) {
-    assert.ok(Date.now() - t0 < 15_000, 'A never stopped');
+  let braking = carOf(await observe(host), epA);
+  for (const t0 = Date.now(); Math.abs(braking.forwardSpeed) > 0.5; braking = carOf(await observe(host), epA)) {
+    assert.ok(Date.now() - t0 < 30_000, `A never stopped: ${JSON.stringify(braking)}`);
+    await host.evaluate(() => window.__jjTest.step(3));
+    await host.waitForTimeout(50);
   }
   await a.page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  for (const t0 = Date.now(); ; ) {
+    await host.evaluate(() => window.__jjTest.step(1));
+    const released = carOf(await observe(host), epA);
+    if (released.input.brake === 0 && released.input.throttle === 0) break;
+    assert.ok(Date.now() - t0 < 10_000, `A never released its brake: ${JSON.stringify(released)}`);
+    await host.waitForTimeout(50);
+  }
+  await host.evaluate(() => window.__jjTest.hold(false));
   await driveTicks(host, 150);
   const recoveries = (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries;
   await a.page.getByRole('button', { name: /Recover/ }).click();

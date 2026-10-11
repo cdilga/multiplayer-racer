@@ -28,3 +28,8 @@ real phone joins from its decoded screen QR; Resume and pause-menu QR are
 verified. The original TV/desk/handheld/auto sizes and full-screen matrix
 fit and decode without changing the assertions. Log `/tmp/jj-r07b-standalone.log`.
 This focused passing rerun does not relabel the earlier full run as green.
+
+Fresh complete public smoke against the patched release host WASM and actual
+local server/controllers: **4/4 passed, 119.94 seconds**, unchanged assertions.
+Log: `/tmp/jj-smoke-standalone-dominance.log`. This is a focused passing rerun;
+the earlier 346-test run and preserved dirty-evidence constraint remain as stated.
