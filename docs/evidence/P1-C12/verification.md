@@ -49,7 +49,7 @@ Deployed preview checking follows publication; this slice does not close the par
 
 ## CPU Firefox and GPU CI follow-up
 
-CI3393's Firefox host did not reach room creation on a CPU runner. In its actual Ubuntu CI container on triton, plain headless Firefox and force-enabled headless Firefox both returned no WebGL2 context. Headed Firefox under Xvfb with Mesa software rendering returned WebGL2 with renderer `llvmpipe, or similar`. Running the real eight-pad Firefox test that way passed in 9.90 seconds; the Mac Firefox test passed in 4.80 seconds.
+CI3393's Firefox host did not reach room creation on a CPU runner. In an active Ubuntu CI container using the same image on triton, plain headless Firefox and force-enabled headless Firefox both returned no WebGL2 context. Headed Firefox under Xvfb with Mesa software rendering returned WebGL2 with renderer `llvmpipe, or similar`. Running the real eight-pad Firefox test that way passed in 9.90 seconds; the Mac Firefox test passed in 4.80 seconds.
 
 The journey now creates an isolated Xvfb display for Linux CPU Firefox, forces Mesa software rendering and kills the display in finally. GPU/native Firefox keeps its normal path. Unsupported host capability now fails with the explanation immediately instead of waiting three minutes for a room that cannot exist.
 
