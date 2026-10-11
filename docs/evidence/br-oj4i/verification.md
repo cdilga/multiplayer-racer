@@ -4,7 +4,7 @@
 
 The shared tree already contained modified receipts/images and untracked captures when this check began. Those files were preserved. The baseline recorded SHA-256 for **2,604 existing evidence files** before running `web/tests` and `web/host/tests`.
 
-The complete local run finished: **346 tests, 327 passed, 13 failed, 5 skipped** (about 99 minutes). It is not a green test receipt. Missing Android SDK tests were skipped; no simulator run is claimed. The failed tests were retained for repair rather than weakening their assertions.
+The complete local run finished: **346 tests, 327 passed, 13 failed, 1 cancelled, 5 skipped** (about 99 minutes). It is not a green test receipt. Missing Android SDK tests were skipped; no simulator run is claimed. The failed tests were retained for repair rather than weakening their assertions.
 
 Comparing the evidence bytes against the baseline after the full run and subsequent focused reruns found **2,603 unchanged files**. The one difference, `docs/evidence/br-2mxa/self-review.md`, was an intentional manual review edit committed in `7cc006d9`; its current bytes match that commit and HEAD. No test writes that Markdown file. The pre-existing dirty receipts and captures were preserved, not replaced with test-run numbers.
 
