@@ -301,16 +301,24 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   assert.ok(engines.every((e) => e.profile === 'cruz-missile' && e.boostLayerBuilt === false), 'the Cruz Missile has no turbo layer');
   assert.ok(engines.every((e) => e.voiced), 'all eight are voiced within the budget');
   await page.evaluate(() => clearInterval(window.__pump));
+  // Mixing a live 120Hz clock with explicit steps let a loaded renderer miss the whole respawn hold.
+  // Pin the worker's test clock and verify the actual lifecycle, independently of browser wall time.
+  await page.evaluate(async () => { await window.__jjTest.hold(true); });
+  const beforeWreck = await page.evaluate(() => window.__jjTest.observe());
   // Wreck stops the engine (R103), and it starts again when the hold ends.
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_FL', health: 0 }), joined[0].car);
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_RR', health: 0 }), joined[0].car);
   // A lost wheel wrecks the car once its grace runs out (R121: 2 s, 240 ticks).
   await page.evaluate(() => window.__jjTest.step(250));
-  await page.waitForTimeout(400);
+  const wreck = await page.evaluate(() => window.__jjTest.observe());
+  const wrecked = wreck.cars.find(c => c.car === joined[0].car);
+  assert.equal(wrecked.race.wrecks, beforeWreck.cars.find(c => c.car === joined[0].car).race.wrecks + 1);
+  assert.equal(wrecked.race.held, true, 'the wheel-loss wreck is still in its respawn hold');
+  await page.waitForFunction(car => window.__jjAudio.engines().some(e => e.car === car && !e.ignition), joined[0].car);
   let log = await page.evaluate(() => window.__jjAudio.log('engine'));
   assert.ok(log.some((l) => l.car === joined[0].car && l.ignition === false), `the wrecked car's engine stopped: ${JSON.stringify(log.slice(-4))}`);
   await page.evaluate(() => window.__jjTest.step(420));
-  await page.waitForTimeout(400);
+  await page.waitForFunction(car => window.__jjAudio.engines().some(e => e.car === car && e.ignition), joined[0].car);
   log = await page.evaluate(() => window.__jjAudio.log('engine'));
   const last = log.filter((l) => l.car === joined[0].car && 'ignition' in l).at(-1);
   assert.equal(last.ignition, true, 'and starts again after the hold');
@@ -349,7 +357,7 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   assert.ok(bench.state.engineCostMs < 2, `update cost ${bench.state.engineCostMs} ms`);
   assert.deepEqual(errors, []);
   await page2.close();
-  runs['P1-A05'] = { engines, startStop: log.filter((l) => l.car === joined[0].car).slice(-6), turbo: out, cost: bench };
+  runs['P1-A05'] = { engines, wreck: {tick:wreck.tick,car:wrecked.car,race:wrecked.race}, startStop: log.filter((l) => l.car === joined[0].car).slice(-6), turbo: out, cost: bench };
   await writeFile(join(ev('P1-A05'), 'engine-log.json'), `${JSON.stringify({ engines, log: log.slice(-30), turbo: out, cost: bench }, null, 1)}\n`);
 });
 
