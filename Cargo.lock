@@ -1060,6 +1060,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
@@ -1802,8 +1803,6 @@ dependencies = [
 [[package]]
 name = "rapier3d"
 version = "0.36.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2e2b20538584bb3ba5bfe6a66c2d9a242ee17d15e5398be0fa35279c7d73739"
 dependencies = [
  "approx",
  "arrayvec",

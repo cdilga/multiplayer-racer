@@ -295,3 +295,12 @@ not feel targets.
 - This deliberate physics correction changes the mixed-host fixture hash from `6f0f9c4e732a35ac2fb6251bbedc8ef50a2d04b4d835bc0c6a865f9483097508` to `8eae7be56efed7e9e9e5b9b27d518e64b1f61e904ec07c227a6a3c9f56e39ae1`. Native and freshly rebuilt WASM independently produced the same new hash before updating the fixture; the native test also repeats its run.
 - Catch-up belongs at a race's GO. Forcing Light on every host tick also rewrote loaded fixtures and free-drive journals. The lobby choice now defaults to Light, supports Off, and applies at GO; fixture parity remains source-blind.
 - Assist hash state must include the car index: hashing only non-Off levels made moving an identical assist between cars invisible before stepping.
+
+
+## 2026-10-11 · Rapier 0.36 dynamic dominance needs motion reads and body-local anchors (P1-W03a)
+
+- The raw pinned API fixture on Mac and eris used equal 1,200 kg cuboids, gravity/friction/restitution zero and locked rotations. Equal groups share 15 m/s as 7.5 each. Group 1 kept 15 m/s, but the lower body got about 1.5e-7 m/s; the mover passed through it (x=4.5 vs target x=0.993 at 0.5 s). This is a dependency/API bug, not a Sanga mass tuning problem. 0.36.1's solver is unchanged.
+- The SIMD contact builders masked dominant ids to u32::MAX for reads as well as writes, losing their velocities/poses. The narrow phase also froze their anchors as world-attached. A motion-read repair alone pushed the target but left a 1 m penetration; the geometry assertion caught that incomplete fix.
+- The local 0.36.0 patch separates actual motion reads from masked impulse writes for awake dynamic dominance, and localizes their contact anchors to the body's centre of mass. Equal groups and genuinely fixed/sleeping/kinematic conventions keep their original paths. The real body mass, controls and pose are never scripted by the patch.
+- Corrected raw fixture: mover and target 15 m/s, x=4.5/6.5 (2 m separation); a fixed barrier still stops the mover at x≈−2. Setter expiry restores equal-group 7.5 m/s contacts. A deliberately overlapped stationary pair separates to 1.999984 m with peak kinetic energy 1.45e-11 J after expiry. This is the isolated translational API fixture, not the full car/terrain W03 qualification.
+- Source provenance and changed files: vendor/rapier3d/JAMMERS-PATCH.md. Native and WASM API banks pass 9/9. Do not call the Sanga shipped on this evidence; W03 still needs driving, damage immunity, weapon reduction, refresh, timers, effects and running-game/visual tests.

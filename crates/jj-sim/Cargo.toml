@@ -23,5 +23,8 @@ sha2.workspace = true
 # The feel bank (tests/feel.rs) runs fixtures through the shared runner, which depends on this crate's library.
 jj-fixture.workspace = true
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test.workspace = true
+
 [lints]
 workspace = true
