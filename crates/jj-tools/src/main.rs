@@ -3,7 +3,8 @@
 //! ```text
 //! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry), vehicle
 //!                                               sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs) and
-//!                                               vehicle profiles (jj.vehicle-profile.v1, against their sidecar)
+//!                                               vehicle profiles (jj.vehicle-profile.v1, against their sidecar), and
+//!                                               item cards (jj.item.v1, P1-W01)
 //! jj sim [--json] [--trace] [--set k=v] <fixture.json>…   set up, step, observe, assert and replay (`jj sim --help`)
 //! jj sim --compare <accepted> <current> [<tuned>]           ACCEPTED | CURRENT | TUNED trace table
 //! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
@@ -140,6 +141,29 @@ fn validate(args: &[String]) -> ExitCode {
                 println!("{}: {} problem(s)", file.display(), report.violations.len());
                 for v in &report.violations {
                     println!("  {:<20} {:<28} {}", v.rule.name(), v.at, v.detail);
+                }
+            }
+            continue;
+        }
+        // Item cards share the data-validation entry point; invalid cards never enter a round's item pool.
+        if serde_json::from_slice::<serde_json::Value>(&bytes)
+            .is_ok_and(|v| v.get("item").is_some())
+        {
+            let problems = match jj_contracts::item::parse(&bytes) {
+                Ok(_) => Vec::new(),
+                Err(problems) => problems,
+            };
+            all_ok &= problems.is_empty();
+            if json {
+                results.push(serde_json::json!({
+                    "file": file.display().to_string(), "kind": "item", "ok": problems.is_empty(), "problems": problems,
+                }));
+            } else if problems.is_empty() {
+                println!("{}: ok (jj.item.v1)", file.display());
+            } else {
+                println!("{}: {} problem(s)", file.display(), problems.len());
+                for problem in problems {
+                    println!("  {problem}");
                 }
             }
             continue;

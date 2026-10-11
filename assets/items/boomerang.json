@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "boomerang",
+  "version": 1,
+  "class": "projectile",
+  "activation": "sector-entry",
+  "direction": "forward-rear",
+  "uses": 1,
+  "offensive": true,
+  "timing": { "arming_ms": 150, "cooldown_ms": 0, "lifetime_ms": 2400, "duration_ms": null },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Eat a sanga", "Steer out of its arc", "Shelter behind a wall or debris"],
+  "presentation": { "vfx": "boomerang-trail", "sfx": "boomerang", "comic": "WHACK!" },
+  "rationale": "P1-W02: a forward or rearward throw arcs out and back in about 2.4 seconds; walls and debris can stop it. The physical effect is implemented by W02."
+}
