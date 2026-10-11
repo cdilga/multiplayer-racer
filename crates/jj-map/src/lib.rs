@@ -15,6 +15,7 @@ mod geom;
 pub mod jump;
 pub mod kit;
 pub mod model;
+pub mod roof;
 pub mod validate;
 
 pub use canon::{canonical_bytes, canonicalise, gameplay_hash, hex};

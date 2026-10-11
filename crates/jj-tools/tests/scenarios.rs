@@ -25,6 +25,12 @@ fn every_scenario_in_the_bank_passes() {
     .filter(|p| p.extension().is_some_and(|e| e == "json"))
     .map(|p| p.display().to_string())
     .collect();
+    // The roof bank keeps its authored map beside the scenario; only the script is a simulation fixture.
+    files.push(
+        repo.join("scenarios/roofs/kicker.json")
+            .display()
+            .to_string(),
+    );
     files.sort();
     for name in [
         "idle-settle.json",

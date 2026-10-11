@@ -340,6 +340,9 @@ pub struct InputSpan {
     pub steer: f32,
     #[serde(default)]
     pub brake: f32,
+    /// Hold the brakes at rest without selecting reverse (parking/landing fixtures).
+    #[serde(default)]
+    pub no_reverse: bool,
     /// ACTION left held: the handbrake drift (P1-S03b).
     #[serde(default)]
     pub drift: bool,
@@ -688,7 +691,7 @@ impl Harness {
                 brake: quantise_axis(i.brake.max(0.0)),
                 drift: i.drift,
                 boost: i.boost,
-                no_reverse: false,
+                no_reverse: i.no_reverse,
             });
             sim.set_input(CarId(car), input);
         }

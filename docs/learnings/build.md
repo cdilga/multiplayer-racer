@@ -91,3 +91,10 @@
   ("eris's clone has local changes").
 - **Fix:** commit `Cargo.lock` with the manifest change (`git commit -- … Cargo.lock`); build on eris with `--locked`.
   If the clone is already dirty, `git stash push -- Cargo.lock` there (never discard), then push the lock from the Mac.
+
+## 2026-10-12 · RCH must fail closed for workspace builds on the Mac
+
+- An explicit `rch exec` can still fall back to local Cargo when no worker is admissible. Set
+  `RCH_REQUIRE_REMOTE=1` for workspace builds/tests and inspect the worker receipt, rather than assuming the wrapper
+  proves offloading. A roof validation run accidentally started locally; it was stopped and rerun on eris with the
+  requirement enabled. Retryable exit 103 means wait for the worker, not rerun Cargo locally.

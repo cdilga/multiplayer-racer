@@ -221,11 +221,23 @@ fn validate(args: &[String]) -> ExitCode {
                 }
             }
         }
-        let (report, hash) =
-            match jj_map::load_json(&bytes, registry.as_ref().expect("loaded above")) {
-                Ok(loaded) => (jj_map::Report::of(vec![]), Some(jj_map::hex(&loaded.hash))),
-                Err(report) => (report, None),
-            };
+        let (report, hash, jump_shapes) = match jj_map::load_json(
+            &bytes,
+            registry.as_ref().expect("loaded above"),
+        ) {
+            Ok(loaded) => {
+                let shapes: Vec<serde_json::Value> = loaded.map.features.iter().enumerate().filter_map(|(feature, f)| {
+                        let mesh = jj_map::jump::jump_mesh(&loaded.map, f)?;
+                        Some(serde_json::json!({"feature":feature,"triangles":mesh.1.len(),"fingerprint":format!("{:016x}",jj_map::jump::render_fingerprint(&mesh))}))
+                    }).collect();
+                (
+                    jj_map::Report::of(vec![]),
+                    Some(jj_map::hex(&loaded.hash)),
+                    shapes,
+                )
+            }
+            Err(report) => (report, None, Vec::new()),
+        };
         all_ok &= report.ok;
         if json {
             results.push(serde_json::json!({
@@ -234,6 +246,7 @@ fn validate(args: &[String]) -> ExitCode {
                 "ok": report.ok,
                 "gameplayHash": hash,
                 "violations": report.violations,
+                "jumpShapes": jump_shapes,
             }));
         } else if report.ok {
             println!(

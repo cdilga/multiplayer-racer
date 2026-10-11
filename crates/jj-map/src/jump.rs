@@ -50,6 +50,19 @@ impl JumpDesign {
         }
         let m = |k: &str| get(k).map(|v| v as f64 / 1000.0);
         let lip = get("lipHeightCm")? as f64 / 100.0;
+        if get("roofTarget").is_some() {
+            // A roof stunt is a free-standing kicker; the visible house is its receiving surface.
+            return Some(Self {
+                ramp_m: m("rampLengthMm")?,
+                ramp_w: m("rampWidthMm")?,
+                lip,
+                table_m: 0.0,
+                land_w: m("rampWidthMm")?,
+                down_m: 0.0,
+                blend_m: m("blendMm")?,
+                down_blend_m: 0.0,
+            });
+        }
         let down_blend_m = m("downBlendMm").unwrap_or(0.0);
         Some(Self {
             ramp_m: m("rampLengthMm")?,
@@ -160,12 +173,38 @@ fn along(map: &Map, base: usize, u: f64) -> ([f64; 2], [f64; 2]) {
     }
 }
 
+/// Route-following for ordinary jumps; an explicitly targeted roof kicker uses its own pose and heading.
+fn frame(map: &Map, f: &Feature, u: f64) -> ([f64; 2], [f64; 2]) {
+    if f.params.contains_key("roofTarget") {
+        let a = f64::from(f.pose.yaw) / 100.0 * core::f64::consts::PI / 180.0;
+        let t = [libm::cos(a), libm::sin(a)];
+        (
+            [
+                f64::from(f.pose.x) / 1000.0 + u * t[0],
+                f64::from(f.pose.z) / 1000.0 + u * t[1],
+            ],
+            t,
+        )
+    } else {
+        along(map, base_index(map, f), u)
+    }
+}
+
 /// How far (m) the surface of a sharp jump stands above the ground at (x, z): 0 outside the jump's footprint. For
 /// placing anything that stands on the road (props, dressing) on the jump instead of inside it.
 pub fn height_above_ground_m(route: &crate::model::Route, f: &Feature, x: f64, z: f64) -> f64 {
     let Some(d) = JumpDesign::of(f) else {
         return 0.0;
     };
+    if f.params.contains_key("roofTarget") {
+        let a = f64::from(f.pose.yaw) / 100.0 * core::f64::consts::PI / 180.0;
+        let (tx, tz) = (libm::cos(a), libm::sin(a));
+        let (dx, dz) = (
+            x - f64::from(f.pose.x) / 1000.0,
+            z - f64::from(f.pose.z) / 1000.0,
+        );
+        return d.height(dx * tx + dz * tz, -dx * tz + dz * tx);
+    }
     let pts = &route.points;
     let n = pts.len();
     let base = nearest_point(route, f);
@@ -210,7 +249,7 @@ fn nearest_point(route: &crate::model::Route, f: &Feature) -> usize {
 
 /// The surface point of a sharp jump (x, y, z in metres) at `u` and `lat`: ground plus the design's height.
 pub fn surface_point(map: &Map, f: &Feature, d: &JumpDesign, u: f64, lat: f64) -> [f64; 3] {
-    let (c, t) = along(map, base_index(map, f), u);
+    let (c, t) = frame(map, f, u);
     let (x, z) = (c[0] - t[1] * lat, c[1] + t[0] * lat);
     [x, ground_height_m(&map.terrain, x, z) + d.height(u, lat), z]
 }
@@ -240,12 +279,11 @@ pub fn render_fingerprint(mesh: &JumpMesh) -> u64 {
 /// ramp. The sim collides with exactly these triangles and the renderer draws them.
 pub fn jump_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
     let d = JumpDesign::of(f)?;
-    let base = base_index(map, f);
     let mut verts: Vec<[f64; 3]> = Vec::new();
     let mut tris: Vec<[u32; 3]> = Vec::new();
     let section = |u: f64, w: f64, verts: &mut Vec<[f64; 3]>| -> u32 {
         let first = verts.len() as u32;
-        let (c, t) = along(map, base, u);
+        let (c, t) = frame(map, f, u);
         for lat in [
             -w / 2.0 - EDGE_SLOPE_M,
             -w / 2.0,
@@ -279,6 +317,9 @@ pub fn jump_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
         let next = section(u, d.ramp_w, &mut verts);
         strip(prev, next, &verts, &mut tris);
         prev = next;
+    }
+    if f.params.contains_key("roofTarget") {
+        return Some((verts, tris));
     }
     let (t0, t1) = (d.ramp_m, d.ramp_m + d.table_m);
     let mut prev = section(t0, d.land_w, &mut verts);

@@ -87,6 +87,8 @@ pub enum Rule {
     GameplayHash,
     /// A derby bowl's profile, size or footprint breaks the arena rules (P1-M10).
     Arena,
+    /// A declared house-roof landing cannot receive its aimed kicker at design speed.
+    RoofReach,
 }
 
 impl Rule {
@@ -117,6 +119,7 @@ impl Rule {
             Self::RegistrySchema => "registry-schema",
             Self::GameplayHash => "gameplay-hash",
             Self::Arena => "arena",
+            Self::RoofReach => "roof-reach",
         }
     }
 }
@@ -494,6 +497,12 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
         let nr = geom.nearest(f64::from(f.pose.x), f64::from(f.pose.z));
         match f.kind {
             FeatureKind::Jump => {
+                if f.params.contains_key("roofTarget") {
+                    for detail in crate::roof::problems(map, f) {
+                        add(&mut v, Rule::RoofReach, &at, detail);
+                    }
+                    continue;
+                }
                 let Some(p) = need(
                     &[
                         "rampLengthMm",

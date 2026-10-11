@@ -1,0 +1,277 @@
+{
+  "cars": [
+    {
+      "pose": {
+        "headingDeg": 90,
+        "x": 10,
+        "y": 0.1,
+        "z": 0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "husks",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "metric": "height",
+      "min": 2,
+      "max": 2.8
+    },
+    {
+      "car": 0,
+      "metric": "upY",
+      "min": 0.95,
+      "max": 1.01
+    },
+    {
+      "car": 0,
+      "metric": "wheelsInContact",
+      "min": 4,
+      "max": 4
+    }
+  ],
+  "inputs": [
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 240,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7999816888943144,
+      "toTick": 241
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 241,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8007446516312143,
+      "toTick": 242
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 242,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8002563554795984,
+      "toTick": 243
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 243,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7990050965910825,
+      "toTick": 244
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 244,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7980590227973265,
+      "toTick": 245
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 245,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7973570970793786,
+      "toTick": 246
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 246,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7969298379467147,
+      "toTick": 247
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 247,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7966856898709067,
+      "toTick": 248
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 248,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7966246528519547,
+      "toTick": 249
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 249,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7967162083803827,
+      "toTick": 250
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 250,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7969603564561907,
+      "toTick": 251
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 251,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7972960600604266,
+      "toTick": 252
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 252,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7977538377025666,
+      "toTick": 253
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 253,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7996154667806025,
+      "toTick": 254
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 254,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.804467909787286,
+      "toTick": 255
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 255,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8089541306802576,
+      "toTick": 256
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 256,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8167058320871609,
+      "toTick": 257
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 257,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8237556077761162,
+      "toTick": 258
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 258,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8342539750358593,
+      "toTick": 259
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 259,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8482619708853419,
+      "toTick": 260
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 260,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8607440412610248,
+      "toTick": 261
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 261,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 1.0,
+      "toTick": 345
+    },
+    {
+      "brake": 1.0,
+      "car": 0,
+      "fromTick": 345,
+      "noReverse": true,
+      "steer": 0.0,
+      "throttle": 0.0,
+      "toTick": 960
+    }
+  ],
+  "map": "scenarios/roofs/kicker-map.json",
+  "observe": [
+    240,
+    300,
+    360,
+    480,
+    720,
+    960
+  ],
+  "place": [
+    {
+      "car": 0,
+      "linvel": [
+        18,
+        0,
+        0
+      ],
+      "pose": {
+        "headingDeg": 90,
+        "x": 23,
+        "y": 0.1,
+        "z": 21
+      },
+      "tick": 240
+    }
+  ],
+  "scenario": "roof-kicker",
+  "seed": 21,
+  "ticks": 960,
+  "what": "P1-PT-rooftop: real 15m/s release lands/stops on visible gable; exact native/WASM replay"
+}

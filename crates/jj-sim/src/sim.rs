@@ -376,6 +376,14 @@ impl Sim {
                 },
             });
             let (builder, hy) = proxy_collider(fp);
+            if crate::roofs::insert_house(
+                &mut world,
+                d,
+                WORLD_GROUPS,
+                groups(GROUP_TERRAIN.union(crate::roofs::ROOF), Group::ALL),
+            ) {
+                continue;
+            }
             if d.kit_piece == "wayfinding/guard-rail" {
                 let length = match fp {
                     Footprint::Rect { x, .. } => x as f32 / 1000.0,
@@ -912,9 +920,18 @@ impl Sim {
     /// rock), 3 off track (R124: the host tells off-track from dirt).
     pub fn car_surface(&self, car: CarId) -> Option<u8> {
         use jj_map::model::Surface;
+        let vehicle = &self.cars.get(car.0 as usize)?.vehicle;
         let b = self.world.bodies.get(self.cars.get(car.0 as usize)?.body)?;
         let t = b.position().translation;
-        Some(match vehicle::surface_at(&self.terrain, t.x, t.z) {
+        let ground = vehicle
+            .wheels()
+            .iter()
+            .find(|w| w.raycast_info().is_in_contact)
+            .map_or_else(
+                || vehicle::surface_at(&self.terrain, t.x, t.z),
+                |w| crate::roofs::surface(&self.terrain, &self.world.colliders, w, t),
+            );
+        Some(match ground {
             Surface::Tarmac => 0,
             s => surface::audio_class(s),
         })
@@ -1614,7 +1631,12 @@ impl Sim {
                 for (i, g) in grip.iter_mut().enumerate() {
                     let [x, y, z] = p.geometry.wheels[i];
                     let at = iso * Vector::new(x, y, z);
-                    let ground = vehicle::surface_at(&self.terrain, at.x, at.z);
+                    let ground = crate::roofs::surface(
+                        &self.terrain,
+                        &self.world.colliders,
+                        &car.vehicle.wheels()[i],
+                        at,
+                    );
                     *g = p.grip(ground);
                     // R124: the ground's slip curve (dirt resolves less of the sideways slip per tick).
                     side_stiffness[i] = p.tuning.side_friction_stiffness
@@ -1759,7 +1781,7 @@ impl Sim {
                         continue;
                     }
                     let at = ri.contact_point_ws;
-                    let surf = vehicle::surface_at(&self.terrain, at.x, at.z);
+                    let surf = crate::roofs::surface(&self.terrain, &self.world.colliders, w, at);
                     let tyre = surface::table().tyre(surf);
                     let nrm = ri.contact_normal_ws;
                     // Along the wheel's rolling direction only: sideways slip is the tyre's grip, not rolling drag.

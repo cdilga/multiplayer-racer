@@ -19,6 +19,7 @@ pub mod profile;
 pub mod race;
 pub mod rails;
 pub mod rng;
+mod roofs;
 pub mod sim;
 pub mod surface;
 pub mod utility;

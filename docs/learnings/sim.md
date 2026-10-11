@@ -317,3 +317,13 @@ not feel targets.
 - Compare corner cases with identical open-loop inputs. At seed 197, 25 m/s entry completes the actual road exit with compliant rails while rigid/absent controls miss its envelope. A separate 3 m/s entry uses the rail and stays intact; rigid also succeeds there, so that case establishes safe low-speed use rather than a need for give.
 - Host initialization, canonical map encoding and `jj sim` used the generic kit registry; generated wayfinding maps were rejected before physics started. Use the same complete procgen registry already used by generated-map validation and replay. Native CLI and both browser engines now match the corner's full-state hash, including the rail springs.
 - The workspace debris source guard originally banned every fixed body, including the mounted rail's anchor and its R90 rigid comparison. Keep removal, count and expiry bans global; permit only the exact anchor constructor and the two fixed-body statements inside `set_rail_fixed`, which addresses `rail.body` only. The minute-long debris persistence/dynamic-body fixture passes after this guard correction.
+
+## 2026-10-12 · Roof landing fixtures must park without selecting reverse (br-gw74.11)
+
+- `DriveInput.brake` selects reverse near rest unless `no_reverse` is set. The first roof-stay experiment reversed off
+  the roof; fixing the fixture's input, rather than changing physics, kept four suspension contacts. Scenario inputs
+  now expose the same optional `noReverse` field as the sim input.
+- A setup command at the final tick is replayed before the next stepped tick. Step once after Recover before comparing
+  full-state hashes; otherwise the original has applied the command while replay has not reached it.
+- Decompose the visible house into roof/walls/deck/posts but retain its complete registry placement footprint. Roof
+  suspension contact selects ground grip/audio; it must not inherit off-track tyre behaviour from terrain below it.

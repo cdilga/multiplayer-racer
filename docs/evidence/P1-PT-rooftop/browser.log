@@ -1,0 +1,10 @@
+✔ chromium: a design-speed jump lands/stops on the visible roof with native/WASM parity (48727.781791ms)
+✔ webkit: a design-speed jump lands/stops on the visible roof with native/WASM parity (11103.562ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61767.738625

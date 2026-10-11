@@ -105,6 +105,7 @@ interface JumpDesign {
   down: number;
   blend: number;
   downBlend: number;
+  launchOnly: boolean;
 }
 const EDGE_SLOPE = 1.5;
 const jumpDesign = (p: Params): JumpDesign | null => {
@@ -112,7 +113,8 @@ const jumpDesign = (p: Params): JumpDesign | null => {
   const m = (k: string) => (p[k] ?? 0) / 1000;
   const lip = (p.lipHeightCm ?? 0) / 100;
   const downBlend = m('downBlendMm');
-  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: m('tableLengthMm'), landW: m('landingWidthMm'), down: lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend };
+  const launchOnly = p.roofTarget !== undefined;
+  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: launchOnly ? 0 : m('tableLengthMm'), landW: launchOnly ? m('rampWidthMm') : m('landingWidthMm'), down: launchOnly ? 0 : lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend: launchOnly ? 0 : downBlend, launchOnly };
 };
 const jumpLength = (d: JumpDesign) => d.ramp + d.table + d.down;
 /** Height along the centreline before any edge slope: the blended kicker, the table, the landing ramp. */
@@ -369,13 +371,20 @@ export class MapRenderer {
     }
   }
 
+  private jumpFrame(base: number, u: number, pose?: Pose): { x: number; z: number; tx: number; tz: number } {
+    if (!pose) return this.routeAlong(base, u);
+    const angle = pose.yaw / 100 * Math.PI / 180;
+    const [tx, tz] = [Math.cos(angle), Math.sin(angle)];
+    return { x: mm(pose.x) + tx * u, z: mm(pose.z) + tz * u, tx, tz };
+  }
+
   /** A sharp jump's surface: the same triangles the sim collides with (jj-map `jump_mesh`): cross-sections every 25 cm up the
    *  ramp, then the table and the landing ramp, plus the table's front skirt at the lip. */
-  private jumpMesh(s: Soup, d: JumpDesign, base: number): void {
+  private jumpMesh(s: Soup, d: JumpDesign, base: number, pose?: Pose): void {
     const colour = '#c08a5a';
     const section = (u: number, w: number): number[][] =>
       [-w / 2 - EDGE_SLOPE, -w / 2, w / 2, w / 2 + EDGE_SLOPE].map((lat) => {
-        const r = this.routeAlong(base, u);
+        const r = this.jumpFrame(base, u, pose);
         const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
         return [x, this.groundAt(x, z) + jumpProfile(d, u) * jumpSide(w, lat), z];
       });
@@ -398,6 +407,7 @@ export class MapRenderer {
       strip(prev, next);
       prev = next;
     }
+    if (d.launchOnly) return;
     prev = section(d.ramp, d.landW);
     const skirt = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
     for (let j = 0; j < 3; j++) {
@@ -438,9 +448,10 @@ export class MapRenderer {
       // A sharp jump follows the route's polyline and stands above the ground by its exact height (see `jumpMesh`).
       const design = f.kind === 'jump' ? jumpDesign(f.params) : null;
       const base = design ? this.nearestIndex(f.pose.x, f.pose.z) : 0;
+      const freePose = design?.launchOnly ? f.pose : undefined;
       const at = (along: number, lat: number, lift: number): number[] => {
         if (design) {
-          const r = this.routeAlong(base, along);
+          const r = this.jumpFrame(base, along, freePose);
           const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
           return [x, this.groundAt(x, z) + jumpHeight(design, along, lat) + lift, z];
         }
@@ -473,7 +484,7 @@ export class MapRenderer {
       };
       if (design) {
         const from = s.pos.length;
-        this.jumpMesh(s, design, base);
+        this.jumpMesh(s, design, base, freePose);
         this.jumpRanges.push({ feature, from, to: s.pos.length });
       }
       if (f.kind === 'jump') {
