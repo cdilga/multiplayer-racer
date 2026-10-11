@@ -29,4 +29,8 @@ The revised focused checks pass 5/5 (`long-preview-qr/layout.log`). Revised real
 journeys pass Chromium (80.87s) and WebKit (18.48s), asserting >=12px rows at every viewport and
 fullscreen attempt. All 32 journey images and four dense-QR live-check images were inspected
 individually; the latter reserve 64px caption space without rendering caption text.
-New containing green CI and a deployed recapture of this correction remain pending.
+The correction is now in deployed preview v02-04a9054b, containing green CI3583. Final Chromium
+and WebKit real-controller journeys pass (131.65 s / 22.84 s), keeping >=12px rows, stable Start
+bounds, retained identities and round-two behavior. The deployed no-replay and dense-QR/64px-caption-reservation
+live-check matrices pass before/after resize. All 40 final images were visually inspected in labelled
+sheets and small-phone WebKit typography at original size; see ../P1-R09/deployed-final/ and self-review.md.

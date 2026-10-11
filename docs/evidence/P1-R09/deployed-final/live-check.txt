@@ -1,0 +1,3 @@
+ok   /p/v02-04a9054b/host?roundfixture=results-2&test 375x667 -> /tmp/jj-results-deployed-final-live/p_v02_04a9054b_host_roundfixture_results_2_test_375x667.png
+ok   /p/v02-04a9054b/host?roundfixture=results-2&test 1920x1080 -> /tmp/jj-results-deployed-final-live/p_v02_04a9054b_host_roundfixture_results_2_test_1920x1080.png
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.
