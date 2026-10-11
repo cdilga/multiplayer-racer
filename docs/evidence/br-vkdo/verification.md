@@ -12,7 +12,7 @@ At host CPU throttle 8, the pre-fix pull emitted a wheelie action carrying
 `preloadMs: 1200`, despite the runner's nominal 500 ms hold. The controller was
 preloading immediately before the snap, emitted one action, and left preload
 with cooldown 0.99975. The real host never satisfied wheelie within 15 seconds
-(`/tmp/jj-c02-preload-diagnostic.log`, 34 s including setup/teardown).
+(`/tmp/jj-c02-preload-diagnostic.log`, 36.94 s including setup/teardown).
 
 Neutral followed immediately by another pull is a dip back into the existing
 250 ms release window: it preserves the preceding brake preload. On a busy host,
