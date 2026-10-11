@@ -7,7 +7,7 @@ import { execSync, spawn } from 'node:child_process';
 import { createHmac, randomBytes } from 'node:crypto';
 import { createSocket } from 'node:dgram';
 import { after, before, describe, test } from 'node:test';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../../landing/tests/lib/site.mjs';
 
 const BASE = '/p/n05/';
@@ -162,6 +162,27 @@ describe('ICE credential refresh', () => {
     for (const x of [host, c]) await x.ctx.close();
     await server.close();
   });
+});
+
+test('WebKit joins and exchanges input with the configured coturn UDP URL present (br-gm11)', { timeout: 90_000 }, async () => {
+  const server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: 'webkit-urls', JJ_TURN_URLS: 'turn:127.0.0.1:9?transport=udp' });
+  const phoneBrowser = await webkit.launch();
+  let host;
+  try {
+    host = await startHost(server.origin);
+    const ctx = await phoneBrowser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+    const page = await ctx.newPage();
+    await page.goto(`${server.origin}${BASE}j/${host.code}?hello`);
+    await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 30_000);
+    const ctl = { page, link: () => page.evaluate(() => window.__jjHello.link()) };
+    await moveAndSee(host, ctl, 0.7, -0.4);
+    const configured = await page.evaluate(() => window.__jjHello.link());
+    assert.deepEqual(configured.channels, { state: 'open', cmd: 'open' });
+  } finally {
+    await host?.ctx.close();
+    await phoneBrowser.close();
+    await server.close();
+  }
 });
 
 const haveCoturn = (() => {

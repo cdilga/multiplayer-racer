@@ -8,6 +8,7 @@ import { underBase } from '../src/base';
 import { FallbackTrigger, type FallbackReason, mergeServers } from './fallback';
 import { SignalStream, type StreamState } from './sse';
 import { type PathStats, selectedPath } from './stats';
+import { canonicalIceServers } from './ice';
 
 export const HOST = 'host';
 export const RESTART_AFTER_MS = 3_000;
@@ -103,7 +104,7 @@ export class ControllerLink {
   }
 
   private servers(): IceServer[] {
-    return this.fallbackValid() ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers;
+    return canonicalIceServers(this.fallbackValid() ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers);
   }
 
   /** A §5.3 trigger fired for `pc`: get Cloudflare entries (retrying a 429 while still unconnected), merge them with
@@ -449,7 +450,7 @@ export class HostHub {
 
   private servers(): IceServer[] {
     const held = this.fallbackServers.length > 0 && this.fallbackExpiresAt > Date.now() + FALLBACK_MARGIN_MS;
-    return held ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers;
+    return canonicalIceServers(held ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers);
   }
 
   /** A trigger fired for `peer`: merge the shared fallback credential into that peer's configuration. (The host
