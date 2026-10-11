@@ -290,23 +290,40 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
                 jj_map::limits::JUMP_DESIGN_SPEED_MPS,
                 ramp_mm as f64 / (ramp_mm as f64 - LIMITS.jump_blend_m * 500.0),
             );
+            // The reserved landing length alone is not a landing surface. Previously the short sampled table
+            // and down-ramp ended well before the design flight, leaving a boosted car to hit flat road at full
+            // descent speed. Keep a level receiving surface through the design flight, then transition back to
+            // the road beyond it. Landing and the turn back to flat ground are separate parts of the envelope.
+            // The landing's foot observes the same vertical-curvature budget as the road. An abrupt change from
+            // a 16% descent to flat ground bottoms the suspension and pitches a boosted car over its nose.
+            // Low lips need a shallower descent so its concave transition fits below the table height.
+            let down_slope_milli = libm::floor(
+                LIMITS
+                    .jump_down_slope
+                    .min(libm::sqrt(2.0 * lip as f64 / 100.0 * LIMITS.max_curvature))
+                    * 1000.0,
+            ) as i64;
+            let down_slope = down_slope_milli as f64 / 1000.0;
+            let down_blend_mm = libm::floor(down_slope / LIMITS.max_curvature * 1000.0) as i64;
+            let down_run = lip as f64 / 100.0 / down_slope + down_blend_mm as f64 / 2000.0;
+            let table_mm = libm::ceil(flight * 1000.0) as i64;
+            p.entry("tableLengthMm".into())
+                .and_modify(|length| *length = (*length).max(table_mm));
             let land = whole(rng, LIMITS.jump_landing_m.0, LIMITS.jump_landing_m.1, 1.0) * 1000;
             p.insert(
                 "landingLengthMm".into(),
-                land.max(((flight + 4.0) as i64 + 1) * 1000),
+                land.max(libm::ceil(table_mm as f64 + (down_run + 4.0) * 1000.0) as i64),
             );
             p.insert("landingWidthMm".into(), 6_000);
             // Sharp geometry (jj_map::jump): the sim collides with, and the renderer draws, the exact ramp, table and
             // landing ramp instead of a 2.5 m grid's rounding of them.
             p.insert("sharp".into(), 1);
+            p.insert("downBlendMm".into(), down_blend_mm);
             p.insert(
                 "blendMm".into(),
                 libm::round(LIMITS.jump_blend_m * 1000.0) as i64,
             );
-            p.insert(
-                "downSlopeMilli".into(),
-                libm::round(LIMITS.jump_down_slope * 1000.0) as i64,
-            );
+            p.insert("downSlopeMilli".into(), down_slope_milli);
         }
         FeatureKind::Crest => {
             let len = whole(rng, 30.0, 60.0, 5.0) * 5;
@@ -630,11 +647,8 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 }
                 // Entry and landing: the road itself stays gentle across the whole envelope (the ramp, table and
                 // landing ramp are the feature; the entry and the run-out after the landing ramp are plain road).
-                let lip_m = get("lipHeightCm").unwrap_or(0) as f64 / 100.0;
-                let ramp_end = z.base
-                    + get("rampLengthMm").unwrap_or(0) as f64 / 1000.0
-                    + get("tableLengthMm").unwrap_or(0) as f64 / 1000.0
-                    + lip_m / LIMITS.jump_down_slope;
+                let ramp_end =
+                    z.base + jj_map::jump::JumpDesign::of(f).map_or(0.0, |d| d.length_m());
                 let (e0, r0) = (line.index_at(z.from), line.index_at(z.base));
                 // The drop beyond the lip (a grid cell or two) is the jump itself; the landing proper starts 6 m on.
                 let (l0, l1) = (line.index_at(ramp_end + 6.0), line.index_at(z.base + z.len));

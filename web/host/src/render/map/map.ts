@@ -104,13 +104,15 @@ interface JumpDesign {
   landW: number;
   down: number;
   blend: number;
+  downBlend: number;
 }
 const EDGE_SLOPE = 1.5;
 const jumpDesign = (p: Params): JumpDesign | null => {
   if (p.sharp !== 1) return null;
   const m = (k: string) => (p[k] ?? 0) / 1000;
   const lip = (p.lipHeightCm ?? 0) / 100;
-  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: m('tableLengthMm'), landW: m('landingWidthMm'), down: lip / m('downSlopeMilli'), blend: m('blendMm') };
+  const downBlend = m('downBlendMm');
+  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: m('tableLengthMm'), landW: m('landingWidthMm'), down: lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend };
 };
 const jumpLength = (d: JumpDesign) => d.ramp + d.table + d.down;
 /** Height along the centreline before any edge slope: the blended kicker, the table, the landing ramp. */
@@ -120,7 +122,10 @@ const jumpProfile = (d: JumpDesign, u: number): number => {
     const slope = d.lip / (d.ramp - d.blend / 2);
     return u < d.blend ? (slope * u * u) / (2 * d.blend) : slope * (u - d.blend / 2);
   }
-  return u <= d.ramp + d.table ? d.lip : d.lip * (1 - (u - d.ramp - d.table) / d.down);
+  if (u <= d.ramp + d.table) return d.lip;
+  const remaining = jumpLength(d) - u;
+  const slope = d.lip / (d.down - d.downBlend / 2);
+  return remaining < d.downBlend ? slope * remaining * remaining / (2 * d.downBlend) : slope * (remaining - d.downBlend / 2);
 };
 const jumpSide = (w: number, lat: number): number => Math.min(1, Math.max(0, (w / 2 + EDGE_SLOPE - Math.abs(lat)) / EDGE_SLOPE));
 /** Height above the ground (m) at `u` along the jump and `lat` from its centreline. */
@@ -149,6 +154,19 @@ export class MapRenderer {
   private faceMaterial = new MeshBasicMaterial({ vertexColors: true });
   private railInstances = new Map<number, { index: number; rest: Matrix4; normal: Vector3 }[]>();
   private railMatrix = new Matrix4();
+  private jumpRanges: { feature: number; from: number; to: number }[] = [];
+
+  /** Hash the actual uploaded jump triangles (R90), excluding paint and decorative walls. No work until queried. */
+  jumpShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    const mesh = this.group.getObjectByName('features') as Mesh;
+    const positions = mesh.geometry.getAttribute('position').array as Float32Array;
+    return this.jumpRanges.map(({ feature, from, to }) => {
+      const bytes = new Uint8Array(positions.buffer, positions.byteOffset + from * 4, (to - from) * 4);
+      let hash = 0xcbf29ce484222325n;
+      for (const byte of bytes) hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
+      return { feature, triangles: (to - from) / 9, fingerprint: hash.toString(16).padStart(16, '0') };
+    });
+  }
 
   /** Simulated W-beam motion, indexed by the map's dressing entries. Still one instanced draw for the family. */
   updateRails(f: Frame | null): void {
@@ -386,8 +404,15 @@ export class MapRenderer {
       tri(prev[j]!, skirt[j]!, prev[j + 1]!);
       tri(prev[j + 1]!, skirt[j]!, skirt[j + 1]!);
     }
-    for (const u of [d.ramp + d.table, jumpLength(d)]) {
-      const next = section(u, d.landW);
+    const tableSteps = Math.max(1, Math.ceil(d.table / .25));
+    for (let k = 1; k <= tableSteps; k++) {
+      const next = section(d.ramp + d.table * k / tableSteps, d.landW);
+      strip(prev, next);
+      prev = next;
+    }
+    const downSteps = Math.ceil(d.down / .25);
+    for (let k = 1; k <= downSteps; k++) {
+      const next = section(d.ramp + d.table + d.down * k / downSteps, d.landW);
       strip(prev, next);
       prev = next;
     }
@@ -398,7 +423,7 @@ export class MapRenderer {
    *  the ground itself. Everything follows the heightfield. */
   private features(): Mesh {
     const s = new Soup();
-    for (const f of this.map.features) {
+    for (const [feature, f] of this.map.features.entries()) {
       // The derby bowl (P1-M10) is its own revolved mesh, the sim's triangles: no route to follow.
       if (f.kind === 'bowl') {
         const bowl = bowlDesign(f.pose, f.params);
@@ -446,7 +471,11 @@ export class MapRenderer {
           s.quad(top(a0, l1), top(a1, l1), foot(a1, l1), foot(a0, l1), '#7a3a26');
         }
       };
-      if (design) this.jumpMesh(s, design, base);
+      if (design) {
+        const from = s.pos.length;
+        this.jumpMesh(s, design, base);
+        this.jumpRanges.push({ feature, from, to: s.pos.length });
+      }
       if (f.kind === 'jump') {
         const ramp = mm(f.params.rampLengthMm ?? 8000);
         const width = mm(f.params.rampWidthMm ?? 4500) / 2;

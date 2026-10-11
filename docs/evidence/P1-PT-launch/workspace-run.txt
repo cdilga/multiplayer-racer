@@ -1,0 +1,146 @@
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_contracts-cc740d1c65e6e95f)
+     Running tests/items.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/items-8b0237a02f69927d)
+     Running tests/vehicle.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/vehicle-548eae7b723518f4)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_fixture-ad3e94519074903a)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/items.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/items-cc6287d0a1a7fd55)
+     Running tests/sanga.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/sanga-f080e74c918b3e6b)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_input-3603d7073723a3de)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_map-664cb69f92c0399a)
+test result: ok. 66 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+     Running tests/broken.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/broken-024aed59abdb4a42)
+     Running tests/greybox.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/greybox-c0ceb0a23a58e867)
+     Running tests/v01_cases.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/v01_cases-7e8090d9d52b96e0)
+     Running tests/wasm_parity.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/wasm_parity-51d9fcbb96190d44)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_procgen-d9a7ad835d99f4b8)
+     Running tests/arena.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/arena-ed92b5e9ebcf07b5)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/bank.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/bank-b228a2e3956dd5a3)
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 98.87s
+     Running tests/biome.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/biome-9daf764719da38be)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 36.99s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.77s
+     Running tests/biomes.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/biomes-6552d2889158de89)
+     Running tests/course.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/course-af2d80d07960dcea)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.89s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.28s
+     Running tests/features.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/features-4e6c139bc633f559)
+     Running tests/handling.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/handling-afce47bd6706168b)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.86s
+     Running tests/jumps.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jumps-6b3621d887d9ed96)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 419.70s
+     Running tests/playtest.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/playtest-4d850daf659aede1)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 193.10s
+     Running tests/procgen.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/procgen-f7f047ebf2cc702c)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.93s
+     Running tests/respawn.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/respawn-d189961e99cbe26b)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.56s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.91s
+     Running tests/scatter.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/scatter-a7911a3675db8461)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.94s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/signs.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/signs-c1fb13e147f87998)
+     Running tests/terrain.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/terrain-a43e38b195595329)
+     Running tests/tuning.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/tuning-a9dd71489da221a3)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.66s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.56s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/wasm_parity.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/wasm_parity-1c1302c811a65957)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_protocol-5e3839b952e98680)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_server-4c1e9136cc6c455e)
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/main.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_server-073587167653189b)
+     Running tests/coturn.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/coturn-7682ffe82f62a814)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_session-3bc89b479c600d17)
+test result: ok. 46 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_sim-aa2fcd8bbf14303d)
+     Running tests/assist.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/assist-f32057cbbbbfae21)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 68.04s
+     Running tests/autopilot.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/autopilot-20fd030fe0c680d2)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.07s
+     Running tests/crashes.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/crashes-5a10b180b41740a0)
+     Running tests/damage.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/damage-b24d4ce8bf9baf19)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+     Running tests/damage_attribution.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/damage_attribution-86a51ce1d5b3dd8c)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+     Running tests/debris.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/debris-c720586798b5a0d2)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s
+     Running tests/determinism.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/determinism-9831d4c18350a115)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/determinism_scan.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/determinism_scan-fb6d66f3b6a470dc)
+     Running tests/drift_r120.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/drift_r120-5f963adc83db8bb1)
+     Running tests/duels.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/duels-6306bf283764290e)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s
+     Running tests/feel.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/feel-6d25424ad8895550)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.89s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/item_queue.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/item_queue-9b0fc11528c17101)
+     Running tests/late_join.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/late_join-47e00173205a356b)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.38s
+     Running tests/placement.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/placement-8f3b127ca958223b)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.09s
+     Running tests/race.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/race-05e9a0961f9d56dd)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.03s
+     Running tests/rails.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/rails-329f3f7a8997675d)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.19s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/rapier_api.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/rapier_api-eef7ec4a291f9bf1)
+     Running tests/roster.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/roster-b50a0bff78e5c95f)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+     Running tests/tradie_ute.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/tradie_ute-e50392922eec0dd8)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.69s
+     Running tests/utility.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/utility-4af6014e5b0e89cf)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+     Running tests/wreck.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/wreck-042ce94722e6a9f8)
+     Running unittests src/main.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj-dd4dd3625843b5cf)
+     Running tests/item_cli.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/item_cli-a6e1dead164b0768)
+     Running tests/procgen_cli.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/procgen_cli-fa09125583fcf0d7)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.71s
+     Running tests/replay_cli.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/replay_cli-70fb139af06e6283)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+     Running tests/scenarios.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/scenarios-4f1b3511092a27fb)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.25s
+     Running tests/sim_cli.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/sim_cli-3c64ea03f2f68db9)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.86s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_types-891c285949ee1159)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_wasm_host-44ac5c5218025f2d)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_wasm_input-3a5c115c35ebc3fc)
+     Running unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_wasm_procgen-329e452face4b53e)
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.38s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  2026-10-11T18:03:52.120616Z  INFO rch::hook::transfer_orchestration: Remote command finished: exit=0 in 1360597ms

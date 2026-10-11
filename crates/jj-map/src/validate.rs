@@ -558,6 +558,44 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                     ramp_len as f64 / (ramp_len as f64 - b as f64 / 2.0).max(1.0)
                 });
                 let flight = jump_flight_kicker_m(lip, ramp_len, JUMP_DESIGN_SPEED_MPS, kicker);
+                if f.params.get("sharp") == Some(&1)
+                    && let Some(shape) =
+                        need(&["tableLengthMm", "downSlopeMilli", "blendMm"], &mut v)
+                {
+                    let (table, slope, blend) = (shape[0], shape[1], shape[2]);
+                    let down_blend = f.params.get("downBlendMm").copied().unwrap_or(0);
+                    if table < 0
+                        || slope <= 0
+                        || blend < 0
+                        || blend > ramp_len
+                        || down_blend < 0
+                        || (slope > 0
+                            && down_blend as f64 > 2.0 * lip as f64 * 10_000.0 / slope as f64)
+                    {
+                        add(
+                            &mut v,
+                            Rule::FeatureParams,
+                            &at,
+                            "invalid sharp jump table, descent or transition".into(),
+                        );
+                    } else {
+                        let receiving_mm = table as f64
+                            + lip as f64 * 10_000.0 / slope as f64
+                            + down_blend as f64 / 2.0;
+                        if receiving_mm < flight * 1000.0 || receiving_mm > land_len as f64 {
+                            add(
+                                &mut v,
+                                Rule::LandingEnvelope,
+                                &at,
+                                format!(
+                                    "physical landing ends {:.1} m past the lip: needs to cover the {flight:.1} m flight inside its {:.1} m envelope",
+                                    receiving_mm / 1000.0,
+                                    land_len as f64 / 1000.0
+                                ),
+                            );
+                        }
+                    }
+                }
                 if flight * 1000.0 > land_len as f64 {
                     add(
                         &mut v,

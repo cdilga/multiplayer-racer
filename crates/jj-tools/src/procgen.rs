@@ -184,6 +184,10 @@ pub fn command(args: &[String]) -> ExitCode {
         "refLapMs": map.header.ref_lap_ms,
         "dressing": map.dressing.len(),
         "props": map.props.len(),
+        "jumpShapes": map.features.iter().enumerate().filter_map(|(feature, f)| {
+            let mesh = jj_map::jump::jump_mesh(&map, f)?;
+            Some(serde_json::json!({ "feature": feature, "triangles": mesh.1.len(), "fingerprint": format!("{:016x}", jj_map::jump::render_fingerprint(&mesh)) }))
+        }).collect::<Vec<_>>(),
         "course": course_json(&course),
         "out": out.display().to_string(),
         "violations": report.violations,

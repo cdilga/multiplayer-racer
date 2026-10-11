@@ -34,6 +34,8 @@ pub struct JumpDesign {
     /// Length of the concave transition at the ramp's foot, m: the ground curves up into the ramp's slope over it
     /// (a parabola), so a car's nose never meets a kink.
     pub blend_m: f64,
+    /// Concave transition from the landing ramp back to flat ground, m.
+    pub down_blend_m: f64,
 }
 
 impl JumpDesign {
@@ -48,14 +50,16 @@ impl JumpDesign {
         }
         let m = |k: &str| get(k).map(|v| v as f64 / 1000.0);
         let lip = get("lipHeightCm")? as f64 / 100.0;
+        let down_blend_m = m("downBlendMm").unwrap_or(0.0);
         Some(Self {
             ramp_m: m("rampLengthMm")?,
             ramp_w: m("rampWidthMm")?,
             lip,
             table_m: m("tableLengthMm")?,
             land_w: m("landingWidthMm")?,
-            down_m: lip / m("downSlopeMilli")?,
+            down_m: lip / m("downSlopeMilli")? + down_blend_m / 2.0,
             blend_m: m("blendMm")?,
+            down_blend_m,
         })
     }
 
@@ -85,7 +89,13 @@ impl JumpDesign {
         } else if u <= self.ramp_m + self.table_m {
             self.lip
         } else {
-            self.lip * (1.0 - (u - self.ramp_m - self.table_m) / self.down_m)
+            let remaining = self.length_m() - u;
+            let slope = self.lip / (self.down_m - self.down_blend_m / 2.0);
+            if remaining < self.down_blend_m {
+                slope * remaining * remaining / (2.0 * self.down_blend_m)
+            } else {
+                slope * (remaining - self.down_blend_m / 2.0)
+            }
         }
     }
 
@@ -208,6 +218,22 @@ pub fn surface_point(map: &Map, f: &Feature, d: &JumpDesign, u: f64, lat: f64) -
 /// A triangle mesh: vertex positions in metres and counter-clockwise index triples.
 pub type JumpMesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
 
+/// FNV-1a of the expanded f32 triangle positions that a renderer must upload. R90: compare the actual draw buffer
+/// against collision geometry, including the receiving table and landing transition, without comparing colours.
+pub fn render_fingerprint(mesh: &JumpMesh) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    for tri in &mesh.1 {
+        for &index in tri {
+            for component in mesh.0[index as usize] {
+                for byte in (component as f32).to_bits().to_le_bytes() {
+                    hash = (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3);
+                }
+            }
+        }
+    }
+    hash
+}
+
 /// A sharp jump as one triangle mesh (positions in metres, counter-clockwise from above): cross-sections every 25 cm up
 /// the ramp, then the table and the landing ramp. A cross-section is four points, the flat top's two edges and the foot
 /// of each sloped side; the table also gets a front skirt down to the ground at the lip, where it is wider than the
@@ -268,7 +294,21 @@ pub fn jump_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
         tris.push([a0, b0, a1]);
         tris.push([a1, b0, b1]);
     }
-    for u in [t1, d.length_m()] {
+    // Follow the route and its natural terrain on the receiving table too. A long single panel cuts across the
+    // route's gentle bend and bridges terrain changes, creating a seam when the down-ramp resumes the real route.
+    let table_steps = libm::ceil(d.table_m / RAMP_STEP_M).max(1.0) as usize;
+    for k in 1..=table_steps {
+        let next = section(
+            t0 + d.table_m * k as f64 / table_steps as f64,
+            d.land_w,
+            &mut verts,
+        );
+        strip(prev, next, &verts, &mut tris);
+        prev = next;
+    }
+    let steps = libm::ceil(d.down_m / RAMP_STEP_M) as usize;
+    for k in 1..=steps {
+        let u = t1 + d.down_m * k as f64 / steps as f64;
         let next = section(u, d.land_w, &mut verts);
         strip(prev, next, &verts, &mut tris);
         prev = next;

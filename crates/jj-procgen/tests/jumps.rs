@@ -4,15 +4,31 @@
 //! (`jump-land` on the S03 flat fixture is S03's; these run on the generated heightfield.)
 #![cfg(not(target_arch = "wasm32"))]
 
-use jj_map::{FeatureKind, LoadedMap, canonical_bytes, load_canonical};
-use jj_procgen::generate;
-use jj_sim::{Sim, TICK_HZ, VehicleProfile, route_spawn};
+use jj_map::{Biome, FeatureKind, LoadedMap, canonical_bytes, load_canonical};
+use jj_procgen::generate_recipe;
+use jj_sim::{DriveInput, Sim, TICK_HZ, VehicleProfile, route_spawn};
 
 const S: u64 = TICK_HZ as u64;
 
-fn loaded(seed: u64) -> LoadedMap {
-    load_canonical(&canonical_bytes(&generate(seed)), &jj_procgen::registry())
-        .expect("generated maps load")
+/// Every biome that places jumps, using the same ten route seeds as the original landability bank.
+fn jump_maps() -> impl Iterator<Item = (Biome, u64, LoadedMap)> {
+    [
+        Biome::Greybox,
+        Biome::Rocks,
+        Biome::OutbackDirt,
+        Biome::OutbackBitumen,
+    ]
+    .into_iter()
+    .flat_map(|biome| {
+        (0..10).map(move |seed| {
+            let map = generate_recipe(seed, &[biome])
+                .expect("one biome needs no boundary")
+                .0;
+            let loaded = load_canonical(&canonical_bytes(&map), &jj_procgen::registry())
+                .expect("generated maps load");
+            (biome, seed, loaded)
+        })
+    })
 }
 
 /// Route point index nearest a pose (metres apart at most a point spacing).
@@ -34,18 +50,23 @@ struct Outcome {
     recovered: bool,
     /// The car's distance from the centreline as it passed the ramp's base, m.
     lateral_at_ramp: f32,
+    speed_at_lip: f32,
+    boosting_at_lip: bool,
+    flight_s: f64,
+    reached_exit: bool,
 }
 
 /// Starts an autopilot car `run_up` route points before jump `k` at `speed` m/s and drives until 15 m past its landing.
-fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
+fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64, boost: bool) -> Outcome {
     let f = &map.map.features[k];
     let base = index_of(map, f.pose.x, f.pose.z);
     let get = |key: &str| *f.params.get(key).unwrap() as f64 / 1000.0;
     let pts = &map.map.route.points;
     let n = pts.len();
-    // 12.5 m before the ramp (the generator keeps the entry straight that far): the car meets it at the stated speed (the autopilot slows for a bend, so a longer run-up
-    // would test the corner speed, not the ramp).
-    let start = (base + n - 5) % n;
+    // Start 10 m before the ramp, inside its 12 m straight entry. Five points (12.5 m) can put the fixture back in
+    // the preceding turn: seed 7 started heading 4.75 degrees toward a 12.3-degree ramp and flew off the landing's
+    // side before the autopilot could align it. The stated speed tests a straight approach, not that artificial yaw.
+    let start = (base + n - 4) % n;
     let mut sim = Sim::new(
         map,
         &jj_procgen::registry(),
@@ -57,12 +78,23 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
     let v = [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()];
     sim.place_car(car, pose, 0.0, v);
     sim.set_autopilot(car, true);
+    sim.set_input(
+        car,
+        DriveInput {
+            boost,
+            ..Default::default()
+        },
+    );
     let life = sim.car_life(car);
     let end_at = |i: usize| {
         (base + ((get("rampLengthMm") + get("landingLengthMm") + 15.0) / 2.5) as usize) % n == i
     };
     let (mut airborne, mut was_air, mut landing_up_y, mut min_up_y) = (0u64, false, None, 1.0f32);
     let (bx, bz) = (pts[base].x as f32 / 1000.0, pts[base].z as f32 / 1000.0);
+    let d = jj_map::jump::JumpDesign::of(f).expect("generated sharp jump");
+    let lip = jj_map::jump::surface_point(&map.map, f, &d, d.ramp_m, 0.0);
+    let (mut nearest_lip, mut speed_at_lip, mut boosting_at_lip) = (f32::MAX, 0.0, false);
+    let (mut flight_ticks, mut longest_flight) = (0, 0);
     let mut ticks = 0;
     // Air time counts from the first time all four wheels are down (the spawn's 0.5 m drop isn't a jump).
     let (mut settled, mut lateral_at_ramp, mut best) = (false, f32::NAN, f32::MAX);
@@ -70,6 +102,12 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
         sim.step();
         ticks += 1;
         let st = sim.car_state(car).unwrap();
+        let to_lip = (st.position[0] - lip[0] as f32).hypot(st.position[2] - lip[2] as f32);
+        if to_lip < nearest_lip {
+            nearest_lip = to_lip;
+            speed_at_lip = libm::sqrtf(st.linvel.iter().map(|v| v * v).sum());
+            boosting_at_lip = sim.action_state(car).unwrap().boosting;
+        }
         settled |= st.wheels_in_contact == 4;
         let to_base = (st.position[0] - bx).hypot(st.position[2] - bz);
         if to_base < best {
@@ -79,11 +117,16 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
         let air = settled && st.wheels_in_contact == 0;
         if air {
             airborne += 1;
+            flight_ticks += 1;
+            longest_flight = longest_flight.max(flight_ticks);
         } else if was_air && landing_up_y.is_none() {
             landing_up_y = Some(st.up_y);
         }
+        if !air {
+            flight_ticks = 0;
+        }
         was_air = air;
-        if ticks > 10 * S {
+        if landing_up_y.is_some() {
             min_up_y = min_up_y.min(st.up_y);
         }
         // Done once past the landing's end (nearest route point is the end point or beyond).
@@ -103,6 +146,10 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
                 end_up_y: st.up_y,
                 recovered: sim.car_life(car) != life,
                 lateral_at_ramp,
+                speed_at_lip,
+                boosting_at_lip,
+                flight_s: longest_flight as f64 / S as f64,
+                reached_exit: reached.is_some_and(end_at),
             };
         }
     }
@@ -111,11 +158,10 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
 #[test]
 fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster() {
     let mut rows = String::from(
-        "seed jump lip(cm) ramp(m) speed  airborne(s)  landingUpY  minUpY  endUpY  offLine(m)\n",
+        "biome seed jump lip(cm) ramp(m) speed  airborne(s)  landingUpY  minUpY  endUpY  offLine(m)\n",
     );
     let (mut jumps, mut bad, mut racing_air) = (0, Vec::new(), Vec::<f64>::new());
-    for seed in 0..10u64 {
-        let map = loaded(seed);
+    for (biome, seed, map) in jump_maps() {
         for (k, f) in map
             .map
             .features
@@ -128,9 +174,9 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
             // lip the 2.5 m height grid used to round off now launch like the rest: the ramp is exact geometry
             // (jj_map::jump, br-gw74.7.1).
             for speed in [15.0f32, 22.0, 26.0, 30.0] {
-                let o = take_jump(&map, k, speed, seed);
+                let o = take_jump(&map, k, speed, seed, false);
                 rows += &format!(
-                    "{seed:>4} {k:>4} {:>8} {:>8.1} {speed:>5.0} {:>12.2} {:>11.2} {:>7.2} {:>7.2} {:>6.1}\n",
+                    "{biome:?} {seed:>4} {k:>4} {:>8} {:>8.1} {speed:>5.0} {:>12.2} {:>11.2} {:>7.2} {:>7.2} {:>6.1}\n",
                     f.params["lipHeightCm"],
                     f.params["rampLengthMm"] as f64 / 1000.0,
                     o.airborne_s,
@@ -139,10 +185,10 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
                     o.end_up_y,
                     o.lateral_at_ramp,
                 );
-                let id = format!("seed {seed} jump {k} @ {speed}");
+                let id = format!("{biome:?} seed {seed} jump {k} @ {speed}");
                 if (22.0..=26.0).contains(&speed) {
-                    racing_air.push(o.airborne_s);
-                    if o.airborne_s < 0.5 {
+                    racing_air.push(o.flight_s);
+                    if o.flight_s < 0.5 {
                         bad.push(format!(
                             "{id}: only {:.2} s in the air at racing speed; {:.1} m off the line at the ramp",
                             o.airborne_s, o.lateral_at_ramp
@@ -150,7 +196,7 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
                     }
                 }
                 // A slow car (the reference lap's 15 m/s) still leaves the lip.
-                if speed == 15.0 && o.airborne_s < 0.25 {
+                if speed == 15.0 && o.flight_s < 0.25 {
                     bad.push(format!(
                         "{id}: only {:.2} s in the air at 15 m/s",
                         o.airborne_s
@@ -158,6 +204,9 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
                 }
                 // Past the design speed (the validator's 26 m/s) a car may overshoot the landing and run off the road
                 // afterwards; it still has to land on its wheels.
+                if !o.reached_exit {
+                    bad.push(format!("{id}: never reached the landing exit"));
+                }
                 if o.recovered && speed <= 26.0 {
                     bad.push(format!("{id}: the car needed a recovery"));
                 }
@@ -174,12 +223,68 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
     println!("{rows}");
     assert!(jumps >= 10, "ten seeds place at least ten jumps: {jumps}");
     let mean = racing_air.iter().sum::<f64>() / racing_air.len().max(1) as f64;
-    println!("mean air time at racing speed {mean:.2} s");
+    println!("mean continuous flight at racing speed {mean:.2} s");
     assert!(bad.is_empty(), "{bad:#?}");
     assert!(mean >= 0.8, "jumps fly at racing speed: mean {mean:.2} s");
     if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
         std::fs::write(std::path::Path::new(&dir).join("jump-scenarios.txt"), rows).unwrap();
     }
+}
+
+/// br-gw74.10: the ACTION boost goes through the actual autopilot/vehicle path, rather than labelling a placed
+/// speed as "full boost". The same ten seeds as the landability bank must release every lip and land upright.
+#[test]
+fn every_generated_jump_releases_a_car_actually_boosting_at_the_lip() {
+    let mut rows = String::from(
+        "biome seed jump lipSpeed(m/s) boosting flight(s) totalAir(s) landingUpY minLandingUpY endUpY recovered\n",
+    );
+    let (mut count, mut failures) = (0, Vec::new());
+    for (biome, seed, map) in jump_maps() {
+        for (k, _) in map
+            .map
+            .features
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| f.kind == FeatureKind::Jump)
+        {
+            let o = take_jump(&map, k, 26.0, seed, true);
+            rows += &format!(
+                "{biome:?} {seed} {k} {:.3} {} {:.3} {:.3} {:.3} {:.3} {:.3} {}\n",
+                o.speed_at_lip,
+                o.boosting_at_lip,
+                o.flight_s,
+                o.airborne_s,
+                o.landing_up_y,
+                o.min_up_y,
+                o.end_up_y,
+                o.recovered
+            );
+            if !o.reached_exit
+                || !o.boosting_at_lip
+                || o.flight_s < 0.5
+                || o.landing_up_y <= 0.8
+                || o.min_up_y <= 0.8
+                || o.end_up_y <= 0.9
+                || o.recovered
+            {
+                failures.push(format!("{biome:?} seed {seed} jump {k}: boost {}, air {:.3}s, landing {:.3}, end {:.3}, recovered {}", o.boosting_at_lip, o.airborne_s, o.landing_up_y, o.end_up_y, o.recovered));
+            }
+            count += 1;
+        }
+    }
+    println!("{rows}");
+    if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
+        std::fs::write(
+            std::path::Path::new(&dir).join("boost-launch-scenarios.txt"),
+            rows,
+        )
+        .unwrap();
+    }
+    assert!(
+        count >= 10,
+        "every generated jump in the ten-seed sample: {count}"
+    );
+    assert!(failures.is_empty(), "{failures:#?}");
 }
 
 /// The ramp's lip is where it was designed to be: the ground a car meets (the sim's own ray against the colliders) at
@@ -188,8 +293,7 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
 fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
     use jj_map::jump::{JumpDesign, ground_height_m, surface_point};
     let (mut n, mut worst, mut bad) = (0, 0.0f32, Vec::new());
-    for seed in 0..10u64 {
-        let map = loaded(seed);
+    for (biome, seed, map) in jump_maps() {
         let mut sim = Sim::new(&map, &jj_procgen::registry(), seed, VehicleProfile::cruz());
         sim.step();
         for (k, f) in map.map.features.iter().enumerate() {
@@ -206,7 +310,7 @@ fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
                 worst = worst.max(err);
                 if err > 0.05 {
                     bad.push(format!(
-                        "seed {seed} jump {k} lat {lat}: lip {got:.3} m vs designed {designed:.3} m"
+                        "{biome:?} seed {seed} jump {k} lat {lat}: lip {got:.3} m vs designed {designed:.3} m"
                     ));
                 }
             }
@@ -215,4 +319,28 @@ fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
     }
     println!("{n} jumps, worst lip error {:.1} cm", worst * 100.0);
     assert!(n >= 10 && bad.is_empty(), "{n} jumps: {bad:#?}");
+}
+
+#[test]
+fn a_reserved_landing_without_a_receiving_surface_is_rejected() {
+    let original = generate_recipe(0, &[Biome::Greybox]).unwrap().0;
+    let registry = jj_procgen::registry();
+    assert!(jj_map::validate(&original, &registry).ok);
+    let k = original
+        .features
+        .iter()
+        .position(|f| f.kind == FeatureKind::Jump)
+        .unwrap();
+    for (param, value, rule) in [
+        ("tableLengthMm", 0, jj_map::Rule::LandingEnvelope),
+        ("landingLengthMm", 34_000, jj_map::Rule::LandingEnvelope),
+        ("downSlopeMilli", 0, jj_map::Rule::FeatureParams),
+        ("downBlendMm", -1, jj_map::Rule::FeatureParams),
+        ("downBlendMm", 100_000, jj_map::Rule::FeatureParams),
+    ] {
+        let mut broken = original.clone();
+        broken.features[k].params.insert(param.into(), value);
+        let report = jj_map::validate(&broken, &registry);
+        assert!(report.has(rule), "{param}={value}: {report:?}");
+    }
 }

@@ -1,0 +1,75 @@
+  [2m2026-10-11T17:26:15.011046Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:15.770456Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:15.770490Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:16.707754Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:16.707890Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:24.954665Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 147 files, 39433015 bytes in 7991ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:25.395244Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test --locked --release --target wasm32-unknown-unknown -p jj-procgen --test wasm_parity --config 'env.RCH_BUILD_SOURCE.value="82478ca5da2618f6c94c98aa90c1bbec0e55648b-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:25.405365Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-ae247ba54bc1dc7f1a0234da41638481[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:25.405417Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m serde_json v1.0.151
+[1m[92m   Compiling[0m pin-project-lite v0.2.17
+[1m[92m   Compiling[0m futures-task v0.3.34
+[1m[92m   Compiling[0m futures-core v0.3.34
+[1m[92m   Compiling[0m slab v0.4.12
+[1m[92m   Compiling[0m autocfg v1.5.1
+[1m[92m   Compiling[0m futures-util v0.3.34
+[1m[92m   Compiling[0m num-traits v0.2.19
+[1m[92m   Compiling[0m jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+[1m[92m   Compiling[0m js-sys v0.3.106
+[1m[92m   Compiling[0m wasm-bindgen-test-macro v0.3.79
+[1m[92m   Compiling[0m async-trait v0.1.92
+[1m[92m   Compiling[0m wasm-bindgen-test-shared v0.2.129
+[1m[92m   Compiling[0m oorandom v11.1.5
+[1m[92m   Compiling[0m nu-ansi-term v0.50.3
+[1m[92m   Compiling[0m cast v0.3.0
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+[1m[92m   Compiling[0m wasm-bindgen-futures v0.4.79
+[1m[92m   Compiling[0m wasm-bindgen-test v0.3.79
+[1m[92m    Finished[0m `release` profile [optimized] target(s) in 12.16s
+[1m[92m     Running[0m tests/wasm_parity.rs (.rch-target-eris-pool-ae247ba54bc1dc7f1a0234da41638481/wasm32-unknown-unknown/release/deps/wasm_parity-ea69b27901dabeff.wasm)
+running 4 tests
+test two_biome_recipes_in_wasm_match_the_native_hashes ... ok
+test golden_seeds_in_wasm_match_the_native_hashes ... ok
+test generate_and_validate_in_wasm_stays_inside_the_laptop_budget ... ok
+test derby_arenas_in_wasm_match_the_native_hashes_and_meshes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 5.31s
+
+  [2m2026-10-11T17:26:44.039841Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 18429ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:44.188513Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:44.188573Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:44.446703Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:44.686423Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 497ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:26:44.708571Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 497ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+
+[RCH] remote eris (30.3s)

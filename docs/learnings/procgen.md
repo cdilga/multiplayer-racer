@@ -160,3 +160,29 @@ segment order and strict distance comparisons. Squared-distance comparisons can
 change rounded ties. The exhaustive bit oracle and canonical 24-seed WASM bank
 qualify the optimisation; the 1500 ms preparation budget remains unchanged.
 
+## 2026-10-12 · Generated jumps launch and receive the car (br-gw74.7 / .7.1 / .10)
+
+The apparent grip at the lip came from geometry: the 2.5 m terrain grid rounded a short ramp into a crest.
+The existing explicit jump collider resolves the lip at 25 cm; the final bank probes its worst height error at
+0.8 cm. No tyre grip, suspension, force or impulse multiplier changed.
+
+A reserved landing envelope is not a physical landing. The receiving table previously ended before the design
+flight, so a boosted car fell onto flat ground at full descent. Extend the table through the flight, then descend
+with a concave quadratic transition whose slope reaches zero at the road. The existing 0.012/m vertical-curvature
+limit determines the blend length and descent slope. Subdivide table and descent at 25 cm too, so they follow the
+route and terrain instead of bridging them with one long panel. Validate both the receiving length and the blend;
+reject missing tables, short reservations, zero slope and invalid transitions.
+
+Start the straight-approach fixture inside the generator's guaranteed entry. Five route points put it 12.5 m back,
+beyond the 12 m entry; on Rocks seed 7 its heading was 4.75 degrees against a 12.3-degree ramp. Four points (10 m)
+measure the promised approach without that artificial sideways flight. Keep the speed, airtime and landing bars.
+Measure the longest continuous flight and uprightness from first touchdown through the actual exit, not total
+airtime from unrelated bumps or uprightness after a possible recovery. Ten seeds in Greybox, Rocks, OutbackDirt and
+OutbackBitumen place 94 jumps; exercise each at 15/22/26/30 m/s and with the real boost action at the lip.
+
+The renderer had a separate, stale shape formula. A metadata match would miss that. `jj procgen` and
+`__jjRender.jumpShapes()` now fingerprint expanded triangle positions as uploaded f32 bytes; the generated-jump
+journey compares every jump's actual draw buffer with the Rust collision mesh, then compares native/WASM replay
+state. Captures use full resolution and keep real UI visible; wait for captions to finish naturally rather than
+following the older chrome-hiding advice above.
+
