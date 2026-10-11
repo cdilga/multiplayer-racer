@@ -17,6 +17,11 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
   el.dataset.jjInputDrawer = '';
   el.setAttribute('aria-label', 'Input drawer');
   root.append(el);
+  // Keep the opaque frame separate from the scroll layer: Chromium can otherwise occlude the world canvas
+  // using the scroll content's unclipped height after a resize (br-dx0e).
+  const scroll = document.createElement('div');
+  scroll.className = 'drawer-scroll';
+  el.append(scroll);
   const qr = o.joinUrl && o.code ? paperQrCard({ url: o.joinUrl, code: o.code, domain: new URL(o.joinUrl).host, size: 112 }).outerHTML : '';
   const render = () => {
     const rows = input.list().map((s) => {
@@ -82,7 +87,7 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
     // Playwright click) on a host whose frames are slow.
     if (html !== last) {
       const open = el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')?.open ?? false;
-      el.innerHTML = last = html;
+      scroll.innerHTML = last = html;
       el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')!.open = open;
     }
   };

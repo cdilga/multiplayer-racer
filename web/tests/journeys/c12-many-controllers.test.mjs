@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { chromium, firefox, webkit } from 'playwright';
+import { PNG } from 'pngjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach, gpu } from './lib/chromium.mjs';
 import { evidencePath } from '../lib/evidence.mjs';
@@ -72,7 +73,7 @@ const shotMatrix = async (p, name) => {
     if (await p.locator('[data-keyboard-options]').count()) {
       await p.locator('[data-keyboard-options] .qr-card').scrollIntoViewIfNeeded();
       await shot(p, `${name}-scrolled-actions-${width}x${height}`);
-      await p.locator('[data-jj-input-drawer]').evaluate((el) => { el.scrollTop = 0; });
+      await p.locator('[data-jj-input-drawer] .drawer-scroll').evaluate((el) => { el.scrollTop = 0; });
     }
   }
   await p.setViewportSize(original);
@@ -410,4 +411,70 @@ test('WebKit host drawer shows the room QR and all three keyboard layouts across
     for (const label of ['Keys A', 'Keys B', 'Keys C']) assert.match(await host.locator('.dr-legends').innerText(), new RegExp(label));
     await shotMatrix(host, 'webkit-keyboard-actions');
   } finally { await wk.close(); }
+});
+
+async function drawerPaintBounds(page) {
+  const drawer = page.locator('[data-jj-input-drawer]');
+  const r = await drawer.boundingBox();
+  const { height } = page.viewportSize();
+  // Leave the ordinary 3 px frame shadow intact. Compare the world immediately below it with the same
+  // frame hidden, without changing layout or its scroll state. DOM hit testing cannot detect this compositor defect.
+  const y = Math.ceil(r.y + r.height + 8), end = Math.min(height - 8, y + 24);
+  assert.ok(end > y, 'the sample includes canvas below the frame');
+  const visible = PNG.sync.read(await page.screenshot());
+  await drawer.evaluate((el) => { el.style.visibility = 'hidden'; });
+  let hidden;
+  try { hidden = PNG.sync.read(await page.screenshot()); }
+  finally { await drawer.evaluate((el) => { el.style.removeProperty('visibility'); }); }
+  let changed = 0, sampled = 0;
+  for (let py = y; py < end; py++) for (let x = Math.ceil(r.x + 8); x < r.x + r.width - 8; x++) {
+    const at = (py * visible.width + x) * 4;
+    if ([0, 1, 2].some((c) => Math.abs(visible.data[at + c] - hidden.data[at + c]) > 4)) changed++;
+    sampled++;
+  }
+  assert.ok(changed / sampled < 0.01, `drawer paint stays inside its frame and shadow: ${changed}/${sampled} pixels changed below it`);
+  return { viewport: page.viewportSize(), frame: r, changed, sampled };
+}
+
+for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint stays in its frame after resize and fullscreen`, { timeout: 180_000 }, async () => {
+  const wk = engine === 'WebKit' ? await webkit.launch() : null;
+  const host = await hostPage(wk ?? browser);
+  const measurements = [];
+  try {
+    await host.evaluate(() => { for (let i = 0; i < 4; i++) window.__padAdd(i); });
+    await host.locator('[data-keyboard-options] summary').click();
+    await host.evaluate(() => window.__jjTest.hold(true));
+    // This order matters: the old opaque scroller leaves a hole after growing and shrinking the viewport.
+    for (const [width, height] of [[1920, 1080], [412, 915], [915, 412], [375, 667], [1366, 768]]) {
+      await host.setViewportSize({ width, height }); await host.waitForTimeout(600);
+      for (const position of ['top', 'bottom']) {
+        await host.locator('.drawer-scroll').evaluate((el, position) => { el.scrollTop = position === 'top' ? 0 : el.scrollHeight; }, position);
+        await host.waitForTimeout(100);
+        measurements.push({ position, ...await drawerPaintBounds(host) });
+        await shot(host, `${engine.toLowerCase()}-drawer-${position}-${width}x${height}`);
+      }
+      const last = host.locator('.drawer-scroll .jj-cc').last();
+      await last.scrollIntoViewIfNeeded();
+      assert.ok(await last.evaluate((el) => {
+        const r = el.getBoundingClientRect(), s = el.closest('.drawer-scroll').getBoundingClientRect();
+        return r.top >= s.top - 1 && r.bottom <= s.bottom + 1;
+      }), 'the last keyboard card remains reachable by scrolling');
+    }
+    await host.setViewportSize({ width: 1920, height: 1080 });
+    if (engine === 'Chromium') {
+      await host.locator('.drawer-head').click();
+      await host.evaluate(() => document.documentElement.requestFullscreen());
+      await host.waitForTimeout(600);
+      measurements.push({ position: 'fullscreen', ...await drawerPaintBounds(host) });
+      await shot(host, 'chromium-drawer-fullscreen');
+      await host.evaluate(() => document.exitFullscreen()); await host.waitForTimeout(600);
+      measurements.push({ position: 'after-fullscreen', ...await drawerPaintBounds(host) });
+      await shot(host, 'chromium-drawer-after-fullscreen');
+    }
+    if (process.env.JJ_CAPTURE_DIR) writeFileSync(join(process.env.JJ_CAPTURE_DIR, `${engine.toLowerCase()}-drawer-pixels.json`), `${JSON.stringify({
+      engine, version: (wk ?? browser).version(), hardware: `${process.platform}/${process.arch}`, gpuMode: process.env.JJ_CHROMIUM_GPU ?? '0',
+      renderer: await host.evaluate(() => { const gl = document.querySelector('.jj-world').getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); }),
+      measurements,
+    }, null, 2)}\n`);
+  } finally { await host.context().close(); await wk?.close(); }
 });

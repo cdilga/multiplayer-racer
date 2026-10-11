@@ -28,7 +28,9 @@ html[data-jj-phase] [data-jj-input-drawer] .dr-cards { display: none; }
 html[data-jj-menu] [data-jj-input-drawer] { display: none; }
 
 /* The kit's paper panel (the host's own dark placeholder from index.html gives way): readable on the lobby's paper and over a race. */
-html [data-jj-input-drawer] { background: var(--c-paper, #fff4de); color: var(--c-ink, #15203a); border: 2px solid var(--c-ink, #15203a); border-radius: 3px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 600 13px/1.3 var(--font-body, system-ui); }
+html [data-jj-input-drawer] { display: flex; flex-direction: column; overflow: hidden; padding: 0; background: var(--c-paper, #fff4de); color: var(--c-ink, #15203a); border: 2px solid var(--c-ink, #15203a); border-radius: 3px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 600 13px/1.3 var(--font-body, system-ui); }
+html [data-jj-input-drawer] .drawer-scroll { min-height: 0; overflow: auto; padding: 6px 12px; }
+@media (max-width: 960px), (max-height: 500px) { html [data-jj-input-drawer] .drawer-scroll { padding: 4px 8px; } }
 html [data-jj-input-drawer] .drawer-head { font: 900 italic 15px/1 var(--font-display, system-ui); letter-spacing: .02em; text-transform: uppercase; }
 html [data-jj-input-drawer] button { color: var(--c-ink, #15203a); background: var(--c-paper-shade, #f1e2c2); border: 2px solid var(--c-ink, #15203a); border-radius: 4px; padding: 1px 8px 2px; font-weight: 700; }
 html [data-jj-input-drawer] button:hover:not(:disabled) { background: var(--c-saffron, #ffb400); }

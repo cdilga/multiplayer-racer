@@ -26,3 +26,9 @@
   on the main thread; the live sim's clock also slows.
 - **Use:** browser journeys wait on sim ticks, seat counts and sample counts, never fixed wall time. On a real GPU
   the frame costs a few ms, so this is a CI-environment cost, not a host budget.
+
+## 2026-10-12 · Opaque scroll layer can punch a hole in the world canvas after resize (br-dx0e)
+
+- Symptom: Chromium SwiftShader shows navy below the drawer, while DOM hit testing reports the world canvas there. Fresh portrait-only navigation can pass; laptop → TV → phone resizing reproduces it.
+- Cause isolated: raw WebGL pixel is road colour but composited screenshot is page ink. Shadows, containment, clip-path, border radius and layer promotion do not fix it; making the opaque aside non-scrolling does.
+- Fix: opaque non-scrolling flex frame with a transparent inner scroll element (min-height 0). All rows remain reachable. Test real screenshot pixels outside the frame against the same page with the frame visibility hidden; DOM bounds alone missed the defect.

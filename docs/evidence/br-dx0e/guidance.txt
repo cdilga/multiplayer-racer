@@ -1,0 +1,10 @@
+✔ Chromium full-slot guidance and second-keyboard actions show the live join QR; the numpad is a third independent cluster (5040.8135ms)
+✔ WebKit host drawer shows the room QR and all three keyboard layouts across phone and TV sizes (2002.387375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7912.315958
