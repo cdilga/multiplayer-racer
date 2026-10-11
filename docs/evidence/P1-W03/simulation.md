@@ -84,6 +84,10 @@ The final native workspace bank passes **456 tests, 0 failed, 1 ignored across
 Log `/tmp/jj-sanga-final-workspace-bank.log`, 11:29–11:42 UTC.
 This bank covers the Sanga changes before the subsequent segment-box optimisation.
 
+The combined final Sanga/segment-box workspace Clippy check also passes on eris,
+all targets with host/testing and `-D warnings`, explicit opt-level-1 profiles.
+Log `/tmp/jj-sanga-and-box-final-clippy.log`, 11:49 UTC.
+
 CI is required before closing. This is a simulation/data receipt; it does not
 claim Sanga's armour/material/audio presentation, stations or inventory HUD are
 delivered. The parent retains those requirements and the boomerang ×0.2 interaction.

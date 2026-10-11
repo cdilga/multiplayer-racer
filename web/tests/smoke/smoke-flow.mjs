@@ -1,6 +1,6 @@
-// The public smoke as a function (P1-D07, plan §12.3): the same fixed steps `jammers-deploy/scripts/smoke.mjs` runs against a
+// The public smoke as a function (P1-D07, plan §12.3): the same fixed steps `infra/previews/scripts/smoke.mjs` runs against a
 // published preview, runnable against any base URL, so CI proves the flow on a local jj-server before a preview exists.
-// Keep the two in step: a step added here is added there (the deploy repo owns what deploys; the game repo owns the pages).
+// Keep the two in step: a step added here is added to the canonical preview publisher too.
 //   room         create + resolve a room (the hello host page)
 //   join-webrtc  a headless controller connects over real WebRTC
 //   input        its stick reaches the host, read back through the test surface
@@ -148,8 +148,42 @@ export async function runSmoke({ base, steps = KNOWN, mandatory = KNOWN, relay =
       await until(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
       const results = await host.evaluate(() => window.__jjRoom.view().results);
       if (results.length !== 2 || results.map((r) => r.place).sort().join() !== '1,2') bad(`Round complete results were ${JSON.stringify(results)}`);
-      await host.getByRole('button', { name: 'Start next round now' }).click();
-      await until(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase) && window.__jjRoom.view().round === 2, undefined, 60_000);
+      // A slow host can show a clickable results button while locator machinery times out
+      // resolving it (br-5j46). Verify the actual target, then send a real browser pointer.
+      const target = await host.evaluate(() => {
+        const el = document.querySelector('[data-screen="results"] button[data-act="start"]');
+        if (!el || el.disabled || el.textContent !== 'Start next round now') return null;
+        const box = el.getBoundingClientRect();
+        const x = box.x + box.width / 2, y = box.y + box.height / 2;
+        const style = getComputedStyle(el);
+        if (box.width <= 0 || box.height <= 0 || style.visibility !== 'visible' || style.display === 'none'
+          || !el.contains(document.elementFromPoint(x, y))) return null;
+        window.__jjSmokeNextRoundClick = null;
+        el.addEventListener('click', (e) => {
+          const room = window.__jjRoom.view();
+          window.__jjSmokeNextRoundClick = { trusted: e.isTrusted, phase: room.phase, round: room.round };
+        }, { once: true });
+        return { x, y };
+      });
+      if (!target) bad('the next-round action is missing, disabled, hidden or covered');
+      await host.mouse.click(target.x, target.y);
+      // Keep the original 60 s transition deadline. Read the small data surface directly:
+      // injecting a polling/actionability script into an overloaded host can itself time out.
+      let next, timer;
+      try {
+        next = await Promise.race([
+          (async () => {
+            for (const deadline = Date.now() + 60_000; ; await host.waitForTimeout(100)) {
+              const state = await host.evaluate(() => ({ click: window.__jjSmokeNextRoundClick, phase: window.__jjRoom.view().phase, round: window.__jjRoom.view().round }));
+              if (state.click?.trusted && ['Countdown', 'Running'].includes(state.phase) && state.round === 2) return state;
+              if (Date.now() > deadline) bad(`next round did not follow the pointer: ${JSON.stringify(state)}`);
+            }
+          })(),
+          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('next round did not follow the pointer within 60 s')), 60_000); }),
+        ]);
+      } finally { clearTimeout(timer); }
+      const clicked = next.click;
+      if (!clicked.trusted || clicked.phase !== 'Intermission' || clicked.round !== 1) bad(`next-round pointer missed its results phase: ${JSON.stringify(clicked)}`);
       passed.push('round');
     }
     if (errors.length) bad(`the game host raised page errors: ${errors[0]}`);
@@ -160,7 +194,7 @@ export async function runSmoke({ base, steps = KNOWN, mandatory = KNOWN, relay =
     if (gameSteps.length) await gameFlow();
     return result({ ok: true });
   } catch (e) {
-    const why = String(e.message ?? e).split('\n')[0];
+    const why = String(e.message ?? e);
     return result({ ok: false, step: e instanceof SmokeFail ? e.step : current, why: passed.length && !(e instanceof SmokeFail) ? `after ${passed.join(', ')}: ${why}` : why });
   } finally {
     await browser.close();

@@ -1,0 +1,2 @@
+autopilot under CPU throttle 80
+{"steps":["room Y95C","join-webrtc (host, 0 ms)","input","resume","drive","hud","round"],"path":"host","code":"Y95C","ok":true}
