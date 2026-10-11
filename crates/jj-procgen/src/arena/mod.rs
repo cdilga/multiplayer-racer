@@ -287,8 +287,8 @@ pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
             continue;
         };
         let reach = match fp {
-            Footprint::Circle { radius, .. } => f64::from(radius) / 1000.0,
-            Footprint::Rect { x, z, .. } => libm::hypot(f64::from(x), f64::from(z)) / 2000.0,
+            Footprint::Circle { radius, .. } => radius / 1000.0,
+            Footprint::Rect { x, z, .. } => libm::hypot(x, z) / 2000.0,
         };
         let dist = libm::hypot(
             f64::from(dr.pose.x) / 1000.0 - d.cx,

@@ -214,11 +214,12 @@ impl GeneratorData {
                 bad.push(format!("{name} = {v}: must be positive"));
             }
         };
-        for (name, lo, hi) in [(
-            "course.startStraight",
-            c.start_straight_min_m,
-            c.start_straight_max_m,
-        )] {
+        {
+            let (name, lo, hi) = (
+                "course.startStraight",
+                c.start_straight_min_m,
+                c.start_straight_max_m,
+            );
             pos(&format!("{name}MinM"), lo, &mut bad);
             pos(&format!("{name}MaxM"), hi, &mut bad);
             if lo > hi {
