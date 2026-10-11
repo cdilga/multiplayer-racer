@@ -46,3 +46,11 @@ is fixed. No retry or inflated deadline has been added.
 
 Visual defects and unmeasured hardware are listed in `self-review.md`.
 Deployed preview checking follows publication; this slice does not close the parent.
+
+## CPU Firefox and GPU CI follow-up
+
+CI3393's Firefox host did not reach room creation on a CPU runner. In its actual Ubuntu CI container on triton, plain headless Firefox and force-enabled headless Firefox both returned no WebGL2 context. Headed Firefox under Xvfb with Mesa software rendering returned WebGL2 with renderer `llvmpipe, or similar`. Running the real eight-pad Firefox test that way passed in 9.90 seconds; the Mac Firefox test passed in 4.80 seconds.
+
+The journey now creates an isolated Xvfb display for Linux CPU Firefox, forces Mesa software rendering and kills the display in finally. GPU/native Firefox keeps its normal path. Unsupported host capability now fails with the explanation immediately instead of waiting three minutes for a room that cannot exist.
+
+GPU3403 at83eb6116 passed every selected journey, including the24-source cohort24.90s, Firefox eight-pad5.74s, Chromium/WebKit guidance and120-tile Identify. Browser-cache isolation fixed the stale interactive install lock; the workflow installs all three browsers from the pinned Playwright version. No fresh-context retries were added.

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { chromium, firefox, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
@@ -133,7 +133,8 @@ async function hostPage(b = browser, query = '') {
   p.on('pageerror', (e) => console.error('C12 host error:', e.message));
   await p.addInitScript(pads);
   await p.goto(`${server.origin}${BASE}host?drive&test=live${query}`);
-  await wait(p, () => window.__jjNet?.code() && window.__jjTest, undefined, 180_000);
+  await wait(p, () => (window.__jjNet?.code() && window.__jjTest) || document.documentElement.dataset.jjHost === 'unsupported', undefined, 180_000);
+  assert.notEqual(await p.evaluate(() => document.documentElement.dataset.jjHost), 'unsupported', await p.locator('body').innerText());
   return p;
 }
 async function joined(url, phone = false) {
@@ -369,8 +370,20 @@ test('Chromium full-slot guidance and second-keyboard actions show the live join
 });
 
 test('Firefox exposes eight emulated host pads and each press claims a distinct seat', { timeout: 360_000 }, async () => {
-  const ff = await firefox.launch();
+  // Linux CPU runners cannot create WebGL in Firefox's headless mode. The same Mesa driver works with Xvfb.
+  let display;
+  const software = process.platform === 'linux' && !gpu;
+  if (software) {
+    display = spawn('Xvfb', ['-displayfd', '3', '-screen', '0', '1366x768x24', '-nolisten', 'tcp'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe'] });
+  }
+  let ff;
   try {
+    const env = software ? { ...process.env, DISPLAY: `:${await bounded(new Promise((resolve, reject) => {
+      display.stdio[3].once('data', (v) => resolve(v.toString().trim()));
+      display.once('error', reject);
+      display.once('exit', (code) => reject(new Error(`Xvfb exited ${code}`)));
+    }), 'Firefox virtual display')}`, LIBGL_ALWAYS_SOFTWARE: '1' } : undefined;
+    ff = await firefox.launch({ headless: !software, env, firefoxUserPrefs: software ? { 'webgl.force-enabled': true } : {} });
     const host = await hostPage(ff);
     for (let i = 0; i < 8; i++) {
       await host.evaluate((i) => window.__padAdd(i), i);
@@ -383,7 +396,7 @@ test('Firefox exposes eight emulated host pads and each press claims a distinct 
     await wait(host, () => window.__jjRender.tileRects()?.length === 8);
     await host.waitForTimeout(600);
     await shot(host, 'firefox-eight');
-  } finally { await ff.close(); }
+  } finally { await ff?.close(); display?.kill(); }
 });
 
 test('WebKit host drawer shows the room QR and all three keyboard layouts across phone and TV sizes', { timeout: 180_000 }, async () => {
