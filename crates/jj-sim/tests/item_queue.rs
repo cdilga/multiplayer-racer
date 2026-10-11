@@ -224,15 +224,15 @@ fn assert_sim_replay(map: &jj_map::LoadedMap, sim: &jj_sim::Sim) {
 fn sim_pickups_are_journalled_and_an_unavailable_handler_never_fires_the_fallback() {
     let (map, mut sim, car) = world();
     let before = sim.state_hash();
-    sim.pickup_item(car, SeatId(17), ItemId::Sanga).unwrap();
     sim.pickup_item(car, SeatId(17), ItemId::Boomerang).unwrap();
+    sim.pickup_item(car, SeatId(17), ItemId::Sanga).unwrap();
     assert_ne!(
         sim.state_hash(),
         before,
         "inventory affects the future state hash"
     );
     assert_eq!(
-        sim.pickup_item(car, SeatId(17), ItemId::Sanga),
+        sim.pickup_item(car, SeatId(17), ItemId::Boomerang),
         Err(PickupRefusal::Full)
     );
     let held = sim.items().queue(car.0);
@@ -270,6 +270,9 @@ fn sim_recovery_clears_queues_and_protection_refuses_an_offensive_pickup() {
 fn sim_round_end_clears_inventory_but_dynamic_debris_keeps_moving_and_replays() {
     let (map, mut sim, car) = world();
     sim.pickup_item(car, SeatId(17), ItemId::Sanga).unwrap();
+    assert!(sim.utility(car, UtilityKind::Rear));
+    assert!(sim.sanga_state(car).is_some());
+    assert_eq!(sim.items().effects().count(), 1);
     sim.spawn_debris(
         jj_sim::SpawnPose {
             x: 140.0,
@@ -282,6 +285,8 @@ fn sim_round_end_clears_inventory_but_dynamic_debris_keeps_moving_and_replays() 
     let before = sim.debris_poses();
     assert!(sim.end_race_now());
     assert_eq!(sim.items().queue(car.0), Queue::default());
+    assert!(sim.sanga_state(car).is_none());
+    assert_eq!(sim.items().effects().count(), 0);
     for _ in 0..30 {
         sim.step();
     }
@@ -295,5 +300,23 @@ fn sim_round_end_clears_inventory_but_dynamic_debris_keeps_moving_and_replays() 
         after.last().unwrap().0[1] < before.last().unwrap().0[1],
         "the debris still falls dynamically"
     );
+    assert_sim_replay(&map, &sim);
+}
+
+#[test]
+fn a_fired_buff_keeps_its_original_owner_and_timer_through_recovery() {
+    let (map, mut sim, car) = world();
+    sim.pickup_item(car, SeatId(17), ItemId::Sanga).unwrap();
+    sim.pickup_item(car, SeatId(17), ItemId::Boomerang).unwrap();
+    assert!(sim.utility(car, UtilityKind::Forward));
+    let fired = *sim.items().effects().next().unwrap();
+    assert!(sim.recover(car));
+    assert_eq!(sim.items().queue(car.0), Queue::default());
+    assert_eq!(sim.sanga_state(car).unwrap().expires_at, fired.expires_at);
+    for _ in 0..240 {
+        sim.step();
+    }
+    assert_eq!(sim.items().effects().next().unwrap().owner, fired.owner);
+    assert_eq!(sim.sanga_state(car).unwrap().expires_at, fired.expires_at);
     assert_sim_replay(&map, &sim);
 }

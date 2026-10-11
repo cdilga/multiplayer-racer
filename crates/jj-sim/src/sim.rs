@@ -628,20 +628,78 @@ impl Sim {
             .and_then(|seat| self.item_context(car, seat));
         let result = match ctx {
             Some(ctx) => {
-                self.items
-                    .use_front(&self.item_cards, car.0, ctx, direction, self.tick, |_| {
-                        // W02/W03 supply physical activation. Until one exists, keep the held item and
-                        // report Unavailable; an abstract ledger record must not pretend to be a weapon/buff.
-                        Err(ItemUseRefusal::Unavailable)
-                    })
+                self.items.use_front(
+                    &self.item_cards,
+                    car.0,
+                    ctx,
+                    direction,
+                    self.tick,
+                    |effect| {
+                        match effect.item {
+                            jj_types::items::ItemId::Sanga => Ok(()),
+                            // W02 owns the physical projectile; a missing handler keeps the item.
+                            jj_types::items::ItemId::Boomerang => Err(ItemUseRefusal::Unavailable),
+                        }
+                    },
+                )
             }
             None => Err(ItemUseRefusal::Unavailable),
         };
         match result {
-            Ok(_) => true,
+            Ok(_) => {
+                self.sync_sanga_dominance();
+                true
+            }
             Err(reason) => {
                 self.item_refusals.push((self.tick, car.0, reason));
                 false
+            }
+        }
+    }
+
+    /// This car's active buff, exposed to fixtures and the host as data.
+    pub fn sanga_state(&self, car: CarId) -> Option<crate::items::sanga::Active> {
+        self.sanga_state_at(car, self.tick)
+    }
+
+    /// R90: deepest overlap between the cars' currently attached convex parts, metres.
+    /// Uses their actual shapes/poses, including damage, rather than an intact-car rectangle.
+    pub fn car_overlap_depth_m(&self, a: CarId, b: CarId) -> Option<f32> {
+        let a = self.cars.get(a.0 as usize)?;
+        let b = self.cars.get(b.0 as usize)?;
+        let mut depth = 0.0_f32;
+        for ca in a.parts.iter().filter_map(|h| self.world.colliders.get(*h)) {
+            for cb in b.parts.iter().filter_map(|h| self.world.colliders.get(*h)) {
+                if let Some(contact) = rapier3d::parry::query::contact(
+                    ca.position(),
+                    ca.shape(),
+                    cb.position(),
+                    cb.shape(),
+                    0.0,
+                )
+                .expect("validated vehicle parts are convex contact-query shapes")
+                {
+                    depth = depth.max(-contact.dist);
+                }
+            }
+        }
+        Some(depth)
+    }
+
+    fn sanga_state_at(&self, car: CarId, tick: u64) -> Option<crate::items::sanga::Active> {
+        self.cars.get(car.0 as usize)?;
+        crate::items::sanga::active(&self.items, car.0, tick)
+    }
+
+    fn sync_sanga_dominance(&mut self) {
+        for (i, car) in self.cars.iter().enumerate() {
+            let active = crate::items::sanga::active(&self.items, i as u32, self.tick).is_some();
+            if let Some(body) = self.world.bodies.get_mut(car.body) {
+                body.set_dominance_group(if active {
+                    crate::items::sanga::DOMINANCE
+                } else {
+                    0
+                });
             }
         }
     }
@@ -995,6 +1053,7 @@ impl Sim {
         let ended = self.race.end_now(self.tick);
         if ended {
             self.items.round_end(self.tick);
+            self.sync_sanga_dominance();
         }
         ended
     }
@@ -1347,6 +1406,7 @@ impl Sim {
 
     /// Advances one fixed tick.
     pub fn step(&mut self) {
+        self.sync_sanga_dominance();
         let tick = self.tick;
         let mut stuck = Vec::new();
         let catch_shares = self.catch_up_shares();
@@ -1683,6 +1743,7 @@ impl Sim {
         if self.race.over.is_some() || self.derby.as_ref().is_some_and(|d| d.over(self.tick)) {
             self.items.round_end(self.tick);
         }
+        self.sync_sanga_dominance();
     }
 
     /// Feeds the derby ledger this tick's control modes, protection and damage events (P1-S10).
@@ -1704,6 +1765,16 @@ impl Sim {
 
     /// Reads this step's contacts into damage episodes, then closes the ones whose window ran out (P1-S04a).
     fn step_damage(&mut self) {
+        // Contact immunity applies to the interval just simulated, including its last tick.
+        let immune: Vec<bool> = self
+            .cars
+            .iter()
+            .enumerate()
+            .map(|(i, _)| {
+                self.sanga_state_at(CarId(i as u32), self.tick - 1)
+                    .is_some()
+            })
+            .collect();
         let cars: Vec<CarParts<'_>> = self
             .cars
             .iter()
@@ -1711,6 +1782,7 @@ impl Sim {
             .map(|(i, c)| CarParts {
                 car: i as u32,
                 parts: &c.parts,
+                contact_immune: immune[i],
             })
             .collect();
         let ts: Vec<&crate::profile::DamageTuning> = self
@@ -1718,10 +1790,14 @@ impl Sim {
             .iter()
             .map(|c| &self.profiles[c.model].tuning.damage)
             .collect();
-        self.episodes
+        let dominance_work = self
+            .episodes
             .scan(&self.world, &self.pre_step, &cars, &ts, self.tick);
+        if dominance_work != 0.0 {
+            self.ledger += dominance_work;
+        }
         let mut health: Vec<CarDamage> = self.cars.iter().map(|c| c.damage.clone()).collect();
-        let events = self.episodes.close(self.tick, &ts, &mut health);
+        let events = self.episodes.close(self.tick, &ts, &mut health, &immune);
         for (c, h) in self.cars.iter_mut().zip(health) {
             c.damage = h;
         }

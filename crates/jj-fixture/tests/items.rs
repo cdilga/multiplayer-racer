@@ -25,12 +25,12 @@ fn scheduled_offers_preserve_fifo_full_queue_and_action_refusal_and_replay() {
         "../../../scenarios/items/queue-refusal.json"
     ));
     let rows = &output.recorded.observations;
-    assert_eq!(front(&rows[0]), "sanga");
-    assert_eq!(back(&rows[0]), "boomerang");
+    assert_eq!(front(&rows[0]), "boomerang");
+    assert_eq!(back(&rows[0]), "sanga");
     assert_eq!(rows[0]["items"]["events"].as_array().unwrap().len(), 2);
     let end = rows.last().unwrap();
-    assert_eq!(front(end), "sanga");
-    assert_eq!(back(end), "boomerang");
+    assert_eq!(front(end), "boomerang");
+    assert_eq!(back(end), "sanga");
     assert_eq!(end["items"]["refusals"][0][2], "unavailable");
     assert_eq!(end["items"]["effects"].as_array().unwrap().len(), 0);
     assert!(output.recorded.trace.iter().any(|row| {

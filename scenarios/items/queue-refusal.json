@@ -1,6 +1,6 @@
 {
   "scenario": "item-queue-refusal",
-  "what": "P1-W01: two offers fill the FIFO; a third full-queue offer creates no pickup. An ACTION use retains the queue and says Unavailable until W02/W03 physical handlers ship. No physical effect is claimed.",
+  "what": "P1-W01: two offers fill the FIFO; a third full-queue offer creates no pickup. An ACTION use retains the queue and says Unavailable until the W02 physical boomerang handler ships. No physical effect is claimed.",
   "map": "maps/greybox-loop.json",
   "seed": 17,
   "ticks": 300,
@@ -18,19 +18,19 @@
       "tick": 240,
       "car": 0,
       "seat": 17,
-      "item": "sanga"
+      "item": "boomerang"
     },
     {
       "tick": 241,
       "car": 0,
       "seat": 17,
-      "item": "boomerang"
+      "item": "sanga"
     },
     {
       "tick": 242,
       "car": 0,
       "seat": 17,
-      "item": "sanga"
+      "item": "boomerang"
     }
   ],
   "inputs": [

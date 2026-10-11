@@ -1,5 +1,5 @@
 // P1-W01.3: item offers and failures through the real Rust/WASM worker + WebRTC controller.
-// W02/W03 physical handlers, W04 stations and W05 presentation remain separate acceptance.
+// Sanga uses real dominance; W02 projectile, W04 stations and W05 presentation remain separate acceptance.
 import assert from 'node:assert/strict';
 import { before, after, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -18,7 +18,7 @@ after(async () => {
   await server?.close();
 });
 
-test('W01: real pickup offers fill the FIFO; failed ACTION retains it and reaches the phone; round end resets it', { timeout: 120_000 }, async () => {
+test('W01/W03: real pickups fill the FIFO; Sanga ACTION consumes the front; failed boomerang ACTION retains it; round end resets it', { timeout: 120_000 }, async () => {
   const host = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
   await host.waitForFunction(() => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
@@ -52,12 +52,27 @@ test('W01: real pickup offers fill the FIFO; failed ACTION retains it and reache
   await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: -1, touch: true }));
   await phone.waitForTimeout(300);
   await host.evaluate(() => window.__jjTest.step(2));
+  await phone.waitForFunction(() => window.__jjController.inspect().inventory.front === 'boomerang' && window.__jjController.inspect().inventory.back === null);
+  const used = await host.evaluate(() => window.__jjTest.observe());
+  assert.equal(used.items.effects.length, 1, 'a real physical buff exists');
+  assert.equal(used.items.effects[0].item, 'sanga');
+  assert.equal(used.items.effects[0].expires_at - used.items.effects[0].started, 720, 'six seconds from the card');
+  assert.equal(used.cars.find((c) => c.car === car).sanga.remainingTicks, used.items.effects[0].expires_at - used.tick, 'timer follows the exact simulation tick');
+  assert.equal((await phone.evaluate(() => window.__jjController.inspect())).lastItemEvent.kind.Used.direction, 'Forward');
+  assert.equal(used.debris.length, picked.debris.length, 'Sanga never substitutes a cone');
+  await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  await phone.waitForTimeout(300);
+  await host.evaluate(() => window.__jjTest.step(30));
+  await phone.waitForTimeout(300);
+  await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 1, touch: true }));
+  await phone.waitForTimeout(300);
+  await host.evaluate(() => window.__jjTest.step(2));
   await phone.waitForFunction(() => window.__jjController.inspect().itemUseRefusal === 'unavailable');
   await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
   const refused = await host.evaluate(() => window.__jjTest.observe());
-  assert.deepEqual((await phone.evaluate(() => window.__jjController.inspect())).inventory, { front: 'sanga', back: 'boomerang' });
+  assert.deepEqual((await phone.evaluate(() => window.__jjController.inspect())).inventory, { front: 'boomerang', back: null });
   assert.equal(refused.items.refusals.length, 1);
-  assert.equal(refused.items.effects.length, 0, 'a missing physical handler never claims an effect');
+  assert.equal(refused.items.effects.length, 1, 'a missing projectile handler adds no effect');
   assert.equal(refused.debris.length, picked.debris.length, 'a held item does not substitute a cone');
 
   await host.evaluate(async () => {

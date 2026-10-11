@@ -17,6 +17,7 @@ fn every_scenario_in_the_bank_passes() {
         "scenarios/introspection",
         "scenarios/duels",
         "scenarios/derby",
+        "scenarios/items",
     ]
     .iter()
     .flat_map(|d| std::fs::read_dir(repo.join(d)).unwrap())

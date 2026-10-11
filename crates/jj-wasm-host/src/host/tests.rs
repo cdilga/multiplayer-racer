@@ -1291,10 +1291,10 @@ fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
     let car = h.inputs[&seat].car.unwrap();
     assert!(!h.sim.is_protected(car));
     while h.next_message().is_some() {}
-    h.sim.pickup_item(car, seat, ItemId::Sanga).unwrap();
     h.sim.pickup_item(car, seat, ItemId::Boomerang).unwrap();
+    h.sim.pickup_item(car, seat, ItemId::Sanga).unwrap();
     assert_eq!(
-        h.sim.pickup_item(car, seat, ItemId::Sanga),
+        h.sim.pickup_item(car, seat, ItemId::Boomerang),
         Err(jj_sim::items::PickupRefusal::Full)
     );
     h.step_one();
@@ -1316,8 +1316,8 @@ fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
     };
     let picked = drain(&mut h);
     let held = Inventory {
-        front: Some(ItemId::Sanga),
-        back: Some(ItemId::Boomerang),
+        front: Some(ItemId::Boomerang),
+        back: Some(ItemId::Sanga),
     };
     assert!(
         picked
@@ -1342,7 +1342,7 @@ fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
     );
     assert_eq!(
         (events[0].item, events[1].item),
-        (ItemId::Sanga, ItemId::Boomerang)
+        (ItemId::Boomerang, ItemId::Sanga)
     );
     assert!(events.iter().all(|e| e.kind == ItemEventKind::Picked));
     let action = wrapped(

@@ -38,6 +38,21 @@ failed launch is not behavioral evidence.
 
 CI and the full physical/presentation acceptance are still required before closing P1-W01/P1-W01.3. No participant/effect/debris caps were added; the two held slots are the owner's game rule.
 
+## Successful-use follow-up: W03b
+
+The earlier paragraphs describe the foundation before physical handlers existed.
+Sanga now activates physically and consumes the real front item; the unimplemented
+boomerang still refuses as Unavailable and preserves its item. The live journey
+offers Sanga then boomerang, refuses a third full-queue offer, uses Sanga through
+real controller ACTION, checks its exact timer, and checks boomerang refusal and
+round cleanup. Final native item_queue is **9/9**, host/testing **48/48**, and native
+CLI/full item fixtures pass. Native/WASM item parity plus the real WebRTC journey
+and unchanged host roster golden pass **3/3**. Fired Sanga retains its original
+owner and natural timer through recovery; held inventory clears. Details and
+hardware/commands are in [W03b's receipt](../P1-W03/simulation.md).
+This delivers W01.3's successful-use prerequisite; CI and parent presentation
+acceptance are still required.
+
 
 CI 3331 passed the unchanged generator WASM budget but its native run found the
 persistent-debris keyword guard treating item card `lifetime_ms` and

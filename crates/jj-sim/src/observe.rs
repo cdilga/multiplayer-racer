@@ -186,6 +186,8 @@ pub struct CarObs {
     /// The derby facts (P1-S10) while a derby round is on: this car's raw points, rank and the clock.
     #[serde(default)]
     pub derby: Option<DerbyObs>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sanga: Option<crate::items::sanga::Active>,
 }
 
 /// One car's derby facts: what the HUD bands, the results and the fixtures read (master §10.12).
@@ -223,6 +225,7 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
     let v = s.linvel;
     Some(CarObs {
         car: car.0,
+        sanga: sim.sanga_state(car),
         vehicle: sim.vehicle_of(car).unwrap_or(0) as u16,
         mass_kg: sim.car_mass(car).unwrap_or(0.0),
         max_engine_force: sim
