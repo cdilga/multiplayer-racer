@@ -213,6 +213,8 @@ test('?tune: generator values change the measured length and relief on Regenerat
   assert.equal(first.generator, undefined, 'the first track is built with the shipped data');
 
   await host.locator('.jj-tune-toggle').click();
+  // Each length class is a nested, initially folded group; open the standard group's real summary.
+  await host.locator('.jj-tune summary').filter({ hasText: /^generator › course › classes › standard$/ }).click();
   const field = (path) => host.locator(`[data-field="generator.${path}"]`);
   const setField = async (path, value) => {
     await field(path).fill(String(value));

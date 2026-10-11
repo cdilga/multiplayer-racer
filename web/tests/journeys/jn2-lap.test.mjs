@@ -47,21 +47,47 @@ test('JN2: a lap completes with its gates in order, the HUD counts it, a shortcu
   await frame(host, 'syn1', { hello: true });
   await frame(host, 'syn1', { claim: 'Davo' });
   await wait(host, () => window.__jjRoom.view().seats.length === 1);
+  // Hold before Ready: waiting for a rendered Running screen can otherwise let the disconnected synthetic
+  // controller's autopilot cross gates while a slow browser is still painting. Preparation remains asynchronous.
+  await host.evaluate(() => window.__jjTest.hold(true));
   await frame(host, 'syn1', { ready: true });
-  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
+  const advanceTo = async (phase) => {
+    const started = Date.now();
+    while (await host.evaluate(() => window.__jjRoom.view().phase) !== phase) {
+      if (Date.now() - started >= 90_000) {
+        assert.fail(`held startup reaches ${phase}: ${JSON.stringify(await host.evaluate(async () => ({ view: window.__jjRoom.view(), observed: await window.__jjTest.observe(), status: await window.__jjTest.status() })))}`);
+      }
+      // Preparation is asynchronous; once on the grid, advance exactly to GO in one worker command.
+      // One browser round trip per countdown tick is too slow on a software renderer.
+      await host.evaluate(() => {
+        const room = window.__jjRoom.view();
+        return window.__jjTest.step(room.phase === 'Countdown' ? Math.max(1, Math.ceil(room.remainingMs * 120 / 1000)) : 1);
+      });
+      if (await host.evaluate(() => ['Lobby', 'Preparing'].includes(window.__jjRoom.view().phase))) await host.waitForTimeout(100);
+    }
+  };
+  await advanceTo('Countdown');
+  await advanceTo('Running');
   const car = (await host.evaluate(() => window.__jjRoom.view().seats[0])).car;
-  assert.equal(typeof car, 'number', 'the seat has a car on the grid');
+  assert.equal(typeof car, 'number', `the seat has a car on the grid: ${JSON.stringify(await host.evaluate(async () => ({ view: window.__jjRoom.view(), observed: await window.__jjTest.observe() })))}`);
 
   // From here the clock is held and stepped: every fact below is exact.
   await host.evaluate(() => window.__jjTest.hold(true));
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+  const courseGates = await host.evaluate(() => {
+    const gates = window.__jjPrepare.mapInfo().gates.sort((a, b) => a.at - b.at);
+    const finish = gates.findIndex((g) => g.finish);
+    return [...gates.slice(finish), ...gates.slice(0, finish)].map((g) => g.at);
+  });
+  assert.ok(courseGates.length > 1, 'the running map has a finish and progress gates');
   assert.equal((await race(host, car)).gatesPassed, 0, 'no gate before the first crossing');
   await wait(host, () => /Lap 1\/2/.test(document.querySelector('.hud-tile .hud-lap')?.textContent ?? ''));
   await shot(host, 'tv-lap1-start');
 
   // The first gate along the route is the finish line; the lap closes on the same gate.
-  assert.equal((await host.evaluate(() => window.__jjTest.until({ car: 0, metric: 'gatesPassed', min: 1 }, 6000))).held, true);
+  assert.equal((await host.evaluate((car) => window.__jjTest.until({ car, metric: 'gatesPassed', min: 1 }, 6000), car)).held, true);
   const finishLine = (await race(host, car)).anchorRoutePoint;
+  assert.equal(finishLine, courseGates[0], 'the first crossing is the actual map finish');
 
   // A shortcut: a second car dropped ahead on the route (a teleport never crosses a gate) drives on past gates that
   // aren't its next one. It earns none, while the first car's count is untouched by it.
@@ -94,9 +120,10 @@ test('JN2: a lap completes with its gates in order, the HUD counts it, a shortcu
     const r = await race(host, car);
     gates += 1;
     assert.equal(r.gatesPassed, gates, `exactly one gate per crossing: ${JSON.stringify(r)}`);
+    assert.equal(r.anchorRoutePoint, courseGates[(gates - 1) % courseGates.length], 'the next gate in the running map is crossed');
     anchors.push(r.anchorRoutePoint);
     if (r.laps >= 1) break;
-    assert.ok(gates < 80, 'the lap closes after one loop of gates');
+    assert.ok(gates <= courseGates.length, 'the lap closes after one loop of the map gates');
     if (gates === 8) {
       await wait(host, () => /Lap 1\/2/.test(document.querySelector('.hud-tile .hud-lap')?.textContent ?? ''));
       await shot(host, 'tv-lap1-midway');
@@ -105,9 +132,7 @@ test('JN2: a lap completes with its gates in order, the HUD counts it, a shortcu
   // Anchors are the gates' route points: strictly rising by the gate spacing, wrapping past the route's end exactly once
   // (the first gate is the finish line, the lap ends when it has been round them all and back through the line).
   const steps = anchors.slice(1).map((a, k) => a - anchors[k]);
-  const spacing = Math.max(...steps);
   assert.equal(steps.filter((s) => s < 0).length, 1, `the route's end is crossed once: ${steps}`);
-  assert.ok(steps.filter((s) => s > 0).every((s) => s <= spacing && s >= spacing - 4), `each gate is the next along the route: ${steps}`);
   assert.equal(new Set(anchors).size, anchors.length, `no gate repeated inside the lap: ${anchors}`);
   assert.equal(anchors.at(-1), finishLine, 'the lap closes on the finish line, the gate it opened with');
 

@@ -61,7 +61,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
      *  step the cars to a biome and to what it shows. */
     mapInfo: () => {
       const m = preparer.committed as unknown as {
-        route: { points: { x: number; y: number; z: number }[]; segments?: { name: string; span: { from: number; to: number } }[] };
+        route: { points: { x: number; y: number; z: number }[]; gates: { at: number; finish: boolean }[]; segments?: { name: string; span: { from: number; to: number } }[] };
         features: { kind: string; pose: { x: number; z: number } }[];
         dressing: { kitPiece: string; pose: { x: number; z: number } }[];
       } | null;
@@ -70,6 +70,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
         ? {
             segments: (m.route.segments ?? []).map((s) => ({ name: s.name, from: s.span.from, to: s.span.to })),
             route: m.route.points.map((q) => [q.x / 1000, q.z / 1000, q.y / 1000]),
+            gates: m.route.gates.map((g) => ({ ...g })),
             features: m.features.map((f) => ({ kind: f.kind, x: f.pose.x / 1000, z: f.pose.z / 1000 })),
             pieces: m.dressing.filter((d) => aimed.has(d.kitPiece)).map((d) => ({ id: d.kitPiece, x: d.pose.x / 1000, z: d.pose.z / 1000 })),
           }
