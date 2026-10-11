@@ -48,3 +48,28 @@ Mac Apple M1 Pro; Playwright Chromium/Firefox/WebKit viewport emulation. WebKit 
 - Real USB/Bluetooth devices, physical keyboard rollover and owner phone/TV hardware. API emulation is not device qualification.
 - Native input helper and self-hosted installer remain br-twal.1.
 - Deployed copy must be captured after this commit ships.
+
+## Local live-check
+
+Live-check on the real Rust server: all ten page/viewport combinations passed, before and after resize (20 frames). Host empty-source drawer and controller ready-to-join state opener. The state opener does not mount the source tray; the real joined-page matrix above covers that. Inspected every live-check frame for image loading, clipping, layout and visible canvas.
+
+- `live-check/host_drive_1366x768.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_1366x768_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_1920x1080.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_1920x1080_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_375x667.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_375x667_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_412x915.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_412x915_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_915x412.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/host_drive_915x412_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_1366x768.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_1366x768_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_1920x1080.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_1920x1080_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_375x667.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_375x667_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_412x915.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_412x915_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_915x412.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
+- `live-check/j_TEST_state_ready_to_join_915x412_after-resize.jpg`: looked at before/after resize; QR, scrolling drawer or Join card remains visible.
