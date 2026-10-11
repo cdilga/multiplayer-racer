@@ -23,5 +23,6 @@ t "The committed emulator receipts show what the beads cite (P1-F08)" node --tes
 t "Every shipped dependency has an allowed licence and the credits list matches the lockfiles (P1-C09)" bash -c 'node tools/licences/check.mjs && node --test tools/licences/'
 t "Deploy secrets appear only in deploy workflows (R117)" scripts/ci/check-deploy-secrets.sh
 t "Native artifacts reject zero-filled and malformed executables (br-hytm)" node --test scripts/ci/native-check.test.mjs
+t "Artifact fetch uses this run's build verdict (br-56d5)" node --test scripts/ci/fetch-web.test.mjs
 t "Preview publisher, record, retention and index (infra/previews, P1-D04..D06)" python3 -m unittest discover -s infra/previews/tests -p 'test_*.py' -q
 exit $rc

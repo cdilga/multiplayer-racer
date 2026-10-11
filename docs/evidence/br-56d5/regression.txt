@@ -1,0 +1,13 @@
+✔ pending current build waits for the artifact despite an older failed commit status (780.397958ms)
+✔ current build success waits for store publication (568.344625ms)
+✔ current build failure stops the fetch (411.19ms)
+✔ current build cancelled stops the fetch (388.016875ms)
+✔ current build timed_out stops the fetch (392.614208ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2590.4265
