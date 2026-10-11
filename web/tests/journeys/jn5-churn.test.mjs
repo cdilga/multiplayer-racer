@@ -51,7 +51,7 @@ async function stateOf(page) {
       return {
         url: location.pathname,
         controller: c && { phase: c.phase, you: c.you, roomPhase: c.roomPhase, link: c.link },
-        room: room && { phase: room.phase, seats: room.seats.map((s) => `${s.name}:${s.presence}:car${s.car}`) },
+        room: room && { phase: room.phase, seats: room.seats.map((s) => `${s.name}:${s.presence}:ready${s.ready}:car${s.car}`) },
         paths: window.__jjNet?.inspect?.(),
       };
     }),
@@ -89,7 +89,7 @@ async function phone(url, name) {
   return { ctx, page, name, endpoint };
 }
 
-async function leave(host, p) {
+async function leave(host, p, { held = false } = {}) {
   // Leave asks for a second tap within 3 s (no browser dialogs).
   const btn = p.page.getByRole('button', { name: /Leave/ });
   const t0 = Date.now();
@@ -102,7 +102,14 @@ async function leave(host, p) {
   // The host has the Leave before the phone goes: closing the page sooner (run 1706: 500 ms on a slow runner) lost the
   // command, and a vanished phone is a dropout whose seat is held for its return, not a leave.
   try {
-    await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
+    if (held) {
+      const started = Date.now();
+      while ((await view(host)).seats.some((s) => s.name === p.name)) {
+        assert.ok(Date.now() - started < 60_000, `${p.name} never left the held Intermission`);
+        await host.evaluate(() => window.__jjTest.step(1));
+        await host.waitForTimeout(50);
+      }
+    } else await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
   } catch (e) {
     // Which side lost it (runs 2058, 2271): the phone's own view of the two taps and whether it sent the Leave.
     const phoneSide = await p.page
@@ -174,7 +181,13 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
 
   at('Ready: the round starts');
   for (const p of phones) await p.page.getByRole('button', { name: /^Ready/ }).click();
-  for (const k of ['KeyE', 'KeyO']) await host.keyboard.press(k, { delay: 250 });
+  // Like the join keys above, hold each sampled key until the host has applied it. A fixed 250 ms tap can fall
+  // wholly between two software-rendered frames, leaving the room in the Lobby without either key seat ready.
+  for (const [key, number] of [['KeyE', 4], ['KeyO', 5]]) {
+    await host.keyboard.down(key);
+    await wait(host, (n) => window.__jjRoom.view().seats.find((s) => s.number === n)?.ready === true, number);
+    await host.keyboard.up(key);
+  }
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
 
   at('Countdown: a phone joins and is on the grid');
@@ -187,6 +200,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Running: five phones drop in, each timed claim → driving');
   const samples = [];
   for (const n of ['Macca', 'Robbo', 'Gazza', 'Thommo', 'Jonesy']) {
+    at(`Running: ${n} claims and drives`);
     const { p, ms } = await dropIn(host, joinUrl, n);
     samples.push({ name: n, ms });
     phones.push(p);
@@ -269,7 +283,13 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission: results and standings');
   // The round runs 99 laps so a slow host (2 s frames) never finishes it mid-churn (run 1659); the test surface finishes the race here, as the finish window closing would
   // (`finishRace`: the race rules freeze the result and the director takes the normal way to Intermission).
-  await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
+  // Hold before ending the race. A software-rendered page can observe a queued Intermission view after the worker
+  // has already advanced into the next round; holding after that observation preserves the wrong phase.
+  await host.evaluate(async () => {
+    await window.__jjTest.hold(true);
+    await window.__jjTest.command({ cmd: 'finishRace' });
+    await window.__jjTest.step(2);
+  });
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 120_000);
   const atResults = await view(host);
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
@@ -278,10 +298,21 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission and Lobby: shrink to 2');
   // One phone leaves in the Intermission itself; the results screen counts down to the next round, and on a slow host
   // six leaves outlast it (run 1656), so the host takes the room back to the Lobby next and the rest leave there.
-  await leave(host, phones[2]); // Bazza
-  // CI's shared runners are several times slower than a host: this click has waited out 30 s in "performing click
-  // action" there (runs 2839-2869) while passing on the Mac and eris; give it the slow host's time.
-  await host.getByRole('button', { name: 'Return to lobby' }).click({ timeout: 120_000 });
+  await leave(host, phones[2], { held: true }); // Bazza
+  assert.equal((await view(host)).phase, 'Intermission', 'a real phone leaves during the results phase');
+  // A real pointer click, without waiting for two stable animation frames on the software-rendered host.
+  // Visibility and the resulting Lobby transition remain asserted; this does not dispatch a synthetic UI command.
+  const returnButton = host.getByRole('button', { name: 'Return to lobby' });
+  await returnButton.waitFor({ state: 'visible' });
+  await returnButton.click({ force: true }).catch(async (e) => {
+    const screen = await host.evaluate(() => ({
+      phase: document.documentElement.dataset.jjPhase,
+      screens: [...document.querySelectorAll('[data-screen]')].map((el) => el.dataset.screen),
+      buttons: [...document.querySelectorAll('.jj-screen button')].map((el) => el.textContent),
+    }));
+    throw new Error(`${e.message}\nresults screen ${JSON.stringify(screen)}, errors ${JSON.stringify(errors)}, room ${JSON.stringify(await view(host))}`);
+  });
+  await host.evaluate(async () => { await window.__jjTest.step(1); await window.__jjTest.hold(false); });
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   for (const p of phones.slice(3, 8)) await leave(host, p); // … Thommo; Jonesy and Sheila stay
   await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters

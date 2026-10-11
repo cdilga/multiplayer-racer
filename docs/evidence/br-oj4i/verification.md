@@ -11,3 +11,12 @@ Comparing the evidence bytes against the baseline after the full run and subsequ
 Tests now default to OS scratch. `evidencePath()` honors explicit `JJ_EVIDENCE_DIR` / `JJ_EVIDENCE`; capture suites use explicit `JJ_CAPTURE_DIR`. Evidence-writing tests document their opt-in destination. The original full-run failures include stale WASM parity, lap/tuning harness assumptions, churn, dropout, join-card and smoke checks; focused repairs and reruns are recorded separately, not relabelled as a passing full run.
 
 The acceptance phrase “leaves git status clean under docs/evidence/” is **not literally satisfied** while preserved pre-existing modifications remain. The byte comparison proves that the full run did not rewrite them. This bead remains open pending resolution of that pre-existing state and green CI; this receipt does not authorize discarding or committing degraded receipts.
+
+Fresh JN5 repair run: `node --test web/tests/journeys/jn5-churn.test.mjs`, default SwiftShader,
+**1/1 passed in 498 seconds** on this Mac. The two sampled Ready keys are held until acknowledged.
+The worker is held before finishing the race, preventing a queued Intermission view from freezing
+the next round instead. Results → Lobby uses a real pointer click after asserting visibility,
+without waiting for stable animation frames; the actual Lobby transition remains asserted.
+The original 12-player growth, own-input drive, Leave/Sit out, standings and final two-player
+assertions are preserved. Drop-in p95 was 13,255 ms on software WebGL; this is not GPU timing
+qualification. Log: `/tmp/jj-jn5-standalone-forced-pointer.log`.
