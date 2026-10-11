@@ -31,12 +31,24 @@ before(async () => {
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
-  if (profiler) {
-    const { profile } = await profiler.send('Profiler.stop');
-    writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
+  try {
+    if (profiler) {
+      // Profiling is optional diagnostic evidence. A stalled target must still release its browser/server.
+      let timer;
+      try {
+        const { profile } = await Promise.race([
+          profiler.send('Profiler.stop'),
+          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('CPU profile stop timed out')), 30_000); }),
+        ]);
+        writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+  } finally {
+    await browser?.close();
+    await server?.close();
   }
-  await browser?.close();
-  await server?.close();
 });
 
 let step = '';
@@ -168,6 +180,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   if (process.env.JJ_HOST_PROFILE) {
     profiler = await host.context().newCDPSession(host);
     await profiler.send('Profiler.enable');
+    await profiler.send('Profiler.setSamplingInterval', { interval: 10_000 });
     await profiler.send('Profiler.start');
   }
   const errors = [];
