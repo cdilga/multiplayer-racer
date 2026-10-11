@@ -1,0 +1,19 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "frame": {
+    "x": 8,
+    "y": 8,
+    "width": 480,
+    "height": 939.421875
+  },
+  "y": 956,
+  "end": 980,
+  "changed": 273,
+  "sampled": 11136,
+  "state": {
+    "caption": ""
+  }
+}

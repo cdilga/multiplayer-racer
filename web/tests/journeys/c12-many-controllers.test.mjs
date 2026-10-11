@@ -414,6 +414,10 @@ test('WebKit host drawer shows the room QR and all three keyboard layouts across
 });
 
 async function drawerPaintBounds(page) {
+  // Holding the simulation alone leaves the overview camera easing in the render loop. CI3441's saved pair
+  // changed grit pixels across the entire world (also far outside the drawer), so freeze the actual canvas.
+  // The existing capture hook stops drawing; explicit frame calls after each resize keep its backing store current.
+  await page.evaluate(() => { window.__jjRender.frame(); window.__jjRender.hold(); });
   const drawer = page.locator('[data-jj-input-drawer]');
   const r = await drawer.boundingBox();
   const { height } = page.viewportSize();
