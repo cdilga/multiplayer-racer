@@ -24,6 +24,8 @@ jobs:
     timeout-minutes: 40
     env:
       CARGO_TARGET_DIR: /home/cdilga/.cache/jj-ci/target-gpu
+      # Keep CI browser installs separate from interactive runs and their install locks.
+      PLAYWRIGHT_BROWSERS_PATH: /home/cdilga/.cache/jj-ci/browsers-gpu
     steps:
       - uses: actions/checkout@v4
         with:
