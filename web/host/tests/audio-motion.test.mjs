@@ -1,9 +1,11 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // br-0uqj (R125): sound for drift, the R120 exit boost, air and surfaces, on the real web build through `window.__jjAudio`.
 // A scripted drive (lib/motion-scenario.mjs) feeds car records through the director's snapshot path; the probe checks each
 // cue fired at its sim event with levels following their drivers (slip, speed, height, fall speed), and renders every new
 // effect offline to show it is audible. A second test records the host's own output for the owner's listen-through clip.
 //   [JJ_CLIP=1] JJ_DIST=<build dir> node --test --test-concurrency=1 web/host/tests/audio-motion.test.mjs
-// Writes docs/evidence/br-0uqj/ (JJ_EVIDENCE_DIR overrides the root): probe.json, listen-through.ogg + README.md.
+// Explicit evidence can go to docs/evidence/br-0uqj/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch): probe.json, listen-through.ogg + README.md.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -15,7 +17,7 @@ import { motionScenario } from './lib/motion-scenario.mjs';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const out = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'br-0uqj');
+const out = join(evidencePath(''), 'br-0uqj');
 let browser;
 let server;
 

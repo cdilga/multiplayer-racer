@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-R06: Identify on a crowded TV. Synthetic controllers (the host page's test surface feeds their hello, claim,
 // ready and identify frames as they'd arrive from phones, so no WebRTC is needed) fill a room: at 24 one seat's
 // Identify pulses only its own tile and floats its number over its car; then the room grows to 120 (no cap) and a
 // three-digit seat's badge, Cooee label and number over its car render without clipping. Captures `identify-24` and
-// `identify-108` to $JJ_CAPTURE_DIR (default docs/evidence/P1-R06).
+// `identify-108` to $JJ_CAPTURE_DIR (default OS scratch).
 //   JJ_CHROMIUM_GPU=1 node --test web/tests/journeys/r06-identify.test.mjs   (24-120 tiles want a GPU host)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -13,7 +15,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, gpu } from './lib/chromium.mjs';
 
 const BASE = '/p/r06/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R06');
+const CAPTURE = evidencePath('P1-R06', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 

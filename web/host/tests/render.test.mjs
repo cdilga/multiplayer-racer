@@ -1,7 +1,9 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R01 browser tests: the host renderer on the real web build (web/dist) in headless Chromium.
 // Needs: scripts/build-host-wasm.sh && npm --prefix web run build.
 //   node --test web/host/tests/render.test.mjs
-// Writes its captures and numbers to docs/evidence/P1-R01/ (JJ_EVIDENCE_DIR overrides).
+// Recapture its captures and numbers to docs/evidence/P1-R01/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -10,7 +12,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R01');
+const evidenceDir = evidencePath('P1-R01');
 const runs = {};
 let browser;
 let server;

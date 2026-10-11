@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R08 browser tests: the host on any aspect and as a phone host (portrait and landscape, DPR 2-3), on fixture room
 // views. Viewing-distance profiles (default per display, host override), the 4-player race laid out on a phone, every
 // tile's backing store equal to its on-screen size in device pixels, and the captures `portrait-phone-host` and
 // `ultrawide-host`. Run on eris (no browsers on the Mac): node --test web/host/tests/phone-host.test.mjs
-// Captures go to docs/evidence/P1-R08 (JJ_EVIDENCE_DIR overrides); JJ_NO_CAPTURES=1 skips them. Phone runs are Chromium
+// Explicit captures can go to docs/evidence/P1-R08 (set JJ_EVIDENCE_DIR explicitly; default OS scratch); JJ_NO_CAPTURES=1 skips them. Phone runs are Chromium
 // emulation (viewport + deviceScaleFactor), not a device; the real phone host's frame rate is a P1-Q02 row.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -12,7 +14,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R08');
+const evidenceDir = evidencePath('P1-R08');
 let browser;
 let server;
 before(async () => {

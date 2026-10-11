@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-F10's demo journey on the G00 hello room: the room grows to 12 mixed controllers (10 Playwright phones, one emulated pad, one
 // emulator) and shrinks back to 2, with joins and leaves in the middle of it, and after every step the host's markers are exactly
 // the controllers that are in the room (no phantom marker, none missing). Each controller has its own browser context and evidence
 // folder. The lane is chosen by the environment so one file serves the matrix:
 //   JJ_LANE=chromium|webkit|firefox   the engine the phones and the pad run on (default chromium)
 //   JJ_EMULATORS=android,ios          which emulator joins (the lane must exist on this machine; none by default)
-//   JJ_EVIDENCE_DIR                   default docs/evidence/P1-F10
+//   JJ_EVIDENCE_DIR                   default OS scratch
 //   node --test web/tests/journeys/f10-hello-demo.test.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -21,7 +23,7 @@ const EMULATORS = (process.env.JJ_EMULATORS ?? '').split(',').filter(Boolean);
 const NAME = [LANE, ...EMULATORS].join('+');
 const ID = `f10${LANE}`;
 const BASE = `/p/${ID}/`;
-const EVIDENCE = process.env.JJ_EVIDENCE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-F10');
+const EVIDENCE = evidencePath('P1-F10');
 let browser; // the controllers' engine
 let hostBrowser; // the host page: Chromium always (WebKit and Firefox are controller lanes, the host runs smoke elsewhere)
 let server;

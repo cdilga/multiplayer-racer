@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R07 browser tests: the host's round screens and per-tile HUD, drawn from fixture room views (`host/?roundfixture=<kind>-<n>`,
 // web/host/src/round/fixture-testing.ts) on the real web build in headless Chromium: no server, worker or players.
 // Needs: scripts/build-host-wasm.sh && (cd web && npx vite build).
 //   node --test web/host/tests/round-screens.test.mjs
-// Writes the capture matrix (jpg) to docs/evidence/P1-R07/ (JJ_EVIDENCE_DIR overrides); `JJ_NO_CAPTURES=1` skips it.
+// Writes the capture matrix (jpg) to docs/evidence/P1-R07/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch); `JJ_NO_CAPTURES=1` skips it.
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -12,7 +14,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R07');
+const evidenceDir = evidencePath('P1-R07');
 const fixture = async (name) => JSON.parse(await readFile(join(import.meta.dirname, 'fixtures', `${name}.json`), 'utf8'));
 const VP = { '1080p': [1920, 1080], '4k': [3840, 2160], '21x9': [3440, 1440], phone: [412, 915] };
 

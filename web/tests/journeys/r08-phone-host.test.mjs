@@ -1,7 +1,9 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-R08: the host page on a phone viewport (DPR 2-3, portrait and landscape) in a real room with four synthetic players:
 // the lobby lists them, the race lays out four tiles with their HUD inside, the footer stays under the tiles, and the
 // canvas backing store equals the on-screen size in device pixels. Synthetic controllers (no WebRTC). Chromium
-// emulation, not a phone. Captures `phone-host-<state>-<orientation>` go to $JJ_CAPTURE_DIR (default docs/evidence/P1-R08).
+// emulation, not a phone. Captures `phone-host-<state>-<orientation>` go to $JJ_CAPTURE_DIR (default OS scratch).
 //   JJ_CHROMIUM_GPU=1 node --test web/tests/journeys/r08-phone-host.test.mjs   (run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -12,7 +14,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 
 const BASE = '/p/r08/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R08');
+const CAPTURE = evidencePath('P1-R08', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 

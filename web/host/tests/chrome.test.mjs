@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R07 / P1-G07 browser tests: the host's footer, pause flow, End/Disband/Remove confirmations, the diagnostics overlay,
 // the HUD's boost and wreck fields, the pre-race HUD and the results caption, on fixture room views (`host/?roundfixture=`).
 // Run on eris (no browsers on the Mac): needs the web build (npx vite build; JJ_DIST overrides web/dist).
 //   node --test web/host/tests/chrome.test.mjs
-// Captures go to docs/evidence/P1-R07 (JJ_EVIDENCE_DIR overrides); JJ_NO_CAPTURES=1 skips them.
+// Explicit captures can go to docs/evidence/P1-R07 (set JJ_EVIDENCE_DIR explicitly; default OS scratch); JJ_NO_CAPTURES=1 skips them.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -11,7 +13,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R07');
+const evidenceDir = evidencePath('P1-R07');
 const VP = { '1080p': [1920, 1080], '4k': [3840, 2160], '21x9': [3440, 1440], phone: [412, 915], 'phone-landscape': [915, 412] };
 let browser;
 let server;

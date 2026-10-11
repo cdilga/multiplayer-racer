@@ -1,6 +1,8 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // Owner playtest 1 (br-gw74.3): a paused host is paused. A race runs with autopilot; the host menu pauses it; over 5 s
 // paused the world draws (almost) nothing and the sim's tick stands still; after the menu closes the race moves again
-// and frames flow at their usual rate. Receipt numbers go to $JJ_CAPTURE_DIR (default docs/evidence/br-gw74.3).
+// and frames flow at their usual rate. Receipt numbers go to $JJ_CAPTURE_DIR (default OS scratch.3).
 //   node --test web/tests/journeys/pt1-pause-idle.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -11,7 +13,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/pt1pause/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/br-gw74.3');
+const CAPTURE = evidencePath('br-gw74.3', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 

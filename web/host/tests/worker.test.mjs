@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath as testEvidencePath } from '../../tests/lib/evidence.mjs';
 // P1-S02 browser tests: the host's sim worker (jj-wasm-host as WASM in a real module Web Worker) in headless Chromium.
 // Needs the pkg and the harness built first:
 //   scripts/build-host-wasm.sh && npx --prefix web vite build --config web/host/tests/vite.config.ts
 //   node --test web/host/tests/
-// Writes what it measured to docs/evidence/P1-S02/browser-run.json (JJ_EVIDENCE overrides the path).
+// Recapture what it measured to docs/evidence/P1-S02/browser-run.json (set JJ_EVIDENCE explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -12,7 +14,7 @@ import { chromium } from 'playwright';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const dist = join(repo, 'web/dist-test');
-const evidencePath = process.env.JJ_EVIDENCE ?? join(repo, 'docs/evidence/P1-S02/browser-run.json');
+const evidencePath = testEvidencePath('P1-S02/browser-run.json', 'JJ_EVIDENCE');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 const STOP = 720;
 const evidence = { browser: '', ac1: [], ac2: {}, ac3: {}, ac4: {}, ac5: {} };

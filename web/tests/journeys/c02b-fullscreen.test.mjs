@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-C02b: full screen on the phone controller. A real phone joins a real room (loopback WebRTC). The tools row's full-screen
 // button enters and leaves full screen and shows the state; the settings sheet's Full screen switch does the same and follows
 // fullscreenchange (an exit the page didn't ask for flips it too). Mid-race, losing full screen without asking (the system
 // gesture: an exit the page didn't make) shows a small "Back to full screen" prompt; the drive stick still drives under it;
 // one tap restores full screen and the prompt goes. Where the Fullscreen API is missing (iPhone Safari; emulated here by
 // removing it before the page loads, as the WebKit lane has no phone Safari), the control explains Add to Home Screen instead.
-// Captures go to $JJ_CAPTURE_DIR (default docs/evidence/P1-C02b).
+// Explicit captures can go to $JJ_CAPTURE_DIR (default OS scratch).
 //   node --test web/tests/journeys/c02b-fullscreen.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -15,7 +17,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/c02b/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-C02b');
+const CAPTURE = evidencePath('P1-C02b', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 

@@ -1,3 +1,5 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // R03's "distinguishable surfaces" rule on a generated four-biome map (P1-M06/M08b): the graded dirt road reads against the
 // red-earth ground from the chase camera, at 1080p and at a small tile's size. The same distance as map.test.mjs's greybox
 // test (CIE76 on screenshot pixels), but the spots are found in the picture itself: `world.project` projects through the
@@ -5,7 +7,7 @@
 // lines left and right of the centre, and the ground is what lies just outside them.
 // The real host page (test build), a generated Playtest-1 track, one player on the autopilot stepped to the middle of the dirt stretch.
 //   scripts/build-host-wasm.sh && npm --prefix web run build && node --test web/host/tests/readability.test.mjs
-// (JJ_DIST serves another build.) Writes docs/evidence/P1-M06/readability.json and a capture per viewport (JJ_EVIDENCE_DIR overrides).
+// (JJ_DIST serves another build.) Explicit evidence can go to docs/evidence/P1-M06/readability.json and a capture per viewport (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -14,7 +16,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-M06');
+const evidenceDir = evidencePath('P1-M06');
 const runs = {};
 let browser;
 let server;

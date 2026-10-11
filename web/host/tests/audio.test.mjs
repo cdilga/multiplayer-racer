@@ -1,9 +1,11 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-A03 / A05 / A07 browser tests: the host's audio on the real web build (web/dist), through the introspection surface
 // `window.__jjAudio` (the trigger log, the engines, the mix state). Sound can't be heard in CI, so each test checks the log
 // (what played, when, with which caption and mix state), the offline-rendered effects (not silent) and the CPU numbers.
 // Needs: scripts/build-host-wasm.sh && npx --prefix web vite build.
 //   node --test --test-concurrency=1 web/host/tests/audio.test.mjs
-// Writes to docs/evidence/P1-A03|A05|A07/ (JJ_EVIDENCE_DIR overrides the root).
+// Recapture to docs/evidence/P1-A03|A05|A07/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -12,7 +14,7 @@ import { chromium, webkit } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evRoot = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence');
+const evRoot = evidencePath('');
 const ev = (bead) => join(evRoot, bead);
 const runs = { 'P1-A03': {}, 'P1-A05': {}, 'P1-A07': {} };
 let live; // Chromium with autoplay allowed: contexts run, clips decode and "play"

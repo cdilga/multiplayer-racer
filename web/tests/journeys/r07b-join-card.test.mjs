@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-R07b: the host footer's docked QR opens the big join card. A race runs with enough synthetic seats that no spare grid
 // cell holds the QR (html[data-grid-dock~=qr]), so the footer docks it; clicking it pauses the race and shows the kit's paper
 // QR card (QR, room code, domain) with the join URL, big and centred. The QR is decoded from the screen and a real phone
 // (loopback WebRTC) joins the room from that URL while the race is paused; Resume lifts the pause. The pause menu carries
 // the join card too (its QR decodes to the same URL). Then the card is checked at every display mode (TV, desk, handheld,
 // auto) and size (1920x1080, 1366x768, a phone host both ways, full screen): on screen, clear of the footer, scannable.
-// Captures go to $JJ_CAPTURE_DIR (default docs/evidence/P1-R07b).
+// Explicit captures can go to $JJ_CAPTURE_DIR (default OS scratch).
 //   node --test web/tests/journeys/r07b-join-card.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -17,7 +19,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/r07b/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R07b');
+const CAPTURE = evidencePath('P1-R07b', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 

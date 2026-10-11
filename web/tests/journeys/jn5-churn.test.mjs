@@ -1,9 +1,11 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // Journey JN5 (P1-G02): mixed controllers join and leave through every phase of a round on the real host page
 // (`B/host?room&test=live&laps=99`, the test surface finishes the round) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
 // the Countdown, five more drop in mid-race (each timed from its accepted claim to its car moving under its own
 // throttle, and each gets its Identify flash and a tile), the room grows to 12, then Leave and Sit out shrink it to 2
 // through Intermission. The room never lists a seat that left, nobody is refused and the standings keep their rows.
-// Writes the drop-in samples to $JJ_EVIDENCE_DIR/dropin.json (default docs/evidence/P1-G02); `JJ_CAPTURE_DIR=<dir>`
+// Writes the drop-in samples to $JJ_EVIDENCE_DIR/dropin.json (default OS scratch); `JJ_CAPTURE_DIR=<dir>`
 // saves the visual self-review matrix.
 //   node --test web/tests/journeys/jn5-churn.test.mjs
 import assert from 'node:assert/strict';
@@ -18,7 +20,7 @@ import { chromiumArgs, gpu } from './lib/chromium.mjs';
 const ID = `jn5${process.env.JJ_BUILD_SUFFIX ?? ''}`;
 const BASE = `/p/${ID}/`;
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
-const EVIDENCE = process.env.JJ_EVIDENCE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G02');
+const EVIDENCE = evidencePath('P1-G02');
 let browser;
 let server;
 
