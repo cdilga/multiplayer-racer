@@ -13,6 +13,7 @@ use proptest::prelude::*;
 
 use crate::abi::*;
 use crate::cmd::*;
+use crate::items::*;
 use crate::signal::*;
 use crate::state::*;
 use crate::{DecodeError, PROTOCOL_VERSION};
@@ -285,6 +286,18 @@ fn host_samples() -> Vec<HostCmd> {
             flick_max_angle: 3000,
             flick_cooldown_ms: 350,
         }),
+        HostCmd::Inventory(Inventory {
+            front: Some(ItemId::Boomerang),
+            back: Some(ItemId::Sanga),
+        }),
+        HostCmd::ItemEvent(ItemEvent {
+            tick: Tick(7200),
+            owner: SeatId(7),
+            life: LifeId(2),
+            effect: 123,
+            item: ItemId::Boomerang,
+            kind: ItemEventKind::Picked,
+        }),
     ]
 }
 
@@ -300,9 +313,11 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::Removed => "removed",
         HostCmd::ForSource { .. } => "for-source",
         HostCmd::InputProfile(_) => "input-profile",
+        HostCmd::Inventory(_) => "inventory",
+        HostCmd::ItemEvent(_) => "item-event",
     }
 }
-const HOST_VARIANTS: [&str; 10] = [
+const HOST_VARIANTS: [&str; 12] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -313,11 +328,13 @@ const HOST_VARIANTS: [&str; 10] = [
     "removed",
     "for-source",
     "input-profile",
+    "inventory",
+    "item-event",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.
 fn host_detail_samples() -> Vec<(&'static str, HostCmd)> {
-    vec![
+    let mut samples = vec![
         (
             "action-result-expired",
             HostCmd::ActionResult {
@@ -349,7 +366,69 @@ fn host_detail_samples() -> Vec<(&'static str, HostCmd)> {
                 results: None,
             },
         ),
-    ]
+    ];
+    for (name, kind) in [
+        (
+            "item-used-forward",
+            ItemEventKind::Used {
+                direction: ItemDirection::Forward,
+            },
+        ),
+        (
+            "item-used-rear",
+            ItemEventKind::Used {
+                direction: ItemDirection::Rear,
+            },
+        ),
+        (
+            "item-hit-seat",
+            ItemEventKind::Hit {
+                target: Some(SeatId(8)),
+            },
+        ),
+        ("item-hit-world", ItemEventKind::Hit { target: None }),
+        ("item-caught", ItemEventKind::Caught),
+        ("item-expired", ItemEventKind::Expired),
+    ] {
+        samples.push((
+            name,
+            HostCmd::ItemEvent(ItemEvent {
+                tick: Tick(7201),
+                owner: SeatId(7),
+                life: LifeId(2),
+                effect: 123,
+                item: ItemId::Boomerang,
+                kind,
+            }),
+        ));
+    }
+    for (name, reason) in [
+        ("item-refused-empty", ItemUseRefusal::Empty),
+        ("item-refused-cooldown", ItemUseRefusal::Cooldown),
+        ("item-refused-protected", ItemUseRefusal::Protected),
+        ("item-refused-blocked", ItemUseRefusal::Blocked),
+        ("item-refused-unavailable", ItemUseRefusal::Unavailable),
+        ("item-refused-not-racing", ItemUseRefusal::NotRacing),
+    ] {
+        samples.push((
+            name,
+            HostCmd::ActionResult {
+                action: ActionId(45),
+                outcome: ActionOutcome::Rejected {
+                    reason: ActionRejection::Item { reason },
+                },
+            },
+        ));
+    }
+    samples.push(("inventory-empty", HostCmd::Inventory(Inventory::default())));
+    samples.push((
+        "inventory-one",
+        HostCmd::Inventory(Inventory {
+            front: Some(ItemId::Sanga),
+            back: None,
+        }),
+    ));
+    samples
 }
 
 fn main_samples() -> Vec<MainToSim> {

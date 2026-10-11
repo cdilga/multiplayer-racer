@@ -156,6 +156,10 @@ pub enum ActionRejection {
     NotYourSource,
     /// The action isn't available now (no utility held, wheelie not allowed in this phase…).
     NotAvailable,
+    /// P1-W01: a failed front-item use keeps the item and reports its reason.
+    Item {
+        reason: crate::items::ItemUseRefusal,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -251,6 +255,8 @@ pub enum HostCmd {
     /// whole, in fixed point. Endpoint-wide (never wrapped), and sent again to a controller that joins afterwards. Only a
     /// host with a tuned profile sends it; the shipped profile is compiled into the controller.
     InputProfile(InputThresholds),
+    Inventory(crate::items::Inventory),
+    ItemEvent(crate::items::ItemEvent),
 }
 
 /// The input profile (`assets/profiles/input.json`) on the wire, in fixed point so the host and every controller resolve

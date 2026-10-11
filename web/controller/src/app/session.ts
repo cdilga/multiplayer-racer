@@ -6,6 +6,7 @@
 // tab that comes back gets the same seat (`Hello{resume: secret}`); rooms reported ended/not-found are pruned. Storage
 // that throws still plays, with `persisted = false` for the honest note.
 import { underBase } from '../../../shared/src/base';
+import type { ItemEvent, ItemInventory, ItemUseRefusal } from '../../../shared/src/items';
 import { ApiError, ControllerLink, type LinkState, type TransportOptions } from '../../../shared/transport';
 import init, * as wasm from '../pkg/jj_wasm_input.js';
 
@@ -132,6 +133,11 @@ export class Session {
   onSticks: (drive: Stick, action: Stick) => void = () => {};
   /** A discrete action fired (wheelie, OI!, cone): the tutorial listens. */
   onAction: (kind: number) => void = () => {};
+  inventory: ItemInventory = { front: null, back: null };
+  itemUseRefusal: ItemUseRefusal | null = null;
+  lastItemEvent: ItemEvent | null = null;
+  /** Every reliable event is delivered to W05's presentation; lastItemEvent is only the current probe fact. */
+  onItemEvent: (event: ItemEvent) => void = () => {};
 
   private endpoint: wasm.WasmEndpoint | null = null;
   /** The host's last `InputProfile` (owner tuning menu): whether the endpoint accepted it, and when it arrived. */
@@ -393,6 +399,25 @@ export class Session {
       return;
     }
     if (typeof cmd !== 'object') return;
+    if ('Inventory' in cmd) {
+      this.inventory = cmd.Inventory as ItemInventory;
+      this.onChange();
+      return;
+    }
+    if ('ItemEvent' in cmd) {
+      this.lastItemEvent = cmd.ItemEvent as ItemEvent;
+      this.onItemEvent(this.lastItemEvent);
+      this.onChange();
+      return;
+    }
+    if ('ActionResult' in cmd) {
+      const { outcome } = cmd.ActionResult as { outcome: string | { Rejected?: { reason: string | { Item?: { reason: ItemUseRefusal } } }; Applied?: { tick: number } } };
+      if (typeof outcome === 'object' && outcome.Rejected && typeof outcome.Rejected.reason === 'object' && outcome.Rejected.reason.Item) {
+        this.itemUseRefusal = outcome.Rejected.reason.Item.reason;
+      } else if (typeof outcome === 'object' && outcome.Applied) this.itemUseRefusal = null;
+      this.onChange();
+      return;
+    }
     if ('InputProfile' in cmd) {
       // The owner tuning menu changed the input thresholds (br-2sdu.2): every source of this connection reads them from
       // its next sample. Endpoint-wide, so it reaches the hub's shared endpoint as well as this session's own.
@@ -689,6 +714,9 @@ export class Session {
       code: this.code,
       you: this.you,
       hud: this.hud,
+      inventory: { ...this.inventory },
+      itemUseRefusal: this.itemUseRefusal,
+      lastItemEvent: this.lastItemEvent,
       roomPhase: this.roomPhase,
       ready: this.isReady,
       countdownMs: this.countdownMs,
