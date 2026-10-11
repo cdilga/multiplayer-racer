@@ -68,6 +68,20 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).cars.length, 2, 'the countdown puts both on the grid');
 
   await wait(host, () => window.__jjRoom.view().phase === 'Running');
+  // Startup rendering or the tutorial can already have handed a car to autopilot. The idle-cue scenario
+  // starts from two freshly player-driven cars: deliberate input earns the real handback, then both let go.
+  for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: -0.5, touch: true }, { x: 0, y: 0, touch: false }));
+  await wait(host, async () => {
+    const o = await window.__jjTest.observe();
+    return o.host.seats.length === 2 && o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
+      && o.cars.every((c) => c.autopilot == null && c.input.throttle > 0.3);
+  });
+  for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  await wait(host, async () => {
+    const o = await window.__jjTest.observe();
+    return o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
+      && o.cars.every((c) => c.autopilot == null && c.input.throttle < 0.05);
+  });
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
