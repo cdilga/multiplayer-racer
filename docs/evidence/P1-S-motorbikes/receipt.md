@@ -16,24 +16,24 @@ fixture harness are reused. Root-cause calculations and impact findings are in `
 Acceptance evidence:
 
 - AC1: `JJ_EVIDENCE_DIR=<out> rch exec -- cargo test -p jj-procgen --release --target aarch64-apple-darwin --test handling bike_ -- --nocapture`.
-  `handling.log`, `handling-bank.txt`: all 288 flat surface/speed/lock/ramp/brake cases pass, worst lean 13.8°;
+  `handling.txt`, `handling-bank.txt`: all 288 flat surface/speed/lock/ramp/brake cases pass, worst lean 13.8°;
   all 549 generated-road cases pass, zero dives/grazes/rollovers and no failed road-only baseline cases.
   Eight rail-impact regressions pass (`rail-regressions.json`). Tests keep generated scenery and rails.
 - AC1: `rch exec -- cargo test -p jj-procgen --release --target aarch64-apple-darwin --test bikes -- --nocapture`.
-  `biomes.log`: 3 seeds × all 4 biomes lap, no recovery/wreck, exact replay. Minimum upY: Town .99806327,
+  `biomes.txt`: 3 seeds × all 4 biomes lap, no recovery/wreck, exact replay. Minimum upY: Town .99806327,
   Rocks .95771813, Dirt .962307, Bitumen .94984204.
 - AC2/AC3: `rch exec -- cargo test -p jj-sim --release --target aarch64-apple-darwin --test bikes -- --nocapture`.
-  `fixtures.log`: four tests pass, including real wall-impact damage, rider separation, lost-wheel grace,
+  `fixtures.txt`: four tests pass, including real wall-impact damage, rider separation, lost-wheel grace,
   fresh mass/parts after respawn, persistent dynamic debris and exact replay. Invalid wheel topology is rejected.
 - AC2/AC3: `jj sim --json --profile scenarios/bikes/profile.json --out <out> scenarios/bikes/{controls,damage}.json`.
   `controls-cli.json`, `damage-cli.json`: every envelope and replay passes. Wheelie front-air time .591667 s,
   drift time 1.066667 s, no control-fixture wreck. Named damage fixture produces exactly one lost-wheel wreck.
 - AC3: build `jj-wasm-host` release for wasm32, then with `--features testing`, bind both with `wasm-bindgen`;
   `JJ_BIN=<native jj> JJ_EVIDENCE_DIR=<out> node --test web/host/tests/bikes-wasm.test.mjs`.
-  `wasm-parity.log`, `*-wasm.json`: both native/WASM hashes agree bit for bit, with actual two-wheel/six-part state.
-- `rch exec -- cargo clippy -p jj-sim -p jj-fixture -p jj-procgen -p jj-tools -p jj-wasm-host --all-targets --all-features --target aarch64-apple-darwin -- -D warnings` passes (`clippy.log`).
+  `wasm-parity.txt`, `*-wasm.json`: both native/WASM hashes agree bit for bit, with actual two-wheel/six-part state.
+- `rch exec -- cargo clippy -p jj-sim -p jj-fixture -p jj-procgen -p jj-tools -p jj-wasm-host --all-targets --all-features --target aarch64-apple-darwin -- -D warnings` passes (`clippy.txt`).
   `npx --prefix web tsc -p web/tsconfig.json --noEmit`, formatting and `git diff --check` pass.
-- `rch exec -- cargo test -p jj-sim --release --target aarch64-apple-darwin` passes in full (`sim-suite.log`),
+- `rch exec -- cargo test -p jj-sim --release --target aarch64-apple-darwin` passes in full (`sim-suite.txt`),
   including the car regression banks and nine derby tests with bike wheel-loss attribution.
 
 Native hashes: controls `4112317d00b7bdd10d2e7fe765d2757aa05f331505e469e6c4293d0a9a848abb`;

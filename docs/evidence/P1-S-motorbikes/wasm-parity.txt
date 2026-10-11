@@ -1,0 +1,10 @@
+✔ bike controls: native journal and WASM host agree bit for bit (221.382583ms)
+✔ bike damage: native journal and WASM host agree bit for bit (826.065542ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1116.106209

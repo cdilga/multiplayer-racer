@@ -1,0 +1,6 @@
+    Checking jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+    Checking jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+    Checking jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Checking jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Checking jj-tools v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.89s
