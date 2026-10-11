@@ -14,5 +14,6 @@ RFC 7065 defaults make `turn` without a transport query UDP, and `turns` without
 
 - `node --test web/shared/transport/tests/ice.test.mjs`: **1/1 pass**; checks both defaults, preserved non-default TCP/UDP, credentials, endpoints and immutable input.
 - `node --test --test-name-pattern=WebKit web/shared/transport/tests/transport.test.mjs`: **1/1 pass**, Mac WebKit controller → Chromium host, real jj-server, with coturn's UDP URL present. Both semantic channels open and input moves that controller's marker.
+- `node --test web/shared/transport/tests/`: **23/23 pass**, including coturn relay allocation, credential refresh, signalling recovery and the scripted Cloudflare fallback merge.
 
 This local join uses a direct loopback path with an unreachable TURN endpoint present; it proves configuration and gameplay exchange, not relay allocation. Full transport/portrait CI and the new deployed preview remain required before close. WebKit is not labelled Safari.

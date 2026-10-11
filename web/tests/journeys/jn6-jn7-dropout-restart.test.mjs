@@ -40,6 +40,8 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  // A Lobby newcomer dismisses Help before racing; a mid-race join gets prompts without opening the card.
+  if (await page.locator('[data-overlay=coach]').isVisible()) await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page, ep: (await page.evaluate(() => window.__jjController.inspect())).link.endpointId };
 }
 

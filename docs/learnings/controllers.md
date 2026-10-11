@@ -1,5 +1,15 @@
 # Controllers: traps
 
+## WebKit TURN URLs (br-gm11, 2026-10-11)
+
+- Playwright 1.62.1 WebKit on Linux and macOS rejects the configured `turn:…?transport=udp` at the peer constructor,
+  before ICE or signalling can run. Removing the redundant default query works: RFC 7065 already makes `turn` UDP and
+  `turns` TLS over TCP. `web/shared/transport/ice.ts` canonicalizes those two defaults for creation, refresh and fallback.
+- Never strip `?transport=tcp` from a `turn` URL: that would silently replace TCP with UDP. Non-default transports remain explicit.
+- A passing browser launch is insufficient evidence. Check a data-channel exchange and the real controller join; WebKit evidence is not Safari evidence.
+- A Lobby newcomer must dismiss the tutorial before a journey asserts manual driving or an idle takeover. Help is a menu and
+  intentionally hands the car to autopilot. Mid-race newcomers get in-world prompts, with no tutorial card to dismiss.
+
 ## Pads on a joined page (P1-C13, R119)
 
 - **Re-plug identity.** The Gamepad API has no serial number and keys pads by `gamepad.index`, so a different pad that lands on a
