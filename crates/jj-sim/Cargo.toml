@@ -11,6 +11,7 @@ repository.workspace = true
 [dependencies]
 jj-types.workspace = true
 jj-map.workspace = true
+jj-contracts.workspace = true
 rapier3d.workspace = true
 libm.workspace = true
 serde.workspace = true

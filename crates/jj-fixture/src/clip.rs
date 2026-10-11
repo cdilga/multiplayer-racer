@@ -404,6 +404,9 @@ fn apply(sim: &mut Sim, s: &Setup) {
         }
         Setup::CatchUp { mode } => sim.set_catch_up(jj_sim::assist::CatchUp::from_u8(*mode)),
         Setup::StartDerby { limit_ticks } => sim.start_derby(*limit_ticks),
+        Setup::PickupItem { car, seat, item } => {
+            let _ = sim.pickup_item(CarId(*car), *seat, *item);
+        }
     }
 }
 

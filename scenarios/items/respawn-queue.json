@@ -1,0 +1,61 @@
+{
+  "scenario": "item-respawn-queue",
+  "what": "P1-W01: Recover clears the two held items. Its spawn protection rejects an offensive pickup while allowing a sanga. The entire offer/recovery journal replays.",
+  "map": "maps/greybox-loop.json",
+  "seed": 17,
+  "ticks": 300,
+  "cars": [
+    {
+      "routePoint": 16
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 240,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    },
+    {
+      "tick": 241,
+      "car": 0,
+      "seat": 17,
+      "item": "boomerang"
+    },
+    {
+      "tick": 260,
+      "car": 0,
+      "seat": 17,
+      "item": "boomerang"
+    },
+    {
+      "tick": 261,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "recover": [
+    {
+      "tick": 260,
+      "car": 0
+    }
+  ],
+  "observe": [
+    242,
+    261,
+    262
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "recoveries",
+      "min": 1,
+      "max": 1
+    }
+  ]
+}

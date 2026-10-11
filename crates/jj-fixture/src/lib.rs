@@ -60,6 +60,9 @@ pub struct Fixture {
     /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
     #[serde(default)]
     pub debris: Vec<DebrisSpec>,
+    /// Scheduled item-box offers (P1-W01/W04); refused offers are journalled without consuming a box.
+    #[serde(default)]
+    pub pickups: Vec<PickupSpec>,
     /// Part health set at a tick (R90 "settable", P1-S04b): the damage state without a crash.
     #[serde(default)]
     pub damage: Vec<PartHealthSpec>,
@@ -92,6 +95,25 @@ pub struct Fixture {
     /// and the metrics that must come out different from the deliberate run's (§7.3a, P1-S03).
     #[serde(default)]
     pub baselines: Option<Baselines>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PickupSpec {
+    pub tick: u64,
+    pub car: u32,
+    pub seat: jj_types::SeatId,
+    pub item: jj_types::items::ItemId,
+}
+
+/// Every held queue and causal effect/event/refusal, shared by native fixtures and the host probe.
+pub fn items(sim: &Sim) -> Value {
+    json!({
+        "queues": sim.cars().map(|car| json!({ "car": car.0, "queue": sim.items().queue(car.0) })).collect::<Vec<_>>(),
+        "effects": sim.items().effects().collect::<Vec<_>>(),
+        "events": sim.items().events(),
+        "refusals": sim.item_refusals(),
+    })
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -578,6 +600,9 @@ impl Harness {
         for d in fx.debris.iter().filter(|d| d.tick == t) {
             sim.spawn_debris(d.pose.spawn(), d.half);
         }
+        for p in fx.pickups.iter().filter(|p| p.tick == t) {
+            let _ = sim.pickup_item(CarId(p.car), p.seat, p.item);
+        }
         for _ in fx.drop_in.iter().filter(|d| d.tick == t) {
             sim.drop_in();
         }
@@ -693,8 +718,12 @@ impl Harness {
 
     /// The full state now: cars (`jj_sim::observe`), debris footprints and the fixture's session.
     pub fn observe(&self, sim: &Sim) -> Value {
-        json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim),
-                "session": self.session.observe() })
+        let mut state = json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim),
+                "session": self.session.observe() });
+        if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+            state["items"] = items(sim);
+        }
+        state
     }
 
     /// Records the state after a tick (`end`: the last one); returns whether the `until` predicate holds.
@@ -718,14 +747,19 @@ impl Harness {
         let tick = sim.tick();
         self.check(tick, end);
         if end || self.fx.observe.contains(&tick) {
-            self.observations.push(
-                json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": self.session.observe() }),
-            );
+            let mut state = json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": self.session.observe() });
+            if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+                state["items"] = items(sim);
+            }
+            self.observations.push(state);
         }
         if self.trace_on {
             let events = self.events(sim);
-            self.trace
-                .push(json!({ "tick": tick, "cars": cars, "events": events }));
+            let mut row = json!({ "tick": tick, "cars": cars, "events": events });
+            if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+                row["items"] = items(sim);
+            }
+            self.trace.push(row);
         }
         self.fx.until.as_ref().is_some_and(|u| self.holds(u))
     }

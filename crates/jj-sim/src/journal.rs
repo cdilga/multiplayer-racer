@@ -145,6 +145,13 @@ pub enum Setup {
     StartDerby {
         limit_ticks: u64,
     },
+    /// An item box offered to this car (P1-W01/W04). A refusal leaves the box available.
+    /// Appended: existing setup variant indices and no-item journals keep their bytes.
+    PickupItem {
+        car: u32,
+        seat: jj_types::SeatId,
+        item: jj_types::items::ItemId,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

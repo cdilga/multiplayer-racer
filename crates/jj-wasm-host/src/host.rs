@@ -202,6 +202,8 @@ pub struct Host {
     seen_utility_events: usize,
     /// How many of the sim's damage events have become seat events (P1-S04a).
     seen_damage_events: usize,
+    seen_item_events: usize,
+    sent_inventory: BTreeMap<SeatId, jj_protocol::items::Inventory>,
     /// The seats' clock: every step, never reset. The sim's tick restarts at 0 with each round's new world, and the
     /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
     /// after every round start (owner playtest 1, br-gw74.1).
@@ -335,6 +337,8 @@ impl Host {
             seen_race_events: 0,
             seen_utility_events: 0,
             seen_damage_events: 0,
+            seen_item_events: 0,
+            sent_inventory: BTreeMap::new(),
             session_tick: 0,
             vehicles: vec![("cruz-missile".into(), VehicleProfile::cruz())],
             tuning_vehicle: 0,
@@ -754,6 +758,7 @@ impl Host {
         self.collect_race_events();
         self.collect_utility_events();
         self.collect_damage_events();
+        self.collect_items();
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
@@ -1111,6 +1116,8 @@ impl Host {
                 kind,
                 ..
             } => {
+                let action_seat = self.seats.input_seat(conn, source);
+                let mut outcome = None;
                 if let Some(input) = self
                     .seats
                     .input_seat(conn, source)
@@ -1128,13 +1135,20 @@ impl Host {
                                 self.sim.wheelie(car, preload_ms);
                             }
                             ActionKind::UtilityForward => {
-                                self.sim.utility(car, UtilityKind::Forward);
+                                outcome = Some(self.utility_outcome(car, UtilityKind::Forward));
                             }
                             ActionKind::UtilityRear => {
-                                self.sim.utility(car, UtilityKind::Rear);
+                                outcome = Some(self.utility_outcome(car, UtilityKind::Rear));
                             }
                         }
                     }
+                }
+                if let (Some(seat), Some(outcome)) = (action_seat, outcome) {
+                    self.out.push(SimToMain::Outbound {
+                        endpoint: endpoint.clone(),
+                        channel: Channel::Cmd,
+                        bytes: self.seat_cmd(seat, HostCmd::ActionResult { action, outcome }),
+                    });
                 }
                 vec![]
             }
@@ -1193,6 +1207,7 @@ impl Host {
                     .iter()
                     .find(|(_, c)| **c == conn)
                     .map_or(Origin::Net(conn), |(&l, _)| Origin::Local(l));
+                self.sent_inventory.remove(&seat);
                 let tuned = self.input_profile.resolve();
                 self.inputs.entry(seat).or_insert_with(|| SeatInput {
                     state: SourceState::with_profile(source, tuned),
@@ -1676,6 +1691,7 @@ impl Writer<'_> {
     }
 }
 
+mod items;
 mod prompts;
 mod round;
 

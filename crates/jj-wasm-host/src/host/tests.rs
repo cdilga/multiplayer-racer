@@ -1235,6 +1235,167 @@ fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the
 }
 
 #[test]
+fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
+    use jj_protocol::cmd::{ActionOutcome, ActionRejection};
+    use jj_protocol::items::{Inventory, ItemEventKind, ItemId, ItemUseRefusal};
+    let mut h = Host::new(&init()).unwrap();
+    let send = |h: &mut Host, cmd: ControllerCmd| {
+        h.handle(&net("hub-items", Channel::Cmd, cmd.encode()))
+            .unwrap();
+    };
+    let wrapped = |source, cmd| ControllerCmd::ForSource {
+        source: SourceHandle(source),
+        cmd: Box::new(cmd),
+    };
+    send(
+        &mut h,
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("hub-items".into()),
+            resume: None,
+        },
+    );
+    for source in [7, 9] {
+        send(
+            &mut h,
+            wrapped(
+                source,
+                ControllerCmd::Claim {
+                    request: RequestId(source.into()),
+                    name: format!("Pad {source}"),
+                },
+            ),
+        );
+    }
+    h.step_one();
+    for source in [7, 9] {
+        send(&mut h, wrapped(source, ControllerCmd::Ready { on: true }));
+    }
+    for _ in 0..1200 {
+        h.step_one();
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    for _ in 0..240 {
+        h.step_one();
+    }
+    let seat = h
+        .seats
+        .seats()
+        .find(|s| s.source == SourceHandle(7))
+        .unwrap()
+        .id;
+    let car = h.inputs[&seat].car.unwrap();
+    assert!(!h.sim.is_protected(car));
+    while h.next_message().is_some() {}
+    h.sim.pickup_item(car, seat, ItemId::Sanga).unwrap();
+    h.sim.pickup_item(car, seat, ItemId::Boomerang).unwrap();
+    assert_eq!(
+        h.sim.pickup_item(car, seat, ItemId::Sanga),
+        Err(jj_sim::items::PickupRefusal::Full)
+    );
+    h.step_one();
+    let drain = |h: &mut Host| {
+        let mut cmds = Vec::new();
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                channel: Channel::Cmd,
+                bytes,
+                endpoint,
+            } = m
+                && let Ok(HostCmd::ForSource { source, cmd }) = HostCmd::decode(&bytes)
+            {
+                assert_eq!(endpoint.0, "hub-items");
+                cmds.push((source, *cmd));
+            }
+        }
+        cmds
+    };
+    let picked = drain(&mut h);
+    let held = Inventory {
+        front: Some(ItemId::Sanga),
+        back: Some(ItemId::Boomerang),
+    };
+    assert!(
+        picked
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7) && *cmd == HostCmd::Inventory(held))
+    );
+    let events = picked
+        .iter()
+        .filter_map(|(source, cmd)| match cmd {
+            HostCmd::ItemEvent(e) => {
+                assert_eq!(*source, SourceHandle(7));
+                assert_eq!(e.owner, seat);
+                Some(*e)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        events.len(),
+        2,
+        "a refused third box creates no pickup event"
+    );
+    assert_eq!(
+        (events[0].item, events[1].item),
+        (ItemId::Sanga, ItemId::Boomerang)
+    );
+    assert!(events.iter().all(|e| e.kind == ItemEventKind::Picked));
+    let action = wrapped(
+        7,
+        ControllerCmd::Action {
+            action: ActionId(50),
+            source: SourceHandle(7),
+            kind: ActionKind::UtilityRear,
+            round: jj_types::RoundId(0),
+            life: jj_types::LifeId(0),
+            at_source_seq: 1,
+        },
+    );
+    send(&mut h, action.clone());
+    h.step_one();
+    let refused = drain(&mut h);
+    assert!(
+        refused
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7)
+                && *cmd
+                    == HostCmd::ActionResult {
+                        action: ActionId(50),
+                        outcome: ActionOutcome::Rejected {
+                            reason: ActionRejection::Item {
+                                reason: ItemUseRefusal::Unavailable
+                            },
+                        },
+                    })
+    );
+    assert_eq!(h.inventory_for(seat), held);
+    assert!(
+        h.sim.utility_events().is_empty(),
+        "no cone is substituted for the held item"
+    );
+    send(&mut h, action);
+    h.step_one();
+    assert_eq!(
+        h.sim.item_refusals().len(),
+        1,
+        "resent action is not applied twice"
+    );
+    assert!(h.sim.end_race_now());
+    h.step_one();
+    assert!(
+        drain(&mut h)
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7)
+                && *cmd == HostCmd::Inventory(Inventory::default()))
+    );
+}
+
+#[test]
 fn a_reloaded_controller_says_hello_again_and_gets_its_seat_back() {
     // P1-C03/G04: a reload or a rebuilt link is a new connection, so its Hello must be answered with the same seat.
     let hello = || {

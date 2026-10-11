@@ -231,6 +231,9 @@ pub struct Sim {
     ledger: f64,
     /// Accepted ACTION utilities, with the tick they fired at (P1-S08).
     utility_events: Vec<(u64, UtilityEvent)>,
+    item_cards: crate::items::Cards,
+    items: crate::items::Items,
+    item_refusals: Vec<(u64, u32, jj_types::items::ItemUseRefusal)>,
     /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
     episodes: Episodes,
     damage_events: Vec<(u64, DamageEvent)>,
@@ -423,6 +426,9 @@ impl Sim {
             part_phys: phys,
             ledger: 0.0,
             utility_events: Vec::new(),
+            item_cards: crate::items::Cards::shipped().expect("shipped item cards validate"),
+            items: crate::items::Items::default(),
+            item_refusals: Vec::new(),
             props,
             statics,
             episodes: Episodes::default(),
@@ -564,6 +570,82 @@ impl Sim {
         self.prop_kinds.push(PropKind::Debris);
     }
 
+    /// Journal an actual box offer. Only success tells the station to consume it (P1-W01/W04).
+    pub fn pickup_item(
+        &mut self,
+        car: CarId,
+        seat: jj_types::SeatId,
+        item: jj_types::items::ItemId,
+    ) -> Result<(), crate::items::PickupRefusal> {
+        self.journal.setup.push((
+            self.tick,
+            Setup::PickupItem {
+                car: car.0,
+                seat,
+                item,
+            },
+        ));
+        let ctx = self
+            .item_context(car, seat)
+            .ok_or(crate::items::PickupRefusal::Unavailable)?;
+        self.items
+            .pickup(&self.item_cards, car.0, item, ctx, self.tick)
+    }
+
+    pub fn items(&self) -> &crate::items::Items {
+        &self.items
+    }
+
+    pub fn item_refusals(&self) -> &[(u64, u32, jj_types::items::ItemUseRefusal)] {
+        &self.item_refusals
+    }
+
+    fn item_context(&self, car: CarId, seat: jj_types::SeatId) -> Option<crate::items::Context> {
+        let c = self.cars.get(car.0 as usize)?;
+        Some(crate::items::Context {
+            owner: crate::items::Owner {
+                seat,
+                life: jj_types::LifeId(c.life),
+            },
+            mode: if self.derby.is_some() {
+                jj_contracts::item::Mode::Derby
+            } else {
+                jj_contracts::item::Mode::Race
+            },
+            racing: self.race.started_at.is_some()
+                && self.race.over.is_none()
+                && !self.race.is_held(car.0, self.tick)
+                && !self.race.is_finished(car.0),
+            protected: c.protected_since.is_some(),
+        })
+    }
+
+    fn use_held_item(&mut self, car: CarId, direction: UtilityKind) -> bool {
+        use jj_types::items::ItemUseRefusal;
+        let ctx = self
+            .items
+            .owner_seat(car.0)
+            .and_then(|seat| self.item_context(car, seat));
+        let result = match ctx {
+            Some(ctx) => {
+                self.items
+                    .use_front(&self.item_cards, car.0, ctx, direction, self.tick, |_| {
+                        // W02/W03 supply physical activation. Until one exists, keep the held item and
+                        // report Unavailable; an abstract ledger record must not pretend to be a weapon/buff.
+                        Err(ItemUseRefusal::Unavailable)
+                    })
+            }
+            None => Err(ItemUseRefusal::Unavailable),
+        };
+        match result {
+            Ok(_) => true,
+            Err(reason) => {
+                self.item_refusals.push((self.tick, car.0, reason));
+                false
+            }
+        }
+    }
+
     /// An ACTION utility (P1-S08, a journaled command): jj-input's deliberate up or down sector entry. Up fires the
     /// "OI!" flash (an event for the host's cue); down drops a traffic cone [`rules::CONE_BEHIND_M`] behind the rear
     /// bumper, at rest, a light dynamic prop that stays for the round (R58). Refused (false) while that utility's
@@ -572,6 +654,9 @@ impl Sim {
         self.journal
             .setup
             .push((self.tick, Setup::Utility { car: car.0, kind }));
+        if self.items.queue(car.0).front.is_some() {
+            return self.use_held_item(car, kind);
+        }
         let held = self.race.is_held(car.0, self.tick) || self.race.is_finished(car.0);
         let tick = self.tick;
         let rear_z = self
@@ -907,7 +992,11 @@ impl Sim {
     /// surface can finish a round on demand). Returns whether it ended.
     pub fn end_race_now(&mut self) -> bool {
         self.journal.setup.push((self.tick, Setup::EndRace));
-        self.race.end_now(self.tick)
+        let ended = self.race.end_now(self.tick);
+        if ended {
+            self.items.round_end(self.tick);
+        }
+        ended
     }
 
     /// A player's Recover button (a journaled command). Returns whether it was accepted: after 1 s under 3 m/s, or when
@@ -1038,6 +1127,7 @@ impl Sim {
     fn apply(&mut self, effect: Effect) {
         match effect {
             Effect::Respawn { car, pose, why } => {
+                self.items.respawn(car);
                 if matches!(
                     why,
                     Respawned::OutOfBounds | Respawned::FlipWreck | Respawned::WheelLoss
@@ -1589,6 +1679,10 @@ impl Sim {
         self.check_wheel_wrecks();
         self.settle_protection();
         self.update_derby();
+        self.items.expire(self.tick);
+        if self.race.over.is_some() || self.derby.as_ref().is_some_and(|d| d.over(self.tick)) {
+            self.items.round_end(self.tick);
+        }
     }
 
     /// Feeds the derby ledger this tick's control modes, protection and damage events (P1-S10).
@@ -2387,6 +2481,9 @@ impl Sim {
             }
         }
         h.update(&race);
+        let mut items = Vec::new();
+        self.items.hash_into(&mut items);
+        h.update(&items);
         // R125: assist state is hashed only where an assist or catch-up is on, so sims without them keep their hashes.
         let mut assist = Vec::new();
         for (id, c) in self.cars.iter().enumerate() {
@@ -2500,6 +2597,9 @@ impl Sim {
                     }
                     Setup::CatchUp { mode } => sim.set_catch_up(CatchUp::from_u8(*mode)),
                     Setup::StartDerby { limit_ticks } => sim.start_derby(*limit_ticks),
+                    Setup::PickupItem { car, seat, item } => {
+                        let _ = sim.pickup_item(CarId(*car), *seat, *item);
+                    }
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {

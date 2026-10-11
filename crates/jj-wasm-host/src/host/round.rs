@@ -254,6 +254,8 @@ impl Host {
         self.seen_race_events = 0;
         self.seen_utility_events = 0;
         self.seen_damage_events = 0;
+        self.seen_item_events = 0;
+        self.sent_inventory.clear();
     }
 
     /// A seat got a car from the seat reducer (claimed, or back from sitting out): it drives now in free drive or a
@@ -451,6 +453,7 @@ impl Host {
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
                     "assist": self.inputs.get(&s.id).map_or(0, |i| i.assist.as_u8()),
+                    "inventory": self.inventory_for(s.id),
                     "prompt": self.inputs.get(&s.id).filter(|i| i.prompt.showing()).map(|i| serde_json::json!({ "step": i.prompt.step, "of": super::prompts::STEPS.len(), "done": i.prompt.done() })),
                 })
             })
