@@ -195,6 +195,45 @@ describe('hello room over loopback WebRTC', () => {
     }
   });
 
+  test('an answer still applying past the watchdog is not interrupted by recovery', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    try {
+      await ctx.addInitScript(() => {
+        const apply = RTCPeerConnection.prototype.setRemoteDescription;
+        const state = Object.getOwnPropertyDescriptor(RTCPeerConnection.prototype, 'connectionState');
+        let release;
+        const held = new Promise(resolve => { release = resolve; });
+        window.__releaseAnswer = release;
+        Object.defineProperty(RTCPeerConnection.prototype, 'connectionState', {
+          get() { return window.__answerApplying ? 'connecting' : state.get.call(this); },
+        });
+        RTCPeerConnection.prototype.setRemoteDescription = async function(description) {
+          await apply.call(this, description);
+          if (description.type === 'answer') {
+            window.__answerApplying = true;
+            await held;
+            window.__answerApplying = false;
+          }
+        };
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__answerApplying);
+      const initial = await page.evaluate(() => window.__jjHello.link());
+      await page.waitForTimeout(9000);
+      const pending = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(pending.gen, initial.gen, 'native answer application keeps its original generation');
+      assert.equal(pending.restarts, 0);
+      assert.equal(pending.rebuilds, 0);
+      await page.evaluate(() => window.__releaseAnswer());
+      await until(page, () => window.__jjHello.link().state === 'connected', undefined, 5000);
+      await moveAndSee(host, { page, link: () => page.evaluate(() => window.__jjHello.link()) }, 0.2, -0.4);
+    } finally {
+      await ctx.close(); await host.ctx.close();
+    }
+  });
+
   test('a lost initial offer recovers on the same endpoint without a test retry', { timeout: 30_000 }, async () => {
     const host = await startHost(origin);
     const ctx = await browser.newContext();

@@ -14,3 +14,25 @@ Validation:
 - Web typecheck and diff whitespace check pass.
 
 No physical phone/Safari or deployed-preview claim. The slow-host churn proves eventual joins under deliberate throttling; it does not claim a three-second join on an 8× throttled software renderer.
+
+## Follow-up: native answer application (2026-10-12)
+
+CI 3475 JN5 still saw two restarts/rebuilds while joining Gazza on a heavily loaded host. A distinct race remained:
+`remoteDescription` can be visible while `setRemoteDescription(answer)` is still pending. The watchdog then mistook
+that intermediate state for a completed answer and advanced the generation. The controlled real-WebRTC regression
+holds the answer promise after native application and keeps the exposed connection state connecting for 9 seconds;
+before the fix it fails because the generation changed. This deliberately injected timing is not a physical device
+measurement.
+
+Track answer application explicitly, defer recovery during it, cancel the old watchdog, and re-arm connection
+recovery after application and early candidates finish. `inspect().applyingAnswer` exposes that state. The new
+regression passes on the original generation and exchanges input afterwards. The full transport file passes
+15 tests, including relay loss/fallback and existing failure recovery. Web typecheck passes. Final 8× CPU-throttled
+JN5 passes all phases, 12 seats down to 2, in 401.928 seconds, without wider timeouts; drop-in claim-to-driving samples
+are 3738/4555/7444/8385/5114 ms on this software-rendered deliberately slowed host. Final same-seat hidden/offline
+resume is 286 ms within the unchanged 3-second envelope. Green CI remains required before closure.
+
+CI 3475 JN3 completed its button click but timed out while Playwright waited for scheduled navigation. A local
+software-rendered repeat passes the full two-round journey in 135.17 seconds. No button bypass or wider acceptance
+timeout was added. A simultaneous native-GPU-mode run exceeded the 150 ms Identify budget on this Mac; this is
+not evidence that the GPU latency gate passed. The actual GPU CI lane passed at the previous committed source.

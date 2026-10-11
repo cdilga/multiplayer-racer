@@ -1,0 +1,22 @@
+# Lobby: three phones and both key clusters
+# Ready: the round starts
+# Countdown: a phone joins and is on the grid
+# Running: five phones drop in, each timed claim → driving
+# Running: Macca claims and drives
+# Running: Robbo claims and drives
+# Running: Gazza claims and drives
+# Running: Thommo claims and drives
+# Running: Jonesy claims and drives
+# drop-in claim → driving: [{"name":"Macca","ms":3738},{"name":"Robbo","ms":4555},{"name":"Gazza","ms":7444},{"name":"Thommo","ms":8385},{"name":"Jonesy","ms":5114}] p95 8385 ms
+# Running: two phones leave, a key cluster sits out
+# Intermission: results and standings
+# Intermission and Lobby: shrink to 2
+✔ JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2 (401927.891042ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 402652.493334

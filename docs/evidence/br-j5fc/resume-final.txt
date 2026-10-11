@@ -1,0 +1,10 @@
+# back to the same seat 286 ms after the page was shown (30 s hidden, network cut)
+✔ the page hidden for 30 s with its network cut, then shown: the same seat within 3 s (32756.953125ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33597.540708

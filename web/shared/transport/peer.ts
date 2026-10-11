@@ -96,6 +96,8 @@ export class ControllerLink {
   private recoveryTimer: ReturnType<typeof setTimeout> | undefined;
   private ended = false;
   private signals: Promise<void> = Promise.resolve();
+  /** The browser may expose remoteDescription before its native answer promise settles. */
+  private applyingAnswer: RTCPeerConnection | null = null;
   private early: RTCIceCandidateInit[] = [];
   /** Cloudflare TURN entries, only after a trigger fired (R92); merged into every later configuration. */
   private fallbackServers: IceServer[] = [];
@@ -321,6 +323,7 @@ export class ControllerLink {
     const pc = this.pc;
     if (!pc || this.ended) return;
     if (this.healthy(pc)) return void (this.recoveryTimer = undefined);
+    if (this.applyingAnswer === pc) return;
     // A closed connection or channel can't be restarted: straight to a new connection.
     if (this.dead(pc)) return this.rebuild();
     // A slow host can take longer than the watchdog to answer. Replacing the still-unanswered generation
@@ -376,10 +379,26 @@ export class ControllerLink {
     }
     if (m.gen !== this.gen) return; // a late message for an old negotiation
     if (m.kind === 'answer') {
-      if (pc.signalingState === 'have-local-offer')
+      if (pc.signalingState !== 'have-local-offer') return;
+      this.applyingAnswer = pc;
+      clearTimeout(this.recoveryTimer);
+      this.recoveryTimer = undefined;
+      try {
         await pc.setRemoteDescription({ type: 'answer', sdp: m.payload }).catch(() => undefined);
-      // Candidates that beat the answer here (separate POSTs) apply now.
-      for (const c of this.early.splice(0)) await pc.addIceCandidate(c).catch(() => undefined);
+        // Candidates that beat the answer here (separate POSTs) apply now.
+        for (const c of this.early.splice(0)) await pc.addIceCandidate(c).catch(() => undefined);
+      } finally {
+        if (this.applyingAnswer === pc) this.applyingAnswer = null;
+        if (this.pc === pc && !this.ended) {
+          this.watch(pc);
+          if (!this.healthy(pc) && this.recoveryTimer === undefined) {
+            this.recoveryTimer = setTimeout(() => {
+              this.recoveryTimer = undefined;
+              if (this.pc === pc && !this.healthy(pc) && !this.ended) void this.recover();
+            }, CONNECT_AFTER_MS);
+          }
+        }
+      }
     } else if (m.kind === 'candidate') {
       const c = JSON.parse(m.payload) as RTCIceCandidateInit;
       if (!pc.remoteDescription || pc.signalingState === 'have-local-offer') this.early.push(c);
@@ -412,6 +431,7 @@ export class ControllerLink {
       pc: this.pc?.connectionState ?? null,
       ice: this.pc?.iceConnectionState ?? null,
       signaling: this.pc?.signalingState ?? null,
+      applyingAnswer: this.applyingAnswer === this.pc && this.pc !== null,
       early: this.early.length,
       sse: this.stream?.state ?? 'closed',
       sseReconnects: this.stream?.reconnects ?? 0,
