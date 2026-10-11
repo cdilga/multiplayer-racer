@@ -63,6 +63,27 @@ impl RouteGeom {
 
     pub fn nearest(&self, x: f64, z: f64) -> Near {
         let n = self.pts.len();
+        // Seed an upper bound with the projection closest in max-coordinate distance. This cheap
+        // pass avoids evaluating software hypot for every successively closer segment on a long
+        // route. The bound is an actual candidate's hypot, not an approximation to the answer.
+        let mut closest = (f64::INFINITY, f64::INFINITY);
+        let mut closest_max = f64::INFINITY;
+        for i in 0..self.segs() {
+            let (a, b) = (self.pts[i], self.pts[(i + 1) % n]);
+            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+            let len2 = dx * dx + dz * dz;
+            if len2 == 0.0 {
+                continue;
+            }
+            let t = (((x - a.0) * dx + (z - a.1) * dz) / len2).clamp(0.0, 1.0);
+            let delta = (x - (a.0 + t * dx), z - (a.1 + t * dz));
+            let max = delta.0.abs().max(delta.1.abs());
+            if max < closest_max {
+                closest_max = max;
+                closest = delta;
+            }
+        }
+        let mut bound = closest.0.hypot(closest.1);
         let mut best = Near {
             s: 0.0,
             lateral: f64::INFINITY,
@@ -81,12 +102,13 @@ impl RouteGeom {
             // Either coordinate alone is a lower bound on the Euclidean distance. Keep the exact hypot
             // comparison (and its first-segment tie break) for every candidate that can still win; distant
             // projections need no software hypot/FMA in WASM.
-            if (x - px).abs() > best_d || (z - pz).abs() > best_d {
+            if (x - px).abs() > bound || (z - pz).abs() > bound {
                 continue;
             }
             let d = (x - px).hypot(z - pz);
             if d < best_d {
                 best_d = d;
+                bound = bound.min(d);
                 let len = len2.sqrt();
                 let (tx, tz) = (dx / len, dz / len);
                 let lateral = (x - px) * -tz + (z - pz) * tx;
@@ -195,6 +217,91 @@ pub fn footprint_points(fp: &Footprint, pose: &Pose) -> Vec<(f64, f64)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Original exhaustive implementation: a regression oracle for ordering and IEEE rounding.
+    fn exhaustive(g: &RouteGeom, x: f64, z: f64) -> Near {
+        let n = g.pts.len();
+        let mut best = Near {
+            s: 0.0,
+            lateral: f64::INFINITY,
+            half: 0.0,
+        };
+        let mut best_d = f64::INFINITY;
+        for i in 0..g.segs() {
+            let (a, b) = (g.pts[i], g.pts[(i + 1) % n]);
+            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+            let len2 = dx * dx + dz * dz;
+            if len2 == 0.0 {
+                continue;
+            }
+            let t = (((x - a.0) * dx + (z - a.1) * dz) / len2).clamp(0.0, 1.0);
+            let (px, pz) = (a.0 + t * dx, a.1 + t * dz);
+            let d = (x - px).hypot(z - pz);
+            if d < best_d {
+                best_d = d;
+                let len = len2.sqrt();
+                let (tx, tz) = (dx / len, dz / len);
+                best = Near {
+                    s: g.s[i] + t * len,
+                    lateral: (x - px) * -tz + (z - pz) * tx,
+                    half: g.half[i] + t * (g.half[(i + 1) % n] - g.half[i]),
+                };
+            }
+        }
+        best
+    }
+
+    #[test]
+    fn nearest_bound_matches_exhaustive_bits_across_generated_routes() {
+        for seed in 0..16 {
+            let points = (0..129)
+                .map(|i| {
+                    let a = i as f64 * 0.05;
+                    let radius = 10_000.0 + ((i * 37 + seed * 91) % 1000) as f64;
+                    (radius * a.cos(), radius * a.sin())
+                })
+                .collect::<Vec<_>>();
+            for closed in [false, true] {
+                let mut s = vec![0.0];
+                let count = if closed {
+                    points.len()
+                } else {
+                    points.len() - 1
+                };
+                for i in 0..count {
+                    let (a, b) = (points[i], points[(i + 1) % points.len()]);
+                    s.push(s[i] + (b.0 - a.0).hypot(b.1 - a.1));
+                }
+                let g = RouteGeom {
+                    half: (0..points.len()).map(|i| 2000.0 + i as f64).collect(),
+                    pts: points.clone(),
+                    total: *s.last().unwrap(),
+                    s,
+                    closed,
+                };
+                for x in -10..=10 {
+                    for z in -10..=10 {
+                        let (x, z) = (x as f64 * 1273.125, z as f64 * 1719.75);
+                        let actual = g.nearest(x, z);
+                        let expected = exhaustive(&g, x, z);
+                        assert_eq!(
+                            [
+                                actual.s.to_bits(),
+                                actual.lateral.to_bits(),
+                                actual.half.to_bits()
+                            ],
+                            [
+                                expected.s.to_bits(),
+                                expected.lateral.to_bits(),
+                                expected.half.to_bits()
+                            ],
+                            "seed {seed}, closed {closed}, ({x}, {z})"
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn nearest_keeps_equal_distance_order_and_interpolated_widths() {

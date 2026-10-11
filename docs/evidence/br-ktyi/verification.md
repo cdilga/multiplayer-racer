@@ -30,3 +30,47 @@ Opportunity score: impact 5 × confidence 5 / effort 1 = 25. Before evaluating `
 The timed region is `prepare` in both Mac banks; module initialization is outside it. The candidate uses synchronous initialization because the asynchronous Node loader stalled before reaching WASM (not a generator time). The initial unoptimized probe is excluded from the comparison.
 
 Rollback is a normal revert of the geometry optimization commit. No tuning or budget changes are needed.
+
+## Second bound after CI 3309
+
+CI [3309](http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/3309)
+still exceeded the unchanged budget: worst **1795 ms**, mean **416 ms**. The prior improvement
+was real but insufficient for this runner. The bead therefore remains open until green CI.
+
+The candidate release profile still attributed 5.045 of 6.561 seconds to `RouteGeom::nearest`,
+including 3.860 seconds in software FMA. Opportunity score: impact 5 × confidence 5 / effort 2 =
+12.5. Seed a distance upper bound from an actual projected point: a cheap first pass chooses the
+projection with the smallest maximum coordinate distance, then computes its original `hypot`.
+The original ordered pass can reject distant projections immediately, instead of running `hypot`
+for each successively closer segment.
+
+- Ordering is preserved: the answer is selected only in the original segment order.
+- Tie-breaking is unchanged: the first strictly smaller original `hypot` wins; bound rejection
+  uses strict `>` on coordinate lower bounds, retaining ties.
+- Projection arithmetic, candidate `hypot`, winning geometry, RNG and validator checks are unchanged.
+- The bound comes from an actual candidate, so any projection rejected by it cannot beat that
+  candidate or the best result already found. The bound only shrinks.
+
+Fresh Mac release WASM banks (same machine/Node as above, other work running, CPU profiler enabled):
+before mean **632.8 ms**, p50 **472.0 ms**, p95 **1624.1 ms**, max **2855.0 ms**; after mean
+**367.2 ms**, p50 **314.9 ms**, p95 **1003.5 ms**, max **1365.6 ms**. These are shared-machine
+measurements, not hardware qualification. `bound-before.jsonl` and `bound-after.jsonl` retain every
+row: all 24 canonical SHA-256 hashes, validity and fallback choices match exactly.
+
+The fresh profiles attribute 12.196 seconds before and 5.942 seconds after to `nearest`; software
+FMA self time falls from 9.326 to 0.944 seconds. The additional geometry oracle compares every
+returned field's bits against the original exhaustive implementation over 16 generated routes,
+both open and closed, and 441 query points per route. Both geometry tests pass on eris.
+
+`RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --config profile.dev.opt-level=1 --config
+profile.test.opt-level=1 --locked --target wasm32-unknown-unknown -p jj-map -p jj-procgen --test
+wasm_parity`: **5/5 pass on eris**, including the unchanged 24-seed budget and original goldens.
+Both profiles are explicitly configured in the Cargo arguments, matching CI. An earlier
+continuation used environment variables outside RCH; those were not forwarded, so its worst
+1985 ms before / 1693 ms after are **unoptimized** measurements, not opt-level-1 evidence.
+
+The broad native `jj-map`/`jj-procgen` run at explicit opt level 1 on eris also passes:
+**88 tests, 1 ignored across 24 suites**. The seed/recipe/arena goldens and biome, handling and
+autopilot banks remain intact. Log: `/tmp/jj-procgen-bound-native.log`, 09:42–09:48 UTC.
+
+Rollback remains a normal revert of the second geometry optimization commit.
