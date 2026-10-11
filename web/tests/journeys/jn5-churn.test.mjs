@@ -80,7 +80,7 @@ async function stateOf(page) {
   );
   const hostSide =
     hostPage && hostPage !== page
-      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: window.__jjRender.stats(), preparation: window.__jjProcgen?.seeds?.() })))
+      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: window.__jjRender.stats(), preparation: window.__jjPrepare?.seeds?.() })))
       : null;
   return JSON.stringify({ own, host: hostSide, contexts: browser.contexts().length });
 }
