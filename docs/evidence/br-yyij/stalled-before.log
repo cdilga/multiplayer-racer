@@ -1,0 +1,26 @@
+# before/after wheel grace {"tickBefore":6226,"tickAfter":7921,"race":{"anchorRoutePoint":null,"assisting":false,"finishedAt":null,"gatesPassed":0,"ghost":false,"held":false,"laps":0,"late":false,"progressM":0,"protected":false,"recoveries":0,"wrecks":1}}
+✖ A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo (66551.388375ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67596.560375
+
+✖ failing tests:
+
+test at web/host/tests/.a05-wreck-before.mjs:278:1
+✖ A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo (66551.388375ms)
+  AssertionError [ERR_ASSERTION]: the wrecked car's engine stopped: [{"at":41802,"kind":"engine","car":6,"profile":"cruz-missile","boostLayer":false,"reason":"car-seen"},{"at":41802,"kind":"engine","car":6,"ignition":true,"reason":"engine-on"},{"at":42605,"kind":"engine","car":7,"profile":"cruz-missile","boostLayer":false,"reason":"car-seen"},{"at":42605,"kind":"engine","car":7,"ignition":true,"reason":"engine-on"}]
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/host/tests/.a05-wreck-before.mjs:317:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

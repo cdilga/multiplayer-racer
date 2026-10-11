@@ -1,0 +1,10 @@
+# held clock ticks {"before":2325,"after":2575}
+✔ A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo (40203.600791ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41016.959791
