@@ -43,7 +43,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     container:
-      image: jj-ci:7ddd7e900c71
+      image: jj-ci:6df24842ee3e
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
   rust-lint:
     runs-on: rust
     container:
-      image: jj-ci:7ddd7e900c71
+      image: jj-ci:6df24842ee3e
     timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers
@@ -79,7 +79,7 @@ jobs:
   rust-test:
     runs-on: rust
     container:
-      image: jj-ci:7ddd7e900c71
+      image: jj-ci:6df24842ee3e
     timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers-o1
@@ -101,7 +101,7 @@ jobs:
   build:
     runs-on: rust
     container:
-      image: jj-ci:7ddd7e900c71
+      image: jj-ci:6df24842ee3e
     timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
@@ -119,7 +119,7 @@ jobs:
   browser:
     runs-on: browser
     container:
-      image: jj-ci:7ddd7e900c71
+      image: jj-ci:6df24842ee3e
       options: --shm-size=2g
     timeout-minutes: 40
     strategy:

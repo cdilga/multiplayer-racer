@@ -27,6 +27,9 @@ added), so a Rust job sometimes takes a browser slot. At most four pages render 
 
 ## The CI job image (`jj-ci:<hash>`)
 
+The current image uses Ubuntu 24.04: WebKit's libsoup3 matches the system GStreamer/WebRTC plugins. Ubuntu 22.04's
+libsoup2 plugin dependency aborts WebKit at launch. Both runner hosts have `jj-ci:6df24842ee3e` (2026-10-11).
+
 `scripts/ci/ci-image.Dockerfile` adds what every job used to install per job: node (`.nvmrc`), Playwright's Chromium
 headless shell, WebKit **and their system libraries** (the `--with-deps` apt step took 10 minutes a job on TrueNAS), coturn,
 git-lfs, zstd, wasm-bindgen and cargo-nextest. The tag is the Dockerfile's hash, and the image is **built locally on each

@@ -5,7 +5,9 @@
 # What lives here: node (.nvmrc), Playwright's Chromium headless shell, WebKit and their libraries, coturn, git-lfs, zstd,
 # wasm-bindgen, cargo-nextest. What doesn't: the Rust toolchain and cargo/npm caches, which stay on the runner's
 # persistent /cargo-cache volume (they change with every rust-toolchain.toml or lockfile bump).
-FROM catthehacker/ubuntu:act-22.04@sha256:3cdab37904fc1798c460f1fadd47fd2c4d24fa2f292d1b57fc12eff072b415ec
+# Ubuntu 24 keeps WebKit's libsoup3 and the system GStreamer/WebRTC plugins on the same ABI.
+# Ubuntu 22's libgstwebrtc pulls libsoup2 into the browser and aborts before any journey can run.
+FROM catthehacker/ubuntu:act-24.04@sha256:4f2d5083a9d10d018c1c511eb8665cd480553c11975e78fd903a46daa830768b
 
 ARG NODE_VERSION=26.10.0
 ARG PLAYWRIGHT_VERSION=1.62.1
