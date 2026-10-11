@@ -37,6 +37,7 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page };
 }
 
@@ -73,8 +74,9 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
   await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
     const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
-    const view = await host.evaluate(() => ({ phase: window.__jjRoom.view().phase, stats: window.__jjNet?.stats?.() }));
-    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}: ${e.message}`);
+    const view = await host.evaluate(async () => ({ room: window.__jjRoom.view(), observed: await window.__jjTest.observe() }));
+    const controller = await a.page.evaluate(() => ({ state: window.__jjController.inspect(), tutorial: window.__jjTutorial.inspect() }));
+    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}, controller ${JSON.stringify(controller)}: ${e.message}`);
   });
   await shot(a.page, 'phone-idle-cue');
   await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);
