@@ -110,6 +110,37 @@ for (const [vpName, vp] of [['1080p', VP['1080p']], ['21x9', VP['21x9']], ['phon
   });
 }
 
+test('results: countdown labels keep the Start button stationary; captions leave every placing and action visible', async () => {
+  for (const vp of [[1280,720],[375,667],[412,915],[915,412]]) {
+    const page=await open('results-2',vp);
+    try {
+      await page.evaluate(() => document.fonts.ready);
+      const bounds=await page.evaluate(async () => {
+        const out=[];
+        for(const seconds of [60,59,58,57,56,55,54,53,52,51,50,10,9,1]) {
+          const room=window.__jjRoundFixture.make('results',2); room.remainingMs=seconds*1000;
+          window.__jjRoundFixture.set(room);
+          await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+          out.push(document.querySelector('[data-act=start]').getBoundingClientRect().toJSON());
+        }
+        return out;
+      });
+      for(const b of bounds) for(const key of ['x','y','width','height'])
+        assert.ok(Math.abs(b[key]-bounds[0][key])<.05,`${vp}: timer moved Start ${key}: ${JSON.stringify(bounds)}`);
+      await page.evaluate(() => document.documentElement.style.setProperty('--jj-caption-space','64px'));
+      await page.waitForTimeout(100);
+      const rows=await rects(page,'[data-results] [data-row]');
+      assertLaidOut(rows,2,`${vp}: caption placings`);
+      const typeSize=await page.locator('[data-row]').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
+      assert.ok(typeSize>=12,`${vp}: two placings retain readable text beside a caption (${typeSize}px)`);
+      const actions=await rects(page,'.rs-join .qr-card, [data-act=start], [data-act=lobby]');
+      assertLaidOut(actions,3,`${vp}: caption controls`);
+      for(const row of rows.list) for(const action of actions.list) assert.ok(!overlap(row,action),'caption never collapses placings under the controls');
+      assert.deepEqual(page.errors,[]);
+    } finally {await page.close();}
+  }
+});
+
 test('Ready states: every card says whether the player is ready; a ready player is told so in words', async () => {
   const room = await fixture('lobby-8');
   const page = await open('lobby-8');

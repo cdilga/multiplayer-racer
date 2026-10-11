@@ -31,6 +31,9 @@ export interface RoundScreens {
   place(rects: { seat: number; x: number; y: number; w: number; h: number }[] | null, scale: number): void;
   /** Test/dev: render a room view directly. */
   show(room: RoomView): void;
+  /** The round-complete presentation slot, plus a refit after Hide replay changes the available standings area. */
+  replaySlot(): HTMLElement | null;
+  refit(): void;
 }
 
 // Card tiers, richest first (CSS px at 1080p; scaled by k). The last has no floor: below the legible size it is still drawn.
@@ -94,6 +97,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
   let shown = '';
   let lastRoom: RoomView | null = null;
   let relayout: (() => void) | null = null;
+  let resultsObserver: ResizeObserver | null = null;
   let lastPhase: RoomView['phase'] | null = null;
   let goTimer = 0;
 
@@ -259,6 +263,15 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     };
     relayout = () => {
       const k = screenK();
+      const side = screen.querySelector<HTMLElement>('.rs-side')!;
+      const sideRect = side.getBoundingClientRect();
+      const compact = sideRect.width < 560 && sideRect.height < 500;
+      side.classList.toggle('compact-foot', compact);
+      // The small portrait results region cannot stack a full QR above all its actions and placings.
+      // Keep the QR's whole modules and minimum pitch, while using the adjacent column for actions.
+      const card = side.querySelector<HTMLElement>('.qr-card')!;
+      const desired = compact ? Math.min(sideRect.width * .44, sideRect.height * .52) : Math.min(window.innerHeight * .3, 240 * k);
+      card.style.setProperty('--qr-size', qrCard(desired).style.getPropertyValue('--qr-size'));
       const rect = list.getBoundingClientRect();
       const gap = 6 * k;
       const tiers = PLACINGS.map((t) => ({ ...t, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
@@ -271,6 +284,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     paintKit(screen);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
     screen.querySelector('[data-act=lobby]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'end' }));
+    resultsObserver?.disconnect();
+    resultsObserver = new ResizeObserver(() => relayout?.());
+    resultsObserver.observe(screen.querySelector('.rs-side')!);
   };
 
   const render = (room: RoomView) => {
@@ -278,6 +294,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     hud.update(room);
     chrome.update(room);
     const phase = room.phase;
+    if (phase !== 'Intermission') { resultsObserver?.disconnect(); resultsObserver = null; }
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
@@ -336,5 +353,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     chrome,
     place: (r, s) => hud.place(r, s),
     show: render,
+    replaySlot: () => screen.querySelector<HTMLElement>('[data-reel]'),
+    refit: () => relayout?.(),
   };
 }

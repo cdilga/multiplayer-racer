@@ -20,7 +20,7 @@ import {
 import type { Snapshot } from '../worker/client';
 import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
-import { decodeSnapshot } from './snapshot';
+import { decodeSnapshot, type Frame } from './snapshot';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { rosterSources } from './vehicles/registry';
@@ -150,6 +150,10 @@ export class World {
   onResolution: () => void = () => {};
   /** Called after each drawn frame. */
   onFrame: (stats: WorldStats) => void = () => {};
+  /** Decoded presentation data, before the pooled wire buffer is released. */
+  onSnapshotFrame: (frame: Frame) => void = () => {};
+  /** A separate playback world's broadcast camera, keyed by recorded car identity. */
+  replayCamera: { car: number; orbit: number } | null = null;
 
   constructor(
     readonly backend: Backend,
@@ -275,7 +279,9 @@ export class World {
   attach(source: SnapshotSource): void {
     const next = source.onSnapshot;
     source.onSnapshot = (s: Snapshot) => {
-      this.interp.push(decodeSnapshot(s.view));
+      const frame = decodeSnapshot(s.view);
+      this.interp.push(frame);
+      this.onSnapshotFrame(frame);
       this.invalidate();
       next(s);
     };
@@ -354,6 +360,21 @@ export class World {
     this.observer.disconnect();
   }
 
+  /** Release an independently owned playback world and its renderer. Shared vehicle assets stay cache-owned. */
+  dispose(): void {
+    this.stop();
+    this.map?.dispose();
+    this.props.dispose();
+    this.vehicles?.dispose();
+    this.ground.geometry.dispose();
+    (this.ground.material as MeshLambertMaterial).dispose();
+    this.grid.geometry.dispose();
+    for (const m of Array.isArray(this.grid.material) ? this.grid.material : [this.grid.material]) m.dispose();
+    this.scene.traverse(object => { if (object instanceof DirectionalLight) object.shadow.dispose(); });
+    this.backend.renderer.dispose();
+    this.scene.clear();
+  }
+
   /** Matches the backing store to the canvas's on-screen size in device pixels (R111), times the setting. */
   private resize(): void {
     const css = this.canvas.getBoundingClientRect();
@@ -389,6 +410,17 @@ export class World {
     const t = this.interp.renderTick();
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
+    if (this.replayCamera) {
+      const i = s.id.subarray(0, s.cars).indexOf(this.replayCamera.car);
+      if (i >= 0) {
+        this.v.fromArray(s.pos, i * 3);
+        const angle = this.replayCamera.orbit * Math.PI / 180;
+        this.camera.position.set(8 * Math.sin(angle), 4.2, 8 * Math.cos(angle)).add(this.v);
+        this.target.copy(this.v).y += .6;
+        this.camera.near = .3; this.camera.far = 2000;
+        this.camera.updateProjectionMatrix(); this.camera.lookAt(this.target);
+      }
+    }
     this.vehicles?.update(s);
     this.identifyMarks.update(s);
     const r = this.backend.renderer;

@@ -17,6 +17,7 @@ import { MapRenderer } from './render/map/map';
 import { controlsPage, paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
+import { mountReel } from './reel/mount';
 import { HostHub } from '../../shared/transport';
 import { ClipRecorder, installHotkey } from './clips/recorder';
 import { SessionRecorder } from './clips/session';
@@ -291,6 +292,7 @@ async function boot(): Promise<void> {
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
   });
   world.attach(client);
+  if (roundScreens) mountReel(client, world, roundScreens);
   // The owner tuning menu (br-2sdu.1): previews only, and only in a browser the owner switched on with `?tune`
   // (remembered; `?tune=off` switches it off). Its code is a separate chunk that a production build never contains.
   if (__JJ_OWNER_TOOLS__ && ownerTools(params)) {

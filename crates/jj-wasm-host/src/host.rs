@@ -1575,6 +1575,8 @@ impl Host {
                 | (u32::from(action.boosting) << 4)
                 | (u32::from(action.drift > 0.0) << 5)
                 | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6)
+                // Presentation contact readout for P1-R09 air clips: raised ramps/bridges are ground too.
+                | (u32::from(s.wheels_in_contact == 0) << 8)
                 // Bits 16-31: the car's roster vehicle (R123), an index into the room's `vehicles`.
                 | ((self.sim.vehicle_of(car).unwrap_or(0) as u32 & 0xFFFF) << 16);
             let throttle = self.sim.applied_input(car).map_or(0.0, |i| {

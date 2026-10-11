@@ -84,7 +84,7 @@
   display: grid; gap: calc(22px * var(--k)); grid-template-columns: minmax(0, 54fr) minmax(0, 46fr); grid-template-rows: minmax(0, 1fr);
 }
 @media (min-aspect-ratio: 19/10) { .results { grid-template-columns: minmax(0, 52fr) minmax(0, 48fr); } }
-@media (max-aspect-ratio: 1/1) { .results { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 50fr) minmax(0, 50fr); } }
+@media (max-aspect-ratio: 1/1) { .results { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 46fr) minmax(0, 54fr); } }
 .rs-reel {
   position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: calc(12px * var(--k)); min-height: 0; padding: calc(18px * var(--k)); box-sizing: border-box; overflow: hidden;
   background: repeating-linear-gradient(-45deg, var(--c-ink-raised) 0 calc(18px * var(--k)), var(--c-ink) calc(18px * var(--k)) calc(36px * var(--k))); border: calc(5px * var(--k)) solid var(--c-ink); border-radius: calc(6px * var(--k)); box-shadow: 0 calc(8px * var(--k)) 0 rgb(21 32 58 / .35);
@@ -112,8 +112,8 @@
 [data-tier=tiny] .rcard .badge { font-size: .8em; min-width: 0; padding: 0 .1em; }
 .rs-foot { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: calc(18px * var(--k)); align-items: end; }
 .rs-join .qr-card { margin: 0; }
-.rs-acts { display: flex; flex-direction: column; gap: calc(12px * var(--k)); min-width: 0; }
-.rs-acts .tag { align-self: flex-start; font-size: calc(30px * var(--k)); }
+.rs-acts { display: flex; flex-direction: column; gap: calc(12px * var(--k)); min-width: 0; padding-bottom: 36px; }
+.rs-acts .tag { align-self: flex-start; flex: none; width: calc(270px * var(--k)); font-size: calc(30px * var(--k)); font-variant-numeric: tabular-nums; }
 .rs-acts .btn { width: 100%; min-height: calc(64px * var(--k)); font-size: calc(30px * var(--k)); }
 
 /* ---------- Per-tile HUD (the accepted POC "Per-tile HUD"): one layer over the canvas, one box per tile ---------- */
@@ -186,6 +186,8 @@
 
 /* The screens stop above the footer; the countdown covers everything. */
 .jj-screen > .lobby, .jj-screen > .results { bottom: var(--foot); inset-block-end: var(--foot); }
+.jj-screen > .results { bottom: calc(var(--foot) + var(--jj-caption-space, 0px)); inset-block-end: calc(var(--foot) + var(--jj-caption-space, 0px)); }
+.jj-screen:has(> .results) { background: var(--c-paper); }
 .results .rs-side { container-type: inline-size; }
 .rs-foot { min-width: 0; }
 .rs-join { min-width: 0; max-width: 100%; }
@@ -193,6 +195,13 @@
 .rs-acts .tag { max-width: 100%; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Too narrow for the QR beside the buttons: stack, so the caption and buttons never run over the QR card's address line. */
 @container (max-width: 560px) { .rs-foot { grid-template-columns: minmax(0, 1fr); align-items: start; } .rs-acts { flex-direction: row; flex-wrap: wrap; } .rs-acts .btn { flex: 1 1 40%; } }
+.rs-side.compact-foot .rs-foot { grid-template-columns: auto minmax(0, 1fr); align-items: end; }
+.rs-side.compact-foot .qr-card { padding: 4px; gap: 4px; }
+.rs-side.compact-foot .qr-code { font-size: max(24px, calc(var(--qr-size) * .19)); }
+.rs-side.compact-foot .qr-domain { font-size: 12px; }
+.rs-side.compact-foot .rs-acts { flex-direction: column; flex-wrap: nowrap; gap: 8px; }
+.rs-side.compact-foot .rs-acts .btn { flex: none; font-size: max(14px, calc(26px * var(--k))); min-height: 36px; }
+.rs-side.compact-foot .rs-acts .tag { font-size: max(13px, calc(24px * var(--k))); white-space: normal; }
 .lcard[role=button] { cursor: pointer; }
 .lcard[role=button]:focus-visible { outline: calc(4px * var(--k)) solid var(--c-cobalt); outline-offset: calc(2px * var(--k)); }
 

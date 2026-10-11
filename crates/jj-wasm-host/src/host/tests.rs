@@ -616,6 +616,44 @@ fn a_fault_stops_the_sim() {
 }
 
 #[test]
+fn replay_air_flag_uses_suspension_contacts_instead_of_terrain_height() {
+    let mut h = driving_host();
+    h.sim.spawn_grid_as(&[0]);
+    for _ in 0..120 {
+        h.sim.step();
+    }
+    let read = |h: &Host| {
+        let mut buf = vec![0; h.snapshot_size()];
+        h.write_snapshot(&mut buf);
+        u32::from_le_bytes(
+            buf[SNAPSHOT_HEADER + 52..SNAPSHOT_HEADER + 56]
+                .try_into()
+                .unwrap(),
+        ) & 256
+    };
+    assert!(h.sim.car_state(CarId(0)).unwrap().wheels_in_contact > 0);
+    assert_eq!(read(&h), 0, "a grounded car is not an air highlight");
+    h.sim.place_car(
+        CarId(0),
+        jj_sim::SpawnPose {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+            heading: 0.0,
+        },
+        0.0,
+        [0.0; 3],
+    );
+    h.sim.step();
+    assert_eq!(h.sim.car_state(CarId(0)).unwrap().wheels_in_contact, 0);
+    assert_eq!(
+        read(&h),
+        256,
+        "an actual flight is marked for the presentation recorder"
+    );
+}
+
+#[test]
 fn snapshots_carry_cars_and_skip_when_the_buffer_is_short() {
     let mut h = driving_host();
     h.handle(&local(1, [0, 20_000])).unwrap();
