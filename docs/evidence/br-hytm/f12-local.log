@@ -1,0 +1,9 @@
+✔ F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round (52665.531125ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 53365.707292

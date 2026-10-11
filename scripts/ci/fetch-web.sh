@@ -54,5 +54,10 @@ if ! tar -I zstd -xf "$file"; then
     rm -f -- "$file"
     rebuild "unpacking $key failed"
 fi
+if ! node scripts/ci/native-check.mjs .ci-bin; then
+    rm -f -- "$file"
+    scripts/ci/web-store.sh drop "$key" || true
+    rebuild "the archived native executables are unusable (dropped from cache and store)"
+fi
 ls -1t "$cache"/*.tar.zst 2>/dev/null | tail -n +13 | xargs -r rm -f
 echo "fetch-web: build $key ready in $((SECONDS - s))s"

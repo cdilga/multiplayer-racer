@@ -22,9 +22,16 @@ if [[ $store == on ]] && scripts/ci/web-store.sh has "$key"; then
 fi
 [[ $store == on ]] && mkdir -p "$cache"
 if [[ $store == on && -f $cache/$key.tar.zst ]]; then
-    echo "build-web: in this host's cache; storing it"
-    scripts/ci/web-store.sh put "$key" "$cache/$key.tar.zst"
-    exit 0
+    check_dir=$(mktemp -d)
+    if tar -I zstd -xf "$cache/$key.tar.zst" -C "$check_dir" .ci-bin && node scripts/ci/native-check.mjs "$check_dir/.ci-bin"; then
+        rm -rf -- "$check_dir"
+        echo "build-web: in this host's cache; storing it"
+        scripts/ci/web-store.sh put "$key" "$cache/$key.tar.zst"
+        exit 0
+    fi
+    rm -rf -- "$check_dir"
+    rm -f -- "$cache/$key.tar.zst"
+    echo "build-web: cached native executables are unusable; rebuilding" >&2
 fi
 
 # A miss: the LFS objects the pages bundle (vehicles, brand, audio) and the pinned toolchain, then the build.
@@ -46,7 +53,9 @@ t npm --prefix web run qualify >&2
 t node scripts/ci/origin-scan.mjs web/dist web/dist-qualify >&2
 t npx --prefix web vite build --config web/host/tests/vite.config.ts >&2
 t cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server >&2
-mkdir -p .ci-bin && cp "$CARGO_TARGET_DIR/debug/jj" "$CARGO_TARGET_DIR/debug/jj-server" .ci-bin/
+mkdir -p .ci-bin
+# Snapshot the actual bytes and validate them before archiving (br-hytm).
+t node scripts/ci/native-check.mjs --copy "$CARGO_TARGET_DIR/debug" .ci-bin >&2
 
 [[ $store == on ]] || { echo "build-web: built in place (JJ_STORE=off)"; exit 0; }
 # mktemp, not $$: jobs are containers sharing this cache dir, and their shell PIDs collide.

@@ -1,0 +1,18 @@
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+✔ reject the CI3419 all-zero executable even when it has the expected size and execute permission (56.373041ms)
+✔ a shell fallback that reports success is not a native CLI (1.525252ms)
+✔ a native-looking truncated payload must execute with the expected response (50.624812ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 307.80445
+native-check: /evidence/jj-hytm-artifact/.ci-bin/jj: invalid native executable header 00000000 (37334096 bytes)
+[{"name":"jj","bytes":37334096,"sha256":"a220334ec23251e803bed4cbd408941af2fa81fff1514ebfcee21567a0c9000b","status":0,"stdout":"jj 0.2.0\n","stderr":""},{"name":"jj-server","bytes":28486816,"sha256":"be346800b6be4139a311b509051a15a3665731904ed28420b289fa2c387e3b74","status":1,"stdout":"","stderr":"jj-server (turn-broker): JJ_BROKER_KEY is required\n"}]
+a220334ec23251e803bed4cbd408941af2fa81fff1514ebfcee21567a0c9000b  /target/debug/jj
+a220334ec23251e803bed4cbd408941af2fa81fff1514ebfcee21567a0c9000b  /tmp/verified-bin/jj
