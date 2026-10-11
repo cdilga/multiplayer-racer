@@ -28,7 +28,7 @@ added), so a Rust job sometimes takes a browser slot. At most four pages render 
 ## The CI job image (`jj-ci:<hash>`)
 
 `scripts/ci/ci-image.Dockerfile` adds what every job used to install per job: node (`.nvmrc`), Playwright's Chromium
-headless shell **and its system libraries** (the `--with-deps` apt step took 10 minutes a job on TrueNAS), coturn,
+headless shell, WebKit **and their system libraries** (the `--with-deps` apt step took 10 minutes a job on TrueNAS), coturn,
 git-lfs, zstd, wasm-bindgen and cargo-nextest. The tag is the Dockerfile's hash, and the image is **built locally on each
 Docker runner host**, never pulled (the runners run with `force_pull: false`, so a present image is used as is):
 

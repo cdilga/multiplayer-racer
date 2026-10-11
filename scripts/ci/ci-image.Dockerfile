@@ -2,7 +2,7 @@
 # download per job (Playwright's Chromium system libraries took 10 minutes a job on TrueNAS). Built locally on each
 # runner host by scripts/ci/ci-image.sh, never pulled: the tag is a hash of this file, so a change here is a new tag.
 #
-# What lives here: node (.nvmrc), Playwright's Chromium headless shell and its libraries, coturn, git-lfs, zstd,
+# What lives here: node (.nvmrc), Playwright's Chromium headless shell, WebKit and their libraries, coturn, git-lfs, zstd,
 # wasm-bindgen, cargo-nextest. What doesn't: the Rust toolchain and cargo/npm caches, which stay on the runner's
 # persistent /cargo-cache volume (they change with every rust-toolchain.toml or lockfile bump).
 FROM catthehacker/ubuntu:act-22.04@sha256:3cdab37904fc1798c460f1fadd47fd2c4d24fa2f292d1b57fc12eff072b415ec
@@ -22,8 +22,9 @@ RUN apt-get update -qq \
  && mkdir -p /opt/node \
  && curl -sSfL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" | tar xJ -C /opt/node --strip-components=1 \
  && cd /tmp && npm init -y >/dev/null && npm install -s "playwright@${PLAYWRIGHT_VERSION}" \
- && npx playwright install-deps chromium \
+ && npx playwright install-deps chromium webkit \
  && npx playwright install --only-shell chromium \
+ && npx playwright install webkit \
  && chmod -R a+rX /ms-playwright \
  && rm -rf /tmp/node_modules /tmp/package*.json /root/.npm \
  && curl -sSfL "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WASM_BINDGEN}/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp \
