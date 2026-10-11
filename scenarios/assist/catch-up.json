@@ -1,0 +1,7 @@
+{
+  "what": "R125 gentle catch-up (br-2mxa): a leader and a follower on the greybox loop, both line-following Lots cars (auto-throttle), the follower released when its gap to the leader reaches 10 s at the reference speed. The test runs it with catch-up Off and Light and states the gap closed.",
+  "map": "maps/greybox-loop.json",
+  "gapSeconds": 10.0,
+  "followerLaps": 1,
+  "maxSeconds": 120
+}

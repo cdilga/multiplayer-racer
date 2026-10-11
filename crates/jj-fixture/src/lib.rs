@@ -69,6 +69,11 @@ pub struct Fixture {
     /// The autopilot takes a car (`on`) or hands it back (P1-S07).
     #[serde(default)]
     pub autopilot: Vec<AutopilotSpec>,
+    /// A derby round (P1-S10): the sim's ledger starts at `atTick` and the fixture's director runs the round on the same
+    /// game-time clock (`limitMs`, 3 minutes by default), so `expect` can read `derbyPoints`, `derbyRank`, `derbyTimeLeftS`
+    /// and `roundOver`.
+    #[serde(default)]
+    pub derby: Option<DerbySpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     /// How the raw `stick` / `action` spans are read: `"dual"` (R116, the default: the right stick steers on x and
@@ -87,6 +92,29 @@ pub struct Fixture {
     /// and the metrics that must come out different from the deliberate run's (§7.3a, P1-S03).
     #[serde(default)]
     pub baselines: Option<Baselines>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DerbySpec {
+    /// The tick the derby starts (and its game clock with it); 0 unless a fixture starts it mid-run.
+    #[serde(default)]
+    pub at_tick: u64,
+    /// The round's game-time limit, ms.
+    #[serde(default)]
+    pub limit_ms: Option<u32>,
+}
+
+impl DerbySpec {
+    /// The limit in ms (3 minutes unless the fixture says shorter, to keep a bank fixture quick).
+    pub fn limit_ms(&self) -> u32 {
+        self.limit_ms.unwrap_or(180_000)
+    }
+
+    /// The same limit in sim ticks (rounded up: the final tick's events count).
+    pub fn limit_ticks(&self) -> u64 {
+        (u64::from(self.limit_ms()) * u64::from(jj_sim::TICK_HZ)).div_ceil(1000)
+    }
 }
 
 /// Baseline runs, and what must come out different in each of them.
@@ -398,6 +426,21 @@ pub struct Recorded {
     pub trace: Vec<Value>,
 }
 
+/// A car's metric from its tracker, except the round's own (`roundOver`: 1 once the fixture's director has ended the round),
+/// which is the session's.
+fn metric_of(
+    trackers: &[SignatureTracker],
+    session: &Session,
+    car: u32,
+    metric: Metric,
+) -> Option<f64> {
+    if metric == Metric::RoundOver {
+        trackers.get(car as usize)?;
+        return Some(f64::from(u8::from(session.round_over())));
+    }
+    trackers.get(car as usize)?.metric(metric)
+}
+
 /// A fixture's run around a [`Sim`] the caller owns and steps.
 pub struct Harness {
     fx: Fixture,
@@ -446,6 +489,9 @@ impl Harness {
             }
         }
         let mut session = Session::new(&fx.seats)?;
+        if let Some(d) = &fx.derby {
+            session.set_game_limit(Some(d.limit_ms()));
+        }
         if let Some(phase) = fx.phase {
             session.jump(phase)?;
         }
@@ -506,6 +552,9 @@ impl Harness {
         let t = sim.tick();
         if let Some(r) = fx.race.as_ref().filter(|r| r.at_tick == t) {
             sim.start_race(r.laps);
+        }
+        if let Some(d) = fx.derby.as_ref().filter(|d| d.at_tick == t) {
+            sim.start_derby(d.limit_ticks());
         }
         for p in fx.place.iter().filter(|p| p.tick == t) {
             sim.place_car(
@@ -687,11 +736,9 @@ impl Harness {
             .is_some_and(|v| u.min.is_none_or(|m| v >= m) && u.max.is_none_or(|m| v <= m))
     }
 
-    /// A car's metric now (state now, or a signature accumulator).
+    /// A car's metric now (state now, or a signature accumulator); `roundOver` is the fixture's director's.
     pub fn metric(&self, car: u32, metric: Metric) -> Option<f64> {
-        self.trackers
-            .get(car as usize)
-            .and_then(|t| t.metric(metric))
+        metric_of(&self.trackers, &self.session, car, metric)
     }
 
     /// `until` stopped the run at this tick: it's the end, so check the end-of-run envelopes and snapshot it.
@@ -716,8 +763,8 @@ impl Harness {
             .iter_mut()
             .filter(|c| c.at_tick == Some(tick) || (end && c.at_tick.is_none()))
         {
-            if let Some(t) = self.trackers.get(c.car as usize) {
-                c.actual = t.metric(c.metric);
+            if self.trackers.get(c.car as usize).is_some() {
+                c.actual = metric_of(&self.trackers, &self.session, c.car, c.metric);
                 c.ok = c.actual.is_some_and(|v| v >= c.min && v <= c.max);
             }
         }

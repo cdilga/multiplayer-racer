@@ -183,6 +183,23 @@ pub struct CarObs {
     pub authorised_j: f64,
     /// Husks the round has made so far (every wrecked car leaves one, P1-S04c): the same for every car.
     pub husks: u32,
+    /// The derby facts (P1-S10) while a derby round is on: this car's raw points, rank and the clock.
+    #[serde(default)]
+    pub derby: Option<DerbyObs>,
+}
+
+/// One car's derby facts: what the HUD bands, the results and the fixtures read (master §10.12).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DerbyObs {
+    /// Raw points in score units (1/2000 point) and as points.
+    pub units: u64,
+    pub points: f64,
+    /// Competition rank by raw points (ties share).
+    pub rank: u32,
+    /// Game time left, ticks.
+    pub time_left_ticks: u64,
+    pub arrived: u64,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -276,6 +293,17 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
         energy_j: sim.energy_j().0,
         authorised_j: sim.energy_j().1,
         husks: sim.husk_count() as u32,
+        derby: sim.derby().map(|l| crate::observe::DerbyObs {
+            units: l.units(car.0),
+            points: l.points(car.0),
+            rank: l.rank_of(car.0),
+            time_left_ticks: l.time_left_ticks(sim.tick()),
+            arrived: l
+                .rows()
+                .iter()
+                .find(|r| r.car == car.0)
+                .map_or(0, |r| r.arrived),
+        }),
         action: sim
             .action_state(car)
             .map_or_else(ActionObs::default, |a| ActionObs {
@@ -371,10 +399,20 @@ pub enum Metric {
     EnergyGainJ,
     /// Husks in the world (P1-S04c): a wreck leaves its chassis on the track as a dynamic body for the round.
     Husks,
+    /// Derby (P1-S10): the car's raw points now, its rank, and the game time left, s.
+    DerbyPoints,
+    DerbyRank,
+    DerbyTimeLeftS,
+    /// 1 once the fixture's round director has ended the round (the derby clock or the rules); decided by the session,
+    /// not the car (`jj-fixture`), so a car's own tracker never has it.
+    RoundOver,
+    /// The farthest the car has been from the world origin in plan view, m (P1-M10: the arena is centred on it, so this
+    /// is how far from the bowl's middle; containment is this staying under the wall's radius).
+    MaxRadiusM,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 42] = [
+    pub const ALL: [Metric; 47] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -417,6 +455,11 @@ impl Metric {
         Metric::EnergyJ,
         Metric::EnergyGainJ,
         Metric::Husks,
+        Metric::MaxRadiusM,
+        Metric::DerbyPoints,
+        Metric::DerbyRank,
+        Metric::DerbyTimeLeftS,
+        Metric::RoundOver,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -464,6 +507,11 @@ impl Metric {
             Metric::EnergyJ => "energyJ",
             Metric::EnergyGainJ => "energyGainJ",
             Metric::Husks => "husks",
+            Metric::MaxRadiusM => "maxRadiusM",
+            Metric::DerbyPoints => "derbyPoints",
+            Metric::DerbyRank => "derbyRank",
+            Metric::DerbyTimeLeftS => "derbyTimeLeftS",
+            Metric::RoundOver => "roundOver",
         }
     }
 }
@@ -502,6 +550,7 @@ pub struct SignatureTracker {
     wheelie_drive_ticks: u64,
     energy0: Option<f64>,
     energy_gain: f64,
+    max_radius: f64,
 }
 
 /// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
@@ -550,6 +599,7 @@ impl SignatureTracker {
             wheelie_drive_ticks: 0,
             energy0: None,
             energy_gain: 0.0,
+            max_radius: 0.0,
         }
     }
 
@@ -628,6 +678,9 @@ impl SignatureTracker {
                 .hypot(f64::from(o.position[2] - self.spawn.z));
             self.stop = Some((travel, self.ticks as f64 / f64::from(TICK_HZ)));
         }
+        self.max_radius = self
+            .max_radius
+            .max(f64::from(o.position[0]).hypot(f64::from(o.position[2])));
         self.max_route_offset = self.max_route_offset.max(o.progress.lateral_m.abs());
         let (pitch, roll) = pitch_roll_deg(o.rotation);
         self.max_pitch = self.max_pitch.max(pitch.abs());
@@ -709,6 +762,11 @@ impl SignatureTracker {
             Metric::EnergyJ => o.energy_j - o.authorised_j,
             Metric::EnergyGainJ => self.energy_gain,
             Metric::Husks => f64::from(o.husks),
+            Metric::MaxRadiusM => self.max_radius,
+            Metric::DerbyPoints => o.derby?.points,
+            Metric::DerbyRank => f64::from(o.derby?.rank),
+            Metric::DerbyTimeLeftS => o.derby?.time_left_ticks as f64 / f64::from(TICK_HZ),
+            Metric::RoundOver => return None,
             Metric::SlipDeg => o
                 .wheels
                 .iter()

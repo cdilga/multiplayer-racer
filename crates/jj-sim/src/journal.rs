@@ -131,6 +131,20 @@ pub enum Setup {
     DropInAs {
         vehicle: u16,
     },
+    /// A player's learner-assist level (R125, 0 Off, 1 Some, 2 Lots). Appended: variant order is the wire format.
+    Assist {
+        car: u32,
+        level: u8,
+    },
+    /// The lobby's catch-up choice (R125, 0 Off, 1 Light).
+    CatchUp {
+        mode: u8,
+    },
+    /// The derby round starts (P1-S10): damage dealt to opponents scores from this tick for `limit_ticks` of game time.
+    /// Appended: variant order is the wire format.
+    StartDerby {
+        limit_ticks: u64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

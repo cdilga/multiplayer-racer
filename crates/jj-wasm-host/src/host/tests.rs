@@ -2631,6 +2631,126 @@ fn a_camera_distance_choice_is_an_event_for_that_seat() {
     )));
 }
 
+/// R125 (br-2mxa): the phone's assist level reaches the seat's car in the sim and the room view (the L-plate), and
+/// catch-up is on for everyone by default.
+#[test]
+fn the_seats_assist_level_reaches_its_car_and_the_room_view() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&phone(c)).unwrap();
+    }
+    let mut now = 0;
+    let mut pump = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    let assist_in_view = |h: &Host| -> serde_json::Value {
+        let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        v["seats"][0]["assist"].clone()
+    };
+    pump(&mut h, 20);
+    assert_eq!(assist_in_view(&h), 0, "a new seat has no help");
+    assert_eq!(
+        h.round.catch_up,
+        jj_sim::assist::CatchUp::Light,
+        "the lobby defaults to Light"
+    );
+    assert_eq!(
+        h.sim.catch_up(),
+        jj_sim::assist::CatchUp::Off,
+        "free drive keeps its own rules"
+    );
+    for (level, want, sim_level) in [
+        (
+            jj_protocol::cmd::AssistLevel::Some,
+            1,
+            jj_sim::assist::AssistLevel::Some,
+        ),
+        (
+            jj_protocol::cmd::AssistLevel::Lots,
+            2,
+            jj_sim::assist::AssistLevel::Lots,
+        ),
+        (
+            jj_protocol::cmd::AssistLevel::Off,
+            0,
+            jj_sim::assist::AssistLevel::Off,
+        ),
+    ] {
+        h.handle(&phone(ControllerCmd::SetAssist { level }))
+            .unwrap();
+        pump(&mut h, 5);
+        assert_eq!(assist_in_view(&h), want);
+        let car = h
+            .inputs
+            .values()
+            .next()
+            .and_then(|i| i.car)
+            .expect("the seat has a car");
+        assert_eq!(h.sim.assist_level(car), sim_level);
+    }
+}
+
+/// Catch-up is a lobby choice applied at GO and retained for subsequent rounds, never a fixture override.
+#[test]
+fn catch_up_is_a_round_rule_and_the_host_can_switch_it_off() {
+    for on in [false, true] {
+        let mut h = Host::new(&init()).unwrap();
+        let ui = |ui| {
+            MainToSim::Ui {
+                command: CommandId(1),
+                ui,
+            }
+            .encode()
+        };
+        h.handle(&ui(UiCommand::SetCatchUp { on })).unwrap();
+        h.handle(&local(1, [0, 32767])).unwrap();
+        h.step_one();
+        let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        assert_eq!(room["catchUp"], on);
+        assert_eq!(h.sim.catch_up(), jj_sim::assist::CatchUp::Off);
+        h.handle(&ui(UiCommand::StartRound)).unwrap();
+        h.step_one();
+        h.handle(&ui(UiCommand::StartRound)).unwrap(); // the host's second press skips the force-start warning
+        for _ in 0..120 * 10 {
+            h.step_one();
+            if h.phase() == jj_session::director::Phase::Running {
+                break;
+            }
+        }
+        assert_eq!(h.phase(), jj_session::director::Phase::Running);
+        let expected = if on {
+            jj_sim::assist::CatchUp::Light
+        } else {
+            jj_sim::assist::CatchUp::Off
+        };
+        assert_eq!(h.sim.catch_up(), expected);
+        for _ in 0..120 {
+            h.step_one();
+        }
+        assert_eq!(
+            h.sim.catch_up(),
+            expected,
+            "ticks never overwrite the chosen rule"
+        );
+    }
+}
+
 /// P1-C06: the host tracks the seat's first-drive prompts from what it sees; skip hides them and never pauses anything.
 #[test]
 fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
@@ -2959,4 +3079,31 @@ fn each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicl
         ),
         (Some(roster[1].0.as_str()), Some(12345.0))
     );
+}
+
+/// P1-C14: a host pad's seat names its source, and its first-drive prompts run from its own samples with no phone to ask.
+#[test]
+fn a_host_pads_seat_names_its_source_and_runs_its_prompts() {
+    let mut h = driving_host();
+    for t in (0..300u64).step_by(6) {
+        h.schedule(
+            t,
+            &MainToSim::LocalSource {
+                source: LocalSourceId(7),
+                axes: [0, 0, 26_000, 0],
+                buttons: 0,
+                seq: 0,
+            }
+            .encode(),
+        )
+        .unwrap();
+    }
+    while h.tick() < 200 {
+        h.step_one();
+    }
+    let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let seat = &v["seats"][0];
+    assert_eq!(seat["localSource"], 7);
+    assert_eq!(seat["prompt"]["step"], 0, "the prompts start on their own");
+    assert_eq!(seat["prompt"]["done"], serde_json::json!(["right"]));
 }

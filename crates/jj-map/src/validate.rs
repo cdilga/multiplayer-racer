@@ -85,6 +85,8 @@ pub enum Rule {
     RegistryCollider,
     RegistrySchema,
     GameplayHash,
+    /// A derby bowl's profile, size or footprint breaks the arena rules (P1-M10).
+    Arena,
 }
 
 impl Rule {
@@ -114,6 +116,7 @@ impl Rule {
             Self::RegistryCollider => "registry-collider",
             Self::RegistrySchema => "registry-schema",
             Self::GameplayHash => "gameplay-hash",
+            Self::Arena => "arena",
         }
     }
 }
@@ -615,6 +618,11 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                     -nr.half,
                     nr.half,
                 ));
+            }
+            FeatureKind::Bowl => {
+                for detail in crate::arena::problems(map, f) {
+                    add(&mut v, Rule::Arena, &at, detail);
+                }
             }
             FeatureKind::Crest | FeatureKind::Whoops | FeatureKind::CreekDip => {}
         }

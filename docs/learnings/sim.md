@@ -286,3 +286,12 @@ not feel targets.
   click after a heavy screen (8 tiles, a 12-player results screen) have timed out in Playwright's "performing click
   action" while passing on the Mac and eris; those clicks take a 120 s timeout. If one still hangs, the page's main
   thread is blocked: profile it before widening anything.
+
+## 2026-10-11 · Suspension ray contact is not support (br-qhga)
+
+- R125's longer, varied tracks exposed a turn rollover: seed 2, route point 320, 35 m/s, full lock held. The car reached upY −0.047 with no damage events. The R122 bank failed without changing its envelopes.
+- A Rapier suspension ray can report `is_in_contact` at full extension while `wheel_suspension_force` is zero. At tick 108 every wheel supplied zero support, but one ray still touched terrain; the air-levelling spring stayed off until the car was already tumbling past its 45° eligibility threshold.
+- Airborne control now treats a wheel as support only when its ray contacts and its suspension force is positive. No torque values or physics units changed. The complete flat/generated handling bank and all 156 sim/session/fixture/protocol tests passed on the Mac with test optimisation level 1.
+- This deliberate physics correction changes the mixed-host fixture hash from `6f0f9c4e732a35ac2fb6251bbedc8ef50a2d04b4d835bc0c6a865f9483097508` to `8eae7be56efed7e9e9e5b9b27d518e64b1f61e904ec07c227a6a3c9f56e39ae1`. Native and freshly rebuilt WASM independently produced the same new hash before updating the fixture; the native test also repeats its run.
+- Catch-up belongs at a race's GO. Forcing Light on every host tick also rewrote loaded fixtures and free-drive journals. The lobby choice now defaults to Light, supports Off, and applies at GO; fixture parity remains source-blind.
+- Assist hash state must include the car index: hashing only non-Off levels made moving an identical assist between cars invisible before stepping.

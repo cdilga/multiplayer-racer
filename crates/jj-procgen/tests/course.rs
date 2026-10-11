@@ -1,11 +1,12 @@
-//! P1-M03b seed bank: 100 seeds design closed loops inside the length band, with no self-intersection and a valid start
+//! P1-M03b seed bank: 100 seeds design closed loops inside their length class's band, with no self-intersection and a valid start
 //! corridor (the map validator), and the corner mix is reported.
 
 use std::collections::BTreeMap;
 
 use jj_map::{Rule, validate};
-use jj_procgen::course::{CLEARANCE_M, LENGTH_BAND_M, self_clear};
+use jj_procgen::course::{CLEARANCE_M, self_clear};
 use jj_procgen::generate_report;
+use jj_procgen::tuning::GeneratorData;
 
 #[test]
 fn a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix() {
@@ -27,10 +28,12 @@ fn a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix() {
             (a.0 - b.0).hypot(a.1 - b.1) < 3.0,
             "seed {seed}: the loop doesn't close"
         );
+        let band = GeneratorData::shipped().course.classes.get(report.class);
         assert!(
-            (LENGTH_BAND_M.0..=LENGTH_BAND_M.1).contains(&report.length_m),
-            "seed {seed}: length {} m outside the band",
-            report.length_m
+            (band.length_min_m..=band.length_max_m).contains(&report.length_m),
+            "seed {seed}: length {} m outside the {} band",
+            report.length_m,
+            report.class.name()
         );
         assert!(
             self_clear(&pts),

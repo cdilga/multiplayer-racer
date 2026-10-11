@@ -74,6 +74,20 @@ impl Session {
         Ok(s)
     }
 
+    /// The next round's game-time limit (a derby fixture's, P1-S10); set before the round starts.
+    pub fn set_game_limit(&mut self, ms: Option<u32>) {
+        self.director.apply(director::Input::SetGameLimit(ms));
+    }
+
+    /// The director has ended the round (game-time limit or the rules): Finalising or later.
+    pub fn round_over(&self) -> bool {
+        self.director.round().is_some()
+            && !matches!(
+                self.director.phase(),
+                Phase::Lobby | Phase::Preparing | Phase::Countdown | Phase::Running
+            )
+    }
+
     /// Drives the director to `target` with the host's own buttons and map results.
     pub fn jump(&mut self, target: PhaseTarget) -> Result<(), String> {
         if target != PhaseTarget::Lobby {
@@ -121,6 +135,9 @@ impl Session {
         self.elapsed_ms = ms;
         self.director
             .apply(director::Input::Elapsed { ms: dt as u32 });
+        // The sim stepped, so game time passed too (the director counts it only while a round runs and nothing pauses it).
+        self.director
+            .apply(director::Input::GameElapsed { ms: dt as u32 });
     }
 
     pub fn observe(&self) -> Value {
@@ -151,6 +168,8 @@ impl Session {
             "phase": format!("{:?}", self.director.phase()),
             "round": self.director.round().map(|r| r.0),
             "remainingMs": self.director.remaining_ms(),
+            "gameMs": self.director.game_ms(),
+            "gameRemainingMs": self.director.game_remaining_ms(),
             "readyRevision": self.director.ready_revision(),
             "driving": format!("{:?}", self.director.driving()),
             "seats": seats,

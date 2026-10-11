@@ -146,6 +146,15 @@ pub enum Input {
     },
     /// The rules froze the result at the final tick.
     RoundOver,
+    /// The next round's game-time limit, ms (derby: 3 minutes, P1-S10); `None` for a round the rules end themselves (a
+    /// race). Read when the round starts, so a change applies from the next round (§10.12).
+    SetGameLimit(Option<u32>),
+    /// Game time passed: the sim stepped this many ms. Unlike [`Input::Elapsed`] (the presentation clock) it stops with the
+    /// sim (any pause), and only counts while a round is Running. At the round's limit the director ends the round itself,
+    /// as [`Input::RoundOver`] would, after [`Output::RoundTimeUp`].
+    GameElapsed {
+        ms: u32,
+    },
     /// Scores and standings committed; `saved: false` shows them as unsaved (storage failed).
     ResultsCommitted {
         saved: bool,
@@ -200,6 +209,10 @@ pub enum Output {
         round: RoundId,
         preparation: PreparationId,
         seats: Vec<SeatId>,
+    },
+    /// The round's game-time limit ran out (P1-S10); [`Output::RoundFinalising`] follows at once.
+    RoundTimeUp {
+        round: RoundId,
     },
     RoundFinalising {
         round: RoundId,
@@ -273,6 +286,10 @@ pub struct Director {
     /// The countdown, intermission or finalise deadline on the presentation clock.
     deadline: Option<u64>,
     start: Option<Start>,
+    /// The limit the next round runs to, and the running round's own (taken at its start) and its game clock, ms.
+    game_limit_ms: Option<u64>,
+    round_limit_ms: Option<u64>,
+    game_ms: u64,
 }
 
 impl Default for Director {
@@ -300,6 +317,9 @@ impl Director {
             next_round: 1,
             deadline: None,
             start: None,
+            game_limit_ms: None,
+            round_limit_ms: None,
+            game_ms: 0,
         }
     }
 
@@ -315,6 +335,16 @@ impl Director {
     /// Time left on the countdown, intermission or finalise timer.
     pub fn remaining_ms(&self) -> Option<u64> {
         self.deadline.map(|d| d.saturating_sub(self.now))
+    }
+
+    /// Game time the current (or last) round has run, ms: counted only while the sim stepped.
+    pub fn game_ms(&self) -> u64 {
+        self.game_ms
+    }
+
+    /// Game time left in a limited round, ms (`None` for a round with no limit).
+    pub fn game_remaining_ms(&self) -> Option<u64> {
+        self.round_limit_ms.map(|l| l.saturating_sub(self.game_ms))
     }
 
     /// The current (or last) round.
@@ -390,13 +420,20 @@ impl Director {
             }
             Input::Reroll => self.reroll(&mut out),
             Input::PrepareFinished { id, ok } => self.prepare_finished(id, ok, &mut out),
-            Input::RoundOver => {
-                if self.phase == Phase::Running {
-                    self.deadline = Some(self.now + u64::from(self.cfg.finalise_timeout_ms));
-                    self.set_phase(Phase::Finalising, &mut out);
-                    out.push(Output::RoundFinalising {
-                        round: self.round.expect("a running round"),
-                    });
+            Input::RoundOver => self.round_over(&mut out),
+            Input::SetGameLimit(limit) => self.game_limit_ms = limit.map(u64::from),
+            Input::GameElapsed { ms } => {
+                if self.phase == Phase::Running && !self.sim_paused() {
+                    self.game_ms += u64::from(ms);
+                    if let Some(limit) = self.round_limit_ms
+                        && self.game_ms >= limit
+                    {
+                        self.game_ms = limit;
+                        out.push(Output::RoundTimeUp {
+                            round: self.round.expect("a running round"),
+                        });
+                        self.round_over(&mut out);
+                    }
                 }
             }
             Input::ResultsCommitted { saved } => {
@@ -424,6 +461,17 @@ impl Director {
             }
         }
         out
+    }
+
+    /// The rules froze the result: Finalising, with the results commit due.
+    fn round_over(&mut self, out: &mut Vec<Output>) {
+        if self.phase == Phase::Running {
+            self.deadline = Some(self.now + u64::from(self.cfg.finalise_timeout_ms));
+            self.set_phase(Phase::Finalising, out);
+            out.push(Output::RoundFinalising {
+                round: self.round.expect("a running round"),
+            });
+        }
     }
 
     /// Moves the presentation clock, firing each deadline at its own time so chained timers stay exact.
@@ -611,6 +659,8 @@ impl Director {
         let round = RoundId(self.next_round);
         self.next_round += 1;
         self.round = Some(round);
+        self.round_limit_ms = self.game_limit_ms;
+        self.game_ms = 0;
         self.prep = None;
         self.start = None;
         self.deadline = None;

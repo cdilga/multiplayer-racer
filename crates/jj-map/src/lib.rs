@@ -9,6 +9,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod arena;
 pub mod canon;
 mod geom;
 pub mod jump;

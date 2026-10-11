@@ -326,7 +326,7 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
             p.insert("lengthMm".into(), whole(rng, 16.0, 24.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
-        FeatureKind::Kerb => {}
+        FeatureKind::Kerb | FeatureKind::Bowl => {}
     }
     p
 }
@@ -439,7 +439,7 @@ fn delta(
                 * libm::sin(core::f64::consts::TAU * u / pitch)
                 * road_wide()
         }
-        FeatureKind::Kerb => 0.0,
+        FeatureKind::Kerb | FeatureKind::Bowl => 0.0,
     }
 }
 
@@ -670,7 +670,7 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 // Whoops are rough by design: grade only.
                 shape_ok(&name, &line, &h, i0, i1, None, &mut bad);
             }
-            FeatureKind::Kerb => {}
+            FeatureKind::Kerb | FeatureKind::Bowl => {}
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

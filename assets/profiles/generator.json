@@ -1,15 +1,38 @@
 {
   "version": 1,
-  "what": "Generator data (R125): the course length band and straights, each biome's terrain and feature mix, and the biome mix (recipe). Tuned in the owner tuning menu and changed here, never in code; jj-procgen validates the file at load. A committed change moves the goldens: bump GENERATOR_VERSION and re-bless tests/goldens.",
-  "recipe": "town,rocks,outback-dirt,outback-bitumen",
+  "what": "Generator data (R124/R125): the course length classes (sprint, standard, epic: weight, length band, laps) and straights, each biome's terrain and feature mix, and the biome mix (weights for one to four biomes per track). Tuned in the owner tuning menu and changed here, never in code; jj-procgen validates the file at load. A committed change moves the goldens: bump GENERATOR_VERSION and re-bless tests/goldens.",
+  "mix": {
+    "oneBiome": 35.0,
+    "twoBiomes": 35.0,
+    "threeBiomes": 15.0,
+    "fourBiomes": 15.0
+  },
   "course": {
-    "lengthMinM": 700.0,
-    "lengthMaxM": 1100.0,
+    "classes": {
+      "sprint": {
+        "weight": 30.0,
+        "lengthMinM": 600.0,
+        "lengthMaxM": 900.0,
+        "laps": 5
+      },
+      "standard": {
+        "weight": 50.0,
+        "lengthMinM": 1000.0,
+        "lengthMaxM": 1600.0,
+        "laps": 3
+      },
+      "epic": {
+        "weight": 20.0,
+        "lengthMinM": 1800.0,
+        "lengthMaxM": 2500.0,
+        "laps": 2
+      }
+    },
     "startStraightMinM": 110.0,
     "startStraightMaxM": 160.0,
-    "straightMinM": 18.0,
-    "straightMaxM": 90.0,
-    "minStraightM": 12.0
+    "straightSpread": 0.6,
+    "minStraightM": 18.0,
+    "bendSpacingM": 350.0
   },
   "biomes": {
     "greybox": {

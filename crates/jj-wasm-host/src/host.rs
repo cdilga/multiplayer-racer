@@ -136,6 +136,9 @@ struct SeatInput {
     unplugged_since_ms: Option<u64>,
     /// The first-drive prompts (C06): which of the seven controls the host has seen this seat do.
     prompt: prompts::PromptTrack,
+    /// The player's learner-assist level (R125, `SetAssist`): carried to this seat's car every tick, so it holds across
+    /// rounds and new cars; the tile shows an L-plate while it isn't Off.
+    assist: jj_sim::assist::AssistLevel,
 }
 
 /// A host pad or key cluster's button edges and its way back after leaving.
@@ -249,6 +252,7 @@ fn session_only(cmd: &ControllerCmd) -> bool {
         | ControllerCmd::Menu { .. }
         | ControllerCmd::SetCamera { .. }
         | ControllerCmd::SetCameraDistance { .. }
+        | ControllerCmd::SetAssist { .. }
         | ControllerCmd::Tutorial { .. } => true,
         _ => false,
     }
@@ -723,8 +727,13 @@ impl Host {
             }
         }
         let held = self.driving() == jj_session::director::Driving::Held;
+        // R125: each seat's assist level rides to its car. Catch-up is a round rule applied at GO, so a
+        // free-drive or fixture world retains its own rules and journals rather than being rewritten here.
         for input in self.inputs.values() {
             let Some(car) = input.car else { continue };
+            if self.sim.assist_level(car) != input.assist {
+                self.sim.set_assist(car, input.assist);
+            }
             let fresh = !held
                 && input
                     .state
@@ -879,6 +888,8 @@ impl Host {
                     // A host pad's gestures are detected here (a controller sends its own as `Action`).
                     if let Some(car) = input.car {
                         for a in fired {
+                            // The first-drive prompts tick on a host pad's gestures as they do on a phone's `Action`.
+                            input.prompt.action(a.kind);
                             match a.kind {
                                 ActionKind::Wheelie { preload_ms } => {
                                     self.sim.wheelie(car, preload_ms);
@@ -1055,6 +1066,21 @@ impl Host {
                 }
                 vec![]
             }
+            ControllerCmd::SetAssist { level } => {
+                if let Some(input) = self
+                    .seats
+                    .seat_at(conn, src)
+                    .and_then(|s| self.inputs.get_mut(&s))
+                {
+                    input.assist = match level {
+                        jj_protocol::cmd::AssistLevel::Off => jj_sim::assist::AssistLevel::Off,
+                        jj_protocol::cmd::AssistLevel::Some => jj_sim::assist::AssistLevel::Some,
+                        jj_protocol::cmd::AssistLevel::Lots => jj_sim::assist::AssistLevel::Lots,
+                    };
+                }
+                self.session_rev += 1;
+                vec![]
+            }
             ControllerCmd::Tutorial { on } => {
                 if let Some(input) = self
                     .seats
@@ -1177,7 +1203,13 @@ impl Host {
                     idle_cued: false,
                     menu_open: false,
                     unplugged_since_ms: None,
-                    prompt: prompts::PromptTrack::default(),
+                    assist: jj_sim::assist::AssistLevel::Off,
+                    // P1-C14: a host pad, wheel or key cluster has no phone to turn the prompts on, so its seat starts with them on.
+                    prompt: {
+                        let mut p = prompts::PromptTrack::default();
+                        p.set(matches!(origin, Origin::Local(_)));
+                        p
+                    },
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)

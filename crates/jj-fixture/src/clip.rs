@@ -399,6 +399,11 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::EndRace => {
             sim.end_race_now();
         }
+        Setup::Assist { car, level } => {
+            sim.set_assist(CarId(*car), jj_sim::assist::AssistLevel::from_u8(*level));
+        }
+        Setup::CatchUp { mode } => sim.set_catch_up(jj_sim::assist::CatchUp::from_u8(*mode)),
+        Setup::StartDerby { limit_ticks } => sim.start_derby(*limit_ticks),
     }
 }
 

@@ -236,6 +236,7 @@ pub mod codec {
             "end" => UiCommand::EndRound,
             "disband" => UiCommand::DisbandRoom,
             "free-drive" => UiCommand::FreeDrive { on },
+            "catch-up" => UiCommand::SetCatchUp { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
             "reroll" => UiCommand::Reroll,
             l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {

@@ -15,6 +15,9 @@
 //! - **Points.** Ranks 1–10 get `[25, 18, 15, 12, 10, 8, 6, 4, 2, 1]`; every later classified rank gets 1. Finishers get
 //!   the ruleset's finish bonus (+5 by default). Late joiners are classified where they actually finish; inherited
 //!   progress only voids lap timing, which isn't recorded yet.
+//! - **Derby** (P1-S10, master §10.12): a seat's raw points (the sim's derby ledger, score units) are all that ranks it. Equal
+//!   raw points share a rank; the same points table applies with no finish bonus; a late joiner is ranked on raw points
+//!   alone from the moment it arrived (no normalisation); a seat that left keeps what it scored and is DNF, placed by it.
 //! - **Commit** is idempotent by `RoundId`: the same facts again change nothing, and different facts for a committed
 //!   round are refused.
 
@@ -137,6 +140,76 @@ enum Key {
     },
 }
 
+/// What the derby ledger knows about one seat at finalisation (P1-S10).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DerbyEntrant {
+    pub seat: SeatId,
+    /// False: the seat never had a car in this round (DNS).
+    pub entered: bool,
+    /// Raw points in score units (1/2000 point).
+    pub units: u64,
+    /// Withdrawn (left or sat out) at finalisation.
+    pub withdrawn: bool,
+    /// Joined mid-round (drop-in).
+    pub late: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DerbyFacts {
+    pub round: RoundId,
+    pub entrants: Vec<DerbyEntrant>,
+}
+
+/// Classifies a derby round by raw points (no standings change): competition ranks, the championship table, no finish
+/// bonus. Present seats are [`Status::Finished`] (played to the clock), withdrawn ones [`Status::Dnf`], both ranked by what
+/// they scored; never-entered seats are DNS.
+pub fn classify_derby(facts: &DerbyFacts) -> Result<RoundResult, CommitError> {
+    let mut seen = BTreeSet::new();
+    for e in &facts.entrants {
+        if !seen.insert(e.seat) {
+            return Err(CommitError::DuplicateSeat { seat: e.seat });
+        }
+    }
+    let mut ranked: Vec<&DerbyEntrant> = facts.entrants.iter().filter(|e| e.entered).collect();
+    ranked.sort_by(|a, b| b.units.cmp(&a.units).then(a.seat.cmp(&b.seat)));
+    let mut rows = Vec::with_capacity(facts.entrants.len());
+    let mut place = 0;
+    for (i, e) in ranked.iter().enumerate() {
+        if i == 0 || ranked[i - 1].units != e.units {
+            place = i as u32 + 1;
+        }
+        let placement_points = points_for_rank(place);
+        rows.push(Classified {
+            seat: e.seat,
+            status: if e.withdrawn {
+                Status::Dnf
+            } else {
+                Status::Finished
+            },
+            place: Some(place),
+            placement_points,
+            finish_bonus: 0,
+            points: placement_points,
+            late: e.late,
+        });
+    }
+    let mut dns: Vec<&DerbyEntrant> = facts.entrants.iter().filter(|e| !e.entered).collect();
+    dns.sort_by_key(|e| e.seat);
+    rows.extend(dns.into_iter().map(|e| Classified {
+        seat: e.seat,
+        status: Status::Dns,
+        place: None,
+        placement_points: 0,
+        finish_bonus: 0,
+        points: 0,
+        late: e.late,
+    }));
+    Ok(RoundResult {
+        round: facts.round,
+        rows,
+    })
+}
+
 /// Classifies a round (no standings change).
 pub fn classify(facts: &RoundFacts) -> Result<RoundResult, CommitError> {
     let mut seen = BTreeSet::new();
@@ -225,8 +298,15 @@ pub struct StandingRow {
 /// The session's standings: every committed round, in memory only.
 #[derive(Clone, Debug, Default)]
 pub struct Standings {
-    rounds: BTreeMap<RoundId, (RoundFacts, RoundResult)>,
+    rounds: BTreeMap<RoundId, (Facts, RoundResult)>,
     totals: BTreeMap<SeatId, SeatTotal>,
+}
+
+/// What a committed round was classified from (a round is committed once, as one kind).
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Facts {
+    Race(RoundFacts),
+    Derby(DerbyFacts),
 }
 
 fn canonical(facts: &RoundFacts) -> RoundFacts {
@@ -239,29 +319,55 @@ impl Standings {
     /// Commits a round exactly once.
     pub fn commit(&mut self, facts: &RoundFacts) -> Result<Committed, CommitError> {
         let facts = canonical(facts);
-        if let Some((stored, result)) = self.rounds.get(&facts.round) {
-            return if *stored == facts {
-                Ok(Committed::Again(result.clone()))
-            } else {
-                Err(CommitError::Conflict { round: facts.round })
-            };
+        if let Some(done) = self.committed(facts.round, &Facts::Race(facts.clone())) {
+            return done;
         }
         let result = classify(&facts)?;
+        self.add(&result, true);
+        self.rounds
+            .insert(facts.round, (Facts::Race(facts), result.clone()));
+        Ok(Committed::New(result))
+    }
+
+    /// Commits a derby round exactly once (P1-S10), by raw points.
+    pub fn commit_derby(&mut self, facts: &DerbyFacts) -> Result<Committed, CommitError> {
+        let mut facts = facts.clone();
+        facts.entrants.sort_by_key(|e| e.seat);
+        if let Some(done) = self.committed(facts.round, &Facts::Derby(facts.clone())) {
+            return done;
+        }
+        let result = classify_derby(&facts)?;
+        self.add(&result, false);
+        self.rounds
+            .insert(facts.round, (Facts::Derby(facts), result.clone()));
+        Ok(Committed::New(result))
+    }
+
+    /// The answer for a round already committed: the same facts again change nothing, other facts conflict.
+    fn committed(&self, round: RoundId, facts: &Facts) -> Option<Result<Committed, CommitError>> {
+        let (stored, result) = self.rounds.get(&round)?;
+        Some(if stored == facts {
+            Ok(Committed::Again(result.clone()))
+        } else {
+            Err(CommitError::Conflict { round })
+        })
+    }
+
+    /// Adds a round's rows to the running totals (`finishes` counts race finishes only).
+    fn add(&mut self, result: &RoundResult, race: bool) {
         for row in &result.rows {
             let t = self.totals.entry(row.seat).or_default();
             t.points += row.points;
             if row.status != Status::Dns {
                 t.rounds += 1;
             }
-            if row.status == Status::Finished {
+            if race && row.status == Status::Finished {
                 t.finishes += 1;
             }
             if row.place == Some(1) {
                 t.wins += 1;
             }
         }
-        self.rounds.insert(facts.round, (facts, result.clone()));
-        Ok(Committed::New(result))
     }
 
     pub fn round(&self, round: RoundId) -> Option<&RoundResult> {

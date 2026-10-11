@@ -265,7 +265,7 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         input_profile: Option<String>,
         #[serde(default)]
         input_set: Vec<(String, String)>,
-        /// The generator data file and its changes (br-2sdu.3), paths as in that file (`course.lengthMinM`).
+        /// The generator data file and its changes (br-2sdu.3), paths as in that file (`course.classes.standard.lengthMinM`).
         #[serde(default)]
         generator: Option<String>,
         #[serde(default)]
@@ -422,7 +422,7 @@ mod tests {
         let original = std::fs::read_to_string(&file).unwrap();
         // A band whose minimum is above its maximum, and an unknown field: refused, nothing written.
         for bad in [
-            json!([["course.lengthMinM", "5000"]]),
+            json!([["course.classes.standard.lengthMinM", "5000"]]),
             json!([["course.nope", "1"]]),
         ] {
             write(bad);
@@ -430,7 +430,7 @@ mod tests {
             assert_eq!(std::fs::read_to_string(&file).unwrap(), original);
         }
         write(json!([
-            ["course.lengthMinM", "800"],
+            ["course.classes.standard.lengthMinM", "1100"],
             ["biomes.town.terrain.reliefM", "9"]
         ]));
         assert_eq!(tune(&patch, true).unwrap().len(), 2);
@@ -443,9 +443,12 @@ mod tests {
         let after =
             jj_procgen::tuning::GeneratorData::from_json(&std::fs::read_to_string(&file).unwrap())
                 .expect("the written file validates");
-        assert_eq!(after.course.length_min_m, 800.0);
+        assert_eq!(after.course.classes.standard.length_min_m, 1100.0);
         assert_eq!(after.biomes.town.terrain.relief_m, 9.0);
-        assert_eq!(after.course.length_max_m, 1100.0, "the rest is kept");
+        assert_eq!(
+            after.course.classes.epic.length_max_m, 2500.0,
+            "the rest is kept"
+        );
     }
 
     #[test]

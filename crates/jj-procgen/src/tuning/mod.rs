@@ -1,10 +1,9 @@
 //! The generator's tunable values as versioned data (br-2sdu.3, R125): `assets/profiles/generator.json`.
 //!
 //! The owner tuning menu edits these and the export patches that file. They are the numbers the generator reads: the
-//! course's length band and straights, each biome's terrain (relief, grade, curvature, bank, wavelength, blend) and
-//! feature densities, and the recipe (the biome mix). The shipped file equals the constants and biome definitions the
-//! generator had before it existed (a test pins that, so the goldens did not move); a committed tuning changes the
-//! file, the goldens and `GENERATOR_VERSION` together.
+//! course's length classes (sprint, standard, epic: weight, length band, laps) and straights, each biome's terrain
+//! (relief, grade, curvature, bank, wavelength, blend) and feature densities, and the biome mix (weights for one to
+//! four biomes per track). A committed tuning changes the file, the goldens and `GENERATOR_VERSION` together.
 
 use std::sync::OnceLock;
 
@@ -19,19 +18,81 @@ use crate::terrain::TerrainParams;
 pub const VERSION: u32 = 1;
 const SHIPPED: &str = include_str!("../../../../assets/profiles/generator.json");
 
+/// One length class (R125): how often it is drawn, the lap length band its courses are built to, and the laps a race
+/// on such a track runs by default (the host may override them).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LengthClass {
+    /// Relative weight (a share of seeds when the weights sum to 100).
+    pub weight: f64,
+    pub length_min_m: f64,
+    pub length_max_m: f64,
+    pub laps: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LengthClasses {
+    pub sprint: LengthClass,
+    pub standard: LengthClass,
+    pub epic: LengthClass,
+}
+
+/// The name of a length class.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ClassName {
+    Sprint,
+    Standard,
+    Epic,
+}
+
+impl ClassName {
+    pub const ALL: [ClassName; 3] = [ClassName::Sprint, ClassName::Standard, ClassName::Epic];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            ClassName::Sprint => "sprint",
+            ClassName::Standard => "standard",
+            ClassName::Epic => "epic",
+        }
+    }
+}
+
+impl LengthClasses {
+    pub fn get(&self, c: ClassName) -> &LengthClass {
+        match c {
+            ClassName::Sprint => &self.sprint,
+            ClassName::Standard => &self.standard,
+            ClassName::Epic => &self.epic,
+        }
+    }
+}
+
 /// The course designer's numbers (metres).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CourseData {
-    /// The lap length band a drawn course must fall inside.
-    pub length_min_m: f64,
-    pub length_max_m: f64,
+    /// The length classes: one is drawn per seed by weight, and the course is built to its band.
+    pub classes: LengthClasses,
     pub start_straight_min_m: f64,
     pub start_straight_max_m: f64,
-    pub straight_min_m: f64,
-    pub straight_max_m: f64,
-    /// The shortest straight the loop-closing adjustment may leave.
+    /// How uneven the straights are, 0 (all equal) to 1: each straight's share of the lap is drawn from 1 +/- this.
+    pub straight_spread: f64,
+    /// The shortest straight the course may leave.
     pub min_straight_m: f64,
+    /// One extra left-right bend pair per this many metres of lap beyond the first few (longer tracks bend more).
+    pub bend_spacing_m: f64,
+}
+
+/// The biome mix (R125): the weights for a track using one, two, three or four biomes; which biomes, and in which
+/// order, are drawn uniformly per seed.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MixData {
+    pub one_biome: f64,
+    pub two_biomes: f64,
+    pub three_biomes: f64,
+    pub four_biomes: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -78,8 +139,7 @@ pub struct Biomes {
 pub struct GeneratorData {
     pub version: u32,
     pub what: String,
-    /// The biome mix: comma-separated biome names in lap order (as `jj-wasm-procgen` takes them).
-    pub recipe: String,
+    pub mix: MixData,
     pub course: CourseData,
     pub biomes: Biomes,
 }
@@ -117,8 +177,8 @@ impl GeneratorData {
         Ok(d)
     }
 
-    /// The same document with each `(dotted path, json value)` set (`course.lengthMinM`, `biomes.town.terrain.reliefM`,
-    /// `recipe`). Refuses an unknown path, a value of the wrong type or one the validator rejects; the original is
+    /// The same document with each `(dotted path, json value)` set (`course.classes.standard.lengthMinM`,
+    /// `biomes.town.terrain.reliefM`, `mix.twoBiomes`). Refuses an unknown path, a value of the wrong type or one the validator rejects; the original is
     /// untouched.
     pub fn with_fields(&self, set: &[(String, String)]) -> Result<Self, GeneratorError> {
         let mut v = serde_json::to_value(self).map_err(|e| err(e.to_string()))?;
@@ -148,24 +208,17 @@ impl GeneratorData {
         if self.version != VERSION {
             bad.push(format!("version {} (expected {VERSION})", self.version));
         }
-        if let Err(e) = self.recipe_biomes() {
-            bad.push(e);
-        }
         let c = &self.course;
         let pos = |name: &str, v: f64, bad: &mut Vec<String>| {
             if !(v > 0.0 && v.is_finite()) {
                 bad.push(format!("{name} = {v}: must be positive"));
             }
         };
-        for (name, lo, hi) in [
-            ("course.length", c.length_min_m, c.length_max_m),
-            (
-                "course.startStraight",
-                c.start_straight_min_m,
-                c.start_straight_max_m,
-            ),
-            ("course.straight", c.straight_min_m, c.straight_max_m),
-        ] {
+        for (name, lo, hi) in [(
+            "course.startStraight",
+            c.start_straight_min_m,
+            c.start_straight_max_m,
+        )] {
             pos(&format!("{name}MinM"), lo, &mut bad);
             pos(&format!("{name}MaxM"), hi, &mut bad);
             if lo > hi {
@@ -173,8 +226,50 @@ impl GeneratorData {
             }
         }
         pos("course.minStraightM", c.min_straight_m, &mut bad);
-        if c.length_max_m > 20_000.0 {
-            bad.push("course.lengthMaxM: above 20 km".to_owned());
+        pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
+        if !(0.0..1.0).contains(&c.straight_spread) {
+            bad.push(format!(
+                "course.straightSpread = {}: must be from 0 up to (not including) 1",
+                c.straight_spread
+            ));
+        }
+        let mut total_weight = 0.0;
+        for n in ClassName::ALL {
+            let k = c.classes.get(n);
+            let id = format!("course.classes.{}", n.name());
+            if !(k.weight >= 0.0 && k.weight.is_finite()) {
+                bad.push(format!("{id}.weight = {}: must not be negative", k.weight));
+            }
+            total_weight += k.weight;
+            pos(&format!("{id}.lengthMinM"), k.length_min_m, &mut bad);
+            pos(&format!("{id}.lengthMaxM"), k.length_max_m, &mut bad);
+            if k.length_min_m > k.length_max_m {
+                bad.push(format!(
+                    "{id}.lengthMinM {} is above lengthMaxM {}",
+                    k.length_min_m, k.length_max_m
+                ));
+            }
+            if k.length_max_m > 20_000.0 {
+                bad.push(format!("{id}.lengthMaxM: above 20 km"));
+            }
+            if k.laps == 0 {
+                bad.push(format!("{id}.laps: at least 1"));
+            }
+        }
+        if total_weight <= 0.0 {
+            bad.push("course.classes: every weight is zero".to_owned());
+        }
+        // The bands are ordered and apart, so a lap length names its class.
+        let (s, m, e) = (&c.classes.sprint, &c.classes.standard, &c.classes.epic);
+        if s.length_max_m >= m.length_min_m || m.length_max_m >= e.length_min_m {
+            bad.push(
+                "course.classes: the sprint, standard and epic bands must be in order and not overlap"
+                    .to_owned(),
+            );
+        }
+        let mix = self.mix.weights();
+        if mix.iter().any(|w| !(*w >= 0.0 && w.is_finite())) || mix.iter().sum::<f64>() <= 0.0 {
+            bad.push("mix: weights must not be negative and must not all be zero".to_owned());
         }
         for (id, b) in self.biomes.all() {
             let t = &b.terrain;
@@ -217,22 +312,53 @@ impl GeneratorData {
         }
     }
 
-    /// The recipe's biomes in lap order.
-    pub fn recipe_biomes(&self) -> Result<Vec<Biome>, String> {
-        let list: Result<Vec<Biome>, String> = self
-            .recipe
-            .split(',')
-            .map(|n| {
-                serde_json::from_value(Value::String(n.trim().into()))
-                    .map_err(|_| format!("recipe: unknown biome {:?}", n.trim()))
-            })
-            .collect();
-        let list = list?;
-        if list.is_empty() {
-            Err("recipe: empty".into())
-        } else {
-            Ok(list)
+    /// The class a lap of `length_m` metres belongs to: the one whose band holds it, else the nearest band.
+    pub fn class_of_length(&self, length_m: f64) -> ClassName {
+        let dist = |k: &LengthClass| {
+            if length_m < k.length_min_m {
+                k.length_min_m - length_m
+            } else {
+                (length_m - k.length_max_m).max(0.0)
+            }
+        };
+        let mut best = ClassName::Standard;
+        let mut best_d = f64::INFINITY;
+        for n in ClassName::ALL {
+            let d = dist(self.course.classes.get(n));
+            if d < best_d {
+                (best, best_d) = (n, d);
+            }
         }
+        best
+    }
+
+    /// The race's default laps for a track whose lap is `length_m` metres (the host may override).
+    pub fn laps_for_length(&self, length_m: f64) -> u32 {
+        self.course.classes.get(self.class_of_length(length_m)).laps
+    }
+
+    /// The biomes of the seed's track in lap order: how many by the mix weights, then which and in what order drawn
+    /// uniformly, all from the seed's own `mix` stream (so nothing else's draws move).
+    pub fn draw_mix(&self, seed: u64) -> Vec<Biome> {
+        let mut rng = crate::seed::Rng::stream(seed, "mix");
+        let w = self.mix.weights();
+        let total: f64 = w.iter().sum();
+        let mut pick = rng.unit() * total;
+        let mut count = w.len();
+        for (i, x) in w.iter().enumerate() {
+            if pick < *x {
+                count = i + 1;
+                break;
+            }
+            pick -= x;
+        }
+        let mut pool = crate::playtest::POOL.to_vec();
+        for i in 0..count {
+            let j = i + (rng.next_u64() % (pool.len() - i) as u64) as usize;
+            pool.swap(i, j);
+        }
+        pool.truncate(count);
+        pool
     }
 
     /// The terrain numbers the generator uses for `biome`.
@@ -259,56 +385,22 @@ impl GeneratorData {
             creek: f.creek,
         }
     }
+}
 
-    /// The data the generator had before this file existed: the course constants and each biome's definition.
-    pub fn builtin() -> Self {
-        use crate::course::{LENGTH_BAND_M, MIN_STRAIGHT_M, START_STRAIGHT_M, STRAIGHT_M};
-        let tuning = |b: Biome| {
-            let d = crate::biome::def(b).data();
-            BiomeTuning {
-                terrain: TerrainData {
-                    relief_m: d.terrain.relief_m,
-                    ground_relief_m: d.terrain.ground_relief_m,
-                    wavelength_m: d.terrain.wavelength_m,
-                    max_grade: d.terrain.max_grade,
-                    max_curvature: d.terrain.max_curvature,
-                    max_bank_cdeg: d.terrain.max_bank_cdeg,
-                    blend_m: d.terrain.blend_m,
-                },
-                features: FeatureData {
-                    jump: d.features.jump,
-                    crest: d.features.crest,
-                    whoops: d.features.whoops,
-                    creek: d.features.creek,
-                },
-            }
-        };
-        Self {
-            version: VERSION,
-            what: String::new(),
-            recipe: crate::playtest::RECIPE_NAMES.to_owned(),
-            course: CourseData {
-                length_min_m: LENGTH_BAND_M.0,
-                length_max_m: LENGTH_BAND_M.1,
-                start_straight_min_m: START_STRAIGHT_M.0,
-                start_straight_max_m: START_STRAIGHT_M.1,
-                straight_min_m: STRAIGHT_M.0,
-                straight_max_m: STRAIGHT_M.1,
-                min_straight_m: MIN_STRAIGHT_M,
-            },
-            biomes: Biomes {
-                greybox: tuning(Biome::Greybox),
-                town: tuning(Biome::Town),
-                rocks: tuning(Biome::Rocks),
-                outback_dirt: tuning(Biome::OutbackDirt),
-                outback_bitumen: tuning(Biome::OutbackBitumen),
-            },
-        }
+impl MixData {
+    /// The weights for one, two, three and four biomes.
+    pub fn weights(&self) -> [f64; 4] {
+        [
+            self.one_biome,
+            self.two_biomes,
+            self.three_biomes,
+            self.four_biomes,
+        ]
     }
 }
 
 impl Biomes {
-    fn get(&self, b: Biome) -> &BiomeTuning {
+    pub fn get(&self, b: Biome) -> &BiomeTuning {
         match b {
             Biome::Greybox => &self.greybox,
             Biome::Town => &self.town,
@@ -340,19 +432,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_shipped_file_is_the_generators_old_constants_so_nothing_moved() {
-        let mut built = GeneratorData::builtin();
-        built.what = GeneratorData::shipped().what.clone();
-        assert_eq!(&built, GeneratorData::shipped());
-    }
-
-    /// `cargo test -p jj-procgen print_builtin -- --ignored --nocapture` prints the file to bless from the constants.
-    #[test]
-    #[ignore]
-    fn print_builtin() {
-        let mut b = GeneratorData::builtin();
-        b.what = "Generator data (R125): the course length band and straights, each biome's terrain and feature mix, and the biome mix (recipe). Tuned in the owner tuning menu and changed here, never in code; jj-procgen validates the file at load. A committed change moves the goldens: bump GENERATOR_VERSION and re-bless tests/goldens.".into();
-        println!("{}", serde_json::to_string_pretty(&b).unwrap());
+    fn the_shipped_file_validates_and_matches_the_owner_rulings() {
+        let d = GeneratorData::shipped();
+        let c = &d.course.classes;
+        assert_eq!(
+            (c.sprint.weight, c.standard.weight, c.epic.weight),
+            (30.0, 50.0, 20.0)
+        );
+        assert_eq!((c.sprint.laps, c.standard.laps, c.epic.laps), (5, 3, 2));
+        assert_eq!(d.mix.weights(), [35.0, 35.0, 15.0, 15.0]);
+        assert_eq!(d.class_of_length(750.0), ClassName::Sprint);
+        assert_eq!(d.class_of_length(1300.0), ClassName::Standard);
+        assert_eq!(d.class_of_length(2400.0), ClassName::Epic);
+        assert_eq!(d.laps_for_length(940.0), 5);
     }
 
     #[test]
@@ -360,22 +452,24 @@ mod tests {
         let d = GeneratorData::shipped();
         let ok = d
             .with_fields(&[
-                ("course.lengthMinM".into(), "800".into()),
+                ("course.classes.standard.lengthMinM".into(), "1100".into()),
                 ("biomes.town.terrain.reliefM".into(), "9.5".into()),
-                ("recipe".into(), "\"town,rocks\"".into()),
+                ("mix.twoBiomes".into(), "10".into()),
             ])
             .unwrap();
-        assert_eq!(ok.course.length_min_m, 800.0);
+        assert_eq!(ok.course.classes.standard.length_min_m, 1100.0);
         assert_eq!(ok.biomes.town.terrain.relief_m, 9.5);
-        assert_eq!(ok.recipe_biomes().unwrap().len(), 2);
+        assert_eq!(ok.mix.two_biomes, 10.0);
         for (path, raw) in [
-            ("course.lengthMinM", "5000"),
-            ("course.lengthMinM", "-1"),
-            ("course.lengthMinM", "\"long\""),
+            ("course.classes.standard.lengthMinM", "5000"),
+            ("course.classes.standard.lengthMinM", "-1"),
+            ("course.classes.standard.lengthMinM", "700"),
+            ("course.classes.standard.laps", "0"),
+            ("course.classes.sprint.lengthMaxM", "\"long\""),
             ("course.nope", "1"),
             ("course", "1"),
             ("version", "2"),
-            ("recipe", "\"town,nowhere\""),
+            ("mix.oneBiome", "-3"),
             ("biomes.rocks.terrain.maxGrade", "0.9"),
             ("biomes.rocks.features.jump", "-1"),
         ] {
@@ -387,7 +481,7 @@ mod tests {
     #[test]
     fn the_validator_names_each_problem() {
         let mut d = GeneratorData::shipped().clone();
-        d.course.straight_max_m = 1.0;
+        d.course.straight_spread = 1.5;
         d.biomes.town.features.creek = -2.0;
         let GeneratorError(lines) = d.validate().unwrap_err();
         assert_eq!(lines.len(), 2, "{lines:?}");

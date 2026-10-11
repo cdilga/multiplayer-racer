@@ -1,0 +1,25 @@
+{
+  "what": "R125 learner assists (br-2mxa): a scripted novice (throttle pinned, steering toward the line at a fraction of what is needed plus seeded stick noise) drives the greybox loop at each assist level, and the same seeds replay bit for bit. Envelopes are what the tests assert; the real numbers are in docs/evidence/br-2mxa/.",
+  "map": "maps/greybox-loop.json",
+  "laps": 2,
+  "maxSeconds": 120,
+  "seeds": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "novice": {
+    "follow": 0.8,
+    "noiseAmp": 0.4,
+    "noiseEveryS": 0.25,
+    "noiseSmooth": 0.25
+  },
+  "expect": {
+    "someMinFinished": 6,
+    "lotsMinFinished": 6,
+    "offMinCrashesOverSome": 40
+  }
+}

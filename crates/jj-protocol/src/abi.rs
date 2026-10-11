@@ -69,6 +69,10 @@ pub enum UiCommand {
     TuneVehicle {
         vehicle: String,
     },
+    /// R125: lobby catch-up choice, applied from the next round's GO.
+    SetCatchUp {
+        on: bool,
+    },
 }
 
 /// Main → sim.

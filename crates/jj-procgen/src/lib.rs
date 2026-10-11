@@ -15,6 +15,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod arena;
 pub mod assemble;
 pub mod biome;
 pub mod course;
@@ -40,13 +41,15 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "9";
+pub const GENERATOR_VERSION: &str = "10";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
 #[derive(Clone, Debug)]
 pub struct Report {
     pub length_m: f64,
+    /// The seed's length class (R125).
+    pub class: tuning::ClassName,
     pub attempts: u32,
     pub fallback: bool,
     pub corners: BTreeMap<&'static str, u32>,
@@ -195,6 +198,7 @@ fn report(course: &Course) -> Report {
     }
     Report {
         length_m: course.length_m,
+        class: course.class,
         attempts: course.attempts,
         fallback: course.fallback,
         corners,

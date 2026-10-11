@@ -13,17 +13,21 @@ pub fn build_info() -> String {
     concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")).to_owned()
 }
 
-/// Playtest 1's lap: four biomes in order, ending back in the first (the M03g ladder handles the seeds that can't fit it).
-pub const PLAYTEST1_RECIPE: &str = jj_procgen::playtest::RECIPE_NAMES;
+/// The default recipe is empty: the seed draws its own one to four biomes in any order (R125, `GeneratorData::draw_mix`;
+/// the M03g ladder handles the seeds that can't fit them). A non-empty list is an explicit lap, for dev tools.
+pub const DEFAULT_RECIPE: &str = "";
 
-/// The Playtest-1 recipe, as a comma-separated list of biome names.
+/// The default recipe: empty, meaning the seed's own biome mix.
 #[wasm_bindgen(js_name = defaultRecipe)]
 pub fn default_recipe() -> String {
-    PLAYTEST1_RECIPE.to_owned()
+    DEFAULT_RECIPE.to_owned()
 }
 
-/// Biome names (`greybox`, `town`, `rocks`, `outback-dirt`, `outback-bitumen`), comma-separated.
+/// Biome names (`greybox`, `town`, `rocks`, `outback-dirt`, `outback-bitumen`), comma-separated; empty is the seed's mix.
 pub fn parse_recipe(list: &str) -> Result<Vec<Biome>, String> {
+    if list.trim().is_empty() {
+        return Ok(Vec::new());
+    }
     list.split(',')
         .map(|n| {
             serde_json::from_value(serde_json::Value::String(n.trim().into()))
@@ -120,13 +124,13 @@ pub fn prepare_tuned(seed: f64, recipe: &str, generator: &str) -> Result<Prepare
         jj_procgen::tuning::GeneratorData::from_json(generator)
             .map_err(|e| JsError::new(&e.to_string()))?
     };
-    // The Playtest-1 course-draw budget: every track keeps all four biomes (a few tens of milliseconds a draw).
-    let p = jj_procgen::prepare_tuned(
-        seed as u64,
-        &recipe,
-        jj_procgen::playtest::PLAYTEST_DRAWS,
-        &data,
-    );
+    // The Playtest-1 course-draw budget (a few tens of milliseconds a draw); an empty recipe is the seed's own mix.
+    let seed = seed as u64;
+    let p = if recipe.is_empty() {
+        jj_procgen::playtest::prepare_data(seed, &data)
+    } else {
+        jj_procgen::prepare_tuned(seed, &recipe, jj_procgen::playtest::PLAYTEST_DRAWS, &data)
+    };
     let log = serde_json::json!(
         p.attempts
             .iter()
@@ -166,11 +170,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_default_recipe_parses_and_prepares_a_valid_map() {
-        let recipe = parse_recipe(PLAYTEST1_RECIPE).unwrap();
-        assert_eq!(recipe.len(), 4);
+    fn the_default_recipe_is_the_seeds_own_mix_and_prepares_a_valid_map() {
+        assert_eq!(parse_recipe(DEFAULT_RECIPE).unwrap(), Vec::new());
+        assert_eq!(parse_recipe("town,rocks").unwrap().len(), 2);
         assert!(parse_recipe("town,nowhere").is_err());
-        let p = jj_procgen::prepare(7, &recipe);
-        assert!(p.valid);
+        let data = jj_procgen::tuning::GeneratorData::shipped();
+        for seed in [7, 8, 9] {
+            let p = jj_procgen::playtest::prepare_data(seed, data);
+            assert!(p.valid, "seed {seed}");
+        }
     }
 }

@@ -75,3 +75,28 @@ fn generate_and_validate_in_wasm_stays_inside_the_laptop_budget() {
         total / 24.0
     );
 }
+
+const ARENAS: &str = include_str!("goldens/arena.txt");
+
+/// The derby bowls (P1-M10): the canonical map bytes and the collider's triangles are bit-identical in WASM.
+#[wasm_bindgen_test]
+fn derby_arenas_in_wasm_match_the_native_hashes_and_meshes() {
+    let mut n = 0;
+    for line in ARENAS.lines().filter(|l| !l.trim().is_empty()) {
+        let f: Vec<&str> = line.split(' ').collect();
+        let (seed, cars): (u64, usize) = (
+            f[0].parse().expect("a seed"),
+            f[1].parse().expect("a car count"),
+        );
+        let map = jj_procgen::arena::prepare(seed, cars, &jj_procgen::registry())
+            .unwrap_or_else(|bad| panic!("arena {seed}/{cars} fails in WASM: {bad:?}"));
+        assert_eq!(hex(&gameplay_hash(&map.map)), f[2], "arena {seed}/{cars}");
+        assert_eq!(
+            format!("{:016x}", jj_map::arena::mesh_fingerprint(&map.map)),
+            f[3],
+            "arena {seed}/{cars} mesh"
+        );
+        n += 1;
+    }
+    assert!(n > 0, "no arena goldens");
+}

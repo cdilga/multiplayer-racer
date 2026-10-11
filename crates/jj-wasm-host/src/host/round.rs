@@ -21,8 +21,10 @@ use super::*;
 pub(super) struct RoundState {
     pub director: Director,
     pub standings: Standings,
-    pub laps: u32,
+    /// The host's laps override (`UiCommand::SetLaps`); `None` follows the track's length class (R125).
+    pub laps: Option<u32>,
     pub free_drive: bool,
+    pub catch_up: jj_sim::assist::CatchUp,
     /// The round on now (Countdown to Intermission), and its seats.
     pub round: Option<RoundId>,
     pub cohort: Vec<SeatId>,
@@ -47,8 +49,9 @@ impl RoundState {
         Self {
             director: Director::new(DirectorConfig::default()),
             standings: Standings::default(),
-            laps: jj_sim::race::DEFAULT_LAPS,
+            laps: None,
             free_drive: false,
+            catch_up: jj_sim::assist::CatchUp::Light,
             round: None,
             cohort: Vec::new(),
             late: Vec::new(),
@@ -73,6 +76,21 @@ fn room_phase(p: Phase) -> RoomPhase {
 }
 
 impl Host {
+    /// The laps the next race runs: the host's override, else the track's length class (R125: sprint, standard and epic
+    /// tracks run more or fewer laps so a race lasts about the same time; the data is `assets/profiles/generator.json`).
+    pub(super) fn effective_laps(&self) -> u32 {
+        self.round.laps.unwrap_or_else(|| {
+            let pts = &self.map.map.route.points;
+            let len_m: f64 = (0..pts.len())
+                .map(|i| {
+                    let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
+                    f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0
+                })
+                .sum();
+            jj_procgen::tuning::GeneratorData::shipped().laps_for_length(len_m)
+        })
+    }
+
     /// What cars may do now.
     pub(super) fn driving(&self) -> Driving {
         self.round.director.driving()
@@ -125,7 +143,9 @@ impl Host {
                 self.round.round = Some(round);
                 self.round.cohort = seats;
                 self.round.late.clear();
-                self.sim.start_race(self.round.laps);
+                let laps = self.effective_laps();
+                self.sim.set_catch_up(self.round.catch_up);
+                self.sim.start_race(laps);
                 self.room_state_all();
                 vec![]
             }
@@ -417,6 +437,9 @@ impl Host {
                     "choosing": self.picks.get(&s.id).is_some_and(|p| p.1),
                     "presence": format!("{:?}", s.presence),
                     "local": s.endpoint.0.starts_with("local:"),
+                    // P1-C14: which host pad, wheel or key cluster holds this seat ("local:<source>" or "local:<source>#<n>"), so the
+                    // tile can show that source's own controls card and glyphs.
+                    "localSource": s.endpoint.0.strip_prefix("local:").and_then(|r| r.split('#').next()).and_then(|n| n.parse::<u32>().ok()),
                     // The transport endpoint (an id, never the secret): diagnostics match it to the peer's path.
                     "endpoint": (!s.endpoint.0.starts_with("local:")).then_some(s.endpoint.0.as_str()),
                     "car": car,
@@ -426,6 +449,8 @@ impl Host {
                     "finished": race.and_then(|r| r.finished_at).is_some(),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
+                    // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
+                    "assist": self.inputs.get(&s.id).map_or(0, |i| i.assist.as_u8()),
                     "prompt": self.inputs.get(&s.id).filter(|i| i.prompt.showing()).map(|i| serde_json::json!({ "step": i.prompt.step, "of": super::prompts::STEPS.len(), "done": i.prompt.done() })),
                 })
             })
@@ -442,8 +467,9 @@ impl Host {
             "phase": format!("{:?}", d.phase()),
             "remainingMs": d.remaining_ms(),
             "round": d.round().map(|r| r.0),
-            "laps": self.round.laps,
+            "laps": self.effective_laps(),
             "freeDrive": self.round.free_drive,
+            "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
             // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
             "vehicles": self.vehicles.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
             "armed": d.armed(),
@@ -500,7 +526,15 @@ impl Host {
             UiCommand::StartRound => self.director_apply(DirIn::StartNow),
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
-            UiCommand::SetLaps { laps } => self.round.laps = laps.max(1),
+            UiCommand::SetLaps { laps } => self.round.laps = Some(laps.max(1)),
+            UiCommand::SetCatchUp { on } => {
+                self.round.catch_up = if on {
+                    jj_sim::assist::CatchUp::Light
+                } else {
+                    jj_sim::assist::CatchUp::Off
+                };
+                self.session_rev += 1;
+            }
             UiCommand::PrepareMaps { on } => self.round.prepare_maps = on,
             // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
             UiCommand::Reroll => self.director_apply(DirIn::Reroll),

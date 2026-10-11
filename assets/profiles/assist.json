@@ -1,0 +1,54 @@
+{
+  "contract": "jj-assist/1",
+  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side: they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input, and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
+  "line": {
+    "lookAheadS": 0.8,
+    "minLookAheadM": 6.0,
+    "planBrake": 6.0,
+    "nearCentre": 0.25,
+    "zeroAt": 0.85,
+    "fullLock": 0.9
+  },
+  "speedPlan": {
+    "lateralGrip": 9.0,
+    "minSpeed": 4.0,
+    "capMps": 60.0,
+    "overspeedMargin": 1.0,
+    "brakeGain": 0.3,
+    "throttleGain": 0.25
+  },
+  "levels": {
+    "some": {
+      "steerToLine": 0.3,
+      "speedSkill": 1.0,
+      "brakeAssist": true,
+      "autoThrottle": false,
+      "drift": "heldFullLock",
+      "driftHoldS": 0.25,
+      "wheelie": true,
+      "flipInstant": false
+    },
+    "lots": {
+      "steerToLine": 0.6,
+      "speedSkill": 0.9,
+      "brakeAssist": true,
+      "autoThrottle": true,
+      "drift": "off",
+      "driftHoldS": 0.0,
+      "wheelie": false,
+      "flipInstant": true
+    }
+  },
+  "flip": {
+    "upBelow": 0.2,
+    "speedBelowMps": 2.0,
+    "doneAbove": 0.7
+  },
+  "catchUp": {
+    "referenceSpeedMps": 20.0,
+    "startS": 3.0,
+    "fullS": 12.0,
+    "topSpeedGain": 0.06,
+    "boostRefill": 1.5
+  }
+}

@@ -7,8 +7,10 @@
 
 #![forbid(unsafe_code)]
 
+pub mod assist;
 pub mod autopilot;
 pub mod damage;
+pub mod derby;
 pub mod journal;
 pub mod observe;
 pub mod placement;

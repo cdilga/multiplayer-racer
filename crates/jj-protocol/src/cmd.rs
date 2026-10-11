@@ -33,6 +33,15 @@ pub enum CameraDistance {
     Far,
 }
 
+/// A player's learner-assist level (R125), chosen in the phone's settings.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum AssistLevel {
+    Off,
+    Some,
+    Lots,
+}
+
 /// A discrete action, detected on the controller.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
@@ -115,6 +124,11 @@ pub enum ControllerCmd {
     ForSource {
         source: SourceHandle,
         cmd: Box<ControllerCmd>,
+    },
+    /// The player's learner-assist level (R125: Off / Some / Lots), from the phone's settings. Appended after `ForSource`:
+    /// variant order is the wire format. The host applies it to the seat's car in the sim and shows an L-plate on the tile.
+    SetAssist {
+        level: AssistLevel,
     },
 }
 

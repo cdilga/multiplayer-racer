@@ -190,6 +190,9 @@ pub enum FeatureKind {
     CreekDip,
     /// A low strip across the road (the wheelie-hop duel). Params: `heightCm`, `depthMm`.
     Kerb,
+    /// The derby bowl arena (P1-M10; pose = the bowl's centre and floor height; appended, so older maps' bytes don't
+    /// move). Params: `floorRadiusMm`, `bankRadiusMm`, `wallHeightCm`, `lipWidthMm`; see [`crate::arena`].
+    Bowl,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

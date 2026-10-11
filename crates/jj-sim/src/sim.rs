@@ -22,6 +22,7 @@ use sha2::{Digest, Sha256};
 
 use jj_map::{Footprint, LoadedMap, Registry, Terrain};
 
+use crate::assist::{AssistLevel, AssistProfile, AssistReport, AssistState, CatchUp};
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::damage::episodes::{CarParts, Episodes, PreStep, TAG_CAR, TAG_PROP};
 use crate::damage::springs::{Hinge, Spring};
@@ -151,6 +152,8 @@ struct Car {
     /// The tick this incarnation first lost a wheel (R121): it drives on until `wheel_loss_respawn_s` later, then is
     /// wrecked and respawns fresh.
     wheel_lost_at: Option<u64>,
+    /// The player's learner assist (R125).
+    assist: AssistState,
 }
 
 /// The catch plane's top, below the kill plane, and its half extent, m.
@@ -231,6 +234,8 @@ pub struct Sim {
     /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
     episodes: Episodes,
     damage_events: Vec<(u64, DamageEvent)>,
+    /// The derby ledger (P1-S10), once a derby round has started.
+    derby: Option<crate::derby::Ledger>,
     /// The bodies' state before each step, for the contacts' closing speeds.
     pre_step: PreStep,
     tick: u64,
@@ -240,6 +245,9 @@ pub struct Sim {
     line: RouteLine,
     slots: Vec<SpawnPose>,
     path: Path,
+    /// Learner-assist and catch-up data (R125) and the lobby's catch-up choice.
+    assist_profile: AssistProfile,
+    catch_up: CatchUp,
 }
 
 fn yaw_rotation(yaw_cdeg: i32) -> Vector {
@@ -298,10 +306,13 @@ impl Sim {
             .collision_groups(TERRAIN_GROUPS);
         world.insert_collider(ground, None);
 
+        // The derby bowl (P1-M10) is a trimesh of the same kind: the bank, the wall and the lip, ground to the car.
         // Sharp jumps (br-gw74.7.1): the ramp, table and landing ramp are the exact triangles of `jj_map::jump`, not a 2.5 m
         // grid's rounding of them. They are ground to the car (the terrain's groups).
         for f in &m.features {
-            if let Some((verts, tris)) = jj_map::jump::jump_mesh(m, f) {
+            if let Some((verts, tris)) =
+                jj_map::jump::jump_mesh(m, f).or_else(|| jj_map::arena::bowl_mesh(m, f))
+            {
                 let pts: Vec<Vector> = verts
                     .iter()
                     .map(|p| Vector::new(p[0] as f32, p[1] as f32, p[2] as f32))
@@ -416,6 +427,7 @@ impl Sim {
             statics,
             episodes: Episodes::default(),
             damage_events: Vec::new(),
+            derby: None,
             pre_step: PreStep::default(),
             tick: 0,
             rng: Rng::stream(seed, "sim"),
@@ -424,6 +436,8 @@ impl Sim {
             line: RouteLine::new(map),
             slots: corridor_slots(map, &RouteLine::new(map)),
             path: Path::new(map),
+            assist_profile: AssistProfile::standard(),
+            catch_up: CatchUp::Off,
         }
     }
 
@@ -866,6 +880,21 @@ impl Sim {
         self.race.placed(car.0);
     }
 
+    /// The derby round starts now and runs `limit_ticks` of game time (a journaled command: countdown completion, P1-S10).
+    /// Damage dealt to opponents scores from here on; see [`crate::derby`].
+    pub fn start_derby(&mut self, limit_ticks: u64) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::StartDerby { limit_ticks }));
+        self.derby = Some(crate::derby::Ledger::new(self.tick, limit_ticks));
+        self.update_derby();
+    }
+
+    /// The derby ledger: points, ranks, the clock and the scored events. `None` until [`Sim::start_derby`].
+    pub fn derby(&self) -> Option<&crate::derby::Ledger> {
+        self.derby.as_ref()
+    }
+
     /// The race starts now with `laps` laps (a journaled command: countdown completion, P1-S05).
     pub fn start_race(&mut self, laps: u32) {
         self.journal
@@ -912,6 +941,13 @@ impl Sim {
         let Some(vehicle) = self.cars.get(car.0 as usize).map(|c| c.model) else {
             return false;
         };
+        // R125: Lots turns the wheelie launch off.
+        if !self
+            .assist_profile
+            .allows_wheelie(self.cars[car.0 as usize].assist.level)
+        {
+            return false;
+        }
         let t = self.profiles[vehicle].tuning.clone();
         let front_z = self.profiles[vehicle].axle_front_z();
         let held = self.race.is_held(car.0, self.tick);
@@ -1119,7 +1155,61 @@ impl Sim {
             incarnation: 0,
             last_detach: None,
             wheel_lost_at: None,
+            assist: AssistState::default(),
         });
+    }
+
+    /// Sets a player's learner-assist level (R125). A journaled setup command.
+    pub fn set_assist(&mut self, car: CarId, level: AssistLevel) {
+        self.journal.setup.push((
+            self.tick,
+            Setup::Assist {
+                car: car.0,
+                level: level.as_u8(),
+            },
+        ));
+        if let Some(c) = self.cars.get_mut(car.0 as usize) {
+            c.assist.set_level(level);
+        }
+    }
+
+    /// Sets the lobby's catch-up (R125). A journaled setup command.
+    pub fn set_catch_up(&mut self, mode: CatchUp) {
+        self.journal.setup.push((
+            self.tick,
+            Setup::CatchUp {
+                mode: u8::from(mode == CatchUp::Light),
+            },
+        ));
+        self.catch_up = mode;
+    }
+
+    pub fn catch_up(&self) -> CatchUp {
+        self.catch_up
+    }
+
+    /// The assist data in force (tunable through [`Sim::set_assist_profile`]).
+    pub fn assist_profile(&self) -> &AssistProfile {
+        &self.assist_profile
+    }
+
+    /// Replaces the assist data (the tuning menu; not journaled, like [`Sim::set_tuning`]).
+    pub fn set_assist_profile(&mut self, profile: AssistProfile) {
+        self.assist_profile = profile;
+    }
+
+    pub fn assist_level(&self, car: CarId) -> AssistLevel {
+        self.cars
+            .get(car.0 as usize)
+            .map_or(AssistLevel::Off, |c| c.assist.level)
+    }
+
+    /// What the assist and catch-up did to `car` last tick (R90 introspection).
+    pub fn assist_report(&self, car: CarId) -> Option<AssistReport> {
+        let c = self.cars.get(car.0 as usize)?;
+        let mut r = c.assist.report;
+        r.level = c.assist.level;
+        Some(r)
     }
 
     /// Sets a car's controls from the next step on (journaled when they change).
@@ -1137,10 +1227,39 @@ impl Sim {
         }
     }
 
+    /// Each car's catch-up share this tick (R125): 0 for the leader, a car not behind and every car when catch-up is off
+    /// or the race isn't running; up to 1 at `fullS` behind. The leader is the unfinished car furthest along.
+    fn catch_up_shares(&self) -> Vec<f32> {
+        let n = self.cars.len();
+        if self.catch_up == CatchUp::Off
+            || self.race.started_at.is_none()
+            || self.race.over.is_some()
+        {
+            return Vec::new();
+        }
+        let progress: Vec<Option<f32>> = (0..n as u32)
+            .map(|i| (!self.race.is_finished(i)).then(|| self.race.progress_m(i)))
+            .collect();
+        let lead = progress.iter().flatten().copied().fold(f32::MIN, f32::max);
+        progress
+            .iter()
+            .map(|p| {
+                p.map_or(0.0, |p| {
+                    if p >= lead {
+                        0.0
+                    } else {
+                        self.assist_profile.catch_up_share(lead - p)
+                    }
+                })
+            })
+            .collect()
+    }
+
     /// Advances one fixed tick.
     pub fn step(&mut self) {
         let tick = self.tick;
         let mut stuck = Vec::new();
+        let catch_shares = self.catch_up_shares();
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
             // Each car is driven by its own profile (R123).
@@ -1177,6 +1296,27 @@ impl Sim {
                     }
                 }
             }
+            // R125: a learner assist edits a player-driven car's input before the normal vehicle path.
+            if car.assist.level != AssistLevel::Off
+                && car.autopilot.is_none()
+                && let Some(b) = self.world.bodies.get(car.body)
+            {
+                let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
+                let pose = Pose2 {
+                    x: t.x,
+                    z: t.z,
+                    heading: libm::atan2f(fwd.x, fwd.z),
+                    forward_speed: b.linvel().dot(fwd),
+                };
+                input = car.assist.apply(
+                    &self.assist_profile,
+                    &self.path,
+                    pose,
+                    p.tuning.max_steer_rad,
+                    wheelbase,
+                    input,
+                );
+            }
             if self.race.is_held(id, tick) {
                 input = DriveInput::default();
             }
@@ -1208,6 +1348,16 @@ impl Sim {
                     .fold(0.0, f32::max);
                 car.action
                     .update(p, input, rear_slip, b.linvel().length(), DT);
+                // R125 catch-up: a trailing car's boost meter refills faster, in proportion to its gap.
+                let share = catch_shares.get(i).copied().unwrap_or(0.0);
+                if share > 0.0 && !car.action.boosting {
+                    let extra = (self.assist_profile.catch_up.boost_refill - 1.0) * share;
+                    car.action.boost =
+                        (car.action.boost + extra * p.tuning.boost_recharge_per_s * DT).min(1.0);
+                }
+                let catch_scale = 1.0 + self.assist_profile.catch_up.top_speed_gain * share;
+                car.assist.report.catch_share = share;
+                car.assist.report.catch_scale = catch_scale;
                 let mut grip = [1.0; 4];
                 let mut side_stiffness = [1.0; 4];
                 for (i, g) in grip.iter_mut().enumerate() {
@@ -1231,7 +1381,7 @@ impl Sim {
                     .enumerate()
                 {
                     w.steering = c.steering;
-                    w.engine_force = c.engine_force;
+                    w.engine_force = c.engine_force * catch_scale;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
                     w.side_friction_stiffness = side_stiffness[i];
@@ -1257,7 +1407,9 @@ impl Sim {
                     .vehicle
                     .wheels()
                     .iter()
-                    .all(|w| !w.raycast_info().is_in_contact);
+                    // A ray can still touch terrain at full extension while exerting no support force.
+                    // Treating that as grounded disables levelling just as a car bounces off a rough verge.
+                    .all(|w| !w.raycast_info().is_in_contact || w.wheel_suspension_force <= 0.0);
                 if airborne && !input.is_neutral() {
                     let [tx, ty, tz] = vehicle::air_torque(p, input);
                     let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
@@ -1291,7 +1443,14 @@ impl Sim {
                 b.wake_up(true);
             }
             // Flip assist (P1-S05): a self-righting torque, integrated once per tick as an impulse.
-            if self.race.is_assisting(id)
+            let instant_flip = car.assist.level != AssistLevel::Off
+                && self.world.bodies.get(car.body).is_some_and(|b| {
+                    let r = b.position().rotation;
+                    let (up, fwd) = (r * Vector::Y, r * Vector::Z);
+                    car.assist
+                        .flip_wanted(&self.assist_profile, up.y, b.linvel().dot(fwd))
+                });
+            if (self.race.is_assisting(id) || instant_flip)
                 && let Some(b) = self.world.bodies.get_mut(car.body)
             {
                 let r = b.position().rotation;
@@ -1429,6 +1588,24 @@ impl Sim {
         }
         self.check_wheel_wrecks();
         self.settle_protection();
+        self.update_derby();
+    }
+
+    /// Feeds the derby ledger this tick's control modes, protection and damage events (P1-S10).
+    fn update_derby(&mut self) {
+        let Some(mut ledger) = self.derby.take() else {
+            return;
+        };
+        let flags: Vec<crate::derby::CarFlags> = self
+            .cars
+            .iter()
+            .map(|c| crate::derby::CarFlags {
+                autopilot: c.autopilot.is_some(),
+                protected: c.protected_since.is_some(),
+            })
+            .collect();
+        ledger.update(self.tick, &flags, &self.damage_events);
+        self.derby = Some(ledger);
     }
 
     /// Reads this step's contacts into damage episodes, then closes the ones whose window ran out (P1-S04a).
@@ -2199,6 +2376,9 @@ impl Sim {
             race.extend(until.to_le_bytes());
         }
         self.episodes.hash_into(&mut race);
+        if let Some(d) = &self.derby {
+            d.hash_into(&mut race);
+        }
         for c in &self.cars {
             race.extend(c.protected_since.unwrap_or(u64::MAX).to_le_bytes());
             match &c.autopilot {
@@ -2207,6 +2387,19 @@ impl Sim {
             }
         }
         h.update(&race);
+        // R125: assist state is hashed only where an assist or catch-up is on, so sims without them keep their hashes.
+        let mut assist = Vec::new();
+        for (id, c) in self.cars.iter().enumerate() {
+            if c.assist.level != AssistLevel::Off {
+                // The seat association affects future physics even before an input is stepped.
+                assist.extend((id as u64).to_le_bytes());
+                c.assist.hash_into(&mut assist);
+            }
+        }
+        if self.catch_up != CatchUp::Off {
+            assist.push(1);
+        }
+        h.update(&assist);
         for c in &self.cars {
             for f in [c.action.boost, c.action.drift] {
                 h.update(f.to_bits().to_le_bytes());
@@ -2302,6 +2495,11 @@ impl Sim {
                     Setup::EndRace => {
                         sim.end_race_now();
                     }
+                    Setup::Assist { car, level } => {
+                        sim.set_assist(CarId(*car), AssistLevel::from_u8(*level));
+                    }
+                    Setup::CatchUp { mode } => sim.set_catch_up(CatchUp::from_u8(*mode)),
+                    Setup::StartDerby { limit_ticks } => sim.start_derby(*limit_ticks),
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {

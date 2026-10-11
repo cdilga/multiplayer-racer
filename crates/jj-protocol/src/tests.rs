@@ -180,6 +180,9 @@ fn controller_samples() -> Vec<ControllerCmd> {
                 name: "Pad 1".into(),
             }),
         },
+        ControllerCmd::SetAssist {
+            level: crate::cmd::AssistLevel::Lots,
+        },
     ]
 }
 
@@ -202,9 +205,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::SetCameraDistance { .. } => "set-camera-distance",
         ControllerCmd::Tutorial { .. } => "tutorial",
         ControllerCmd::ForSource { .. } => "for-source",
+        ControllerCmd::SetAssist { .. } => "set-assist",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 16] = [
+const CONTROLLER_VARIANTS: [&str; 17] = [
     "hello",
     "claim",
     "action",
@@ -221,6 +225,7 @@ const CONTROLLER_VARIANTS: [&str; 16] = [
     "set-camera-distance",
     "tutorial",
     "for-source",
+    "set-assist",
 ];
 
 fn host_samples() -> Vec<HostCmd> {

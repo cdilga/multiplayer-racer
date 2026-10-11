@@ -382,3 +382,132 @@ proptest! {
         prop_assert!(r.rows.iter().filter(|c| c.status == Status::Dns).all(|c| c.points == 0 && c.place.is_none()));
     }
 }
+
+// Derby (P1-S10): ranked by raw points.
+
+fn scorer(n: u32, units: u64) -> DerbyEntrant {
+    DerbyEntrant {
+        seat: seat(n),
+        entered: true,
+        units,
+        withdrawn: false,
+        late: false,
+    }
+}
+
+fn derby_round(id: u32, entrants: Vec<DerbyEntrant>) -> DerbyFacts {
+    DerbyFacts {
+        round: RoundId(id),
+        entrants,
+    }
+}
+
+#[test]
+fn a_derby_ranks_by_raw_points_with_ties_sharing_and_the_race_table_without_a_finish_bonus() {
+    let r = classify_derby(&derby_round(
+        1,
+        vec![
+            scorer(1, 70_000),
+            scorer(2, 70_000),
+            scorer(3, 35_000),
+            scorer(4, 0),
+            scorer(5, 69_999),
+        ],
+    ))
+    .unwrap();
+    let places: Vec<(u32, Option<u32>, u32)> = r
+        .rows
+        .iter()
+        .map(|c| (c.seat.0, c.place, c.points))
+        .collect();
+    // 35 points twice share first (25 each), then 34.99 third (15), 17.5 fourth (12), nothing fifth (10): 1, 1, 3, 4, 5.
+    assert_eq!(
+        places,
+        vec![
+            (1, Some(1), 25),
+            (2, Some(1), 25),
+            (5, Some(3), 15),
+            (3, Some(4), 12),
+            (4, Some(5), 10)
+        ]
+    );
+    assert!(
+        r.rows
+            .iter()
+            .all(|c| c.finish_bonus == 0 && c.status == Status::Finished)
+    );
+}
+
+#[test]
+fn every_derby_rank_past_ten_gets_one_point_and_there_is_no_cap() {
+    let entrants: Vec<DerbyEntrant> = (1..=40).map(|n| scorer(n, u64::from(1000 - n))).collect();
+    let r = classify_derby(&derby_round(1, entrants)).unwrap();
+    assert_eq!(r.rows.len(), 40);
+    assert_eq!(row(&r, 1).points, 25);
+    assert_eq!(row(&r, 10).points, 1);
+    assert_eq!((row(&r, 11).points, row(&r, 40).points), (1, 1));
+}
+
+#[test]
+fn a_late_joiner_ranks_on_raw_points_alone_and_a_seat_that_left_keeps_what_it_scored() {
+    let mut late = scorer(3, 40_000);
+    late.late = true;
+    let mut gone = scorer(2, 20_000);
+    gone.withdrawn = true;
+    let never = DerbyEntrant {
+        seat: seat(4),
+        entered: false,
+        units: 0,
+        withdrawn: true,
+        late: false,
+    };
+    let r = classify_derby(&derby_round(1, vec![scorer(1, 30_000), gone, late, never])).unwrap();
+    // The late joiner scored more in less time and wins: no normalisation for time on the clock.
+    assert_eq!((row(&r, 3).place, row(&r, 3).late), (Some(1), true));
+    assert_eq!(
+        (row(&r, 1).place, row(&r, 1).status),
+        (Some(2), Status::Finished)
+    );
+    assert_eq!(
+        (row(&r, 2).place, row(&r, 2).status, row(&r, 2).points),
+        (Some(3), Status::Dnf, 15)
+    );
+    assert_eq!(
+        (row(&r, 4).place, row(&r, 4).status, row(&r, 4).points),
+        (None, Status::Dns, 0)
+    );
+}
+
+#[test]
+fn a_derby_commit_is_idempotent_conflicts_with_other_facts_and_never_counts_as_a_race_finish() {
+    let mut s = Standings::default();
+    let facts = derby_round(1, vec![scorer(1, 10), scorer(2, 5)]);
+    assert!(matches!(s.commit_derby(&facts).unwrap(), Committed::New(_)));
+    assert!(matches!(
+        s.commit_derby(&facts).unwrap(),
+        Committed::Again(_)
+    ));
+    assert_eq!(
+        s.total(seat(1)),
+        SeatTotal {
+            points: 25,
+            rounds: 1,
+            finishes: 0,
+            wins: 1
+        }
+    );
+    // Other facts for the committed round, or the same round as a race, are refused.
+    assert!(matches!(
+        s.commit_derby(&derby_round(1, vec![scorer(1, 5), scorer(2, 10)])),
+        Err(CommitError::Conflict { .. })
+    ));
+    assert!(matches!(
+        s.commit(&round(1, vec![finisher(1, 1, 0)])),
+        Err(CommitError::Conflict { .. })
+    ));
+    assert!(matches!(
+        classify_derby(&derby_round(2, vec![scorer(1, 1), scorer(1, 2)])),
+        Err(CommitError::DuplicateSeat { .. })
+    ));
+    assert_eq!(s.total(seat(1)).points, 25);
+}
