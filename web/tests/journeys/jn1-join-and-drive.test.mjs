@@ -98,6 +98,7 @@ const turn = (a, b) => {
 test('JN1: phones join by QR and by code, claim, and each drives its own car; keys beside them; a late phone joins; reload resumes', { timeout: 300_000 }, async () => {
   const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const host = await hostCtx.newPage();
+  if (process.env.JJ_HOST_CPU_THROTTLE) await (await hostCtx.newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
   const hostErrors = [];
   host.on('pageerror', (e) => hostErrors.push(e.message));
   at('host opens a room');
@@ -192,7 +193,7 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const after1 = await driveTicks(host, 120);
   assert.equal(after1.now.host.seats.length, 4);
   assert.ok(carOf(after1.now, youC.link.endpointId), 'C has a car');
-  assert.ok(carOf(after1.now, epA).forwardSpeed > 4, 'A undisturbed');
+  assert.ok(carOf(after1.now, epA).forwardSpeed > 4, `A undisturbed: before ${JSON.stringify(carOf(after1.start, epA))}, after ${JSON.stringify(carOf(after1.now, epA))}`);
   await wait(host, () => window.__jjRender.tileRects().length === 4);
   await shot(host, 'tv-1280x720-four-seats');
   if (CAPTURE) {
