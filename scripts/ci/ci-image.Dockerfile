@@ -35,3 +35,11 @@ RUN apt-get update -qq \
  && curl -sSfL "https://get.nexte.st/${NEXTEST}/linux" | tar xz -C /usr/local/bin \
  && git lfs install --system \
  && rm -rf /var/lib/apt/lists/*
+
+# P1-C12 qualifies the real Firefox host in addition to Chromium/WebKit.
+# A separate layer preserves the existing browser/tooling cache on runner hosts.
+RUN cd /tmp && npm init -y >/dev/null && npm install -s "playwright@${PLAYWRIGHT_VERSION}" \
+ && npx playwright install-deps firefox \
+ && npx playwright install firefox \
+ && chmod -R a+rX /ms-playwright \
+ && rm -rf /tmp/node_modules /tmp/package*.json /root/.npm /var/lib/apt/lists/*
