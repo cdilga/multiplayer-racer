@@ -352,9 +352,26 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   assert.ok(out.hay[0].boostLayerBuilt && out.hay[0].boostLevel > 0, `a profile with a boost section does (${JSON.stringify(out.hay[0])})`);
   assert.equal(out.cruz[1].surface, 'gravel');
   // Cost: the engines offline, 8 voices, and the update cost per snapshot.
-  const bench = await page2.evaluate(async () => ({ eight: await window.__jjAudio.benchEngines(8, 6), sixteen: await window.__jjAudio.benchEngines(16, 6), state: window.__jjAudio.state() }));
+  const bench = await page2.evaluate(async () => {
+    const a=window.__jjAudio;
+    const eight=await a.benchEngines(8,6), sixteen=await a.benchEngines(16,6);
+    // The cached EMA after four two-car/profile-switch feeds is not an eight-car
+    // steady update measurement. Exercise the live bank on successive snapshots,
+    // excluding graph construction (already reported separately by the bank).
+    a.useProfile('cruz-missile');
+    const facts=Array.from({length:8},(_,i)=>({car:200+i,speed:15+i,throttle:.7,boosting:false,boost:0,drifting:false,surface:i%4,damage:0,held:false}));
+    const costs=[];
+    for(let sample=0;sample<80;sample++) {
+      await new Promise(requestAnimationFrame);
+      a.feedFacts(facts);
+      if(sample>=16) costs.push(a.state().engineCostMs);
+    }
+    costs.sort((x,y)=>x-y);
+    return {eight,sixteen,state:a.state(),update:{voices:facts.length,samples:costs.length,p95Ms:costs[Math.ceil(costs.length*.95)-1],maxMs:costs.at(-1)},engines:a.engines()};
+  });
   assert.ok(bench.eight.realtimeFactor > 1.5, `8 engines render ${bench.eight.realtimeFactor}x real time (software, headless)`);
-  assert.ok(bench.state.engineCostMs < 2, `update cost ${bench.state.engineCostMs} ms`);
+  assert.ok(bench.update.p95Ms < 2, `steady 8-engine update p95 ${bench.update.p95Ms} ms (${bench.update.samples} snapshots)`);
+  assert.equal(bench.engines.filter(e=>e.voiced).length,8,'the measured bank voices all eight engines');
   assert.deepEqual(errors, []);
   await page2.close();
   runs['P1-A05'] = { engines, wreck: {tick:wreck.tick,car:wrecked.car,race:wrecked.race}, startStop: log.filter((l) => l.car === joined[0].car).slice(-6), turbo: out, cost: bench };

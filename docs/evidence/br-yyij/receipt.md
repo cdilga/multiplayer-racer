@@ -11,3 +11,20 @@ With the test clock held before damage, the same throttle/stall advanced from 23
 The committed test checks the actual wreck counter and hold, then waits for the audio bank's state, retaining both original log assertions. No physics, engine implementation, gameplay timings, or test timeout changed. Fully stalled browser audio scheduling is not newly guaranteed by this test.
 
 Command: `JJ_SERVER_BIN=/tmp/jj-macos-server-w01 node --test --test-name-pattern='A05: a scripted 8-car' web/host/tests/audio.test.mjs` with pinned Node and `AGENT_NAME=CyanBridge JJ_ROLE=solo`.
+
+## CI 3558 follow-up: representative steady update cost
+
+The lifecycle assertion passed in CI 3558/browser(1), job 8104; its cost assertion failed at 2.37 ms. The asserted
+value was the bank's cached EMA after four two-car feeds across a profile change, not a steady eight-car measurement.
+The original focused test passes locally in 23.403 s, so the runner's timing failure is not claimed as reproduced
+on this Mac. The inspected measurement path establishes the mismatched sample.
+
+The revised test feeds eight active engines on successive animation frames, warms up graph construction for 16
+snapshots, then records 64 steady EMA samples. It asserts p95 below the same **2 ms** budget and explicitly checks
+all eight engines are voiced. Offline rendering and the real worker's wreck/hold/ignition assertions remain intact.
+No runtime engine code or test timeout changed.
+
+MacBookPro18,3, macOS arm64, Node 26.10.0, Playwright headless Chromium 151.0.7922.34/software GL, existing local
+`web/dist` with the unchanged engine implementation. `steady-cost.json`: eight-engine update p95 .228 ms, maximum
+EMA .25 ms; eight engines render offline at 11.3× real time. This is a local browser receipt, not CI or physical hardware
+playtest acceptance. `steady-cost.txt` records the focused revised journey passing in 22.430 s.
