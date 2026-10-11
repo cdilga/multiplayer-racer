@@ -13,6 +13,52 @@ use super::*;
 const GREYBOX: &str = include_str!("../../../../maps/greybox-loop.json");
 const MS: u64 = 1000;
 
+#[test]
+fn race_classification_preserves_crossing_fraction_progress_and_exact_ties() {
+    use jj_session::results::{RoundFacts, Ruleset, classify};
+    use jj_types::{RoundId, SeatId};
+    let mut h = driving_host();
+    h.sim.spawn_grid_as(&[0]);
+    let base = h.sim.race().car(0).unwrap().clone();
+    let mut states = vec![base; 5];
+    for (i, state) in states.iter_mut().enumerate() {
+        state.best_progress_mm = 123_456;
+        state.best_progress_tick = if i == 3 { 80 } else { 90 };
+        if i < 3 {
+            state.finished_at = Some(100);
+            state.finish_fraction = if i < 2 { 10_000 } else { 20_000 };
+        }
+    }
+    let entrants = states
+        .iter()
+        .enumerate()
+        .map(|(i, state)| super::round::entrant_from_race(SeatId(i as u32 + 1), Some(state), false))
+        .collect::<Vec<_>>();
+    assert_eq!(entrants[0].finish.unwrap().fraction, 10_000);
+    assert_eq!(entrants[3].progress_mm, 123_456);
+    assert_eq!(entrants[3].progress_tick, 80);
+    let result = classify(&RoundFacts {
+        round: RoundId(1),
+        ruleset: Ruleset::default(),
+        entrants,
+    })
+    .unwrap();
+    assert_eq!(
+        result
+            .rows
+            .iter()
+            .map(|r| r.place.unwrap())
+            .collect::<Vec<_>>(),
+        vec![1, 1, 3, 4, 5]
+    );
+    assert_eq!(
+        result.rows[0].points, result.rows[1].points,
+        "exact finish ties share points"
+    );
+    let missing = super::round::entrant_from_race(SeatId(6), None, true);
+    assert!(!missing.entered && missing.withdrawn && missing.late);
+}
+
 /// A host in G04's free drive, where a claimed seat drives at once: the driving-mechanics tests run there. The round
 /// loop's own tests (G01) start from `Host::new` with the real Lobby, which holds every car.
 fn driving_host() -> Host {

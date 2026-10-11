@@ -283,20 +283,11 @@ impl Host {
             .iter()
             .map(|&seat| {
                 let car = self.inputs.get(&seat).and_then(|i| i.car);
-                let standing =
-                    car.and_then(|c| race.standings().into_iter().find(|s| s.car == c.0));
-                Entrant {
+                entrant_from_race(
                     seat,
-                    entered: car.is_some(),
-                    finish: standing.and_then(|s| s.finished_at).map(|t| FinishTime {
-                        tick: t,
-                        fraction: 0,
-                    }),
-                    progress_mm: standing.map_or(0, |s| (s.progress_m.max(0.0) * 1000.0) as u64),
-                    progress_tick: self.sim.tick(),
-                    withdrawn: car.is_none(),
-                    late: self.round.late.contains(&seat),
-                }
+                    car.and_then(|c| race.car(c.0)),
+                    self.round.late.contains(&seat),
+                )
             })
             .collect();
         let facts = RoundFacts {
@@ -653,5 +644,27 @@ impl Host {
         });
         self.session_rev += 1;
         self.room_state(seat);
+    }
+}
+
+/// Keep the authoritative same-tick finish and unfinished-progress tie-breaks at the session boundary.
+pub(super) fn entrant_from_race(
+    seat: SeatId,
+    car: Option<&jj_sim::race::CarRace>,
+    late: bool,
+) -> Entrant {
+    Entrant {
+        seat,
+        entered: car.is_some(),
+        finish: car.and_then(|c| {
+            c.finished_at.map(|tick| FinishTime {
+                tick,
+                fraction: c.finish_fraction,
+            })
+        }),
+        progress_mm: car.map_or(0, |c| c.best_progress_mm),
+        progress_tick: car.map_or(0, |c| c.best_progress_tick),
+        withdrawn: car.is_none(),
+        late,
     }
 }
