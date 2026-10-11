@@ -39,7 +39,8 @@ Acceptance evidence:
 Native hashes: controls `4112317d00b7bdd10d2e7fe765d2757aa05f331505e469e6c4293d0a9a848abb`;
 damage `c5b3e32070ff6cf5b34de4685262dccfd96be3faa9555fe7d349949115b976bc`.
 
-The workspace matrix remains a CI close requirement. An older remote debug workspace run was superseded as
-balance changed; its partial success is not a green receipt. The replacement remote release run was refused
-because that project was still active and the other worker had critical pressure. No local workspace fallback ran.
-This record does not close the bead or bypass CI.
+The committed `9ab839ba` clean-tree release workspace matrix subsequently passed on RCH worker eris:
+`RCH_REQUIRE_REMOTE=1 rch exec --base HEAD --clean-overlay --no-overlay -- cargo test --workspace --all-features --release`.
+`workspace.txt` retains the output and clean-overlay receipt for that exact source tree. This run predates the
+generator-v15 course-family changes; it is bike implementation evidence only. Earlier debug runs were superseded
+and are not green receipts. No Mac workspace fallback ran. Containing green CI remains required before close.
