@@ -493,6 +493,8 @@ export class Session {
     this.sample();
   }
 
+  private lastDetectedAction: { kind: number; preloadMs: number; at: number; atSourceSeq: number } | null = null;
+
   private sample(): void {
     if (!this.endpoint || this.srcIdx < 0) return;
     const q = (v: number) => wasm.quantise(v);
@@ -508,6 +510,7 @@ export class Session {
       performance.now(),
     );
     for (const a of actions) {
+      this.lastDetectedAction = { kind: a.kindTag, preloadMs: a.preloadMs, at: performance.now(), atSourceSeq: a.atSourceSeq };
       const r = this.you;
       this.send('cmd', wasm.encodeAction(a.id, r?.source ?? 0, a.kindTag, a.preloadMs, 0, 0, a.atSourceSeq));
       this.stats.actions += 1;
@@ -734,6 +737,7 @@ export class Session {
         ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown, driftHeld: this.srcIdx >= 0 ? this.endpoint.driftHeld(this.srcIdx) : false }
         : null,
       inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
+      launch: { preloading: this.endpoint && this.srcIdx >= 0 ? this.endpoint.wheeliePreload(this.srcIdx) : false, cooldown: this.launchCooldown(), lastDetectedAction: this.lastDetectedAction },
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
     };
   }
