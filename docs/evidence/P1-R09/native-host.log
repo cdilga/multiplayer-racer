@@ -1,0 +1,110 @@
+  [2m2026-10-11T18:18:16.966962Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:18.239007Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:18.239071Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:19.205317Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:19.205500Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:30.185873Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 315 files, 81399295 bytes in 10647ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:30.974849Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test -p jj-wasm-host --all-features --config 'env.RCH_BUILD_SOURCE.value="acd563abb4068412224d3914617ad2292b0d2c0d-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:30.985510Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:18:30.985614Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+
+running 51 tests
+test host::prompts::tests::the_sequence_clears_one_control_at_a_time_in_order ... ok
+test host::prompts::tests::off_hides_it_and_on_again_repeats_from_the_start ... ok
+test host::tests::a_fault_stops_the_sim ... ok
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 1.50s
+[1m[92m     Running[0m unittests src/lib.rs (.rch-target-eris-pool-e63feaad7745367f26003ba216836a0d/debug/deps/jj_wasm_host-088db423a77d1b90)
+test host::testing::tests::bad_commands_say_why ... ok
+test host::tests::a_hello_for_another_protocol_is_answered_with_claim_rejected_build_and_no_seat ... ok
+test host::tests::a_camera_distance_choice_is_an_event_for_that_seat ... ok
+test host::tests::a_hidden_host_still_tells_the_phones_why_the_room_is_paused ... ok
+test host::tests::a_controller_cannot_remove_a_seat ... ok
+test host::tests::a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the_snapshot ... ok
+test host::tests::a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host ... ok
+test host::tests::a_claim_while_paused_is_welcomed_and_seated_and_places_at_resume ... ok
+test host::tests::a_host_pads_seat_names_its_source_and_runs_its_prompts ... ok
+test host::tests::a_long_stall_pauses_at_the_last_tick_instead_of_catching_up ... ok
+test host::testing::tests::until_steps_to_the_predicate_and_observe_shows_controller_seats ... ok
+test host::tests::a_pick_reaches_the_room_view_and_a_bad_id_does_not ... ok
+test host::tests::a_host_pads_right_stick_steers_and_its_left_stick_drives ... ok
+test host::tests::a_reloaded_controller_says_hello_again_and_gets_its_seat_back ... ok
+test host::tests::a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat ... ok
+test host::testing::tests::journal_chunks_kept_by_main_replay_to_the_live_hash_across_worlds ... ok
+test host::tests::catch_up_is_a_round_rule_and_the_host_can_switch_it_off ... ok
+test host::tests::each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicle ... ok
+test host::tests::an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_and_is_held ... ok
+test host::tests::a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event ... ok
+test host::tests::an_input_profile_change_reaches_the_host_and_every_controller ... ok
+test host::tests::hiding_pauses_with_no_catch_up_and_resume_counts_down_with_neutral_input ... ok
+test host::tests::input_is_rearmed_at_neutral_after_a_pause ... ok
+test host::testing::tests::spawning_through_the_surface_and_stepping_held_matches_the_native_fixture_run ... ok
+test host::tests::controller_bytes_and_local_source_drive_identically ... ok
+test host::tests::loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_events ... ok
+test host::tests::race_classification_preserves_crossing_fraction_progress_and_exact_ties ... ok
+test host::tests::item_inventory_events_and_use_refusals_follow_only_their_hub_source ... ok
+test host::tests::host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back ... ok
+test host::tests::snapshot_transfers_compliant_rails_by_map_dressing_index ... ok
+test host::tests::r116_the_rim_is_not_a_boost_and_a_sideways_push_drifts_at_full_throttle ... ok
+test host::tests::an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over ... ok
+test host::tests::the_input_and_vehicle_profiles_agree_on_the_launch ... ok
+test host::tests::snapshots_carry_cars_and_skip_when_the_buffer_is_short ... ok
+test host::tests::replay_air_flag_uses_suspension_contacts_instead_of_terrain_height ... ok
+test host::tests::identify_answers_every_press_after_a_long_lobby_and_a_round_start ... ok
+test host::tests::the_seats_assist_level_reaches_its_car_and_the_room_view ... ok
+test host::tests::the_old_layouts_action_stick_still_boosts_then_drifts ... ok
+test host::tests::a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit ... ok
+test host::tests::the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them ... ok
+test host::tests::the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat ... ok
+test host::tests::a_hub_endpoint_claims_and_holds_a_seat_per_source_over_one_connection ... ok
+test host::tests::a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped ... ok
+test host::testing::tests::a_mixed_roster_through_the_host_hashes_to_the_committed_value ... ok
+test host::tests::finishing_the_race_on_demand_gives_intermission_with_standings_for_every_racer ... ok
+test host::tests::render_and_worker_cadence_never_change_the_simulation ... ok
+test host::tests::thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats ... ok
+test host::tests::four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars ... ok
+
+test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.67s
+
+[1m[92m   Doc-tests[0m jj_wasm_host
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+  [2m2026-10-11T18:19:07.457064Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 36284ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:19:07.745737Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:19:07.745983Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:19:08.008076Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:19:08.264610Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 518ms (0 files, 43 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T18:19:08.282084Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 43 bytes in 518ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

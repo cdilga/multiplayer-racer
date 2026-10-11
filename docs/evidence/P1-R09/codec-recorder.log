@@ -1,0 +1,17 @@
+✔ a retained quantised frame restores identities, motion, detached baseline, husk and rail pose (10.029292ms)
+✔ recording has no actor cap and accounts exact owned buffer bytes (17.121708ms)
+✔ unrepresentable footage is refused instead of inventing a clipped trajectory (0.97125ms)
+✔ corrupt or truncated frames fail before allocating arrays from untrusted counts (3.277209ms)
+✔ two detaches and a wreck retain exact identities, independent of a 20s rolling history (255.024792ms)
+✔ memory pressure evicts footage by value; oversized actors never become a live cap (2073.094666ms)
+✔ lost intervals discard incomplete causality without orphaning older retained clips (77.307041ms)
+✔ contact readout triggers air once per flight/life and close finishes show both identities (60.393833ms)
+✔ a race-long overlapping event chain selects at most sixty seconds without actor truncation (2100.361166ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5607.442333

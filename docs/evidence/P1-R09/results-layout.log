@@ -1,0 +1,13 @@
+✔ 1080p: results list every row in place order at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (8674.641375ms)
+✔ 21x9: results list every row in place order at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (13815.310792ms)
+✔ phone: results list every row in place order at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (10824.835875ms)
+✔ results: countdown labels keep the Start button stationary; captions leave every placing and action visible (34750.975458ms)
+✔ results: 32 rows in place order, the buttons send the host commands, the timer ticks without redrawing (11117.119958ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 79485.248541
