@@ -1,0 +1,198 @@
+{
+  "browser": "151.0.7922.34",
+  "hardware": "darwin/arm64",
+  "boundMs": 20000,
+  "connectedMs": 8219,
+  "path": {
+    "local": "relay",
+    "remote": "relay",
+    "kind": "coturn-relay",
+    "protocol": "udp",
+    "relayProtocol": "udp",
+    "rttMs": 1
+  },
+  "timeline": [
+    {
+      "at": 37.300000071525574,
+      "event": "created",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "stable"
+    },
+    {
+      "at": 38.800000071525574,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer"
+    },
+    {
+      "at": 39.200000047683716,
+      "event": "icegatheringstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer"
+    },
+    {
+      "at": 41.800000071525574,
+      "event": "candidate-error",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer",
+      "code": 701
+    },
+    {
+      "at": 46.60000002384186,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "stable"
+    },
+    {
+      "at": 8048.700000047684,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer"
+    },
+    {
+      "at": 8052.100000023842,
+      "event": "candidate-error",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer",
+      "code": 701
+    },
+    {
+      "at": 8056.200000047684,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "stable"
+    },
+    {
+      "at": 8116.600000023842,
+      "event": "iceconnectionstatechange",
+      "ice": "checking",
+      "pc": "new",
+      "signaling": "stable"
+    },
+    {
+      "at": 8117,
+      "event": "candidate",
+      "ice": "checking",
+      "pc": "new",
+      "signaling": "stable",
+      "type": "relay"
+    },
+    {
+      "at": 8117.399999976158,
+      "event": "connectionstatechange",
+      "ice": "checking",
+      "pc": "connecting",
+      "signaling": "stable"
+    },
+    {
+      "at": 8175.899999976158,
+      "event": "icegatheringstatechange",
+      "ice": "checking",
+      "pc": "connecting",
+      "signaling": "stable"
+    },
+    {
+      "at": 8175.899999976158,
+      "event": "candidate",
+      "ice": "checking",
+      "pc": "connecting",
+      "signaling": "stable",
+      "type": "done"
+    },
+    {
+      "at": 8180.399999976158,
+      "event": "iceconnectionstatechange",
+      "ice": "connected",
+      "pc": "connecting",
+      "signaling": "stable"
+    },
+    {
+      "at": 8182.800000071526,
+      "event": "connectionstatechange",
+      "ice": "connected",
+      "pc": "connected",
+      "signaling": "stable"
+    }
+  ],
+  "link": {
+    "state": "connected",
+    "gen": 917279473,
+    "endpointId": "c-5fb04d3fde25",
+    "roomId": "rm-cc9da1eced76a1c3",
+    "code": "S56R",
+    "pc": "connected",
+    "ice": "connected",
+    "signaling": "stable",
+    "early": 0,
+    "sse": "open",
+    "sseReconnects": 0,
+    "registrations": 1,
+    "restarts": 1,
+    "rebuilds": 0,
+    "iceExpiresAt": 1791735147000,
+    "relayFallback": {
+      "state": "unavailable",
+      "reason": "offer-timeout",
+      "requests": 1,
+      "credentialHeld": false
+    },
+    "channels": {
+      "state": "open",
+      "cmd": "open"
+    }
+  },
+  "loss": {
+    "dropped": 6,
+    "events": [
+      {
+        "at": 1791727947179,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727947454,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727947968,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727948981,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727951003,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727955016,
+        "event": "drop-allocate",
+        "transaction": "4761754b6b684f4a31314a64"
+      },
+      {
+        "at": 1791727955199,
+        "event": "forward-allocate",
+        "transaction": "78544c5845734f554a697137"
+      },
+      {
+        "at": 1791727955200,
+        "event": "forward-allocate",
+        "transaction": "7a472f723374364459394245"
+      }
+    ]
+  },
+  "coturn": "2026-10-12T00:12:26.243+1000 INFO Listener address to use: 127.0.0.1\n2026-10-12T00:12:26.243+1000 INFO Listener address to use: 127.0.0.1\n2026-10-12T00:12:26.243+1000 INFO Relay address to use: 127.0.0.1\n2026-10-12T00:12:26.243+1000 ERROR no-cli option is deprecated, see --cli\n2026-10-12T00:12:26.243+1000 INFO System cpu num is 8\n2026-10-12T00:12:26.243+1000 INFO System enable num is 8\n2026-10-12T00:12:26.243+1000 INFO Configured cpu num is 8\n2026-10-12T00:12:26.243+1000 INFO Coturn Version Coturn-4.18.0 'Gorst'\n2026-10-12T00:12:26.243+1000 INFO Max number of open files/sockets allowed for this process: 9223372036854775807\n2026-10-12T00:12:26.243+1000 INFO Due to the open files/sockets limitation, max supported number of TURN Sessions possible is: 4611686018427387500 (approximately)\n2026-10-12T00:12:26.243+1000 INFO ==== Show him the instruments, Practical Frost: ====\n2026-10-12T00:12:26.243+1000 INFO OpenSSL compile-time version: OpenSSL 3.6.4 25 Aug 2026 (0x30600040)\n2026-10-12T00:12:26.243+1000 INFO TLS 1.2 supported\n2026-10-12T00:12:26.243+1000 INFO TLS 1.3 supported\n2026-10-12T00:12:26.243+1000 INFO DTLS 1.2 supported\n2026-10-12T00:12:26.243+1000 INFO TURN/STUN ALPN supported\n2026-10-12T00:12:26.243+1000 INFO Third-party authorization (oAuth) supported\n2026-10-12T00:12:26.243+1000 INFO GCM (AEAD) supported\n2026-10-12T00:12:26.243+1000 INFO SQLite supported, default database location is /opt/homebrew/var/db/turndb\n2026-10-12T00:12:26.243+1000 INFO Redis supported\n2026-10-12T00:12:26.243+1000 INFO PostgreSQL supported\n2026-10-12T00:12:26.243+1000 INFO MySQL is not supported\n2026-10-12T00:12:26.243+1000 INFO MongoDB is not supported\n2026-10-12T00:12:26.243+1000 INFO Net Engine: UDP thread per CPU core\n2026-10-12T00:12:26.243+1000 INFO Domain name: \n2026-10-12T00:12:26.243+1000 INFO Default realm: jj.test\n2026-10-12T00:12:26.243+1000 WARNING CONFIG: allow_loopback_peers opens a possible security vulnerability. Do not use in production!!\n2026-10-12T00:12:26.243+1000 WARNING Certificate file not found or not readable: /Users/cdilga/Documents/dev/multiplayer-racer/turn_server_cert.pem\n2026-10-12T00:12:26.243+1000 WARNING Private key file not found or not readable: /Users/cdilga/Documents/dev/multiplayer-racer/turn_server_pkey.pem\n2026-10-12T00:12:26.244+1000 WARNING Cannot create pid file: /var/run/turnserver.pid\n2026-10-12T00:12:26.244+1000 INFO pid file created: /var/tmp/turnserver.pid\n2026-10-12T00:12:26.245+1000 INFO IO method: kqueue\n2026-10-12T00:12:26.245+1000 INFO RFC5780 disabled! /NAT behavior discovery/\n2026-10-12T00:12:26.245+1000 INFO Wait for relay ports initialization...\n2026-10-12T00:12:26.245+1000 INFO   relay 127.0.0.1 initialization...\n2026-10-12T00:12:26.394+1000 INFO   relay 127.0.0.1 initialization done\n2026-10-12T00:12:26.394+1000 INFO Relay ports initialization done\n2026-10-12T00:12:26.394+1000 INFO Total relay threads: 8\n2026-10-12T00:12:26.394+1000 INFO Total auth threads: 2\n2026-10-12T00:12:26.394+1000 INFO turnserver compiled without prometheus support\n2026-10-12T00:12:27.197+1000 INFO stateless-nonce: listener fast-path challenge active\n"
+}

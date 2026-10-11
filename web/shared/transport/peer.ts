@@ -13,6 +13,8 @@ import { canonicalIceServers } from './ice';
 export const HOST = 'host';
 export const RESTART_AFTER_MS = 3_000;
 export const REBUILD_AFTER_MS = 5_000;
+/** Initial ICE can stay new/checking forever without a disconnected/failed event. */
+export const CONNECT_AFTER_MS = 8_000;
 /** Refresh ICE credentials at this share of their lifetime. */
 export const REFRESH_AT = 0.75;
 
@@ -272,6 +274,10 @@ export class ControllerLink {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     this.trigger?.offerSent();
+    this.recoveryTimer = setTimeout(() => {
+      this.recoveryTimer = undefined;
+      if (this.pc === pc && !this.healthy(pc) && !this.ended) void this.recover();
+    }, CONNECT_AFTER_MS);
     await this.send('offer', pc.localDescription!.sdp);
   }
 

@@ -1,0 +1,47 @@
+✔ 429s back off from 0.5 s doubling to a 5 s ceiling (5.97725ms)
+✔ a 429's retryAfterMs is honoured when it's longer than the backoff (0.478167ms)
+✔ a 404 unknown-room (a restarted server) is retried; other 404s and 401s fail at once (0.611958ms)
+✔ case 1: ICE reaching failed fires at once, once (0.880291ms)
+✔ case 2: gathering done with no relay candidate and not connected 3 s later (0.10775ms)
+✔ case 2 does not fire when the connection comes up inside the 3 s, or when a coturn relay candidate exists (0.084958ms)
+✔ case 3: not connected 8 s after the offer (0.083625ms)
+✔ a connection that comes up never fires, and a relay candidate does not stop case 3 (0.085333ms)
+✔ at most one request per peer connection, whichever case comes first (0.071959ms)
+✔ a link that connected and then fails asks for the fallback (0.069208ms)
+✔ a disposed trigger is silent (0.444083ms)
+✔ merging adds Cloudflare entries and never repeats a URL (0.203791ms)
+✔ default TURN transports omit their redundant query, while endpoints, credentials and explicit TCP stay intact (1.061583ms)
+▶ hello room over loopback WebRTC
+  ✔ two controllers join and each moves its own marker; diagnostics show the selected path (1126.400125ms)
+  ✔ a lost connection restarts, then rebuilds at gen + 1 on the same endpoint without re-registering; stale gens are fenced (412.300917ms)
+  ✔ a dropped signalling stream reconnects with Last-Event-ID and keeps working (940.327458ms)
+  ✔ a lost initial offer recovers on the same endpoint without a test retry (8335.396459ms)
+✔ hello room over loopback WebRTC (10942.767917ms)
+▶ server restart mid-session
+  ✔ the data channel stays up, the host re-registers its code and the controller its endpoint (874.041209ms)
+✔ server restart mid-session (874.358ms)
+▶ ICE credential refresh
+  ✔ credentials refresh at 75 % of the TTL through /ice without dropping the data channels (5580.572625ms)
+✔ ICE credential refresh (5580.794042ms)
+✔ WebKit joins and exchanges input with the configured coturn UDP URL present (br-gm11) (1847.422708ms)
+# lost Allocate: {"connectedMs":8219,"loss":{"dropped":6,"events":[{"at":1791727947179,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727947454,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727947968,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727948981,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727951003,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727955016,"event":"drop-allocate","transaction":"4761754b6b684f4a31314a64"},{"at":1791727955199,"event":"forward-allocate","transaction":"78544c5845734f554a697137"},{"at":1791727955200,"event":"forward-allocate","transaction":"7a472f723374364459394245"}]},"link":{"state":"connected","gen":917279473,"endpointId":"c-5fb04d3fde25","roomId":"rm-cc9da1eced76a1c3","code":"S56R","pc":"connected","ice":"connected","signaling":"stable","early":0,"sse":"open","sseReconnects":0,"registrations":1,"restarts":1,"rebuilds":0,"iceExpiresAt":1791735147000,"relayFallback":{"state":"unavailable","reason":"offer-timeout","requests":1,"credentialHeld":false},"channels":{"state":"open","cmd":"open"}}}
+▶ relay through a local coturn
+  ✔ a lost initial TURN Allocate transaction recovers without a fresh controller or test retry (9181.796542ms)
+# stats dump (IPs redacted): host {"local":"relay","remote":"relay","kind":"coturn-relay","protocol":"udp","relayProtocol":"udp","rttMs":0} controller {"local":"relay","remote":"relay","kind":"coturn-relay","protocol":"udp","relayProtocol":"udp","rttMs":1}
+  ✔ iceTransportPolicy relay connects host and controller through coturn (1138.262292ms)
+✔ relay through a local coturn (10320.321833ms)
+▶ Cloudflare fallback triggers (P1-N04b)
+  ✔ a healthy connection never asks for Cloudflare credentials (10259.857875ms)
+  ✔ relay-only with coturn unreachable asks exactly once, later than 3 s; a 503 keeps the existing path (no broker) (11241.103959ms)
+✔ Cloudflare fallback triggers (P1-N04b) (21501.238375ms)
+▶ Cloudflare fallback merges and connects (P1-N04b)
+  ✔ coturn unreachable in the initial list, a scripted fallback answer carries working TURN entries: setConfiguration + ICE restart connects (9128.819167ms)
+✔ Cloudflare fallback merges and connects (P1-N04b) (9128.986375ms)
+ℹ tests 25
+ℹ suites 6
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 62141.723125
