@@ -57,8 +57,11 @@ fn jj_procgen_generates_validates_and_dumps() {
     assert_eq!(validated[0]["ok"], true, "{validated}");
 
     // The course design is in the report.
-    assert!(report["course"]["lengthM"].as_f64().unwrap() >= 700.0);
-    assert!(report["course"]["corners"]["hairpin"].as_u64().unwrap() >= 1);
+    assert!(report["course"]["lengthM"].as_f64().unwrap() >= 600.0);
+    assert!(report["course"]["straightsM"].as_array().unwrap().len() >= 2);
+    assert!(
+        ["twisty", "flowing", "speedway"].contains(&report["course"]["preset"].as_str().unwrap())
+    );
 
     // The seed bank: every seed valid, with the corner mix.
     let bank = Command::new(env!("CARGO_BIN_EXE_jj"))
@@ -106,6 +109,44 @@ fn jj_procgen_generates_validates_and_dumps() {
         .sum();
     assert_eq!(counted, 12, "every seed's plan is counted: {}", f["plans"]);
     assert!(f["rows"][0]["plan"].is_string());
+
+    for preset in ["twisty", "flowing", "speedway"] {
+        let out = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("procgen-preset-{preset}"));
+        let run = Command::new(env!("CARGO_BIN_EXE_jj"))
+            .args([
+                "procgen", "--seeds", "0..2", "--preset", preset, "--json", "--out",
+            ])
+            .arg(&out)
+            .current_dir(&repo)
+            .output()
+            .unwrap();
+        assert!(
+            run.status.success(),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+        let bank: serde_json::Value = serde_json::from_slice(&run.stdout).unwrap();
+        assert_eq!(bank["valid"], 2);
+        assert!(
+            bank["rows"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|r| r["course"]["preset"] == preset)
+        );
+        let written: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(out.join("bank.json")).unwrap()).unwrap();
+        assert_eq!(
+            written, bank,
+            "bank --out must preserve this family's measurements"
+        );
+    }
+    let invalid = Command::new(env!("CARGO_BIN_EXE_jj"))
+        .args(["procgen", "--seed", "0", "--preset", "unknown"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+    assert_eq!(invalid.status.code(), Some(2));
 
     let usage = Command::new(env!("CARGO_BIN_EXE_jj"))
         .arg("procgen")

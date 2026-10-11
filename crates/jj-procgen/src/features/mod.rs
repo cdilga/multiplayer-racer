@@ -44,6 +44,8 @@ pub struct Limits {
     pub jump_min_ramp_slope: f64,
     /// Steepest natural road grade across a jump's whole envelope.
     pub jump_road_grade: f64,
+    /// Turning across the approach and ramp, radians (quantization tolerance for a straight).
+    pub jump_entry_turn: f64,
     /// Straight run before the ramp's base, m.
     pub entry_m: f64,
     /// Grade and vertical curvature (1/m) any non-jump piece may add; a car at 25 m/s stays grounded at 0.0157.
@@ -69,6 +71,7 @@ pub const LIMITS: Limits = Limits {
     jump_ramp_slope: 0.21,
     jump_min_ramp_slope: 0.16,
     jump_road_grade: 0.045,
+    jump_entry_turn: 0.01,
     entry_m: 12.0,
     max_grade: 0.16,
     max_curvature: 0.012,
@@ -201,6 +204,21 @@ pub fn place(map: &mut Map, rng: &mut Rng, biome: Biome) {
 /// [`place`] for a route that crosses biomes: `ranges` are `(from, to)` arc lengths (m) with the density that applies
 /// there. A piece's whole envelope stays inside one range, so no piece straddles a biome boundary.
 pub fn place_in(map: &mut Map, rng: &mut Rng, ranges: &[(f64, f64, Density)]) {
+    place_in_tuned(
+        map,
+        rng,
+        ranges,
+        crate::tuning::GeneratorData::shipped().jumps,
+    );
+}
+
+/// The same placement with explicit generator jump data (owner tuning).
+pub fn place_in_tuned(
+    map: &mut Map,
+    rng: &mut Rng,
+    ranges: &[(f64, f64, Density)],
+    jumps: crate::tuning::JumpData,
+) {
     map.features.clear();
     let line = Line::new(map);
     // Counts per range: whole expected number plus one more with the fractional probability.
@@ -221,7 +239,7 @@ pub fn place_in(map: &mut Map, rng: &mut Rng, ranges: &[(f64, f64, Density)]) {
     let mut zones: Vec<Zone> = Vec::new();
     for (kind, from, to) in kinds {
         for _ in 0..ATTEMPTS {
-            let params = draw_params(kind, rng);
+            let params = draw_params(kind, rng, jumps);
             let span = zone_of(kind, 0.0, &params);
             let lo = from.max(LIMITS.earliest_m) + (span.base - span.from);
             let hi = to.min(line.total - LIMITS.seam_m) - (span.to - span.base);
@@ -263,7 +281,11 @@ fn mm(v: f64) -> i32 {
     libm::round(v * 1000.0) as i32
 }
 
-fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
+fn draw_params(
+    kind: FeatureKind,
+    rng: &mut Rng,
+    jumps: crate::tuning::JumpData,
+) -> BTreeMap<String, i64> {
     let mut p = BTreeMap::new();
     let whole =
         |rng: &mut Rng, lo: f64, hi: f64, step: f64| libm::round(rng.range(lo, hi) / step) as i64;
@@ -273,7 +295,7 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
             // 2·v·sin(angle)/g, so a gentle ramp is a flat jump, owner playtest 1), and the ramp spans at least three
             // cells of the 2.5 m height grid (a shorter one bakes lumpy and barely launches).
             let ramp_mm = whole(rng, LIMITS.jump_ramp_m.0, LIMITS.jump_ramp_m.1, 0.5) * 500;
-            let slope = rng.range(LIMITS.jump_min_ramp_slope, LIMITS.jump_ramp_slope);
+            let slope = rng.range(jumps.min_ramp_slope, jumps.max_ramp_slope);
             let lip = (libm::floor(ramp_mm as f64 / 1000.0 * slope * 20.0) as i64 * 5)
                 .clamp(LIMITS.jump_lip_cm.0, LIMITS.jump_lip_cm.1);
             p.insert("rampLengthMm".into(), ramp_mm);
@@ -376,6 +398,14 @@ fn zone_ok(map: &Map, line: &Line, kind: FeatureKind, z: &Zone, taken: &[Zone]) 
         return false;
     }
     if kind == FeatureKind::Jump {
+        // The whole-envelope budget allows a gentle bend on the receiving surface, but the entry and ramp must
+        // share a heading. A 6-degree turn inside the nominal 12 m entry launched seed 9 diagonally: a longer
+        // flight drifted 3.7 m sideways onto the landing's sloped edge. Keep the promised straight approach through
+        // the lip; 0.01 rad allows millimetre-quantized route tangents without treating a corner as a straight.
+        let ramp_end = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+        if line.turn(i0, ramp_end) > LIMITS.jump_entry_turn {
+            return false;
+        }
         let worst = (i0..i1)
             .map(|i| {
                 libm::fabs(line.y(map, i + 1) - line.y(map, i))
@@ -625,6 +655,13 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
         let h = |i: usize| ground_height_m(&map.terrain, line.pts[i % n].0, line.pts[i % n].1);
         match f.kind {
             FeatureKind::Jump => {
+                let lip = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+                if line.turn(i0, lip) > LIMITS.jump_entry_turn + 1e-9 {
+                    bad.push(format!(
+                        "{name}: entry bends {:.3} rad through the ramp",
+                        line.turn(i0, lip)
+                    ));
+                }
                 in_range(
                     "rampLengthMm",
                     LIMITS.jump_ramp_m.0,

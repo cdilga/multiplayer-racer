@@ -1699,17 +1699,21 @@ impl Sim {
                 // it onto its nose): a spring toward world-up on pitch and roll, damped, so the stick only biases the
                 // attitude. Its work is authorised in the ledger like the stick's.
                 let up = iso.rotation * Vector::Y;
-                // A bike loses its pitch support baseline as soon as one wheel leaves
-                // the ground (e.g. the front meets a rail). Balance must start then,
-                // before a collision can pitch it past the car's flight cutoff. Keep
-                // the deliberate wheelie free while its rear wheel still supports it.
+                // A bike needs both axle contacts; a car needs three loaded
+                // contacts for a support plane. Once that plane disappears,
+                // arrest a tilt beyond the profile's supported-road envelope.
+                // Small road attitudes and rear-supported wheelies stay free.
                 let bike = p.tuning.bike_balance.is_some();
-                let level = airborne || (bike && supported < 2 && car.action.wheelie_ticks == 0);
-                // Cars hand tumbles beyond 45 degrees to flip assist; bikes auto-balance.
-                if level
-                    && p.tuning.air_level_torque > 0.0
-                    && (bike || up.y > core::f32::consts::FRAC_1_SQRT_2)
-                {
+                let stable_contacts = if bike { 2 } else { 3 };
+                let losing_balance = bike || up.y < libm::cosf(p.tuning.support_level_tilt_rad);
+                let level = airborne
+                    || (supported < stable_contacts
+                        && losing_balance
+                        && car.action.wheelie_ticks == 0);
+                // Keep damping through the upright hemisphere: a 45-degree
+                // cutoff abandoned a recoverable rough-verge lean mid-flight.
+                // Fully inverted cars remain the flip assist's; bikes auto-balance.
+                if level && p.tuning.air_level_torque > 0.0 && (bike || up.y > 0.0) {
                     let tilt = up.cross(Vector::Y);
                     let w = b.angvel();
                     let w_tilt = w - Vector::Y * w.dot(Vector::Y);

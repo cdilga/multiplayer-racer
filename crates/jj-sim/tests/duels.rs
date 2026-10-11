@@ -93,7 +93,7 @@ fn duel_profile(set: &[String]) -> VehicleProfile {
 
 struct Row {
     label: String,
-    gate_s: Option<f64>,
+    gate_tick: Option<u64>,
     end_speed: f64,
     wrecks: f64,
     max_offset_m: f64,
@@ -102,6 +102,24 @@ struct Row {
     /// Landing quality (the up axis at the first landing, 1 level) and the air time, s.
     landing_up_y: f64,
     airtime_s: f64,
+}
+
+impl Row {
+    fn gate_s(&self) -> Option<f64> {
+        self.gate_tick.map(|t| t as f64 / f64::from(TICK_HZ))
+    }
+}
+
+fn beats_ticks(fast: u64, slow: u64, by_s: f64) -> bool {
+    slow >= fast && (slow - fast) as f64 >= by_s * f64::from(TICK_HZ)
+}
+
+#[test]
+fn ordering_uses_exact_tick_differences_at_a_margin_boundary() {
+    // 5.60 - 5.55 rounds below .05 in f64; these are exactly six ticks apart.
+    assert!(beats_ticks(666, 672, 0.05));
+    assert!(!beats_ticks(666, 671, 0.05));
+    assert!(!beats_ticks(672, 666, 0.0));
 }
 
 fn run_duel(o: &Ordering, profile: &VehicleProfile, registry: &Registry) -> Vec<Row> {
@@ -245,14 +263,12 @@ fn run_loaded(
             let car = first + k;
             Row {
                 label: labels[k as usize].clone(),
-                gate_s: gate[k as usize]
-                    .filter(|_| {
-                        o.gate.max_offset_m.is_none_or(|m| {
-                            h.metric(car, Metric::MaxRouteOffsetM)
-                                .is_none_or(|v| v <= m)
-                        })
+                gate_tick: gate[k as usize].filter(|_| {
+                    o.gate.max_offset_m.is_none_or(|m| {
+                        h.metric(car, Metric::MaxRouteOffsetM)
+                            .is_none_or(|v| v <= m)
                     })
-                    .map(|t| t as f64 / f64::from(TICK_HZ)),
+                }),
                 end_speed: h.metric(car, Metric::Speed).unwrap_or(0.0),
                 wrecks: h.metric(car, Metric::Wrecks).unwrap_or(0.0),
                 max_offset_m: h.metric(car, Metric::MaxRouteOffsetM).unwrap_or(0.0),
@@ -318,7 +334,7 @@ fn every_duel_holds_its_ordering() {
                 "| {} | {} | {} | {:.1} | {} |\n",
                 o.duel,
                 r.label,
-                r.gate_s.map_or("DNF".to_owned(), |s| format!("{s:.2}")),
+                r.gate_s().map_or("DNF".to_owned(), |s| format!("{s:.2}")),
                 r.end_speed,
                 r.wrecks
             );
@@ -330,7 +346,7 @@ fn every_duel_holds_its_ordering() {
                     format!(
                         "{}|{:?}|{:.2}|{}|{:.1}|{:.1}|{:.1}|{:.3}|{:.2}",
                         r.label,
-                        r.gate_s,
+                        r.gate_s(),
                         r.end_speed,
                         r.wrecks,
                         r.max_offset_m,
@@ -352,19 +368,19 @@ fn every_duel_holds_its_ordering() {
             );
             for f in &fast {
                 for s in &slow {
-                    let ok = match (f.gate_s, s.gate_s) {
-                        (Some(f), Some(s)) => s - f >= b.by_s,
+                    let ok = match (f.gate_tick, s.gate_tick) {
+                        (Some(f), Some(s)) => beats_ticks(f, s, b.by_s),
                         (Some(_), None) => true,
                         _ => false,
                     };
                     match (&b.gap, ok) {
                         (None, false) => failures.push(format!(
                             "{}: {} ({:?} s) must beat {} ({:?} s) by {} s",
-                            o.duel, f.label, f.gate_s, s.label, s.gate_s, b.by_s
+                            o.duel, f.label, f.gate_s(), s.label, s.gate_s(), b.by_s
                         )),
                         (Some(_), true) => failures.push(format!(
                             "{}: the gap closed ({} {:?} s beats {} {:?} s by {} s): delete its `gap`",
-                            o.duel, f.label, f.gate_s, s.label, s.gate_s, b.by_s
+                            o.duel, f.label, f.gate_s(), s.label, s.gate_s(), b.by_s
                         )),
                         _ => {}
                     }

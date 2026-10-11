@@ -344,3 +344,27 @@ fn a_reserved_landing_without_a_receiving_surface_is_rejected() {
         assert!(report.has(rule), "{param}={value}: {report:?}");
     }
 }
+
+#[test]
+fn a_corner_inside_the_jump_approach_is_rejected() {
+    let mut map = generate_recipe(9, &[Biome::Greybox]).unwrap().0;
+    assert!(jj_procgen::features::check_envelope(&map).is_empty());
+    let f = map
+        .features
+        .iter()
+        .find(|f| f.kind == FeatureKind::Jump)
+        .unwrap();
+    let base = map
+        .route
+        .points
+        .iter()
+        .position(|q| q.x == f.pose.x && q.z == f.pose.z)
+        .unwrap();
+    // A kink immediately before the ramp must not qualify as a straight entry, even when the landing is clear.
+    map.route.points[base - 1].x += 300;
+    assert!(
+        jj_procgen::features::check_envelope(&map)
+            .iter()
+            .any(|p| p.contains("entry bends"))
+    );
+}

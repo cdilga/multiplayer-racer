@@ -10,11 +10,14 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--recipe <biome,..>] [--json]\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway>] [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
         "lengthM": (r.length_m * 10.0).round() / 10.0,
+        "class": r.class.name(),
+        "preset": r.preset.name(),
+        "straightsM": r.straights_m,
         "corners": r.corners,
         "attempts": r.attempts,
         "fallback": r.fallback,
@@ -45,13 +48,16 @@ fn bank(
     json: bool,
     registry: &jj_map::Registry,
     recipe: &[jj_map::Biome],
+    data: &jj_procgen::tuning::GeneratorData,
+    out: Option<PathBuf>,
 ) -> ExitCode {
     let mut rows = Vec::new();
     let mut histogram: std::collections::BTreeMap<&str, u32> = std::collections::BTreeMap::new();
     let (mut ok, mut fallbacks, mut attempts) = (0u64, 0u32, 0u64);
     let mut plans: std::collections::BTreeMap<String, u32> = std::collections::BTreeMap::new();
     for seed in from..to {
-        let prepared = jj_procgen::prepare(seed, recipe);
+        let prepared =
+            jj_procgen::prepare_tuned(seed, recipe, jj_procgen::validate::MAX_DRAWS, data);
         let (map, r) = (prepared.map, prepared.course);
         let v = jj_map::validate(&map, registry);
         let good = v.ok && prepared.valid;
@@ -82,7 +88,8 @@ fn bank(
         "cornerMix": histogram,
         "rows": rows,
     });
-    let out = PathBuf::from(format!("target/jj-runs/procgen-seeds-{from}-{to}"));
+    let out =
+        out.unwrap_or_else(|| PathBuf::from(format!("target/jj-runs/procgen-seeds-{from}-{to}")));
     if let Err(e) = std::fs::create_dir_all(&out).and_then(|()| {
         std::fs::write(
             out.join("bank.json"),
@@ -117,6 +124,7 @@ pub fn command(args: &[String]) -> ExitCode {
     let mut seeds: Option<(u64, u64)> = None;
     let mut out: Option<PathBuf> = None;
     let mut recipe = vec![jj_map::Biome::Greybox];
+    let mut data = jj_procgen::tuning::GeneratorData::shipped().clone();
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -129,6 +137,21 @@ pub fn command(args: &[String]) -> ExitCode {
                     .and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?)))
             }
             "--out" => out = it.next().map(PathBuf::from),
+            "--preset" => {
+                let name = it.next().and_then(|s| {
+                    serde_json::from_value::<jj_procgen::tuning::PresetName>(
+                        serde_json::Value::String(s.clone()),
+                    )
+                    .ok()
+                });
+                let Some(name) = name else {
+                    eprintln!("jj procgen: --preset needs twisty, flowing or speedway\n{USAGE}");
+                    return ExitCode::from(2);
+                };
+                for n in jj_procgen::tuning::PresetName::ALL {
+                    data.course.presets.get_mut(n).weight = f64::from(n == name);
+                }
+            }
             "--recipe" => match it.next().and_then(|l| parse_recipe(l)) {
                 Some(r) => recipe = r,
                 None => {
@@ -156,14 +179,14 @@ pub fn command(args: &[String]) -> ExitCode {
         None => jj_procgen::registry(),
     };
     if let Some((from, to)) = seeds {
-        return bank(from, to, json, &registry, &recipe);
+        return bank(from, to, json, &registry, &recipe, &data, out);
     }
     let Some(seed) = seed else {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     };
 
-    let prepared = jj_procgen::prepare(seed, &recipe);
+    let prepared = jj_procgen::prepare_tuned(seed, &recipe, jj_procgen::validate::MAX_DRAWS, &data);
     let (map, course) = (prepared.map, prepared.course);
     let report = jj_map::validate(&map, &registry);
     let ok = report.ok && prepared.valid;

@@ -1,0 +1,16 @@
+✔ no owner flag: no panel and no tuning chunk (3097.76675ms)
+# applied in 4106 ms; mean speed 14.0 -> 6.0 m/s
+✔ ?tune: a live change mid-race reaches the sim and the cars; reset; export (42851.691417ms)
+# input threshold live on the phone and the host in 574 ms (profile on the phone after 452 ms)
+✔ ?tune: an input threshold changed mid-drive reaches a connected phone within a second; refused values; reset; export (7783.228917ms)
+# seed 2: length 1241.091 -> 1192.312 m, relief 2.951 -> 5.607 m (same course) -> 4.699 m
+✔ ?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export (15833.37ms)
+✔ a production build contains no tuning panel code (594.769667ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70935.420167

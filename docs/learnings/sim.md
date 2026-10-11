@@ -346,3 +346,18 @@ not feel targets.
   yaw while pitched; a fast tilted impact otherwise makes the damper resist standing up. Balance continues airborne.
 - Raw-stick fixtures must put DRIVE fully sideways for R120 drift; a diagonal vector outside that sector is ordinary
   throttle. CLI `jj sim --profile` and the WASM fixture load use the same versioned bike profile and named damage setters.
+
+## 2026-10-12 · Support-loss levelling and exact duel timing (br-xlvx.7 / br-qhga)
+
+- Generator v15 exposed Cruz turns at seed 2/point 280 and seed 5/point 200 that the previous geometry did not.
+  Loaded wheel contacts matter: three define a car support plane; fewer can leave a rough-verge tilt unarrested.
+  The 45° flight cutoff then removed damping during an otherwise recoverable lean. Keep levelling through the
+  upright hemisphere and hand fully inverted cars to flip assist.
+- Applying levelling to every partial contact also changed ordinary road driving enough to break the six-seed
+  learner bank. Start it beyond `support_level_tilt_rad` (10° initially), retaining road attitude and deliberate
+  supported wheelies. Reuse the existing spring/damping gains; do not add a large-force multiplier. Canceling
+  the car's entire partial-contact suspension roll moment instead worsened the seed-2 roll and was rejected.
+- Core health is always zero: it has no part health. A zero there does not prove a wreck or collision damage.
+  Read damage events and changes in the actual part-health vector before attributing a tumble.
+- The .05 s duel margin is exactly six 120 Hz ticks. Subtracting displayed seconds (5.60−5.55) can round below
+  that margin. Preserve gate ticks and compare their difference before converting to seconds for display.

@@ -82,6 +82,73 @@ pub struct CourseData {
     pub min_straight_m: f64,
     /// One extra left-right bend pair per this many metres of lap beyond the first few (longer tracks bend more).
     pub bend_spacing_m: f64,
+    pub presets: CoursePresets,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PresetName {
+    Twisty,
+    Flowing,
+    Speedway,
+}
+
+impl PresetName {
+    pub const ALL: [Self; 3] = [Self::Twisty, Self::Flowing, Self::Speedway];
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Twisty => "twisty",
+            Self::Flowing => "flowing",
+            Self::Speedway => "speedway",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoursePreset {
+    pub weight: f64,
+    pub hairpin_probability: f64,
+    pub second_hairpin_probability: f64,
+    pub sweeper_probability: f64,
+    pub opposite_corner_probability: f64,
+    pub bend_spacing_scale: f64,
+    pub chicanes_per_km: f64,
+    pub chicane_angle_scale: f64,
+    pub radius_scale: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoursePresets {
+    pub twisty: CoursePreset,
+    pub flowing: CoursePreset,
+    pub speedway: CoursePreset,
+}
+
+/// Ordinary jump ramp grades (rise/run), tunable before regeneration.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct JumpData {
+    pub min_ramp_slope: f64,
+    pub max_ramp_slope: f64,
+}
+
+impl CoursePresets {
+    pub fn get(&self, n: PresetName) -> &CoursePreset {
+        match n {
+            PresetName::Twisty => &self.twisty,
+            PresetName::Flowing => &self.flowing,
+            PresetName::Speedway => &self.speedway,
+        }
+    }
+    pub fn get_mut(&mut self, n: PresetName) -> &mut CoursePreset {
+        match n {
+            PresetName::Twisty => &mut self.twisty,
+            PresetName::Flowing => &mut self.flowing,
+            PresetName::Speedway => &mut self.speedway,
+        }
+    }
 }
 
 /// The biome mix (R125): the weights for a track using one, two, three or four biomes; which biomes, and in which
@@ -141,6 +208,7 @@ pub struct GeneratorData {
     pub what: String,
     pub mix: MixData,
     pub course: CourseData,
+    pub jumps: JumpData,
     pub biomes: Biomes,
     pub roof_stunts: crate::roofs::RoofStunts,
 }
@@ -207,6 +275,18 @@ impl GeneratorData {
     pub fn validate(&self) -> Result<(), GeneratorError> {
         let mut bad = Vec::new();
         bad.extend(self.roof_stunts.problems());
+        let jump = &self.jumps;
+        if !jump.min_ramp_slope.is_finite()
+            || !jump.max_ramp_slope.is_finite()
+            || jump.min_ramp_slope < crate::features::LIMITS.jump_min_ramp_slope
+            || jump.max_ramp_slope > crate::features::LIMITS.jump_ramp_slope
+            || jump.min_ramp_slope > jump.max_ramp_slope
+        {
+            bad.push(
+                "jumps: ramp slopes must be ordered inside the validated ordinary-jump envelope"
+                    .into(),
+            );
+        }
         if self.version != VERSION {
             bad.push(format!("version {} (expected {VERSION})", self.version));
         }
@@ -230,6 +310,37 @@ impl GeneratorData {
         }
         pos("course.minStraightM", c.min_straight_m, &mut bad);
         pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
+        let mut preset_weight = 0.0;
+        for name in PresetName::ALL {
+            let p = c.presets.get(name);
+            let prefix = format!("course.presets.{}", name.name());
+            for (key, value) in [("weight", p.weight), ("chicanesPerKm", p.chicanes_per_km)] {
+                if !value.is_finite() || value < 0.0 {
+                    bad.push(format!("{prefix}.{key}: must be finite and nonnegative"));
+                }
+            }
+            preset_weight += p.weight;
+            for (key, value) in [
+                ("hairpinProbability", p.hairpin_probability),
+                ("secondHairpinProbability", p.second_hairpin_probability),
+                ("sweeperProbability", p.sweeper_probability),
+                ("oppositeCornerProbability", p.opposite_corner_probability),
+            ] {
+                if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+                    bad.push(format!("{prefix}.{key}: must be in 0..1"));
+                }
+            }
+            for (key, value) in [
+                ("bendSpacingScale", p.bend_spacing_scale),
+                ("chicaneAngleScale", p.chicane_angle_scale),
+                ("radiusScale", p.radius_scale),
+            ] {
+                pos(&format!("{prefix}.{key}"), value, &mut bad);
+            }
+        }
+        if !preset_weight.is_finite() || preset_weight <= 0.0 {
+            bad.push("course.presets: total weight must be finite and positive".into());
+        }
         if !(0.0..1.0).contains(&c.straight_spread) {
             bad.push(format!(
                 "course.straightSpread = {}: must be from 0 up to (not including) 1",
@@ -475,10 +586,24 @@ mod tests {
             ("mix.oneBiome", "-3"),
             ("biomes.rocks.terrain.maxGrade", "0.9"),
             ("biomes.rocks.features.jump", "-1"),
+            ("course.presets.twisty.hairpinProbability", "1.2"),
+            ("course.presets.flowing.chicanesPerKm", "-1"),
+            ("course.presets.speedway.bendSpacingScale", "0"),
+            ("jumps.minRampSlope", "0.1"),
+            ("jumps.maxRampSlope", "0.3"),
         ] {
             let e = d.with_fields(&[(path.into(), raw.into())]);
             assert!(e.is_err(), "{path}={raw} should be refused");
         }
+        assert!(
+            d.with_fields(
+                &PresetName::ALL
+                    .into_iter()
+                    .map(|n| (format!("course.presets.{}.weight", n.name()), "0".into()))
+                    .collect::<Vec<_>>()
+            )
+            .is_err()
+        );
     }
 
     #[test]

@@ -42,7 +42,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "14";
+pub const GENERATOR_VERSION: &str = "15";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -51,6 +51,8 @@ pub struct Report {
     pub length_m: f64,
     /// The seed's length class (R125).
     pub class: tuning::ClassName,
+    pub preset: tuning::PresetName,
+    pub straights_m: Vec<f64>,
     pub attempts: u32,
     pub fallback: bool,
     pub corners: BTreeMap<&'static str, u32>,
@@ -140,7 +142,7 @@ pub fn generate_tuned_from(
             (lo, hi, data.density(b))
         })
         .collect();
-    features::place_in(&mut map, &mut st.features, &ranges);
+    features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
     biome::wayfinding::place(&mut map);
     let registry = biome::registry();
     // Each biome's rules along its own stretches (houses facing the street, lane lines, signs...), before the scatter fills
@@ -205,6 +207,8 @@ fn report(course: &Course) -> Report {
     Report {
         length_m: course.length_m,
         class: course.class,
+        preset: course.preset,
+        straights_m: course.straights.clone(),
         attempts: course.attempts,
         fallback: course.fallback,
         corners,

@@ -399,3 +399,67 @@ fn bike_generated_full_lock_regressions_stay_upright() {
     }
     assert!(failures.is_empty(), "the bike rolled: {failures:?}");
 }
+
+#[test]
+fn cruz_generated_rough_verge_turns_do_not_roll() {
+    let mut failures = Vec::new();
+    for (seed, at, speed, flick) in [
+        (2, 280, 25.0, true),
+        (2, 280, 35.0, false),
+        (2, 280, 35.0, true),
+        (5, 200, 35.0, false),
+    ] {
+        let map = loaded(seed);
+        let mut sim = Sim::new(&map, &jj_procgen::registry(), 7, VehicleProfile::cruz());
+        let car = sim.spawn_grid(1)[0];
+        let pose = route_spawn(&map, at, 0.0, 0.5);
+        sim.place_car(
+            car,
+            pose,
+            0.0,
+            [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()],
+        );
+        let mut rows = Vec::new();
+        let mut min_up = 1.0f32;
+        for t in 0..2 * S {
+            let steer = if !flick || t < S * 6 / 10 {
+                FULL
+            } else if t < S * 12 / 10 {
+                -FULL
+            } else {
+                0
+            };
+            sim.set_input(
+                car,
+                DriveInput {
+                    throttle: FULL,
+                    steer,
+                    ..Default::default()
+                },
+            );
+            sim.step();
+            let st = sim.car_state(car).unwrap();
+            min_up = min_up.min(st.up_y);
+            rows.push(serde_json::json!({"tick":sim.tick(),"position":st.position,"rotation":st.rotation,"angvel":st.angvel,"upY":st.up_y,"contacts":st.wheels_in_contact,"parts":sim.part_health(car)}));
+        }
+        if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(
+                format!("{dir}/cruz-seed{seed}-point{at}-speed{speed}-flick{flick}.json"),
+                serde_json::to_string_pretty(&rows).unwrap(),
+            )
+            .unwrap();
+            std::fs::write(
+                format!("{dir}/cruz-seed{seed}-map.json"),
+                serde_json::to_string(&map.map).unwrap(),
+            )
+            .unwrap();
+        }
+        if min_up < 0.5 {
+            failures.push(format!(
+                "seed{seed} point{at} speed{speed} flick{flick}: minUpY {min_up}"
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "{failures:?}");
+}

@@ -53,7 +53,10 @@ fn a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix() {
         "corner mix over 100 seeds: {histogram:?}; mean attempts {}; fallbacks {fallbacks}",
         attempts as f64 / 100.0
     );
-    for kind in ["hairpin", "sweeper", "medium"] {
+    // R124 course families include speedways with no hairpins; require variety
+    // across the seed mix rather than a hairpin in every speedway.
+    assert!(histogram["hairpin"] > 0);
+    for kind in ["sweeper", "medium"] {
         assert!(
             histogram[kind] >= 100,
             "every course has at least one {kind}: {histogram:?}"

@@ -2591,6 +2591,7 @@
     "drift_exit_boost_gain": 2.5,
     "air_level_torque": 3200.0,
     "air_level_damping": 2200.0,
+    "support_level_tilt_rad": 0.17453292,
     "surfaces": {
       "tarmac": 1.0,
       "packed_dirt": 0.7,

@@ -32,7 +32,42 @@
     "startStraightMaxM": 160.0,
     "straightSpread": 0.6,
     "minStraightM": 18.0,
-    "bendSpacingM": 350.0
+    "bendSpacingM": 350.0,
+    "presets": {
+      "twisty": {
+        "weight": 1,
+        "hairpinProbability": 1,
+        "secondHairpinProbability": 0.35,
+        "sweeperProbability": 0.15,
+        "oppositeCornerProbability": 0.5,
+        "bendSpacingScale": 0.85,
+        "chicanesPerKm": 2,
+        "chicaneAngleScale": 1.4,
+        "radiusScale": 0.9
+      },
+      "flowing": {
+        "weight": 1,
+        "hairpinProbability": 0.35,
+        "secondHairpinProbability": 0.1,
+        "sweeperProbability": 0.8,
+        "oppositeCornerProbability": 0.45,
+        "bendSpacingScale": 1.2,
+        "chicanesPerKm": 0.6,
+        "chicaneAngleScale": 1.1,
+        "radiusScale": 1.05
+      },
+      "speedway": {
+        "weight": 1,
+        "hairpinProbability": 0,
+        "secondHairpinProbability": 0,
+        "sweeperProbability": 1,
+        "oppositeCornerProbability": 0,
+        "bendSpacingScale": 3,
+        "chicanesPerKm": 0,
+        "chicaneAngleScale": 1,
+        "radiusScale": 1.05
+      }
+    }
   },
   "biomes": {
     "greybox": {
@@ -120,6 +155,10 @@
         "creek": 1.0
       }
     }
+  },
+  "jumps": {
+    "minRampSlope": 0.18,
+    "maxRampSlope": 0.21
   },
   "roofStunts": {
     "spacingM": 120.0,

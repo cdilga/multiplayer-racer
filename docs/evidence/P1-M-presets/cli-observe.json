@@ -1,0 +1,83 @@
+{
+  "attempts": [
+    {
+      "biomes": 1,
+      "draw": 0,
+      "rejected": []
+    }
+  ],
+  "course": {
+    "attempts": 27,
+    "class": "epic",
+    "corners": {
+      "chicane": 4,
+      "hairpin": 1,
+      "medium": 11,
+      "sweeper": 0
+    },
+    "fallback": false,
+    "lengthM": 2077.8,
+    "preset": "twisty",
+    "rejects": {
+      "corner types cannot fit the turn budget": 5,
+      "longer than the length band": 20,
+      "the road comes too close to itself": 1
+    },
+    "straightsM": [
+      125.00517906486998,
+      56.27175506455478,
+      117.45531855939198,
+      141.26420060282564,
+      84.39522639073112,
+      37.370002962299694,
+      95.45312420738722,
+      67.57598796393255,
+      129.42051616072843,
+      54.20386814449384,
+      40.37279234287481,
+      110.18718547637988,
+      122.47096630682435,
+      66.89599986273461,
+      102.70010184071016,
+      137.336777964851,
+      104.2009815796071
+    ]
+  },
+  "dressing": 526,
+  "gameplayHash": "e471612aa4d23eb2f3816330b249ea5c13e3d5ae9c301225f77d18abc8c1a411",
+  "gates": 52,
+  "generator": {
+    "id": "jj.procgen.course",
+    "version": "15"
+  },
+  "jumpShapes": [
+    {
+      "feature": 0,
+      "fingerprint": "5844f30a987cdde6",
+      "triangles": 1356
+    },
+    {
+      "feature": 4,
+      "fingerprint": "b396c3764d4dd569",
+      "triangles": 1368
+    },
+    {
+      "feature": 7,
+      "fingerprint": "6875a1fc9126a64f",
+      "triangles": 1446
+    },
+    {
+      "feature": 9,
+      "fingerprint": "75af8695db311284",
+      "triangles": 1392
+    }
+  ],
+  "ok": true,
+  "out": "/tmp/jj-presets-cli-observe",
+  "plan": "requested",
+  "props": 4,
+  "refLapMs": 138491,
+  "routePoints": 831,
+  "seed": 23,
+  "violations": []
+}

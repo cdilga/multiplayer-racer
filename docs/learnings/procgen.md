@@ -193,3 +193,27 @@ to the same house before sorting features, or a multi-house map validates agains
 regression uses two houses, reverses authoring order with the reference adjusted, compares canonical bytes and checks
 idempotence/round-trip. Generator stages that sort dressing must preserve these references too.
 
+## 2026-10-12 · Course families need feasible angle fitting (br-xlvx.7)
+
+Family weights and corner/straight parameters are generator data. Sampling labels alone cannot establish variety:
+measure every straight and tight-corner density, validate actual generated maps, then lap/replay every family in
+every biome. Speedway need not contain a hairpin; require variety across the mixed bank instead of retaining an
+old per-seed assertion that defeats the owner's course families.
+
+Proportional angle scaling can push one sweeper outside its real range even when the turn budget is feasible.
+Clamp to each kind's range, redistribute the remaining turn through available capacity, and redraw only when the
+type list cannot meet the budget. Preserve self-clearance and length bands; retain rare-fallback measurements.
+
+More curved routes exposed bitumen guidepost under-density: `avoid_corners` suppressed the reflector-post rule.
+Permit those posts beside bends while retaining the shared placement clearance checks. Evidence bank tests that
+write straight to `JJ_EVIDENCE_DIR` require the caller to create that directory before running them.
+
+### Jump approaches need their own straightness check (2026-10-12, br-xlvx.7)
+
+The whole-feature 0.12 rad turn budget admitted a six-degree bend inside seed 9's nominal 12 m jump entry.
+At 30 m/s the Cruz launched diagonally, drifted 3.7 m from the line and landed on the table's sloped edge;
+touchdown upY was almost 1, then fell to .656. This was not a post-landing run-out defect. Trace the actual
+heading, lateral position and receiving-surface height before changing the physics. Placement and envelope
+checks now require the entry through the ramp to be straight (0.01 rad quantization tolerance), while retaining
+the receiving envelope's existing turning budget. Data-defined ordinary ramp grades .18–.21 restore mean
+continuous racing flight (.85 s) without changing boost forces or any landing/flight acceptance threshold.

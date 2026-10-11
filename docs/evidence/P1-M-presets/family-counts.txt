@@ -1,0 +1,12 @@
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 1.69s
+     Running tests/presets.rs (target/aarch64-apple-darwin/release/deps/presets-85e6a4c25a92d286)
+
+running 1 test
+twisty: fallbacks 0; mean longest straight 273.0 m; tight/km 2.524; chicanes 226; rejects {"corner types cannot fit the turn budget": 111, "longer than the length band": 658, "no pair of straights closes the loop": 120, "shorter than the length band": 2, "the road comes too close to itself": 14, "the target length leaves the straights too short": 52, "two hairpins back to back": 56}
+flowing: fallbacks 1; mean longest straight 259.5 m; tight/km 0.660; chicanes 62; rejects {"corner types cannot fit the turn budget": 9, "longer than the length band": 386, "no pair of straights closes the loop": 64, "the road comes too close to itself": 1, "the target length leaves the straights too short": 406, "two hairpins back to back": 11}
+speedway: fallbacks 1; mean longest straight 248.2 m; tight/km 0.015; chicanes 0; rejects {"longer than the length band": 211, "shorter than the length band": 1, "the target length leaves the straights too short": 403}
+test preset_seed_bank_reports_geometry ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 7.93s
+

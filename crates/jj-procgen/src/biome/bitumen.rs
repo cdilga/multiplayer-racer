@@ -64,7 +64,9 @@ const ROAD: &[Lineside] = &[
         offset_m: (2.6, 2.6),
         params: &[],
         yaw: Yaw::Random,
-        avoid_corners: true,
+        // Reflectors mark the highway through bends too. The shared placement
+        // checks still keep them off the road and clear of chevrons/guard rails.
+        avoid_corners: false,
         ..line("outback_bitumen/reflector-post", Side::Both, 0.0)
     },
     // Short runs of the shared W-beam rail at culvert ends: 24 m of rail every 160 m, both sides.

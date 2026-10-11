@@ -20,7 +20,7 @@
 use std::collections::BTreeMap;
 
 use crate::seed::Rng;
-pub use crate::tuning::{ClassName, CourseData, LengthClass};
+pub use crate::tuning::{ClassName, CourseData, LengthClass, PresetName};
 
 pub const WIDTH_M: f64 = 12.0;
 /// Two parts of the road further apart than this along it must stay [`CLEARANCE_M`] apart.
@@ -85,6 +85,7 @@ pub struct Course {
     pub length_m: f64,
     /// The length class drawn for the seed.
     pub class: ClassName,
+    pub preset: PresetName,
     pub attempts: u32,
     /// True when every draw failed and the conservative oval was used.
     pub fallback: bool,
@@ -204,14 +205,19 @@ fn range(rng: &mut Rng, (lo, hi): (f64, f64)) -> f64 {
 fn draw(
     rng: &mut Rng,
     data: &CourseData,
+    preset: &crate::tuning::CoursePreset,
     target_m: f64,
 ) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     // The turn budget: 360° of left-hand turning net, plus whatever an optional right-hander takes back.
-    let right = (rng.unit() < 0.4).then(|| range(rng, (40.0, 75.0)));
+    let right = (rng.unit() < preset.opposite_corner_probability).then(|| range(rng, (40.0, 75.0)));
     let total = 360.0 + right.unwrap_or(0.0);
     // Hairpins first (one, sometimes two), then sweepers and medium corners filling what's left, scaled to fit.
     let mut corners = Vec::new();
-    let hairpins = if rng.unit() < 0.35 { 2 } else { 1 };
+    let hairpins = if rng.unit() < preset.hairpin_probability {
+        1 + usize::from(rng.unit() < preset.second_hairpin_probability)
+    } else {
+        0
+    };
     for _ in 0..hairpins {
         let ((a0, a1), r) = CornerKind::Hairpin.ranges();
         corners.push(Corner {
@@ -229,7 +235,7 @@ fn draw(
     let others = libm::round(rest / 75.0).max(1.0) as usize;
     let mut fill: Vec<Corner> = (0..others)
         .map(|_| {
-            let kind = if rng.unit() < 0.5 {
+            let kind = if rng.unit() < preset.sweeper_probability {
                 CornerKind::Sweeper
             } else {
                 CornerKind::Medium
@@ -244,11 +250,21 @@ fn draw(
         .collect();
     let drawn: f64 = fill.iter().map(|c| c.turn).sum();
     for c in &mut fill {
-        c.turn *= rest / drawn;
         let ((lo, hi), _) = c.kind.ranges();
-        if c.turn < lo || c.turn > hi {
-            return Err("corner out of range after fitting the turn budget");
-        }
+        c.turn = (c.turn * rest / drawn).clamp(lo, hi);
+    }
+    // Fit within the actual angle ranges instead of rejecting a whole course
+    // when one proportional angle overshoots. Redistribute the residual only
+    // through available capacity; an infeasible type list still redraws.
+    let mut remaining = rest - fill.iter().map(|c| c.turn).sum::<f64>();
+    for c in &mut fill {
+        let ((lo, hi), _) = c.kind.ranges();
+        let add = remaining.clamp(lo - c.turn, hi - c.turn);
+        c.turn += add;
+        remaining -= add;
+    }
+    if remaining.abs() > 1e-6 {
+        return Err("corner types cannot fit the turn budget");
     }
     corners.extend(fill);
     if let Some(r) = right {
@@ -260,9 +276,11 @@ fn draw(
         });
     }
     // Longer tracks bend more: left-right pairs (net zero turn) in proportion to the length.
-    let pairs = libm::floor((target_m / data.bend_spacing_m - 3.0).max(0.0) + rng.unit()) as usize;
+    let pairs = libm::floor(
+        (target_m / (data.bend_spacing_m * preset.bend_spacing_scale) - 3.0).max(0.0) + rng.unit(),
+    ) as usize;
     for _ in 0..pairs {
-        let kind = if rng.unit() < 0.5 {
+        let kind = if rng.unit() < preset.sweeper_probability {
             CornerKind::Sweeper
         } else {
             CornerKind::Medium
@@ -279,16 +297,18 @@ fn draw(
             });
         }
     }
-    for _ in 0..(rng.next_u64() % 3) {
+    let chicanes = libm::floor(target_m / 1000.0 * preset.chicanes_per_km + rng.unit()) as usize;
+    for _ in 0..chicanes {
         let (a, r) = CornerKind::Chicane.ranges();
         corners.push(Corner {
             kind: CornerKind::Chicane,
-            turn: range(rng, a),
+            turn: range(rng, a) * preset.chicane_angle_scale,
             radius: range(rng, r),
         });
     }
     for c in &mut corners {
         c.turn = deg(c.turn);
+        c.radius *= preset.radius_scale;
     }
     // A shuffled order, but never two hairpins back to back.
     for i in (1..corners.len()).rev() {
@@ -426,11 +446,28 @@ pub fn design(rng: &mut Rng) -> Course {
 /// [`design`] with explicit course data (the owner tuning menu's length classes and straights).
 pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
     let class = draw_class(rng, data);
+    let total: f64 = PresetName::ALL
+        .iter()
+        .map(|n| data.presets.get(*n).weight)
+        .sum();
+    let mut pick = rng.unit() * total;
+    let preset = PresetName::ALL
+        .into_iter()
+        .find(|n| {
+            let weight = data.presets.get(*n).weight;
+            if pick < weight {
+                true
+            } else {
+                pick -= weight;
+                false
+            }
+        })
+        .unwrap_or(PresetName::Speedway);
     let band = *data.classes.get(class);
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
         let target = range(rng, (band.length_min_m, band.length_max_m));
-        let (corners, pieces) = match draw(rng, data, target) {
+        let (corners, pieces) = match draw(rng, data, data.presets.get(preset), target) {
             Ok(d) => d,
             Err(why) => {
                 *rejects.entry(why).or_default() += 1;
@@ -458,6 +495,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
             points,
             length_m: len,
             class,
+            preset,
             attempts: attempt,
             fallback: false,
             rejects,
@@ -471,6 +509,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         length_m: length(&points),
         points,
         class,
+        preset,
         attempts: MAX_ATTEMPTS,
         fallback: true,
         rejects,

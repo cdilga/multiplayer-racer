@@ -188,6 +188,10 @@ pub struct Tuning {
     /// … damped on its pitch and roll rate (N·m·s per rad/s).
     #[serde(default)]
     pub air_level_damping: f32,
+    /// When a car loses its support plane, start levelling beyond this tilt
+    /// (radians). Normal supported road attitude and deliberate wheelies stay free.
+    #[serde(default = "support_level_tilt")]
+    pub support_level_tilt_rad: f32,
     pub surfaces: SurfaceGrip,
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
@@ -296,6 +300,11 @@ impl VehicleProfile {
     /// the vehicle's physical structure, never the number of participants in a room.
     pub fn validate_geometry(&self) -> Result<(), String> {
         let g = &self.geometry;
+        if !self.tuning.support_level_tilt_rad.is_finite()
+            || !(0.0..std::f32::consts::FRAC_PI_2).contains(&self.tuning.support_level_tilt_rad)
+        {
+            return Err("support levelling tilt must be finite and below 90 degrees".into());
+        }
         if g.wheels.len() < 2 || !g.wheels.len().is_multiple_of(2) {
             return Err("wheels must have nonempty equally sized front and rear axles".into());
         }
@@ -508,4 +517,8 @@ impl VehicleProfile {
 
 fn no_reverse_limit() -> f32 {
     f32::MAX
+}
+
+fn support_level_tilt() -> f32 {
+    10.0f32.to_radians()
 }
