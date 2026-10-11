@@ -1,0 +1,508 @@
+{
+  "profile": "jj.vehicle-profile.v1",
+  "vehicle": "motorbike-sim-fixture",
+  "source": {
+    "sidecar": "simulation fixture only; model supplied by br-bwju.5",
+    "sidecar_sha256": "",
+    "lod0_sha256": ""
+  },
+  "geometry": {
+    "hull": [
+      [
+        -0.27,
+        0.35,
+        -0.7
+      ],
+      [
+        -0.27,
+        0.35,
+        0.7
+      ],
+      [
+        -0.27,
+        1.5,
+        -0.7
+      ],
+      [
+        -0.27,
+        1.5,
+        0.7
+      ],
+      [
+        0.27,
+        0.35,
+        -0.7
+      ],
+      [
+        0.27,
+        0.35,
+        0.7
+      ],
+      [
+        0.27,
+        1.5,
+        -0.7
+      ],
+      [
+        0.27,
+        1.5,
+        0.7
+      ]
+    ],
+    "wheels": [
+      [
+        0,
+        0.32,
+        0.8
+      ],
+      [
+        0,
+        0.32,
+        -0.8
+      ]
+    ],
+    "wheel_radius": 0.32,
+    "com": [
+      0,
+      0.755,
+      -0.01395
+    ],
+    "parts": [
+      {
+        "name": "core",
+        "pivot": [
+          0,
+          0.6,
+          0
+        ],
+        "hinge": null,
+        "mass_fraction": 0.5,
+        "points": [
+          [
+            -0.27,
+            0.35,
+            -0.7
+          ],
+          [
+            -0.27,
+            0.35,
+            0.7
+          ],
+          [
+            -0.27,
+            0.95,
+            -0.7
+          ],
+          [
+            -0.27,
+            0.95,
+            0.7
+          ],
+          [
+            0.27,
+            0.35,
+            -0.7
+          ],
+          [
+            0.27,
+            0.35,
+            0.7
+          ],
+          [
+            0.27,
+            0.95,
+            -0.7
+          ],
+          [
+            0.27,
+            0.95,
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "front",
+        "pivot": [
+          0,
+          0.45,
+          0.7
+        ],
+        "hinge": [
+          [
+            1,
+            0,
+            0
+          ],
+          -15,
+          15
+        ],
+        "mass_fraction": 0.08,
+        "points": [
+          [
+            -0.15,
+            0.38,
+            0.6
+          ],
+          [
+            -0.15,
+            0.38,
+            0.82
+          ],
+          [
+            -0.15,
+            0.8,
+            0.6
+          ],
+          [
+            -0.15,
+            0.8,
+            0.82
+          ],
+          [
+            0.15,
+            0.38,
+            0.6
+          ],
+          [
+            0.15,
+            0.38,
+            0.82
+          ],
+          [
+            0.15,
+            0.8,
+            0.6
+          ],
+          [
+            0.15,
+            0.8,
+            0.82
+          ]
+        ]
+      },
+      {
+        "name": "back",
+        "pivot": [
+          0,
+          0.65,
+          -0.55
+        ],
+        "hinge": [
+          [
+            1,
+            0,
+            0
+          ],
+          -15,
+          15
+        ],
+        "mass_fraction": 0.08,
+        "points": [
+          [
+            -0.22,
+            0.5,
+            -0.82
+          ],
+          [
+            -0.22,
+            0.5,
+            -0.48
+          ],
+          [
+            -0.22,
+            0.85,
+            -0.82
+          ],
+          [
+            -0.22,
+            0.85,
+            -0.48
+          ],
+          [
+            0.22,
+            0.5,
+            -0.82
+          ],
+          [
+            0.22,
+            0.5,
+            -0.48
+          ],
+          [
+            0.22,
+            0.85,
+            -0.82
+          ],
+          [
+            0.22,
+            0.85,
+            -0.48
+          ]
+        ]
+      },
+      {
+        "name": "rider",
+        "pivot": [
+          0,
+          0.95,
+          -0.1
+        ],
+        "hinge": [
+          [
+            1,
+            0,
+            0
+          ],
+          -15,
+          15
+        ],
+        "mass_fraction": 0.25,
+        "points": [
+          [
+            -0.18,
+            0.9,
+            -0.35
+          ],
+          [
+            -0.18,
+            0.9,
+            0.2
+          ],
+          [
+            -0.18,
+            1.5,
+            -0.35
+          ],
+          [
+            -0.18,
+            1.5,
+            0.2
+          ],
+          [
+            0.18,
+            0.9,
+            -0.35
+          ],
+          [
+            0.18,
+            0.9,
+            0.2
+          ],
+          [
+            0.18,
+            1.5,
+            -0.35
+          ],
+          [
+            0.18,
+            1.5,
+            0.2
+          ]
+        ]
+      },
+      {
+        "name": "wheel_F",
+        "pivot": [
+          0,
+          0.32,
+          0.8
+        ],
+        "hinge": [
+          [
+            1,
+            0,
+            0
+          ],
+          -15,
+          15
+        ],
+        "mass_fraction": 0.045,
+        "points": [
+          [
+            -0.09,
+            0,
+            0.48000000000000004
+          ],
+          [
+            -0.09,
+            0,
+            1.12
+          ],
+          [
+            -0.09,
+            0.64,
+            0.48000000000000004
+          ],
+          [
+            -0.09,
+            0.64,
+            1.12
+          ],
+          [
+            0.09,
+            0,
+            0.48000000000000004
+          ],
+          [
+            0.09,
+            0,
+            1.12
+          ],
+          [
+            0.09,
+            0.64,
+            0.48000000000000004
+          ],
+          [
+            0.09,
+            0.64,
+            1.12
+          ]
+        ]
+      },
+      {
+        "name": "wheel_R",
+        "pivot": [
+          0,
+          0.32,
+          -0.8
+        ],
+        "hinge": [
+          [
+            1,
+            0,
+            0
+          ],
+          -15,
+          15
+        ],
+        "mass_fraction": 0.045,
+        "points": [
+          [
+            -0.09,
+            0,
+            -1.12
+          ],
+          [
+            -0.09,
+            0,
+            -0.48000000000000004
+          ],
+          [
+            -0.09,
+            0.64,
+            -1.12
+          ],
+          [
+            -0.09,
+            0.64,
+            -0.48000000000000004
+          ],
+          [
+            0.09,
+            0,
+            -1.12
+          ],
+          [
+            0.09,
+            0,
+            -0.48000000000000004
+          ],
+          [
+            0.09,
+            0.64,
+            -1.12
+          ],
+          [
+            0.09,
+            0.64,
+            -0.48000000000000004
+          ]
+        ]
+      }
+    ]
+  },
+  "tuning": {
+    "bike_balance": {
+      "torque_per_rad": 1800,
+      "damping": 462,
+      "max_lean_rad": 0.2,
+      "lean_speed_mps": 8
+    },
+    "mass": 220,
+    "inertia_scale": 1,
+    "suspension_rest": 0.25,
+    "suspension_stiffness": 35,
+    "suspension_compression": 5,
+    "suspension_damping": 6,
+    "max_suspension_travel": 0.2,
+    "max_suspension_force": 12000,
+    "friction_slip": 2,
+    "side_friction_stiffness": 1,
+    "max_engine_force": 2200,
+    "max_engine_power_w": 25000,
+    "max_reverse_force": 900,
+    "reverse_below_mps": 1,
+    "max_brake_force": 3500,
+    "max_steer_rad": 0.55,
+    "steer_falloff_mps": 14,
+    "drive": "Rear",
+    "linear_damping": 0.15,
+    "angular_damping": 0.8,
+    "roll_influence": 0,
+    "drift_rear_grip": 0.37,
+    "drift_recovery_s": 0.15,
+    "boost_start": 0.5,
+    "boost_min_start": 0.25,
+    "boost_engine_gain": 0.6,
+    "boost_drain_per_s": 0.35,
+    "boost_recharge_per_s": 0.12,
+    "drift_charge_per_s": 0.25,
+    "drift_charge_min_slip_deg": 10,
+    "drift_charge_min_mps": 5,
+    "wheelie_full_preload_ms": 400,
+    "wheelie_good_min_ms": 350,
+    "wheelie_lift_impulse": 300,
+    "wheelie_drive_gain": 0.15,
+    "wheelie_drive_s": 0.8,
+    "wheelie_launch_reward": 1.5,
+    "wheelie_cooldown_s": 4,
+    "wheelie_max_reverse_mps": 0.5,
+    "air_pitch_torque": 40,
+    "air_roll_torque": 20,
+    "drift_exit_min_s": 0.25,
+    "drift_exit_min_slip_deg": 4,
+    "drift_exit_boost_per_s": 2,
+    "drift_exit_boost_max_s": 3,
+    "drift_exit_boost_gain": 2.5,
+    "air_level_torque": 3850,
+    "air_level_damping": 963,
+    "surfaces": {
+      "tarmac": 1,
+      "packed_dirt": 0.7,
+      "gravel": 0.62,
+      "rock": 0.9,
+      "off_track": 0.45
+    },
+    "damage": {
+      "health_front": 100,
+      "health_back": 100,
+      "health_door": 60,
+      "health_wheel": 80,
+      "k_front": 0.007,
+      "k_back": 0.007,
+      "k_door": 0.014,
+      "k_wheel": 0.0055,
+      "loose_fraction": 0.5,
+      "window_ms": 50,
+      "min_closing_mps": 4,
+      "attribution_margin_m": 0.3,
+      "spring_stiffness": 25,
+      "spring_damping": 4,
+      "loose_wheel_grip_loss": 0,
+      "wheel_loss_respawn_s": 2,
+      "detach_kick_mps": 1.5,
+      "detach_clear_ms": 250
+    }
+  }
+}

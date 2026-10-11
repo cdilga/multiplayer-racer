@@ -1,0 +1,24 @@
+{
+  "scenario": "bike-controls",
+  "what": "br-bwju.4: the same raw DRIVE pull/release launches a two-wheel fixture, raw full-side DRIVE requests drift, and neutral release exits. Physics fixture only; bike model acceptance belongs to br-bwju.5.",
+  "map": "scenarios/bikes/flat-strips.json",
+  "seed": 71,
+  "ticks": 720,
+  "cars": [{"pose": {"x":20,"y":0.1,"z":-20,"headingDeg":0}}],
+  "inputs": [
+    {"car":0,"fromTick":0,"toTick":60,"stick":[0,0.4]},
+    {"car":0,"fromTick":60,"toTick":114,"stick":[0,-1]},
+    {"car":0,"fromTick":114,"toTick":360,"stick":[0,1]},
+    {"car":0,"fromTick":360,"toTick":480,"stick":[-1,0],"action":[-0.5,0]},
+    {"car":0,"fromTick":480,"stick":[0,0.8]}
+  ],
+  "observe":[60,114,150,240,360,420,480,600,720],
+  "expect":[
+    {"car":0,"metric":"wheelieDriveS","min":0.7,"max":0.85},
+    {"car":0,"metric":"frontAirTimeS","min":0.1,"max":1},
+    {"car":0,"metric":"driftTimeS","min":0.5,"max":1.3},
+    {"car":0,"metric":"wrecks","min":0,"max":0},
+    {"car":0,"metric":"minUpY","min":0.8,"max":1.001},
+    {"car":0,"metric":"wheelsInContact","min":2,"max":2}
+  ]
+}

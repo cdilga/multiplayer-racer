@@ -151,25 +151,37 @@ pub enum WreckWhy {
 /// A car's part health.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CarDamage {
-    pub health: [f32; PARTS],
-    pub start: [f32; PARTS],
+    pub health: Vec<f32>,
+    pub start: Vec<f32>,
+    wheel: Vec<bool>,
 }
 
 impl CarDamage {
     pub fn new(t: &DamageTuning) -> Self {
-        let mut start = [0.0; PARTS];
+        Self::with_parts(t, &PART_NAMES)
+    }
+
+    pub fn for_profile(p: &crate::profile::VehicleProfile) -> Self {
+        let names: Vec<_> = (0..p.part_count()).map(|i| p.part_name(i)).collect();
+        Self::with_parts(&p.tuning.damage, &names)
+    }
+
+    fn with_parts(t: &DamageTuning, names: &[&str]) -> Self {
+        let wheel: Vec<_> = names.iter().map(|n| n.starts_with("wheel_")).collect();
+        let mut start = vec![0.0; names.len()];
         for (i, s) in start.iter_mut().enumerate() {
             *s = match i {
                 CORE => 0.0,
                 FRONT => t.health_front,
                 BACK => t.health_back,
-                i if is_wheel(i) => t.health_wheel,
+                i if wheel[i] => t.health_wheel,
                 _ => t.health_door,
             };
         }
         Self {
-            health: start,
+            health: start.clone(),
             start,
+            wheel,
         }
     }
 
@@ -187,17 +199,17 @@ impl CarDamage {
     }
 
     /// Every part's state, in index order.
-    pub fn states(&self, t: &DamageTuning) -> [PartState; PARTS] {
-        std::array::from_fn(|i| self.state(i, t))
+    pub fn states(&self, t: &DamageTuning) -> Vec<PartState> {
+        (0..self.health.len()).map(|i| self.state(i, t)).collect()
     }
 
     /// The damage constant for `part`.
-    pub fn k(part: usize, t: &DamageTuning) -> f32 {
+    pub fn k(&self, part: usize, t: &DamageTuning) -> f32 {
         match part {
             CORE => 0.0,
             FRONT => t.k_front,
             BACK => t.k_back,
-            i if is_wheel(i) => t.k_wheel,
+            i if self.wheel[i] => t.k_wheel,
             _ => t.k_door,
         }
     }
@@ -208,7 +220,7 @@ impl CarDamage {
     }
 
     pub(crate) fn hash_into(&self, out: &mut Vec<u8>) {
-        for h in self.health {
+        for h in &self.health {
             out.extend(h.to_bits().to_le_bytes());
         }
     }

@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "replayMatches": true,
+  "stateHash": "c5b3e32070ff6cf5b34de4685262dccfd96be3faa9555fe7d349949115b976bc",
+  "checks": [
+    {
+      "car": 0,
+      "atTick": 598,
+      "metric": "wrecks",
+      "min": 0.0,
+      "max": 0.0,
+      "actual": 0.0,
+      "ok": true
+    },
+    {
+      "car": 0,
+      "atTick": 604,
+      "metric": "wrecks",
+      "min": 1.0,
+      "max": 1.0,
+      "actual": 1.0,
+      "ok": true
+    },
+    {
+      "car": 0,
+      "atTick": null,
+      "metric": "husks",
+      "min": 1.0,
+      "max": 1.0,
+      "actual": 1.0,
+      "ok": true
+    },
+    {
+      "car": 0,
+      "atTick": null,
+      "metric": "wheelsInContact",
+      "min": 2.0,
+      "max": 2.0,
+      "actual": 2.0,
+      "ok": true
+    }
+  ]
+}

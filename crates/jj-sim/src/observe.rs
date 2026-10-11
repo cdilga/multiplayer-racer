@@ -175,7 +175,7 @@ pub struct CarObs {
     pub autopilot: Option<crate::autopilot::AutopilotState>,
     /// The ACTION stick (P1-S03b): the boost meter (0..1), boosting now, and how far into a drift (0 grip, 1 drift).
     pub action: ActionObs,
-    /// Every part's health and state, in `damage::PART_NAMES` order (P1-S04a).
+    /// Every part's health and state, in vehicle profile order (P1-S04a).
     pub parts: Vec<PartObs>,
     /// The world's kinetic plus potential energy and the sim's authorised-work ledger, J (P1-S04b, plan §13b.1): the same
     /// for every car (it's the whole world's).
@@ -282,10 +282,10 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             .part_health(car)
             .zip(sim.part_states(car))
             .map(|(h, s)| {
-                let angles = sim.part_angles(car).unwrap_or([0.0; crate::damage::PARTS]);
-                (0..crate::damage::PARTS)
+                let angles = sim.part_angles(car).unwrap_or_else(|| vec![0.0; h.len()]);
+                (0..h.len())
                     .map(|i| PartObs {
-                        part: crate::damage::PART_NAMES[i].to_owned(),
+                        part: sim.profile_of(car).unwrap().part_name(i).to_owned(),
                         health: h[i],
                         state: s[i],
                         angle_deg: angles[i].to_degrees(),
@@ -690,8 +690,10 @@ impl SignatureTracker {
         self.max_roll = self.max_roll.max(roll.abs());
         self.max_nose_up = self.max_nose_up.max(pitch);
         if self.last.is_some() {
-            let up = |i: usize| o.wheels.get(i).is_some_and(|w| !w.contact);
-            if up(0) && up(1) && !(up(2) && up(3)) {
+            let front = o.wheels.len() / 2;
+            if o.wheels[..front].iter().all(|w| !w.contact)
+                && o.wheels[front..].iter().any(|w| w.contact)
+            {
                 self.front_air_ticks += 1;
             }
             if o.action.wheelie {

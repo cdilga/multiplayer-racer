@@ -205,7 +205,7 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     /** Feeds one input as it would arrive (a synthetic controller's frames: hello, claim, ready, identify, state). */
     input: (input: TestInput) => test.input(input),
     hold: (on: boolean) => test.command({ cmd: 'hold', on }),
-    load: (fixture: Json, mapJson?: string) => test.command({ cmd: 'load', fixture, mapJson }),
+    load: (fixture: Json, mapJson?: string, profileJson?: string) => test.command({ cmd: 'load', fixture, mapJson, profileJson }),
     rail: (dressing: number, displacementM: number, velocityMps = 0) => test.command({ cmd: 'rail', dressing, displacementM, velocityMps }),
     spawn: (cars: Json[]) => test.command<{ cars: number[] }>({ cmd: 'spawn', cars }),
     inputs: (spans: Json[]) => test.command({ cmd: 'inputs', spans }),

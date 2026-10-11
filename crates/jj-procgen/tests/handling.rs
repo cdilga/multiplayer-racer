@@ -245,10 +245,21 @@ fn on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills() {
 }
 
 fn flat_bank(vehicle: &str, profile: &VehicleProfile) {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../maps/test/surface-strips.json"
-    );
+    // The bike's tighter arc crosses the building at x=140,z=-25 on the
+    // car strips. Its versioned flat fixture uses the identical four surfaces
+    // without collision obstacles: this bank measures turns, not building hits.
+    // Generated-road coverage below retains every obstacle and feature.
+    let path = if profile.tuning.bike_balance.is_some() {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../scenarios/bikes/flat-strips.json"
+        )
+    } else {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../maps/test/surface-strips.json"
+        )
+    };
     let map =
         load_json(&std::fs::read(path).unwrap(), &Registry::generic()).expect("the test map loads");
     let hull = profile.geometry.hull.clone();
@@ -310,4 +321,81 @@ fn flat_bank(vehicle: &str, profile: &VehicleProfile) {
         worst.0, worst.1
     );
     assert!(failures.is_empty(), "{vehicle}: {failures:#?}");
+}
+
+fn bike() -> VehicleProfile {
+    VehicleProfile::from_json(include_str!("../../../scenarios/bikes/profile.json")).unwrap()
+}
+
+#[test]
+fn bike_flat_speed_lock_bank() {
+    flat_bank("bike-sim-fixture", &bike());
+}
+
+#[test]
+fn bike_generated_road_speed_lock_bank() {
+    thrown_about_on_generated_roads("bike-sim-fixture", &bike());
+}
+
+#[test]
+fn bike_generated_full_lock_regressions_stay_upright() {
+    let mut failures = Vec::new();
+    for (seed, at, speed) in [
+        (4, 240, 35.0),
+        (1, 160, 25.0),
+        (1, 560, 25.0),
+        (1, 760, 35.0),
+        (1, 920, 15.0),
+        (3, 80, 15.0),
+        (4, 320, 15.0),
+        (4, 320, 25.0),
+    ] {
+        let map = loaded(seed);
+        let profile = bike();
+        let mut sim = Sim::new(&map, &jj_procgen::registry(), 7, profile);
+        let car = sim.spawn_grid(1)[0];
+        let pose = route_spawn(&map, at, 0.0, 0.5);
+        sim.place_car(
+            car,
+            pose,
+            0.0,
+            [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()],
+        );
+        let mut rows = Vec::new();
+        let mut min_up = 1.0f32;
+        for _ in 0..2 * S {
+            sim.set_input(
+                car,
+                DriveInput {
+                    throttle: FULL,
+                    steer: FULL,
+                    ..Default::default()
+                },
+            );
+            sim.step();
+            let st = sim.car_state(car).unwrap();
+            min_up = min_up.min(st.up_y);
+            rows.push(serde_json::json!({"tick":sim.tick(), "position":st.position,"rotation":st.rotation,"angvel":st.angvel,"upY":st.up_y,"contacts":st.wheels_in_contact,
+            "mass":sim.car_mass(car),"parts":sim.part_health(car),"wrecks":sim.race().car(car.0).unwrap().wrecks}));
+        }
+        if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(
+                format!("{dir}/seed{seed}-point{at}-speed{speed}.json"),
+                serde_json::to_string_pretty(&rows).unwrap(),
+            )
+            .unwrap();
+            std::fs::write(
+                format!("{dir}/seed{seed}-map.json"),
+                serde_json::to_string(&map.map).unwrap(),
+            )
+            .unwrap();
+        }
+        if min_up <= 0.5 {
+            failures.push(format!(
+                "seed {seed} point {at} speed {speed}: min upY {min_up}"
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "the bike rolled: {failures:?}");
 }

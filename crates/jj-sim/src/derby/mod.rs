@@ -195,6 +195,17 @@ impl Ledger {
     /// Reads one finished tick: every car's flags at its end, then the damage log from where the last call stopped. `tick`
     /// is the sim's tick counter after the step; `log` is `Sim::damage_events`.
     pub fn update(&mut self, tick: u64, flags: &[CarFlags], log: &[(u64, DamageEvent)]) {
+        self.update_with_wheels(tick, flags, log, |_, part| crate::damage::is_wheel(part));
+    }
+
+    /// Reads damage with the affected vehicle's actual wheel topology (cars and bikes can share a round).
+    pub fn update_with_wheels(
+        &mut self,
+        tick: u64,
+        flags: &[CarFlags],
+        log: &[(u64, DamageEvent)],
+        is_wheel: impl Fn(u32, usize) -> bool,
+    ) {
         self.grow(flags.len(), tick);
         for (i, f) in flags.iter().enumerate() {
             for (hist, on) in [
@@ -212,11 +223,11 @@ impl Ledger {
             if *at > self.start + self.limit || *at < self.start {
                 continue;
             }
-            self.read(*at, e);
+            self.read(*at, e, &is_wheel);
         }
     }
 
-    fn read(&mut self, at: u64, e: &DamageEvent) {
+    fn read(&mut self, at: u64, e: &DamageEvent, is_wheel: &impl Fn(u32, usize) -> bool) {
         match e {
             DamageEvent::Episode(r) => {
                 let approved = self.approve(r);
@@ -245,7 +256,7 @@ impl Ledger {
                 if let Some(a) = approved {
                     self.credit(at, a, *car, Some(*part), ScoreKind::Detach, DETACH_UNITS);
                     // A wheel-loss wreck is the car that took the wheel.
-                    if crate::damage::is_wheel(*part as usize) {
+                    if is_wheel(*car, *part as usize) {
                         self.last_detach[*car as usize] = Some(a);
                     }
                 }

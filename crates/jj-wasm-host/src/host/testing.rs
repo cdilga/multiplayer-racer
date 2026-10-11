@@ -56,6 +56,9 @@ enum Command {
         fixture: Box<Fixture>,
         #[serde(default)]
         map_json: Option<String>,
+        /// A simulation fixture can supply a profile before its model joins the roster.
+        #[serde(default)]
+        profile_json: Option<String>,
     },
     Spawn {
         cars: Vec<CarSpec>,
@@ -198,7 +201,11 @@ impl Host {
                 self.test.held = on;
                 json!({ "tick": self.sim.tick(), "held": on })
             }
-            Command::Load { fixture, map_json } => {
+            Command::Load {
+                fixture,
+                map_json,
+                profile_json,
+            } => {
                 let map = match map_json {
                     Some(text) => {
                         load_json(text.as_bytes(), &jj_procgen::registry()).map_err(|r| {
@@ -215,6 +222,16 @@ impl Host {
                 };
                 let held = self.test.held;
                 *self = Host::from_map(map, fixture.seed);
+                if let Some(json) = profile_json {
+                    let profile = jj_sim::VehicleProfile::from_json(&json)?;
+                    self.sim = jj_sim::Sim::new(
+                        &self.map,
+                        &jj_procgen::registry(),
+                        fixture.seed,
+                        profile.clone(),
+                    );
+                    self.vehicles = vec![("simulation-fixture".into(), profile)];
+                }
                 self.test.held = held;
                 let mut h = Harness::new(*fixture, &self.map, &mut self.sim, false)?;
                 h.record(&self.sim, false);
@@ -240,7 +257,10 @@ impl Host {
                 json!({ "spans": n })
             }
             Command::Damage { car, part, health } => {
-                let i = jj_sim::damage::part_index(&part)
+                let i = self
+                    .sim
+                    .profile_of(jj_sim::CarId(car))
+                    .and_then(|p| p.part_index(&part))
                     .filter(|&i| i > 0)
                     .ok_or_else(|| format!("no damageable part {part:?}"))?;
                 self.sim

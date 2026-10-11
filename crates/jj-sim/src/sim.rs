@@ -26,7 +26,7 @@ use crate::assist::{AssistLevel, AssistProfile, AssistReport, AssistState, Catch
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::damage::episodes::{CarParts, Episodes, PreStep, TAG_CAR, TAG_PROP};
 use crate::damage::springs::{Hinge, Spring};
-use crate::damage::{self, CarDamage, DamageEvent, PARTS, PartState};
+use crate::damage::{self, CarDamage, DamageEvent, PartState};
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
 use crate::placement::{
     CLEARANCE_M, PROTECT_TICKS, Rect, RouteLine, SEARCH_LATERAL_M, SEARCH_STEP_M, SEARCH_STEPS,
@@ -120,7 +120,7 @@ struct Car {
     body: RigidBodyHandle,
     /// The core's collider (the cabin, which carries the car's mass properties).
     collider: ColliderHandle,
-    /// Every part's collider in part order (`crate::damage::PART_NAMES`); `parts[0]` is `collider`.
+    /// Every part's collider in profile order; `parts[0]` is `collider`.
     parts: Vec<ColliderHandle>,
     /// Part health (P1-S04a).
     damage: CarDamage,
@@ -137,9 +137,9 @@ struct Car {
     /// The ACTION stick's state: boost meter and drift (P1-S03b).
     action: vehicle::ActionState,
     /// Each loose part's hinge spring (P1-S04b), in part order; closed and at rest while a part isn't loose.
-    springs: [Spring; PARTS],
+    springs: Vec<Spring>,
     /// Parts whose collider has left the chassis (detached into debris).
-    removed: [bool; PARTS],
+    removed: Vec<bool>,
     /// The last [`SPEED_HISTORY_TICKS`] forward speeds (m/s), newest last: the wheelie launch repays what its pull cost.
     speed_history: std::collections::VecDeque<f32>,
     /// The chassis' linear velocity at the end of the last step, for its acceleration (the hinge springs' drive).
@@ -1049,7 +1049,9 @@ impl Sim {
             c.protected_since = Some(tick);
             for (i, &h) in c.parts.iter().enumerate() {
                 if let Some(col) = self.world.colliders.get_mut(h) {
-                    col.set_collision_groups(Solidity::Protected.groups(damage::is_wheel(i)));
+                    col.set_collision_groups(
+                        Solidity::Protected.groups(self.profiles[c.model].is_wheel_part(i)),
+                    );
                 }
             }
         }
@@ -1059,7 +1061,9 @@ impl Sim {
     fn set_solidity(&mut self, i: usize, solidity: Solidity) {
         for (part, &h) in self.cars[i].parts.iter().enumerate() {
             if let Some(col) = self.world.colliders.get_mut(h) {
-                col.set_collision_groups(solidity.groups(damage::is_wheel(part)));
+                col.set_collision_groups(
+                    solidity.groups(self.profiles[self.cars[i].model].is_wheel_part(part)),
+                );
             }
         }
     }
@@ -1226,7 +1230,8 @@ impl Sim {
             .iter()
             .filter(|w| w.raycast_info().is_in_contact)
             .count();
-        if grounded < 3 || held || preload_ms == 0 {
+        let required = if c.vehicle.wheels().len() == 2 { 2 } else { 3 };
+        if grounded < required || held || preload_ms == 0 {
             return false;
         }
         // The launch is on a cooldown, and a car that pull-and-held into reverse is reversing, not launching.
@@ -1373,7 +1378,7 @@ impl Sim {
             .user_data(TAG_CAR | self.cars.len() as u128);
         let (handle, collider) = self.world.insert(body, part_builder(p, damage::CORE));
         let mut parts = vec![collider];
-        for i in 1..PARTS {
+        for i in 1..p.part_count() {
             parts.push(self.world.insert_collider(part_builder(p, i), Some(handle)));
         }
 
@@ -1389,9 +1394,8 @@ impl Sim {
             friction_slip: t.friction_slip,
             max_suspension_force: t.max_suspension_force,
         };
-        // Wheel order: FL, FR, RL, RR. In this right-handed frame (+y up, facing +z) +x is the car's left, as the
-        // sidecar names them (P1-V02).
-        for i in 0..4 {
+        // Front axle first, rear axle second, as the profile and sidecar name them.
+        for i in 0..p.geometry.wheels.len() {
             let [x, y, z] = p.hard_point(i);
             vehicle.add_wheel(
                 Vector::new(x, y, z),
@@ -1407,7 +1411,7 @@ impl Sim {
             body: handle,
             collider,
             parts,
-            damage: CarDamage::new(&p.tuning.damage),
+            damage: CarDamage::for_profile(p),
             vehicle,
             input: DriveInput::default(),
             protected_since: None,
@@ -1415,8 +1419,8 @@ impl Sim {
             applied: DriveInput::default(),
             life: 0,
             action: vehicle::ActionState::new(p),
-            springs: [Spring::default(); PARTS],
-            removed: [false; PARTS],
+            springs: vec![Spring::default(); p.part_count()],
+            removed: vec![false; p.part_count()],
             speed_history: std::collections::VecDeque::new(),
             last_linvel: Vector::ZERO,
             incarnation: 0,
@@ -1601,7 +1605,7 @@ impl Sim {
                 car.speed_history.push_back(forward_speed);
                 // The rear tyres' slip from last tick's contacts decides the drift's boost charge, so libm.
                 let side = (iso.rotation * Vector::Y).cross(fwd);
-                let rear_slip = car.vehicle.wheels()[2..]
+                let rear_slip = car.vehicle.wheels()[p.front_wheels()..]
                     .iter()
                     .filter(|w| w.raycast_info().is_in_contact)
                     .map(|w| {
@@ -1626,8 +1630,8 @@ impl Sim {
                 let catch_scale = 1.0 + self.assist_profile.catch_up.top_speed_gain * share;
                 car.assist.report.catch_share = share;
                 car.assist.report.catch_scale = catch_scale;
-                let mut grip = [1.0; 4];
-                let mut side_stiffness = [1.0; 4];
+                let mut grip = vec![1.0; p.geometry.wheels.len()];
+                let mut side_stiffness = vec![1.0; p.geometry.wheels.len()];
                 for (i, g) in grip.iter_mut().enumerate() {
                     let [x, y, z] = p.geometry.wheels[i];
                     let at = iso * Vector::new(x, y, z);
@@ -1658,9 +1662,9 @@ impl Sim {
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
                     w.side_friction_stiffness = side_stiffness[i];
-                    match car.damage.state(damage::WHEEL_FL + i, dt_) {
+                    match car.damage.state(p.wheel_part(i), dt_) {
                         PartState::Intact => w.max_suspension_force = t_.max_suspension_force,
-                        // A loose wheel grips less.
+                        // R121: a loose wheel retains its handling until it detaches.
                         PartState::Loose => {
                             w.friction_slip *= 1.0 - dt_.loose_wheel_grip_loss;
                             w.max_suspension_force = t_.max_suspension_force;
@@ -1676,13 +1680,15 @@ impl Sim {
                     }
                     self.ledger += f64::from(w.engine_force * forward_speed * DT);
                 }
-                let airborne = car
+                let supported = car
                     .vehicle
                     .wheels()
                     .iter()
                     // A ray can still touch terrain at full extension while exerting no support force.
                     // Treating that as grounded disables levelling just as a car bounces off a rough verge.
-                    .all(|w| !w.raycast_info().is_in_contact || w.wheel_suspension_force <= 0.0);
+                    .filter(|w| w.raycast_info().is_in_contact && w.wheel_suspension_force > 0.0)
+                    .count();
+                let airborne = supported == 0;
                 if airborne && !input.is_neutral() {
                     let [tx, ty, tz] = vehicle::air_torque(p, input);
                     let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
@@ -1693,17 +1699,32 @@ impl Sim {
                 // it onto its nose): a spring toward world-up on pitch and roll, damped, so the stick only biases the
                 // attitude. Its work is authorised in the ledger like the stick's.
                 let up = iso.rotation * Vector::Y;
-                // Only in near-upright flight (a jump), never in a tumble: a car rolled past 45° is the flip assist's.
-                if airborne
+                // A bike loses its pitch support baseline as soon as one wheel leaves
+                // the ground (e.g. the front meets a rail). Balance must start then,
+                // before a collision can pitch it past the car's flight cutoff. Keep
+                // the deliberate wheelie free while its rear wheel still supports it.
+                let bike = p.tuning.bike_balance.is_some();
+                let level = airborne || (bike && supported < 2 && car.action.wheelie_ticks == 0);
+                // Cars hand tumbles beyond 45 degrees to flip assist; bikes auto-balance.
+                if level
                     && p.tuning.air_level_torque > 0.0
-                    && up.y > core::f32::consts::FRAC_1_SQRT_2
+                    && (bike || up.y > core::f32::consts::FRAC_1_SQRT_2)
                 {
                     let tilt = up.cross(Vector::Y);
                     let w = b.angvel();
                     let w_tilt = w - Vector::Y * w.dot(Vector::Y);
-                    let ti = (tilt * p.tuning.air_level_torque
-                        - w_tilt * p.tuning.air_level_damping)
-                        * DT;
+                    // Bike roll has its own actuator below; applying both roll
+                    // dampers would overdamp it and couple a fast yaw impact into
+                    // that correction. The flight spring supplies pitch only.
+                    let ti = if bike {
+                        let axis = iso.rotation * Vector::X;
+                        axis * (tilt.dot(axis) * p.tuning.air_level_torque
+                            - w.dot(axis) * p.tuning.air_level_damping)
+                            * DT
+                    } else {
+                        (tilt * p.tuning.air_level_torque - w_tilt * p.tuning.air_level_damping)
+                            * DT
+                    };
                     self.ledger += f64::from(ti.dot(w));
                     b.apply_torque_impulse(ti, true);
                 }
@@ -1770,10 +1791,10 @@ impl Sim {
             );
             car.vehicle.update_vehicle(DT, queries);
             // R124 rolling drag: each wheel in contact drags against its ground velocity by the ground under it. One
-            // impulse of force × dt per tick, never more than stops the wheel's quarter of the car.
+            // impulse of force × dt per tick, never more than stops the wheel's share of the vehicle.
             if let Some(b) = self.world.bodies.get_mut(car.body) {
-                let quarter = b.mass() * 0.25;
-                let mut ground = [(Vector::ZERO, Vector::ZERO); 4];
+                let wheel_mass = b.mass() / car.vehicle.wheels().len() as f32;
+                let mut ground = vec![(Vector::ZERO, Vector::ZERO); car.vehicle.wheels().len()];
                 let mut n = 0;
                 for w in car.vehicle.wheels() {
                     let ri = w.raycast_info();
@@ -1794,7 +1815,7 @@ impl Sim {
                     }
                     let load = w.wheel_suspension_force;
                     let force = load * (tyre.rolling_resistance + tyre.speed_drag * speed);
-                    let impulse = (force * DT).min(quarter * speed);
+                    let impulse = (force * DT).min(wheel_mass * speed);
                     ground[n] = (at, fwd * (-impulse * along.signum()));
                     n += 1;
                 }
@@ -1830,6 +1851,87 @@ impl Sim {
                 }
                 self.ledger += f64::from(torque.dot(b.angvel()));
                 b.apply_torque_impulse(torque, true);
+            }
+            // A bike has no lateral suspension baseline. Its arcade balance actuator supplies
+            // the roll moment toward a speed/steer lean, without constraining yaw or wheelie
+            // pitch. Torque integrates once; its work is recorded like air/flip controls.
+            if let Some(balance) = &p.tuning.bike_balance
+                && let Some(b) = self.world.bodies.get_mut(car.body)
+            {
+                let r = b.position().rotation;
+                let (up, fwd) = (r * Vector::Y, r * Vector::Z);
+                let pitch_axis = r * Vector::X;
+                let horizontal_side = Vector::Y.cross(fwd);
+                let side_length = horizontal_side.length();
+                let side = horizontal_side.normalize_or_zero();
+                let roll = libm::atan2f(-up.dot(side), up.y);
+                // Differentiate that same world-up lean angle. Body angular velocity
+                // along fwd also contains yaw when the bike pitches, so damping it
+                // directly mistakes a fast tilted turn for a roll and resists recovery.
+                let spin = b.angvel();
+                let up_rate = spin.cross(up);
+                let side_rate = Vector::Y.cross(spin.cross(fwd));
+                let roll_rate = if side_length > 1e-6 {
+                    let side_rate = (side_rate - side * side.dot(side_rate)) / side_length;
+                    let a = -up.dot(side);
+                    let a_rate = -up_rate.dot(side) - up.dot(side_rate);
+                    (up.y * a_rate - a * up_rate.y) / (a * a + up.y * up.y).max(1e-6)
+                } else {
+                    spin.dot(fwd)
+                };
+                let speed = b.linvel().dot(fwd).abs();
+                let grounded = car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .any(|w| w.raycast_info().is_in_contact);
+                let lean = if grounded {
+                    -jj_types::axis::dequantise_axis(input.steer) * balance.max_lean_rad * speed
+                        / (speed + balance.lean_speed_mps)
+                } else {
+                    0.0
+                };
+                let moment = (lean - roll) * balance.torque_per_rad - roll_rate * balance.damping;
+                // A single-track support line creates an overturning roll moment as
+                // the chassis leans. Cancel precisely the roll component Rapier just
+                // applied at its contact patches; keep support force and pitch. This
+                // gives the balance spring its requested equilibrium without gains
+                // compensating for gravity or a fictitious third suspension wheel.
+                let support_roll: f32 = car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .map(|w| {
+                        let ri = w.raycast_info();
+                        let impulse = ri.contact_normal_ws
+                            * w.wheel_suspension_force.min(w.max_suspension_force)
+                            * DT;
+                        (ri.contact_point_ws - b.center_of_mass())
+                            .cross(impulse)
+                            .dot(fwd)
+                    })
+                    .sum();
+                // Rear drive/braking at ground height must not pitch an arcade
+                // bike into a flip once its front ray lifts. Move that impulse's
+                // pitch lever to COM height; preserve suspension pitch and the
+                // explicit wheelie launch impulse. Rapier uses n × projected axle.
+                let drive_pitch: f32 = car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .map(|w| {
+                        let ri = w.raycast_info();
+                        let n = ri.contact_normal_ws;
+                        let axle = (w.axle() - n * w.axle().dot(n)).normalize_or_zero();
+                        let impulse = n.cross(axle).normalize_or_zero() * w.forward_impulse;
+                        (ri.contact_point_ws - b.center_of_mass())
+                            .cross(impulse)
+                            .dot(pitch_axis)
+                    })
+                    .sum();
+                let ti = fwd * (moment * DT - support_roll) - pitch_axis * drive_pitch;
+                self.ledger += f64::from(ti.dot(b.angvel()));
+                b.apply_torque_impulse(ti, true);
             }
         }
         // A stuck autopilot presses Recover: a consequence of the state, so not journaled.
@@ -1882,7 +1984,10 @@ impl Sim {
                 protected: c.protected_since.is_some(),
             })
             .collect();
-        ledger.update(self.tick, &flags, &self.damage_events);
+        ledger.update_with_wheels(self.tick, &flags, &self.damage_events, |car, part| {
+            self.profile_of(CarId(car))
+                .is_some_and(|p| p.is_wheel_part(part))
+        });
         self.derby = Some(ledger);
     }
 
@@ -1958,7 +2063,7 @@ impl Sim {
             let force = b.position().rotation.inverse() * (Vector::new(0.0, -9.81, 0.0) - accel);
             #[allow(clippy::needless_range_loop)]
             // `part` indexes the springs, the profile's parts and the health
-            for part in 1..PARTS {
+            for part in 1..car.parts.len() {
                 let spring = &mut car.springs[part];
                 match (car.damage.state(part, t), part_phys[part].hinge) {
                     (PartState::Loose, Some(h)) => {
@@ -1978,7 +2083,7 @@ impl Sim {
     fn detach_parts(&mut self) {
         for ci in 0..self.cars.len() {
             let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
-            for part in 1..PARTS {
+            for part in 1..self.cars[ci].parts.len() {
                 if self.cars[ci].removed[part]
                     || self.cars[ci].damage.state(part, &t) != PartState::Detached
                 {
@@ -2080,7 +2185,9 @@ impl Sim {
         for ci in 0..self.cars.len() {
             let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
             let after = libm::roundf(t.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
-            let gone = (damage::WHEEL_FL..PARTS)
+            let p = &self.profiles[self.cars[ci].model];
+            let gone = (0..p.part_count())
+                .filter(|&i| p.is_wheel_part(i))
                 .any(|i| self.cars[ci].damage.state(i, &t) == PartState::Detached);
             if !gone {
                 continue;
@@ -2114,7 +2221,7 @@ impl Sim {
     /// caller places at its anchor (same identity, same progress). Wreck event, with its cause and instigator, follows.
     fn wreck_car(&mut self, ci: usize, why: Respawned) {
         let t = self.profiles[self.cars[ci].model].tuning.damage.clone();
-        for part in 1..PARTS {
+        for part in 1..self.cars[ci].parts.len() {
             if !self.cars[ci].removed[part] {
                 self.cars[ci].damage.health[part] = 0.0;
                 self.cars[ci].removed[part] = true;
@@ -2203,9 +2310,10 @@ impl Sim {
         };
         let before = energy(self);
         let vehicle = self.cars[ci].model;
-        for i in 1..PARTS {
-            let builder = part_builder(&self.profiles[vehicle], i)
-                .collision_groups(Solidity::Protected.groups(damage::is_wheel(i)));
+        for i in 1..self.cars[ci].parts.len() {
+            let builder = part_builder(&self.profiles[vehicle], i).collision_groups(
+                Solidity::Protected.groups(self.profiles[vehicle].is_wheel_part(i)),
+            );
             self.cars[ci].parts[i] = self.world.insert_collider(builder, Some(body));
         }
         let core = self.cars[ci].collider;
@@ -2219,9 +2327,9 @@ impl Sim {
         // The mass coming back is the respawn's, not the sim's doing.
         self.ledger += energy(self) - before;
         let c = &mut self.cars[ci];
-        c.damage = CarDamage::new(&self.profiles[vehicle].tuning.damage);
-        c.springs = [Spring::default(); PARTS];
-        c.removed = [false; PARTS];
+        c.damage = CarDamage::for_profile(&self.profiles[vehicle]);
+        c.springs = vec![Spring::default(); c.parts.len()];
+        c.removed = vec![false; c.parts.len()];
         c.incarnation += 1;
         c.wheel_lost_at = None;
     }
@@ -2285,7 +2393,7 @@ impl Sim {
             },
         ));
         if let Some(c) = self.cars.get_mut(car.0 as usize)
-            && (1..PARTS).contains(&usize::from(part))
+            && (1..c.parts.len()).contains(&usize::from(part))
         {
             let t = &self.profiles[c.model].tuning.damage;
             let i = usize::from(part);
@@ -2330,10 +2438,10 @@ impl Sim {
     }
 
     /// Every loose part's hinge angle, radians, in part order (0 when not loose).
-    pub fn part_angles(&self, car: CarId) -> Option<[f32; PARTS]> {
+    pub fn part_angles(&self, car: CarId) -> Option<Vec<f32>> {
         self.cars
             .get(car.0 as usize)
-            .map(|c| std::array::from_fn(|i| c.springs[i].angle))
+            .map(|c| c.springs.iter().map(|s| s.angle).collect())
     }
 
     /// The part records for the snapshot (P1-S04b): every part that isn't intact, as `(car, part, state, hinge angle,
@@ -2342,7 +2450,7 @@ impl Sim {
         let mut out = Vec::new();
         for (ci, c) in self.cars.iter().enumerate() {
             let t = &self.profiles[c.model].tuning.damage;
-            for part in 1..PARTS {
+            for part in 1..c.parts.len() {
                 let state = c.damage.state(part, t);
                 if state == PartState::Intact {
                     continue;
@@ -2422,10 +2530,13 @@ impl Sim {
     }
 
     /// Which car's part debris body `index` is.
-    pub fn debris_part(&self, index: usize) -> Option<(CarId, &'static str)> {
-        self.part_debris
-            .get(&(index as u32))
-            .map(|&(c, p, _)| (CarId(c), damage::PART_NAMES[usize::from(p)]))
+    pub fn debris_part(&self, index: usize) -> Option<(CarId, &str)> {
+        self.part_debris.get(&(index as u32)).map(|&(c, p, _)| {
+            (
+                CarId(c),
+                self.profiles[self.cars[c as usize].model].part_name(usize::from(p)),
+            )
+        })
     }
 
     /// Kinetic plus potential energy over every dynamic body, J, and the authorised-work ledger (engine force, air
@@ -2472,13 +2583,15 @@ impl Sim {
         self.episodes.owner_of_prop(prop)
     }
 
-    /// A car's part health, in part order (`damage::PART_NAMES`; the core has none).
-    pub fn part_health(&self, car: CarId) -> Option<[f32; PARTS]> {
-        self.cars.get(car.0 as usize).map(|c| c.damage.health)
+    /// A vehicle's part health, in profile order (the core has none).
+    pub fn part_health(&self, car: CarId) -> Option<Vec<f32>> {
+        self.cars
+            .get(car.0 as usize)
+            .map(|c| c.damage.health.clone())
     }
 
     /// A car's part states, in part order.
-    pub fn part_states(&self, car: CarId) -> Option<[PartState; PARTS]> {
+    pub fn part_states(&self, car: CarId) -> Option<Vec<PartState>> {
         self.cars
             .get(car.0 as usize)
             .map(|c| c.damage.states(&self.profiles[c.model].tuning.damage))
@@ -2486,7 +2599,7 @@ impl Sim {
 
     /// A part's state by name (`front`, `door_FL`…).
     pub fn part_state(&self, car: CarId, part: &str) -> Option<PartState> {
-        let i = damage::part_index(part)?;
+        let i = self.profile_of(car)?.part_index(part)?;
         self.part_states(car).map(|s| s[i])
     }
 
@@ -2669,7 +2782,7 @@ impl Sim {
         self.race.hash_into(&mut race);
         for c in &self.cars {
             c.damage.hash_into(&mut race);
-            for (s, r) in c.springs.iter().zip(c.removed) {
+            for (s, r) in c.springs.iter().zip(c.removed.iter().copied()) {
                 race.extend(s.angle.to_bits().to_le_bytes());
                 race.extend(s.rate.to_bits().to_le_bytes());
                 race.push(u8::from(r));
@@ -2856,7 +2969,7 @@ pub fn route_spawn(map: &LoadedMap, index: usize, lateral: f32, lift: f32) -> Sp
 /// Each part's mass, centre of mass and hinge from the profile (P1-S04b): the proxy hull's centroid, its mass fraction of
 /// the car, and the hinge's pivot-to-centre arm and limits.
 fn part_phys(p: &VehicleProfile) -> Vec<PartPhys> {
-    (0..PARTS)
+    (0..p.part_count())
         .map(|i| {
             let Some(g) = p.geometry.parts.get(i) else {
                 return PartPhys {
@@ -2947,5 +3060,5 @@ fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
     builder
         .friction(0.6)
         .user_data(i as u128)
-        .collision_groups(Solidity::Racing.groups(damage::is_wheel(i)))
+        .collision_groups(Solidity::Racing.groups(p.is_wheel_part(i)))
 }

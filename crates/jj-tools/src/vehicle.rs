@@ -35,7 +35,7 @@ fn to_sim(g: &PhysicsGeometry) -> VehicleGeometry {
     let f = |p: [f64; 3]| p.map(|v| v as f32);
     VehicleGeometry {
         hull: g.hull.iter().map(|&p| f(p)).collect(),
-        wheels: g.wheels.map(f),
+        wheels: g.wheels.iter().map(|&p| f(p)).collect(),
         wheel_radius: g.wheel_radius as f32,
         com: f(g.com),
         parts: g

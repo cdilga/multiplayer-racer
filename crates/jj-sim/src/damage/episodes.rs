@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 
 use rapier3d::prelude::*;
 
-use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner, PARTS};
+use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner};
 use crate::profile::DamageTuning;
 use crate::sim::TICK_HZ;
 
@@ -280,7 +280,7 @@ impl Episodes {
             let loss = if was == super::PartState::Detached || immune[car as usize] {
                 0.0
             } else {
-                CarDamage::k(part, t) * e.damage_impulse
+                d.k(part, t) * e.damage_impulse
             };
             let before = d.health[part];
             d.charge(part, loss);
@@ -345,7 +345,7 @@ impl Episodes {
 /// the core.
 fn attribute_core(world: &PhysicsWorld, car: &CarParts<'_>, local: Vector, margin: f32) -> usize {
     let mut best = (margin, CORE);
-    for part in 1..PARTS {
+    for part in 1..car.parts.len() {
         let Some(c) = car.parts.get(part).and_then(|&c| world.colliders.get(c)) else {
             continue;
         };

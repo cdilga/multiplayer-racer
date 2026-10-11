@@ -327,3 +327,22 @@ not feel targets.
   full-state hashes; otherwise the original has applied the command while replay has not reached it.
 - Decompose the visible house into roof/walls/deck/posts but retain its complete registry placement footprint. Roof
   suspension contact selects ground grip/audio; it must not inherit off-track tyre behaviour from terrain below it.
+
+## 2026-10-12 · Two-wheel support and arcade balance (br-bwju.4)
+
+- A bike has one ray per axle and no lateral suspension baseline. Generalise axle splits, drive/brake shares and
+  damage names from profile topology; retaining four-wheel indices silently loses its rear contact and misclassifies
+  wheel-loss wrecks. The fixture has six proxies, including a rider; it is not an accepted vehicle model.
+- Rapier applies suspension impulses at contact patches. Cancel their exact roll moment for a bike, leaving support
+  and pitch, then apply the balance spring once as torque × dt. Move the tyre drive/brake pitch lever to COM height
+  by cancelling its exact applied pitch moment; keep the explicit wheelie lift and suspension pitch.
+- Include the rider in the inertia envelope and use the mass-weighted proxy centroid for COM. This fixture's
+  220 kg, 0.54 × 1.15 × 1.4 m envelope gives roll inertia 29.59 and pitch inertia 60.18 kg·m². Roll K=1800 has
+  critical damping 2√(KI)=462; pitch response ω=8 rad/s gives K=Iω²=3850 and D=2Iω=963. These are real torque units.
+- Rail-impact traces showed pitch stability disappears with one wheel still supported. Bike pitch levelling starts
+  then, rather than waiting for both rays to leave; intentional wheelies retain free pitch while rear-supported.
+  Car flight/tumble behavior is unchanged. Bike roll already has an actuator, so flight levelling supplies pitch only.
+- Differentiate the measured world-up lean angle for its damping. Angular velocity dotted with body-forward includes
+  yaw while pitched; a fast tilted impact otherwise makes the damper resist standing up. Balance continues airborne.
+- Raw-stick fixtures must put DRIVE fully sideways for R120 drift; a diagonal vector outside that sector is ordinary
+  throttle. CLI `jj sim --profile` and the WASM fixture load use the same versioned bike profile and named damage setters.

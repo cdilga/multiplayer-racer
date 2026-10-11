@@ -154,6 +154,29 @@ fn the_master_example_scores_35_points_for_a_human_and_17_5_for_the_autopilot() 
 }
 
 #[test]
+fn a_bike_wheel_loss_credits_the_wheel_taker_using_its_profile() {
+    let p =
+        crate::VehicleProfile::from_json(include_str!("../../../../scenarios/bikes/profile.json"))
+            .unwrap();
+    let wheel = p.wheel_part(0) as u8;
+    assert_eq!(p.part_name(wheel as usize), "wheel_F");
+    let log = vec![
+        (100, hit(0, 1, wheel, 10.0, 90)),
+        (100, detached(1, wheel, 0)),
+        (101, wrecked(1, WreckWhy::WheelLoss, Some(0))),
+    ];
+    let mut ledger = Ledger::new(0, ROUND_TICKS);
+    ledger.update_with_wheels(101, &[CarFlags::default(); 2], &log, |_, part| {
+        p.is_wheel_part(part)
+    });
+    assert_eq!(
+        ledger.points(0),
+        35.0,
+        "wheel 4 is a wheel on a bike, so its causal wreck earns 20 points"
+    );
+}
+
+#[test]
 fn damage_is_two_score_units_per_damage_unit_and_bonuses_are_exact_integers() {
     let mut l = Rig::new(2, &[]);
     // 0.001 HP is one damage unit: two score units.

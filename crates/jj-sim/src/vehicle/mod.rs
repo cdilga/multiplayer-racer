@@ -161,18 +161,20 @@ pub fn wheel_commands(
     input: DriveInput,
     action: ActionState,
     forward_speed: f32,
-    grip: [f32; 4],
+    grip: impl AsRef<[f32]>,
     dt: f32,
-) -> [WheelCommand; 4] {
+) -> Vec<WheelCommand> {
     let t = &p.tuning;
     let (throttle, brake) = stick(input);
     let steer = dequantise_axis(input.steer);
     let driven = |i: usize| match t.drive {
-        Drive::Front => i < 2,
-        Drive::Rear => i >= 2,
+        Drive::Front => i < p.front_wheels(),
+        Drive::Rear => i >= p.front_wheels(),
         Drive::All => true,
     };
-    let n_driven = (0..4).filter(|&i| driven(i)).count() as f32;
+    let count = p.geometry.wheels.len();
+    let grip = grip.as_ref();
+    let n_driven = (0..count).filter(|&i| driven(i)).count() as f32;
     // Boost is full forward drive and then some, whatever DRIVE says: letting go of it is how a booster slows for a
     // corner (§7.3a "boost-forever isn't the best line"). Otherwise down brakes while rolling forward and reverses near
     // rest, and up drives forward but brakes while rolling backwards.
@@ -224,16 +226,26 @@ pub fn wheel_commands(
     // The handbrake drift loosens the rear tyres.
     let rear_grip = 1.0 - action.drift * (1.0 - t.drift_rear_grip);
     let lock = p.steer_lock(forward_speed);
-    let mut out = [WheelCommand::default(); 4];
+    let mut out = vec![WheelCommand::default(); count];
     for (i, w) in out.iter_mut().enumerate() {
-        w.steering = if i < 2 { steer * lock } else { 0.0 };
+        w.steering = if i < p.front_wheels() {
+            steer * lock
+        } else {
+            0.0
+        };
         // Rapier ignores `brake` while an engine force is set.
         if braking > 0.0 {
-            w.brake_impulse = braking * t.max_brake_force / 4.0 * dt;
+            w.brake_impulse = braking * t.max_brake_force / count as f32 * dt;
         } else if driven(i) {
             w.engine_force = engine / n_driven;
         }
-        w.friction_slip = t.friction_slip * grip[i] * if i >= 2 { rear_grip } else { 1.0 };
+        w.friction_slip = t.friction_slip
+            * grip[i]
+            * if i >= p.front_wheels() {
+                rear_grip
+            } else {
+                1.0
+            };
     }
     out
 }
@@ -341,8 +353,8 @@ mod tests {
         assert!(fast[0].steering < slow[0].steering && slow[2].steering == 0.0);
         let base = p.tuning.friction_slip;
         assert_eq!(
-            slow.map(|w| w.friction_slip),
-            [base, base * 0.8, base * 0.7, base * 0.9]
+            slow.iter().map(|w| w.friction_slip).collect::<Vec<_>>(),
+            vec![base, base * 0.8, base * 0.7, base * 0.9]
         );
     }
 }

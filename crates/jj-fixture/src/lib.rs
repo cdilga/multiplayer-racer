@@ -604,7 +604,10 @@ impl Harness {
             );
         }
         for d in fx.damage.iter().filter(|d| d.tick == t) {
-            if let Some(part) = jj_sim::damage::part_index(&d.part) {
+            if let Some(part) = sim
+                .profile_of(CarId(d.car))
+                .and_then(|p| p.part_index(&d.part))
+            {
                 sim.set_part_health(CarId(d.car), part as u8, d.health);
             }
         }
