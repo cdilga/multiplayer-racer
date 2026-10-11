@@ -5,7 +5,8 @@
 // worker's room view (`SimClient.onRoom`). Any N, any aspect: the roster and the placings pick the richest card tier that
 // stays legible and never cap, scroll or page (fit.ts). Copy says room and round, never game (R112).
 import roster from '../../../shared/src/roster.json' with { type: 'json' };
-import { installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
+import { controlsCard, installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
+import { controlsData, localView, sourceOf } from '../input/controls-data';
 import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
 import { onProfileChange, screenScale } from '../layout/profile';
@@ -123,6 +124,35 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     box.style.cssText = `grid-template-columns:repeat(${f.cols},${fluid ? 'minmax(0,1fr)' : `${f.cw}px`});grid-template-rows:repeat(${f.rows},${f.ch}px);gap:${gap}px;--fs:${f.fs}px`;
   };
 
+  // ---------- Lobby controls cards (P1-C14) ----------
+  // A pad, wheel or key cluster that claimed a seat gets a card for its kind under the roster: its own glyphs, two sticks and
+  // Identify/READY. It folds away once the host has seen every control used (the seat's first-drive prompt is over) and with
+  // the lobby itself at the countdown; holding the source's Identify shows it again. A phone's seat never gets one.
+  let strip = '';
+  const stripHtml = (room: RoomView): string => {
+    const data = controlsData();
+    return [...room.seats]
+      .sort((a, b) => a.number - b.number)
+      .flatMap((s) => {
+        const src = sourceOf(s.localSource);
+        if (!src || s.presence === 'Left') return [];
+        const held = localView(s.localSource)?.identifyHeld === true;
+        if ((localView(s.localSource)?.used.length ?? 0) >= 7 && !held) return [];
+        return ['<div class="lb-cc" data-seat="' + s.seat + '" data-number="' + s.number + '" data-held="' + held + '"><span class="badge" style="' + colourVars(s.colourIndex) + '">#' + s.number + '</span>' + controlsCard(src, data, { compact: true }) + '</div>'];
+      })
+      .join('');
+  };
+  const paintStrip = (room: RoomView, force = false) => {
+    const el = screen.querySelector<HTMLElement>('[data-controls]');
+    if (!el) return;
+    const html = stripHtml(room);
+    if (!force && html === strip) return;
+    strip = html;
+    el.innerHTML = html;
+    el.hidden = !html;
+    relayout?.();
+  };
+
   // ---------- Lobby ----------
   const lobby = (room: RoomView) => {
     const ready = room.seats.filter((s) => stateOf(s) === 'ready').length;
@@ -133,8 +163,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         <span class="strip">Pick a car on your phone · the host starts the race</span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>Start race</button>
-        <p class="lb-hint">${n ? `${room.armed ? 'Everyone ready starts the race on its own' : 'Start race when everyone\'s ready'} · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p></div></div>
-      <div class="lb-roster" data-players></div></section>`;
+        <p class="lb-hint">${n ? `${room.armed ? 'Everyone ready starts the race on its own' : 'Start race when everyone\'s ready'} · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
+        <button class="btn brush" data-act="catch-up" type="button" aria-pressed="${room.catchUp !== false}">Catch-up: ${room.catchUp === false ? 'Off' : 'Light'}</button></div></div>
+      <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
     joinEl.append(qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK())));
@@ -158,8 +189,10 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('');
     };
     relayout();
+    paintStrip(room, true);
     paintKit(screen);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
+    screen.querySelector('[data-act=catch-up]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'catch-up', on: room.catchUp === false }));
     // Select a card to remove that player (P1-G07): works at every tier, and asks first.
     const pick = (e: Event) => {
       const c = (e.target as HTMLElement).closest<HTMLElement>('.lcard');
@@ -248,7 +281,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
-    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);
@@ -269,7 +302,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       if (shown !== key) {
         shown = key;
         lobby(room);
-      }
+      } else paintStrip(room);
       return;
     }
     // Running and Finalising: the tiles and their HUD are the screen; GO! shows for the first moment of the race.
@@ -291,6 +324,11 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     relayout?.();
   });
   onProfileChange(() => lastRoom && reflow());
+  // What a pad or cluster has used, and whether its Identify is down, live on this page rather than in the room view: the lobby's
+  // controls cards follow it a few times a second (a room update isn't sent for a stick moving).
+  setInterval(() => {
+    if (lastRoom?.phase === 'Lobby') paintStrip(lastRoom);
+  }, 200);
   client.onRoom = render;
   if (client.room) render(client.room);
   return {

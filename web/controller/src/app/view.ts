@@ -71,8 +71,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let tutorial: Tutorial | null = null;
   let tutorialOffered = false;
   // Orientation is the first choice; coaching starts once it is settled, without opening a hidden menu.
-  const showTutorial = () => {
-    if (!app.querySelector('[data-overlay=rotate]')) tutorial?.show();
+  const showTutorial = (from = 0) => {
+    if (!app.querySelector('[data-overlay=rotate]')) tutorial?.show(from);
   };
   let firstPerson = false;
   let shown: string | null = null;
@@ -105,6 +105,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   const prefsNow = () => {
     prefs ??= new Preferences(session.realm);
     session.cameraDistance = prefs.value.cameraDistance;
+    session.assist = prefs.value.assist;
     session.classic = prefs.value.controls === 'classic';
     return prefs;
   };
@@ -215,7 +216,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic);
+    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic, () => openSettings(screenEl));
     if (session.roomPhase === 'Lobby') {
       tutorialOffered = !app.querySelector('[data-overlay=rotate]');
       if (tutorialOffered && Tutorial.wanted()) tutorial.show();
@@ -245,6 +246,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     cars = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;
+      session.assist = v.assist;
       session.classic = v.controls === 'classic';
       syncTilt();
     });
@@ -253,7 +255,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       fsNote = !fsNote;
       updateFullscreen();
     });
-    app.querySelector('[data-act=help]')!.addEventListener('click', showTutorial);
+    app.querySelector('[data-act=help]')!.addEventListener('click', () => showTutorial());
     app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
     app.querySelector('[data-act=car]')!.addEventListener('click', () => openCars(screenEl));
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());

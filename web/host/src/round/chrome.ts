@@ -11,6 +11,8 @@ import { basePath } from '../../../shared/src/base';
 import { paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import { enterFullscreen, fullscreenSupport } from '../layout/fullscreen';
 import { setPositions } from '../layout/positions';
+import { controlsPage } from '../../../shared/ui';
+import { controlsData } from '../input/controls-data';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
 
 type Seat = RoomView['seats'][number];
@@ -48,7 +50,9 @@ export interface Chrome {
   /** Open the Remove confirmation for a seat (a lobby card click, or the menu's player list). */
   askRemove(seat: number): void;
   toggleDiagnostics(on?: boolean): void;
-  readonly state: { menu: boolean; join: boolean; confirm: string | null; diagnostics: boolean };
+  readonly state: { menu: boolean; join: boolean; confirm: string | null; diagnostics: boolean; controls: boolean };
+  /** The menu's Controls page (P1-C14): one card per source kind, read from the live key and wheel data. */
+  openControls(): void;
 }
 
 const RACING = new Set(['Countdown', 'Running', 'Finalising']);
@@ -62,7 +66,7 @@ const colour = (s: Seat) => `--b:var(--id-${s.colourIndex % tokenData.seatColors
 
 export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: ParentNode) => void): Chrome {
   let room: RoomView | null = null;
-  const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false };
+  const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false, controls: false };
   let paused = false;
   let target: number | null = null;
 
@@ -196,6 +200,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p>
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></div></div></section>`;
+    } else if (state.controls) {
+      menuEl.innerHTML = `<section class="mn-panel controls" data-controls-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Con<span class="acc">trols</span></h2>
+        ${controlsPage(controlsData(), { compact: true })}
+        <div class="mn-acts"><button class="btn brush primary" type="button" data-act="host-menu" data-autofocus>Back</button></div></section>`;
     } else {
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
       const fs = fullscreenSupport();
@@ -203,6 +211,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><div class="mn-main"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
         <div class="mn-acts main"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
+        <button class="btn brush" type="button" data-act="controls">Controls</button>
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
         <h3 class="display">Display</h3>
         <div class="mn-view" data-view role="group" aria-label="Viewing distance">${PROFILES.map((p) => `<button class="btn brush${profileChoice() === p ? ' primary' : ''}" type="button" data-act="view" data-profile="${p}" aria-pressed="${profileChoice() === p}">${p === 'auto' ? `Auto (${activeProfile()})` : p === 'tv' ? 'TV' : p === 'desk' ? 'Desk' : 'Handheld'}</button>`).join('')}
@@ -232,22 +241,26 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     paused = on;
     send('pause', on);
   };
-  const openMenu = (join = false) => {
+  const openMenu = (join = false, controls = false) => {
     state.menu = true;
+    state.controls = controls;
     state.join = join;
     state.confirm = null;
     target = null;
     menuEl.hidden = false;
     menuBtn.setAttribute('aria-expanded', 'true');
+    document.documentElement.dataset.jjMenu = 'open';
     if (racing()) setPause(true);
     renderMenu();
   };
   const closeMenu = () => {
     state.menu = false;
     state.join = false;
+    state.controls = false;
     state.confirm = null;
     menuEl.hidden = true;
     menuBtn.setAttribute('aria-expanded', 'false');
+    delete document.documentElement.dataset.jjMenu;
     setPause(false);
     menuBtn.focus({ preventScroll: true });
   };
@@ -272,6 +285,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         return closeMenu();
       case 'host-menu':
         state.join = false;
+        state.controls = false;
+        return renderMenu();
+      case 'controls':
+        state.controls = true;
         return renderMenu();
       case 'back':
         // Back from a confirmation returns to the menu, or closes it if it was opened straight to the confirmation.
@@ -379,7 +396,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   });
 
   // Test and probe surface (R90): the menu's state and the same opens the footer and the menu button use.
-  (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, openJoin: () => openMenu(true), openMenu: () => openMenu(false), closeMenu };
+  (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, openJoin: () => openMenu(true), openMenu: () => openMenu(false), openControls: () => openMenu(false, true), closeMenu };
+  // The input drawer's Controls button asks for the same page (P1-C14).
+  window.addEventListener('jj-open-controls', () => openMenu(false, true));
 
   return {
     footer,
@@ -387,6 +406,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     state,
     openMenu: () => openMenu(false),
     openJoin: () => openMenu(true),
+    openControls: () => openMenu(false, true),
     closeMenu,
     askRemove: (seat) => confirm('remove', seat),
     toggleDiagnostics,
@@ -407,7 +427,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         if (paused && !racing()) {
           paused = false;
         }
-        const key = `${state.confirm}:${state.join}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+        const key = `${state.confirm}:${state.join}:${state.controls}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
         if (menuEl.dataset.key !== key) {
           menuEl.dataset.key = key;
           renderMenu();

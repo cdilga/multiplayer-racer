@@ -182,13 +182,14 @@ export interface RoomView {
   remainingMs: number | null;
   round: number | null;
   laps: number;
+  catchUp?: boolean;
   freeDrive: boolean;
   /** The roster's vehicle ids in the host's table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123). */
   vehicles?: string[];
   /** Round preparation (P1-M08a, the R90 readout): main prepares maps, the pending job and its seed, whether a map is waiting for the next Countdown, stale `MapReady`s dropped, and the last validator verdict. */
   preparation?: { external: boolean; pending: { id: number; seed: number } | null; prepared: boolean; staleDropped: number; verdict: string };
   armed: boolean;
-  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; /** The transport endpoint (not for host pads). */ endpoint?: string | null; car: number | null; laps: number | null; position: number | null; finished: boolean; /** R119: ms this seat's pad has been unplugged (null while plugged); the seat is held, nothing expires it. */ unpluggedMs?: number | null; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null }>;
+  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; /** P1-C14: the host pad, wheel or key cluster (its source id) that holds this seat; null for a joined controller. */ localSource?: number | null; /** The transport endpoint (not for host pads). */ endpoint?: string | null; car: number | null; laps: number | null; position: number | null; finished: boolean; /** R119: ms this seat's pad has been unplugged (null while plugged); the seat is held, nothing expires it. */ unpluggedMs?: number | null; /** R125: the seat's learner assist, 0 Off, 1 Some, 2 Lots (an L-plate shows on its tile while it is not 0). */ assist?: number; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

@@ -9,11 +9,12 @@ import { BUILD_LABEL } from '../../shared/src/build';
 import { mountAudio } from './audio';
 import { mountDrawer } from './input/drawer';
 import { mountGridOverlay } from './layout/overlay';
+import { attachLocalInput, controlsData, setControlsData } from './input/controls-data';
 import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
-import { paperQrCard } from '../../shared/ui';
+import { controlsPage, paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
 import { HostHub } from '../../shared/transport';
@@ -175,6 +176,7 @@ async function boot(): Promise<void> {
   // Host pads and key clusters (P1-C05): players from their first press, listed in the input drawer.
   const input = new LocalInput(client);
   input.start();
+  attachLocalInput(input);
   mountDrawer(document.body, input);
   testing?.attach(client, { mapJson: greybox, seed, input });
   // The round loop (P1-G01) runs in the worker. A host page opens a room: the Lobby has no driving cars (R110) and a
@@ -189,6 +191,15 @@ async function boot(): Promise<void> {
   if (online) await openRoom(client, world, params, freeDrive);
   // The real room prepares each round's map in the procgen worker (P1-M08a); free drive and plain test pages race the start map.
   if (online && !freeDrive) await (await import('./procgen/start')).startPreparation(client, world, params);
+  // Test and probe surface (R90, P1-C14): the data the controls cards read, swappable so a test can change it and see the page follow.
+  (window as unknown as { __jjControls: unknown }).__jjControls = {
+    data: () => controlsData(),
+    setData: (d: Parameters<typeof setControlsData>[0]) => setControlsData(d),
+    page: () => controlsPage(controlsData()),
+    keyboardPlayers: () => input.keyboardPlayers(),
+    /** The host's own pads, wheels and key clusters as the drawer lists them (with the controls each has used). */
+    sources: () => input.list(),
+  };
   (window as unknown as { __jjRoom: unknown }).__jjRoom = {
     view: () => client.room,
     start: () => client.input({ type: 'ui', ui: 'start' }),

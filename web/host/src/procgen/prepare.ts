@@ -30,7 +30,7 @@ export interface PrepareOptions {
   host: PrepareHost;
   presenter: Presenter;
   procgen: Procgen;
-  /** The recipe (comma-separated biome names); default is the worker's Playtest-1 four. */
+  /** The recipe (comma-separated biome names); default (empty) is the seed's own one to four biomes (R125). */
   recipe?: string;
   /** The recipe after a failed preparation (the director's one conservative retry): the placeholder biome alone. */
   conservativeRecipe?: string;
@@ -157,7 +157,7 @@ export class RoundPreparer {
         entry.plan = 'dev-map';
       } else {
         const generator = this.generator;
-        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : generator ? (JSON.parse(generator) as { recipe: string }).recipe : this.o.recipe;
+        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : this.o.recipe;
         const p = await this.o.procgen.prepare(seed, recipe, generator);
         if (generator) entry.generator = generator;
         entry.plan = p.plan;

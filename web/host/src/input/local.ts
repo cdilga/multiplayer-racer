@@ -39,6 +39,10 @@ export interface LocalSourceView {
   left: boolean;
   /** Its seat is sitting out (from the drawer). */
   sittingOut: boolean;
+  /** Its Identify button is down now (P1-C14: holding it shows the controls card on the seat's tile). */
+  identifyHeld: boolean;
+  /** The controls this seat has used since it joined (P1-C14): the lobby's controls card folds away once all seven are. */
+  used: string[];
   /** A wheel's profile: its name, whether it's confirmed on a device, and the live mapping (−1..1 steer, 0..1 pedals). */
   wheel?: { profile: string; verified: boolean; steer: number; throttle: number; brake: number };
   /** A non-standard device that needs mapping before it can play (P1-C05.2). */
@@ -69,7 +73,22 @@ interface Source {
   cal?: Calibration;
   /** Just calibrated: the press that finished it isn't a join; everything must be let go first. */
   awaitRelease?: boolean;
+  /** When the left stick was last pulled all the way back (ms), for the launch: pull back, hold, snap forward. */
+  pulledAt?: number;
+  pullReleasedAt?: number;
+  /** The drawer's Add: claim (or re-claim after Leave) on the next sample as if a key had been pressed (P1-C14). */
+  wantJoin?: boolean;
 }
+
+/** Whether the host's keyboard plays (the drawer's toggle): remembered per host browser, on by default. */
+const KEYS_KEY = 'jj.hostKeyboardPlayers';
+const readKeysOn = (): boolean => {
+  try {
+    return localStorage.getItem(KEYS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
 
 /** A stick past the radial deadzone, rescaled so the edge of the deadzone reads 0. */
 function deadzone(x: number, y: number, dz: number): [number, number] {
@@ -86,6 +105,7 @@ export class LocalInput {
   private last = 0;
   /** Profiles saved by calibration (read once, written on save). */
   private saved: Record<string, WheelProfile> = savedProfiles();
+  private keysOn = readKeysOn();
   private readonly clusterKeys = new Set(
     clusters.flatMap((c) => [...Object.values(c.drive), ...Object.values(c.action), c.identify, c.ready]),
   );
@@ -104,6 +124,38 @@ export class LocalInput {
 
   clusters(): Cluster[] {
     return clusters;
+  }
+
+  /** Whether the host's keyboard plays (P1-C14). Off ignores every cluster key and lets them through to the host UI. */
+  keyboardPlayers(): boolean {
+    return this.keysOn;
+  }
+
+  setKeyboardPlayers(on: boolean): void {
+    this.keysOn = on;
+    this.keys.clear();
+    try {
+      localStorage.setItem(KEYS_KEY, on ? 'on' : 'off');
+    } catch {
+      // Storage blocked: the toggle still works for this page.
+    }
+  }
+
+  /** The drawer's Add (P1-C14): a key cluster claims its seat (or a left one a new seat) with no key pressed. */
+  join(source: number): void {
+    const s = this.sources.get(source);
+    if (!s || s.view.kind !== 'keys' || !s.view.connected || !this.keysOn) return;
+    if (s.view.claimed && !s.view.left) return;
+    s.wantJoin = true;
+  }
+
+  /** The drawer's Remove (P1-C14): an unplugged pad or wheel's held seat leaves for good, its car with it. */
+  remove(source: number): void {
+    const s = this.sources.get(source);
+    if (!s?.view.claimed || s.view.left || s.view.connected) return;
+    Object.assign(s.view, { left: true, sittingOut: false, identifyHeld: false });
+    s.released = true;
+    this.send(s, [0, 0, 0, 0], LOCAL_LEAVE);
   }
 
   /** The drawer's Sit out / Return for a seated source. */
@@ -179,7 +231,7 @@ export class LocalInput {
 
   private add(source: number, kind: LocalSourceView['kind'], label: string): Source {
     const s: Source = {
-      view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false },
+      view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false, identifyHeld: false, used: [] },
       axes: [0, 0, 0, 0],
       buttons: 0,
       seq: 0,
@@ -192,7 +244,7 @@ export class LocalInput {
   }
 
   private readonly onKey = (e: KeyboardEvent): void => {
-    if (e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
+    if (!this.keysOn || e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
     e.preventDefault();
     if (e.type === 'keydown') this.keys.add(e.code);
     else this.keys.delete(e.code);
@@ -298,18 +350,62 @@ export class LocalInput {
     } else {
       s.holdSince = null;
     }
-    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0;
+    const identifyChanged = s.view.identifyHeld !== identify;
+    s.view.identifyHeld = identify;
+    if (identifyChanged) window.dispatchEvent(new Event('jj-local-controls'));
+    this.trackUse(s, axes, now);
+    const joining = s.wantJoin === true;
+    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || joining;
     if (!s.view.claimed && !pressed) return;
     s.view.claimed = true;
+    const wasLeft = s.view.left;
     // After leaving: letting go, then pressing again, is a new player (the worker gives it a new seat).
     if (s.view.left) {
       if (!pressed) s.released = true;
-      else if (s.released) Object.assign(s.view, { left: false, sittingOut: false }), (s.released = false);
+      else if (s.released) Object.assign(s.view, { left: false, sittingOut: false, used: [] }), (s.released = false);
+    }
+    // Add after Leave is a new player without a press: the host's rule is "a non-neutral sample after letting go", so the
+    // join rides a one-step nudge on an axis (far below any deadzone).
+    if (joining) {
+      s.wantJoin = false;
+      if (wasLeft) {
+        Object.assign(s.view, { left: false, sittingOut: false, used: [] });
+        s.released = false;
+        axes = [1 / AXIS_MAX, axes[1], axes[2], axes[3]];
+      }
     }
     buttons |= s.once;
     s.once = 0;
     if (buttons & LOCAL_LEAVE) Object.assign(s.view, { left: true, sittingOut: false }), (s.released = false);
     this.send(s, axes, buttons);
+  }
+
+  /** Which of the seven controls this source has used (steer, go, brake, drift, launch, OI!, cone): the card folds at all of them. */
+  private trackUse(s: Source, axes: Axes, now: number): void {
+    if (!s.view.claimed || s.view.left) return;
+    const used = s.view.used;
+    const mark = (id: string) => used.includes(id) || used.push(id);
+    const [dx, y, steer, flick] = axes;
+    if (Math.abs(steer) > 0.7) mark('steer');
+    if (y > 0.7) mark('go');
+    if (y < -0.7) mark('brake');
+    if (Math.abs(dx) > 0.9) mark('drift');
+    if (flick > 0.7) mark('oi');
+    if (flick < -0.7) mark('cone');
+    if (y < -0.9) {
+      s.pulledAt ??= now;
+      s.pullReleasedAt = undefined;
+    }
+    else {
+      if (s.pulledAt !== undefined) s.pullReleasedAt ??= now;
+      if (s.pulledAt !== undefined && now - s.pulledAt >= 350 && y > 0.7) mark('launch');
+      // Keyboard axes ramp through neutral on their way from brake to throttle. Keep the pull through
+      // that transition; otherwise it is forgotten before the forward sample can tick off Launch.
+      if (y > 0.7 || (s.pullReleasedAt !== undefined && now - s.pullReleasedAt > 600)) {
+        s.pulledAt = undefined;
+        s.pullReleasedAt = undefined;
+      }
+    }
   }
 
   private send(s: Source, axes: Axes, buttons: number): void {

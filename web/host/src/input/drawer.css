@@ -1,0 +1,25 @@
+/* The input drawer's controls (P1-C14): the keyboard toggle and Controls button, the player rows, and the clusters' cards. The
+   floating shell (position, background, the race-time fold) is in index.html; this folds the new pieces the same way. */
+[data-jj-input-drawer] .dr-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+[data-jj-input-drawer] .dr-rows { margin: 4px 0; padding-left: 18px; }
+[data-jj-input-drawer] .dr-rows li { margin: 2px 0; }
+[data-jj-input-drawer] button { font: inherit; cursor: pointer; }
+[data-jj-input-drawer] button[aria-pressed='false'] { opacity: .8; }
+[data-jj-input-drawer] .dr-cards { display: grid; gap: 8px; margin: 8px 0 4px; font-size: 12px; }
+:is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards) { display: none; }
+@media (max-width: 960px), (max-height: 500px) { [data-jj-input-drawer] .dr-cards { font-size: 9px; } }
+
+/* In a room the round screens (z 4) cover the page, so the drawer docks above the footer and rides over them (P1-C14): bottom right in
+   every phase (the lobby's roster and its controls cards fill the left; a race's boost meters sit bottom left of each tile), folded
+   to its head in a race. It steps aside for the host menu. */
+html[data-jj-phase] [data-jj-input-drawer] { z-index: 5; top: auto; left: auto; right: 8px; bottom: calc(max(5vh, 30px) + 8px); translate: none; width: max-content; max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100vh - max(5vh, 30px) - 24px); }
+html:is([data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards, .dr-rows) { display: none; }
+html[data-jj-phase] [data-jj-input-drawer] .dr-cards { display: none; }
+html[data-jj-menu] [data-jj-input-drawer] { display: none; }
+
+/* The kit's paper panel (the host's own dark placeholder from index.html gives way): readable on the lobby's paper and over a race. */
+html [data-jj-input-drawer] { background: var(--c-paper, #fff4de); color: var(--c-ink, #15203a); border: 2px solid var(--c-ink, #15203a); border-radius: 3px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 600 13px/1.3 var(--font-body, system-ui); }
+html [data-jj-input-drawer] .drawer-head { font: 900 italic 15px/1 var(--font-display, system-ui); letter-spacing: .02em; text-transform: uppercase; }
+html [data-jj-input-drawer] button { color: var(--c-ink, #15203a); background: var(--c-paper-shade, #f1e2c2); border: 2px solid var(--c-ink, #15203a); border-radius: 4px; padding: 1px 8px 2px; font-weight: 700; }
+html [data-jj-input-drawer] button:hover:not(:disabled) { background: var(--c-saffron, #ffb400); }
+html [data-jj-input-drawer] button:disabled { opacity: .45; cursor: not-allowed; }

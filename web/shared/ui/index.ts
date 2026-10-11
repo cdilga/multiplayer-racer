@@ -5,6 +5,7 @@
 import './tokens.generated.css';
 import './brush.css';
 import './components.css';
+import './controls.css';
 import { icon } from './icons';
 import { installBrushSkins, paintBrushButtons } from './brush';
 import { paintCaptions } from './caption';
@@ -19,6 +20,8 @@ export { identify, motion, motionMode } from './motion';
 export type { MotionMode, MotionName, MotionSpec } from './motion';
 export { paperQrCard, paperQrMinPx, paperQrSvg } from './qr';
 export { tokenData } from './tokens.generated';
+export { controlsCard, controlsPage, glyphs, keyLabel, promptGlyphs, sourceKinds, sourceLabel } from './controls';
+export type { ControlId, ControlsCluster, ControlsData, ControlsSource, ControlsWheel, PromptStepId } from './controls';
 
 /** Paint every brushed button and caption under root (call after adding them; they repaint themselves on resize). */
 export function paintKit(root: ParentNode = document): void {

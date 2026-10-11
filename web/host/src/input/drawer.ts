@@ -2,14 +2,12 @@
 // each key cluster's legend. Wheels (P1-C05.2) show their profile and live steering and pedals, and any device can be
 // mapped as a wheel here: the prompts walk the calibration and the profile is saved for that device. Its visual design belongs to the accepted TV mocks (R07); this is the plain version the
 // host shows until then, and the data the designed one will read.
-import type { Cluster, LocalInput } from './local';
+import { controlsCard } from '../../../shared/ui';
+import { controlsData } from './controls-data';
+import type { LocalInput } from './local';
+import './drawer.css';
 
 const key = (code: string) => code.replace(/^Key/, '').replace(/^Arrow/, '');
-
-export function legend(c: Cluster): string {
-  const stick = (s: Cluster['drive']) => `${key(s.up)}${key(s.left)}${key(s.down)}${key(s.right)}`;
-  return `${c.label}: throttle, brake and steer ${stick(c.drive)}, drift and flicks ${stick(c.action)}, Identify ${key(c.identify)}, READY ${key(c.ready)} (hold both 2 s to leave)`;
-}
 
 /** Renders the drawer into `root` and keeps it current. */
 export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500): () => void {
@@ -19,21 +17,34 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
   root.append(el);
   const render = () => {
     const rows = input.list().map((s) => {
-      const state = !s.connected
-        ? 'unplugged'
-        : !s.claimed
-          ? 'press to join'
-          : s.left
-            ? 'left'
+      const keysOff = s.kind === 'keys' && !input.keyboardPlayers();
+      const idle = !s.claimed || s.left;
+      const state = s.left
+        ? 'left'
+        : !s.connected
+          ? 'unplugged'
+          : !s.claimed
+            ? keysOff
+              ? 'keyboard off'
+              : 'press to join'
             : s.sittingOut
               ? 'sitting out'
               : 'playing';
-      const seated = s.connected && s.claimed && !s.left;
+      // A seated key cluster stays leavable while the keyboard is off; an unplugged pad's held seat gets Remove instead.
+      const seated = s.claimed && !s.left && (s.connected || s.kind === 'keys');
+      const held = s.claimed && !s.left && !s.connected && s.kind !== 'keys';
       const btn = (act: string, text: string) => ` <button type="button" data-act="${act}" data-source="${s.source}">${text}</button>`;
       if (s.calibrating) {
         return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="calibrating" data-step="${s.calibrating.step}">${s.label}: ${s.calibrating.prompt}${btn('skip', 'Skip')}${btn('cancel', 'Cancel')}</li>`;
       }
       let controls = seated ? btn('sit-out', s.sittingOut ? 'Return' : 'Sit out') + btn('leave', 'Leave') : '';
+      if (held) controls += btn('remove', 'Remove');
+      let hint = '';
+      if (s.kind === 'keys' && idle) {
+        const c = input.clusters().find((k) => k.id === s.source);
+        hint = c && !keysOff ? ` · press ${key(c.drive.up)} to join` : '';
+        controls += `<button type="button" data-act="add" data-source="${s.source}"${keysOff ? ' disabled' : ''}>Add</button>`;
+      }
       let detail = '';
       if (s.kind === 'wheel' && s.wheel) {
         const w = s.wheel;
@@ -45,14 +56,18 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
       } else if (s.kind === 'pad' && s.connected) {
         controls += btn('calibrate', 'Map as a wheel');
       }
-      return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}: ${state}${detail}${controls}</li>`;
+      return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}${hint && state === 'press to join' ? '' : `: ${state}`}${hint}${detail}${controls}</li>`;
     });
     // The head is what shows while a race collapses the drawer (it expands on hover or keyboard focus).
     const seated = input.list().filter((s) => s.connected && s.claimed && !s.left).length;
-    const html = `<div class="drawer-head" tabindex="0">Keys &amp; pads${seated ? ` · ${seated} playing` : ''}</div><ul>${rows.join('')}</ul><ul>${input
+    const on = input.keyboardPlayers();
+    const data = controlsData();
+    const html = `<div class="drawer-head" tabindex="0">Keys &amp; pads${seated ? ` · ${seated} playing` : ''}</div>
+      <div class="dr-bar"><button type="button" data-act="keys-toggle" aria-pressed="${on}">Keyboard players: ${on ? 'on' : 'off'}</button><button type="button" data-act="controls">Controls</button></div>
+      <ul class="dr-rows">${rows.join('')}</ul><div class="dr-cards">${input
       .clusters()
-      .map((c) => `<li>${legend(c)}</li>`)
-      .join('')}</ul>`;
+      .map((c) => controlsCard({ kind: 'keys', cluster: c.id }, data, { compact: true }))
+      .join('')}</div>`;
     // Only when something changed: rebuilding every tick swaps the buttons out from under a pointer (or a
     // Playwright click) on a host whose frames are slow.
     if (html !== last) el.innerHTML = last = html;
@@ -66,6 +81,10 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
     const act = b.dataset.act;
     if (act === 'sit-out') input.toggleSitOut(source);
     else if (act === 'leave') input.leave(source);
+    else if (act === 'add') input.join(source);
+    else if (act === 'remove') input.remove(source);
+    else if (act === 'keys-toggle') input.setKeyboardPlayers(!input.keyboardPlayers());
+    else if (act === 'controls') window.dispatchEvent(new CustomEvent('jj-open-controls'));
     else if (act === 'calibrate') input.calibrate(source);
     else if (act === 'skip') input.skipStep(source);
     else if (act === 'cancel') input.cancelCalibration(source);

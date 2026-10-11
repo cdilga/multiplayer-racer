@@ -15,7 +15,7 @@ export interface PreparedMap {
 
 /** What round preparation needs of a procgen worker (the tests substitute one). */
 export interface Procgen {
-  /** The seed's validated map for the recipe (comma-separated biome names; default: the Playtest-1 four). */
+  /** The seed's validated map for the recipe (comma-separated biome names; default: empty, the seed's own one to four biomes, R125). */
   prepare(seed: number, recipe?: string, generator?: string): Promise<PreparedMap>;
   /** An authored `jj.map.v1` JSON through the sim's validator; rejects with the validator's message. */
   validate(json: string): Promise<{ canonical: Uint8Array; mapJson: string }>;

@@ -27,6 +27,7 @@ import type { Params } from '../kit/types';
 import type { Frame } from '../snapshot';
 import { InkHull, toon } from '../look';
 import { finishBanner } from './banner';
+import { bowlDesign, bowlQuads } from './bowl';
 
 export interface Pose {
   x: number;
@@ -370,6 +371,12 @@ export class MapRenderer {
   private features(): Mesh {
     const s = new Soup();
     for (const f of this.map.features) {
+      // The derby bowl (P1-M10) is its own revolved mesh, the sim's triangles: no route to follow.
+      if (f.kind === 'bowl') {
+        const bowl = bowlDesign(f.pose, f.params);
+        if (bowl) bowlQuads(bowl, (a, b, c, d, colour) => s.quad(a, b, c, d, colour));
+        continue;
+      }
       const near = this.nearest(f.pose.x, f.pose.z);
       const [fx, fz] = near.fwd;
       const [lx, lz] = near.left;

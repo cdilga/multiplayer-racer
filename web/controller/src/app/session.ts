@@ -421,6 +421,7 @@ export class Session {
       this.set('playing');
       if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
       if (this.camDistance !== 'host') this.sendCameraDistance();
+      if (this.assistLevel !== 'off') this.sendAssist();
       this.onChange();
     } else if ('ClaimRejected' in cmd) {
       const r = (cmd.ClaimRejected as { reason: string }).reason;
@@ -591,6 +592,19 @@ export class Session {
   private sendCameraDistance(): void {
     this.send('cmd', wasm.encodeSetCameraDistance(this.camDistance === 'near' ? 1 : this.camDistance === 'far' ? 2 : 0));
   }
+  /** The player's learner assist (R125): Off, Some or Lots. Changing it tells the host at once (`SetAssist`); a (re)welcome sends it again. */
+  private assistLevel: 'off' | 'some' | 'lots' = 'off';
+  get assist(): 'off' | 'some' | 'lots' {
+    return this.assistLevel;
+  }
+  set assist(a: 'off' | 'some' | 'lots') {
+    if (a === this.assistLevel) return;
+    this.assistLevel = a;
+    if (this.you) this.sendAssist();
+  }
+  private sendAssist(): void {
+    this.send('cmd', wasm.encodeSetAssist(this.assistLevel === 'some' ? 1 : this.assistLevel === 'lots' ? 2 : 0));
+  }
   /** The car the player picked in the lobby (an id from roster.json); a per-device preference, not on the wire yet. */
   carChoice = '';
 
@@ -681,6 +695,7 @@ export class Session {
       results: this.results,
       persisted: this.persisted,
       cameraDistance: this.cameraDistance,
+      assist: this.assist,
       carChoice: this.carChoice,
       sticks: { drive: { ...this.drive }, action: { ...this.action } },
       stats: { ...this.stats },

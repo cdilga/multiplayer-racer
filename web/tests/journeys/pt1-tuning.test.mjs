@@ -218,8 +218,8 @@ test('?tune: generator values change the measured length and relief on Regenerat
     await field(path).fill(String(value));
     await field(path).dispatchEvent('change');
   };
-  await field('course.lengthMinM').waitFor();
-  assert.equal(Number(await field('course.lengthMinM').inputValue()), 700, 'the generator rows come from the shipped data file');
+  await field('course.classes.standard.lengthMinM').waitFor();
+  assert.equal(Number(await field('course.classes.standard.lengthMinM').inputValue()), 1000, 'the generator rows come from the shipped data file');
   assert.equal(await host.locator('[data-tune-regenerate]').count(), 1);
 
   // Relief first: the course is the same (its band is unchanged), so only the heights differ.
@@ -240,21 +240,23 @@ test('?tune: generator values change the measured length and relief on Regenerat
   assert.equal(taller.lengthM, first.lengthM, 'the same course: the length did not move');
   assert.ok(taller.reliefM > first.reliefM * 1.3, `measured relief ${first.reliefM} -> ${taller.reliefM} m`);
 
-  // Then the length band. A band whose minimum is above its maximum is refused by the generator's own validator:
-  // shown, never kept.
-  await setField('course.lengthMinM', 720);
-  await setField('course.lengthMaxM', 820);
-  await setField('course.lengthMinM', 5000);
+  // Then the length classes: only standard tracks, in a narrower band. A band whose minimum is above its maximum is
+  // refused by the generator's own validator: shown, never kept.
+  await setField('course.classes.sprint.weight', 0);
+  await setField('course.classes.epic.weight', 0);
+  await setField('course.classes.standard.lengthMinM', 1100);
+  await setField('course.classes.standard.lengthMaxM', 1250);
+  await setField('course.classes.standard.lengthMinM', 5000);
   await host.locator('[data-tune-error]').getByText('lengthMinM').waitFor({ timeout: 5000 });
-  assert.equal(Number(await field('course.lengthMinM').inputValue()), 720, 'the row goes back to the last good value');
+  assert.equal(Number(await field('course.classes.standard.lengthMinM').inputValue()), 1100, 'the row goes back to the last good value');
   const held = (await host.evaluate(() => window.__jjTune.inspect())).patch;
   assert.equal(held.generator, 'assets/profiles/generator.json');
-  assert.equal(held.generatorSet.length, 10);
-  assert.ok(held.generatorSet.some(([f, v]) => f === 'course.lengthMinM' && v === '720'));
+  assert.equal(held.generatorSet.length, 12);
+  assert.ok(held.generatorSet.some(([f, v]) => f === 'course.classes.standard.lengthMinM' && v === '1100'));
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-refused-1920x1080.png` });
   const tuned = await regenerate();
   assert.equal(tuned.seed, first.seed);
-  assert.ok(tuned.lengthM >= 720 && tuned.lengthM <= 820, `measured length ${tuned.lengthM} m is inside the tuned band 720-820`);
+  assert.ok(tuned.lengthM >= 1100 && tuned.lengthM <= 1250, `measured length ${tuned.lengthM} m is inside the tuned band 1100-1250`);
   console.log(`# seed ${first.seed}: length ${first.lengthM} -> ${tuned.lengthM} m, relief ${first.reliefM} -> ${taller.reliefM} m (same course) -> ${tuned.reliefM} m`);
   await host.locator('[data-tune-built]').getByText(`${tuned.lengthM} m long`).waitFor({ timeout: 5000 });
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-built-1920x1080.png` });
@@ -267,10 +269,10 @@ test('?tune: generator values change the measured length and relief on Regenerat
   assert.deepEqual(journal[1].set, journal[2].set);
 
   // Reset puts a row back and out of the export; the export downloads with the generator patch.
-  await host.locator('[data-reset="generator.course.lengthMaxM"]').click();
-  assert.equal(Number(await field('course.lengthMaxM').inputValue()), 1100);
+  await host.locator('[data-reset="generator.course.classes.standard.lengthMaxM"]').click();
+  assert.equal(Number(await field('course.classes.standard.lengthMaxM').inputValue()), 1600);
   const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
-  assert.ok(!patch.generatorSet.some(([f]) => f === 'course.lengthMaxM'));
+  assert.ok(!patch.generatorSet.some(([f]) => f === 'course.classes.standard.lengthMaxM'));
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-reset-1920x1080.png` });
   const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
   assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);

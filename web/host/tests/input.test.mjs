@@ -2,7 +2,7 @@
 import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-C05: host pads and key clusters, on the real web build in headless Chromium with an emulated Gamepad API and real
 // key events. The host runs live (`?test=live`) so the worker's clock, the dropout rule and input ages are real.
-// Set JJ_EVIDENCE_DIR explicitly to recapture P1-C05/receipt.json and seats.json; default OS scratch.
+// Explicit evidence can go to docs/evidence/P1-C05/receipt.json and seats.json (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -214,10 +214,10 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
   await page.evaluate(() => [0, 1].forEach((i) => window.__pads.axes(i, [0, 0, 0, 0])));
   const id = Object.fromEntries(['local:100', 'local:101', 'local:1', 'local:2'].map((e) => [e, seat(joined, e).seat]));
 
-  // The drawer's legend shows each cluster's keys, Identify and READY included.
-  const legend = await page.evaluate(() => document.querySelector('[data-jj-input-drawer]').textContent);
-  for (const part of ['Keys A: throttle, brake and steer WASD, drift and flicks TFGH, Identify Q, READY E', 'Keys B: throttle, brake and steer IJKL, drift and flicks UpLeftDownRight, Identify U, READY O'])
-    assert.ok(legend.includes(part), `legend has "${part}": ${legend}`);
+  // The drawer's legend is each cluster's controls card (P1-C14): every key of the cluster, Identify and READY included.
+  const cardKeys = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-jj-input-drawer] [data-card^="keys-"]')].map((c) => [c.dataset.card, [...c.querySelectorAll('kbd')].map((k) => k.dataset.code)])));
+  for (const [n, codes] of [['keys-1', ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyT', 'KeyF', 'KeyG', 'KeyH', 'KeyQ', 'KeyE']], ['keys-2', ['KeyI', 'KeyJ', 'KeyK', 'KeyL', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'KeyU', 'KeyO']]])
+    for (const code of codes) assert.ok(cardKeys[n]?.includes(code), `${n} card has ${code}: ${JSON.stringify(cardKeys)}`);
 
   // Joining flashes each seat once; past the seat reducer's 3 s limit, Identify flashes that seat only.
   await page.waitForTimeout(3300);

@@ -271,7 +271,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 }
 
 /* POC1-20: the tutorial, bigger and central; goals tick as you do them */
-.coach { left: 50%; top: 8px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; z-index: 6; }
+.coach { left: 50%; top: 8px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); max-height: calc(100% - 16px); overflow: auto; padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; z-index: 6; }
+.coach-actions { display: flex; gap: 12px; }
+.coach-actions .btn { flex: 1; min-height: 48px; }
 .coach-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .coach h2 { margin: 2px 0 0; font-size: 34px; }
 .coach p { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; }
@@ -449,3 +451,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 /* The wheelie launch (the boost, R116): its cooldown is a paper ring on the left stick's knob, and the pod bar shows it ready. */
 .zone.drive .preload.cool { background: conic-gradient(var(--c-paper) var(--p, 0%), transparent 0); opacity: .9; }
 .pod-boost[data-cooling] .dir { opacity: .5; }
+
+/* Help's Controls page (P1-C14): the cards scroll inside the Help card on a short phone rather than push the page. */
+.coach[data-page='controls'] { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 16px); }
+.coach-controls { overflow: auto; min-height: 0; font-size: 13px; padding: 2px 2px 6px; }

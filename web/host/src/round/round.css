@@ -40,7 +40,8 @@
 .lb-go { display: flex; flex-direction: column; gap: calc(10px * var(--k)); align-items: stretch; }
 .lb-go .btn { width: 100%; min-height: calc(84px * var(--k)); font-size: calc(40px * var(--k)); }
 .lb-hint { margin: 0; font: 600 calc(24px * var(--k))/1.25 var(--font-body); color: var(--c-ink-soft); text-align: center; }
-.lb-roster { grid-area: roster; display: grid; grid-auto-flow: column; justify-content: start; align-content: start; min-height: 0; min-width: 0; font-size: var(--fs, 24px); }
+.lb-rwrap { grid-area: roster; display: flex; flex-direction: column; gap: calc(14px * var(--k)); min-height: 0; min-width: 0; }
+.lb-roster { flex: 1 1 auto; display: grid; grid-auto-flow: column; justify-content: start; align-content: start; min-height: 0; min-width: 0; font-size: var(--fs, 24px); }
 .lcard {
   box-sizing: border-box; display: flex; align-items: center; gap: .45em; padding: 0 .5em; min-width: 0; overflow: hidden;
   background: var(--c-paper); border: calc(3px * var(--k)) solid var(--c-ink); border-radius: calc(8px * var(--k)); box-shadow: 0 calc(3px * var(--k)) 0 rgb(21 32 58 / .85);
@@ -125,6 +126,8 @@
 .hud-badge { font-size: var(--hud); height: 1.65em; min-width: 2em; padding: 0 .35em .25em; flex: none; }
 .pill, .hud-name, .hud-tr, .wreck-back { background: var(--c-paper); border: calc(var(--hud) * .12) solid var(--c-ink); border-radius: calc(var(--hud) * .3); box-shadow: 0 calc(var(--hud) * .12) 0 rgb(21 32 58 / .85); }
 .hud-name { font-size: var(--hud); height: 1.5em; display: block; font-weight: 700; padding: 0 .4em; line-height: calc(1.5em - var(--hud) * .24); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hud-lplate { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1.5em; height: 1.5em; font: 900 1.05em/1 var(--font-display); color: var(--c-danger); background: var(--c-white); border: calc(var(--hud) * .12) solid var(--c-ink); border-radius: calc(var(--hud) * .2); box-shadow: 0 calc(var(--hud) * .12) 0 rgb(21 32 58 / .85); padding-bottom: .08em; }
+.hud-lplate[hidden] { display: none; }
 .hud-tr { display: flex; align-items: center; gap: .4em; height: 1.5em; padding: 0 .5em; white-space: nowrap; flex: none; }
 .hud-pos { font-size: 1.15em; line-height: 1; }
 .hud-pos sup { font-size: .6em; vertical-align: .45em; margin-left: .04em; text-transform: none; }
@@ -282,7 +285,7 @@ body:has(.jj-foot) .jj-chip { display: none; }
 #jj-caption { bottom: calc(max(5vh, 30px) + 12px) !important; }
 
 /* First-drive prompt on a tile (P1-C06): a paper caption low in the tile, above the boost meter; it ticks as the host sees the control. */
-.hud-prompt { position: absolute; left: 50%; bottom: calc(var(--hud) * 2.4); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: calc(var(--hud) * .45); max-width: 92%; padding: calc(var(--hud) * .3) calc(var(--hud) * .7); background: var(--c-paper); color: var(--c-ink); border: calc(var(--hud) * .12) solid var(--c-ink); box-shadow: 0 calc(var(--hud) * .2) 0 var(--c-ink); font-size: var(--hud); line-height: 1.15; pointer-events: none; }
+.hud-prompt { position: absolute; left: 50%; top: calc(var(--hud) * 2.8); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: .45em; max-width: 92%; padding: .3em .7em; background: var(--c-paper); color: var(--c-ink); border: .12em solid var(--c-ink); box-shadow: 0 .2em 0 var(--c-ink); font-size: calc(var(--hud) * .75); line-height: 1.15; pointer-events: none; }
 .hud-prompt[hidden] { display: none; }
 .hud-prompt .pn { font-weight: 700; opacity: .65; }
 .hud-prompt .pt { font-size: 1.25em; text-transform: uppercase; font-style: italic; }
@@ -327,3 +330,21 @@ body:has(.jj-foot) .jj-chip { display: none; }
 /* A notch tighter in the pause menu so a full room's rows stay in the first screen beside the join card. */
 .mn-main .mn-players li { padding-block: calc(4px * var(--k)); font-size: calc(26px * var(--k)); }
 .mn-main .mn-players .btn { min-height: calc(44px * var(--k)); }
+/* Holding Identify on a pad, wheel or key cluster shows that source's controls card in the prompt's slot (P1-C14): low in the tile,
+   only while the button is held, never in a compact tile (the pulse says who it is there). */
+.hud-prompt.card { top: calc(var(--hud) * .55); padding: 0; background: transparent; border: 0; box-shadow: none; font-size: calc(var(--hud) * .55); max-width: 44%; }
+.hud-tile.compact .hud-prompt.card { display: none; }
+.hud-prompt .px kbd { font-size: .9em; }
+.hud-prompt .px .jj-stick { font-size: .85em; }
+
+/* Controls cards under the lobby roster (P1-C14): one per pad, wheel or key-cluster seat still learning its controls. */
+.lb-controls { flex: none; display: flex; flex-wrap: wrap; gap: calc(10px * var(--k)); align-items: flex-end; font-size: calc(23px * var(--k)); }
+.lb-controls[hidden] { display: none; }
+.lb-cc { display: flex; align-items: flex-start; gap: calc(8px * var(--k)); min-width: 0; }
+.lb-cc > .badge { font-size: calc(22px * var(--k)); }
+
+/* The host menu's Controls page (P1-C14): wide enough for the cards to sit in columns, at a size a couch can read. */
+.mn-panel.controls { width: min(calc(1420px * var(--k)), 100%); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
+.mn-panel.controls .jj-cpage { min-height: 0; overflow: auto; padding-bottom: .3em; }
+.mn-panel.controls .mn-acts { flex-shrink: 0; }
+.mn-panel.controls .jj-cpage { font-size: calc(24px * var(--k)); grid-template-columns: repeat(auto-fit, minmax(17em, 1fr)); }

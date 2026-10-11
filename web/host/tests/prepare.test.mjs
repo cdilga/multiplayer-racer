@@ -6,7 +6,7 @@ import { evidencePath as testEvidencePath } from '../../tests/lib/evidence.mjs';
 // a broken dev map is refused with the validator's message, and every track names its seed.
 //   scripts/build-host-wasm.sh && npx --prefix web vite build --config web/host/tests/vite.config.ts
 //   node --test web/host/tests/prepare.test.mjs
-// Set JJ_EVIDENCE explicitly to recapture P1-M08a/browser-run.json; default OS scratch.
+// Recapture what it measured to docs/evidence/P1-M08a/browser-run.json (set JJ_EVIDENCE explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -278,8 +278,15 @@ test('two rounds back to back play two different generated four-biome tracks', {
   assert.equal(seeds.length, 2);
   assert.notEqual(seeds[0].seed, seeds[1].seed, 'two different seeds');
   assert.notEqual(shown.commitMaps[0], shown.commitMaps[1]);
-  const lap = ['town', 'rocks', 'outback-dirt', 'outback-bitumen', 'town'];
-  assert.deepEqual(shown.commitSegments, [lap, lap], 'each is a four-biome lap, dirt then bitumen');
+  // R125: each seed draws its own one to four biomes in any order; a lap of two or more ends back in its first.
+  const pool = ['town', 'rocks', 'outback-dirt', 'outback-bitumen'];
+  assert.equal(shown.commitSegments.length, 2);
+  for (const segs of shown.commitSegments) {
+    const lap = segs.length > 1 ? segs.slice(0, -1) : segs;
+    assert.ok(lap.length >= 1 && lap.length <= 4 && lap.every((b) => pool.includes(b)), `a drawn mix of the pool: ${segs}`);
+    assert.equal(new Set(lap).size, lap.length, `no biome twice in a lap: ${segs}`);
+    if (segs.length > 1) assert.equal(segs[segs.length - 1], segs[0], 'the lap ends back in its first biome');
+  }
   assert.deepEqual(errors, []);
   evidence.runs.twoRounds = { seeds, presented: shown, firstTrackReadyMs: firstReady, intermissionRemainingWhenReadyMs: remaining };
   await page.close();

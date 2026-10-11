@@ -5,6 +5,8 @@
 // for the name drops it, keeping number, place and lap. Tiles are the seated cars in seat-number order.
 import { ordinal, shortName } from './format';
 import type { RoomView } from '../worker/client';
+import { controlsCard } from '../../../shared/ui';
+import { controlsData, localView, sourceOf } from '../input/controls-data';
 import { promptHtml } from '../ui/prompts/steps';
 
 type SeatView = RoomView['seats'][number] & {
@@ -52,7 +54,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     const b = document.createElement('div');
     b.className = 'hud-tile';
     b.dataset.tile = String(tile);
-    b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span></div>
+    b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span><span class="hud-lplate" data-lplate hidden aria-label="Driving help on" role="img">L</span></div>
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
       <div class="hud-bottom"><div class="hud-boost" hidden><i></i></div><div class="hud-status"></div></div>
       <div class="hud-prompt" data-prompt hidden></div>
@@ -85,7 +87,10 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       }
       // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
       const started = room?.phase === 'Running' || room?.phase === 'Finalising';
-      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null]);
+      // P1-C14: a pad, wheel or key cluster seat is coached in its own glyphs, and holding its Identify shows its controls card.
+      const src = sourceOf(s?.localSource);
+      const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
+      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -98,6 +103,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       badge.style.setProperty('--b', `var(--id-${s.colourIndex % 12})`);
       badge.style.setProperty('--on', `var(--id-${s.colourIndex % 12}-on)`);
       box.querySelector('.hud-name')!.textContent = shortName(s.name || (s.local ? 'Host keys' : 'Player'));
+      // R125: the L-plate shows while the seat's driving help is on (Some or Lots).
+      const lp = box.querySelector<HTMLElement>('[data-lplate]')!;
+      lp.hidden = !s.assist;
+      lp.dataset.assist = String(s.assist ?? 0);
+      lp.title = s.assist === 2 ? 'Driving help: Lots' : s.assist === 1 ? 'Driving help: Some' : '';
       const posEl = box.querySelector<HTMLElement>('.hud-pos')!;
       if (pos === null) posEl.textContent = '–';
       else {
@@ -116,17 +126,21 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
-      // The first-drive prompt (C06): the next control, only in a race, never covering the car (bottom of the tile).
+      // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
       const prompt = started ? s.prompt : null;
-      pr.hidden = !prompt;
-      pr.innerHTML = prompt ? promptHtml(prompt) : '';
+      pr.hidden = !prompt && !held;
+      pr.classList.toggle('card', held);
+      pr.dataset.card = held ? 'identify' : '';
+      pr.innerHTML = held ? controlsCard(src!, controlsData(), { compact: true }) : prompt ? promptHtml(prompt, src, controlsData()) : '';
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
       centre.hidden = !(s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0);
       if (!centre.hidden) box.querySelector('.cd')!.textContent = String(Math.ceil(s.wreckMs! / 1000));
     }
   };
 
+  // Holding Identify is a local input edge, independent of a room or renderer-layout update.
+  window.addEventListener('jj-local-controls', paint);
   return {
     place(r, sc) {
       rects = r ?? [];

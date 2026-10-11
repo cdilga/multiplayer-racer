@@ -2,7 +2,20 @@
 // central card in the Lobby (there's no warm-up drive, R110), one step at a time, each ticking off when the player does
 // the gesture: steer, brake/reverse, boost, drift, OI!, cone, wheelie. Skip is one tap and remembered for this player;
 // Help shows it again. It only coaches: it never pauses anyone, blocks Ready or holds a race.
+import { controlsPage } from '../../../shared/ui';
+import clusterMap from '../../../host/src/input/clusters.json';
+import wheelMap from '../../../host/src/input/wheels.json';
 import type { Stick } from './session';
+
+/** What the Controls page reads (P1-C14): the host's key clusters and wheel profiles, so the page never drifts from the mapping. */
+export let controlsData = {
+  clusters: clusterMap.clusters as Parameters<typeof controlsPage>[0]['clusters'],
+  wheels: (wheelMap.profiles as Array<{ label: string; buttons: Record<string, number> }>).map((p) => ({ label: p.label, buttons: p.buttons })),
+};
+/** Test seam: swap the data and the page follows. */
+export const setControlsData = (d: typeof controlsData): void => {
+  controlsData = d;
+};
 
 type Goals = Record<string, boolean>;
 interface Step {
@@ -110,6 +123,8 @@ export class Tutorial {
     private readonly onWanted: (on: boolean) => void = () => {},
     /** The player chose the old one-stick layout: the card teaches that one. */
     private readonly classic: () => boolean = () => false,
+    /** R125: offer learner help after teaching the controls; the player chooses their level in Settings. */
+    private readonly onDrivingHelp: () => void = () => {},
   ) {}
 
   private get steps(): Step[] {
@@ -119,6 +134,7 @@ export class Tutorial {
   show(from = 0): void {
     this.step = from;
     this.goals = {};
+    this.controls = false;
     const was = this.open;
     this.card?.remove();
     this.card = document.createElement('div');
@@ -150,23 +166,47 @@ export class Tutorial {
     return this.card !== null;
   }
 
+  /** Help's Controls page (P1-C14): one card per source kind, one tap from the steps and one tap back. */
+  private controls = false;
+
   private render(won = false): void {
     if (!this.card) return;
     const identify = `<button class="btn quiet-ink" data-act="menu-identify" aria-label="Identify: flash my number on the TV">Identify</button>`;
+    if (this.controls) {
+      this.card.dataset.page = 'controls';
+      this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Controls</span></span><button class="btn quiet-ink" data-act="back">Back to Help</button></div><div class="coach-controls">${controlsPage(controlsData, { compact: true })}</div>`;
+      this.card.querySelector('[data-act=back]')!.addEventListener('click', () => {
+        this.controls = false;
+        this.render();
+      });
+      return;
+    }
+    delete this.card.dataset.page;
+    const controlsBtn = `<button class="btn quiet-ink" data-act="controls" aria-label="Controls: every kind of controller">Controls</button>`;
+    const openControls = () => {
+      this.controls = true;
+      this.render();
+    };
     if (this.step >= this.steps.length) {
-      this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Help</span></span>${identify}</div><h2 class="display italic">You're ready</h2><p>That's every control. Tap Ready when you are.</p><button class="btn primary big" data-act="done">Let's race</button>`;
+      this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Help</span></span><span>${controlsBtn}${identify}</span></div><h2 class="display italic">You're ready</h2><p>Driving help steers and brakes for bends. Lots helps with the throttle too.</p><div class="coach-actions"><button class="btn brush" data-act="driving-help">Driving help</button><button class="btn primary" data-act="done">Let's race</button></div>`;
+      this.card.querySelector('[data-act=driving-help]')!.addEventListener('click', () => {
+        this.close(true);
+        this.onDrivingHelp();
+      });
       this.card.querySelector('[data-act=done]')!.addEventListener('click', () => this.close(true));
       this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
+      this.card.querySelector('[data-act=controls]')!.addEventListener('click', openControls);
       return;
     }
     const st = this.steps[this.step]!;
     const goals = st.goals.map(([k, label]) => `<span class="goal${this.goals[k] || won ? ' on' : ''}">${this.goals[k] || won ? '✓ ' : ''}${label}</span>`).join('');
     const dots = this.steps.map((_, i) => `<i class="${i < this.step ? 'done' : i === this.step ? 'on' : ''}"></i>`).join('');
-    this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Step ${this.step + 1} of ${this.steps.length}</span></span><span>${identify}<button class="btn quiet-ink" data-act="skip">Skip tutorial</button></span></div>
+    this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Step ${this.step + 1} of ${this.steps.length}</span></span><span>${controlsBtn}${identify}<button class="btn quiet-ink" data-act="skip">Skip tutorial</button></span></div>
       <h2 class="display italic">${st.title}</h2><p>${st.text}</p><div class="goals">${goals}</div>
       ${won ? '<span class="goodstrip"><span>Nice! On to the next one</span></span>' : `<div class="dots">${dots}</div>`}`;
     this.card.querySelector('[data-act=skip]')!.addEventListener('click', () => this.close(false));
     this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
+    this.card.querySelector('[data-act=controls]')!.addEventListener('click', openControls);
   }
 
   private check(): void {
@@ -201,6 +241,6 @@ export class Tutorial {
   }
 
   inspect(): Record<string, unknown> {
-    return { open: this.open, step: this.step, done: [...this.done], goals: { ...this.goals } };
+    return { open: this.open, page: this.controls ? 'controls' : 'steps', step: this.step, done: [...this.done], goals: { ...this.goals } };
   }
 }
