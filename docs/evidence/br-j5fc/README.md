@@ -59,3 +59,20 @@ endpoint and generation fencing remain intact; no recovery or acceptance timeout
 
 The defect injections prove two independent queue/race repairs; the slowed journey proves the whole join path.
 CI on the committed fix and deployed validation remain required.
+
+## Further stress and profiling (2026-10-12)
+
+12× and 16× CDP CPU-throttled local runs still lose host responsiveness; they do not establish a transport repair
+at those throttle levels. The first profiling runs stalled while stopping CDP, so the journey now bounds optional
+profile stop at 30 s and always releases its browser/server. `JJ_HOST_PROFILE_UNTIL=<drop-in name>` can save a profile
+before a later stall while the full journey continues. These are diagnostic controls; no gameplay wait changed.
+
+The 12× run recorded in `stress12-before-stall.log` fails waiting for Running after the Countdown join; the host does
+not answer its state read within 5 s. Its profile has 8,707 samples over 112.109 s, with 86.22% attributed to V8's
+`(program)` pseudo-frame. The largest named self-time is worker `onmessage` at 0.556 s (0.50%). The compressed raw
+profile is committed. This does not identify a JavaScript renderer hotspot or prove a native/GPU root cause; no
+renderer or acceptance change is justified by this profile alone. Earlier passing 8×/12-seat churn and same-seat
+recovery receipts remain the applicable successful evidence. CI and heavier stress remain unresolved.
+
+Timeout diagnostics now include the existing complete renderer stats and generated-track seeds if the host answers,
+so the next CI failure can distinguish a scene/frame-budget problem from signalling state. No per-frame logging added.

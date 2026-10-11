@@ -25,6 +25,22 @@ let browser;
 let server;
 let profiler;
 
+async function stopHostProfile() {
+  if (!profiler) return;
+  const session = profiler;
+  profiler = null;
+  let timer;
+  try {
+    const { profile } = await Promise.race([
+      session.send('Profiler.stop'),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('CPU profile stop timed out')), 30_000); }),
+    ]);
+    writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 before(async () => {
   server = await serve(build('./', ID), BASE, { JJ_STUN_URLS: '' });
   browser = await chromium.launch({ args: chromiumArgs });
@@ -32,19 +48,8 @@ before(async () => {
 });
 after(async () => {
   try {
-    if (profiler) {
-      // Profiling is optional diagnostic evidence. A stalled target must still release its browser/server.
-      let timer;
-      try {
-        const { profile } = await Promise.race([
-          profiler.send('Profiler.stop'),
-          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('CPU profile stop timed out')), 30_000); }),
-        ]);
-        writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
-      } finally {
-        clearTimeout(timer);
-      }
-    }
+    // Profiling is optional diagnostic evidence. A stalled target must still release its browser/server.
+    await stopHostProfile();
   } finally {
     await browser?.close();
     await server?.close();
@@ -75,7 +80,7 @@ async function stateOf(page) {
   );
   const hostSide =
     hostPage && hostPage !== page
-      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: { frames: window.__jjRender.stats().frames, scale: window.__jjRender.stats().scale } })))
+      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: window.__jjRender.stats(), preparation: window.__jjProcgen?.seeds?.() })))
       : null;
   return JSON.stringify({ own, host: hostSide, contexts: browser.contexts().length });
 }
@@ -227,6 +232,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
     const { p, ms } = await dropIn(host, joinUrl, n);
     samples.push({ name: n, ms });
     phones.push(p);
+    // Capture before an overloaded target stops answering CDP; the rest of the journey still runs.
+    if (process.env.JJ_HOST_PROFILE_UNTIL === n) await stopHostProfile();
     const seat = (await view(host)).seats.find((s) => s.name === n);
     const identified = await host.evaluate((seat) => window.__jjRoom.events().some((e) => e.event.Identify?.seat === seat), seat.seat);
     assert.ok(identified, `${n}'s Identify fired on joining`);
