@@ -117,3 +117,16 @@ No local caption overlap or text clipping in the inspected matrix. The separate 
 ## Not covered
 
 These are desktop browser viewport emulations, not physical phones or Safari. Deployed preview and Linux eris verification are pending and required before closing. Local full-screen captures are Chromium; WebKit covers resize and both routes.
+
+## Eris follow-up at 86bda2e1
+
+Linux eris GPU run passed all six journeys (166.25 seconds). All 82 captured frames were inspected in these contact sheets; all caption text is readable, the drawer's final legends remain reachable, and no caption/drawer collision is visible. These are Chromium/WebKit desktop browsers, not physical phones. Deployed verification remains pending.
+
+- `eris/jj-m5l0-eris-chromium-drawer.jpg`: 12 frames, five viewports, top/bottom and actual full-screen before/after; intact frame and canvas.
+- `eris/jj-m5l0-eris-webkit-drawer.jpg`: 10 frames, five viewports and top/bottom; intact frame and canvas.
+- `eris/jj-m5l0-eris-chromium-drive.jpg`: 15 frames, five viewports and caption top/bottom/cleared; text, drawer and join-card spacing.
+- `eris/jj-m5l0-eris-webkit-drive.jpg`: 15 frames, same states; text, drawer and join-card spacing.
+- `eris/jj-m5l0-eris-chromium-room.jpg`: 15 frames, five viewports and caption top/bottom/cleared; text, drawer and footer spacing.
+- `eris/jj-m5l0-eris-webkit-room.jpg`: 15 frames, same states; text, drawer and footer spacing.
+
+Both drawer pixel comparisons passed without loosening the threshold. This run establishes the current behaviour; it does not prove the exact cause of the earlier 273-pixel WebKit difference.

@@ -1,0 +1,15 @@
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs 86bda2e1b4c5.
+✔ Chromium scroll drawer paint stays in its frame after resize and fullscreen (17821.283662ms)
+✔ WebKit scroll drawer paint stays in its frame after resize and fullscreen (23431.180839ms)
+✔ Chromium drive welcome caption leaves the expanded drawer readable while visible (27928.129707ms)
+✔ Chromium room welcome caption leaves the expanded drawer readable while visible (27254.059539ms)
+✔ WebKit drive welcome caption leaves the expanded drawer readable while visible (36148.93006ms)
+✔ WebKit room welcome caption leaves the expanded drawer readable while visible (31945.181096ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166253.043022
