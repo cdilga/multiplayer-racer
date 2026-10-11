@@ -5,7 +5,7 @@ import { evidencePath } from '../../tests/lib/evidence.mjs';
 // test (CIE76 on screenshot pixels), but the spots are found in the picture itself: `world.project` projects through the
 // overview camera, not a chase tile's, so on a row above the car the road is whatever lies between the nearest cream edge
 // lines left and right of the centre, and the ground is what lies just outside them.
-// The real host page (test build), a generated Playtest-1 track, one player on the autopilot stepped to the middle of the dirt stretch.
+// The real host page (test build), a generated Playtest-1 track, one player placed on the middle of the dirt stretch.
 //   scripts/build-host-wasm.sh && npm --prefix web run build && node --test web/host/tests/readability.test.mjs
 // (JJ_DIST serves another build.) Explicit evidence can go to docs/evidence/P1-M06/readability.json and a capture per viewport (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
@@ -58,9 +58,11 @@ async function dirtView(width, height, name) {
   await page.evaluate(() => window.__jjRoom.start());
   await page.waitForFunction(() => window.__jjPrepare.stats().committed === 1, null, { timeout: 60_000 });
   await page.waitForFunction(() => window.__jjRoom.view()?.phase === 'Running', null, { timeout: 60_000 });
-  await page.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
-  // Step to the middle of the dirt stretch; the road ahead of the car is then the dirt road.
+  // Readability is a pixel check, not a lap qualification. Journal the setup on the generated dirt segment instead of
+  // repeating the whole positioning trip in each viewport (CI3354 exhausted the original 180 s deadline doing that).
   const reached = await page.evaluate(async () => {
+    const s = window.__jjTest;
+    await s.hold(true);
     const info = window.__jjPrepare.mapInfo();
     const dirt = info.segments.find((s) => s.name === 'outback-dirt');
     const target = Math.round((dirt.from + dirt.to) / 2);
@@ -73,9 +75,14 @@ async function dirtView(width, height, name) {
       });
       return best;
     };
-    const r = await window.__jjTest.untilFact((s) => Math.abs(nearest(s.cars[0].position) - target) <= 2, { maxTicks: 40_000, every: 20 });
-    const here = nearest(r.state.cars[0].position);
-    return { held: r.held, here, onDirt: here >= dirt.from && here <= dirt.to };
+    const [x, z, y] = info.route[target], [nx, nz] = info.route[(target + 1) % info.route.length];
+    await s.command({ cmd: 'autopilot', on: false });
+    await s.command({ cmd: 'place', car: 0, pose: { x, y: y + 0.05, z, headingDeg: Math.atan2(nx - x, nz - z) * 180 / Math.PI } });
+    await s.step(120); // settle the real suspension, then let the chase camera settle on ordinary rendering frames
+    const state = await s.observe();
+    const here = nearest(state.cars[0].position);
+    await s.hold(false);
+    return { held: Math.abs(here - target) <= 2, here, target, onDirt: here >= dirt.from && here <= dirt.to, setup: 'journaled place + 120 suspension ticks' };
   });
   await new Promise((r) => setTimeout(r, 1_200));
   const png = await page.screenshot();

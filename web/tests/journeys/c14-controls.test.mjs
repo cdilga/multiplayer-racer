@@ -99,6 +99,8 @@ test('AC1: every key cluster is listed before anyone joins; Add claims its seat 
   // Leave removes it.
   await act(page, 1, 'leave').click();
   await until(page, async () => (await live(page)).length === 0, 'Leave never took the seat');
+  // The drawer projects local state on its own render clock; seat removal can precede that projection.
+  await until(page, async () => (await row(page, 1).getAttribute('data-state')) === 'left', 'Leave never reached the visible drawer row');
   assert.equal(await row(page, 1).getAttribute('data-state'), 'left');
   // Add again is a new player (no press needed after Leave either).
   await act(page, 1, 'add').click();
@@ -246,24 +248,24 @@ test('AC5: the host menu\'s Controls page has a card per source kind, and its ke
   const panel = await page.locator('[data-controls-view]').boundingBox();
   assert.ok(back && panel && back.y >= panel.y && back.y + back.height <= panel.y + panel.height - 4, 'Back stays fully inside the Controls panel');
   const ids = () => page.evaluate(() => [...document.querySelectorAll('[data-controls-page] [data-card]')].map((c) => c.dataset.card));
-  assert.deepEqual(await ids(), ['phone', 'pad', 'wheel', 'keys-1', 'keys-2']);
+  assert.deepEqual(await ids(), ['phone', 'pad', 'wheel', ...file.clusters.map((c) => `keys-${c.id}`)]);
   const keysOf = (id) => page.evaluate((id) => [...document.querySelectorAll(`[data-controls-page] [data-card="${id}"] kbd`)].map((k) => k.dataset.code), id);
   const c1 = file.clusters[0];
   assert.deepEqual(await keysOf('keys-1'), [c1.drive.left, c1.drive.right, c1.drive.up, c1.drive.down, c1.action.left, c1.action.right, c1.drive.down, c1.drive.up, c1.action.up, c1.action.down, c1.identify, c1.ready]);
   assert.equal(await page.locator('[data-controls-page] [data-card="phone"] kbd, [data-controls-page] [data-card="pad"] kbd').count(), 0, 'no keycaps on a phone or pad card');
   await shot(page, 'host-menu-controls-1366x768');
-  // Change the data: Keys A's throttle moves to Z and a third cluster appears; the page follows, with no rebuild.
+  // Change the data: Keys A's throttle moves to Z and another cluster appears; the page follows, with no rebuild.
   await page.evaluate(() => {
     const d = structuredClone(window.__jjControls.data());
     d.clusters[0].drive.up = 'KeyZ';
-    d.clusters.push({ id: 3, label: 'Keys C', drive: { up: 'Digit8', down: 'Digit2', left: 'Digit4', right: 'Digit6' }, action: { up: 'Numpad8', down: 'Numpad2', left: 'Numpad4', right: 'Numpad6' }, identify: 'Digit7', ready: 'Digit9' });
+    d.clusters.push({ id: 4, label: 'Keys D', drive: { up: 'Digit8', down: 'Digit2', left: 'Digit4', right: 'Digit6' }, action: { up: 'Numpad8', down: 'Numpad2', left: 'Numpad4', right: 'Numpad6' }, identify: 'Digit7', ready: 'Digit9' });
     window.__jjControls.setData(d);
   });
   await page.evaluate(() => window.__jjChrome.closeMenu());
   await page.evaluate(() => window.__jjChrome.openControls());
-  assert.deepEqual(await ids(), ['phone', 'pad', 'wheel', 'keys-1', 'keys-2', 'keys-3']);
+  assert.deepEqual(await ids(), ['phone', 'pad', 'wheel', ...file.clusters.map((c) => `keys-${c.id}`), 'keys-4']);
   assert.ok((await keysOf('keys-1')).includes('KeyZ') && !(await keysOf('keys-1')).includes('KeyW'), 'Keys A shows Z, not W');
-  assert.match(await page.locator('[data-controls-page] [data-card="keys-3"]').innerText(), /keys c/i);
+  assert.match(await page.locator('[data-controls-page] [data-card="keys-4"]').innerText(), /keys d/i);
   await page.evaluate(() => window.__jjChrome.closeMenu());
 });
 
