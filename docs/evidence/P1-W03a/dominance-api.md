@@ -62,3 +62,10 @@ to the committed list. `node tools/licences/check.mjs` passes, and `node --test
 tools/licences/` passes 6/6 on the Mac/Node 26.10.0, including defect injection for a
 missing vendored credit and a missing licence. CI is still required.
 
+CI3342's image lane also showed the Docker Rust stage omitted `vendor/`, so Cargo
+could not find the path patch. `docker/jj-server.Dockerfile` now copies the vendored
+sources before building the server and WASM. Vendored source changes explicitly
+select the full CI matrix as workspace inputs (previously they selected it through
+the conservative unmapped-path fallback). `node --check scripts/ci/plan.mjs` passes;
+the actual image build remains a required CI lane.
+

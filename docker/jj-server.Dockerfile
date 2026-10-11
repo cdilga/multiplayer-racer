@@ -19,6 +19,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca
 WORKDIR /src
 COPY rust-toolchain.toml Cargo.toml Cargo.lock deny.toml ./
 COPY crates crates
+COPY vendor vendor
 COPY assets assets
 COPY maps maps
 COPY scenarios scenarios

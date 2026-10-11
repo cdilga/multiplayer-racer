@@ -124,7 +124,7 @@ const rules = [
   // CI's own files: the next run of this workflow is their test; run everything so it's proven end to end.
   [/^(\.gitea\/|scripts\/ci\/)/, (p) => everything(`CI change (${p})`)],
   // The workspace and shared inputs.
-  [/^(Cargo\.(toml|lock)|rust-toolchain\.toml|deny\.toml|\.cargo\/|\.nvmrc|package(-lock)?\.json|\.gitattributes|\.dockerignore)/, (p) => everything(`workspace input ${p}`)],
+  [/^(Cargo\.(toml|lock)|rust-toolchain\.toml|deny\.toml|\.cargo\/|vendor\/|\.nvmrc|package(-lock)?\.json|\.gitattributes|\.dockerignore)/, (p) => everything(`workspace input ${p}`)],
   [/^(maps|assets|scenarios|art\/vehicles|art\/contracts|tools\/net)\//, (p) => everything(`shared data ${p.split('/').slice(0, 2).join('/')}`)],
   [/^scripts\/(build-host-wasm|wasm-test-runner)\.sh$/, (p) => everything(`build script ${p}`)],
   [/^docker\//, () => (sel.image = true)],
