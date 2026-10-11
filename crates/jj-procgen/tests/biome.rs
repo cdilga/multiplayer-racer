@@ -331,6 +331,19 @@ fn chevrons_and_rail_stand_on_the_outside_of_the_turn() {
                         "seed {seed}: {} on the inside ({lateral:.1} m)",
                         d.kit_piece
                     );
+                    if d.kit_piece == CHEVRON {
+                        let yaw = f64::from(d.pose.yaw) / 100.0 * std::f64::consts::PI / 180.0;
+                        let front = (-yaw.sin(), yaw.cos());
+                        assert!(
+                            front.0 * tx / l + front.1 * tz / l < -0.85,
+                            "seed {seed}: board front must face approaching traffic, not hide behind the post"
+                        );
+                        assert_eq!(
+                            d.params.get("rightArrow"),
+                            Some(&i64::from(!c.left)),
+                            "seed {seed}: the printed arrow must point into the bend"
+                        );
+                    }
                 }
             }
         }

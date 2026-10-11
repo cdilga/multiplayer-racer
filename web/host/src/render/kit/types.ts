@@ -16,7 +16,9 @@ export interface KitModule {
    *  registry's bounds check measures `geometry()` alone. One more instanced draw per type in use. Geometry in metres,
    *  origin at the extra's own centre; `lift` raises it above the piece's origin. */
   decor?: {
-    geometry(): BufferGeometry;
+    geometry(variant?: string): BufferGeometry;
+    /** Geometry differences that cannot be expressed by a positive instance scale (left/right printed arrows). */
+    variant?(params: Params): string;
     scale(params: Params): [number, number, number];
     lift(params: Params): number;
     /** A printed sign face (retroreflective sheeting): drawn unlit, in its true colours whatever the sun does, so a

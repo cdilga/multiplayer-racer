@@ -3,13 +3,35 @@
 // flat vertex colours, unit size scaled by the params like every kit module, and every piece's `geometry()` bounds are its
 // registry collider's (web/host/tests/map.test.mjs). The chevron's board and the banner between the gantry legs are visual
 // extras (`decor`, and MapRenderer's banner): not part of the collider proxy. No checkpoint graphics (R106).
-import { BoxGeometry, BufferGeometry, Float32BufferAttribute, Quaternion, Shape, ShapeGeometry, Vector3 } from 'three';
+import { BoxGeometry, BufferGeometry, CylinderGeometry, Float32BufferAttribute, Quaternion, Shape, ShapeGeometry, TorusGeometry, Vector3 } from 'three';
 import { drum, merge, paint, slab } from '../shapes';
 import type { KitModule } from '../types';
 
 const YELLOW = '#f2c200';
 const BLACK = '#1b1b22';
 const STEEL = '#aeb4ba';
+const BOARD_Z = 0.175;
+const BOARD_HEIGHT = 1.5;
+
+/** Two threaded legs, a rear U bend and a backing channel: the post sits inside the U, behind the sign. */
+function chevronBracket(y: number, postRadius: number): BufferGeometry[] {
+  const rod = 0.008;
+  const radius = postRadius + rod;
+  const back = BOARD_Z - 0.015;
+  const parts = [
+    paint(new TorusGeometry(radius, rod, 4, 12, Math.PI).rotateX(-Math.PI / 2).translate(0, y, 0), STEEL),
+    paint(new BoxGeometry(0.31, 0.045, 0.018).translate(0, y, back - 0.009), STEEL),
+    // The saddle spacer bears on the post's front; tightening the U clamps it, rather than floating a large hoop.
+    paint(new BoxGeometry(0.09, 0.045, back - postRadius).translate(0, y, (back + postRadius) / 2), STEEL),
+  ];
+  for (const x of [-radius, radius]) {
+    parts.push(
+      paint(new CylinderGeometry(rod, rod, back, 6).rotateX(Math.PI / 2).translate(x, y, back / 2), STEEL),
+      paint(new CylinderGeometry(0.019, 0.019, 0.014, 6).rotateX(Math.PI / 2).translate(x, y, back - 0.014), STEEL),
+    );
+  }
+  return parts;
+}
 
 /** A polygon (x, y points) as a flat shape at depth `z`, painted; `flip` turns it to face -z (a half turn about y). */
 function plate(points: [number, number][], z: number, colour: string, flip = false): BufferGeometry {
@@ -38,14 +60,18 @@ export const chevronPost: KitModule = {
   scale: (p) => [p.radiusMm! / 1000, p.heightCm! / 100, p.radiusMm! / 1000],
   ink: true,
   decor: {
-    geometry: () => {
-      const parts: BufferGeometry[] = [paint(new BoxGeometry(0.58, 0.7, 0.03), BLACK), paint(new BoxGeometry(0.52, 0.64, 0.034), YELLOW)];
-      parts.push(plate(CHEVRON_V, 0.0185, BLACK), plate(CHEVRON_V.map(([x, y]) => [-x, y] as [number, number]), 0.0185, BLACK, true));
-      // A board 1.7x life size: it has to read at chase distance and in a 24-tile grid.
-      return merge(parts.map((g) => (g.index ? g.toNonIndexed() : g))).scale(1.7, 1.7, 1);
+    variant: (p) => `${p.rightArrow ? 'right' : 'left'}:${p.radiusMm ?? 60}`,
+    geometry: (variant) => {
+      const [direction, radiusMm = '60'] = (variant ?? 'left:60').split(':');
+      // Australian single-chevron proportions, enlarged for chase distance and grid readability.
+      // Scale the printed board first: its U-bolts remain real metre-sized mounting hardware.
+      const parts: BufferGeometry[] = [paint(new BoxGeometry(1.2, BOARD_HEIGHT, 0.03), BLACK), paint(new BoxGeometry(1.14, 1.44, 0.034), YELLOW)];
+      const arrow = CHEVRON_V.map(([x, y]) => [direction === 'right' ? -x : x, y] as [number, number]);
+      parts.push(plate(arrow, 0.0185, BLACK).scale(2.05, 2.05, 1), plate(arrow.map(([x, y]) => [-x, y] as [number, number]), 0.0185, BLACK, true).scale(2.05, 2.05, 1));
+      return merge([...parts.map((g) => g.translate(0, 0, BOARD_Z)), ...chevronBracket(-0.38, Number(radiusMm) / 1000), ...chevronBracket(0.38, Number(radiusMm) / 1000)].map((g) => (g.index ? g.toNonIndexed() : g)));
     },
     scale: () => [1, 1, 1],
-    lift: (p) => p.heightCm! / 100 - 0.55,
+    lift: (p) => p.heightCm! / 100 - BOARD_HEIGHT / 2 + 0.05,
     face: true,
   },
 };

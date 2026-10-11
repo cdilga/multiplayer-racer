@@ -161,12 +161,17 @@ pub fn place(map: &mut Map) {
             if i == c.from || dist >= CHEVRON_SPACING_M {
                 dist = 0.0;
                 let (mut pose, _) = pose_at(map, &pts, i, side * (half + CHEVRON_OFFSET_M));
-                // The chevron faces the road: yaw turned toward the centerline.
-                pose.yaw = (pose.yaw + if c.left { 9_000 } else { -9_000 }).rem_euclid(36_000);
+                // Local +z is the printed front. Face approaching traffic on either bend;
+                // the right-hand board mirrors only its printed arrow, not its post/bracket.
+                pose.yaw = (pose.yaw + 9_000).rem_euclid(36_000);
                 placed.push(Dressing {
                     kit_piece: CHEVRON.into(),
                     pose,
-                    params: BTreeMap::from([("heightCm".into(), 140), ("radiusMm".into(), 60)]),
+                    params: BTreeMap::from([
+                        ("heightCm".into(), 240),
+                        ("radiusMm".into(), 60),
+                        ("rightArrow".into(), i64::from(!c.left)),
+                    ]),
                     collides: false,
                 });
             }

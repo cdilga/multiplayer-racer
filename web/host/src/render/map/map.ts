@@ -472,16 +472,23 @@ export class MapRenderer {
         this.group.add(hull.mesh);
       }
       if (mod.decor) {
-        const d = new InstancedMesh(mod.decor.geometry(), mod.decor.face ? this.faceMaterial : this.material, list.length);
-        d.name = `${id}.decor`;
-        d.castShadow = true;
-        d.frustumCulled = false;
-        list.forEach(({ pose, params }, i) => {
-          const p = withDefaults(entry, params);
-          d.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y) + mod.decor!.lift(p), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.decor!.scale(p))));
-        });
-        this.decor.set(id, d);
-        this.group.add(d);
+        const variants = new Map<string, typeof list>();
+        for (const item of list) {
+          const variant = mod.decor.variant?.(withDefaults(entry, item.params)) ?? '';
+          (variants.get(variant) ?? variants.set(variant, []).get(variant)!).push(item);
+        }
+        for (const [variant, instances] of variants) {
+          const d = new InstancedMesh(mod.decor.geometry(variant), mod.decor.face ? this.faceMaterial : this.material, instances.length);
+          d.name = `${id}.decor`;
+          d.castShadow = true;
+          d.frustumCulled = false;
+          instances.forEach(({ pose, params }, i) => {
+            const p = withDefaults(entry, params);
+            d.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y) + mod.decor!.lift(p), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.decor!.scale(p))));
+          });
+          this.decor.set(variant ? `${id}:${variant}` : id, d);
+          this.group.add(d);
+        }
       }
       total += list.length;
     }
