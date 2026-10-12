@@ -200,6 +200,13 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   if (process.env.JJ_HOST_CPU_THROTTLE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  const renderer = await host.evaluate(() => {
+    const gl = document.querySelector('canvas')?.getContext('webgl2');
+    const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+    return gl && ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+  });
+  assert.ok(renderer && !/swiftshader|llvmpipe|software/i.test(renderer), `GPU cohort requires a measured hardware renderer: ${renderer}`);
+  console.log('# host renderer', renderer);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
 
   at('Lobby: three phones and both key clusters');
@@ -284,10 +291,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)];
   console.log(`# drop-in claim → driving: ${JSON.stringify(samples)} p95 ${p95} ms`);
   mkdirSync(EVIDENCE, { recursive: true });
-  // The 3 s target is a host drawing on a GPU; on software WebGL (CI's runner) eleven tiles hold the host's main thread,
-  // which delays the claim and the first inputs, so there the samples get a loose bound only.
-  const renderer = gpu ? 'host on a GPU' : 'host on SwiftShader (software WebGL)';
-  const limit = gpu ? 3000 : 45_000; // software WebGL: a loose bound, see DROP_IN_GIVE_UP_MS
+  const limit = 3000;
   writeFileSync(join(EVIDENCE, 'dropin.json'), `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', renderer, samples, p95Ms: p95, targetP95Ms: 3000 }, null, 1)}\n`);
   assert.ok(p95 <= limit, `drop-in p95 ${p95} ms > ${limit} ms (${renderer})`);
 

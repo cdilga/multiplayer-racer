@@ -10,7 +10,7 @@ export const chromiumArgs = [
   ...(mode === '1'
     ? ['--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist', '--enable-gpu']
     : mode === 'native'
-      ? ['--ignore-gpu-blocklist']
+      ? ['--ignore-gpu-blocklist', '--enable-gpu']
       : ['--use-gl=swiftshader', '--enable-unsafe-swiftshader']),
 ];
 
