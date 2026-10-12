@@ -19,8 +19,8 @@
   },
   "levels": {
     "some": {
-      "steerToLine": 0.3,
-      "speedSkill": 1.0,
+      "steerToLine": 0.45,
+      "speedSkill": 0.9,
       "brakeAssist": true,
       "autoThrottle": false,
       "drift": "heldFullLock",

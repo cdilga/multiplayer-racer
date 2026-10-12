@@ -232,6 +232,12 @@ fn assists_never_fight_a_full_lock_input() {
                     },
                 );
                 sim.step();
+                // A respawn hold applies no input by design (the fun-pass car plows wide at full lock and leaves the
+                // greybox's bounds inside 8 s); everywhere else the steering must be the player's.
+                // The input is applied at the tick before the step; a hold zeroes it there.
+                if sim.race().is_held(car.0, sim.tick() - 1) {
+                    continue;
+                }
                 assert_eq!(
                     sim.applied_input(car).unwrap().steer,
                     want,
@@ -240,9 +246,13 @@ fn assists_never_fight_a_full_lock_input() {
             }
         }
     }
-    // Near centre it does help: a centred stick on a bend is pulled toward the line, 30 % (Some) / 60 % (Lots) of it.
+    // Near centre it does help: a centred stick on a bend is pulled toward the line by the level's `steerToLine` share.
     let route = Route::new(&map);
-    for (level, share) in [(AssistLevel::Some, 0.3f32), (AssistLevel::Lots, 0.6)] {
+    let tuned = jj_sim::assist::AssistProfile::standard();
+    for (level, share) in [
+        (AssistLevel::Some, tuned.some.steer_to_line),
+        (AssistLevel::Lots, tuned.lots.steer_to_line),
+    ] {
         let mut sim = Sim::new(&map, &Registry::generic(), 3, profile());
         let car = sim.spawn_grid(1)[0];
         sim.set_assist(car, level);

@@ -18,12 +18,12 @@
  ],
  "expect": [
   {"car": 0, "metric": "maxNoseUpDeg", "min": 6, "max": 14},
-  {"car": 0, "metric": "frontAirTimeS", "min": 0.3, "max": 0.9},
+  {"car": 0, "metric": "frontAirTimeS", "min": 0.3, "max": 1.0},
   {"car": 0, "metric": "wheelieDriveS", "min": 0.7, "max": 0.85},
   {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
   {"car": 0, "metric": "wheelsInContact", "min": 4, "max": 4},
   {"car": 1, "metric": "maxNoseUpDeg", "min": 6, "max": 14},
-  {"car": 1, "metric": "frontAirTimeS", "min": 0.3, "max": 0.9},
+  {"car": 1, "metric": "frontAirTimeS", "min": 0.3, "max": 1.0},
   {"car": 1, "metric": "wheelieDriveS", "min": 0.7, "max": 0.85},
   {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
   {"car": 1, "metric": "wheelsInContact", "min": 4, "max": 4}

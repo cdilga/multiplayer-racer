@@ -361,3 +361,17 @@ not feel targets.
   Read damage events and changes in the actual part-health vector before attributing a tumble.
 - The .05 s duel margin is exactly six 120 Hz ticks. Subtracting displayed seconds (5.60−5.55) can round below
   that margin. Preserve gate ticks and compare their difference before converting to seconds for display.
+
+## 2026-10-12 · Arcade fun pass (br-gw74.13)
+
+- `jj sim` embeds the vehicle profiles at build time: after editing `assets/profiles/*.json`, rebuild `jj` before
+  reading a scenario with it, or it reports the old car. `cargo test` rebuilds on its own.
+- An engine stronger than the car's weight drives up walls: the raycast suspension keeps the tyres pressed to whatever
+  they touch, so traction exists on a vertical surface. Drive now fades with the wheel's contact normal (gone past
+  ~70 degrees); keep it if the engine changes again.
+- Drive at the tyre contact pitches the nose up (squat) in proportion to the drive force; doubling the engine popped
+  plain-throttle wheelies. `com_lower_m` is the data lever, not the wheelie impulse.
+- Most feel/affordance fixtures script throttle for a manoeuvre. After an engine change, scale the scripted throttle to
+  the old drive force when the row is about the manoeuvre or a surface; re-measure the envelope only when the row
+  measures the car's own response. Safety rows never move. The duels' boost/drift windows are frozen search results:
+  retime them with `scenarios/duels/search.py` (pass the duel's seed: `multi_opt` drops it).

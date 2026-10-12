@@ -30,12 +30,17 @@
   {
    "car": 0,
    "fromTick": 0,
-   "toTick": 180,
+   "toTick": 126
+  },
+  {
+   "car": 0,
+   "fromTick": 126,
+   "toTick": 468,
    "boost": true
   },
   {
    "car": 0,
-   "fromTick": 180
+   "fromTick": 468
   }
  ],
  "expect": []

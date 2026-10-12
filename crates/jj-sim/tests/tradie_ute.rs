@@ -83,7 +83,8 @@ fn the_ute_responds_to_throttle() {
     let mut s = Sim::new(&map, &Registry::generic(), 9, VehicleProfile::tradie_ute());
     let car = s.spawn_grid(1)[0];
     s.start_race(3);
-    for _ in 0..(6 * S) {
+    // 3 s, not 6: the fun-pass ute (br-gw74.13) reaches the end of the greybox's straight inside 6 s with no steering.
+    for _ in 0..(3 * S) {
         s.set_input(
             car,
             DriveInput {

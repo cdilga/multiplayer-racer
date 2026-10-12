@@ -50,76 +50,76 @@
    "car": 0,
    "fromTick": 0,
    "toTick": 150,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": -0.8
   },
   {
    "car": 0,
    "fromTick": 150,
    "toTick": 300,
-   "throttle": 0.5
+   "throttle": 0.25
   },
   {
    "car": 0,
    "fromTick": 300,
    "toTick": 420,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": 0.8
   },
   {
    "car": 0,
    "fromTick": 420,
-   "throttle": 0.5
+   "throttle": 0.25
   },
   {
    "car": 1,
    "fromTick": 0,
    "toTick": 150,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": 0.8
   },
   {
    "car": 1,
    "fromTick": 150,
    "toTick": 300,
-   "throttle": 0.5
+   "throttle": 0.25
   },
   {
    "car": 1,
    "fromTick": 300,
    "toTick": 420,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": -0.8
   },
   {
    "car": 1,
    "fromTick": 420,
-   "throttle": 0.5
+   "throttle": 0.25
   },
   {
    "car": 2,
    "fromTick": 0,
    "toTick": 230,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": -0.8
   },
   {
    "car": 2,
    "fromTick": 230,
    "toTick": 380,
-   "throttle": 0.5
+   "throttle": 0.25
   },
   {
    "car": 2,
    "fromTick": 380,
    "toTick": 500,
-   "throttle": 0.5,
+   "throttle": 0.25,
    "steer": 0.8
   },
   {
    "car": 2,
    "fromTick": 500,
-   "throttle": 0.5
+   "throttle": 0.25
   }
  ],
  "observe": [

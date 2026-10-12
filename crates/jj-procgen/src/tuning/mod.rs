@@ -163,6 +163,10 @@ pub struct CrossingData {
 pub struct JumpData {
     pub min_ramp_slope: f64,
     pub max_ramp_slope: f64,
+    /// The take-off speed a jump's table is long enough for, m/s (at least the validator's design speed).
+    pub takeoff_speed_mps: f64,
+    /// The landing ramp's slope back to the road (fall over run), at most the envelope's.
+    pub landing_slope: f64,
 }
 
 impl CoursePresets {
@@ -318,9 +322,11 @@ impl GeneratorData {
             || jump.min_ramp_slope < crate::features::LIMITS.jump_min_ramp_slope
             || jump.max_ramp_slope > crate::features::LIMITS.jump_ramp_slope
             || jump.min_ramp_slope > jump.max_ramp_slope
+            || !(jj_map::limits::JUMP_DESIGN_SPEED_MPS..=45.0).contains(&jump.takeoff_speed_mps)
+            || !(0.04..=crate::features::LIMITS.jump_down_slope).contains(&jump.landing_slope)
         {
             bad.push(
-                "jumps: ramp slopes must be ordered inside the validated ordinary-jump envelope"
+                "jumps: ramp slopes ordered inside the ordinary-jump envelope, take-off speed 26-45 m/s, landing slope 0.04-0.16"
                     .into(),
             );
         }

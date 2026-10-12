@@ -25,7 +25,8 @@
   {
    "faster": "well",
    "slower": "grip",
-   "byS": 0.2
+   "byS": 0.2,
+   "gap": "since the fun pass (br-gw74.13) the best grip line ties the drift line in this quick S-bend: both are capped by the meter and the autopilot's 26 m/s plan (search: 5.608 s vs 5.600 s); a 90-degree corner still pays (drift_r120.rs, drift-corner-duel)"
   },
   {
    "faster": "grip",

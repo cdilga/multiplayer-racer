@@ -338,7 +338,9 @@ impl Autopilot {
         self.mode == Mode::Handback && tick >= self.handback_at + HANDBACK_TICKS
     }
 
-    /// The controls for this tick, and whether it wants to press Recover (stuck for 3 s).
+    /// The controls for this tick, and whether it wants to press Recover (stuck for 3 s). `speed_scale` is the car's
+    /// catch-up drive scale (1 when it isn't trailing): a trailing bot aims that much faster, so catch-up helps it at its
+    /// planned speed too, not only while it accelerates.
     pub fn drive(
         &mut self,
         path: &Path,
@@ -346,6 +348,7 @@ impl Autopilot {
         max_steer: f32,
         wheelbase: f32,
         tick: u64,
+        speed_scale: f32,
     ) -> (DriveInput, bool) {
         let n = path.n();
         let idx = match self.idx {
@@ -388,7 +391,8 @@ impl Autopilot {
         } else {
             MAX_SPEED
         }
-        .clamp(MIN_SPEED, MAX_SPEED);
+        .clamp(MIN_SPEED, MAX_SPEED)
+            * speed_scale;
         if self.mode == Mode::CoolDown {
             target_speed *= COOL_DOWN;
         }

@@ -156,6 +156,29 @@ impl ActionState {
 
 /// The four wheels' commands (FL, FR, RL, RR) for `input` at `forward_speed` m/s, on ground with `grip[i]` under wheel
 /// `i`, for a tick of `dt` seconds, with the car's ACTION state (`action.update` already run this tick).
+/// The boost's push on the body along the car's forward axis, N (0 when not boosting): the extra drive the boost adds
+/// over full throttle, power-limited like the engine, so boost is worth most at low speed and lifts top speed a
+/// little. It acts on the body rather than through the tyres: wheelspin can't swallow it (arcade fun pass,
+/// br-gw74.13). The drift-exit burst can push harder than the meter's boost; whichever is bigger applies.
+pub fn boost_thrust(p: &VehicleProfile, action: ActionState, forward_speed: f32) -> f32 {
+    if !action.boosting {
+        return 0.0;
+    }
+    let t = &p.tuning;
+    let exit_burning = action.exit_boost_ticks > 0 && !action.exit_boost_wait;
+    let extra = if exit_burning {
+        t.boost_engine_gain.max(t.drift_exit_boost_gain)
+    } else {
+        t.boost_engine_gain
+    };
+    let force = t.max_engine_force * extra;
+    if t.max_engine_power_w > 0.0 {
+        force.min(t.max_engine_power_w * extra / forward_speed.max(1.0))
+    } else {
+        force
+    }
+}
+
 pub fn wheel_commands(
     p: &VehicleProfile,
     input: DriveInput,
@@ -188,18 +211,9 @@ pub fn wheel_commands(
         }
     };
     let (engine, braking) = if action.boosting {
-        // The drift-exit burst can drive harder than the meter's boost; whichever is bigger applies.
-        let exit_burning = action.exit_boost_ticks > 0 && !action.exit_boost_wait;
-        let extra = if exit_burning {
-            t.boost_engine_gain.max(t.drift_exit_boost_gain)
-        } else {
-            t.boost_engine_gain
-        };
-        let gain = 1.0 + extra;
-        (
-            drive(t.max_engine_force * gain, t.max_engine_power_w * gain),
-            0.0,
-        )
+        // Boosting holds full throttle through the tyres; the boost's extra drive is a push on the body
+        // (`boost_thrust`), so a traction-limited launch still gets it (arcade fun pass, br-gw74.13).
+        (drive(t.max_engine_force, t.max_engine_power_w), 0.0)
     } else if brake > 0.0 {
         if forward_speed > t.reverse_below_mps || input.no_reverse {
             (0.0, brake)
@@ -223,8 +237,9 @@ pub fn wheel_commands(
     } else {
         engine
     };
-    // The handbrake drift loosens the rear tyres.
+    // The handbrake drift loosens the rear tyres and takes drive off them.
     let rear_grip = 1.0 - action.drift * (1.0 - t.drift_rear_grip);
+    let drift_drive = 1.0 - action.drift * (1.0 - t.drift_drive_scale);
     let lock = p.steer_lock(forward_speed);
     let mut out = vec![WheelCommand::default(); count];
     for (i, w) in out.iter_mut().enumerate() {
@@ -237,7 +252,8 @@ pub fn wheel_commands(
         if braking > 0.0 {
             w.brake_impulse = braking * t.max_brake_force / count as f32 * dt;
         } else if driven(i) {
-            w.engine_force = engine / n_driven;
+            let rear = i >= p.front_wheels();
+            w.engine_force = engine / n_driven * if rear { drift_drive } else { 1.0 };
         }
         w.friction_slip = t.friction_slip
             * grip[i]

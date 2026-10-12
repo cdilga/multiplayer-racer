@@ -24,13 +24,13 @@
   {"car": 0, "metric": "driftChargeGained", "min": 0.12, "max": 0.35},
   {"car": 0, "atTick": 240, "metric": "slipDeg", "min": 0, "max": 3},
   {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
-  {"car": 0, "metric": "speed", "min": 8, "max": 25},
+  {"car": 0, "metric": "speed", "min": 8.0, "max": 30.0},
   {"car": 1, "metric": "maxSlipDeg", "min": 25, "max": 60},
   {"car": 1, "metric": "driftTimeS", "min": 0.4, "max": 0.9},
   {"car": 1, "metric": "driftChargeGained", "min": 0.12, "max": 0.35},
   {"car": 1, "atTick": 240, "metric": "slipDeg", "min": 0, "max": 3},
   {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
-  {"car": 1, "metric": "speed", "min": 8, "max": 25}
+  {"car": 1, "metric": "speed", "min": 8.0, "max": 30.0}
  ],
  "baselines": {
   "kinds": ["no-input", "mash", "hold", "no-action"],

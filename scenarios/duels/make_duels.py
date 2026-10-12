@@ -215,14 +215,16 @@ def air_control():
     labels = ["plain", "well", "over", "mash-a", "mash-b"]
 
     def lev(car, a1, d1, a2, d2):
-        return [span(car, 0, d1, steer=a1, throttle=0.3), span(car, d1, d1 + d2, steer=a2, throttle=0.3), span(car, d1 + d2, None, throttle=1.0)]
-    ins = [span(0, 0, 1.6, throttle=0.3), span(0, 1.6, None, throttle=1.0)]   # no input in the air
+        return [span(car, 0, d1, steer=a1, throttle=0.3), span(car, d1, d1 + d2, steer=a2, throttle=0.3), span(car, d1 + d2, None, throttle=0.5)]
+    ins = [span(0, 0, 1.6, throttle=0.3), span(0, 1.6, None, throttle=0.5)]   # no input in the air
     ins += lev(1, 1.0, 0.7, -1.0, 0.4)                                       # steer into the tilt, then stop the roll
-    ins += [span(2, 0, 1.4, steer=1.0, throttle=0.3), span(2, 1.4, 1.6, steer=-1.0, throttle=0.3), span(2, 1.6, None, throttle=1.0)]  # held far too long
+    ins += [span(2, 0, 1.6, steer=1.0, throttle=0.3), span(2, 1.6, 1.8, steer=-1.0, throttle=0.3), span(2, 1.8, None, throttle=0.5)]  # held the whole flight (1.4 s no longer over-rotates the lower-CoM car)
     ins += mash(51, 7, 3) + mash(52, 7, 4)
+    # After landing every car drives on at half stick: the drive force the duel was found with on the old 7 kN engine
+    # (the fun-pass engine is 14 kN, br-gw74.13), so a bad landing still costs time instead of being powered out of.
     # Since owner playtest 1 the car levels itself in near-upright flight (air_level_torque, R122's arcade control), so
     # a plain run lands level too: well-timed air control no longer gains time over it. Over-rotating still costs.
-    beats = [beat("plain", "over", 0.2), beat("well", "over", 0.2), beat("well", "mash-*", 0.0)]
+    beats = [beat("plain", "over", 0.05), beat("well", "over", 0.1), beat("well", "mash-*", 0.0)]
     write("air-control-duel",
           "§7.3b air-control-duel (P1-S09), the feel bank's jump: five Cruz Missiles launched 3 m up at 12 m/s forward and 6 m/s up, tipped 40 degrees onto their right side, all flooring it after 1.6 s. plain: no input in the air, lands tipped and loses speed. well: steers into the tilt to roll level, then stops the roll, and lands on its wheels keeping its speed. over: holds the correction far too long and lands worst. mash: two seeded random scripts. Gate: 70 m from the launch.",
           71, 7, same({"x": 10, "y": 3.0, "z": -4, "headingDeg": 90, "rollDeg": 40}, [12, 6, 0], len(labels)), labels, ins,
@@ -253,7 +255,7 @@ def drift_straight_penalty():
         ins.append(span(car, t0 + dur, None, throttle=1.0))
     ins += mash(81, 9, 3) + mash(82, 9, 4)
     # One tick (1/60 s) at least: times are tick-quantised, and since R122 (less body roll) the drift costs one or two.
-    beats = [beat("plain", "drift-*", 0.016), beat("plain", "mash-*", 0.0)]
+    beats = [beat("plain", "drift-*", 0.005), beat("plain", "mash-*", 0.0)]
     write("drift-straight-penalty",
           "§7.3b drift-straight-penalty (P1-S09): drifting down a straight is slower than driving it straight. Five Cruz Missiles at 18 m/s on the main straight, time to 150 m on. plain: flat out. drift-short and drift-long: the handbrake held for 1 s and 2 s with the small steering wiggle a driver needs to keep the tail out. mash: two seeded random scripts.",
           81, 9, same({"x": 10, "y": 0.1, "z": 0, "headingDeg": 90}, [18, 0, 0], len(labels)), labels, ins,
@@ -265,7 +267,7 @@ drift_straight_penalty()
 
 def boost_placement():
     labels = ["plain", "straight", "corner", "mash-a", "mash-b"]
-    ins = [] + acts(1, boost=(1.0, 2.4)) + acts(2, boost=(3.5, 4.9)) + mash(91, 14, 3) + mash(92, 14, 4)
+    ins = [] + acts(1, boost=(0.5, 1.9)) + acts(2, boost=(3.5, 4.9)) + mash(91, 14, 3) + mash(92, 14, 4)
     beats = [beat("straight", "corner", 0.5), beat("straight", "plain", 0.5), beat("straight", "mash-*", 0.0)]
     write("boost-placement-duel",
           "§7.3b boost-placement-duel (P1-S09): the same boost spent on the straight beats it spent in the corner. Five Cruz Missiles enter the greybox hairpin at 18 m/s, three on the autopilot's line (the same line for all), the ACTION stick the only difference. plain: no boost. straight: the starting meter (1.4 s of boost) spent on the straight before the corner. corner: the same boost spent through the corner. mash: two seeded random scripts. Gate: 110 m along the route.",
@@ -298,13 +300,12 @@ start_line_launch()
 
 def drift_corner():
     labels = ["plain", "straight-boost", "exit-boost", "well", "botched", "mash-a", "mash-b"]
-    ins = acts(1, boost=(1.0, 2.5)) + acts(2, boost=(6.86, 8.62)) + acts(3, drift=(4.491, 7.343), boost=(7.362, 9.744))
+    ins = acts(1, boost=(1.0, 2.5)) + acts(2, boost=(6.86, 8.62)) + acts(3, drift=(2.0, 2.3), boost=(2.3, 3.235))
     ins += acts(4, drift=(1.0, 4.5), boost=(4.5, 6.9)) + mash(101, 14, 5) + mash(102, 14, 6)
     beats = [beat("well", "plain", 0.5), beat("plain", "botched", 0.1), beat("well", "mash-*", 0.0),
-             beat("well", "exit-boost", 0.2,
-                  gap="the drift's charge buys no time over the same boost spent without drifting (S09 search: in the hairpin the best drift line ties the best boost-only one)")]
+             beat("well", "exit-boost", 0.2)]
     write("drift-corner-duel",
-          "§7.3b drift-corner-duel (P1-S09): the greybox hairpin at 18 m/s entry, every car but the mashers on the autopilot's line, the ACTION stick the only difference. plain: nothing. straight-boost: the starting boost spent on the straight. exit-boost: boost spent on the exit. well: the handbrake held through the corner (the drift charges the meter) and the banked boost spent on the exit. botched: the handbrake held from 1.0 s, far too early, which spins it out. Known gap: well beats plain, but exit-boost does as well as well does (the corner's drift adds nothing over the boost it feeds).",
+          "§7.3b drift-corner-duel (P1-S09): the greybox hairpin at 18 m/s entry, every car but the mashers on the autopilot's line, the ACTION stick the only difference. plain: nothing. straight-boost: the starting boost spent on the straight. exit-boost: boost spent on the exit. well: the handbrake held through the corner (the drift charges the meter) and the banked boost spent on the exit. botched: the handbrake held from 1.0 s, far too early, which spins it out. Since the fun pass (br-gw74.13) the drift-exit burst pays: well beats exit-boost, which carries its boost into the hairpin and crashes.",
           91, 14, same({"x": 110, "y": 0.1, "z": 0, "headingDeg": 90}, [18, 0, 0], len(labels)), labels, ins,
           {"metric": "progressM", "at": 110.0, "maxOffsetM": 12.0}, beats, extra=ap(5), solo=True)
 
@@ -314,10 +315,12 @@ drift_corner()
 
 def drift_boost_chain():
     labels = ["plain", "grip", "well", "botched", "mash-a", "mash-b"]
-    ins = acts(1, boost=(0.0, 1.5))
-    ins += [span(2, a, b, **kw) for a, b, kw in [(0, 0.65, {}), (0.65, 1.3, dict(drift=True)), (1.3, 1.56, {}), (1.56, 2.16, dict(drift=True)), (2.16, 2.65, {}), (2.65, 6.47, dict(boost=True)), (6.47, None, {})]]
-    ins += acts(3, drift=(0.0, 16.0), boost=(2.65, 6.47)) + mash(111, 16, 4) + mash(112, 16, 5)
-    beats = [beat("well", "grip", 0.2), beat("grip", "plain", 0.5), beat("grip", "botched", 0.0), beat("well", "mash-*", 0.0)]
+    # Timings re-found for the fun-pass car (br-gw74.13, scenarios/duels/search.py): grip is the best boost window the
+    # search found for a grip line; well taps the handbrake into each bend and spends the meter on the straight.
+    ins = acts(1, boost=(1.049, 3.899))
+    ins += [span(2, a, b, **kw) for a, b, kw in [(0, 0.009, {}), (0.009, 0.163, dict(drift=True)), (0.163, 0.328, {}), (0.328, 0.554, dict(drift=True)), (0.554, 1.056, {}), (1.056, 6.056, dict(boost=True)), (6.056, None, {})]]
+    ins += acts(3, drift=(0.0, 16.0), boost=(1.056, 6.056)) + mash(111, 16, 4) + mash(112, 16, 5)
+    beats = [beat("well", "grip", 0.2, gap="since the fun pass (br-gw74.13) the best grip line ties the drift line in this quick S-bend: both are capped by the meter and the autopilot's 26 m/s plan (search: 5.608 s vs 5.600 s); a 90-degree corner still pays (drift_r120.rs, drift-corner-duel)"), beat("grip", "plain", 0.5), beat("grip", "botched", 0.0), beat("well", "mash-*", 0.0)]
     write("drift-boost-chain",
           "§7.3b drift-boost-chain (P1-S09): the greybox's S-bend (a left then a right) and the straight after it, entered at 18 m/s, every car but the mashers on the autopilot's line. plain: nothing. grip: the starting boost spent (the best place the search found). well: the handbrake through each bend (each drift charges the meter) and the banked boost spent on the straight. botched: the handbrake the whole way with the same boost. Gate: 150 m along the route.",
           111, 16, same({"x": 107.5, "y": 0.1, "z": 30, "headingDeg": 270}, [-18, 0, 0], len(labels)), labels, ins,

@@ -301,6 +301,10 @@ fn a_shortcut_across_the_infield_doesnt_count_progress() {
             },
         );
         s.step();
+        // Stop once across: the fun-pass car (br-gw74.13) would otherwise reach the map's edge inside 5 s.
+        if s.car_state(car).unwrap().position[2] > 45.0 {
+            break;
+        }
     }
     let st = s.car_state(car).unwrap();
     assert!(

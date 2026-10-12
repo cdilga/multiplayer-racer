@@ -30,39 +30,39 @@
   {
    "car": 0,
    "fromTick": 0,
-   "toTick": 78
+   "toTick": 1
   },
   {
    "car": 0,
-   "fromTick": 78,
-   "toTick": 156,
+   "fromTick": 1,
+   "toTick": 20,
    "drift": true
   },
   {
    "car": 0,
-   "fromTick": 156,
-   "toTick": 187
+   "fromTick": 20,
+   "toTick": 39
   },
   {
    "car": 0,
-   "fromTick": 187,
-   "toTick": 259,
+   "fromTick": 39,
+   "toTick": 66,
    "drift": true
   },
   {
    "car": 0,
-   "fromTick": 259,
-   "toTick": 318
+   "fromTick": 66,
+   "toTick": 127
   },
   {
    "car": 0,
-   "fromTick": 318,
-   "toTick": 776,
+   "fromTick": 127,
+   "toTick": 727,
    "boost": true
   },
   {
    "car": 0,
-   "fromTick": 776
+   "fromTick": 727
   }
  ],
  "expect": []

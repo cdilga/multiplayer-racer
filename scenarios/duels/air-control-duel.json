@@ -86,7 +86,7 @@
   {
    "car": 0,
    "fromTick": 192,
-   "throttle": 1.0
+   "throttle": 0.5
   },
   {
    "car": 1,
@@ -105,26 +105,26 @@
   {
    "car": 1,
    "fromTick": 132,
-   "throttle": 1.0
+   "throttle": 0.5
   },
   {
    "car": 2,
    "fromTick": 0,
-   "toTick": 168,
+   "toTick": 192,
    "steer": 1.0,
    "throttle": 0.3
   },
   {
    "car": 2,
-   "fromTick": 168,
-   "toTick": 192,
+   "fromTick": 192,
+   "toTick": 216,
    "steer": -1.0,
    "throttle": 0.3
   },
   {
    "car": 2,
-   "fromTick": 192,
-   "throttle": 1.0
+   "fromTick": 216,
+   "throttle": 0.5
   },
   {
    "car": 3,

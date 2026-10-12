@@ -15,15 +15,15 @@
  ],
  "inputs": [
   {"car": 0, "fromTick": 0, "toTick": 250, "boost": true},
-  {"car": 0, "fromTick": 1100, "toTick": 1650, "boost": true},
+  {"car": 0, "fromTick": 1100, "toTick": 1220, "boost": true},
   {"car": 0, "fromTick": 2250, "toTick": 2400, "boost": true},
   {"car": 1, "fromTick": 0, "toTick": 500, "boost": true},
   {"car": 1, "fromTick": 1650, "toTick": 2150, "boost": true}
  ],
  "expect": [
-  {"car": 0, "metric": "progressM", "min": 235, "max": 275},
-  {"car": 1, "metric": "progressM", "min": 200, "max": 235},
-  {"car": 0, "metric": "boostTimeS", "min": 4, "max": 7},
+  {"car": 0, "metric": "progressM", "min": 285.0, "max": 325.0},
+  {"car": 1, "metric": "progressM", "min": 240.0, "max": 280.0},
+  {"car": 0, "metric": "boostTimeS", "min": 3.5, "max": 7.0},
   {"car": 1, "metric": "boostTimeS", "min": 3.5, "max": 6},
   {"car": 0, "metric": "wrecks", "min": 0, "max": 0},
   {"car": 0, "metric": "minUpY", "min": 0.9, "max": 1.001},

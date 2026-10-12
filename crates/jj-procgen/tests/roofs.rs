@@ -75,7 +75,8 @@ fn town_seed_lots_are_reachable_clear_and_land_a_real_car() {
                         }
                     } else {
                         DriveInput {
-                            throttle: ((0.9 + (17.5 - c.forward_speed) * 0.2).clamp(0.0, 1.0)
+                            // About the drive force the approach was tuned with on the old 7 kN engine (br-gw74.13).
+                            throttle: ((0.40 + (17.0 - c.forward_speed) * 0.1).clamp(0.0, 1.0)
                                 * i16::MAX as f32) as i16,
                             ..Default::default()
                         }

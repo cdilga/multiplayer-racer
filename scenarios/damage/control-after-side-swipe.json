@@ -1,6 +1,6 @@
 {
  "scenario": "control-after-side-swipe",
- "what": "\u00a77.3a control-after-hit, side hit (P1-S04a): after the 8 m/s side swipe of side-swipe-8 the swiped car (car 0, on half throttle) is back under control within about 1 s: 1 s after the hit it is upright, on all four wheels and no longer spinning; steering right (away from the other car, which is on its left) for the next half second then turns it clearly more than not steering does.",
+ "what": "§7.3a control-after-hit, side hit (P1-S04a): after the 8 m/s side swipe of side-swipe-8 the swiped car (car 0, on half throttle) is back under control within about 1 s: 1 s after the hit it is upright, on all four wheels and no longer spinning; steering right (away from the other car, which is on its left) for the next half second then turns it clearly more than not steering does. Since br-gw74.13 (centre of mass 0.18 m lower) the struck car rolls less and yaws more, so its tail brushes the other car: car 0's rear-left wheel and car 1's back take a few points, staying intact.",
  "map": "scenarios/damage/yard.json",
  "seed": 1,
  "cars": [
@@ -57,6 +57,14 @@
    {
     "car": 1,
     "part": "door_RR"
+   },
+   {
+    "car": 0,
+    "part": "wheel_RL"
+   },
+   {
+    "car": 1,
+    "part": "back"
    }
   ],
   "hitTick": [

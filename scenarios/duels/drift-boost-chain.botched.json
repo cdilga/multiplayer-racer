@@ -30,19 +30,19 @@
   {
    "car": 0,
    "fromTick": 0,
-   "toTick": 318,
+   "toTick": 127,
    "drift": true
   },
   {
    "car": 0,
-   "fromTick": 318,
-   "toTick": 776,
+   "fromTick": 127,
+   "toTick": 727,
    "drift": true,
    "boost": true
   },
   {
    "car": 0,
-   "fromTick": 776,
+   "fromTick": 727,
    "toTick": 1920,
    "drift": true
   },

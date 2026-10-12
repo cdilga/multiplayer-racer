@@ -55,6 +55,10 @@ pub const GROUP_TERRAIN: Group = Group::GROUP_6;
 /// A car's wheel colliders (P1-S04a): they touch cars, debris and scenery but not the terrain, so a wheel strike on
 /// a barrier registers without fighting the raycast suspension standing on the ground.
 pub const GROUP_WHEEL: Group = Group::GROUP_7;
+/// Drive fades between these contact-normal heights (cos of the slope): full on ground up to about 55 degrees, none at 70.
+const DRIVABLE_NORMAL_Y: f32 = 0.57;
+const WALL_NORMAL_Y: f32 = 0.34;
+
 /// A part that just came off a car (P1-S04b): it touches only the world until it has cleared the chassis it left.
 pub const GROUP_FRESH: Group = Group::GROUP_8;
 const fn groups(memberships: Group, filter: Group) -> InteractionGroups {
@@ -1596,7 +1600,15 @@ impl Sim {
                         forward_speed: b.linvel().dot(fwd),
                     };
                     let (out, recover) =
-                        ap.drive(&self.path, pose, p.tuning.max_steer_rad, wheelbase, tick);
+                        ap.drive(
+                        &self.path,
+                        pose,
+                        p.tuning.max_steer_rad,
+                        wheelbase,
+                        tick,
+                        1.0 + self.assist_profile.catch_up.top_speed_gain
+                            * catch_shares.get(i).copied().unwrap_or(0.0),
+                    );
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost and drift ride on the autopilot's line. Only DRIVE moving counts as taking back over.
                     input = DriveInput {
@@ -1700,7 +1712,17 @@ impl Sim {
                     .enumerate()
                 {
                     w.steering = c.steering;
-                    w.engine_force = c.engine_force * catch_scale;
+                    // Drive bites only on drivable ground (br-gw74.13): it fades out as the contact steepens past about
+                    // 55 degrees and is gone on a wall. The arcade engine out-pulls the car's weight, and the suspension
+                    // keeps the tyres pressed to whatever they touch, so without this a car could drive up a wall.
+                    let info = w.raycast_info();
+                    let climbable = if info.is_in_contact {
+                        ((info.contact_normal_ws.y - WALL_NORMAL_Y) / (DRIVABLE_NORMAL_Y - WALL_NORMAL_Y))
+                            .clamp(0.0, 1.0)
+                    } else {
+                        1.0
+                    };
+                    w.engine_force = c.engine_force * catch_scale * climbable;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
                     w.side_friction_stiffness = side_stiffness[i];
@@ -1731,6 +1753,15 @@ impl Sim {
                     .filter(|w| w.raycast_info().is_in_contact && w.wheel_suspension_force > 0.0)
                     .count();
                 let airborne = supported == 0;
+                // The boost pushes the body while the car is on the ground (arcade fun pass, br-gw74.13), along the
+                // level ground plane (the forward axis with its climb removed): it speeds a car along a slope but never
+                // rockets it up a wall or a derby bank.
+                let thrust = vehicle::boost_thrust(p, car.action, forward_speed) * catch_scale;
+                if thrust > 0.0 && !airborne {
+                    let impulse = Vector::new(fwd.x, 0.0, fwd.z) * (thrust * DT);
+                    self.ledger += f64::from(impulse.dot(b.linvel()));
+                    b.apply_impulse(impulse, true);
+                }
                 if airborne && !input.is_neutral() {
                     let [tx, ty, tz] = vehicle::air_torque(p, input);
                     let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
@@ -2162,7 +2193,7 @@ impl Sim {
         let vehicle = self.cars[ci].model;
         let p = &self.profiles[vehicle];
         let part_phys = &self.part_phys[vehicle];
-        let (m0, [cx, cy, cz]) = (p.tuning.mass, p.geometry.com);
+        let (m0, [cx, cy, cz]) = (p.tuning.mass, p.com());
         let (mut gone, mut moment) = (0.0f32, Vector::ZERO);
         for (i, &r) in self.cars[ci].removed.iter().enumerate() {
             if r {
@@ -3057,7 +3088,7 @@ fn chassis_mass_props(p: &VehicleProfile) -> MassProperties {
         k * (w * w + l * l),
         k * (w * w + h * h),
     );
-    let [cx, cy, cz] = p.geometry.com;
+    let [cx, cy, cz] = p.com();
     MassProperties::new(Vector::new(cx, cy, cz), p.tuning.mass, inertia)
 }
 
@@ -3104,7 +3135,7 @@ fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
         builder.density(0.0)
     };
     builder
-        .friction(0.6)
+        .friction(p.tuning.body_friction)
         .user_data(i as u128)
         .collision_groups(Solidity::Racing.groups(p.is_wheel_part(i)))
 }

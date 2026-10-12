@@ -182,6 +182,11 @@ pub struct Tuning {
     /// The exit boost's extra drive (like `boost_engine_gain`, which it replaces while it burns if larger; 0 = the meter boost's).
     #[serde(default)]
     pub drift_exit_boost_gain: f32,
+    /// Share of the drive the rear keeps while the handbrake drift is held (1 = all of it). The handbrake takes drive off
+    /// the rear, so the slide swings out instead of the car powering straight; the exit boost pays the speed back
+    /// (arcade fun pass, br-gw74.13).
+    #[serde(default = "one")]
+    pub drift_drive_scale: f32,
     /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
     #[serde(default)]
     pub air_level_torque: f32,
@@ -192,6 +197,14 @@ pub struct Tuning {
     /// (radians). Normal supported road attitude and deliberate wheelies stay free.
     #[serde(default = "support_level_tilt")]
     pub support_level_tilt_rad: f32,
+    /// Friction of the car's body and parts (chassis, doors, bumpers) against the world and other cars. Arcade low
+    /// (br-gw74.13): a bottomed-out landing or a wall scrape slides instead of anchoring the car; 0.6 was the old value.
+    #[serde(default = "body_friction")]
+    pub body_friction: f32,
+    /// Lowers the chassis' centre of mass below the baked one (m). Arcade stability (br-gw74.13): a strong engine's drive
+    /// at the tyres no longer squats the nose up on throttle, and the car rolls and dives less.
+    #[serde(default)]
+    pub com_lower_m: f32,
     pub surfaces: SurfaceGrip,
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
@@ -497,6 +510,12 @@ impl VehicleProfile {
     }
 
     /// The front-wheel lock at full steer at `speed` m/s.
+    /// The chassis' centre of mass in vehicle space: the baked one, lowered by `com_lower_m`.
+    pub fn com(&self) -> [f32; 3] {
+        let [x, y, z] = self.geometry.com;
+        [x, y - self.tuning.com_lower_m, z]
+    }
+
     pub fn steer_lock(&self, speed: f32) -> f32 {
         self.tuning.max_steer_rad / (1.0 + speed.abs() / self.tuning.steer_falloff_mps)
     }
@@ -513,6 +532,14 @@ impl VehicleProfile {
             Surface::OffTrack => s.off_track,
         }
     }
+}
+
+fn one() -> f32 {
+    1.0
+}
+
+fn body_friction() -> f32 {
+    0.6
 }
 
 fn no_reverse_limit() -> f32 {

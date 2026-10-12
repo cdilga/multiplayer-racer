@@ -42,7 +42,7 @@
       "fromTick": 240,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7999816888943144,
+      "throttle": 0.3999908444471572,
       "toTick": 241
     },
     {
@@ -51,7 +51,7 @@
       "fromTick": 241,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8007446516312143,
+      "throttle": 0.4003723258156072,
       "toTick": 242
     },
     {
@@ -60,7 +60,7 @@
       "fromTick": 242,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8002563554795984,
+      "throttle": 0.4001281777397992,
       "toTick": 243
     },
     {
@@ -69,7 +69,7 @@
       "fromTick": 243,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7990050965910825,
+      "throttle": 0.3995025482955413,
       "toTick": 244
     },
     {
@@ -78,7 +78,7 @@
       "fromTick": 244,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7980590227973265,
+      "throttle": 0.3990295113986633,
       "toTick": 245
     },
     {
@@ -87,7 +87,7 @@
       "fromTick": 245,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7973570970793786,
+      "throttle": 0.3986785485396893,
       "toTick": 246
     },
     {
@@ -96,7 +96,7 @@
       "fromTick": 246,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7969298379467147,
+      "throttle": 0.3984649189733573,
       "toTick": 247
     },
     {
@@ -105,7 +105,7 @@
       "fromTick": 247,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7966856898709067,
+      "throttle": 0.3983428449354534,
       "toTick": 248
     },
     {
@@ -114,7 +114,7 @@
       "fromTick": 248,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7966246528519547,
+      "throttle": 0.3983123264259774,
       "toTick": 249
     },
     {
@@ -123,7 +123,7 @@
       "fromTick": 249,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7967162083803827,
+      "throttle": 0.3983581041901914,
       "toTick": 250
     },
     {
@@ -132,7 +132,7 @@
       "fromTick": 250,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7969603564561907,
+      "throttle": 0.3984801782280953,
       "toTick": 251
     },
     {
@@ -141,7 +141,7 @@
       "fromTick": 251,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7972960600604266,
+      "throttle": 0.3986480300302133,
       "toTick": 252
     },
     {
@@ -150,7 +150,7 @@
       "fromTick": 252,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7977538377025666,
+      "throttle": 0.3988769188512833,
       "toTick": 253
     },
     {
@@ -159,7 +159,7 @@
       "fromTick": 253,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.7996154667806025,
+      "throttle": 0.3998077333903012,
       "toTick": 254
     },
     {
@@ -168,7 +168,7 @@
       "fromTick": 254,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.804467909787286,
+      "throttle": 0.402233954893643,
       "toTick": 255
     },
     {
@@ -177,7 +177,7 @@
       "fromTick": 255,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8089541306802576,
+      "throttle": 0.4044770653401288,
       "toTick": 256
     },
     {
@@ -186,7 +186,7 @@
       "fromTick": 256,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8167058320871609,
+      "throttle": 0.4083529160435804,
       "toTick": 257
     },
     {
@@ -195,7 +195,7 @@
       "fromTick": 257,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8237556077761162,
+      "throttle": 0.4118778038880581,
       "toTick": 258
     },
     {
@@ -204,7 +204,7 @@
       "fromTick": 258,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8342539750358593,
+      "throttle": 0.4171269875179296,
       "toTick": 259
     },
     {
@@ -213,7 +213,7 @@
       "fromTick": 259,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8482619708853419,
+      "throttle": 0.424130985442671,
       "toTick": 260
     },
     {
@@ -222,7 +222,7 @@
       "fromTick": 260,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 0.8607440412610248,
+      "throttle": 0.4303720206305124,
       "toTick": 261
     },
     {
@@ -231,7 +231,7 @@
       "fromTick": 261,
       "noReverse": false,
       "steer": 0.0,
-      "throttle": 1.0,
+      "throttle": 0.5,
       "toTick": 345
     },
     {

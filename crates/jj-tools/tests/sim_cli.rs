@@ -168,20 +168,20 @@ fn trace_feeds_compare_which_shows_the_differing_keys() {
     ]);
     assert!(tuned.status.success() || tuned.status.code() == Some(1));
 
-    // One JSON row per tick (0..=720) and a summary row.
+    // One JSON row per tick (0..=480, straight-throttle's length) and a summary row.
     let text = std::fs::read_to_string(Path::new(&a).join("trace.jsonl")).unwrap();
     let rows: Vec<Value> = text
         .lines()
         .map(|l| serde_json::from_str(l).unwrap())
         .collect();
-    assert_eq!(rows.len(), 722);
-    assert_eq!(rows[720]["tick"], 720);
+    assert_eq!(rows.len(), 482);
+    assert_eq!(rows[480]["tick"], 480);
     let car = &rows[360]["cars"][0];
     for key in ["position", "linvel", "angvel", "input", "wheels"] {
         assert!(!car[key].is_null(), "trace rows lack {key}");
     }
     assert!(car["wheels"][0]["slipDeg"].is_f64() && car["wheels"][0]["contact"].is_boolean());
-    assert!(rows[721]["summary"]["stateHash"].is_string());
+    assert!(rows[481]["summary"]["stateHash"].is_string());
     // Events: what changed the sim since the previous row (the spawn at row 0, the throttle input applied at tick 0).
     assert!(
         rows[0]["events"][0]["setup"]["SpawnCar"].is_object(),

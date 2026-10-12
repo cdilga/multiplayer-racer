@@ -172,7 +172,9 @@
   },
   "jumps": {
     "minRampSlope": 0.18,
-    "maxRampSlope": 0.21
+    "maxRampSlope": 0.21,
+    "takeoffSpeedMps": 30.0,
+    "landingSlope": 0.09
   },
   "roofStunts": {
     "spacingM": 120.0,

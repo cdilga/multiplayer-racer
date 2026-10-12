@@ -75,31 +75,31 @@
   {
    "car": 0,
    "fromTick": 0,
-   "throttle": 1.0,
+   "throttle": 0.5,
    "steer": 1.0
   },
   {
    "car": 1,
    "fromTick": 0,
-   "throttle": 1.0,
+   "throttle": 0.5,
    "steer": 1.0
   },
   {
    "car": 2,
    "fromTick": 0,
-   "throttle": 1.0,
+   "throttle": 0.5,
    "steer": 1.0
   },
   {
    "car": 3,
    "fromTick": 0,
-   "throttle": 1.0,
+   "throttle": 0.5,
    "steer": 1.0
   },
   {
    "car": 4,
    "fromTick": 0,
-   "throttle": 1.0,
+   "throttle": 0.5,
    "steer": 1.0
   }
  ],
@@ -114,43 +114,43 @@
    "car": 2,
    "metric": "slipDeg",
    "min": 14.3,
-   "max": 15.2
+   "max": 14.85
   },
   {
    "car": 3,
    "metric": "slipDeg",
-   "min": 15.2,
-   "max": 15.9
+   "min": 14.85,
+   "max": 15.45
   },
   {
    "car": 0,
    "metric": "slipDeg",
-   "min": 16.0,
-   "max": 16.8
+   "min": 15.5,
+   "max": 16.3
   },
   {
    "car": 1,
    "metric": "headingChangeDeg",
-   "min": 41,
-   "max": 46
+   "min": 43.0,
+   "max": 50.0
   },
   {
    "car": 2,
    "metric": "headingChangeDeg",
-   "min": 28.5,
-   "max": 33
+   "min": 32.5,
+   "max": 36.5
   },
   {
    "car": 3,
    "metric": "headingChangeDeg",
-   "min": 25.5,
-   "max": 29.5
+   "min": 28.0,
+   "max": 32.4
   },
   {
    "car": 0,
    "metric": "headingChangeDeg",
-   "min": 18.5,
-   "max": 22.5
+   "min": 19.0,
+   "max": 24.0
   },
   {
    "car": 1,

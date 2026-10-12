@@ -142,9 +142,13 @@ fn run(
         );
     }
     let mut at_4s = start;
+    // Protection ends once, when the car is clear; sampled every tick because the fun-pass car (br-gw74.13) reaches the
+    // autopilot crowd at the hairpin inside 8 s, where a still-protected ghost would overlap them again.
+    let mut ended = false;
     for t in 0..8 * S {
         sim.set_input(me, throttle(1.0));
         sim.step();
+        ended |= !sim.is_protected(me);
         if t == 4 * S {
             at_4s = pos(&sim, me.0);
         }
@@ -158,7 +162,7 @@ fn run(
             sim.is_protected(me)
         );
     }
-    (at_4s[0] - start[0], end, sim.is_protected(me))
+    (at_4s[0] - start[0], end, !ended)
 }
 
 #[test]

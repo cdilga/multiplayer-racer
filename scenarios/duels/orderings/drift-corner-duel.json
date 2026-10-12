@@ -42,8 +42,7 @@
   {
    "faster": "well",
    "slower": "exit-boost",
-   "byS": 0.2,
-   "gap": "the drift's charge buys no time over the same boost spent without drifting (S09 search: in the hairpin the best drift line ties the best boost-only one)"
+   "byS": 0.2
   }
  ]
 }

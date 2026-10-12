@@ -6,7 +6,7 @@
 //!   clear of the start corridor, of each other, and of the lap seam. Counts come from a per-biome density per km of
 //!   route (data, not a cap); a site that can't be found in 64 draws is skipped.
 //! - **Jump** (standard, a tabletop since owner playtest 1 found the old 8 % wedge flat): a 4 m wide ramp centred on
-//!   the route (the standard line goes over it) up to a 1.1-2.1 m lip (slope 0.16-0.21, ramp 7-10 m), a table at lip height, then a landing ramp back
+//!   the route (the standard line goes over it) up to a 1.1-2.1 m lip (slope 0.16-0.21, ramp 7-10 m), a table at lip height long enough for the data's take-off speed, then the data's landing slope back
 //!   down to the road, 6 m wide with sloped sides; 4 m of bypass either side (the validator's rule) and a 12 m entry
 //!   straight. Too slow and the car lands on the table; at speed it lands on the down-slope; the landing length covers
 //!   the flight at the validator's design speed (jj-map's landability rule). Huge jumps are R124's later opt-in.
@@ -309,7 +309,8 @@ fn draw_params(
             let flight = jj_map::limits::jump_flight_kicker_m(
                 lip,
                 p["rampLengthMm"],
-                jj_map::limits::JUMP_DESIGN_SPEED_MPS,
+                // Generated jumps are built for the arcade cars' take-off speed (data), above the validator's minimum.
+                jumps.takeoff_speed_mps.max(jj_map::limits::JUMP_DESIGN_SPEED_MPS),
                 ramp_mm as f64 / (ramp_mm as f64 - LIMITS.jump_blend_m * 500.0),
             );
             // The reserved landing length alone is not a landing surface. Previously the short sampled table
@@ -320,8 +321,11 @@ fn draw_params(
             // a 16% descent to flat ground bottoms the suspension and pitches a boosted car over its nose.
             // Low lips need a shallower descent so its concave transition fits below the table height.
             let down_slope_milli = libm::floor(
-                LIMITS
-                    .jump_down_slope
+                // The data's landing slope (br-gw74.13: gentle enough that a car leaving the table at speed meets it at
+                // a shallow angle instead of flying past it onto flat road), never steeper than the envelope.
+                jumps
+                    .landing_slope
+                    .min(LIMITS.jump_down_slope)
                     .min(libm::sqrt(2.0 * lip as f64 / 100.0 * LIMITS.max_curvature))
                     * 1000.0,
             ) as i64;
@@ -362,7 +366,9 @@ fn draw_params(
             p.insert("heightCm".into(), whole(rng, 12.0, 20.0, 2.0) * 2);
         }
         FeatureKind::CreekDip => {
-            p.insert("lengthMm".into(), whole(rng, 16.0, 24.0, 2.0) * 2_000);
+            // Long enough for the arcade cars (br-gw74.13): curvature 2π²·D/L² stays under 0.01, about 1.2 g of extra
+            // load at 35 m/s. A 16-24 m dip bottomed a car at 24 m/s and tripped it onto its roof.
+            p.insert("lengthMm".into(), whole(rng, 34.0, 50.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
         FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}

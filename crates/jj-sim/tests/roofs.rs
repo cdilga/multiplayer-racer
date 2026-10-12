@@ -103,7 +103,8 @@ fn a_design_speed_kicker_lands_on_the_visible_roof_and_the_validator_rejects_an_
             }
         } else {
             DriveInput {
-                throttle: ((0.9 + (17.5 - c.forward_speed) * 0.2).clamp(0.0, 1.0) * i16::MAX as f32)
+                // About the drive force the approach was tuned with (7 kN engine): under half the stick on the fun-pass 14 kN car.
+                throttle: ((0.40 + (17.0 - c.forward_speed) * 0.1).clamp(0.0, 1.0) * i16::MAX as f32)
                     as i16,
                 ..Default::default()
             }

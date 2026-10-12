@@ -237,7 +237,7 @@
    "car": 0,
    "metric": "frontAirTimeS",
    "min": 0.2,
-   "max": 0.7
+   "max": 0.8
   },
   {
    "car": 0,
@@ -248,14 +248,14 @@
   {
    "car": 0,
    "metric": "maxSpeed",
-   "min": 20,
-   "max": 25
+   "min": 29.0,
+   "max": 36.0
   },
   {
    "car": 0,
    "metric": "progressM",
-   "min": 45,
-   "max": 56
+   "min": 40.0,
+   "max": 56.0
   },
   {
    "car": 0,
@@ -296,8 +296,8 @@
   {
    "car": 1,
    "metric": "maxSpeed",
-   "min": 0,
-   "max": 17.5
+   "min": 0.0,
+   "max": 28.0
   },
   {
    "car": 2,
@@ -320,8 +320,8 @@
   {
    "car": 2,
    "metric": "maxSpeed",
-   "min": 0,
-   "max": 16
+   "min": 0.0,
+   "max": 27.5
   }
  ],
  "baselines": {

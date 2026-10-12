@@ -23,7 +23,7 @@ use crate::seed::Rng;
 
 pub const GENERATOR_ID: &str = "jj.procgen.arena";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/arena.txt`).
-pub const GENERATOR_VERSION: &str = "1";
+pub const GENERATOR_VERSION: &str = "2";
 
 const TERRAIN_SPACING_M: f64 = 2.5;
 /// The spawn ring sits this far in from the foot of the bank (the ring's centreline), m.
@@ -73,7 +73,8 @@ pub fn generate(seed: u64, cars: usize) -> Map {
     let mut rng = Rng::stream(seed, "arena");
     // The bank's radius, the wall's height and the lip's width vary a little with the seed (whole metres).
     let bank = 8 + (rng.unit() * 4.0) as i64; // 8..=11 m
-    let wall = 8 + (rng.unit() * 3.0) as i64; // 8..=10 m
+    // 10..=12 m: tall enough for the fun-pass cars (br-gw74.13), which climbed out of an 8-10 m wall at 30-55 m/s.
+    let wall = 10 + (rng.unit() * 3.0) as i64; // 10..=12 m
     let lip = 2 + (rng.unit() * 2.0) as i64; // 2..=3 m
     let floor_r = floor_radius_for(cars);
     let params: Params = [

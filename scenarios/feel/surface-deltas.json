@@ -11,10 +11,10 @@
   {"pose": {"x": 124, "y": 0.1, "z": -8, "headingDeg": 90}, "linvel": [15, 0, 0]}
  ],
  "inputs": [
-  {"car": 0, "fromTick": 0, "throttle": 0.3, "steer": -1.0},
-  {"car": 1, "fromTick": 0, "throttle": 0.3, "steer": -1.0},
-  {"car": 2, "fromTick": 0, "throttle": 0.3, "steer": -1.0},
-  {"car": 3, "fromTick": 0, "throttle": 0.3, "steer": -1.0}
+  {"car": 0, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
+  {"car": 1, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
+  {"car": 2, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
+  {"car": 3, "fromTick": 0, "throttle": 0.15, "steer": -1.0}
  ],
  "expect": [
   {"car": 0, "metric": "headingChangeDeg", "min": 52, "max": 62},

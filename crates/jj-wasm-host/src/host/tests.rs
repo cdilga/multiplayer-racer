@@ -212,7 +212,7 @@ fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
     };
     let plain = pad_script();
     let mut tuned = pad_script();
-    tuned.push((60, tune("max_engine_force", "14000")));
+    tuned.push((60, tune("max_engine_force", "20000")));
     let a = run(16_667, 720, &tuned);
     let b = run(16_667, 720, &tuned);
     assert_eq!(a, b, "the tuned run replays bit for bit");
