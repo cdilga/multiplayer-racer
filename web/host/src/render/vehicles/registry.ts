@@ -7,6 +7,7 @@ import roster from '../../../../shared/src/roster.json' with { type: 'json' };
 
 /** The parts of a baked vehicle (`jj.vehicle.v1`) the renderer reads. */
 export interface Sidecar {
+  anchors?: Record<string, number[]>;
   parts: Record<string, { pivot: number[]; hinge: { axis: number[] } | null }>;
   interiors?: Record<string, { exposedBy: string[] }>;
 }

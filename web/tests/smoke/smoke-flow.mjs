@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from '../journeys/lib/vehicle.mjs';
 // The public smoke as a function (P1-D07, plan §12.3): the same fixed steps `infra/previews/scripts/smoke.mjs` runs against a
 // published preview, runnable against any base URL, so CI proves the flow on a local jj-server before a preview exists.
 // Keep the two in step: a step added here is added to the canonical preview publisher too.
@@ -113,6 +114,7 @@ export async function runSmoke({ base, steps = KNOWN, mandatory = KNOWN, relay =
       await page.locator('#name').fill(name);
       await page.getByRole('button', { name: 'Join the race' }).click();
       await until(page, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
+      await confirmInitialVehicle(page);
       phones.push(page);
     }
     await until(host, () => window.__jjRoom.view().seats.length === 2);

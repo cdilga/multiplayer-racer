@@ -17,7 +17,7 @@ const shot = async (page, name) => {
 };
 for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and pad choose visibly; settings preserve pause and controller actions`, { timeout: 300000 }, async () => {
   const server = deployed ? {origin:deployed.origin,close:async()=>{}} : await serve(dist, BASE, { JJ_STUN_URLS: '' });
-  const browser = await engine.launch(engine === chromium ? {args: chromiumArgs} : {});
+  const browser = await engine.launch(engine === chromium ? {channel:process.env.JJ_CHROMIUM_GPU==='native'?'chromium':undefined,args: chromiumArgs} : {});
   const errors = [];
   try {
     const host = await (await browser.newContext({viewport:{width:1366,height:768}})).newPage();

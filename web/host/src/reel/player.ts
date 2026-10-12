@@ -4,8 +4,9 @@ import type { MapJson } from '../render/map/map';
 import type { HighlightRecorder, Clip } from './recorder';
 import { unpackFrame } from './frame';
 import { esc } from '../round/format';
-import { motionMode, paintKit } from '../../../shared/ui';
+import { applySeatPattern, motionMode, paintKit } from '../../../shared/ui';
 import './reel.css';
+import { mountNameplates } from '../identity/nameplates';
 
 const titles = { detach: 'Parts flying', wreck: 'Wrecked!', air: 'Big air', finish: 'Across the line', 'close-finish': 'Photo finish' };
 
@@ -54,12 +55,15 @@ export class ReelPlayer {
       await Promise.all([...vehicles].map(v => world!.vehicles!.ensure(v)));
       if (generation !== this.generation || !host.isConnected) { world.dispose(); return; }
       this.world = world; this.state = 'playing';
+      mountNameplates(layer, world);
       const identities = new Map(recorder.actors().map(a=>[a.car,a]));
       for (const c of clips) for (const e of c.events) for (const a of e.actors) identities.set(a.car,a);
       const palette = world.vehicles!.paintOf;
       world.vehicles!.paintOf = car => {
         const a = identities.get(car); return a ? `#${a.rgb.map(c=>c.toString(16).padStart(2,'0')).join('')}` : palette(car);
       };
+      world.vehicles!.numberOf = car => identities.get(car)?.number ?? car;
+      world.vehicles!.nameOf = car => identities.get(car)?.name || 'Player';
       let started = performance.now(); let index = 0;
       this.lastFrame = null;
       const draw = (now: number) => {
@@ -88,6 +92,7 @@ export class ReelPlayer {
           this.label = key;
           layer.querySelector('[data-highlight]')!.textContent = titles[event.kind];
           layer.querySelector('[data-identity]')!.innerHTML = event.actors.map(a => `<span class="reel-who"><span class="badge" style="--b:rgb(${a.rgb.join(',')});--on:var(--c-ink)">#${a.number}</span>${esc(a.name || 'Player')}</span>`).join('');
+          for (const badge of layer.querySelectorAll<HTMLElement>('[data-identity] .badge')) applySeatPattern(badge, Number(badge.textContent?.replace('#', '')));
         }
         const reduced = motionMode() === 'reduced';
         world!.replayCamera = {car:actor.car,orbit:recorder.profile.orbitStartDegrees + (reduced ? 0 : (now-started)/1000 * recorder.profile.orbitDegreesPerSecond)};

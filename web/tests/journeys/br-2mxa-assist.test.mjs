@@ -50,11 +50,14 @@ test('R125: the phone sets Off / Some / Lots, the host carries it per seat and s
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
-  await host.getByRole('button', { name: 'Catch-up: Light', exact: true }).click();
+  await host.getByRole('button', { name: 'Host menu', exact: true }).click();
+  await host.getByRole('button', { name: 'Race rules', exact: true }).click();
+  await host.getByRole('button', { name: 'Off', exact: true }).click();
   await wait(host, () => window.__jjRoom.view().catchUp === false);
-  await host.getByRole('button', { name: 'Catch-up: Off', exact: true }).click();
+  await host.getByRole('button', { name: 'Light', exact: true }).click();
   await wait(host, () => window.__jjRoom.view().catchUp === true);
   await shot(host, 'lobby-catchup-light-1280x720');
+  await host.keyboard.press('Escape');
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
@@ -138,6 +141,7 @@ test('WebKit: completion offers Driving help with both actions visible on short 
     await page.goto(await host.evaluate(() => window.__jjNet.joinUrl()));
     await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
     await page.getByRole('button', { name: 'Join the race' }).click();
+    await confirmInitialVehicle(page);
     await wait(page, () => window.__jjTutorial?.inspect()?.open === true);
     for (const [width, height] of [[667, 375], [915, 412], [375, 667]]) {
       await resize(page, width, height);

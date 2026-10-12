@@ -28,6 +28,8 @@ import { mountResolutionSetting } from './render/settings';
 import { SyntheticSource } from './render/synthetic';
 import { rosterProfiles } from './render/vehicles/registry';
 import { World } from './render/world';
+import { mountNameplates } from './identity/nameplates';
+import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
 
 const app = document.querySelector<HTMLElement>('#app')!;
@@ -63,6 +65,7 @@ async function boot(): Promise<void> {
   const maxCanvas = Number(params.get('maxcanvas')); // test hook: pretends the browser's max canvas edge is this small
   if (maxCanvas > 0) backend.maxSize = Math.min(backend.maxSize, maxCanvas);
   const world = new World(backend, canvas, chosen);
+  mountNameplates(app, world);
   world.autoLower = override === null && params.get('autores') !== 'off';
   world.realFrameTimes = params.get('autores') !== 'injected';
   await world.loadVehicles();
@@ -102,6 +105,8 @@ async function boot(): Promise<void> {
      *  for a screenshot that takes longer than the effect lives. */
     hold: () => world.stop(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
+    setIdentityPatterns: (on: boolean) => { world.vehicles?.setPatternsEnabled(on); world.invalidate(); },
+    identityNumberChunks: (number: number) => numberData(number),
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
     /** Actual scene haze after the last viewport render (overview/chase regression probe, R90). */
     haze: () => world.scene.fog && 'near' in world.scene.fog ? { near: world.scene.fog.near, far: world.scene.fog.far } : null,
@@ -288,9 +293,16 @@ async function boot(): Promise<void> {
     }
   };
   // Identity (P1-R06): each car is painted in its seat's colour, the same colour as that player's phone.
-  let seatPaint = new Map<number, string>();
+  const seatPaint = new Map<number, string>();
+  const seatNumber = new Map<number, number>();
+  const seatName = new Map<number, string>();
+  let identityRound: number | null = null;
   let painted = false;
   client.watchRoom((room) => {
+    if (identityRound !== room.round) {
+      identityRound = room.round;
+      seatPaint.clear(); seatNumber.clear(); seatName.clear();
+    }
     // The page knows the round's phase (the input drawer folds away while racing so it covers no tile).
     document.body.dataset.jjPhase = room.phase;
     // In a room the grid's tiles are the seated cars in seat-number order: a car withdrawn by Leave or Sit out stays in
@@ -302,7 +314,12 @@ async function boot(): Promise<void> {
         applyCams();
       }
     }
-    seatPaint = new Map(room.seats.filter((st) => st.car !== null).map((st) => [st.car!, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`]));
+    // Retain identity for withdrawn cars and their dynamic debris for the round.
+    for (const st of room.seats) if (st.car !== null) {
+      seatPaint.set(st.car, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`);
+      seatNumber.set(st.car, st.number);
+      seatName.set(st.car, st.name || 'Player');
+    }
     const v = world.vehicles;
     // The cars the seats picked in the lobby load their models now, so they are ready when the grid forms (R123).
     for (const st of room.seats) if (st.vehicle) void v?.ensureId(st.vehicle);
@@ -310,6 +327,8 @@ async function boot(): Promise<void> {
     painted = true;
     const palette = v.paintOf;
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
+    v.numberOf = (car) => seatNumber.get(car) ?? car;
+    v.nameOf = (car) => seatName.get(car) ?? `Player ${car}`;
   });
   world.attach(client);
   if (roundScreens) mountReel(client, world, roundScreens);

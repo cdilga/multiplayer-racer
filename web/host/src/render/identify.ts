@@ -3,6 +3,7 @@
 // drawn over the world (no depth test); the tile pulse and "Cooee #N" label are the per-tile HUD's.
 import { CanvasTexture, Sprite, SpriteMaterial, SRGBColorSpace, type Scene } from 'three';
 import type { Sampled } from './interp';
+import { drawSeatPattern } from '../../../shared/ui/patterns';
 
 interface Mark {
   sprite: Sprite;
@@ -38,6 +39,11 @@ export class IdentifyMarks {
     g.beginPath();
     g.roundRect(8, 8, c.width - 16, c.height - 16, 12);
     g.fill();
+    const number = Number(label.replace(/^#/, ''));
+    drawSeatPattern(g, number, c.width, c.height, 32);
+    // Clear centre: pattern identifies the ring without obscuring the unique number.
+    g.fillStyle = fill;
+    g.fillRect(28, 22, c.width - 56, c.height - 44);
     g.fillStyle = ink;
     g.textAlign = 'center';
     g.textBaseline = 'middle';

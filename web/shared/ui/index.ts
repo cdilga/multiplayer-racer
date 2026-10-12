@@ -9,6 +9,7 @@ import './controls.css';
 import { icon } from './icons';
 import { installBrushSkins, paintBrushButtons } from './brush';
 import { paintCaptions } from './caption';
+import { applySeatPattern } from './patterns';
 
 export { icon } from './icons';
 export { paintPath, seeded, strokePath, tiltFor, tornBanner, tornPath, wobblePath } from './paint';
@@ -16,6 +17,7 @@ export { brushBg, brushButtonPath, gamepadTab, installBrushSkins, outlinePx, pai
 export { caption, paintCaptions } from './caption';
 export type { CaptionOptions, CaptionTone } from './caption';
 export { seatBadge, seatColor } from './seat';
+export { applySeatPattern, drawSeatPattern, patternImage, seatPattern } from './patterns';
 export { identify, motion, motionMode } from './motion';
 export type { MotionMode, MotionName, MotionSpec } from './motion';
 export { paperQrCard, paperQrMinPx, paperQrSvg } from './qr';
@@ -27,6 +29,10 @@ export type { ControlId, ControlsCluster, ControlsData, ControlsSource, Controls
 export function paintKit(root: ParentNode = document): void {
   paintBrushButtons(root);
   paintCaptions(root);
+  for (const badge of root.querySelectorAll<HTMLElement>('.badge')) {
+    const number = /^#(\d+)$/.exec(badge.textContent?.trim() ?? '');
+    if (number) applySeatPattern(badge, Number(number[1]));
+  }
 }
 
 export type Profile = 'handheld' | 'desk' | 'tv';

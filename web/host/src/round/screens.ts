@@ -92,7 +92,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
   // On the body, not in #app: #app is fixed (its own stacking context), and the round screens sit above the host's
   // input drawer and the grid's join chip. The HUD layer sits under the screens.
   document.body.append(root);
-  const hud = mountHud(document.body, screenK);
+  // HUD badges inherit the same rebuilt brush masks as lobby and results after profile/resize changes.
+  const hud = mountHud(root, screenK);
   const screen = document.createElement('div');
   screen.className = 'jj-screen';
   root.append(screen);

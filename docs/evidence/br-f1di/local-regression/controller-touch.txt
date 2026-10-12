@@ -1,0 +1,52 @@
+▶ chromium: touch
+  ✔ two simultaneous touch points drive two independent sticks (landscape and portrait) (689.968208ms)
+✔ chromium: touch (1943.690917ms)
+▶ webkit: touch
+  ✔ two simultaneous touch points drive two independent sticks (landscape and portrait) (1931.154459ms)
+✔ webkit: touch (1931.392791ms)
+▶ chromium: real touch points
+  ✔ two CDP touch points drive both sticks independently; no zoom, no scroll (729.530708ms)
+✔ chromium: real touch points (729.766916ms)
+▶ chromium: touch hygiene
+  ✔ double-tap, pinch gestures, selection and the context menu change nothing (234.151459ms)
+✔ chromium: touch hygiene (234.422375ms)
+▶ webkit: touch hygiene
+  ✔ double-tap, pinch gestures, selection and the context menu change nothing (491.254ms)
+✔ webkit: touch hygiene (491.521584ms)
+▶ the pod: indicators, not buttons
+  ✔ landscape: not focusable or tappable, and where the design puts it (169.619458ms)
+  ✔ portrait: not focusable or tappable, and where the design puts it (188.60575ms)
+✔ the pod: indicators, not buttons (358.56075ms)
+▶ the player colour and Identify
+  ✔ the seat's colour is on screen (strip and frame), and Identify from the secondary button plays the Cooee flash (2134.047834ms)
+  ✔ the Cooee flash is see-through and both sticks keep driving under it (owner playtest 1) (332.887334ms)
+✔ the player colour and Identify (2467.544125ms)
+▶ landscape first, full screen and the wake lock
+  ✔ portrait asks once to turn sideways and still plays upright; landscape never asks (366.796167ms)
+  ✔ the first tap asks for full screen then a wake lock; the wake lock is asked for again when the page returns (222.756667ms)
+✔ landscape first, full screen and the wake lock (589.901667ms)
+✖ at short landscape heights nothing overlaps on the play screen (7235.02175ms)
+ℹ tests 12
+ℹ suites 8
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10856.141916
+
+✖ failing tests:
+
+test at web/tests/journeys/c07-landscape-short.test.mjs:29:1
+✖ at short landscape heights nothing overlaps on the play screen (7235.02175ms)
+  AssertionError [ERR_ASSERTION]: 640x300: the tools row scrolls sideways (10px hidden)
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/c07-landscape-short.test.mjs:91:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

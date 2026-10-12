@@ -44,6 +44,7 @@ async function joined(joinUrl, name = 'Marlene', init) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   return { ctx, page, you: (await inspect(page)).you, endpoint: (await inspect(page)).link.endpointId };
 }
 const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s) => ({ name: s.name, number: s.number, presence: s.presence })));
@@ -262,6 +263,7 @@ test('Leave asks for a second tap, then the seat goes; Sit out from Settings par
   await q.page.getByRole('button', { name: 'Sit out' }).click();
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
   assert.equal((await seats(host)).length, 2, 'sitting out keeps the seat');
+  await p.page.getByRole('button', { name: 'Skip tutorial' }).click();
   const leave = p.page.locator('[data-act=leave]');
   await leave.click();
   assert.match(await leave.textContent(), /Tap again to leave/i);

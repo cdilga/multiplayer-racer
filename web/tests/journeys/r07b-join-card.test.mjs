@@ -25,7 +25,7 @@ let server;
 
 before(async () => {
   server = await serve(build('./', 'r07b'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
@@ -148,7 +148,6 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
 
   // The pause menu carries the join card too.
   await host.locator('[data-act=menu]').click();
-      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
   await host.locator('[data-menu] [data-join-card=menu]').waitFor();
   await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
   assert.equal(await host.locator('[data-menu] [data-join-url]').textContent(), joinUrl);

@@ -4,6 +4,7 @@
 // the cameras P1-R05 (`tiles` is a plain chase-camera view until then). Instance buffers grow with the field: there is
 // no car or debris cap.
 import {
+  type Camera,
   Color,
   DirectionalLight,
   GridHelper,
@@ -29,6 +30,11 @@ import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
+
+export interface NameplatePoint {
+  tile: number; car: number; id: number; x: number; y: number; font: number;
+  clip: { left: number; right: number; top: number; bottom: number };
+}
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
 const PAPER = new Color('#FFF4DE');
@@ -124,6 +130,8 @@ export class World {
   private arrowKey = '';
   /** Called with the grid's layout (device pixels) and the device pixel ratio when the tiles move. */
   onLayout: (layout: Layout | null, dpr: number) => void = () => {};
+  onNameplates: (points: NameplatePoint[]) => void = () => {};
+  private nameplatePoints: NameplatePoint[] = [];
   map: MapRenderer | null = null;
   private props: PropRenderer;
   private ground: Mesh;
@@ -413,6 +421,7 @@ export class World {
 
   /** Draws one frame at the interpolator's render tick. */
   frame(): void {
+    this.nameplatePoints.length = 0;
     this.resize();
     const t = this.interp.renderTick();
     const s = (this.sample = this.interp.sample(t, this.sample));
@@ -443,6 +452,7 @@ export class World {
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
       this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
+      this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0);
       st.lods = [lod];
     }
     st.frames++;
@@ -452,6 +462,7 @@ export class World {
     st.snapped = s.snapped;
     st.drawCalls = this.backend.drawCalls();
     st.triangles = this.backend.triangles();
+    this.onNameplates(this.nameplatePoints);
     this.onFrame(st);
   }
 
@@ -526,6 +537,7 @@ export class World {
       r.setClearColor(SKY);
       r.clear();
       this.backend.render(this.scene, cam);
+      this.nameplates(s, cam, t, t.seat, i);
       if (mode === 'fp' && i >= 0) {
         // Segmented first person: the rear-view mirror in its strip of the tile (rects are fractions, top-down).
         const M = CAMERA.firstPerson.mirror;
@@ -549,6 +561,18 @@ export class World {
     r.setScissorTest(false);
     r.autoClear = true;
     return lods;
+  }
+
+  private nameplates(s: Sampled, camera: Camera, rect: { x: number; y: number; w: number; h: number }, tile: number, own = -1): void {
+    const scale = this.stats.dpr * this.scale;
+    const clip = { left: rect.x / scale, right: (rect.x + rect.w) / scale, top: rect.y / scale, bottom: (rect.y + rect.h) / scale };
+    for (let car = 0; car < s.cars; car++) {
+      if (car === own) continue;
+      const p = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]! + 2.2, s.pos[car * 3 + 2]!).project(camera);
+      if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z < -1 || p.z > 1) continue;
+      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale,
+        y: (rect.y + (1 - p.y) * rect.h / 2) / scale, font: Math.max(14, Math.min(28, rect.h / scale * .07)), clip });
+    }
   }
 
   /** Each tile's rect on the backing store, in device pixels (what the viewports drew into), for the receipts. */

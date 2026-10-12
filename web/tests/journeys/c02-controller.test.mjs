@@ -218,9 +218,10 @@ describe('the player colour and Identify', () => {
     const { ctx, page } = await open(eng, 'playing&seat=12', LAND);
     const seat = await page.evaluate(() => getComputedStyle(document.querySelector('.screen.play')).getPropertyValue('--seat').trim());
     assert.match(seat, /^#[0-9a-f]{6}$/i);
-    const colours = await page.evaluate(() => ({ number: getComputedStyle(document.querySelector('.strip .seatno')).color, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor }));
+    const colours = await page.evaluate(() => ({ numberPaint: getComputedStyle(document.querySelector('.strip .seatno')).getPropertyValue('--bz-fill').trim(), pattern: document.querySelector('.strip .seatno').dataset.identityPattern, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor }));
     const rgb = (h) => `rgb(${[1, 3, 5].map((i) => Number.parseInt(h.slice(i, i + 2), 16)).join(', ')})`;
-    assert.equal(colours.number, rgb(seat), 'the number in the strip is the seat colour');
+    assert.equal(colours.numberPaint.toLowerCase(), seat.toLowerCase(), 'the patterned number badge is painted in the seat colour');
+    assert.ok(colours.pattern, 'the badge also carries the seat pattern');
     assert.equal(colours.knob, rgb(seat), 'the DRIVE knob is the seat colour');
     // The frame round the whole screen (POC1-21): the pixels at the very edge are the seat colour.
     const png = PNG.sync.read(await page.screenshot());

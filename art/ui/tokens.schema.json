@@ -293,6 +293,20 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "patterns": {
+          "type": "array", "minItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "name", "kind", "cellM", "svg"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z]+$" },
+              "name": { "type": "string", "minLength": 1 },
+              "kind": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "cellM": { "type": "number", "exclusiveMinimum": 0 },
+              "svg": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
         "rule": {
           "type": "string"
         },

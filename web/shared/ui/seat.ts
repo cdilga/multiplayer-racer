@@ -1,6 +1,7 @@
 // Seat identity (tokens.identity, ported from art/ui/poc/shared/tokens.js `seatColor`): every seat gets a number and a colour;
 // seat N takes colour (N-1) mod the palette length, so colours repeat for large rooms and the number never does. No cap (R66).
 import { tokenData } from './tokens.generated';
+import { applySeatPattern } from './patterns';
 
 export interface SeatColor {
   hex: string;
@@ -27,5 +28,6 @@ export function seatBadge(seat: number): HTMLSpanElement {
   el.style.setProperty('--b', `var(--id-${index})`);
   el.style.setProperty('--on', `var(--id-${index}-on)`);
   el.textContent = `#${seat}`;
+  applySeatPattern(el, seat);
   return el;
 }

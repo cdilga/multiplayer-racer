@@ -5,7 +5,7 @@
 // for the name drops it, keeping number, place and lap. Tiles are the seated cars in seat-number order.
 import { ordinal, shortName } from './format';
 import type { RoomView } from '../worker/client';
-import { controlsCard } from '../../../shared/ui';
+import { applySeatPattern, controlsCard, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
 import { promptHtml } from '../ui/prompts/steps';
 
@@ -82,8 +82,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const state = s ? (unplugged !== null ? 'unplugged' : s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
       // Placing rewrote the inline style, so the seat colour (border, Identify pulse) goes back on every paint.
       if (s) {
-        box.style.setProperty('--seat', `var(--id-${s.colourIndex % 12})`);
-        box.style.setProperty('--seat-on', `var(--id-${s.colourIndex % 12}-on)`);
+        box.style.setProperty('--seat', `var(--id-${s.colourIndex % tokenData.seatColors.length})`);
+        box.style.setProperty('--seat-on', `var(--id-${s.colourIndex % tokenData.seatColors.length}-on)`);
       }
       // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
       const started = room?.phase === 'Running' || room?.phase === 'Finalising';
@@ -100,8 +100,9 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       box.dataset.seat = String(s.number);
       const badge = box.querySelector<HTMLElement>('.hud-badge')!;
       badge.textContent = `#${s.number}`;
-      badge.style.setProperty('--b', `var(--id-${s.colourIndex % 12})`);
-      badge.style.setProperty('--on', `var(--id-${s.colourIndex % 12}-on)`);
+      applySeatPattern(badge, s.number);
+      badge.style.setProperty('--b', `var(--id-${s.colourIndex % tokenData.seatColors.length})`);
+      badge.style.setProperty('--on', `var(--id-${s.colourIndex % tokenData.seatColors.length}-on)`);
       box.querySelector('.hud-name')!.textContent = shortName(s.name || (s.local ? 'Host keys' : 'Player'));
       // R125: the L-plate shows while the seat's driving help is on (Some or Lots).
       const lp = box.querySelector<HTMLElement>('[data-lplate]')!;

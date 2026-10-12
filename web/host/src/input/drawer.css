@@ -41,9 +41,13 @@ html [data-controllers-panel] [data-jj-input-drawer] {
   position: static; display: flex; width: 100%; max-width: none; max-height: none;
   translate: none; border: 0; box-shadow: none; font-size: max(13px, calc(17px * var(--rk, 1)));
 }
-html [data-controllers-panel] [data-jj-input-drawer] .drawer-scroll { overflow: visible; padding: 0; }
+html [data-controllers-panel] [data-jj-input-drawer] .drawer-scroll { flex: none; overflow: visible; padding: 0; }
 html [data-controllers-panel] [data-jj-input-drawer] :is(.dr-bar, .dr-cards, .dr-rows, .dr-options) { display: block; }
 html [data-controllers-panel] [data-jj-input-drawer] .dr-bar { display: flex; }
 html [data-controllers-panel] [data-jj-input-drawer] .dr-cards { display: none; }
 html [data-controllers-panel] [data-jj-input-drawer] button { min-height: 36px; margin: 3px; }
 html [data-controllers-panel] [data-jj-input-drawer] .dr-options { max-width: none; }
+/* The old floating drawer's race-time hover fold must never collapse menu actions. */
+html[data-jj-phase][data-jj-menu] [data-controllers-panel] [data-jj-input-drawer] ul {
+  width: auto; max-height: none; overflow: visible;
+}

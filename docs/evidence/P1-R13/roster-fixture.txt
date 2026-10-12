@@ -1,0 +1,10 @@
+✔ every roster vehicle has a profile, a bake and an engine voice, in roster order (677.408625ms)
+✔ a fixture vehicle added as data is in the picker and drawn by the renderer (767.260167ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2081.780792

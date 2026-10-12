@@ -37,6 +37,9 @@ import type { Sampled } from '../interp';
 import { followSun, InkHull, toon } from '../look';
 import { PART_DETACHED, PART_LOOSE, PIECE_HUSK, type Frame } from '../snapshot';
 import type { VehicleSource } from './registry';
+import { identityPaint, numberData, patternData, patternGeometry } from './identity-paint';
+import { seatPattern } from '../../../../shared/ui/patterns';
+import { tokenData } from '../../../../shared/ui/tokens.generated';
 
 export const LOD_CLASSES = 3;
 /** Camera layer of LOD class k (layer 0 is the rest of the world). */
@@ -72,6 +75,8 @@ interface InteriorType {
   meshes: InstancedMesh[];
   matrix: InstancedBufferAttribute;
   color: InstancedBufferAttribute;
+  pattern: InstancedBufferAttribute;
+  number: InstancedBufferAttribute;
 }
 
 interface PartType {
@@ -80,10 +85,12 @@ interface PartType {
   meshes: InstancedMesh[]; // one per LOD class
   matrix: InstancedBufferAttribute;
   color: InstancedBufferAttribute;
+  pattern: InstancedBufferAttribute;
+  number: InstancedBufferAttribute;
 }
 
 /** The paint-key material (V02's viewer recipe, with the tint from instanceColor). */
-function paintKey(src: MeshStandardMaterial): MeshStandardMaterial {
+function paintKey(src: MeshStandardMaterial, roof?: number[]): MeshStandardMaterial {
   const m = new MeshStandardMaterial({
     map: src.map,
     emissiveMap: src.emissiveMap,
@@ -93,16 +100,7 @@ function paintKey(src: MeshStandardMaterial): MeshStandardMaterial {
     roughness: 0.9,
     metalness: 0,
   });
-  m.onBeforeCompile = (sh) => {
-    sh.fragmentShader = sh.fragmentShader.replace(
-      '#include <color_fragment>',
-      `#if defined( USE_INSTANCING_COLOR ) || defined( USE_COLOR )
-        float paintMask = step( 0.985, min( diffuseColor.r, min( diffuseColor.g, diffuseColor.b ) ) );
-        diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, paintMask );
-      #endif`,
-    );
-  };
-  m.customProgramCacheKey = () => 'jj-paint-key';
+  identityPaint(m, roof);
   // The toon ramp on the sun (P1-R10); no halftone or grit on a car, so the identity paint stays true (POC2-13, R108).
   return toon(m);
 }
@@ -134,6 +132,7 @@ interface Placement {
   pieces: number[];
   byCar: Map<number, Map<number, PartState>>;
   paintOf: (car: number) => string;
+  numberOf: (car: number) => number;
   spin: (id: number, x: number, z: number, rot: Float32Array, i: number, radius: number) => number;
 }
 
@@ -174,7 +173,7 @@ export class VehicleModel {
     const sidecar = src.sidecar;
     this.partIds = Object.keys(sidecar.parts);
     this.corePart = this.partIds.indexOf('core');
-    this.material = paintKey(lods[0]!.material as MeshStandardMaterial);
+    this.material = paintKey(lods[0]!.material as MeshStandardMaterial, sidecar.anchors?.roof_number);
     const byType = new Map<string, Slot[]>();
     this.partIds.forEach((id, part) => {
       const spec = sidecar.parts[id]!;
@@ -197,7 +196,7 @@ export class VehicleModel {
       const meshes = lods.map((parts, lod) => {
         const g = parts.get(source);
         if (!g) throw new Error(`${src.id} LOD${lod} has no ${source}`);
-        const im = new InstancedMesh(g, this.material, 1);
+        const im = new InstancedMesh(patternGeometry(g, slots.find((s) => !s.mirror)!.pivot), this.material, 1);
         im.name = `${src.id}.${id}.lod${lod}`;
         im.frustumCulled = false;
         im.castShadow = true;
@@ -214,7 +213,7 @@ export class VehicleModel {
         g.computeBoundingBox();
         if (g.boundingBox) wheelRadius = (g.boundingBox.max.y - g.boundingBox.min.y) / 2;
       }
-      this.types.push({ id, slots, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3) });
+      this.types.push({ id, slots, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3), pattern: new InstancedBufferAttribute(new Float32Array(2), 2), number: new InstancedBufferAttribute(new Float32Array(4), 4) });
     }
     this.wheelRadius = wheelRadius;
     const declared = sidecar.interiors ?? {};
@@ -222,7 +221,7 @@ export class VehicleModel {
       const meshes = lods.map((parts, lod) => {
         const g = parts.get(`interior_${id}`);
         if (!g) throw new Error(`${src.id} LOD${lod} has no interior_${id}`);
-        const im = new InstancedMesh(g, this.material, 1);
+        const im = new InstancedMesh(patternGeometry(g, new Vector3()), this.material, 1);
         im.name = `${src.id}.interior_${id}.lod${lod}`;
         im.frustumCulled = false;
         im.receiveShadow = true;
@@ -232,7 +231,7 @@ export class VehicleModel {
         return im;
       });
       const exposedBy = b.exposedBy.map((p) => this.partIds.indexOf(p)).filter((k) => k >= 0);
-      this.interiors.push({ id, exposedBy, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3) });
+      this.interiors.push({ id, exposedBy, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3), pattern: new InstancedBufferAttribute(new Float32Array(2), 2), number: new InstancedBufferAttribute(new Float32Array(4), 4) });
     }
     this.grow(capacity);
   }
@@ -246,17 +245,25 @@ export class VehicleModel {
       // One buffer per part type, shared by its LOD meshes (uploaded once per frame whatever the tiles' LODs).
       t.matrix = new InstancedBufferAttribute(new Float32Array(n * 16), 16);
       t.color = new InstancedBufferAttribute(new Float32Array(n * 3), 3);
+      t.pattern = new InstancedBufferAttribute(new Float32Array(n * 2), 2);
+      t.number = new InstancedBufferAttribute(new Float32Array(n * 4), 4);
       for (const im of t.meshes) {
         im.instanceMatrix = t.matrix;
         im.instanceColor = t.color;
+        im.geometry.setAttribute('identityPattern', t.pattern);
+        im.geometry.setAttribute('identityNumber', t.number);
       }
     }
     for (const t of this.interiors) {
       t.matrix = new InstancedBufferAttribute(new Float32Array(cap * 16), 16);
       t.color = new InstancedBufferAttribute(new Float32Array(cap * 3), 3);
+      t.pattern = new InstancedBufferAttribute(new Float32Array(cap * 2), 2);
+      t.number = new InstancedBufferAttribute(new Float32Array(cap * 4), 4);
       for (const im of t.meshes) {
         im.instanceMatrix = t.matrix;
         im.instanceColor = t.color;
+        im.geometry.setAttribute('identityPattern', t.pattern);
+        im.geometry.setAttribute('identityNumber', t.number);
       }
     }
     this.capacity = cap;
@@ -275,6 +282,8 @@ export class VehicleModel {
       const steer = s.steer[i]!;
       const states = byCar.get(id);
       this.c.set(p.paintOf(id));
+      const identity = patternData(p.numberOf(id));
+      const number = numberData(p.numberOf(id));
       for (const t of this.types) {
         t.slots.forEach((slot, k) => {
           const at = n * t.slots.length + k;
@@ -294,6 +303,8 @@ export class VehicleModel {
           if (slot.mirror) this.m.multiply(this.flip);
           this.m.toArray(t.matrix.array, at * 16);
           this.c.toArray(t.color.array, at * 3);
+          t.pattern.array.set(identity, at * 2);
+          if (slot.part === this.corePart) t.number.array.set(number, at * 4);
         });
       }
       // Interior blocks sit in vehicle space: the car's own matrix, only where a part that exposes them isn't intact.
@@ -302,6 +313,7 @@ export class VehicleModel {
           if (!t.exposedBy.some((part) => states.has(part))) return;
           this.car.toArray(t.matrix.array, exposed[k]! * 16);
           this.c.toArray(t.color.array, exposed[k]! * 3);
+          t.pattern.array.set(identity, exposed[k]! * 2);
           exposed[k]!++;
         });
       }
@@ -314,6 +326,8 @@ export class VehicleModel {
       const part = f!.piecePart[k]!;
       this.car.compose(this.v.fromArray(f!.piecePos, k * 3), this.q.fromArray(f!.pieceRot, k * 4), this.one);
       this.c.set(p.paintOf(f!.pieceCar[k]!));
+      const identity = patternData(p.numberOf(f!.pieceCar[k]!));
+      const number = numberData(p.numberOf(f!.pieceCar[k]!));
       for (const t of this.types) {
         t.slots.forEach((slot, n) => {
           const at = i * t.slots.length + n;
@@ -326,12 +340,15 @@ export class VehicleModel {
           }
           this.m.toArray(t.matrix.array, at * 16);
           this.c.toArray(t.color.array, at * 3);
+          t.pattern.array.set(identity, at * 2);
+          if (slot.part === this.corePart) t.number.array.set(number, at * 4);
         });
       }
       if (part === PIECE_HUSK) {
         this.interiors.forEach((t, n) => {
           this.car.toArray(t.matrix.array, exposed[n]! * 16);
           this.c.toArray(t.color.array, exposed[n]! * 3);
+          t.pattern.array.set(identity, exposed[n]! * 2);
           exposed[n]!++;
         });
       }
@@ -339,6 +356,8 @@ export class VehicleModel {
     this.interiors.forEach((t, k) => {
       t.matrix.needsUpdate = true;
       t.color.needsUpdate = true;
+      t.pattern.needsUpdate = true;
+      t.number.needsUpdate = true;
       for (const im of t.meshes) {
         im.count = exposed[k]!;
         im.visible = exposed[k]! > 0;
@@ -348,6 +367,8 @@ export class VehicleModel {
     for (const t of this.types) {
       t.matrix.needsUpdate = true;
       t.color.needsUpdate = true;
+      t.pattern.needsUpdate = true;
+      t.number.needsUpdate = true;
       for (const im of t.meshes) {
         im.count = this.drawn * t.slots.length;
         im.visible = shown;
@@ -360,8 +381,18 @@ export class VehicleModel {
   }
 
   dispose(): void {
-    for (const t of [...this.types, ...this.interiors]) for (const im of t.meshes) this.scene.remove(im);
-    for (const h of this.hulls) this.scene.remove(h.mesh);
+    for (const t of [...this.types, ...this.interiors]) for (const im of t.meshes) {
+      this.scene.remove(im);
+      im.geometry.dispose();
+      im.dispose();
+    }
+    // Hull geometry is owned here; its ink material is shared by the whole world.
+    for (const h of this.hulls) {
+      this.scene.remove(h.mesh);
+      h.mesh.geometry.dispose();
+      h.mesh.dispose();
+    }
+    this.material.dispose();
   }
 }
 
@@ -377,6 +408,9 @@ export class VehicleRenderer {
   readonly fx: Fx;
   /** The identity colour of a car (P1-R06 and the session set it; until then a palette by car id). */
   paintOf: (car: number) => string = (car) => PALETTE[(car - 1) % PALETTE.length]!;
+  /** Seat numbers remain stable across drop-ins, respawns, debris and replay. */
+  numberOf: (car: number) => number = (car) => car;
+  nameOf: (car: number) => string = (car) => `Player ${car}`;
   cars = 0;
   /** Called when a vehicle's model has loaded (the world redraws, so its cars appear without waiting for a snapshot). */
   onLoaded?: (id: string) => void;
@@ -386,6 +420,8 @@ export class VehicleRenderer {
   private carVehicle = new Map<number, number>();
   /** The vehicle of each car in the last sample, by its index there. */
   private vehicleOfIndex: number[] = [];
+  private lastIds: number[] = [];
+  private patternsEnabled = true;
 
   /** `sources`: the vehicles in roster order (`rosterSources()` from registry.ts; a test passes its own). */
   static async load(scene: Scene, sources: VehicleSource[], capacity = 16): Promise<VehicleRenderer> {
@@ -416,6 +452,7 @@ export class VehicleRenderer {
     if (!p) {
       p = loadLods(src.lods).then((lods) => {
         this.models[index] = new VehicleModel(this.scene, src, lods, this.capacity);
+        this.models[index]!.material.userData.jjPatternEnabled.value = this.patternsEnabled ? 1 : 0;
         this.onLoaded?.(src.id);
       });
       this.loading.set(index, p);
@@ -461,17 +498,24 @@ export class VehicleRenderer {
     return this.loaded.reduce((a, m) => a + (m.drawn > 0 ? m.types.length : 0), 0);
   }
 
+  /** Validation seam: compare actual enabled/disabled frames without changing materials, geometry or batching. */
+  setPatternsEnabled(on: boolean): void {
+    this.patternsEnabled = on;
+    for (const model of this.loaded) model.material.userData.jjPatternEnabled.value = on ? 1 : 0;
+  }
+
   /** Places every car and part from an interpolated sample (its frame carries the part records). */
   update(s: Sampled): void {
     const f = s.frame;
     const pieceCount = f?.pieces ?? 0;
     this.cars = s.cars;
+    this.lastIds = Array.from(s.id.subarray(0, s.cars));
     this.centre(s);
     const byCar = partStates(f);
     const last = this.sources.length - 1;
     const groupOf = (v: number) => (this.groups[v] ??= { cars: [], pieces: [] });
     for (const g of this.groups) if (g) (g.cars.length = 0), (g.pieces.length = 0);
-    this.carVehicle.clear();
+    // Withdrawn cars' dynamic husks/parts keep their model for the round, even when no live car remains.
     for (let i = 0; i < s.cars; i++) {
       // An index past the roster draws as the first vehicle (a host newer than its renderer).
       const v = Math.min(s.flags[i]! >>> 16, last);
@@ -480,7 +524,7 @@ export class VehicleRenderer {
       groupOf(v).cars.push(i);
     }
     for (let k = 0; k < pieceCount; k++) groupOf(this.carVehicle.get(f!.pieceCar[k]!) ?? 0).pieces.push(k);
-    const place: Placement = { s, f, cars: [], pieces: [], byCar, paintOf: this.paintOf, spin: (...a) => this.wheelSpin(...a) };
+    const place: Placement = { s, f, cars: [], pieces: [], byCar, paintOf: this.paintOf, numberOf: this.numberOf, spin: (...a) => this.wheelSpin(...a) };
     this.models.forEach((m, v) => {
       if (!m) return;
       const g = this.groups[v];
@@ -531,7 +575,7 @@ export class VehicleRenderer {
         instances: t.meshes[0]!.count,
         capacity: t.matrix.count,
         /** All LOD meshes of the type draw from the same matrix and colour buffers. */
-        shared: t.meshes.every((mesh) => mesh.instanceMatrix === t.matrix && mesh.instanceColor === t.color),
+        shared: t.meshes.every((mesh) => mesh.instanceMatrix === t.matrix && mesh.instanceColor === t.color && mesh.geometry.getAttribute('identityPattern') === t.pattern && mesh.geometry.getAttribute('identityNumber') === t.number),
         layers: t.meshes.map((mesh) => mesh.layers.mask),
       })),
     );
@@ -555,6 +599,8 @@ export class VehicleRenderer {
                   vehicle: m.id,
                   position: [p.x, p.y, p.z].map((x) => +x.toFixed(3)),
                   colour: '#' + new Color().fromArray(t.color.array, c).getHexString(),
+                  pattern: seatPattern(Math.round(t.pattern.getX(rank * t.slots.length + k)) + 1).id,
+                  numberChunks: Array.from(t.number.array.slice((rank * t.slots.length + k) * 4, (rank * t.slots.length + k + 1) * 4)),
                 };
               }),
             )
@@ -564,12 +610,15 @@ export class VehicleRenderer {
     return {
       capacity: this.capacityOf,
       cars: this.cars,
+      patternsEnabled: this.patternsEnabled,
+      materials: this.loaded.map((m) => ({ vehicle: m.id, count: new Set([...m.types, ...m.interiors].flatMap((t) => t.meshes.map((mesh) => mesh.material))).size })),
       drawsPerTile: this.drawsPerTile,
       hulls: this.hulls.length,
       fx: this.fx.inspect(),
       types,
       parts,
       interiors,
+      identities: this.lastIds.map((id, car) => ({ car, number: this.numberOf(id), pattern: seatPattern(this.numberOf(id)).id })),
       /** Per roster vehicle: loaded, and cars drawn at the last update. */
       vehicles: this.sources.map((src, v) => ({ id: src.id, loaded: !!this.models[v], cars: this.models[v]?.drawn ?? 0 })),
     };
@@ -581,7 +630,7 @@ export class VehicleRenderer {
   }
 }
 
-const PALETTE = ['#22c3e6', '#ff4fa3', '#ffd23f', '#7bd389', '#ff7a2e', '#9b7bff', '#ff3b3b', '#3bd6c6'];
+const PALETTE = tokenData.seatColors.map(c => c.hex);
 
 interface PartState {
   state: number;

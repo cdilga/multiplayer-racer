@@ -102,6 +102,8 @@ function deadzone(x: number, y: number, dz: number): [number, number] {
 export class LocalInput {
   private sources = new Map<number, Source>();
   private keys = new Set<string>();
+  /** A Lobby Ready event has already sent its toggle; held keys must not toggle again during Preparing. */
+  private readyEvents = new Set<number>();
   private timer: ReturnType<typeof setInterval> | undefined;
   private last = 0;
   /** Profiles saved by calibration (read once, written on save). */
@@ -177,7 +179,7 @@ export class LocalInput {
   }
 
   private lobbyChoice(s: Source, axes: Axes, ready: boolean): boolean {
-    if (this.client.room?.phase !== 'Lobby') return ready;
+    if (this.client.room?.phase !== 'Lobby') return ready && !this.readyEvents.has(s.view.source);
     const seat = this.client.room.seats.find((st) => st.localSource === s.view.source && st.presence !== 'Left');
     if (!seat) return false; // The joining press is never Ready as well.
     let pick = this.lobbyPicks.get(s.view.source);
@@ -201,7 +203,8 @@ export class LocalInput {
       if (pressed) this.choose(s.view.source, pick.vehicle, false);
       return false;
     }
-    return ready && !pick.suppressReady;
+    // Keyboard Ready is delivered from its key event, so a short press survives a long renderer frame.
+    return s.view.kind !== 'keys' && ready && !pick.suppressReady;
   }
 
   /** The drawer's Remove (P1-C14): an unplugged pad or wheel's held seat leaves for good, its car with it. */
@@ -303,10 +306,19 @@ export class LocalInput {
     e.preventDefault();
     if (e.type === 'keydown') this.keys.add(e.code);
     else this.keys.delete(e.code);
+    const cluster = clusters.find(c => c.ready === e.code);
+    if (cluster && e.type === 'keyup') this.readyEvents.delete(cluster.id);
+    if (cluster && this.client.room?.phase === 'Lobby' && !e.repeat) {
+      const confirmed = this.lobbyPicks.get(cluster.id)?.confirmed === true;
+      if (e.type === 'keydown' && confirmed) this.readyEvents.add(cluster.id);
+      // Sample the press/release immediately for joining and confirmation; Ready itself takes the reliable UI lane.
+      this.sampleCluster(cluster, 0, performance.now());
+      if (e.type === 'keydown' && confirmed) this.ready(cluster.id);
+    }
   };
 
   /** A window that loses focus never sees the key-ups: release everything. */
-  private readonly onBlur = (): void => this.keys.clear();
+  private readonly onBlur = (): void => { this.keys.clear(); this.readyEvents.clear(); };
 
   private readonly onPad = (e: GamepadEvent): void => {
     const source = map.padSourceBase + e.gamepad.index;

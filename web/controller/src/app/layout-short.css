@@ -15,6 +15,7 @@
   .strip { min-height: 52px; padding: 4px 10px; gap: 8px; }
   .strip .who { flex: 1 1 110px; min-width: 110px; }
   .strip .seatno { font-size: 40px; }
+  .strip .seatno.badge { font-size: 30px; padding: 3px 7px 4px; min-width: 1.6em; }
   .strip .pos { font-size: 24px; }
   .strip .tools .btn.identify { font-size: 15px; }
   .strip .nm { font-size: 17px; }
@@ -31,13 +32,16 @@
 /* Narrow and short (640x300 with a toolbar): everything tightens a notch so all seven tools stay in view without scrolling. */
 @media (orientation: landscape) and (max-height: 440px) and (max-width: 800px) {
   .strip { gap: 5px; padding: 4px 6px; }
-  .strip .who { flex: 0 1 auto; min-width: 0; gap: 6px; }
+  .strip .who { flex: 1 1 110px; min-width: 110px; gap: 6px; }
   .strip .seatno { font-size: 30px; }
+  .strip .seatno.badge { font-size: 26px; padding: 3px 6px 4px; }
   .strip .nm { font-size: 15px; }
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
   .strip .tools { gap: 3px; }
   .strip .tools .btn { padding: 0 5px; font-size: 12px; min-width: 40px; }
   /* Icon-only tools are squares; seven of them plus Identify's label must fit 640 px beside the number and the place. */
   .strip .tools .btn.icon { width: 40px; padding: 0; }
-  .strip .tools .btn.identify { font-size: 13px; padding: 0 8px; }
+  .strip .tools .btn.identify { font-size: 12px; padding: 0 3px; }
+  .strip .tools .btn[data-act=car] { padding-inline: 3px; }
+  .strip .conn { font-size: 10px; padding-inline: 2px; }
 }

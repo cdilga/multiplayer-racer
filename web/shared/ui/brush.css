@@ -49,7 +49,7 @@
 .capt.flat { --capt-rot: 0deg; }
 .capt.one > span { display: block; white-space: nowrap; text-overflow: ellipsis; }
 .capt .badge { font-size: .8em; vertical-align: .05em; }
-.bz, .chip, .badge { -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important; border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important; }
+.bz, .chip, .badge { -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--identity-pattern, none) 0 0 / 24px 24px repeat, var(--bz-fill, var(--c-paper)) !important; border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important; }
 
 .chip, .badge { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin); }
 .chip:nth-child(4n+2) { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin); }

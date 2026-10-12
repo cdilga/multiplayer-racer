@@ -5,7 +5,7 @@
 //   npm --prefix web run build && node web/host/tests/look-capture.mjs [look identity fx] [--headless]
 // Writes JPGs and report.json (what each shot waited for, console errors, draw calls, tiers) into docs/evidence/P1-R10 and
 // docs/evidence/P1-R12. Look at every frame: self-review.md is written from them, never from this report.
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
@@ -164,7 +164,7 @@ async function identity(out, report) {
     }
     return out;
   });
-  const palette = ['#22c3e6', '#ff4fa3', '#ffd23f', '#7bd389', '#ff7a2e', '#9b7bff', '#ff3b3b', '#3bd6c6']; // vehicles.ts PALETTE: the badge colours
+  const palette = JSON.parse(await readFile(join(repo, 'art/ui/accepted/2026-10-07/tokens.json'), 'utf8')).identity.colors.map(c => c.hex);
   const shot = await page.screenshot({ type: 'png' });
   await writeFile(join(out, 'identity-strip-1080p.png'), shot);
   const png = PNG.sync.read(shot);

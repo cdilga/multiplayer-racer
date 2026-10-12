@@ -2,7 +2,7 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
-import { icon, paintKit } from '../../../shared/ui';
+import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
@@ -79,7 +79,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let prefs: Preferences | null = null;
   let sheet: SettingsSheet | null = null;
   let cars: CarSheet | null = null;
-  let chosenSeat: number | null = null;
+  // R90 offline play fixtures show the confirmed controller; &choose=1 explicitly opens the initial vehicle step.
+  const fixture = new URLSearchParams(location.hash.slice(1));
+  let chosenSeat: number | null = fixture.get('state') === 'playing' && fixture.get('choose') !== '1'
+    ? Math.max(1, Number.parseInt(fixture.get('seat') ?? '12', 10) || 12) : null;
   let rehosting = false;
   const fs = new FullscreenControl();
   let fsNote = false;
@@ -180,12 +183,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
-      <div class="strip" data-box="strip"><div class="who"><span class="seatno">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
+      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
 </div>
     </section>`;
     // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
     // the tools ride in the strip in landscape and get their own row under it in portrait, so the name keeps its room.
     const screenEl = app.querySelector<HTMLElement>('.screen')!;
+    const identity = screenEl.querySelector<HTMLElement>('.seatno')!;
+    identity.style.setProperty('--on', seatColor(you.number).on);
+    applySeatPattern(identity, you.number);
     const land = matchMedia('(orientation: landscape)').matches;
     const toolsHolder = document.createElement('div');
     toolsHolder.innerHTML = TOOLS;
@@ -361,7 +367,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (carBtn) {
       carBtn.hidden = session.roomPhase !== 'Lobby';
       carBtn.classList.remove('icon');
-      carBtn.textContent = 'Choose vehicle';
+      carBtn.textContent = chosenSeat === session.you?.number ? 'Vehicle' : 'Choose vehicle';
     }
     if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
       const host = app.querySelector<HTMLElement>('.screen.play');

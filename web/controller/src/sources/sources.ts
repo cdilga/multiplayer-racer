@@ -1,3 +1,4 @@
+import { applySeatPattern } from '../../../shared/ui/patterns';
 // The sources on a joined controller (P1-C08, folded into the one join journey by P1-C13 / R119). Whatever joined (a phone or a
 // laptop) is also a carrier: a pad pressed or a key cluster pressed on it claims a seat for that source, straight away, over the
 // page's one connection; the page's own touch player is optional (a laptop never needs to tap in). Every source joins and
@@ -381,6 +382,8 @@ export class Sources {
     this.list.innerHTML = html;
     // The kit's icon element carries its own mask URL, so it is added as an element, not written into the markup.
     for (const li of this.list.querySelectorAll<HTMLElement>('[data-icon]')) {
+      const badge = li.querySelector<HTMLElement>('.hub-badge.badge');
+      if (badge) applySeatPattern(badge, Number(badge.textContent?.replace('#', '')));
       li.querySelector('.hub-kind')?.prepend(icon(li.dataset.icon!));
       if (li.dataset.chipIcon) li.querySelector('.hub-state')?.prepend(icon(li.dataset.chipIcon));
     }

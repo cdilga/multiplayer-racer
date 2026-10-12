@@ -9,6 +9,7 @@
 // `JJ_CAPTURE_DIR=<dir>` saves the visual self-review captures.
 //   node --test web/tests/journeys/jn3-edges.test.mjs
 import assert from 'node:assert/strict';
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 import { mkdirSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -22,7 +23,7 @@ let server;
 
 before(async () => {
   server = await serve(build('./', 'jn3e'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
@@ -141,6 +142,9 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
+  await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page };
 }
 

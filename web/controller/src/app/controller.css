@@ -374,7 +374,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
    keep straight edges here because their torn banners overhang them, which a shape mask would cut off. */
 :is(.badge, .goal, .cooee-phone b, .meter, .row, .gatecard .tip) {
   -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
-  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--identity-pattern, none) 0 0 / 24px 24px repeat, var(--bz-fill, var(--c-paper)) !important;
   border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
 }
 .badge { --bz-mask: var(--bz-badge-0-mask); --bz-skin: var(--bz-badge-0-skin); --bz-fill: var(--seat); padding-inline: 12px; }
@@ -414,7 +414,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .scroll, .picker { touch-action: pan-y; }
 :is(.tools .btn, .strip-acts .btn, .btn.icon:not(.brush), .banner, .seg, .field input, .thumb) {
   -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
-  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--identity-pattern, none) 0 0 / 24px 24px repeat, var(--bz-fill, var(--c-paper)) !important;
   border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
 }
 :is(.tools .btn, .strip-acts .btn) { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin-on-ink); --bz-fill: var(--c-ink-raised); padding-inline: 16px; padding-bottom: 4px; }
@@ -455,3 +455,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 /* Help's Controls page (P1-C14): the cards scroll inside the Help card on a short phone rather than push the page. */
 .coach[data-page='controls'] { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 16px); }
 .coach-controls { overflow: auto; min-height: 0; font-size: 13px; padding: 2px 2px 6px; }
+
+/* P1-R13: the persistent number chip carries the same pattern as the car. */
+.strip .seatno.badge { color: var(--on); -webkit-text-stroke: 0; padding: 4px 12px 6px; --bz-fill: var(--seat); text-shadow: 0 1px 1px rgb(21 32 58 / .35); }
+.strip .seatno.badge { margin-top: 0; height: auto; min-width: 1.8em; line-height: 1.15; font-size: 40px; }

@@ -171,7 +171,8 @@ test('profiles: the display picks a default (TV, desk, handheld), the host overr
     try {
       dflt[name] = await rk(page);
       await page.locator('[data-act=menu]').click();
-      assert.match(await page.locator('[data-view] [aria-pressed=true]').innerText(), new RegExp(`^Auto \\(${name}\\)`), `${name}: Auto names the profile in force`);
+      await page.getByRole('button', {name:'Display & sound',exact:true}).click();
+      assert.match(await page.locator('[data-display-sound] [aria-pressed=true]').innerText(), new RegExp(`^Auto \\(${name}\\)`), `${name}: Auto names the profile in force`);
     } finally {
       await page.close();
     }
@@ -182,6 +183,7 @@ test('profiles: the display picks a default (TV, desk, handheld), the host overr
   const page = await open('lobby-8', [1280, 800]);
   try {
     await page.locator('[data-act=menu]').click();
+    await page.getByRole('button', {name:'Display & sound',exact:true}).click();
     await page.locator('[data-act=view][data-profile=tv]').click();
     assert.ok(Math.abs((await rk(page)) - 800 / 1080) < 1e-6, 'override applied live');
     assert.equal(await page.evaluate(() => localStorage.getItem('jj.host.profile')), 'tv');
@@ -198,6 +200,7 @@ test('phone host menu: Full screen is offered (from a gesture), and the lobby fi
   const page = await open('lobby-8', [412, 915]);
   try {
     await page.locator('[data-act=menu]').click();
+    await page.getByRole('button', {name:'Display & sound',exact:true}).click();
     assert.ok(await page.getByRole('button', { name: 'Full screen' }).isVisible());
     await capture(page, 'phone-host-menu');
   } finally {

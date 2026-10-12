@@ -140,6 +140,8 @@ test('tilt steering: off by default, opt-in, steers the host car through the nor
   // Reload: the setting and its neutral persist, and the sensor comes back on without a tap (Android-style).
   await page.goto(joinUrl);
   await wait(page, () => window.__jjController?.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
+  if (await page.getByRole('button', { name: 'Skip tutorial' }).isVisible()) await page.getByRole('button', { name: 'Skip tutorial' }).click();
   const p = await prefs(page);
   assert.deepEqual([p.tilt, p.tiltSensitivity, p.tiltDeadzone], [true, 'normal', 'medium']);
   await tilt(page, 40);

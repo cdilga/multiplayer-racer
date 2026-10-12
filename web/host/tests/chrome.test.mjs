@@ -53,7 +53,7 @@ test('footer: the host menu, room code and domain, count and diagnostics sit in 
       const f = await box(page, '.jj-foot');
       assert.ok(f.x === 0 && Math.abs(f.y + f.h - vp[1]) < 1, `${name}: footer on the bottom edge`);
       assert.ok(f.h >= 29 && f.h <= vp[1] * 0.06 + 31, `${name}: footer height ${f.h}`);
-      for (const sel of ['[data-act=menu]', '[data-foot-code]', '[data-foot-count]', '[data-act=diagnostics]']) {
+      for (const sel of ['[data-act=menu]', '[data-foot-code]', '[data-foot-count]']) {
         const b = await box(page, `.jj-foot ${sel}`);
         if (!b && sel === '[data-foot-count]' && vp[0] < vp[1]) continue; // portrait: the count is in the lobby head
         assert.ok(b && b.x >= 0 && b.x + b.w <= vp[0] + 0.5 && b.y >= f.y - 0.5 && b.y + b.h <= f.y + f.h + 0.5, `${name}: ${sel} inside the footer`);
@@ -225,6 +225,8 @@ test('diagnostics: room code, direct or relay and RTT per seat, no addresses', a
       const p = (kind, rttMs, protocol = 'udp', relayProtocol = null) => ({ local: kind, remote: kind, kind, protocol, relayProtocol, rttMs });
       window.__jjRoundFixture.setPaths({ 'ep-1': p('host', 3), 'ep-2': p('srflx', 18), 'ep-3': p('coturn-relay', 61, 'udp', 'udp'), 'ep-4': p('cloudflare-relay', 95, 'udp', 'udp'), 'ep-5': null, 'ep-9': p('host', 7) });
     });
+    await page.locator('[data-act=menu]').click();
+    await page.getByRole('button', {name:'Advanced',exact:true}).click();
     await page.locator('[data-act=diagnostics]').click();
     await page.waitForFunction(() => document.querySelectorAll('.jj-diag tr[data-seat]').length === 8, null, { timeout: 5000 });
     const rows = await page.$$eval('.jj-diag tr[data-seat]', (els) => els.map((e) => ({ seat: Number(e.dataset.seat), path: e.querySelector('[data-path]').textContent, rtt: e.querySelector('[data-rtt]').textContent })));
@@ -304,10 +306,12 @@ test('captures: menu, confirmations and diagnostics on a phone and a 4K TV', { s
     const page = await open('race-8', vp);
     try {
       await untilHud(page, 8);
+      await page.locator('[data-act=menu]').click();
+      await page.getByRole('button', {name:'Advanced',exact:true}).click();
       await page.locator('[data-act=diagnostics]').click();
       await page.waitForTimeout(400);
       await capture(page, `diagnostics-race-8@${vpName}`);
-      await page.locator('[data-act=diagnostics]').click();
+      await page.keyboard.press('Escape');
       await page.locator('[data-act=menu]').click();
       await capture(page, `menu-race-8@${vpName}`);
       await page.getByRole('button', { name: 'Disband room' }).click();

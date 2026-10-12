@@ -494,13 +494,18 @@ for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint
   } finally { await host.context().close(); await wk?.close(); }
 });
 
-for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room']) test(`${engine} ${mode} welcome caption leaves the expanded drawer readable while visible`, { timeout: 180_000 }, async () => {
+for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room']) test(`${engine} ${mode} welcome caption leaves controller administration readable while visible`, { timeout: 180_000 }, async () => {
   const wk = engine === 'WebKit' ? await webkit.launch() : null;
   const host = await hostPage(wk ?? browser, '', mode);
   const checks = [];
   let cue = 0;
   try {
-    if (mode === 'room') await host.waitForFunction(() => window.__jjRoom?.view()?.phase === 'Lobby' && document.documentElement.dataset.jjPhase === 'Lobby');
+    if (mode === 'room') {
+      await host.waitForFunction(() => window.__jjRoom?.view()?.phase === 'Lobby' && document.documentElement.dataset.jjPhase === 'Lobby');
+      assert.equal(await host.locator('[data-jj-input-drawer]').count(), 0, 'room has no floating input panel');
+      await host.getByRole('button', { name: 'Host menu', exact: true }).click();
+      await host.getByRole('button', { name: 'Controllers', exact: true }).click();
+    }
     await host.evaluate(() => { for (let i = 0; i < 4; i++) window.__padAdd(i); });
     await host.waitForFunction(() => document.querySelectorAll('.dr-rows li').length === 7);
     await host.locator('[data-keyboard-options] summary').click();
@@ -515,14 +520,18 @@ for (const engine of ['Chromium', 'WebKit']) for (const mode of ['drive', 'room'
           const space = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--jj-caption-space'));
           return !!painted && space >= Math.ceil(painted.height) + 16;
         });
-        await host.locator('.drawer-scroll').evaluate((el, position) => { el.scrollTop = position === 'top' ? 0 : el.scrollHeight; }, position);
+        await host.locator(mode === 'room' ? '[data-controllers-view]' : '.drawer-scroll').evaluate((el, position) => { el.scrollTop = position === 'top' ? 0 : el.scrollHeight; }, position);
         for (let sample = 0; sample < 6; sample++) {
           const data = await host.evaluate(() => {
-            const d = document.querySelector('[data-jj-input-drawer]').getBoundingClientRect();
+            const raw = document.querySelector('[data-jj-input-drawer]').getBoundingClientRect();
+            // Controllers scrolls inside the menu; its clipped content is not painted over the caption.
+            const panel = document.querySelector('[data-controllers-view]')?.getBoundingClientRect();
+            const d = panel ? { left: Math.max(raw.left, panel.left), right: Math.min(raw.right, panel.right),
+              top: Math.max(raw.top, panel.top), bottom: Math.min(raw.bottom, panel.bottom) } : raw;
             const c = document.querySelector('#jj-caption .capt')?.getBoundingClientRect();
             const text = document.querySelector('#jj-caption .capt > span');
             const qr = document.querySelector('.jj-drive-qr')?.getBoundingClientRect();
-            return { drawer: d.toJSON(), caption: c?.toJSON(), text: window.__jjAudio.captionShown(),
+            return { drawer: 'toJSON' in d ? d.toJSON() : d, rawDrawer: raw.toJSON(), panel: panel?.toJSON(), caption: c?.toJSON(), text: window.__jjAudio.captionShown(),
               qr: qr?.toJSON(),
               textClipped: !!text && text.scrollHeight > text.clientHeight + 1,
               textHeight: [text?.clientHeight, text?.scrollHeight], rows: document.querySelectorAll('.dr-rows li').length };

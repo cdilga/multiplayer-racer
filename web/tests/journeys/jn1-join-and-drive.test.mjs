@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Journey JN1 (P1-G04): free drive on the greybox. The real host page (`B/host?drive&test=live`) and real controller
 // pages from one build, served by the real jj-server, over loopback WebRTC in Chromium. One phone joins by the QR the
 // host shows (decoded from the screen), one by typing the code on the landing page; both claim, get a seat and a car,
@@ -71,6 +72,7 @@ async function joinAndClaim(p, url, name) {
   await p.page.locator('#name').fill(name);
   await p.page.getByRole('button', { name: 'Join the race' }).click();
   await wait(p.page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(p.page);
   return p.page.evaluate(() => window.__jjController.inspect());
 }
 
