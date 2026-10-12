@@ -27,8 +27,9 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
   const s = await server();
   const b = await engine.launch(engine === chromium ? {channel:process.env.JJ_CHROMIUM_GPU==='native'?'chromium':undefined,args:chromiumArgs} : {});
   const errors=[];
+  let host;
   try {
-    const host = await b.newPage({viewport:{width:1366,height:768}});
+    host = await b.newPage({viewport:{width:1366,height:768}});
     host.on('pageerror', e=>errors.push(e.message));
     host.on('console', m=>{if (m.type()==='error' && /shader|WebGLProgram/i.test(m.text())) errors.push(m.text());});
     await host.goto(`${s.origin}${BASE}host?room&test=live&autores=off`);
@@ -81,7 +82,8 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       await host.evaluate(()=>document.exitFullscreen()); await shot(host,'chromium-host-after-fullscreen');
     }
     assert.deepEqual(errors,[]);
-  } finally {await b.close();await s.close();}
+  } catch(e) {console.log('host signalling',await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null));throw e;}
+  finally {await b.close();await s.close();}
 });
 
 test('identity patterns add zero draws at 1/4/24 tiles; roof numbers and CVD sheet stay distinct', {timeout:240000,skip:!gpu && 'rendered 24-tile cohort needs GPU'}, async()=>{

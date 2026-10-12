@@ -147,7 +147,7 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');
 
   // The pause menu carries the join card too.
-  await host.locator('[data-act=menu]').click();
+  await host.locator('[data-act=menu]').click({ noWaitAfter: true });
   await host.locator('[data-menu] [data-join-card=menu]').waitFor();
   await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
   assert.equal(await host.locator('[data-menu] [data-join-url]').textContent(), joinUrl);

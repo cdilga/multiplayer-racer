@@ -19,8 +19,9 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
   const server = deployed ? {origin:deployed.origin,close:async()=>{}} : await serve(dist, BASE, { JJ_STUN_URLS: '' });
   const browser = await engine.launch(engine === chromium ? {channel:process.env.JJ_CHROMIUM_GPU==='native'?'chromium':undefined,args: chromiumArgs} : {});
   const errors = [];
+  let host;
   try {
-    const host = await (await browser.newContext({viewport:{width:1366,height:768}})).newPage();
+    host = await (await browser.newContext({viewport:{width:1366,height:768}})).newPage();
     await host.addInitScript(() => {
       localStorage.setItem('jj.hostVehicle.1', 'tradie-ute');
       window.__pads = [];
@@ -197,5 +198,5 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     },oldLocal);
     await shot(host,`${engine.name()}-race-after-controllers`);
     assert.deepEqual(errors,[]);
-  } catch(e) { console.log('errors', errors); throw e; } finally { await browser.close(); await server.close(); }
+  } catch(e) { console.log('errors', errors, 'host link', await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)); throw e; } finally { await browser.close(); await server.close(); }
 });

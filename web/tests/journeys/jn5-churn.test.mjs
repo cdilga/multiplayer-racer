@@ -292,7 +292,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await leave(host, phones[0]);
   await leave(host, phones[1]);
   // Local controller actions live in the accepted pause menu during racing.
-  await host.locator('.jj-foot [data-act=menu]').click();
+  // Keyboard activation is the same real footer action and remains usable while this software-GL churn cohort
+  // reflows. Pointer/scroll-observer latency is covered by the owner journey, not qualified by this loaded run.
+  await host.locator('.jj-foot [data-act=menu]').press('Enter');
   await host.getByRole('button', { name: 'Controllers', exact: true }).click();
   await host.locator('[data-jj-input-drawer] button[data-act="sit-out"]').first().click();
   await host.keyboard.press('Escape');

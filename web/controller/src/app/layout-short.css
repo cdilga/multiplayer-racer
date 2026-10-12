@@ -38,10 +38,12 @@
   .strip .nm { font-size: 15px; }
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
   .strip .tools { gap: 1px; }
-  .strip .tools .btn { padding: 0 5px; font-size: 12px; min-width: 40px; }
-  /* Icon-only tools are squares; seven of them plus Identify's label must fit 640 px beside the number and the place. */
+  .strip .tools .btn { padding: 0 5px; gap: 4px; font-size: 12px; min-width: 40px; }
+  /* Keep the full Identify and Vehicle labels beside square tools. The redundant Locate icon gives way on the
+     narrowest phones, leaving the labels clear of the brush edges without reducing the touch targets. */
   .strip .tools .btn.icon { width: 40px; padding: 0; }
   .strip .tools .btn.identify { font-size: 12px; padding: 0 3px; }
+  .strip .tools .btn.identify .ic { display: none; }
   .strip .tools .btn[data-act=car] { padding-inline: 3px; }
   .strip .conn { font-size: 10px; padding-inline: 2px; }
 }
