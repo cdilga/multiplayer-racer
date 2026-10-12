@@ -133,11 +133,40 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                 "seed {seed} {label}: no {want:?} road for {b:?}"
             );
         }
-        // Grade along the road never beats the strictest biome on the route.
-        let strictest = recipe
+        // R124: each biome keeps its own grade budget, blended at transitions; town must not flatten the rocks.
+        let (s, total) = jj_procgen::assemble::arc_lengths(&route(&map));
+        let cuts: Vec<usize> = map
+            .route
+            .segments
             .iter()
-            .map(|b| def(*b).data().terrain.max_grade)
-            .fold(f64::INFINITY, f64::min);
+            .take(map.route.segments.len() - 1)
+            .map(|seg| seg.span.to as usize)
+            .collect();
+        let selection = jj_procgen::biome::Selection {
+            lap: map
+                .route
+                .segments
+                .iter()
+                .map(|seg| {
+                    *recipe
+                        .iter()
+                        .find(|b| segment_name(**b) == seg.name)
+                        .unwrap()
+                })
+                .collect(),
+            cut_s: cuts.iter().map(|i| s[*i]).collect(),
+            cuts,
+            s,
+            total,
+        };
+        let grade_at = |i| {
+            let (a, b, t) = selection.blend_at(i);
+            def(a)
+                .data()
+                .terrain
+                .lerp(&def(b).data().terrain, t)
+                .max_grade
+        };
         let n = map.route.points.len();
         let near_feature = |i: usize| {
             map.features.iter().any(|f| {
@@ -157,13 +186,15 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
             let (a, b) = (&map.route.points[i], &map.route.points[(i + 2) % n]);
             let run = f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0;
             if run > 1.0 && (i + 2) % n >= 2 {
-                worst_grade = worst_grade.max(f64::from(b.y - a.y).abs() / 1000.0 / run);
+                let grade = f64::from(b.y - a.y).abs() / 1000.0 / run;
+                let budget = grade_at(i).max(grade_at((i + 2) % n));
+                assert!(
+                    grade <= budget + 0.02,
+                    "seed {seed} {label} point{i}: grade{grade:.3} vs local budget{budget}"
+                );
+                worst_grade = worst_grade.max(grade);
             }
         }
-        assert!(
-            worst_grade <= strictest + 0.02,
-            "seed {seed} {label}: grade {worst_grade:.3} vs {strictest}"
-        );
     }
     *table += &format!(
         "{label:<46} {ok:>3}/{} seeds found every boundary ({no_straight} had no straight), worst route grade {:.2} %\n",

@@ -217,3 +217,30 @@ heading, lateral position and receiving-surface height before changing the physi
 checks now require the entry through the ramp to be straight (0.01 rad quantization tolerance), while retaining
 the receiving envelope's existing turning budget. Data-defined ordinary ramp grades .18–.21 restore mean
 continuous racing flight (.85 s) without changing boost forces or any landing/flight acceptance threshold.
+
+## 2026-10-12 · Taller rock terrain exposes surface mismatches (br-xlvx.4)
+
+Blending both original road profiles under an explicit crossing made a bump on the lower road as relief increased.
+Seed4 Rocks/Town hit that bump and spun; previous rock budgets completed the same seed unaided. Rasterise the lower
+road corridor and suppress upper-road ground weights inside its bed, fading them back beyond the shoulder. The upper
+road is supplied by its explicit deck, not by the shared ground. The 24 pure/mixed rock lap/replay samples then finished
+without recovery, wreck or slow windows.
+
+Endpoint clearance does not guarantee a bridge approach clears intervening hills. On forced-crossing Rocks seed0,
+gate39 was at y3.44 m while the car drove on ground at y5.55 m. Envelope each approach edge against the actual ground
+edge, retaining the raised cosine where it clears the hill. The 15 forced-crossing laps/replays then reached both
+levels unaided; grade validation remains required.
+
+The analytical route and quantised heightfield diverge more with taller profiles. Project ground-route heights onto
+the actual bilinear surface before explicit decks/features. Derive the kill plane below the lowest ground, retaining
+the twenty-metre fall margin, so an ordinary off-road valley cannot itself wreck a car.
+
+Bank planes must extend across the entire road bed, including grid vertices outside the painted edge. Clamping bank
+at half-width flattened those vertices; bilinear edge sampling exceeded the existing cross-slope tolerance on seed7
+Rocks. Extending the bank to the bed boundary passes the focused sweep without relaxing the assertion.
+
+Floating-point interpolation can let harmless dressing change the road. When dressing expands the terrain bounds,
+subtracting its shifted origin in floating point moves half-millimetre rounding ties (seed13, route point104).
+For integer route poses, split the millimetre offset into cell and remainder as integers. For metre-valued feature
+queries, split the world-grid fraction before subtracting the origin. Keep cell and fraction separate through the
+bilinear sample. The dressing-invariance fixture then passes without changing its whole-route equality assertion.

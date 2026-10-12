@@ -43,7 +43,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "17";
+pub const GENERATOR_VERSION: &str = "18";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -127,7 +127,7 @@ pub fn generate_tuned_from(
         .iter()
         .map(|&(a, b, t)| data.terrain(a).lerp(&data.terrain(b), t))
         .collect();
-    terrain::undulate_along(&mut map, &mut st.terrain, &along);
+    terrain::undulate_along_crossing(&mut map, &mut st.terrain, &along, course.crossing);
     if course.crossing.is_some() {
         crossings::place(&mut map, &course, &data.course.crossing);
     }

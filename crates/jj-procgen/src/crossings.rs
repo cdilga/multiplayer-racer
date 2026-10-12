@@ -50,7 +50,13 @@ pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
         } else {
             ground[b - a]
         };
-        let [left, right] = end.map(|height| height + (top - height) * blend);
+        // Taller natural hills can rise above a cosine approach between its endpoints. A deck must meet that road
+        // rather than pass through the terrain: the car would drive on the hidden hill above its painted road and
+        // height-aware gates. Keep the smooth raised profile wherever it clears the ground, and follow the actual
+        // road edges where they are higher. The same grade validator and physical lap bank qualify this envelope.
+        let [left, right] = std::array::from_fn(|edge| {
+            (end[edge] + (top - end[edge]) * blend).max(ground[i - a][edge])
+        });
         let p = &mut map.route.points[i];
         p.y = mm((left + right) / 2.0);
         p.bank = libm::round(

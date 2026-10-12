@@ -9,7 +9,6 @@ use super::{BiomeData, BiomeDef};
 use crate::features::Density;
 use crate::lineside::{Anchor, Lineside, Side, SignRule, Trigger, Yaw};
 use crate::scatter::{Algorithm, PieceSpec, Spec, piece};
-use crate::terrain::TerrainParams;
 
 pub struct Town;
 
@@ -153,15 +152,7 @@ impl BiomeDef for Town {
             id: Biome::Town,
             road: Surface::Tarmac,
             ground: Surface::OffTrack,
-            terrain: TerrainParams {
-                relief_m: 3.0,
-                ground_relief_m: 3.0,
-                wavelength_m: 60.0,
-                max_grade: 0.03,
-                max_curvature: 0.0020,
-                max_bank_cdeg: 200,
-                blend_m: 20.0,
-            },
+            terrain: crate::tuning::GeneratorData::shipped().terrain(Biome::Town),
             features: Density {
                 jump: 0.0,
                 crest: 1.0,

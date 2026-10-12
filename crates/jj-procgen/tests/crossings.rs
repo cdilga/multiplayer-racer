@@ -308,6 +308,15 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
                 race.recoveries,
                 race.wrecks
             );
+            if race.finished_at.is_none() {
+                eprintln!(
+                    "uncompleted crossing: gates {}, last {:?}; car {:?}; autopilot {:?}",
+                    race.gates_passed,
+                    race.last_gate,
+                    sim.car_state(car),
+                    sim.autopilot_state(car)
+                );
+            }
             assert!(race.finished_at.is_some(), "{recipe:?} {seed} stalled");
             assert_eq!((race.recoveries, race.wrecks), (0, 0), "{recipe:?} {seed}");
             assert_eq!(seen, [true, true], "both crossing layers physically driven");

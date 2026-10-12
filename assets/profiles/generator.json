@@ -120,11 +120,11 @@
     },
     "rocks": {
       "terrain": {
-        "reliefM": 10.0,
-        "groundReliefM": 10.0,
-        "wavelengthM": 80.0,
-        "maxGrade": 0.06,
-        "maxCurvature": 0.004,
+        "reliefM": 45.0,
+        "groundReliefM": 30.0,
+        "wavelengthM": 180.0,
+        "maxGrade": 0.18,
+        "maxCurvature": 0.006,
         "maxBankCdeg": 600,
         "blendM": 20.0
       },
