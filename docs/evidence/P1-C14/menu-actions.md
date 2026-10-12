@@ -10,3 +10,5 @@ Based on 518c795f plus the committed repair. Solo Mac Playwright Chromium/WebKit
 - 80 local screenshots (see actual file list in the supplemental review) inspected in `../br-f1di/local-controls-final/self-review.md`; screenshot count is defined by that list.
 
 Logs: `../br-f1di/local-controls-final/`. Full remote workspace check attempted with `RCH_REQUIRE_REMOTE=1`: refused with exit103 because one worker is under storage pressure and the other is busy with this project's procgen suite. No local workspace-wide check ran. Full containing CI and deployed visual review still required before close; owner's couch taste check remains a separate gate.
+
+After the procgen worker slot released, `RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --workspace --target x86_64-unknown-linux-gnu` completed green on eris (1m57s). Receipt `controllers-workspace-check.txt`. No local workspace-wide build ran.

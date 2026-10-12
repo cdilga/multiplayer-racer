@@ -1,0 +1,29 @@
+   Compiling serde_json v1.0.151
+   Compiling wasm-bindgen-shared v0.2.129
+   Compiling slab v0.4.12
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-task v0.3.34
+   Compiling futures-core v0.3.34
+   Compiling num-traits v0.2.19
+   Compiling jj-types v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-types)
+   Compiling wasm-bindgen-test-shared v0.2.129
+   Compiling oorandom v11.1.5
+   Compiling nu-ansi-term v0.50.3
+   Compiling futures-util v0.3.34
+   Compiling wasm-bindgen v0.2.129
+   Compiling cast v0.3.0
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+   Compiling js-sys v0.3.106
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling wasm-bindgen-futures v0.4.79
+   Compiling wasm-bindgen-test v0.3.79
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.98s
+     Running tests/wasm_parity.rs (target/wasm32-unknown-unknown/debug/deps/wasm_parity-3e39187ccc7c4039.wasm)
+running 4 tests
+test two_biome_recipes_in_wasm_match_the_native_hashes ... ok
+test golden_seeds_in_wasm_match_the_native_hashes ... ok
+test generate_and_validate_in_wasm_stays_inside_the_laptop_budget ... ok
+test derby_arenas_in_wasm_match_the_native_hashes_and_meshes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 11.30s
+
