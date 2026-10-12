@@ -22,7 +22,7 @@ pub mod limits {
     pub const MIN_GATE_LOOP_AREA_MM2: f64 = 1.0e6;
     /// Landing envelope after a jump's ramp.
     pub const MIN_LANDING_LENGTH_MM: i64 = 20_000;
-    /// A jump leaves a flat lane at least this wide beside its ramp.
+    /// A jump leaves a flat lane at least this wide beside its ramp, unless it is road-wide (`roadWide = 1`).
     pub const MIN_BYPASS_WIDTH_MM: f64 = 4_000.0;
     pub const MIN_RAMP_LENGTH_MM: i64 = 3_000;
     pub const MAX_LIP_HEIGHT_CM: i64 = 300;
@@ -562,8 +562,9 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                         "the ramp sticks out of the drivable corridor".into(),
                     );
                 }
+                // A road-wide jump (`roadWide = 1`, owner 2026-10-12) spans the road on purpose: no bypass lane.
                 let bypass = (lo + nr.half).max(nr.half - hi);
-                if bypass < MIN_BYPASS_WIDTH_MM {
+                if bypass < MIN_BYPASS_WIDTH_MM && f.params.get("roadWide") != Some(&1) {
                     add(
                         &mut v,
                         Rule::JumpBypass,

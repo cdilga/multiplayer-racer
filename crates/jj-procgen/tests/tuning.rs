@@ -89,5 +89,6 @@ fn a_tuned_relief_changes_the_built_height_range() {
         base / 12.0,
         tuned / 12.0
     );
-    assert!(tuned > base * 1.5, "relief {base} -> {tuned}");
+    // 1.4x: route relief includes crests, which the longer jumps of br-gw74.13.1 leave fewer stretches for.
+    assert!(tuned > base * 1.4, "relief {base} -> {tuned}");
 }

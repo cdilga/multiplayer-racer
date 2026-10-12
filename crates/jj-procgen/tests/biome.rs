@@ -174,9 +174,13 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                     return jj_map::bridge::indices(&map, d.upper)
                         .is_some_and(|ix| ix.contains(&i));
                 }
+                // A jump's own ramp, table and landing ramp reach past 80 m since they're built for 36 m/s take-offs.
+                let reach_mm = jj_map::jump::JumpDesign::of(f)
+                    .map_or(80_000.0, |d| (d.length_m() + 10.0) * 1000.0)
+                    .max(80_000.0);
                 f64::from(f.pose.x - map.route.points[i].x)
                     .hypot(f64::from(f.pose.z - map.route.points[i].z))
-                    < 80_000.0
+                    < reach_mm
             })
         };
         for i in 0..n {

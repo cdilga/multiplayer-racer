@@ -179,6 +179,18 @@ pub struct JumpData {
     pub takeoff_speed_mps: f64,
     /// The landing ramp's slope back to the road (fall over run), at most the envelope's.
     pub landing_slope: f64,
+    /// Jumps that span the whole road (owner 2026-10-12).
+    pub road_wide: RoadWideJumps,
+}
+
+/// Road-wide jumps: the share of placed jumps that span the road, and their steeper ramp grades.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RoadWideJumps {
+    /// 0..1: each placed jump is road-wide with this probability.
+    pub share: f64,
+    pub min_ramp_slope: f64,
+    pub max_ramp_slope: f64,
 }
 
 impl CoursePresets {
@@ -337,9 +349,15 @@ impl GeneratorData {
             || jump.min_ramp_slope > jump.max_ramp_slope
             || !(jj_map::limits::JUMP_DESIGN_SPEED_MPS..=45.0).contains(&jump.takeoff_speed_mps)
             || !(0.04..=crate::features::LIMITS.jump_down_slope).contains(&jump.landing_slope)
+            || !(0.0..=1.0).contains(&jump.road_wide.share)
+            || !jump.road_wide.min_ramp_slope.is_finite()
+            || !jump.road_wide.max_ramp_slope.is_finite()
+            || jump.road_wide.min_ramp_slope < crate::features::LIMITS.jump_min_ramp_slope
+            || jump.road_wide.max_ramp_slope > crate::features::LIMITS.jump_wide_ramp_slope
+            || jump.road_wide.min_ramp_slope > jump.road_wide.max_ramp_slope
         {
             bad.push(
-                "jumps: ramp slopes ordered inside the ordinary-jump envelope, take-off speed 26-45 m/s, landing slope 0.04-0.16"
+                "jumps: ramp slopes ordered inside the ordinary-jump envelope, take-off speed 26-45 m/s, landing slope 0.04-0.16, roadWide share 0-1 with slopes ordered inside 0.16-0.30"
                     .into(),
             );
         }
@@ -700,6 +718,8 @@ mod tests {
             ("course.presets.speedway.bendSpacingScale", "0"),
             ("jumps.minRampSlope", "0.1"),
             ("jumps.maxRampSlope", "0.3"),
+            ("jumps.roadWide.share", "1.5"),
+            ("jumps.roadWide.maxRampSlope", "0.4"),
         ] {
             let e = d.with_fields(&[(path.into(), raw.into())]);
             assert!(e.is_err(), "{path}={raw} should be refused");

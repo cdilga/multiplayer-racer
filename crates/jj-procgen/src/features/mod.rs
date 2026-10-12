@@ -40,8 +40,15 @@ pub struct Limits {
     pub jump_blend_m: f64,
     /// Steepest ramp (rise over run).
     pub jump_ramp_slope: f64,
+    /// Road-wide jumps (owner 2026-10-12: "road wide jumps to be ultra fun"): the ramp spans the road, longer and
+    /// steeper than a line jump, up to the validator's highest lip.
+    pub jump_wide_ramp_m: (f64, f64),
+    pub jump_wide_lip_cm: (i64, i64),
+    pub jump_wide_ramp_slope: f64,
     /// Gentlest ramp: below it a tabletop barely launches a car.
     pub jump_min_ramp_slope: f64,
+    /// Most extra load (m/s²) the landing ramp's concave foot puts on a car arriving at the jumps' take-off speed.
+    pub jump_foot_accel_mps2: f64,
     /// Steepest natural road grade across a jump's whole envelope.
     pub jump_road_grade: f64,
     /// Turning across the approach and ramp, radians (quantization tolerance for a straight).
@@ -69,6 +76,10 @@ pub const LIMITS: Limits = Limits {
     jump_down_slope: 0.16,
     jump_blend_m: 3.0,
     jump_ramp_slope: 0.21,
+    jump_wide_ramp_m: (9.0, 12.0),
+    jump_wide_lip_cm: (150, jj_map::limits::MAX_LIP_HEIGHT_CM),
+    jump_wide_ramp_slope: 0.30,
+    jump_foot_accel_mps2: 6.0,
     jump_min_ramp_slope: 0.16,
     jump_road_grade: 0.045,
     jump_entry_turn: 0.01,
@@ -239,7 +250,7 @@ pub fn place_in_tuned(
     let mut zones: Vec<Zone> = Vec::new();
     for (kind, from, to) in kinds {
         for _ in 0..ATTEMPTS {
-            let params = draw_params(kind, rng, jumps);
+            let params = draw_params(kind, rng, jumps, line.half);
             let span = zone_of(kind, 0.0, &params);
             let lo = from.max(LIMITS.earliest_m) + (span.base - span.from);
             let hi = to.min(line.total - LIMITS.seam_m) - (span.to - span.base);
@@ -287,6 +298,7 @@ fn draw_params(
     kind: FeatureKind,
     rng: &mut Rng,
     jumps: crate::tuning::JumpData,
+    road_half_m: f64,
 ) -> BTreeMap<String, i64> {
     let mut p = BTreeMap::new();
     let whole =
@@ -296,13 +308,38 @@ fn draw_params(
             // The ramp's length and slope are drawn and the lip follows: no shallow ramp (on a tabletop the air time is
             // 2·v·sin(angle)/g, so a gentle ramp is a flat jump, owner playtest 1), and the ramp spans at least three
             // cells of the 2.5 m height grid (a shorter one bakes lumpy and barely launches).
-            let ramp_mm = whole(rng, LIMITS.jump_ramp_m.0, LIMITS.jump_ramp_m.1, 0.5) * 500;
-            let slope = rng.range(jumps.min_ramp_slope, jumps.max_ramp_slope);
+            // A road-wide jump (data share) spans the road's flat width, its side slopes inside the corridor, with a
+            // longer, steeper ramp: every car on the road takes it, and it throws them higher.
+            let wide = rng.unit() < jumps.road_wide.share;
+            let (ramp_m, lip_cm, slopes) = if wide {
+                let w = jumps.road_wide;
+                (
+                    LIMITS.jump_wide_ramp_m,
+                    LIMITS.jump_wide_lip_cm,
+                    (w.min_ramp_slope, w.max_ramp_slope),
+                )
+            } else {
+                (
+                    LIMITS.jump_ramp_m,
+                    LIMITS.jump_lip_cm,
+                    (jumps.min_ramp_slope, jumps.max_ramp_slope),
+                )
+            };
+            let ramp_mm = whole(rng, ramp_m.0, ramp_m.1, 0.5) * 500;
+            let slope = rng.range(slopes.0, slopes.1);
             let lip = (libm::floor(ramp_mm as f64 / 1000.0 * slope * 20.0) as i64 * 5)
-                .clamp(LIMITS.jump_lip_cm.0, LIMITS.jump_lip_cm.1);
+                .clamp(lip_cm.0, lip_cm.1);
+            let width_mm = if wide {
+                libm::floor((road_half_m - jj_map::jump::EDGE_SLOPE_M) * 2.0 * 10.0) as i64 * 100
+            } else {
+                LIMITS.jump_ramp_width_mm
+            };
             p.insert("rampLengthMm".into(), ramp_mm);
-            p.insert("rampWidthMm".into(), LIMITS.jump_ramp_width_mm);
+            p.insert("rampWidthMm".into(), width_mm);
             p.insert("lipHeightCm".into(), lip);
+            if wide {
+                p.insert("roadWide".into(), 1);
+            }
             p.insert(
                 "tableLengthMm".into(),
                 whole(rng, LIMITS.jump_table_m.0, LIMITS.jump_table_m.1, 1.0) * 1000,
@@ -324,17 +361,26 @@ fn draw_params(
             // The landing's foot observes the same vertical-curvature budget as the road. An abrupt change from
             // a 16% descent to flat ground bottoms the suspension and pitches a boosted car over its nose.
             // Low lips need a shallower descent so its concave transition fits below the table height.
+            // The foot's curvature also keeps its extra load under `jump_foot_accel_mps2` at the take-off speed: a car
+            // runs down the landing ramp at least that fast, and the road's budget (set for 25 m/s) bottomed the
+            // suspension at 33 m/s and dug the chassis into the road (br-gw74.13.1).
+            let foot_speed = jumps
+                .takeoff_speed_mps
+                .max(jj_map::limits::JUMP_DESIGN_SPEED_MPS);
+            let foot_curvature = LIMITS
+                .max_curvature
+                .min(LIMITS.jump_foot_accel_mps2 / (foot_speed * foot_speed));
             let down_slope_milli = libm::floor(
                 // The data's landing slope (br-gw74.13: gentle enough that a car leaving the table at speed meets it at
                 // a shallow angle instead of flying past it onto flat road), never steeper than the envelope.
                 jumps
                     .landing_slope
                     .min(LIMITS.jump_down_slope)
-                    .min(libm::sqrt(2.0 * lip as f64 / 100.0 * LIMITS.max_curvature))
+                    .min(libm::sqrt(2.0 * lip as f64 / 100.0 * foot_curvature))
                     * 1000.0,
             ) as i64;
             let down_slope = down_slope_milli as f64 / 1000.0;
-            let down_blend_mm = libm::floor(down_slope / LIMITS.max_curvature * 1000.0) as i64;
+            let down_blend_mm = libm::floor(down_slope / foot_curvature * 1000.0) as i64;
             let down_run = lip as f64 / 100.0 / down_slope + down_blend_mm as f64 / 2000.0;
             let table_mm = libm::ceil(flight * 1000.0) as i64;
             p.entry("tableLengthMm".into())
@@ -344,7 +390,7 @@ fn draw_params(
                 "landingLengthMm".into(),
                 land.max(libm::ceil(table_mm as f64 + (down_run + 4.0) * 1000.0) as i64),
             );
-            p.insert("landingWidthMm".into(), 6_000);
+            p.insert("landingWidthMm".into(), width_mm.max(6_000));
             // Sharp geometry (jj_map::jump): the sim collides with, and the renderer draws, the exact ramp, table and
             // landing ramp instead of a 2.5 m grid's rounding of them.
             p.insert("sharp".into(), 1);
@@ -412,7 +458,7 @@ fn zone_ok(map: &Map, line: &Line, kind: FeatureKind, z: &Zone, taken: &[Zone]) 
         // share a heading. A 6-degree turn inside the nominal 12 m entry launched seed 9 diagonally: a longer
         // flight drifted 3.7 m sideways onto the landing's sloped edge. Keep the promised straight approach through
         // the lip; 0.01 rad allows millimetre-quantized route tangents without treating a corner as a straight.
-        let ramp_end = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+        let ramp_end = line.index_at(z.base + LIMITS.jump_wide_ramp_m.1);
         if line.turn(i0, ramp_end) > LIMITS.jump_entry_turn {
             return false;
         }
@@ -673,24 +719,32 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
         let h = |i: usize| ground_height_m(&map.terrain, line.pts[i % n].0, line.pts[i % n].1);
         match f.kind {
             FeatureKind::Jump => {
-                let lip = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+                let wide = get("roadWide") == Some(1);
+                let (ramp_m, lip_cm, max_slope) = if wide {
+                    (
+                        LIMITS.jump_wide_ramp_m,
+                        LIMITS.jump_wide_lip_cm,
+                        LIMITS.jump_wide_ramp_slope,
+                    )
+                } else {
+                    (
+                        LIMITS.jump_ramp_m,
+                        LIMITS.jump_lip_cm,
+                        LIMITS.jump_ramp_slope,
+                    )
+                };
+                let lip = line.index_at(z.base + ramp_m.1);
                 if line.turn(i0, lip) > LIMITS.jump_entry_turn + 1e-9 {
                     bad.push(format!(
                         "{name}: entry bends {:.3} rad through the ramp",
                         line.turn(i0, lip)
                     ));
                 }
-                in_range(
-                    "rampLengthMm",
-                    LIMITS.jump_ramp_m.0,
-                    LIMITS.jump_ramp_m.1,
-                    1000.0,
-                    &mut bad,
-                );
+                in_range("rampLengthMm", ramp_m.0, ramp_m.1, 1000.0, &mut bad);
                 in_range(
                     "lipHeightCm",
-                    LIMITS.jump_lip_cm.0 as f64,
-                    LIMITS.jump_lip_cm.1 as f64,
+                    lip_cm.0 as f64,
+                    lip_cm.1 as f64,
                     1.0,
                     &mut bad,
                 );
@@ -701,12 +755,17 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                     1000.0,
                     &mut bad,
                 );
-                if get("rampWidthMm") != Some(LIMITS.jump_ramp_width_mm) {
+                let width = if wide {
+                    libm::floor((line.half - jj_map::jump::EDGE_SLOPE_M) * 2.0 * 10.0) as i64 * 100
+                } else {
+                    LIMITS.jump_ramp_width_mm
+                };
+                if get("rampWidthMm") != Some(width) {
                     bad.push(format!("{name}: ramp width {:?}", get("rampWidthMm")));
                 }
                 if let (Some(l), Some(lip)) = (get("rampLengthMm"), get("lipHeightCm")) {
                     let slope = lip as f64 / 100.0 / (l as f64 / 1000.0);
-                    if slope > LIMITS.jump_ramp_slope + 1e-9 {
+                    if slope > max_slope + 1e-9 {
                         bad.push(format!("{name}: ramp slope {slope:.3}"));
                     }
                 }
