@@ -62,26 +62,50 @@ test('?tune: a live change mid-race reaches the sim and the cars; reset; export'
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
-  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9&tune`);
+  // A fixed flat course isolates the engine change from a random downhill or a turn's autopilot braking.
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9&tune&map=greybox-loop`);
   await race(host);
   await wait(host, () => !!window.__jjTune);
-  await host.waitForTimeout(3000);
-  const before = await meanSpeed(host);
-  assert.ok(before > 3, `racing before the change (${before} m/s)`);
-
   await host.locator('.jj-tune-toggle').click();
   const field = host.locator('[data-field="max_engine_force"]');
   await field.waitFor();
   const original = Number(await field.inputValue());
+  // Use R90 to give both trials the same clear straight and 15 m/s start. Keep the real room, seated cars and panel;
+  // only the driving setup/clock are controlled. Autopilot braking at the loop's next bend is not engine evidence.
+  const stageStraight = () => host.evaluate(async () => {
+    const s = window.__jjTest;
+    await s.hold(true);
+    await s.command({cmd:'autopilot',on:false});
+    const state = await s.observe();
+    for (const [i,c] of state.cars.entries()) {
+      await s.command({cmd:'place',car:c.car,pose:{x:0,y:.05,z:i===0?-3.5:3.5,headingDeg:90},linvel:[15,0,0]});
+    }
+    await s.step(1);
+  });
+  const driveFourSeconds = () => host.evaluate(async () => {
+    const s = window.__jjTest;
+    for (let i=0;i<40;i++) {
+      const state = await s.observe();
+      for (const seat of state.host.seats) {
+        s.input({type:'controller',endpoint:seat.endpoint,frame:{state:{source:seat.source,seq:state.tick+1,drive:[0,32767],action:[0,0]}}});
+      }
+      await s.step(12); // Fresh controller samples throughout; a stale held packet must not become neutral.
+    }
+  });
+  await stageStraight();
+  const before = await meanSpeed(host);
+  assert.ok(before > 3, `racing before the change (${before} m/s)`);
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-open-1280x720.png` });
   const t0 = Date.now();
   await field.fill('0');
   await field.dispatchEvent('change');
+  await host.evaluate(()=>window.__jjTest.step(1));
   await wait(host, () => window.__jjTune.inspect().current.max_engine_force === 0, undefined, 5_000); // inside 1 s on the Mac (self-review); CI runners are several times slower
   const appliedMs = Date.now() - t0;
-  await host.waitForTimeout(4000);
+  // Four seconds of simulation, even when software GL or concurrent CI work slows the worker's wall clock.
+  await driveFourSeconds();
   const after = await meanSpeed(host);
-  assert.ok(after < before * 0.6, `no engine: the cars slow (${before.toFixed(1)} -> ${after.toFixed(1)} m/s)`);
+  assert.ok(after < before * 0.6, `no engine: the cars coast down (${before.toFixed(1)} -> ${after.toFixed(1)} m/s)`);
   const shown = await host.evaluate(() => window.__jjTune.inspect());
   assert.deepEqual(shown.patch, { contract: 'jj.tuning-patch.v1', profile: 'assets/profiles/cruz-missile.json', set: [['max_engine_force', '0']] });
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-changed-1280x720.png` });
@@ -91,19 +115,27 @@ test('?tune: a live change mid-race reaches the sim and the cars; reset; export'
   if (await gravel.count()) {
     await gravel.fill('0.5');
     await gravel.dispatchEvent('change');
+    await host.evaluate(()=>window.__jjTest.step(1));
     await wait(host, () => window.__jjTune.inspect().current['surfaces.gravel'] === 0.5, undefined, 5_000);
   }
 
   // Reset puts the engine back and it drops out of the export.
   await host.locator('[data-reset="max_engine_force"]').click();
+  await host.evaluate(()=>window.__jjTest.step(1));
   await wait(host, (v) => window.__jjTune.inspect().current.max_engine_force === v, original, 5_000);
+  await stageStraight();
+  await driveFourSeconds();
+  const restored = await meanSpeed(host);
+  // The paired reset checks the opposite physical response on the same flat course. A random turn's braking cannot
+  // qualify a tuning change merely by crossing a percentage threshold; restoring the engine must accelerate again.
+  assert.ok(restored > before && restored > after * 1.2, `restored engine accelerates again (${after.toFixed(1)} -> ${restored.toFixed(1)} m/s; started at ${before.toFixed(1)})`);
   const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
   assert.ok(!patch.set.some(([f]) => f === 'max_engine_force'), `reset leaves it out of the export: ${JSON.stringify(patch)}`);
 
   // Export downloads the patch file.
   const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
   assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);
-  console.log(`# applied in ${appliedMs} ms; mean speed ${before.toFixed(1)} -> ${after.toFixed(1)} m/s`);
+  console.log(`# applied in ${appliedMs} ms; four simulation seconds each: coast ${before.toFixed(1)} -> ${after.toFixed(1)}, restored ${restored.toFixed(1)} m/s`);
   assert.deepEqual(errors, []);
 });
 
