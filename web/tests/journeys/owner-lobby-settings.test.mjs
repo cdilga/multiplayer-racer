@@ -201,5 +201,5 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     },oldLocal);
     await shot(host,`${engine.name()}-race-after-controllers`);
     assert.deepEqual(errors,[]);
-  } catch(e) { console.log('errors', errors, 'host link', JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null))); throw e; } finally { await browser.close(); await server.close(); }
+  } catch(e) { console.log('errors', errors, 'host link', JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)), 'menu', JSON.stringify(await host?.evaluate(()=>({state:window.__jjChrome?.state, history:window.__jjChrome?.history, pause:document.querySelector('[data-act=menu]')?.textContent})).catch(()=>null))); throw e; } finally { await browser.close(); await server.close(); }
 });
