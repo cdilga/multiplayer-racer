@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Owner playtest 1 (br-gw74.8): the host's diagnostics panel shows real numbers and closes cleanly on a screen change.
 // A real phone joins a real room over loopback WebRTC (a direct path); the panel lists its path as Direct with a
 // measured RTT, and the host's own frame time; then the room moves from the Lobby to the race with the panel open and
@@ -54,6 +55,8 @@ test('diagnostics: a direct phone with a measured RTT and the host frame time; c
   await wait(phone, () => window.__jjController.inspect().phase === 'playing');
   await wait(host, () => window.__jjRoom.view().seats.length === 1);
 
+  await host.evaluate(()=>window.__jjChrome.openMenu());
+  await host.getByRole('button',{name:'Advanced',exact:true}).click();
   await host.locator('[data-act=diagnostics]').click();
   await wait(host, () => /Direct/.test(document.querySelector('.jj-diag [data-path]')?.textContent ?? ''), undefined, 20_000);
   await wait(host, () => /\d+ ms/.test(document.querySelector('.jj-diag [data-rtt]')?.textContent ?? ''), undefined, 20_000);
@@ -67,6 +70,9 @@ test('diagnostics: a direct phone with a measured RTT and the host frame time; c
   assert.doesNotMatch(p.host, /Host frame 0(\.0)? ms/, 'a real frame time, not zero');
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/diagnostics-lobby-1280x720.png` });
 
+  await confirmInitialVehicle(phone);
+  const skip = phone.getByRole('button',{name:'Skip tutorial'});
+  if(await skip.isVisible()) await skip.click();
   // The phone readies; the room leaves the Lobby with the panel open, and it closes.
   await phone.locator('.tools [data-act=ready]').click();
   await wait(host, () => window.__jjRoom.view().phase !== 'Lobby', undefined, 60_000);
@@ -78,6 +84,8 @@ test('diagnostics: a direct phone with a measured RTT and the host frame time; c
 
   // Opened again in the race, it fills in again.
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
+  await host.evaluate(()=>window.__jjChrome.openMenu());
+  await host.getByRole('button',{name:'Advanced',exact:true}).click();
   await host.locator('[data-act=diagnostics]').click();
   await wait(host, () => /\d+ ms/.test(document.querySelector('.jj-diag [data-rtt]')?.textContent ?? ''), undefined, 20_000);
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/diagnostics-race-1280x720.png` });

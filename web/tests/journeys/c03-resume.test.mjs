@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C03 on a live room (real host page, real phone pages, real jj-server, WebRTC: run on eris): resume, fencing, retried
 // claims, the scripted cause of every §11 state, names remembered per device and realm, and Leave with its confirmation.
 // The wording of each state with no network at all is `c03-states.test.mjs`.
@@ -253,7 +254,9 @@ test('Leave asks for a second tap, then the seat goes; Sit out from Settings par
   const p = await joined(joinUrl, 'Marlene');
   const q = await joined(joinUrl, 'Shazza');
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  await confirmInitialVehicle(q.page);
   await wait(q.page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(q.page);
   await q.page.getByRole('button', { name: 'Skip tutorial' }).click();
   await q.page.getByRole('button', { name: /Settings/ }).click();
   await q.page.getByRole('button', { name: 'Sit out' }).click();

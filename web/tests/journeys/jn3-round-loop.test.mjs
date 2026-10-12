@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Journey JN3 (P1-G01): the party loop through the real host page (`B/host?room&test=live&laps=1`) and real phones over
 // WebRTC. Two players join; the Lobby has no driving cars (R110); both tap Ready; the countdown puts them on the grid;
 // the autopilot races a 1-lap round (test surface `autopilot`); Round complete shows both results on the TV and each
@@ -37,6 +38,7 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page };
 }

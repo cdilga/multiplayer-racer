@@ -55,7 +55,7 @@ function dress(root: ParentNode): void {
 }
 
 /** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose vehicle" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:0%"></i></div></div></div>`;
@@ -79,6 +79,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let prefs: Preferences | null = null;
   let sheet: SettingsSheet | null = null;
   let cars: CarSheet | null = null;
+  let chosenSeat: number | null = null;
+  let rehosting = false;
   const fs = new FullscreenControl();
   let fsNote = false;
   const tilt = new Tilt({ deadzoneDeg: DEADZONES.medium, fullLockDeg: SENSITIVITIES.normal });
@@ -217,7 +219,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
     tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic, () => openSettings(screenEl));
-    if (session.roomPhase === 'Lobby') {
+    if (session.roomPhase === 'Lobby' && chosenSeat === session.you?.number) {
       tutorialOffered = !app.querySelector('[data-overlay=rotate]');
       if (tutorialOffered && Tutorial.wanted()) tutorial.show();
     }
@@ -299,7 +301,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     });
   };
 
-  /** The lobby's car picker (R101/R110): opened from the Car button, closed with Done; Ready is never behind it. */
+  /** The visible lobby vehicle step: remembered preselection, explicit confirmation, then Ready. */
   const openCars = (host: HTMLElement) => {
     if (cars?.open || sheet?.open || tutorial?.open || !session.you) return;
     const key = `jj.car.${session.realm}`;
@@ -314,7 +316,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     session.pick(current().id, true); // the picker is open: the TV says so
     cars = new CarSheet(host, {
       roster,
-      start: Math.max(0, roster.findIndex((r) => r.id === saved)),
+      start: Math.max(0, roster.findIndex((r) => r.id === current().id)),
       colour: hex(session.you.rgb),
       onPick: (car) => {
         session.pick(car.id, true);
@@ -326,7 +328,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       },
       onClose: () => {
         cars = null;
+        chosenSeat = session.you?.number ?? null;
         session.pick(current().id, false);
+        try { localStorage.setItem(key, current().id); } catch { /* This visit only. */ }
+        updateHud();
       },
     });
   };
@@ -338,6 +343,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       readyBtn.hidden = session.roomPhase !== 'Lobby' && session.roomPhase !== 'Results';
       readyBtn.textContent = session.isReady ? 'Ready ✓' : 'Ready';
       readyBtn.setAttribute('aria-pressed', String(session.isReady));
+      readyBtn.disabled = session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number;
     }
     roundBanner(app, session);
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
@@ -352,9 +358,17 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
     if (cars?.open && session.roomPhase === 'Countdown') cars.close();
     const carBtn = app.querySelector<HTMLButtonElement>('[data-act=car]');
-    if (carBtn) carBtn.hidden = session.roomPhase !== 'Lobby';
+    if (carBtn) {
+      carBtn.hidden = session.roomPhase !== 'Lobby';
+      carBtn.classList.remove('icon');
+      carBtn.textContent = 'Choose vehicle';
+    }
+    if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
+      const host = app.querySelector<HTMLElement>('.screen.play');
+      if (host) openCars(host);
+    }
     // The Lobby state can arrive just after the play screen: offer the tutorial once then.
-    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby' && !app.querySelector('[data-overlay=rotate]')) {
+    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby' && chosenSeat === session.you?.number && !cars?.open && !app.querySelector('[data-overlay=rotate]')) {
       tutorialOffered = true;
       if (Tutorial.wanted() && !tutorial.open) tutorial.show();
     }
@@ -430,8 +444,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     // Turning the phone rebuilds the play screen; an open settings sheet moves onto the new one (still open, Menu still held).
     const keep = sheet?.open ? sheet : null;
     const keepCars = cars?.open ? cars : null;
+    rehosting = true;
     shown = null;
     render();
+    rehosting = false;
     const screenEl = app.querySelector<HTMLElement>('.screen.play');
     if (keep && screenEl) {
       sheet = keep;

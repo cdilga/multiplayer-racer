@@ -219,7 +219,7 @@ pub fn place_in_tuned(
     ranges: &[(f64, f64, Density)],
     jumps: crate::tuning::JumpData,
 ) {
-    map.features.clear();
+    map.features.retain(|f| f.kind == FeatureKind::Bridge);
     let line = Line::new(map);
     // Counts per range: whole expected number plus one more with the fractional probability.
     let mut kinds: Vec<(FeatureKind, f64, f64)> = Vec::new();
@@ -365,7 +365,7 @@ fn draw_params(
             p.insert("lengthMm".into(), whole(rng, 16.0, 24.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
-        FeatureKind::Kerb | FeatureKind::Bowl => {}
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
     }
     p
 }
@@ -486,7 +486,7 @@ fn delta(
                 * libm::sin(core::f64::consts::TAU * u / pitch)
                 * road_wide()
         }
-        FeatureKind::Kerb | FeatureKind::Bowl => 0.0,
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => 0.0,
     }
 }
 
@@ -614,6 +614,14 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
+        if f.kind == FeatureKind::Bridge {
+            bad.extend(
+                jj_map::bridge::problems(map, f)
+                    .into_iter()
+                    .map(|p| format!("{name}: {p}")),
+            );
+            continue;
+        }
         if f.kind == FeatureKind::Jump && f.params.contains_key("roofTarget") {
             // Free-standing rooftop kickers have their own heading and receiving house, rather
             // than a tabletop envelope along the centreline. The shared map validator checks it.
@@ -731,7 +739,7 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 // Whoops are rough by design: grade only.
                 shape_ok(&name, &line, &h, i0, i1, None, &mut bad);
             }
-            FeatureKind::Kerb | FeatureKind::Bowl => {}
+            FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

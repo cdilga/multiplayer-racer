@@ -1,0 +1,18 @@
+✔ the picker opening is "Choosing car…" on the TV; Done shows the car by name; a long roster and a reload keep working (3492.639ms)
+✔ Ready follows vehicle confirmation; changing the confirmed choice preserves readiness (3468.185958ms)
+✔ AC1: every key cluster is listed before anyone joins; Add claims its seat with no key press, Leave removes it, Keyboard players off ignores the cluster keys (9114.963125ms)
+✔ AC2: an unplugged pad with a held seat shows Remove in the drawer, and Remove takes its seat and car away (4846.728875ms)
+✔ AC3: a pad that claims a seat gets its controls card on the lobby tile, which folds once its controls are used; holding Identify shows it again; the countdown folds a cluster card (9694.8695ms)
+✔ AC4: tutorial prompts in a race show the source's own glyphs: keys for a cluster, stick glyphs for a pad, never a touch hint (8504.217667ms)
+✔ AC5: the host menu's Controls page has a card per source kind, and its key labels follow clusters.json (a test changes the data and the page changes) (2415.766167ms)
+✔ AC5: the phone's Help has the same Controls page (1742.149833ms)
+﹣ self-review captures at tv (0.213ms) # SKIP
+﹣ self-review captures at laptop (0.04725ms) # SKIP
+ℹ tests 10
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 44869.907417

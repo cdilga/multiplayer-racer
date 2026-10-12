@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // The play screen in a short landscape viewport (a phone with its browser chrome showing: about 844x340, 640x300 with a
 // toolbar): nothing overlaps. The round banner clears the tools, the tools stay on one line with the name readable, each
 // stick base sits inside its dashed zone, the launch meter keeps its track, and the page doesn't scroll.
@@ -36,7 +37,9 @@ test('at short landscape heights nothing overlaps on the play screen', { timeout
   await page.locator('#name').fill('Marlene');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await wait(page, () => /Tap Ready/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''));
 

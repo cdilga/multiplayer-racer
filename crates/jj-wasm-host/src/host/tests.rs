@@ -3401,3 +3401,125 @@ fn a_host_pads_seat_names_its_source_and_runs_its_prompts() {
     assert_eq!(seat["prompt"]["step"], 0, "the prompts start on their own");
     assert_eq!(seat["prompt"]["done"], serde_json::json!(["right"]));
 }
+
+#[test]
+fn host_local_vehicle_choice_uses_each_sources_existing_seat() {
+    let roster = roster_files();
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    h.handle(
+        &MainToSim::Vehicles {
+            vehicles: roster.clone(),
+        }
+        .encode(),
+    )
+    .unwrap();
+    let pick = |source, vehicle: String, open| {
+        MainToSim::Ui {
+            command: jj_types::CommandId(1),
+            ui: UiCommand::LocalPick {
+                source: LocalSourceId(source),
+                vehicle,
+                open,
+            },
+        }
+        .encode()
+    };
+    h.handle(&pick(99, roster[1].0.clone(), true)).unwrap();
+    for now in (0..10).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    assert_eq!(
+        h.seats.seats().count(),
+        0,
+        "choosing never claims an absent source"
+    );
+    h.handle(&local(1, [0, 1])).unwrap();
+    h.handle(&local(2, [0, 1])).unwrap();
+    for now in (10..30).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    h.handle(&pick(1, roster[1].0.clone(), true)).unwrap();
+    for now in (30..40).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    let seat = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(1)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    assert_eq!(h.picks.get(&seat), Some(&(roster[1].0.clone(), true)));
+    h.handle(&pick(1, roster[1].0.clone(), false)).unwrap();
+    for now in (40..50).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    assert_eq!(h.picks.get(&seat), Some(&(roster[1].0.clone(), false)));
+    let other = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(2)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    assert_eq!(h.vehicle_of_seat(other), 0);
+    assert_eq!(h.vehicle_of_seat(seat), 1);
+    assert_eq!(h.sim().cars().count(), 2);
+}
+
+#[test]
+fn lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source() {
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(&local(1, [0, 1])).unwrap();
+    h.handle(&local(2, [0, 1])).unwrap();
+    for i in 0..20 {
+        h.advance(i * 16_667);
+    }
+    let seat = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(1)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    let command = |ui| {
+        MainToSim::Ui {
+            command: jj_types::CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&command(UiCommand::LocalPick {
+        source: LocalSourceId(1),
+        vehicle: "cruz-missile".into(),
+        open: true,
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(99),
+    }))
+    .unwrap();
+    for i in 20..30 {
+        h.advance(i * 16_667);
+    }
+    assert!(!h.round.director.is_ready(seat));
+    assert_eq!(h.seats.seats().count(), 2);
+    h.handle(&command(UiCommand::LocalPick {
+        source: LocalSourceId(1),
+        vehicle: "cruz-missile".into(),
+        open: false,
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    for i in 30..40 {
+        h.advance(i * 16_667);
+    }
+    assert!(h.round.director.is_ready(seat));
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    for i in 40..50 {
+        h.advance(i * 16_667);
+    }
+    assert!(!h.round.director.is_ready(seat));
+}

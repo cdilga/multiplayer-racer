@@ -1,0 +1,59 @@
+  2026-10-12T00:21:09.571033Z  INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)
+    at rch/src/hook.rs:3354 on ThreadId(1)
+
+  2026-10-12T00:21:10.399798Z  INFO rch::hook::transfer_orchestration: Starting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)
+    at rch/src/hook/transfer_orchestration.rs:943 on ThreadId(1)
+
+  2026-10-12T00:21:10.399858Z  INFO rch::hook::transfer_orchestration: Prepared dependency sync manifest for 1 roots
+    at rch/src/hook/transfer_orchestration.rs:965 on ThreadId(1)
+
+  2026-10-12T00:21:11.478625Z  INFO rch::hook::transfer_orchestration: Syncing project to worker eris...
+    at rch/src/hook/transfer_orchestration.rs:1201 on ThreadId(1)
+
+  2026-10-12T00:21:11.478753Z  INFO rch::transfer: Syncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)
+    at rch/src/transfer.rs:4907 on ThreadId(1)
+
+  2026-10-12T00:21:18.571645Z  INFO rch::hook::transfer_orchestration: Sync complete: 2 files, 995791 bytes in 6822ms
+    at rch/src/hook/transfer_orchestration.rs:1590 on ThreadId(1)
+
+  2026-10-12T00:21:19.097214Z  INFO rch::hook::transfer_orchestration: Executing command remotely: cargo test -p jj-wasm-host --release lobby_ready_button --config 'env.RCH_BUILD_SOURCE.value="32bb8de00acaf6ee4bd5d820fd63b9cfafd7410e-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'
+    at rch/src/hook/transfer_orchestration.rs:1691 on ThreadId(1)
+
+  2026-10-12T00:21:19.107590Z  INFO rch::transfer: Rewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba
+    at rch/src/transfer.rs:2911 on ThreadId(1)
+
+  2026-10-12T00:21:19.107658Z  INFO rch::transfer: Wrapping command with external timeout protection, kind: cargo test, timeout_secs: 1800
+    at rch/src/transfer.rs:3754 on ThreadId(1)
+
+   Compiling jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+   Compiling jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+   Compiling jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+   Compiling jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+
+running 1 test
+test host::tests::lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 47 filtered out; finished in 0.01s
+
+    Finished `release` profile [optimized] target(s) in 16.56s
+     Running unittests src/lib.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/jj_wasm_host-ac2f5df6427daf93)
+  2026-10-12T00:21:36.713099Z  INFO rch::hook::transfer_orchestration: Remote command finished: exit=0 in 17350ms
+    at rch/src/hook/transfer_orchestration.rs:1904 on ThreadId(1)
+
+  2026-10-12T00:21:36.913950Z  INFO rch::hook::transfer_orchestration: Retrieving build artifacts...
+    at rch/src/hook/transfer_orchestration.rs:2000 on ThreadId(1)
+
+  2026-10-12T00:21:36.914031Z  INFO rch::transfer: Retrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris
+    at rch/src/transfer.rs:5733 on ThreadId(1)
+
+  2026-10-12T00:21:37.346389Z  INFO rch::transfer: Artifact retrieval budget from selected remote files, selected_bytes: 0, total_timeout_ms: 30000
+    at rch/src/transfer.rs:2632 on ThreadId(1)
+
+  2026-10-12T00:21:37.589047Z  INFO rch::transfer: Artifacts retrieved in 674ms (0 files, 44 bytes)
+    at rch/src/transfer.rs:5794 on ThreadId(1)
+
+  2026-10-12T00:21:37.608439Z  INFO rch::hook::transfer_orchestration: Artifacts retrieved: 0 files, 44 bytes in 674ms
+    at rch/src/hook/transfer_orchestration.rs:2046 on ThreadId(1)
+

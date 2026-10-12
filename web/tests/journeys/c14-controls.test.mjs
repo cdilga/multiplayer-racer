@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C14: host keyboard players (add, remove, off) and controls you can find for every controller. Headless Chromium on the real
 // host page served by jj-server, with the Gamepad API emulated and real key events (as c13-one-join). Each test is one acceptance
 // row; JJ_CAPTURE_DIR=<dir> saves the visual self-review captures (docs/evidence/P1-C14).
@@ -76,9 +77,12 @@ const until = async (page, fn, why, ms = 30_000) => {
 };
 const row = (page, source) => page.locator(`[data-jj-input-drawer] li[data-source="${source}"]`);
 const act = (page, source, a) => row(page, source).locator(`button[data-act="${a}"]`);
+const controllers = async (page) => { await page.evaluate(() => window.__jjChrome.openMenu()); await page.getByRole('button',{name:'Controllers',exact:true}).click(); };
+
 
 test('AC1: every key cluster is listed before anyone joins; Add claims its seat with no key press, Leave removes it, Keyboard players off ignores the cluster keys', { timeout: 300_000 }, async () => {
   const page = await openHost('room');
+  await controllers(page);
   // Listed up front, each with how to join and an Add button.
   for (const [source, key] of [[1, 'W'], [2, 'I']]) {
     assert.equal(await row(page, source).getAttribute('data-state'), 'press to join');
@@ -202,8 +206,10 @@ test('AC3: a pad that claims a seat gets its controls card on the lobby tile, wh
   await page.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: false }));
   await until(page, async () => (await cards(page)).length === 0, 'the card never folded after Identify was let go');
 
-  // A key cluster that claims by Add gets the keys card with that cluster's own keys; the countdown takes it away.
+  // A key cluster claims from Host menu → Controllers.
+  await controllers(page);
   await act(page, 1, 'add').click();
+  await page.evaluate(()=>window.__jjChrome.closeMenu());
   await until(page, async () => (await cards(page)).some((c) => c.card === 'keys-1'), 'the Keys A card never showed');
   assert.match(await page.locator('[data-controls] [data-card="keys-1"]').innerText(), /W[\s\S]*S/);
   await shot(page, 'lobby-keys-card-1366x768');
@@ -214,17 +220,22 @@ test('AC3: a pad that claims a seat gets its controls card on the lobby tile, wh
 
 test('AC4: tutorial prompts in a race show the source\'s own glyphs: keys for a cluster, stick glyphs for a pad, never a touch hint', { timeout: 400_000 }, async () => {
   const page = await openHost('room');
+  await controllers(page);
   await act(page, 1, 'add').click();
+  await page.evaluate(()=>window.__jjChrome.closeMenu());
   await until(page, async () => (await live(page)).length === 1, 'Keys A joined');
   await page.evaluate(() => window.__padAdd(0));
   await hold(page, [0, 0, 1, 0]);
   await until(page, async () => (await live(page)).length === 2, 'the pad joined');
+  await page.locator('[data-local-use="1"]').click();
+  await page.locator('[data-local-use="100"]').click();
   // Both ready: the room starts (E is Keys A's READY, button 9 the pad's).
   await page.keyboard.down('KeyE');
   await page.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: true }));
   await page.waitForTimeout(250);
   await page.keyboard.up('KeyE');
   await page.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: false }));
+  await wait(page, () => window.__jjRoom.view().phase !== 'Lobby', undefined, 15000).catch(async e => { console.log('C14 readiness', JSON.stringify(await page.evaluate(()=>({room:window.__jjRoom.view(), sources:window.__jjControls.sources(), choices:window.__jjControls.vehicleChoices()})))); throw e; });
   await wait(page, () => window.__jjRoom.view().phase === 'Running', undefined, 120_000);
   const prompts = () => page.evaluate(() => [...document.querySelectorAll('.hud-tile [data-prompt]')].filter((e) => !e.hidden).map((e) => ({ kind: e.querySelector('[data-glyphs]')?.dataset.glyphs ?? null, text: e.textContent, keys: [...e.querySelectorAll('kbd')].map((k) => k.textContent), sticks: e.querySelectorAll('.jj-stick').length })));
   await until(page, async () => (await prompts()).length === 2, 'a prompt on each tile', 60_000);
@@ -280,6 +291,7 @@ test('AC5: the phone\'s Help has the same Controls page', { timeout: 300_000 }, 
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await page.locator('[data-act=controls]').click();
   assert.equal(await page.evaluate(() => window.__jjTutorial.inspect().page), 'controls');
@@ -315,9 +327,11 @@ for (const [name, viewport] of Object.entries(SIZES)) {
     const page = await openHost('room', viewport);
     const at = (what) => `${what}-${name}-${viewport.width}x${viewport.height}`;
     await shot(page, at('lobby-empty-drawer'));
+    await controllers(page);
     // Four sources claim seats: two pads and both clusters, each with its card.
     await act(page, 1, 'add').click();
     await act(page, 2, 'add').click();
+    await page.evaluate(()=>window.__jjChrome.closeMenu());
     await page.evaluate(() => {
       window.__padAdd(0);
       window.__padAdd(1);
@@ -345,7 +359,7 @@ for (const [name, viewport] of Object.entries(SIZES)) {
     await until(page, async () => (await cards(page)).length === 0, 'every card folded', 60_000);
     await shot(page, at('lobby-four-seats-no-cards'));
     // The drawer open (hover), and the host menu's Controls page.
-    await page.locator('[data-jj-input-drawer] .drawer-head').hover();
+    await controllers(page);
     await page.screenshot({ path: CAPTURE + '/' + at('drawer-open-lobby') + '.png' });
     await page.evaluate(() => window.__jjChrome.openControls());
     await shot(page, at('host-menu-controls'));

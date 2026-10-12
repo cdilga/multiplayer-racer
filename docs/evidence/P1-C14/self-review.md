@@ -37,3 +37,5 @@ No clipping or car/HUD overlap found in the inspected matrix. The owner couch ch
 
 Published preview, physical wheels/pads, owner couch readability and the full phone Help matrix are still to be
 verified. This record covers the inspected host surfaces and does not complete the owner acceptance box.
+
+Owner feedback 2026-10-12: implementation and 74 inspected local Chromium/WebKit images are recorded at `../br-f1di/self-review.md` and `../br-f1di/receipt.md`. Deployed verification remains pending.

@@ -83,6 +83,7 @@ pub struct CourseData {
     /// One extra left-right bend pair per this many metres of lap beyond the first few (longer tracks bend more).
     pub bend_spacing_m: f64,
     pub presets: CoursePresets,
+    pub crossing: CrossingData,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,15 +92,22 @@ pub enum PresetName {
     Twisty,
     Flowing,
     Speedway,
+    FigureEight,
 }
 
 impl PresetName {
-    pub const ALL: [Self; 3] = [Self::Twisty, Self::Flowing, Self::Speedway];
+    pub const ALL: [Self; 4] = [
+        Self::Twisty,
+        Self::Flowing,
+        Self::Speedway,
+        Self::FigureEight,
+    ];
     pub fn name(self) -> &'static str {
         match self {
             Self::Twisty => "twisty",
             Self::Flowing => "flowing",
             Self::Speedway => "speedway",
+            Self::FigureEight => "figureEight",
         }
     }
 }
@@ -124,6 +132,29 @@ pub struct CoursePresets {
     pub twisty: CoursePreset,
     pub flowing: CoursePreset,
     pub speedway: CoursePreset,
+    pub figure_eight: CrossingPreset,
+}
+
+/// The crossing family uses `CourseData::crossing`, rather than unused corner knobs.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CrossingPreset {
+    pub weight: f64,
+}
+
+/// Figure-eight topology and crossing safety, consumed by course and deck generation.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CrossingData {
+    pub lobe_turn_min_deg: f64,
+    pub lobe_turn_max_deg: f64,
+    pub deck_height_m: f64,
+    pub plateau_half_m: f64,
+    pub thickness_mm: i64,
+    pub barrier_height_mm: i64,
+    pub barrier_width_mm: i64,
+    pub clearance_mm: i64,
+    pub max_grade_milli: i64,
 }
 
 /// Ordinary jump ramp grades (rise/run), tunable before regeneration.
@@ -135,19 +166,25 @@ pub struct JumpData {
 }
 
 impl CoursePresets {
-    pub fn get(&self, n: PresetName) -> &CoursePreset {
+    pub fn get(&self, n: PresetName) -> Option<&CoursePreset> {
         match n {
-            PresetName::Twisty => &self.twisty,
-            PresetName::Flowing => &self.flowing,
-            PresetName::Speedway => &self.speedway,
+            PresetName::Twisty => Some(&self.twisty),
+            PresetName::Flowing => Some(&self.flowing),
+            PresetName::Speedway => Some(&self.speedway),
+            PresetName::FigureEight => None,
         }
     }
-    pub fn get_mut(&mut self, n: PresetName) -> &mut CoursePreset {
-        match n {
-            PresetName::Twisty => &mut self.twisty,
-            PresetName::Flowing => &mut self.flowing,
-            PresetName::Speedway => &mut self.speedway,
-        }
+    pub fn weight(&self, n: PresetName) -> f64 {
+        self.get(n).map_or(self.figure_eight.weight, |p| p.weight)
+    }
+    pub fn set_weight(&mut self, n: PresetName, weight: f64) {
+        let slot = match n {
+            PresetName::Twisty => &mut self.twisty.weight,
+            PresetName::Flowing => &mut self.flowing.weight,
+            PresetName::Speedway => &mut self.speedway.weight,
+            PresetName::FigureEight => &mut self.figure_eight.weight,
+        };
+        *slot = weight;
     }
 }
 
@@ -310,16 +347,59 @@ impl GeneratorData {
         }
         pos("course.minStraightM", c.min_straight_m, &mut bad);
         pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
+        let bridge = c.crossing;
+        for (key, value) in [
+            ("deckHeightM", bridge.deck_height_m),
+            ("plateauHalfM", bridge.plateau_half_m),
+        ] {
+            pos(&format!("course.crossing.{key}"), value, &mut bad);
+        }
+        if !(210.0..=235.0).contains(&bridge.lobe_turn_min_deg)
+            || bridge.lobe_turn_max_deg < bridge.lobe_turn_min_deg
+            || bridge.lobe_turn_max_deg > 235.0
+        {
+            bad.push("course.crossing: lobe turns must be ordered within 210..235 degrees".into());
+        }
+        use jj_map::bridge::limits as bl;
+        for (key, value, minimum) in [
+            ("thicknessMm", bridge.thickness_mm, bl::MIN_THICKNESS_MM),
+            (
+                "barrierHeightMm",
+                bridge.barrier_height_mm,
+                bl::MIN_BARRIER_HEIGHT_MM,
+            ),
+            (
+                "barrierWidthMm",
+                bridge.barrier_width_mm,
+                bl::MIN_BARRIER_WIDTH_MM,
+            ),
+            ("clearanceMm", bridge.clearance_mm, bl::MIN_CLEARANCE_MM),
+        ] {
+            if value < minimum {
+                bad.push(format!(
+                    "course.crossing.{key}: below crossing safety minimum {minimum}"
+                ));
+            }
+        }
+        if !(1..=bl::MAX_GRADE_MILLI).contains(&bridge.max_grade_milli) {
+            bad.push("course.crossing.maxGradeMilli: outside crossing safety envelope".into());
+        }
         let mut preset_weight = 0.0;
         for name in PresetName::ALL {
-            let p = c.presets.get(name);
             let prefix = format!("course.presets.{}", name.name());
+            let weight = c.presets.weight(name);
+            if !weight.is_finite() || weight < 0.0 {
+                bad.push(format!("{prefix}.weight: must be finite and nonnegative"));
+            }
+            preset_weight += weight;
+            let Some(p) = c.presets.get(name) else {
+                continue;
+            };
             for (key, value) in [("weight", p.weight), ("chicanesPerKm", p.chicanes_per_km)] {
                 if !value.is_finite() || value < 0.0 {
                     bad.push(format!("{prefix}.{key}: must be finite and nonnegative"));
                 }
             }
-            preset_weight += p.weight;
             for (key, value) in [
                 ("hairpinProbability", p.hairpin_probability),
                 ("secondHairpinProbability", p.second_hairpin_probability),

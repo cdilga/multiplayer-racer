@@ -196,6 +196,106 @@ pub fn select(
     })
 }
 
+/// Crossing layouts have two long straight runs. Plan all boundaries together:
+/// a greedy first cut at the end of one run can otherwise consume the room needed
+/// by the later cuts. Retains exactly the same turn, spacing, start and seam rules.
+pub fn select_crossing(
+    pts: &[(f64, f64)],
+    recipe: &[Biome],
+    rng: &mut Rng,
+) -> Result<Selection, SelectError> {
+    let mut lap = Vec::new();
+    for &b in recipe {
+        if lap.last() != Some(&b) {
+            lap.push(b);
+        }
+    }
+    let first = *lap.first().ok_or(SelectError::EmptyRecipe)?;
+    if lap.len() > 1 && lap.last() != Some(&first) {
+        lap.push(first);
+    }
+    let (s, total) = arc_lengths(pts);
+    let boundaries = lap.len() - 1;
+    if boundaries == 0 {
+        return Ok(Selection {
+            lap,
+            cuts: Vec::new(),
+            cut_s: Vec::new(),
+            s,
+            total,
+        });
+    }
+    let lo = LIMITS.earliest_m + TRANSITION_M;
+    let hi = total - LIMITS.seam_m - TRANSITION_M;
+    let spacing = (hi - lo) / (boundaries + 1) as f64;
+    let at = |v: f64| s.iter().position(|&x| x >= v).unwrap_or(s.len() - 1);
+    let candidates: Vec<usize> = (0..s.len())
+        .filter(|&i| {
+            s[i] >= lo
+                && s[i] <= hi
+                && turn(
+                    pts,
+                    at(s[i] - STRAIGHT_M).saturating_sub(1),
+                    at(s[i] + STRAIGHT_M) + 1,
+                ) <= MAX_TURN
+        })
+        .collect();
+    let n = candidates.len();
+    let mut previous = vec![0.0f64; n];
+    let mut parents = Vec::new();
+    for boundary in 0..boundaries {
+        let target = lo + spacing * (boundary + 1) as f64 + rng.range(-0.1, 0.1) * spacing;
+        let mut scores = vec![f64::INFINITY; n];
+        let mut parent = vec![None; n];
+        let (mut eligible, mut best) = (0, None::<usize>);
+        for j in 0..n {
+            if boundary > 0 {
+                while eligible < j
+                    && s[candidates[j]] - s[candidates[eligible]] >= MIN_BOUNDARY_GAP_M
+                {
+                    if previous[eligible].is_finite()
+                        && best.is_none_or(|k| previous[eligible] < previous[k])
+                    {
+                        best = Some(eligible);
+                    }
+                    eligible += 1;
+                }
+                if let Some(k) = best {
+                    scores[j] = previous[k];
+                    parent[j] = Some(k);
+                } else {
+                    continue;
+                }
+            } else {
+                scores[j] = 0.0;
+            }
+            scores[j] += (s[candidates[j]] - target).powi(2);
+        }
+        previous = scores;
+        parents.push(parent);
+    }
+    let mut j = (0..n)
+        .filter(|&j| previous[j].is_finite())
+        .min_by(|&a, &b| previous[a].total_cmp(&previous[b]))
+        .ok_or(SelectError::NoStraight(boundaries - 1))?;
+    let mut cuts = Vec::new();
+    for boundary in (0..boundaries).rev() {
+        cuts.push(candidates[j]);
+        if boundary > 0 {
+            j = parents[boundary][j].expect("finite boundary chain");
+        }
+    }
+    cuts.reverse();
+    let cut_s = cuts.iter().map(|&i| s[i]).collect();
+    Ok(Selection {
+        lap,
+        cuts,
+        cut_s,
+        s,
+        total,
+    })
+}
+
 /// The transition rules, checked on a finished map's `route.segments`: the segments tile the route without gap or
 /// overlap, name known biomes, adjacent ones differ, the header lists exactly the biomes used, every boundary is on a
 /// straight clear of the start and seam and far from the next, the road surface follows the biome outside the transition
@@ -216,7 +316,11 @@ pub fn check_transitions(map: &Map) -> Vec<String> {
     let known: Vec<(Biome, String)> = super::ALL.iter().map(|&b| (b, segment_name(b))).collect();
     let mut segs: Vec<(Biome, usize, usize)> = Vec::new();
     let mut expect = 0usize;
-    for (k, seg) in r.segments.iter().enumerate() {
+    // Canonical storage sorts this unordered collection by name. Validate its
+    // route coverage in spatial order, both before and after a canonical load.
+    let mut ordered: Vec<_> = r.segments.iter().collect();
+    ordered.sort_by_key(|seg| seg.span.from);
+    for (k, seg) in ordered.into_iter().enumerate() {
         let at = format!("route.segments[{k}] {:?}", seg.name);
         let Some((b, _)) = known.iter().find(|(_, name)| *name == seg.name).cloned() else {
             bad.push(format!("{at}: not a biome's name"));
@@ -267,6 +371,12 @@ pub fn check_transitions(map: &Map) -> Vec<String> {
             bad.push(format!("{name}: bends {t:.2} rad within {STRAIGHT_M} m"));
         }
         for (k, feat) in map.features.iter().enumerate() {
+            // A bridge carries the route itself, including its per-segment surface
+            // transitions. Its grade/clearance validator governs the whole deck;
+            // unlike an ordinary jump or crest it is not biome-local furniture.
+            if feat.kind == jj_map::FeatureKind::Bridge {
+                continue;
+            }
             let fp = (
                 f64::from(feat.pose.x) / 1000.0,
                 f64::from(feat.pose.z) / 1000.0,

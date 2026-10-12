@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // br-2mxa (R125) journey: a phone sets each learner-assist level in Settings (Off / Some / Lots); the host's room view
 // carries it per seat and, once the race runs, the seat's tile shows the L-plate (and loses it when set back to Off).
 //   node --test web/tests/journeys/br-2mxa-assist.test.mjs     (JJ_CAPTURE_DIR=<dir> saves the self-review captures)
@@ -61,6 +62,7 @@ test('R125: the phone sets Off / Some / Lots, the host carries it per seat and s
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   // R90 fixture: show the tutorial's completion state in the real joined controller.
   await page.evaluate(() => window.__jjTutorial.show(6));

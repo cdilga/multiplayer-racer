@@ -141,6 +141,10 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
         let n = map.route.points.len();
         let near_feature = |i: usize| {
             map.features.iter().any(|f| {
+                if let Some(d) = jj_map::bridge::BridgeDesign::of(f) {
+                    return jj_map::bridge::indices(&map, d.upper)
+                        .is_some_and(|ix| ix.contains(&i));
+                }
                 f64::from(f.pose.x - map.route.points[i].x)
                     .hypot(f64::from(f.pose.z - map.route.points[i].z))
                     < 80_000.0

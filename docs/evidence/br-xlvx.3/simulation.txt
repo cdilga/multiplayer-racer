@@ -1,0 +1,324 @@
+  [2m2026-10-11T23:42:43.824256Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:45.508246Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:45.508331Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:46.700918Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:46.701048Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:55.902325Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 17 files, 4420375 bytes in 8723ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:57.502486Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test -p jj-sim --release --config 'env.RCH_BUILD_SOURCE.value="a46932d3422686f62a6d02756d8bac3253f6b33b-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:57.518079Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:42:57.518235Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-types v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-types)
+[1m[92m   Compiling[0m rapier3d v0.36.0 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/rapier3d)
+[1m[92m   Compiling[0m jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+[1m[92m   Compiling[0m jj-contracts v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-contracts)
+[1m[92m   Compiling[0m jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+[1m[92m   Compiling[0m jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+[1m[92m   Compiling[0m jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+[1m[92m   Compiling[0m jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+[1m[92m   Compiling[0m jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+
+running 19 tests
+test derby::tests::loosening_and_damage_to_a_gone_part_pay_nothing ... ok
+test assist::tests::the_standard_profile_is_valid_and_bad_ones_are_refused ... ok
+test derby::tests::debris_attribution_expires_three_seconds_after_the_last_instigator_impulse ... ok
+test derby::tests::equal_raw_scores_share_a_rank_and_a_late_joiner_ranks_from_arrival ... ok
+test derby::tests::damage_is_two_score_units_per_damage_unit_and_bonuses_are_exact_integers ... ok
+test derby::tests::self_friendly_protected_and_environmental_damage_score_zero ... ok
+test assist::tests::catch_up_share_is_zero_to_3_s_and_linear_to_full_at_12_s ... ok
+test derby::tests::a_bike_wheel_loss_credits_the_wheel_taker_using_its_profile ... ok
+test derby::tests::a_wreck_pays_once_per_life_and_flips_are_credited_only_within_three_seconds ... ok
+test derby::tests::the_clock_counts_game_ticks_and_the_final_tick_still_counts ... ok
+test rng::tests::streams_are_reproducible_and_independent ... ok
+test surface::tests::builtin_table_validates_and_orders_by_drag ... ok
+test vehicle::tests::steering_lock_falls_with_speed_and_grip_follows_the_surface ... ok
+test utility::tests::cone_density_gives_its_mass ... ok
+test surface::tests::validator_rejects_bad_values ... ok
+test derby::tests::the_master_example_scores_35_points_for_a_human_and_17_5_for_the_autopilot ... ok
+test utility::tests::cooldowns_are_game_ticks ... ok
+test vehicle::tests::brake_brakes_when_rolling_and_reverses_near_rest ... ok
+test vehicle::r120_tests::letting_go_of_a_held_drift_fires_a_free_exit_boost ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+[1m[92m    Finished[0m `release` profile [optimized] target(s) in 51.53s
+[1m[92m     Running[0m unittests src/lib.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/jj_sim-3fe557af32da6835)
+[1m[92m     Running[0m tests/assist.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/assist-0ce075ae5450204c)
+test the_state_hash_distinguishes_which_car_has_assist_before_it_steps ... ok
+test lots_rights_a_flipped_car_at_once ... ok
+test some_gates_the_drift_and_lots_turns_it_and_the_wheelie_off ... ok
+test lots_auto_throttles_and_brakes_before_bends_and_the_brake_still_works ... ok
+test assists_never_fight_a_full_lock_input ... ok
+test catch_up_closes_a_10_s_gap_by_a_stated_amount_and_never_touches_the_leader ... ok
+test a_scripted_novice_laps_with_lots_and_some_and_crashes_more_with_off ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 53.40s
+
+
+running 5 tests
+test a_heartbeat_or_a_noisy_axis_is_not_deliberate ... ok
+test handback_blends_at_a_tick_boundary_with_no_jolt ... ok
+test it_recovers_itself_after_being_stuck_3_s_and_its_state_is_introspectable ... ok
+[1m[92m     Running[0m tests/autopilot.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/autopilot-650c8b789aa7d099)
+test autopilot_takeovers_and_handbacks_replay_to_the_same_hash ... ok
+test the_autopilot_completes_three_laps_unaided_then_cools_down ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.25s
+
+
+running 4 tests
+test malformed_axles_and_missing_wheel_proxies_are_rejected_before_simulation ... ok
+test a_bike_wall_collision_charges_its_own_damage_proxies_and_replays ... ok
+test rider_and_wheel_damage_leave_dynamic_debris_and_a_fresh_bike ... ok
+test raw_stick_and_named_damage_fixtures_replay_through_the_shared_harness ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 1 test
+[1m[92m     Running[0m tests/bikes.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/bikes-94fdcbe8c573b328)
+[1m[92m     Running[0m tests/crashes.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/crashes-253b163cbb069e02)
+test the_staged_crashes_take_their_parts_loose_then_off_and_replay_to_the_same_state ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s
+
+
+running 1 test
+[1m[92m     Running[0m tests/damage.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/damage-bdf4ba20dfd8ccf8)
+test the_damage_bank_holds_its_envelopes_and_replays_bit_for_bit ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+
+
+running 3 tests
+test the_profile_carries_every_part_proxy_in_contract_order ... ok
+test a_hit_by_debris_names_the_car_that_hit_the_debris ... ok
+test episodes_and_part_states_show_in_the_jj_sim_output ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 6 tests
+test a_detached_part_inherits_the_chassis_velocity_and_mass_adds_up ... ok
+test a_loose_part_swings_inside_its_limits_and_settles ... ok
+[1m[92m     Running[0m tests/damage_attribution.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/damage_attribution-3eaae44f0e4c484b)
+[1m[92m     Running[0m tests/debris.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/debris-4cf70c70ad3a1bf1)
+test debris_persists_dynamic_sleeps_and_wakes_on_contact ... ok
+test loose_wheel_drive_and_the_energy_fixture_hold ... ok
+test springs_kicks_and_a_debris_pile_never_inject_energy ... ok
+test nothing_converts_deletes_merges_or_budgets_debris ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.96s
+
+
+running 3 tests
+test placing_a_car_is_journaled_so_the_run_still_replays ... ok
+[1m[92m     Running[0m tests/determinism.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/determinism-b83759a9e24c5fcf)
+[1m[92m     Running[0m tests/determinism_scan.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/determinism_scan-8810f5ea180a8a7e)
+[1m[92m     Running[0m tests/drift_r120.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/drift_r120-1047f7c1ce90b464)
+test journal_replay_reproduces_the_hash ... ok
+test same_inputs_and_seed_give_the_same_hash ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+
+running 2 tests
+test the_scan_catches_injected_cases ... ok
+test sim_code_reads_no_clock_and_draws_no_unseeded_randomness ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+test holding_countersteer_keeps_the_yaw_rate_bounded_through_a_three_second_drift ... ok
+test a_countersteered_drift_makes_the_corner_and_fires_its_exit_boost_and_without_countersteer_it_spins ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+
+running 3 tests
+test ordering_uses_exact_tick_differences_at_a_margin_boundary ... ok
+test the_feel_bank_under_a_tuning ... ok
+[1m[92m     Running[0m tests/duels.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/duels-eee4ac5403948c1f)
+test every_duel_holds_its_ordering ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.76s
+
+
+running 1 test
+[1m[92m     Running[0m tests/feel.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/feel-5e60f303edbf39ce)
+test every_feel_scenario_and_s03_affordance_row_holds_its_envelopes_and_beats_its_baselines ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.27s
+
+
+running 9 tests
+test card_uses_and_cooldown_are_game_time_and_a_protected_car_can_use_a_buff ... ok
+test respawn_clears_held_items_but_keeps_the_fired_effect_owner_until_exact_expiry ... ok
+test protection_and_failed_activation_keep_the_item_and_do_not_allocate_an_effect ... ok
+test full_pickup_is_not_consumed_and_use_shifts_the_fifo ... ok
+test round_retirement_returns_every_effect_and_replayed_transactions_hash_identically ... ok
+test sim_recovery_clears_queues_and_protection_refuses_an_offensive_pickup ... ok
+test sim_round_end_clears_inventory_but_dynamic_debris_keeps_moving_and_replays ... ok
+test sim_pickups_are_journalled_and_an_unavailable_handler_never_fires_the_fallback ... ok
+[1m[92m     Running[0m tests/item_queue.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/item_queue-82d26217d048cd7d)
+[1m[92m     Running[0m tests/late_join.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/late_join-2c55ecbc4e15e34a)
+test a_fired_buff_keeps_its_original_owner_and_timer_through_recovery ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 2 tests
+test on_a_narrow_road_the_newcomer_is_placed_clear_of_the_barriers_too ... ok
+test a_late_joiner_into_a_crowd_with_a_husk_and_debris_drives_away ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.83s
+
+
+running 7 tests
+test respawns_go_through_the_placement_service ... ok
+test the_0_1_spawn_cap_never_returns ... ok
+[1m[92m     Running[0m tests/placement.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/placement-1da21bd4d696abf0)
+test a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state ... ok
+test start_grids_of_1_24_40_and_99_place_without_overlap ... ok
+test drop_ins_and_debris_replay_to_the_same_hash ... ok
+test a_crowded_tail_still_yields_a_controllable_protected_car_within_3_s ... ok
+test a_99_car_grid_on_a_24_car_corridor_places_everyone_at_once_under_protection ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s
+
+
+running 9 tests
+test recover_needs_a_slow_or_inverted_car_and_holds_it_then_rolls_it_off ... ok
+test a_shortcut_across_the_infield_doesnt_count_progress ... ok
+test finished_cars_are_ghosts_to_racers ... ok
+[1m[92m     Running[0m tests/race.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/race-43f4fe880fbcd9dd)
+test finishes_carry_a_crossing_fraction_and_progress_keeps_its_high_water_mark ... ok
+test a_race_with_commands_replays_to_the_same_hash ... ok
+test out_of_bounds_always_recovers ... ok
+test the_first_finisher_opens_the_30_s_window ... ok
+test a_flip_from_12_inverted_poses_rights_itself_or_is_wrecked_within_4_s_of_rest ... ok
+test an_all_stuck_race_ends_at_the_deadline ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.83s
+
+
+running 4 tests
+test rail_profile_validates_and_passive_deflection_returns_without_creating_energy ... ok
+test bolted_neighbours_spread_a_setup_deflection_and_return_passively ... ok
+[1m[92m     Running[0m tests/rails.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/rails-c2e0fa45741d0883)
+test speed_angle_sweep_moves_the_rail_without_losing_car_parts ... ok
+test compliant_corner_and_low_speed_use_have_intact_replayable_outcomes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.65s
+
+
+running 10 tests
+test per_wheel_state_is_readable ... ok
+test restoring_equal_dominance_separates_a_stationary_overlap_without_launching_it ... ok
+test higher_dominance_pushes_dynamic_bodies_but_fixed_barriers_still_stop_it ... ok
+test dominance_setter_applies_on_the_next_tick_and_equal_contacts_return_on_expiry ... ok
+test one_wheel_is_disabled_by_zeroing_its_suspension_and_grip ... ok
+test engine_force_is_a_force_and_brake_is_an_impulse_per_tick ... ok
+test update_vehicle_pumps_velocity_into_a_sleeping_chassis ... ok
+test a_sleeping_chassis_wakes_only_on_positive_engine_force ... ok
+test update_vehicle_before_step_holds_the_car_on_its_suspension ... ok
+test dominance_contact_models_work_with_either_body_insertion_order ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 4 tests
+test suspension_hits_the_gable_and_verandah_instead_of_a_full_height_box ... ok
+test respawn_clearance_keeps_the_full_house_footprint_after_roof_decomposition ... ok
+test a_design_speed_kicker_lands_on_the_visible_roof_and_the_validator_rejects_an_unreachable_target ... ok
+test an_unprotected_car_lands_stays_on_the_roof_and_drives_off ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 5 tests
+test every_roster_vehicle_has_a_profile_and_an_art_folder ... ok
+test tuning_one_vehicle_changes_only_its_cars ... ok
+[1m[92m     Running[0m tests/rapier_api.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/rapier_api-b5e673b6f5cfcb0a)
+[1m[92m     Running[0m tests/roofs.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/roofs-5d51cabb24ca01f7)
+[1m[92m     Running[0m tests/roster.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/roster-71a7ff384da5a092)
+test a_fixture_vehicle_added_as_data_drives ... ok
+test each_car_is_built_from_and_driven_by_its_own_profile ... ok
+test a_mixed_roster_replays_bit_for_bit ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
+
+
+running 4 tests
+test the_ute_profile_is_heavier_and_torquier_than_the_cruz ... ok
+test the_ute_settles_on_its_wheels_at_the_design_ride_height ... ok
+test the_ute_responds_to_throttle ... ok
+[1m[92m     Running[0m tests/tradie_ute.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/tradie_ute-bc2d4340bc5a4dba)
+test the_ute_laps_the_greybox_under_autopilot_without_a_wreck_and_no_faster_than_the_cruz ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.08s
+
+
+running 4 tests
+test each_utility_fires_once_and_its_cooldown_refuses_in_game_time ... ok
+test utilities_replay_from_the_journal ... ok
+[1m[92m     Running[0m tests/utility.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/utility-4f454497938abecd)
+[1m[92m     Running[0m tests/wreck.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/wreck-70ea1fcfed4c8acc)
+test a_cone_lands_behind_the_bumper_on_the_ground_and_stays_for_the_round ... ok
+test a_car_driving_into_a_cone_pushes_it_and_is_not_wrecked ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+
+running 4 tests
+test a_lost_wheel_wrecks_the_car_after_its_grace_and_it_respawns_at_its_anchor ... ok
+test a_wreck_never_injects_energy_and_replays_bit_for_bit ... ok
+test stuck_flip_and_out_of_bounds_wrecks_leave_husks_that_persist_dynamic ... ok
+[1m[92m   Doc-tests[0m jj_sim
+test a_car_with_every_part_loose_laps_as_fast_as_an_intact_one ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+  [2m2026-10-11T23:45:15.167239Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 137459ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:45:15.346865Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:45:15.347409Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:45:15.708866Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:45:15.965340Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 617ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T23:45:15.984126Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 617ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

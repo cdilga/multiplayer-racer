@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C06 journey: a newcomer's phone in the Lobby (no warm-up drive, R110) is coached through each control by doing
 // it: steer, brake/reverse, boost, drift, OI!, cone, wheelie. Each step clears on the gesture; Skip is one tap and
 // remembered; Help shows it again; nothing pauses (the room view stays in the Lobby, the host's sim keeps ticking).
@@ -77,6 +78,7 @@ const launch = (page, hold = 600) =>
 
 test('C06: a newcomer is coached through every control by doing it; nothing pauses', { timeout: 180_000 }, async () => {
   const { host, page, ctx } = await hostAndPhone();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await shot(page, 'phone-tutorial-step1');
   // R116: the right stick steers.
@@ -111,6 +113,7 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   assert.equal((await page.evaluate(() => window.__jjTutorial.inspect())).open, false);
   // Help shows it again from the start.
   await page.getByRole('button', { name: /Help/ }).click();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true && window.__jjTutorial.inspect().step === 0);
   await shot(page, 'phone-tutorial-help-again');
   await ctx.close();
@@ -118,11 +121,13 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
 
 test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', { timeout: 120_000 }, async () => {
   const { host, page } = await hostAndPhone();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await sticks(page, z, { x: 1, y: 0 });
   await sticks(page, z, { x: -1, y: 0 });
   await waitStep(page, 1);
   await shot(page, 'phone-tutorial-before-skip');
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   assert.equal((await page.evaluate(() => window.__jjTutorial.inspect())).open, false);
   await shot(page, 'phone-tutorial-skipped');
@@ -147,6 +152,7 @@ const startRace = async (page, host) => {
 
 test('C06: the host sees each control and the seat\'s tile shows the next one in the race; it never pauses', { timeout: 240_000 }, async () => {
   const { host, page, ctx } = await hostAndPhone();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
   // The host sees the steer goals as they happen.
@@ -172,8 +178,10 @@ test('C06: the host sees each control and the seat\'s tile shows the next one in
 
 test('C06: skip hides the TV prompt too, and nothing is shown afterwards', { timeout: 180_000 }, async () => {
   const { host, page } = await hostAndPhone();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await wait(host, () => window.__jjRoom.view().seats[0].prompt === null, undefined, 10_000);
   await startRace(page, host);
@@ -184,6 +192,7 @@ test('C06: skip hides the TV prompt too, and nothing is shown afterwards', { tim
 
 test('C06: a newcomer who joins a race in progress gets the prompts on their tile', { timeout: 240_000 }, async () => {
   const { host, page } = await hostAndPhone();
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await startRace(page, host);
   const ctx2 = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });

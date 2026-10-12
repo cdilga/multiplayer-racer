@@ -68,6 +68,8 @@ struct Gate {
     at: usize,
     x: f32,
     z: f32,
+    /// Only layered courses need a height window: a car under a gate cannot pass it.
+    layer_y: Option<f32>,
     /// Unit route tangent (x, z) at the gate.
     tx: f32,
     tz: f32,
@@ -157,6 +159,16 @@ impl Course {
                     at,
                     x: pts[at].0,
                     z: pts[at].1,
+                    layer_y: m
+                        .features
+                        .iter()
+                        .filter_map(jj_map::bridge::BridgeDesign::of)
+                        .any(|d| {
+                            [d.upper, d.lower].iter().any(|&span| {
+                                jj_map::bridge::indices(m, span).is_some_and(|ix| ix.contains(&at))
+                            })
+                        })
+                        .then_some(m.route.points[at].y as f32 / 1000.0),
                     tx: dx / len,
                     tz: dz / len,
                     half_width: m.route.points[at].width as f32 / 2000.0,
@@ -640,6 +652,15 @@ impl Race {
         let lateral = ((now.position[0] - g.x) * -g.tz + (now.position[2] - g.z) * g.tx).abs();
         let (before, after) = (f(prev.position), f(now.position));
         if !(before < 0.0 && after >= 0.0 && lateral <= g.half_width + GATE_MARGIN_M) {
+            return;
+        }
+        let t = (-before / (after - before)).clamp(0.0, 1.0);
+        let y = prev.position[1] + t * (now.position[1] - prev.position[1]);
+        // Use half the minimum separation: a full-clearance window would also
+        // admit the body centre of a car on the other layer of a low deck.
+        if g.layer_y.is_some_and(|h| {
+            (y - h).abs() > jj_map::bridge::limits::MIN_CLEARANCE_MM as f32 / 2000.0
+        }) {
             return;
         }
         // Where in this tick's step the line was crossed, linearly between the two positions.

@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C03: the lobby's car pick on the wire. A phone's picker tells the host (`Pick{vehicle, open}`), and the TV's lobby shows
 // that seat as "Choosing car…" while the picker is open and the car's name once it's picked. Works for any roster size
 // (`#roster=N` stands extra cars in on the phone), survives a reload (the saved pick is resent on Welcome), and Ready is
@@ -46,7 +47,9 @@ async function phone(joinUrl, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page };
 }
@@ -67,13 +70,13 @@ const card = async (host, name, want) => {
 test('the picker opening is "Choosing car…" on the TV; Done shows the car by name; a long roster and a reload keep working', { timeout: 240_000 }, async () => {
   const { host, joinUrl } = await room();
   const p = await phone(`${joinUrl}#roster=200`, 'Marlene');
-  // Not picked yet: the TV says what it has always said.
+  // The visible initial choice has been confirmed by the phone helper.
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.name === 'Marlene'));
-  assert.equal((await card(host, 'Marlene', 'choosing')).state, 'choosing');
-  assert.equal((await seatOf(host, 'Marlene')).vehicle ?? null, null);
+  assert.equal((await card(host, 'Marlene', 'picked')).state, 'picked');
+  assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
 
   // Open the picker: the seat is choosing, with the car being looked at.
-  await p.page.getByRole('button', { name: /^Car/ }).click();
+  await p.page.getByRole('button', { name: 'Choose vehicle' }).click();
   await p.page.locator('[data-overlay=cars]').waitFor();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === true);
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
@@ -88,7 +91,7 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   await shot(p.page, 'c03-pick-phone-open-844x390');
 
   // Done: the pick stands, and the TV names the car.
-  await p.page.getByRole('button', { name: 'Done' }).click();
+  await p.page.getByRole('button', { name: 'Use this vehicle' }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === false);
   assert.equal((await card(host, 'Marlene', 'picked')).label, 'Test 149');
   await shot(host, 'c03-pick-tv-picked-1280x720');
@@ -99,17 +102,17 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'test-149');
 });
 
-test('Ready is never behind the pick: a seat can be ready without choosing, and picking afterwards leaves it ready', { timeout: 180_000 }, async () => {
+test('Ready follows vehicle confirmation; changing the confirmed choice preserves readiness', { timeout: 180_000 }, async () => {
   const { host, joinUrl } = await room();
   const p = await phone(joinUrl, 'Shazza');
   await phone(joinUrl, 'Davo'); // a second player who isn't ready keeps the room in the Lobby (everyone ready starts the race)
   await p.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.ready === true);
   assert.equal((await card(host, 'Shazza', 'ready')).state, 'ready', 'ready with no car picked');
-  await p.page.getByRole('button', { name: /^Car/ }).click();
+  await p.page.getByRole('button', { name: 'Choose vehicle' }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.choosing === true);
   assert.equal((await seatOf(host, 'Shazza')).ready, true, 'opening the picker un-readies nobody');
-  await p.page.getByRole('button', { name: 'Done' }).click();
+  await p.page.getByRole('button', { name: 'Use this vehicle' }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.choosing === false);
   const s = await seatOf(host, 'Shazza');
   assert.deepEqual([s.ready, s.vehicle], [true, 'cruz-missile']);

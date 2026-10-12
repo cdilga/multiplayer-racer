@@ -8,3 +8,5 @@ Captured by `web/tests/journeys/v-roster-mixed.test.mjs` (headless Chromium, sof
 - `tv-tuning-ute-1280x720.png`: the tuning panel with the vehicle selector set to `tradie-ute`.
 
 Honest gaps: the Ute hero art is a silhouette; ute engine sound is data only (nobody listened); native `cargo clippy` for jj-wasm-host and jj-fixture is blocked by another helper's `jj-procgen/src/tuning/mod.rs:138` (useless format!); `jj-sim/tests/damage.rs` fails in the shared tree but passes at HEAD, which looks like the concurrent surface work (not isolated).
+
+Owner feedback 2026-10-12: implementation and 74 inspected local Chromium/WebKit images are recorded at `../br-f1di/self-review.md` and `../br-f1di/receipt.md`. Deployed verification remains pending.

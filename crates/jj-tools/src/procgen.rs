@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway>] [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
@@ -145,11 +145,13 @@ pub fn command(args: &[String]) -> ExitCode {
                     .ok()
                 });
                 let Some(name) = name else {
-                    eprintln!("jj procgen: --preset needs twisty, flowing or speedway\n{USAGE}");
+                    eprintln!(
+                        "jj procgen: --preset needs twisty, flowing, speedway or figureEight\n{USAGE}"
+                    );
                     return ExitCode::from(2);
                 };
                 for n in jj_procgen::tuning::PresetName::ALL {
-                    data.course.presets.get_mut(n).weight = f64::from(n == name);
+                    data.course.presets.set_weight(n, f64::from(n == name));
                 }
             }
             "--recipe" => match it.next().and_then(|l| parse_recipe(l)) {
@@ -209,6 +211,10 @@ pub fn command(args: &[String]) -> ExitCode {
         "props": map.props.len(),
         "jumpShapes": map.features.iter().enumerate().filter_map(|(feature, f)| {
             let mesh = jj_map::jump::jump_mesh(&map, f)?;
+            Some(serde_json::json!({ "feature": feature, "triangles": mesh.1.len(), "fingerprint": format!("{:016x}", jj_map::jump::render_fingerprint(&mesh)) }))
+        }).collect::<Vec<_>>(),
+        "bridgeShapes": map.features.iter().enumerate().filter_map(|(feature, f)| {
+            let mesh = jj_map::bridge::bridge_mesh(&map, f)?;
             Some(serde_json::json!({ "feature": feature, "triangles": mesh.1.len(), "fingerprint": format!("{:016x}", jj_map::jump::render_fingerprint(&mesh)) }))
         }).collect::<Vec<_>>(),
         "course": course_json(&course),

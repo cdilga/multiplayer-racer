@@ -916,6 +916,25 @@ impl Host {
             }
             MainToSim::Ui { ui, .. } => match ui {
                 UiCommand::Pause { on } => self.set_pause(Pause::Manual, on),
+                UiCommand::LocalReady { source } => {
+                    if let Some(&conn) = self.locals.get(&source)
+                        && let Some(seat) = self.seats.seat_at(conn, seats::PRIMARY_SOURCE)
+                        && self.picks.get(&seat).is_some_and(|p| !p.1)
+                    {
+                        self.set_ready(seat, !self.round.director.is_ready(seat));
+                    }
+                }
+                UiCommand::LocalPick {
+                    source,
+                    vehicle,
+                    open,
+                } => {
+                    if let Some(&conn) = self.locals.get(&source)
+                        && let Some(seat) = self.seats.seat_at(conn, seats::PRIMARY_SOURCE)
+                    {
+                        self.pick_seat(seat, vehicle, open);
+                    }
+                }
                 // Start/End/Disband, laps and free drive are the round loop's (G01); cameras (R05) come from the
                 // controllers and the drawer's Remove is G07's.
                 other => self.round_ui(other),
@@ -1034,19 +1053,8 @@ impl Host {
                 vec![]
             }
             ControllerCmd::Pick { vehicle, open } => {
-                let slug = !vehicle.is_empty()
-                    && vehicle.len() <= MAX_VEHICLE_ID
-                    && vehicle
-                        .bytes()
-                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
-                if slug && let Some(seat) = self.seats.seat_at(conn, src) {
-                    let before = self.vehicle_of_seat(seat);
-                    self.picks.insert(seat, (vehicle, open));
-                    // In free drive the seat already has a car (the Lobby has none otherwise, R110): it is rebuilt as the
-                    // new pick.
-                    if self.round.free_drive && self.vehicle_of_seat(seat) != before {
-                        self.rebuild_for_vehicles();
-                    }
+                if let Some(seat) = self.seats.seat_at(conn, src) {
+                    self.pick_seat(seat, vehicle, open);
                 }
                 vec![]
             }
@@ -1165,6 +1173,22 @@ impl Host {
     }
 
     /// A host pad or keyboard player's seat, claimed through the seat reducer on its first sample.
+    fn pick_seat(&mut self, seat: SeatId, vehicle: String, open: bool) {
+        let slug = !vehicle.is_empty()
+            && vehicle.len() <= MAX_VEHICLE_ID
+            && vehicle
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
+        if !slug {
+            return;
+        }
+        let before = self.vehicle_of_seat(seat);
+        self.picks.insert(seat, (vehicle, open));
+        if self.round.free_drive && self.vehicle_of_seat(seat) != before {
+            self.rebuild_for_vehicles();
+        }
+    }
+
     fn local_seat(&mut self, source: LocalSourceId) -> Option<SeatId> {
         let conn = match self.locals.get(&source) {
             Some(&c) => c,

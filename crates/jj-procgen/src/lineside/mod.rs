@@ -436,6 +436,18 @@ pub fn place(
                     libm::round(cx * 1000.0) / 1000.0,
                     libm::round(cz * 1000.0) / 1000.0,
                 );
+                // A bridge's upper road is a separate deck above terrain. Its painted
+                // centre line follows the selected route span, including at the crossing.
+                if rule.anchor == Anchor::Centre
+                    && map.features.iter().any(|f| {
+                        jj_map::bridge::BridgeDesign::of(f).is_some_and(|d| {
+                            jj_map::bridge::indices(map, d.upper)
+                                .is_some_and(|span| span.contains(&i))
+                        })
+                    })
+                {
+                    ground = f64::from(map.route.points[i].y) / 1000.0;
+                }
                 if rule.yaw == Yaw::Across {
                     // A side street is a low pad across whatever the ground does: its base sits at the lowest ground under it.
                     let len = footprint_x(&fp);

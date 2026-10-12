@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-R06 AC "Identify from ... the phone's menu": the Help card (the phone's menu, C06) carries an Identify button that
 // sends the same Identify as the tools row; the host's event log lists it for that seat. A keyboard cluster's Identify
 // key (Q for keys A) in a running race also lists an Identify event and pulses that seat's tile (`__jjRoom.identified()`).
@@ -39,6 +40,7 @@ test("the phone's menu (Help card) has an Identify that the host receives for th
   const seat = await host.evaluate(() => window.__jjRoom.view().seats[0].seat);
   // The tutorial card opens for a newcomer; its top bar carries Identify beside Skip. Past the seat reducer's 3 s limit
   // from the join flash, so the press is its own event.
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await page.waitForTimeout(3300);
   const before = (await identifies(host)).length;
@@ -46,8 +48,10 @@ test("the phone's menu (Help card) has an Identify that the host receives for th
   await wait(host, (n) => window.__jjRoom.events().filter((e) => e.event?.Identify).length > n, before, 10_000);
   assert.equal((await identifies(host)).at(-1), seat, 'the menu Identify reaches the host for this seat');
   // Help re-opens the same menu after the tutorial is closed.
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await page.getByRole('button', { name: /^Help/ }).click();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await page.waitForTimeout(3300);
   const again = (await identifies(host)).length;
@@ -67,7 +71,9 @@ test("the settings sheet's Identify sends the same command for that seat and the
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
   await wait(host, () => window.__jjRoom.view().seats.length === 1);
   const seat = await host.evaluate(() => window.__jjRoom.view().seats[0].seat);
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await page.waitForTimeout(3300);
   await page.locator('[data-act=settings]').click();

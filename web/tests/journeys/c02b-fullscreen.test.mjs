@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
 import { evidencePath } from '../lib/evidence.mjs';
 // P1-C02b: full screen on the phone controller. A real phone joins a real room (loopback WebRTC). The tools row's full-screen
@@ -60,7 +61,9 @@ async function joinPhone(joinUrl, { width, height, noApi = false, name = 'Marlen
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   // Joining asks for full screen once (keep awake on): let that land, then start from the windowed state the owner reported.
   if (!noApi) await wait(page, () => !!document.fullscreenElement, undefined, 5_000);

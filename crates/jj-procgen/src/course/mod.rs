@@ -91,6 +91,8 @@ pub struct Course {
     pub fallback: bool,
     /// Why earlier draws were rejected (introspection for the seed bank).
     pub rejects: BTreeMap<&'static str, u32>,
+    /// Upper and lower straight spans in metres along the route, before resampling.
+    pub crossing: Option<[(f64, f64); 2]>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -448,13 +450,13 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
     let class = draw_class(rng, data);
     let total: f64 = PresetName::ALL
         .iter()
-        .map(|n| data.presets.get(*n).weight)
+        .map(|n| data.presets.weight(*n))
         .sum();
     let mut pick = rng.unit() * total;
     let preset = PresetName::ALL
         .into_iter()
         .find(|n| {
-            let weight = data.presets.get(*n).weight;
+            let weight = data.presets.weight(*n);
             if pick < weight {
                 true
             } else {
@@ -464,10 +466,18 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         })
         .unwrap_or(PresetName::Speedway);
     let band = *data.classes.get(class);
+    if preset == PresetName::FigureEight {
+        return figure_eight(rng, data, class, band);
+    }
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
         let target = range(rng, (band.length_min_m, band.length_max_m));
-        let (corners, pieces) = match draw(rng, data, data.presets.get(preset), target) {
+        let (corners, pieces) = match draw(
+            rng,
+            data,
+            data.presets.get(preset).expect("ordinary course preset"),
+            target,
+        ) {
             Ok(d) => d,
             Err(why) => {
                 *rejects.entry(why).or_default() += 1;
@@ -499,6 +509,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
             attempts: attempt,
             fallback: false,
             rejects,
+            crossing: None,
         };
     }
     let (corners, pieces) = oval((band.length_min_m + band.length_max_m) / 2.0);
@@ -513,6 +524,69 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         attempts: MAX_ATTEMPTS,
         fallback: true,
         rejects,
+        crossing: None,
+    }
+}
+
+/// Opposite-hand lobes joined by long tangent straights, crossing once at a real angle.
+/// The upper straight's grade is applied after terrain, never baked into the lower road.
+fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: LengthClass) -> Course {
+    let target = rng.range(band.length_min_m, band.length_max_m);
+    let angle = deg(rng.range(
+        data.crossing.lobe_turn_min_deg,
+        data.crossing.lobe_turn_max_deg,
+    ));
+    let ratio = -libm::tan(angle / 2.0);
+    let mut radius = target / (4.0 * ratio + 2.0 * angle);
+    let mut straight = 2.0 * ratio * radius;
+    let sign = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
+    let pieces = [
+        Piece::Straight(straight),
+        Piece::Arc {
+            turn: sign * angle,
+            radius,
+        },
+        Piece::Straight(straight),
+        Piece::Arc {
+            turn: -sign * angle,
+            radius,
+        },
+    ];
+    let mut points = sample(&pieces);
+    // Arc chords are shorter than analytical arcs. Fit the sampled route to the
+    // requested length, rather than letting the shortest band undershoot.
+    let scale = target / length(&points);
+    for p in &mut points {
+        p.0 *= scale;
+        p.1 *= scale;
+    }
+    radius *= scale;
+    straight *= scale;
+    Course {
+        corners: vec![
+            Corner {
+                kind: CornerKind::Sweeper,
+                turn: sign * angle,
+                radius,
+            },
+            Corner {
+                kind: CornerKind::Sweeper,
+                turn: -sign * angle,
+                radius,
+            },
+        ],
+        straights: vec![straight, straight],
+        length_m: length(&points),
+        points,
+        class,
+        preset: PresetName::FigureEight,
+        attempts: 1,
+        fallback: false,
+        rejects: BTreeMap::new(),
+        crossing: Some([
+            (straight + angle * radius, 2.0 * straight + angle * radius),
+            (0.0, straight),
+        ]),
     }
 }
 

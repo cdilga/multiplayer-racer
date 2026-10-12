@@ -1,0 +1,43 @@
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 2.88s
+     Running tests/biome.rs (target/aarch64-apple-darwin/release/deps/biome-e0806e15a5388876)
+
+running 8 tests
+test writes_the_capture ... ok
+test the_trait_is_all_a_biome_needs_and_every_biome_is_pure_data ... ok
+test missing_or_shortened_rail_sections_are_rejected_as_gaps ... ok
+test chevrons_and_rail_stand_on_the_outside_of_the_turn ... ok
+test a_transition_blends_the_terrain_and_switches_the_road_in_the_middle ... ok
+test two_biome_recipes_hash_to_the_committed_goldens ... ok
+test every_corner_has_chevrons_and_rail_and_the_finish_has_a_gantry_on_every_route ... ok
+test a_two_biome_placeholder_track_validates_with_its_transition ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.53s
+
+     Running tests/course.rs (target/aarch64-apple-darwin/release/deps/course-29caf7b9dee5b067)
+
+running 1 test
+test a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.93s
+
+     Running tests/presets.rs (target/aarch64-apple-darwin/release/deps/presets-85e6a4c25a92d286)
+
+running 2 tests
+test preset_seed_bank_reports_geometry ... ok
+test each_preset_autopilot_laps_each_biome_across_seeds_and_replays has been running for over 60 seconds
+test each_preset_autopilot_laps_each_biome_across_seeds_and_replays ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 98.93s
+
+     Running tests/procgen.rs (target/aarch64-apple-darwin/release/deps/procgen-19c3c3f35f498e5a)
+
+running 5 tests
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.71s
+

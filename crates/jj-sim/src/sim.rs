@@ -315,6 +315,44 @@ impl Sim {
         // Sharp jumps (br-gw74.7.1): the ramp, table and landing ramp are the exact triangles of `jj_map::jump`, not a 2.5 m
         // grid's rounding of them. They are ground to the car (the terrain's groups).
         for f in &m.features {
+            if let Some((verts, tris)) = jj_map::bridge::bridge_mesh(m, f) {
+                let materials =
+                    jj_map::bridge::triangle_surfaces(m, f).expect("validated bridge spans");
+                let pts: Vec<Vector> = verts
+                    .iter()
+                    .map(|p| Vector::new(p[0] as f32, p[1] as f32, p[2] as f32))
+                    .collect();
+                for surface in [
+                    jj_map::Surface::Tarmac,
+                    jj_map::Surface::PackedDirt,
+                    jj_map::Surface::Gravel,
+                    jj_map::Surface::Rock,
+                    jj_map::Surface::OffTrack,
+                ] {
+                    let faces: Vec<_> = tris
+                        .iter()
+                        .zip(&materials)
+                        .filter(|(_, s)| **s == surface)
+                        .map(|(t, _)| *t)
+                        .collect();
+                    if faces.is_empty() {
+                        continue;
+                    }
+                    let b = ColliderBuilder::trimesh_with_flags(
+                        pts.clone(),
+                        faces,
+                        TriMeshFlags::FIX_INTERNAL_EDGES,
+                    )
+                    .expect("validated bridge mesh");
+                    world.insert_collider(
+                        b.friction(0.9)
+                            .collision_groups(TERRAIN_GROUPS)
+                            .user_data(crate::roofs::BRIDGE_SURFACE | surface as u128),
+                        None,
+                    );
+                }
+                continue;
+            }
             if let Some((verts, tris)) =
                 jj_map::jump::jump_mesh(m, f).or_else(|| jj_map::arena::bowl_mesh(m, f))
             {
@@ -1327,7 +1365,9 @@ impl Sim {
             Effect::Roll { car } => {
                 if let Some(st) = self.car_state(CarId(car)) {
                     let v = crate::race::RESPAWN_ROLL_FRACTION
-                        * self.path.planned_speed(st.position[0], st.position[2]);
+                        * self
+                            .path
+                            .planned_speed(st.position[0], st.position[1], st.position[2]);
                     // `heading` is libm's (car_state): it feeds the physics here, so native and WASM step bit for bit.
                     let heading = st.heading;
                     let (sin, cos) = (libm::sinf(heading), libm::cosf(heading));
@@ -1550,6 +1590,7 @@ impl Sim {
                     let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
                     let pose = Pose2 {
                         x: t.x,
+                        y: t.y,
                         z: t.z,
                         heading: libm::atan2f(fwd.x, fwd.z),
                         forward_speed: b.linvel().dot(fwd),
@@ -1576,6 +1617,7 @@ impl Sim {
                 let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
                 let pose = Pose2 {
                     x: t.x,
+                    y: t.y,
                     z: t.z,
                     heading: libm::atan2f(fwd.x, fwd.z),
                     forward_speed: b.linvel().dot(fwd),

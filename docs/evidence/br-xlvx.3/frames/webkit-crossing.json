@@ -1,0 +1,4503 @@
+{
+  "browser": "webkit",
+  "source": "local real jj-server",
+  "fixture": {
+    "scenario": "generated-crossing-two-cars",
+    "what": "A Cruz passes beneath another Cruz on the actual generated bridge.",
+    "map": "/var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/jj-crossing-AuHSuM/map/map.json",
+    "seed": 0,
+    "ticks": 300,
+    "cars": [
+      {
+        "routePoint": 126,
+        "lift": 0.3,
+        "linvel": [
+          10,
+          0,
+          6.123233995736766e-16
+        ]
+      },
+      {
+        "routePoint": 576,
+        "lift": 0.3,
+        "linvel": [
+          -7.649319468422685,
+          0,
+          6.441111058661361
+        ]
+      }
+    ],
+    "race": {
+      "laps": 1,
+      "atTick": 0
+    },
+    "seats": [
+      {
+        "name": "Underpass",
+        "car": 0
+      },
+      {
+        "name": "Bridge",
+        "car": 1
+      }
+    ],
+    "inputs": [
+      {
+        "car": 0,
+        "fromTick": 0,
+        "toTick": 300,
+        "throttle": 1
+      },
+      {
+        "car": 1,
+        "fromTick": 0,
+        "toTick": 300,
+        "throttle": 1
+      }
+    ],
+    "expect": [
+      {
+        "car": 0,
+        "metric": "upY",
+        "min": 0.9,
+        "max": 1.001
+      },
+      {
+        "car": 0,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0
+      },
+      {
+        "car": 0,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0
+      },
+      {
+        "car": 1,
+        "metric": "upY",
+        "min": 0.9,
+        "max": 1.001
+      },
+      {
+        "car": 1,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0
+      },
+      {
+        "car": 1,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0
+      }
+    ]
+  },
+  "native": {
+    "scenario": "generated-crossing-two-cars",
+    "what": "A Cruz passes beneath another Cruz on the actual generated bridge.",
+    "ok": true,
+    "ticks": 300,
+    "stoppedEarly": false,
+    "stateHash": "0d21c18a9e8475050371ac64587339e75729698eedf1caeee59c4aca4231189e",
+    "replayHash": "0d21c18a9e8475050371ac64587339e75729698eedf1caeee59c4aca4231189e",
+    "replayMatches": true,
+    "tuned": [],
+    "checks": [
+      {
+        "car": 0,
+        "atTick": null,
+        "metric": "upY",
+        "min": 0.9,
+        "max": 1.001,
+        "actual": 0.9999077320098877,
+        "ok": true
+      },
+      {
+        "car": 0,
+        "atTick": null,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "car": 0,
+        "atTick": null,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "car": 1,
+        "atTick": null,
+        "metric": "upY",
+        "min": 0.9,
+        "max": 1.001,
+        "actual": 0.9996312856674194,
+        "ok": true
+      },
+      {
+        "car": 1,
+        "atTick": null,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "car": 1,
+        "atTick": null,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "baselines": [],
+    "signature": [
+      {
+        "airtimeS": 0.18333333333333332,
+        "boostMeter": 0.7999961376190186,
+        "boostTimeS": 0,
+        "car": 0,
+        "conesDropped": 0,
+        "driftChargeGained": 0,
+        "driftTimeS": 0,
+        "energyGainJ": 0,
+        "energyJ": -107654.99823935324,
+        "finished": 0,
+        "forwardSpeed": 18.531322479248047,
+        "frontAirTimeS": 0.008333333333333333,
+        "gatesPassed": 0,
+        "headingChangeDeg": 0.002083207696853889,
+        "height": -0.36523544788360596,
+        "husks": 0,
+        "landingUpY": 0.9999744892120361,
+        "landings": 1,
+        "lapsCompleted": 0,
+        "lateralDrift": 0.005035286428742689,
+        "legalProgressM": 0,
+        "maxNoseUpDeg": 1.6982759550589692,
+        "maxPitchDeg": 1.6982759550589692,
+        "maxRadiusM": 20.214207323076383,
+        "maxRollDeg": 1.8226506125447994,
+        "maxRouteOffsetM": 0.005333427339792252,
+        "maxSlipDeg": 0.5734783411026001,
+        "maxSpeed": 18.54043960571289,
+        "maxYawRateDegS": 0.521714234715345,
+        "minUpY": 0.9994646310806274,
+        "oiFired": 0,
+        "progressM": 35.24820709228521,
+        "rebounds": 0,
+        "recoveries": 0,
+        "routeOffsetM": 0.005036827176809311,
+        "slipDeg": 0.0017731647239997983,
+        "speed": 18.54043960571289,
+        "travel": 35.248207452156336,
+        "upY": 0.9999077320098877,
+        "wheelieDriveS": 0,
+        "wheelsInContact": 4,
+        "wrecks": 0
+      },
+      {
+        "airtimeS": 0.175,
+        "boostMeter": 0.7999961376190186,
+        "boostTimeS": 0,
+        "car": 1,
+        "conesDropped": 0,
+        "driftChargeGained": 0,
+        "driftTimeS": 0,
+        "energyGainJ": 0,
+        "energyJ": -107654.99823935324,
+        "finished": 0,
+        "forwardSpeed": 18.279499053955078,
+        "frontAirTimeS": 0,
+        "gatesPassed": 0,
+        "headingChangeDeg": 0.00022881133719542717,
+        "height": 6.598995685577393,
+        "husks": 0,
+        "landingUpY": 0.9999852180480957,
+        "landings": 1,
+        "lapsCompleted": 0,
+        "lateralDrift": 0.00008055146258811874,
+        "legalProgressM": 0,
+        "maxNoseUpDeg": 1.700250614220958,
+        "maxPitchDeg": 1.700250614220958,
+        "maxRadiusM": 20.595810732183807,
+        "maxRollDeg": 0.000013740448985423094,
+        "maxRouteOffsetM": 0.0020118252705197187,
+        "maxSlipDeg": 0.00002801251321216114,
+        "maxSpeed": 18.28848648071289,
+        "maxYawRateDegS": 0.00006060969547101479,
+        "minUpY": 0.999559760093689,
+        "oiFired": 0,
+        "progressM": 34.92019402469646,
+        "rebounds": 0,
+        "recoveries": 0,
+        "routeOffsetM": 0.0020116718932341585,
+        "slipDeg": 0.0000029891809845139505,
+        "speed": 18.28848648071289,
+        "travel": 34.92019460579795,
+        "upY": 0.9996312856674194,
+        "wheelieDriveS": 0,
+        "wheelsInContact": 4,
+        "wrecks": 0
+      }
+    ],
+    "observations": [
+      {
+        "cars": [
+          {
+            "action": {
+              "boost": 0.7999961376190186,
+              "boosting": false,
+              "cones": 0,
+              "drift": 0,
+              "oi": 0,
+              "wheelie": false
+            },
+            "angvel": [
+              -0.0008918417152017355,
+              0.000010083173947350588,
+              0.0006363285938277841
+            ],
+            "authorisedJ": 609284.7585389039,
+            "autopilot": null,
+            "car": 0,
+            "derby": null,
+            "energyJ": 501629.76029955066,
+            "forwardSpeed": 18.531322479248047,
+            "headingDeg": 89.99791717529297,
+            "husks": 0,
+            "input": {
+              "brake": 0,
+              "steer": 0,
+              "throttle": 1
+            },
+            "linvel": [
+              18.537511825561523,
+              -0.3295135498046875,
+              0.00005323812729329802
+            ],
+            "massKg": 1200,
+            "maxEngineForce": 7000,
+            "parts": [
+              {
+                "angleDeg": 0,
+                "health": 0,
+                "part": "core",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "front",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "back",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RR",
+                "state": "intact"
+              }
+            ],
+            "position": [
+              20.21420669555664,
+              -0.36523544788360596,
+              -0.005036827176809311
+            ],
+            "progress": {
+              "distanceM": 350.21420669555687,
+              "fraction": 0.15584285348923343,
+              "lateralM": -0.005036827176809311,
+              "routePoint": 140
+            },
+            "race": {
+              "anchorRoutePoint": null,
+              "assisting": false,
+              "finishedAt": null,
+              "gatesPassed": 0,
+              "ghost": false,
+              "held": false,
+              "laps": 0,
+              "late": false,
+              "progressM": 0,
+              "protected": false,
+              "recoveries": 0,
+              "wrecks": 0
+            },
+            "rotation": [
+              -0.004734262824058533,
+              0.7070781588554382,
+              0.004878045525401831,
+              0.7071028351783752
+            ],
+            "speed": 18.54043960571289,
+            "upY": 0.9999077320098877,
+            "vehicle": 0,
+            "wheels": [
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": 0.004823317285627127,
+                "slipDeg": 0.0017731647239997983,
+                "steering": 0,
+                "suspensionForce": 2179.240966796875,
+                "suspensionLength": 0.24477091431617737
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": 0.004823359195142984,
+                "slipDeg": 0.0017731263069435954,
+                "steering": 0,
+                "suspensionForce": 2178.619873046875,
+                "suspensionLength": 0.2444111406803131
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 29.166667938232422,
+                "sideImpulse": 0.0070342873223125935,
+                "slipDeg": 0.0015881353756412864,
+                "steering": 0,
+                "suspensionForce": 3711.397705078125,
+                "suspensionLength": 0.16545405983924866
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 29.166667938232422,
+                "sideImpulse": 0.007034301292151213,
+                "slipDeg": 0.001588097307831049,
+                "steering": 0,
+                "suspensionForce": 3710.77880859375,
+                "suspensionLength": 0.16509416699409485
+              }
+            ],
+            "wheelsInContact": 4
+          },
+          {
+            "action": {
+              "boost": 0.7999961376190186,
+              "boosting": false,
+              "cones": 0,
+              "drift": 0,
+              "oi": 0,
+              "wheelie": false
+            },
+            "angvel": [
+              0.0032849234994500875,
+              -2.7617319986461553e-8,
+              0.003902689553797245
+            ],
+            "authorisedJ": 609284.7585389039,
+            "autopilot": null,
+            "car": 1,
+            "derby": null,
+            "energyJ": 501629.76029955066,
+            "forwardSpeed": 18.279499053955078,
+            "headingDeg": -49.90071105957031,
+            "husks": 0,
+            "input": {
+              "brake": 0,
+              "steer": 0,
+              "throttle": 1
+            },
+            "linvel": [
+              -13.989277839660645,
+              -0.07672581076622009,
+              11.779767990112305
+            ],
+            "massKg": 1200,
+            "maxEngineForce": 7000,
+            "parts": [
+              {
+                "angleDeg": 0,
+                "health": 0,
+                "part": "core",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "front",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "back",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RR",
+                "state": "intact"
+              }
+            ],
+            "position": [
+              -15.625520706176758,
+              6.598995685577393,
+              13.417545318603516
+            ],
+            "progress": {
+              "distanceM": 1474.7520503786106,
+              "fraction": 0.6562542676056901,
+              "lateralM": -0.0020116718932341585,
+              "routePoint": 589
+            },
+            "race": {
+              "anchorRoutePoint": null,
+              "assisting": false,
+              "finishedAt": null,
+              "gatesPassed": 0,
+              "ghost": false,
+              "held": false,
+              "laps": 0,
+              "late": false,
+              "progressM": 0,
+              "protected": false,
+              "recoveries": 0,
+              "wrecks": 0
+            },
+            "rotation": [
+              -0.01230988185852766,
+              -0.42179393768310547,
+              -0.00572728319093585,
+              0.9065900444984436
+            ],
+            "speed": 18.28848648071289,
+            "upY": 0.9996312856674194,
+            "vehicle": 0,
+            "wheels": [
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0006858996348455548,
+                "slipDeg": -0.0000029891809845139505,
+                "steering": 0,
+                "suspensionForce": 2157.378173828125,
+                "suspensionLength": 0.24567267298698425
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0009145328076556325,
+                "slipDeg": -0.0000029891809845139505,
+                "steering": 0,
+                "suspensionForce": 2157.384765625,
+                "suspensionLength": 0.24567267298698425
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 29.166667938232422,
+                "sideImpulse": -0.000686030020006001,
+                "slipDeg": -0.0000029891809845139505,
+                "steering": 0,
+                "suspensionForce": 3654.83837890625,
+                "suspensionLength": 0.16588148474693298
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 29.166667938232422,
+                "sideImpulse": -0.000686030020006001,
+                "slipDeg": -0.0000029891809845139505,
+                "steering": 0,
+                "suspensionForce": 3654.835693359375,
+                "suspensionLength": 0.1658819615840912
+              }
+            ],
+            "wheelsInContact": 4
+          }
+        ],
+        "debris": [
+          {
+            "halfL": 0.4590444564819336,
+            "halfW": 0.461273193359375,
+            "kind": "Debris",
+            "x": -327.5,
+            "z": 9.520768165588379
+          },
+          {
+            "halfL": 0.4588479995727539,
+            "halfW": 0.463836669921875,
+            "kind": "Debris",
+            "x": -327.4976806640625,
+            "z": -9.520907402038574
+          },
+          {
+            "halfL": 0.3975639343261719,
+            "halfW": 0.428558349609375,
+            "kind": "Debris",
+            "x": -262.5069885253906,
+            "z": -9.298995971679688
+          },
+          {
+            "halfL": 0.4040679931640625,
+            "halfW": 0.435028076171875,
+            "kind": "Debris",
+            "x": -247.7858123779297,
+            "z": 195.78048706054688
+          },
+          {
+            "halfL": 0.4608173370361328,
+            "halfW": 0.45562744140625,
+            "kind": "Debris",
+            "x": -235.01197814941406,
+            "z": -9.542035102844238
+          },
+          {
+            "halfL": 0.4608163833618164,
+            "halfW": 0.45562744140625,
+            "kind": "Debris",
+            "x": -235.01199340820312,
+            "z": 9.541971206665039
+          },
+          {
+            "halfL": 0.4041595458984375,
+            "halfW": 0.433013916015625,
+            "kind": "Debris",
+            "x": -234.87277221679688,
+            "z": 211.11622619628906
+          },
+          {
+            "halfL": 0.4604158401489258,
+            "halfW": 0.4625244140625,
+            "kind": "Debris",
+            "x": -215.01609802246094,
+            "z": -9.472899436950684
+          },
+          {
+            "halfL": 0.4604158401489258,
+            "halfW": 0.4625091552734375,
+            "kind": "Debris",
+            "x": -215.01609802246094,
+            "z": 9.47309684753418
+          },
+          {
+            "halfL": 0.3892669677734375,
+            "halfW": 0.3464508056640625,
+            "kind": "Debris",
+            "x": -199.69483947753906,
+            "z": 155.8665008544922
+          },
+          {
+            "halfL": 0.38922119140625,
+            "halfW": 0.3467864990234375,
+            "kind": "Debris",
+            "x": -187.351806640625,
+            "z": 170.526611328125
+          },
+          {
+            "halfL": 0.456878662109375,
+            "halfW": 0.4442291259765625,
+            "kind": "Debris",
+            "x": -178.65155029296875,
+            "z": 138.16000366210938
+          },
+          {
+            "halfL": 0.458984375,
+            "halfW": 0.442138671875,
+            "kind": "Debris",
+            "x": -166.322265625,
+            "z": 152.8117218017578
+          },
+          {
+            "halfL": 0.39314842224121094,
+            "halfW": 0.35121917724609375,
+            "kind": "Debris",
+            "x": -125.02356719970703,
+            "z": -9.363007545471191
+          },
+          {
+            "halfL": 0.39321422576904297,
+            "halfW": 0.35028839111328125,
+            "kind": "Debris",
+            "x": -125.02291870117188,
+            "z": 9.36325454711914
+          },
+          {
+            "halfL": 0.4570741653442383,
+            "halfW": 0.44254302978515625,
+            "kind": "Debris",
+            "x": -102.52401733398438,
+            "z": -9.118001937866211
+          },
+          {
+            "halfL": 0.45710277557373047,
+            "halfW": 0.44435882568359375,
+            "kind": "Debris",
+            "x": -102.52577209472656,
+            "z": 9.118021011352539
+          },
+          {
+            "halfL": 0.4263153076171875,
+            "halfW": 0.4459075927734375,
+            "kind": "Debris",
+            "x": -102.44169616699219,
+            "z": 73.42927551269531
+          },
+          {
+            "halfL": 0.4236602783203125,
+            "halfW": 0.4472198486328125,
+            "kind": "Debris",
+            "x": -89.55355834960938,
+            "z": 88.7370834350586
+          },
+          {
+            "halfL": 0.4120025634765625,
+            "halfW": 0.37700653076171875,
+            "kind": "Debris",
+            "x": -79.203857421875,
+            "z": 54.45283889770508
+          },
+          {
+            "halfL": 0.4410362243652344,
+            "halfW": 0.4549407958984375,
+            "kind": "Debris",
+            "x": -65.835693359375,
+            "z": 43.16310501098633
+          },
+          {
+            "halfL": 0.38063716888427734,
+            "halfW": 0.4201164245605469,
+            "kind": "Debris",
+            "x": -55.026729583740234,
+            "z": -9.20797348022461
+          },
+          {
+            "halfL": 0.38063716888427734,
+            "halfW": 0.4201164245605469,
+            "kind": "Debris",
+            "x": -55.02672576904297,
+            "z": 9.208024024963379
+          },
+          {
+            "halfL": 0.36525535583496094,
+            "halfW": 0.4049873352050781,
+            "kind": "Debris",
+            "x": -44.820430755615234,
+            "z": 25.4316463470459
+          },
+          {
+            "halfL": 0.3632774353027344,
+            "halfW": 0.40723419189453125,
+            "kind": "Debris",
+            "x": -32.44027328491211,
+            "z": 40.13621520996094
+          },
+          {
+            "halfL": 0.49593162536621094,
+            "halfW": 0.4775409698486328,
+            "kind": "Debris",
+            "x": -25.35516357421875,
+            "z": 9.7466402053833
+          },
+          {
+            "halfL": 0.46358299255371094,
+            "halfW": 0.4594535827636719,
+            "kind": "Debris",
+            "x": -13.651046752929688,
+            "z": 23.64113426208496
+          },
+          {
+            "halfL": 0.4453086853027344,
+            "halfW": 0.4213228225708008,
+            "kind": "Debris",
+            "x": 31.598461151123047,
+            "z": -39.050472259521484
+          },
+          {
+            "halfL": 0.44403648376464844,
+            "halfW": 0.42197418212890625,
+            "kind": "Debris",
+            "x": 44.11886215209961,
+            "z": -24.180931091308594
+          },
+          {
+            "halfL": 0.4443511962890625,
+            "halfW": 0.4177055358886719,
+            "kind": "Debris",
+            "x": 59.39107131958008,
+            "z": -37.084754943847656
+          },
+          {
+            "halfL": 0.3868112564086914,
+            "halfW": 0.34867095947265625,
+            "kind": "Debris",
+            "x": 72.46239471435547,
+            "z": -9.764988899230957
+          },
+          {
+            "halfL": 0.3863029479980469,
+            "halfW": 0.3467254638671875,
+            "kind": "Debris",
+            "x": 72.46109008789062,
+            "z": 9.76671028137207
+          },
+          {
+            "halfL": 0.42661285400390625,
+            "halfW": 0.3920440673828125,
+            "kind": "Debris",
+            "x": 85.15624237060547,
+            "z": -84.1109390258789
+          },
+          {
+            "halfL": 0.45829010009765625,
+            "halfW": 0.44486236572265625,
+            "kind": "Debris",
+            "x": 89.94790649414062,
+            "z": -9.685062408447266
+          },
+          {
+            "halfL": 0.46153926849365234,
+            "halfW": 0.45465850830078125,
+            "kind": "Debris",
+            "x": 89.96046447753906,
+            "z": 9.695658683776855
+          },
+          {
+            "halfL": 0.4245147705078125,
+            "halfW": 0.39414215087890625,
+            "kind": "Debris",
+            "x": 97.64318084716797,
+            "z": -69.28172302246094
+          },
+          {
+            "halfL": 0.416229248046875,
+            "halfW": 0.44600677490234375,
+            "kind": "Debris",
+            "x": 121.7926254272461,
+            "z": -114.34333801269531
+          },
+          {
+            "halfL": 0.41660308837890625,
+            "halfW": 0.4404754638671875,
+            "kind": "Debris",
+            "x": 133.6739501953125,
+            "z": -100.2298355102539
+          },
+          {
+            "halfL": 0.4051666259765625,
+            "halfW": 0.4338531494140625,
+            "kind": "Debris",
+            "x": 159.82640075683594,
+            "z": -146.7872314453125
+          },
+          {
+            "halfL": 0.44577884674072266,
+            "halfW": 0.426116943359375,
+            "kind": "Debris",
+            "x": 172.44322204589844,
+            "z": -9.423657417297363
+          },
+          {
+            "halfL": 0.44576263427734375,
+            "halfW": 0.424652099609375,
+            "kind": "Debris",
+            "x": 172.44427490234375,
+            "z": 9.423918724060059
+          },
+          {
+            "halfL": 0.4058685302734375,
+            "halfW": 0.43804931640625,
+            "kind": "Debris",
+            "x": 202.43832397460938,
+            "z": -10.0557279586792
+          },
+          {
+            "halfL": 0.4045133590698242,
+            "halfW": 0.4327545166015625,
+            "kind": "Debris",
+            "x": 202.43959045410156,
+            "z": 10.0523099899292
+          },
+          {
+            "halfL": 0.42417240142822266,
+            "halfW": 0.45391845703125,
+            "kind": "Debris",
+            "x": 262.432861328125,
+            "z": -9.531251907348633
+          },
+          {
+            "halfL": 0.4242134094238281,
+            "halfW": 0.453948974609375,
+            "kind": "Debris",
+            "x": 262.4328308105469,
+            "z": 9.52871322631836
+          },
+          {
+            "halfL": 0.4277315139770508,
+            "halfW": 0.39959716796875,
+            "kind": "Debris",
+            "x": 282.4307861328125,
+            "z": -9.86202621459961
+          },
+          {
+            "halfL": 0.1835784912109375,
+            "halfW": 0.18601226806640625,
+            "kind": "Debris",
+            "x": 20.94902801513672,
+            "z": -5.125784397125244
+          },
+          {
+            "halfL": 0.18259811401367188,
+            "halfW": 0.18463897705078125,
+            "kind": "Debris",
+            "x": 90.00548553466797,
+            "z": -10.27558422088623
+          },
+          {
+            "halfL": 0.18170166015625,
+            "halfW": 0.181304931640625,
+            "kind": "Debris",
+            "x": 303.1659240722656,
+            "z": -247.4022979736328
+          },
+          {
+            "halfL": 0.18280029296875,
+            "halfW": 0.196533203125,
+            "kind": "Debris",
+            "x": 414.9466552734375,
+            "z": -192.14088439941406
+          },
+          {
+            "halfL": 0.42883872985839844,
+            "halfW": 0.397918701171875,
+            "kind": "Debris",
+            "x": -285.0050048828125,
+            "z": -9.214997291564941
+          },
+          {
+            "halfL": 0.42883872985839844,
+            "halfW": 0.397918701171875,
+            "kind": "Debris",
+            "x": -285.0050048828125,
+            "z": 9.21500301361084
+          },
+          {
+            "halfL": 0.36425304412841797,
+            "halfW": 0.320953369140625,
+            "kind": "Debris",
+            "x": -175.0198516845703,
+            "z": -9.521674156188965
+          },
+          {
+            "halfL": 0.384124755859375,
+            "halfW": 0.34063720703125,
+            "kind": "Debris",
+            "x": -170.77197265625,
+            "z": 131.99795532226562
+          },
+          {
+            "halfL": 0.4618654251098633,
+            "halfW": 0.4592742919921875,
+            "kind": "Debris",
+            "x": -147.52117919921875,
+            "z": -9.208163261413574
+          },
+          {
+            "halfL": 0.4609651565551758,
+            "halfW": 0.460235595703125,
+            "kind": "Debris",
+            "x": -147.52365112304688,
+            "z": 9.206950187683105
+          },
+          {
+            "halfL": 0.4210357666015625,
+            "halfW": 0.38439178466796875,
+            "kind": "Debris",
+            "x": -105.68238067626953,
+            "z": 77.3370132446289
+          },
+          {
+            "halfL": 0.4192352294921875,
+            "halfW": 0.3843231201171875,
+            "kind": "Debris",
+            "x": -93.95844268798828,
+            "z": 91.26815032958984
+          },
+          {
+            "halfL": 0.45868682861328125,
+            "halfW": 0.466583251953125,
+            "kind": "Debris",
+            "x": -78.25006103515625,
+            "z": 78.8759994506836
+          },
+          {
+            "halfL": 0.45055103302001953,
+            "halfW": 0.42105865478515625,
+            "kind": "Debris",
+            "x": -72.52759552001953,
+            "z": -10.065157890319824
+          },
+          {
+            "halfL": 0.4506826400756836,
+            "halfW": 0.421142578125,
+            "kind": "Debris",
+            "x": -72.52422332763672,
+            "z": 10.065007209777832
+          },
+          {
+            "halfL": 0.458953857421875,
+            "halfW": 0.43614959716796875,
+            "kind": "Debris",
+            "x": -67.9686279296875,
+            "z": 44.511173248291016
+          },
+          {
+            "halfL": 0.3813943862915039,
+            "halfW": 0.34149932861328125,
+            "kind": "Debris",
+            "x": -57.526546478271484,
+            "z": -9.21416187286377
+          },
+          {
+            "halfL": 0.38145923614501953,
+            "halfW": 0.3403205871582031,
+            "kind": "Debris",
+            "x": -57.52639389038086,
+            "z": 9.213549613952637
+          },
+          {
+            "halfL": 0.45817089080810547,
+            "halfW": 0.4385108947753906,
+            "kind": "Debris",
+            "x": -52.65045928955078,
+            "z": 31.650569915771484
+          },
+          {
+            "halfL": 0.45398712158203125,
+            "halfW": 0.4406013488769531,
+            "kind": "Debris",
+            "x": -39.90643310546875,
+            "z": 46.79636001586914
+          },
+          {
+            "halfL": 0.4599800109863281,
+            "halfW": 0.4633903503417969,
+            "kind": "Debris",
+            "x": -38.787357330322266,
+            "z": 20.954708099365234
+          },
+          {
+            "halfL": 0.39966773986816406,
+            "halfW": 0.43691158294677734,
+            "kind": "Debris",
+            "x": -15.027939796447754,
+            "z": -9.218167304992676
+          },
+          {
+            "halfL": 0.43480587005615234,
+            "halfW": 0.4540255069732666,
+            "kind": "Debris",
+            "x": 3.8033430576324463,
+            "z": 9.447657585144043
+          },
+          {
+            "halfL": 0.45998382568359375,
+            "halfW": 0.45116233825683594,
+            "kind": "Debris",
+            "x": 23.77118682861328,
+            "z": -32.8223991394043
+          },
+          {
+            "halfL": 0.4608802795410156,
+            "halfW": 0.45098876953125,
+            "kind": "Debris",
+            "x": 36.64801025390625,
+            "z": -17.526527404785156
+          },
+          {
+            "halfL": 0.4326295852661133,
+            "halfW": 0.4060821533203125,
+            "kind": "Debris",
+            "x": 119.95362091064453,
+            "z": -9.367855072021484
+          },
+          {
+            "halfL": 0.4326295852661133,
+            "halfW": 0.4060821533203125,
+            "kind": "Debris",
+            "x": 119.95362091064453,
+            "z": 9.366142272949219
+          },
+          {
+            "halfL": 0.4608154296875,
+            "halfW": 0.4535064697265625,
+            "kind": "Debris",
+            "x": 130.82020568847656,
+            "z": -123.02610778808594
+          },
+          {
+            "halfL": 0.46588897705078125,
+            "halfW": 0.452972412109375,
+            "kind": "Debris",
+            "x": 143.7648162841797,
+            "z": -107.64854431152344
+          },
+          {
+            "halfL": 0.46718406677246094,
+            "halfW": 0.45465087890625,
+            "kind": "Debris",
+            "x": 147.44900512695312,
+            "z": 9.849560737609863
+          },
+          {
+            "halfL": 0.33358001708984375,
+            "halfW": 0.3776092529296875,
+            "kind": "Debris",
+            "x": 160.7300567626953,
+            "z": -122.4295425415039
+          },
+          {
+            "halfL": 0.3472900390625,
+            "halfW": 0.390350341796875,
+            "kind": "Debris",
+            "x": 169.23988342285156,
+            "z": -155.01315307617188
+          },
+          {
+            "halfL": 0.4346437454223633,
+            "halfW": 0.403106689453125,
+            "kind": "Debris",
+            "x": 169.94723510742188,
+            "z": -9.220381736755371
+          },
+          {
+            "halfL": 0.4345121383666992,
+            "halfW": 0.4056396484375,
+            "kind": "Debris",
+            "x": 169.9451141357422,
+            "z": 9.21977710723877
+          },
+          {
+            "halfL": 0.3431243896484375,
+            "halfW": 0.38616943359375,
+            "kind": "Debris",
+            "x": 181.8350067138672,
+            "z": -140.05499267578125
+          },
+          {
+            "halfL": 0.4621429443359375,
+            "halfW": 0.447906494140625,
+            "kind": "Debris",
+            "x": 202.07998657226562,
+            "z": -181.98634338378906
+          },
+          {
+            "halfL": 0.4589996337890625,
+            "halfW": 0.4491729736328125,
+            "kind": "Debris",
+            "x": 214.0063934326172,
+            "z": -167.82298278808594
+          },
+          {
+            "halfL": 0.4588184356689453,
+            "halfW": 0.441131591796875,
+            "kind": "Debris",
+            "x": 272.424560546875,
+            "z": -10.03138542175293
+          },
+          {
+            "halfL": 0.45552825927734375,
+            "halfW": 0.4383544921875,
+            "kind": "Debris",
+            "x": 272.4289855957031,
+            "z": 10.035401344299316
+          }
+        ],
+        "rails": [
+          {
+            "displacementM": 0,
+            "dressing": 734,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 735,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 736,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 737,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 738,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 739,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 740,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 741,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 742,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 743,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 744,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 745,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 746,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 747,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 748,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 749,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 750,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 751,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 752,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 753,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 754,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 755,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 756,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 757,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 758,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 759,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 760,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 761,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 762,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 763,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 764,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 765,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 766,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 767,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 768,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 769,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 770,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 771,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 772,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 773,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 774,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 775,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 776,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 777,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 778,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 779,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 780,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 781,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 782,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 783,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 784,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 785,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 786,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 787,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 788,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 789,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 790,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 791,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 792,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 793,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 794,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 795,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 796,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 797,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 798,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 799,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 800,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 801,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 802,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 803,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 804,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 805,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 806,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 807,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 808,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 809,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 810,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 811,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 812,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 813,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 814,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 815,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 816,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 817,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 818,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 819,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 820,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 821,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 822,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 823,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 824,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 825,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 826,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 827,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 828,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 829,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 830,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 831,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 832,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 833,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 834,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 835,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 836,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 837,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 838,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 839,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 840,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 841,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 842,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 843,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 844,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 845,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 846,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 847,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 848,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 849,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 850,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 851,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 852,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 853,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 854,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 855,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 856,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 857,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 858,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 859,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 860,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 861,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 862,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 863,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 864,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 865,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 866,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 867,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 868,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 869,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 870,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 871,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 872,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 873,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 874,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 875,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 876,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 877,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 878,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 879,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 880,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 881,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 882,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 883,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 884,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 885,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 886,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 887,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 888,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 889,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 890,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 891,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 892,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 893,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 894,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 895,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 896,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 897,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 898,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 899,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 900,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 901,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 902,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 903,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 904,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 905,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 906,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 907,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 908,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 909,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 910,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 911,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 912,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 913,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 914,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 915,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 916,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 917,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 918,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 919,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 920,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 921,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 922,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 923,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 924,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 925,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 926,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 927,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 928,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 929,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 930,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 931,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 932,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 933,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 934,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0.00009604365914128721,
+            "dressing": 935,
+            "fixed": false,
+            "springEnergyJ": 0.000375524687115103,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0.00018550199456512928,
+            "dressing": 936,
+            "fixed": false,
+            "springEnergyJ": 0.0014065492432564497,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 937,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 938,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 939,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 940,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 941,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 942,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 943,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 944,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 945,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 946,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 947,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 948,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 949,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 950,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 951,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 952,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 953,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 954,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 955,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 956,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 957,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 958,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 959,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 960,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 961,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 962,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 963,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 964,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 965,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 966,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 967,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 968,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 969,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 970,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 971,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 972,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 973,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 974,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 975,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 976,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 977,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 978,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 979,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 980,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 981,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 982,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 983,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 984,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 985,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 986,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 987,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 988,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 989,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 990,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 991,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 992,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 993,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 994,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 995,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 996,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 997,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 998,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 999,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1000,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1001,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1002,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1003,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1004,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1005,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1006,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1007,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1008,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1009,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1010,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1011,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1012,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1013,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1014,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1015,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1016,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1017,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1018,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1019,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1020,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1021,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1022,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1023,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1024,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1025,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1026,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1027,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1028,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1029,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1030,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1031,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1032,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1033,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1034,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1035,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1036,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1037,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1038,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1039,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1040,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1041,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1042,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1043,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1044,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1045,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1046,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1047,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1048,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1049,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1050,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1051,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1052,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1053,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1054,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1055,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1056,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1057,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1058,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1059,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1060,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1061,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1062,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1063,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1064,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1065,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1066,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1067,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1068,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1069,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1070,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1071,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1072,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1073,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1074,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1075,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1076,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1077,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1078,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1079,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1080,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1081,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1082,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1083,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1084,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1085,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1086,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1087,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1088,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1089,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1090,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1091,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1092,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1093,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1094,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1095,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          }
+        ],
+        "session": {
+          "driving": "Held",
+          "gameMs": 0,
+          "gameRemainingMs": null,
+          "phase": "Lobby",
+          "readyRevision": 0,
+          "remainingMs": null,
+          "round": null,
+          "seats": [
+            {
+              "car": 0,
+              "colour": {
+                "index": 0,
+                "rgb": [
+                  229,
+                  50,
+                  45
+                ]
+              },
+              "connected": true,
+              "hasCar": true,
+              "name": "Underpass",
+              "number": 1,
+              "presence": "Active",
+              "ready": false,
+              "seat": 1,
+              "source": 1
+            },
+            {
+              "car": 1,
+              "colour": {
+                "index": 1,
+                "rgb": [
+                  37,
+                  99,
+                  235
+                ]
+              },
+              "connected": true,
+              "hasCar": true,
+              "name": "Bridge",
+              "number": 2,
+              "presence": "Active",
+              "ready": false,
+              "seat": 2,
+              "source": 1
+            }
+          ]
+        },
+        "tick": 300
+      }
+    ],
+    "out": "/var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/jj-crossing-AuHSuM/native",
+    "trace": null
+  },
+  "bridgeShapes": [
+    {
+      "feature": 0,
+      "fingerprint": "8f259875fe7ed5f0",
+      "triangles": 6348
+    }
+  ],
+  "passage": [
+    {
+      "tick": 30,
+      "lower": [
+        -12.569304466247559,
+        0.19619494676589966,
+        0.00009547080844640732
+      ],
+      "upper": [
+        9.196964263916016,
+        6.6634840965271,
+        -7.484337329864502
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    },
+    {
+      "tick": 60,
+      "lower": [
+        -9.903875350952148,
+        0.09105420112609863,
+        -0.0002842727117240429
+      ],
+      "upper": [
+        7.164576053619385,
+        6.609652519226074,
+        -5.7729644775390625
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    },
+    {
+      "tick": 90,
+      "lower": [
+        -6.974018573760986,
+        0.04065638780593872,
+        -0.0005464339628815651
+      ],
+      "upper": [
+        4.938457012176514,
+        6.608251571655273,
+        -3.898458957672119
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    },
+    {
+      "tick": 120,
+      "lower": [
+        -3.790070056915283,
+        -0.02827286720275879,
+        -0.0020977621898055077
+      ],
+      "upper": [
+        2.5223610401153564,
+        6.608615398406982,
+        -1.8639856576919556
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    },
+    {
+      "tick": 150,
+      "lower": [
+        -0.35531795024871826,
+        -0.10832205414772034,
+        -0.003090919926762581
+      ],
+      "upper": [
+        -0.07818569242954254,
+        6.6087446212768555,
+        0.3258139193058014
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    },
+    {
+      "tick": 180,
+      "lower": [
+        3.329925298690796,
+        -0.14480674266815186,
+        -0.004390880465507507
+      ],
+      "upper": [
+        -2.8568077087402344,
+        6.60877799987793,
+        2.665571689605713
+      ],
+      "contacts": [
+        4,
+        4
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "file": "webkit-underpass-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "underpass",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "fullscreen",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "resized",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-underpass-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "underpass",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "fullscreen",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "resized",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-underpass-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "underpass",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "fullscreen",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "resized",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-underpass-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "underpass",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "fullscreen",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-underpass-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "underpass",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "fullscreen",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "resized",
+      "visibility": [
+        {
+          "seat": 1,
+          "sees": [
+            true,
+            true
+          ]
+        }
+      ]
+    }
+  ],
+  "hash": {
+    "stateHash": "0d21c18a9e8475050371ac64587339e75729698eedf1caeee59c4aca4231189e",
+    "tick": 300
+  },
+  "errors": []
+}

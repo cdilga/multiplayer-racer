@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-R09: real Rust server, real host WASM, two phones over WebRTC; explicit R90 damage setup, then two rounds.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
@@ -36,6 +37,7 @@ test('two real controllers: retained damage plays beside results and QR; Hide le
     await phone.locator('#name').fill(name);
     await phone.getByRole('button',{name:'Join the race'}).click();
     await wait(phone,()=>window.__jjController.inspect().phase==='playing');
+    await confirmInitialVehicle(phone);
     await phone.getByRole('button',{name:'Skip tutorial'}).click();
     phones.push(phone);
   }

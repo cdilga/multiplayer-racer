@@ -447,8 +447,9 @@ pub fn debris(sim: &Sim) -> Vec<Value> {
     sim.debris_footprints()
         .iter()
         .zip(sim.prop_kinds())
+        .enumerate()
         .map(
-            |(d, k)| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l, "kind": k }),
+            |(i, (d, k))| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l, "kind": k, "dynamic": sim.debris_dynamic(i) }),
         )
         .collect()
 }

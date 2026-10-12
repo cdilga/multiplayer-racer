@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C07.2 tilt steering through the real join path (real host in free drive, real phone page, WebRTC: run on eris).
 //   node --test web/tests/journeys/c07-tilt-join.test.mjs
 // Off by default; turned on in Settings; Set neutral; a turn of the phone steers THE HOST'S car for that seat through the
@@ -52,7 +53,9 @@ async function seated() {
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   const endpoint = (await page.evaluate(() => window.__jjController.inspect())).link.endpointId;
   /** The host's applied input and boost for this seat's car, and the seat's input age. */

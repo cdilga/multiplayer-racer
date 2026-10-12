@@ -6,13 +6,28 @@
 use jj_map::{Biome, FeatureKind, Footprint, Map, Surface, validate};
 use jj_procgen::assemble::distance_to_loop;
 use jj_procgen::features::place;
-use jj_procgen::generate;
 use jj_procgen::scatter::{
     Algorithm, BITUMEN_RADIUS_M, CLEAR_M, GAP_M, Spec, clark_evans, nn_stats, reach_m, scatter,
     spec,
 };
 use jj_procgen::seed::Rng;
 use jj_procgen::terrain::{params, undulate};
+
+/// These isolated scatter checks re-run terrain/features on a ground-only
+/// scaffold. Crossing courses retain their decks in the complete crossings bank.
+fn generate(seed: u64) -> Map {
+    let mut data = jj_procgen::tuning::GeneratorData::shipped().clone();
+    data.course
+        .presets
+        .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    jj_procgen::generate_tuned_from(
+        jj_procgen::seed::Streams::new(seed),
+        &[Biome::Greybox],
+        &data,
+    )
+    .unwrap()
+    .0
+}
 
 const BIOMES: [Biome; 5] = [
     Biome::Greybox,

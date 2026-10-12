@@ -35,11 +35,16 @@ export function mountResolutionSetting(root: HTMLElement, world: World, chip: HT
   chip.setAttribute('aria-haspopup', 'true');
   chip.setAttribute('aria-expanded', 'false');
   const open = (on: boolean) => {
+    if (el.dataset.embedded !== undefined) {
+      window.dispatchEvent(new Event('jj-open-display'));
+      select.focus();
+      return;
+    }
     el.style.display = on ? 'block' : 'none';
     chip.setAttribute('aria-expanded', String(on));
     if (on) select.focus();
   };
-  const isOpen = () => el.style.display !== 'none';
+  const isOpen = () => el.dataset.embedded === undefined && el.style.display !== 'none';
   chip.addEventListener('click', () => open(!isOpen()));
   chip.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {

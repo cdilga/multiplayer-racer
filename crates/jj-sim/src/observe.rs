@@ -14,6 +14,8 @@ use crate::sim::{CarId, Sim, TICK_HZ};
 #[derive(Clone, Debug)]
 pub struct RouteGeom {
     pts: Vec<(f64, f64)>,
+    heights: Vec<f64>,
+    layered: bool,
     s: Vec<f64>,
     total: f64,
 }
@@ -47,7 +49,21 @@ impl RouteGeom {
             let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
             total += (b.0 - a.0).hypot(b.1 - a.1);
         }
-        Self { pts, s, total }
+        Self {
+            pts,
+            s,
+            total,
+            heights: map
+                .route
+                .points
+                .iter()
+                .map(|p| p.y as f64 / 1000.0)
+                .collect(),
+            layered: map
+                .features
+                .iter()
+                .any(|f| f.kind == jj_map::FeatureKind::Bridge),
+        }
     }
 
     pub fn length_m(&self) -> f64 {
@@ -56,6 +72,15 @@ impl RouteGeom {
 
     /// The nearest point on the centerline to `(x, z)`.
     pub fn progress(&self, x: f64, z: f64) -> RouteProgress {
+        self.project(x, None, z)
+    }
+
+    /// Height-aware observation for grade-separated roads. Arc distances stay horizontal.
+    pub fn progress_xyz(&self, x: f64, y: f64, z: f64) -> RouteProgress {
+        self.project(x, self.layered.then_some(y), z)
+    }
+
+    fn project(&self, x: f64, y: Option<f64>, z: f64) -> RouteProgress {
         let mut best = (f64::INFINITY, 0usize, 0.0, 0.0);
         for i in 0..self.pts.len() {
             let (a, b) = (self.pts[i], self.pts[(i + 1) % self.pts.len()]);
@@ -67,7 +92,13 @@ impl RouteGeom {
                 0.0
             };
             let (px, pz) = (a.0 + t * dx, a.1 + t * dz);
-            let d = (x - px).hypot(z - pz);
+            let planar = (x - px).hypot(z - pz);
+            let d = y.map_or(planar, |y| {
+                planar.hypot(
+                    y - (self.heights[i]
+                        + t * (self.heights[(i + 1) % self.pts.len()] - self.heights[i])),
+                )
+            });
             if d < best.0 {
                 let len = len2.sqrt().max(1e-9);
                 // + on the (−tz, tx) side.
@@ -240,7 +271,11 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
         heading_deg: s.heading.to_degrees(),
         up_y: s.up_y,
         wheels_in_contact: s.wheels_in_contact,
-        progress: route.progress(f64::from(s.position[0]), f64::from(s.position[2])),
+        progress: route.progress_xyz(
+            f64::from(s.position[0]),
+            f64::from(s.position[1]),
+            f64::from(s.position[2]),
+        ),
         input: InputObs {
             throttle: dequantise_axis(input.throttle),
             steer: dequantise_axis(input.steer),

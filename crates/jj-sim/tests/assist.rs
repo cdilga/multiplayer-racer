@@ -30,6 +30,7 @@ fn pose(sim: &Sim, car: CarId) -> Pose2 {
     let s = sim.car_state(car).unwrap();
     Pose2 {
         x: s.position[0],
+        y: s.position[1],
         z: s.position[2],
         heading: s.heading,
         forward_speed: s.forward_speed,

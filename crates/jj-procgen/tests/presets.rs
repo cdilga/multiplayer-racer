@@ -10,10 +10,14 @@ use serde_json::json;
 fn preset_seed_bank_reports_geometry() {
     let mut rows = Vec::new();
     let mut means = Vec::new();
-    for name in PresetName::ALL {
+    for name in [
+        PresetName::Twisty,
+        PresetName::Flowing,
+        PresetName::Speedway,
+    ] {
         let mut data = GeneratorData::shipped().clone();
         for n in PresetName::ALL {
-            data.course.presets.get_mut(n).weight = f64::from(n == name);
+            data.course.presets.set_weight(n, f64::from(n == name));
         }
         data.validate().unwrap();
         let (mut fallback, mut length, mut straight, mut tight, mut chicanes) = (0, 0.0, 0.0, 0, 0);
@@ -110,10 +114,14 @@ fn preset_seed_bank_reports_geometry() {
 fn each_preset_autopilot_laps_each_biome_across_seeds_and_replays() {
     let mut rows = Vec::new();
     let registry = jj_procgen::registry();
-    for name in PresetName::ALL {
+    for name in [
+        PresetName::Twisty,
+        PresetName::Flowing,
+        PresetName::Speedway,
+    ] {
         let mut data = GeneratorData::shipped().clone();
         for n in PresetName::ALL {
-            data.course.presets.get_mut(n).weight = f64::from(n == name);
+            data.course.presets.set_weight(n, f64::from(n == name));
         }
         for biome in [
             jj_map::Biome::Town,

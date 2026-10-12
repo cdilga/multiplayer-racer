@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // br-bwju.7 (R123): every car picks its own vehicle. Two phones pick the Cruz Missile and the Tradie Ute in the lobby picker,
 // both drive, the sim's introspection shows each car's own mass and engine force, and the TV draws each car's own model (the
 // renderer loaded both bakes). A second page shows a mixed grid from the synthetic source. Real host page and phones over
@@ -42,14 +43,16 @@ async function phone(joinUrl, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return page;
 }
 
 /** Opens the car picker, looks at the car called `car`, and presses Done. */
 async function pick(page, car) {
-  await page.getByRole('button', { name: /^Car/ }).click();
+  await page.getByRole('button', { name: 'Choose vehicle' }).click();
   await page.locator('[data-overlay=cars]').waitFor();
   await page.locator(`.thumb[aria-label="${car}"]`).dispatchEvent('click');
   return page;
@@ -70,10 +73,10 @@ test('two phones pick a Cruz Missile and a Tradie Ute; each car has its own prof
   await pick(a, 'Cruz Missile');
   assert.deepEqual(await a.locator('.thumb').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label'))), ['Cruz Missile', 'Tradie Ute']);
   await shot(a, 'phone-picker-cruz-844x390');
-  await a.getByRole('button', { name: 'Done' }).click();
+  await a.getByRole('button', { name: 'Use this vehicle' }).click();
   await pick(b, 'Tradie Ute');
   await shot(b, 'phone-picker-ute-844x390');
-  await b.getByRole('button', { name: 'Done' }).click();
+  await b.getByRole('button', { name: 'Use this vehicle' }).click();
   await wait(host, () => {
     const s = window.__jjRoom.view().seats;
     return s.find((x) => x.name === 'Davo')?.vehicle === 'cruz-missile' && s.find((x) => x.name === 'Shazza')?.vehicle === 'tradie-ute';

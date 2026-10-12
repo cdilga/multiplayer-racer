@@ -66,7 +66,21 @@
         "chicanesPerKm": 0,
         "chicaneAngleScale": 1,
         "radiusScale": 1.05
+      },
+      "figureEight": {
+        "weight": 0.6
       }
+    },
+    "crossing": {
+      "lobeTurnMinDeg": 220,
+      "lobeTurnMaxDeg": 225,
+      "deckHeightM": 6.5,
+      "plateauHalfM": 12,
+      "thicknessMm": 400,
+      "barrierHeightMm": 750,
+      "barrierWidthMm": 350,
+      "clearanceMm": 5000,
+      "maxGradeMilli": 200
     }
   },
   "biomes": {

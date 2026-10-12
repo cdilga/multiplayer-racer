@@ -48,6 +48,10 @@ export interface TileView {
   /** Degrees a tile's debug camera swings round its car from behind (captures of a car's side); a tile with an orbit
    *  bypasses its seat's camera. */
   orbit?: number[];
+  /** Capture framing of an actual car-under-car crossing; used only by the debug orbit. */
+  orbitDistance?: number;
+  orbitHeight?: number;
+  orbitTargetHeight?: number;
   /** Each seat's starting camera mode (the controller's SetCamera changes it). */
   modes?: CameraMode[];
   /** Free drive (P1-G04): one tile per car in the snapshot, growing and shrinking as seats join and leave. */
@@ -499,8 +503,9 @@ export class World {
         const orbit = view.orbit?.[k];
         if (orbit !== undefined && orbit !== 0) {
           const a = (orbit * Math.PI) / 180;
-          cam.position.set(-6.2 * Math.sin(a), 2.4, -6.2 * Math.cos(a)).applyQuaternion(this.q).add(this.v);
-          this.target.set(0, 0.6, 0).applyQuaternion(this.q).add(this.v);
+          const distance=view.orbitDistance ?? 6.2;
+          cam.position.set(-distance * Math.sin(a), view.orbitHeight ?? 2.4, -distance * Math.cos(a)).applyQuaternion(this.q).add(this.v);
+          this.target.set(0, view.orbitTargetHeight ?? 0.6, 0).applyQuaternion(this.q).add(this.v);
           cam.lookAt(this.target);
         } else {
           this.rig.update(t.seat, cam, { pos: this.v.clone(), rot: this.q.clone(), life: s.life[i]! }, dt);

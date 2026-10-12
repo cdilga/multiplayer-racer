@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // The owner tuning menu, part 1 (br-2sdu.1). Without the owner flag the host has no tuning panel and never loads its
 // chunk. With `?tune` (remembered in that browser) a race runs on autopilot; the panel, built from the sim's own tuning,
 // sets the engine force to 0 mid-race: the sim reads the new value back within a second and the cars slow down; Reset
@@ -123,7 +124,9 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
   await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await phone.getByRole('button', { name: 'Join the race' }).click();
   await wait(phone, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(phone);
   await wait(phone, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(phone);
   await phone.getByRole('button', { name: 'Skip tutorial' }).click();
   const endpoint = (await phone.evaluate(() => window.__jjController.inspect())).link.endpointId;
 

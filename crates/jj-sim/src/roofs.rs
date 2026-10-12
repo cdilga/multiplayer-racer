@@ -9,6 +9,8 @@ use crate::vehicle;
 /// Terrain membership prevents physical wheel shapes fighting suspension on a roof. The extra bit
 /// identifies the roof's tyre surface without changing body/ghost/protected collision filters.
 pub(crate) const ROOF: Group = Group::GROUP_9;
+/// Collider metadata, independent of body tags used by damage attribution.
+pub(crate) const BRIDGE_SURFACE: u128 = 1 << 96;
 
 pub(crate) fn surface(
     terrain: &Terrain,
@@ -17,6 +19,18 @@ pub(crate) fn surface(
     at: Vector,
 ) -> Surface {
     let contact = wheel.raycast_info();
+    if contact.is_in_contact
+        && let Some(c) = contact.ground_object.and_then(|h| colliders.get(h))
+        && c.user_data & BRIDGE_SURFACE != 0
+    {
+        return match (c.user_data & 0xff) as u8 {
+            0 => Surface::Tarmac,
+            1 => Surface::PackedDirt,
+            2 => Surface::Gravel,
+            3 => Surface::Rock,
+            _ => Surface::OffTrack,
+        };
+    }
     if contact.is_in_contact
         && contact
             .ground_object

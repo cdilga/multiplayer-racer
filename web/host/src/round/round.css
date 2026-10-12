@@ -360,3 +360,34 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .mn-panel.controls .jj-cpage { min-height: 0; overflow: auto; padding-bottom: .3em; }
 .mn-panel.controls .mn-acts { flex-shrink: 0; }
 .mn-panel.controls .jj-cpage { font-size: calc(24px * var(--k)); grid-template-columns: repeat(auto-fit, minmax(17em, 1fr)); }
+
+/* Host settings pages scroll inside the menu at every display size. */
+.mn-panel.controls:is([data-race-rules], [data-controllers-view], [data-display-sound], [data-advanced]) {
+  display: flex; overflow: auto;
+}
+.mn-panel .jj-diag { position: static; max-width: 100%; max-height: none; overflow: auto; box-shadow: none; }
+.lb-local-choice { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; min-width: 0; }
+.lb-local-choice label { display: grid; gap: .2em; font-weight: 700; }
+.lb-local-choice select { font: inherit; max-width: 100%; min-height: 36px; background: var(--c-paper); color: var(--c-ink); border: 2px solid var(--c-ink); border-radius: 4px; }
+.lb-local-choice .btn { min-height: 36px; font-size: inherit; padding: .2em .5em; }
+.lb-local-choice small { flex-basis: 100%; }
+.lb-cc:has(.lb-local-choice) { flex-wrap: wrap; flex: 1 1 18em; }
+.lb-cc .lb-local-choice { flex: 1 1 100%; }
+.lb-cc .jj-cc { flex-basis: 100%; }
+/* Source guidance may scroll; the fitted roster always retains space for every player. */
+.lb-controls { max-height: 45%; overflow: auto; align-items: flex-start; }
+@media (max-aspect-ratio: 11/10) {
+  .lb-join .qr-card { flex-direction: row; gap: 8px; padding: 6px; }
+  .lb-join .qr-card figcaption { min-width: 0; }
+  .lb-join .qr-code { font-size: 28px; }
+  .lb-join .qr-domain { font-size: 11px; overflow-wrap: anywhere; }
+  .lb-controls { max-height: 65%; font-size: 12px; }
+  .lb-cc:has(.lb-local-choice) { flex-basis: 100%; }
+  .lb-local-choice label { flex: 1 1 100%; grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+  .lb-local-choice .btn { flex: 1; }
+  .lb-local-choice small { font-size: 11px; }
+  .lb-cc:not([data-held=true]) .jj-cc { display: none; }
+}
+.mn-panel .jj-render-chip { position: static; font: inherit; white-space: normal; overflow-wrap: anywhere; }
+.mn-panel [data-testid=render-resolution] { display: flex; flex-wrap: wrap; align-items: center; gap: .7em; font-weight: 700; }
+.mn-panel [data-testid=render-resolution-select] { font: inherit; min-height: 40px; background: var(--c-paper); color: var(--c-ink); }

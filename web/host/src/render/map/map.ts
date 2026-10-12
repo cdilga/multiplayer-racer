@@ -28,6 +28,7 @@ import type { Frame } from '../snapshot';
 import { InkHull, toon } from '../look';
 import { finishBanner } from './banner';
 import { bowlDesign, bowlQuads } from './bowl';
+import { bridgeIndices, bridgeMesh } from './bridge';
 
 export interface Pose {
   x: number;
@@ -40,7 +41,7 @@ export interface MapJson {
   route: {
     closed: boolean;
     start: { at: number };
-    points: { x: number; y: number; z: number; width: number; surface: string }[];
+    points: { x: number; y: number; z: number; width: number; bank?: number; surface: string }[];
   };
   features: { kind: string; pose: Pose; params: Params }[];
   dressing: { kitPiece: string; pose: Pose; params?: Params; collides?: boolean }[];
@@ -157,12 +158,21 @@ export class MapRenderer {
   private railInstances = new Map<number, { index: number; rest: Matrix4; normal: Vector3 }[]>();
   private railMatrix = new Matrix4();
   private jumpRanges: { feature: number; from: number; to: number }[] = [];
+  private bridgeRanges: { feature: number; from: number; to: number }[] = [];
 
   /** Hash the actual uploaded jump triangles (R90), excluding paint and decorative walls. No work until queried. */
   jumpShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    return this.shapeFingerprints(this.jumpRanges);
+  }
+
+  bridgeShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    return this.shapeFingerprints(this.bridgeRanges);
+  }
+
+  private shapeFingerprints(ranges: {feature:number;from:number;to:number}[]): {feature:number;triangles:number;fingerprint:string}[] {
     const mesh = this.group.getObjectByName('features') as Mesh;
     const positions = mesh.geometry.getAttribute('position').array as Float32Array;
-    return this.jumpRanges.map(({ feature, from, to }) => {
+    return ranges.map(({ feature, from, to }) => {
       const bytes = new Uint8Array(positions.buffer, positions.byteOffset + from * 4, (to - from) * 4);
       let hash = 0xcbf29ce484222325n;
       for (const byte of bytes) hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
@@ -277,6 +287,11 @@ export class MapRenderer {
     const lift = 0.05;
     const edge = 0.3;
     const segs = r.closed ? p.length : p.length - 1;
+    const elevated = new Set<number>();
+    for (const f of this.map.features) if (f.kind === 'bridge') {
+      const ix = bridgeIndices(this.map,f.params);
+      for (const i of ix.slice(0,-1)) elevated.add(i);
+    }
     // A point at lateral offset `off` from route point `k`, `y` above the ground the sim collides with there (the road lies
     // on the heightfield, so a ramp narrower than the road, or a banked corner, never leaves the ribbon floating).
     const rail = (k: number, off: number, y: number) => {
@@ -286,6 +301,8 @@ export class MapRenderer {
       return [x, this.groundAt(x, z) + y, z];
     };
     for (let k = 0; k < segs; k++) {
+      // The explicit upper deck supplies its road. Never draw that span as a second ribbon on the lower terrain.
+      if (elevated.has(k)) continue;
       const a = p[k]!;
       const b = p[(k + 1) % p.length]!;
       const [wa, wb] = [mm(a.width) / 2, mm(b.width) / 2];
@@ -434,6 +451,18 @@ export class MapRenderer {
   private features(): Mesh {
     const s = new Soup();
     for (const [feature, f] of this.map.features.entries()) {
+      if (f.kind === 'bridge') {
+        const mesh = bridgeMesh(this.map,f.params);
+        if (mesh) {
+          const from = s.pos.length;
+          for (const [i,tri] of mesh.triangles.entries()) {
+            const colour = mesh.beams[i] ? '#f2efe6' : SURFACE_COLOURS[mesh.surfaces[i]!] ?? SURFACE_COLOURS.tarmac!;
+            s.tri(mesh.vertices[tri[0]!]!,mesh.vertices[tri[1]!]!,mesh.vertices[tri[2]!]!,colour);
+          }
+          this.bridgeRanges.push({feature,from,to:s.pos.length});
+        }
+        continue;
+      }
       // The derby bowl (P1-M10) is its own revolved mesh, the sim's triangles: no route to follow.
       if (f.kind === 'bowl') {
         const bowl = bowlDesign(f.pose, f.params);

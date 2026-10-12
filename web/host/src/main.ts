@@ -75,6 +75,10 @@ async function boot(): Promise<void> {
   const list = (k: string) => params.get(k)?.split(',').map(Number);
   if (params.has('tiles')) {
     world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
+    for (const key of ['orbitDistance','orbitHeight','orbitTargetHeight'] as const) {
+      const value=Number(params.get(key));
+      if (params.has(key) && Number.isFinite(value)) world.tiles[key]=value;
+    }
     // The grid's spare cells (P1-R04): the join QR points at the join page until rooms exist (G00).
     const overlay = mountGridOverlay(app, new URL('../controller/', location.href).href);
     world.onLayout = (layout, scale) => overlay.render(layout, scale);
@@ -85,7 +89,7 @@ async function boot(): Promise<void> {
     if (camdist === 'near' || camdist === 'mid' || camdist === 'far') world.rig.hostDistance = camdist;
   }
   const chip = mountOverlay(document.body, world, BUILD_LABEL);
-  mountResolutionSetting(document.body, world, chip);
+  const resolutionSetting = mountResolutionSetting(document.body, world, chip);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
     /** Paused drawing (owner playtest 1): whether the world is held and how many frames it has skipped. */
@@ -103,6 +107,7 @@ async function boot(): Promise<void> {
     haze: () => world.scene.fog && 'near' in world.scene.fog ? { near: world.scene.fog.near, far: world.scene.fog.far } : null,
     rails: () => world.map?.railPoses() ?? [],
     jumpShapes: () => world.map?.jumpShapes() ?? [],
+    bridgeShapes: () => world.map?.bridgeShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
     cameras: () => world.rig.inspect(),
@@ -199,6 +204,13 @@ async function boot(): Promise<void> {
   const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
   if (online) await openRoom(client, world, params, freeDrive, input);
   else mountDrawer(document.body, input);
+  if (roundScreens) {
+    roundScreens.chrome.readouts.append(chip);
+    roundScreens.chrome.display.append(resolutionSetting);
+    resolutionSetting.dataset.embedded = '';
+    resolutionSetting.removeAttribute('style');
+    chip.removeAttribute('style');
+  }
   // The real room prepares each round's map in the procgen worker (P1-M08a); free drive and plain test pages race the start map.
   if (online && !freeDrive) await (await import('./procgen/start')).startPreparation(client, world, params);
   // Test and probe surface (R90, P1-C14): the data the controls cards read, swappable so a test can change it and see the page follow.
@@ -209,6 +221,7 @@ async function boot(): Promise<void> {
     keyboardPlayers: () => input.keyboardPlayers(),
     /** The host's own pads, wheels and key clusters as the drawer lists them (with the controls each has used). */
     sources: () => input.list(),
+    vehicleChoices: () => input.vehicleChoices(),
   };
   (window as unknown as { __jjRoom: unknown }).__jjRoom = {
     view: () => client.room,
@@ -318,7 +331,7 @@ async function boot(): Promise<void> {
   client.watchEvents(() => world.invalidate());
   for (const t of ['pointerdown', 'keydown', 'input', 'resize'] as const) addEventListener(t, () => world.invalidate(), { passive: true });
   // Audio (P1-A03/A05/A07) taps the client's snapshot, event and room feeds last, so it wraps whatever the page set.
-  mountAudio(client);
+  mountAudio(client, document, roundScreens?.chrome.sound);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
@@ -336,7 +349,9 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     console.warn('jj: no room server; free drive is local only', e);
   }
   const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
-  mountDrawer(document.body, input, { joinUrl, code: bridge.hub.code });
+  const controllers = document.createElement('div');
+  controllers.dataset.controllersPanel = '';
+  mountDrawer(!freeDrive && bridge.hub.code ? controllers : document.body, input, { joinUrl, code: bridge.hub.code });
   const overlay = mountGridOverlay(app, joinUrl);
   // Free drive always shows the paper QR with the code, so phones can join any time; a real room's join panel is the
   // round screens' (R07).
@@ -355,7 +370,7 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     const ages = pads.filter((p) => p.samples > 0).map((p) => p.p50);
     return { frameMs: world.stats.frameMs, p95Ms: world.stats.p95Ms ?? null, padAgeMs: ages.length ? Math.max(...ages) : null };
   };
-  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl, paths: () => bridge.hub.paths(), onDisband: () => void bridge.hub.end(), hostStats }) : null;
+  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl, paths: () => bridge.hub.paths(), onDisband: () => void bridge.hub.end(), hostStats, controllers, localChoose: (source, vehicle, open) => input.choose(source, vehicle, open), localReady: (source) => input.ready(source) }) : null;
   roundScreens = screens;
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);

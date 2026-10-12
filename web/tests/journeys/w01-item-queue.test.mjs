@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-W01.3: item offers and failures through the real Rust/WASM worker + WebRTC controller.
 // Sanga uses real dominance; W02 projectile, W04 stations and W05 presentation remain separate acceptance.
 import assert from 'node:assert/strict';
@@ -29,6 +30,7 @@ test('W01/W03: real pickups fill the FIFO; Sanga ACTION consumes the front; fail
   await phone.waitForFunction(() => window.__jjController?.inspect().phase === 'ready-to-join');
   await phone.getByRole('button', { name: 'Join the race' }).click();
   await phone.waitForFunction(() => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(phone);
   await phone.getByRole('button', { name: 'Skip tutorial' }).click();
   await phone.getByRole('button', { name: /^Ready/ }).click();
   await host.waitForFunction(() => window.__jjRoom.view().phase === 'Running');

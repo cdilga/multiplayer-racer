@@ -81,6 +81,9 @@ export interface JoinInfo {
   onDisband?: () => void;
   /** The host's frame time and host pads' input age for diagnostics. */
   hostStats?: () => Promise<HostStats>;
+  controllers?: HTMLElement;
+  localChoose?: (source: number, vehicle: string, open: boolean) => void;
+  localReady?: (source: number) => void;
 }
 
 export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScreens {
@@ -105,12 +108,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const k = screenK();
     root.style.setProperty('--rk', String(k));
     document.documentElement.style.setProperty('--rk', String(k));
-    installBrushSkins(document.documentElement, { stroke: Math.max(1.5, 3 * k) });
+    installBrushSkins(root, { stroke: Math.max(1.5, 3 * k) });
   };
   applyK();
 
   const domain = join.joinUrl ? new URL(join.joinUrl).host : '';
-  const chrome = mountChrome(root, { code: join.code, domain, joinUrl: join.joinUrl, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband, hostStats: join.hostStats }, paintKit);
+  const chrome = mountChrome(root, { code: join.code, domain, joinUrl: join.joinUrl, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband, hostStats: join.hostStats, controllers: join.controllers }, paintKit);
   /** The join QR card sized to whole device pixels per module (never under `minPx` CSS px per module: the bead's 4 px at 1080p). */
   const qrCard = (maxPx: number) => {
     const modules = paperQrSvg(join.joinUrl).modules;
@@ -141,8 +144,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         const src = sourceOf(s.localSource);
         if (!src || s.presence === 'Left') return [];
         const held = localView(s.localSource)?.identifyHeld === true;
-        if ((localView(s.localSource)?.used.length ?? 0) >= 7 && !held) return [];
-        return ['<div class="lb-cc" data-seat="' + s.seat + '" data-number="' + s.number + '" data-held="' + held + '"><span class="badge" style="' + colourVars(s.colourIndex) + '">#' + s.number + '</span>' + controlsCard(src, data, { compact: true }) + '</div>'];
+        const used = (localView(s.localSource)?.used.length ?? 0) >= 7;
+        const choice = `<div class="lb-local-choice"><label>Vehicle for #${s.number}<select data-local-vehicle="${s.localSource}" aria-label="Vehicle for #${s.number}">${roster.cars.map((c) => `<option value="${c.id}"${c.id === s.vehicle ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label><button class="btn brush" data-local-use="${s.localSource}">Use vehicle</button><button class="btn brush primary" data-local-ready="${s.localSource}"${!s.vehicle || s.choosing ? ' disabled' : ''}>${s.ready ? 'Ready ✓' : 'Ready'}</button><small>${s.choosing || !s.vehicle ? 'Steer to choose · Ready button to confirm, then Ready again' : 'Vehicle chosen · press Ready when you are'}</small></div>`;
+        return ['<div class="lb-cc" data-seat="' + s.seat + '" data-number="' + s.number + '" data-held="' + held + '"><span class="badge" style="' + colourVars(s.colourIndex) + '">#' + s.number + '</span>' + choice + (!used || held ? controlsCard(src, data, { compact: true }) : '') + '</div>'];
       })
       .join('');
   };
@@ -153,6 +157,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     if (!force && html === strip) return;
     strip = html;
     el.innerHTML = html;
+    paintKit(el);
+    el.querySelectorAll<HTMLSelectElement>('[data-local-vehicle]').forEach((select) => select.addEventListener('change', () => join.localChoose?.(Number(select.dataset.localVehicle), select.value, true)));
+    el.querySelectorAll<HTMLButtonElement>('[data-local-use]').forEach((button) => button.addEventListener('click', () => {
+      const source = Number(button.dataset.localUse);
+      const select = el.querySelector<HTMLSelectElement>(`[data-local-vehicle="${source}"]`)!;
+      join.localChoose?.(source, select.value, false);
+    }));
+    el.querySelectorAll<HTMLButtonElement>('[data-local-ready]').forEach((button) => button.addEventListener('click', () => join.localReady?.(Number(button.dataset.localReady))));
     el.hidden = !html;
     relayout?.();
   };
@@ -164,15 +176,16 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
       <header class="lb-head"><span class="bn display">Lob<span class="acc">by</span></span>
         <span class="tag"><b data-count-label>${n}</b> in the room · <b>${ready}</b> ready</span>
-        <span class="strip">Pick a car on your phone · the host starts the race</span></header>
+        <span class="strip">Join → choose your vehicle → Ready</span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>Start race</button>
         <p class="lb-hint">${n ? `${room.armed ? 'Everyone ready starts the race on its own' : 'Start race when everyone\'s ready'} · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
-        <button class="btn brush" data-act="catch-up" type="button" aria-pressed="${room.catchUp !== false}">Catch-up: ${room.catchUp === false ? 'Off' : 'Light'}</button></div></div>
+        <p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
-    joinEl.append(qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK())));
+    const joinCard = qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK()));
+    joinEl.append(joinCard);
     const cardHtml = (s: RoomView['seats'][number], tier: string) => {
       const st = stateOf(s);
       const tick = `<span class="tick ${st}" aria-label="${esc(labelOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
@@ -184,6 +197,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     };
     relayout = () => {
       const k = screenK();
+      const portrait = window.innerWidth / window.innerHeight <= 1.1;
+      joinCard.style.setProperty('--qr-size', qrCard(Math.min(window.innerHeight * (portrait ? .18 : .44), 380 * k)).style.getPropertyValue('--qr-size'));
       const r = box.getBoundingClientRect();
       const gap = 8 * k;
       const tiers = LOBBY.map((t) => ({ ...t, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
@@ -191,6 +206,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       applyFit(box, f, gap);
       box.className = `lb-roster t-${f.tier.id}`;
       box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('');
+      paintKit(box);
     };
     relayout();
     paintStrip(room, true);
@@ -279,6 +295,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       applyFit(list, f, gap, true);
       list.dataset.tier = f.tier.id;
       list.innerHTML = rows.map((r, i) => rowHtml(r, f.tier.id, i)).join('');
+      paintKit(list);
     };
     relayout();
     paintKit(screen);

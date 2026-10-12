@@ -35,3 +35,15 @@ html [data-jj-input-drawer] .drawer-head { font: 900 italic 15px/1 var(--font-di
 html [data-jj-input-drawer] button { color: var(--c-ink, #15203a); background: var(--c-paper-shade, #f1e2c2); border: 2px solid var(--c-ink, #15203a); border-radius: 4px; padding: 1px 8px 2px; font-weight: 700; }
 html [data-jj-input-drawer] button:hover:not(:disabled) { background: var(--c-saffron, #ffb400); }
 html [data-jj-input-drawer] button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* The real room keeps input administration inside Host menu → Controllers. */
+html [data-controllers-panel] [data-jj-input-drawer] {
+  position: static; display: flex; width: 100%; max-width: none; max-height: none;
+  translate: none; border: 0; box-shadow: none; font-size: max(13px, calc(17px * var(--rk, 1)));
+}
+html [data-controllers-panel] [data-jj-input-drawer] .drawer-scroll { overflow: visible; padding: 0; }
+html [data-controllers-panel] [data-jj-input-drawer] :is(.dr-bar, .dr-cards, .dr-rows, .dr-options) { display: block; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-bar { display: flex; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-cards { display: none; }
+html [data-controllers-panel] [data-jj-input-drawer] button { min-height: 36px; margin: 3px; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-options { max-width: none; }

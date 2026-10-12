@@ -148,6 +148,7 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
 
   // The pause menu carries the join card too.
   await host.locator('[data-act=menu]').click();
+      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
   await host.locator('[data-menu] [data-join-card=menu]').waitFor();
   await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
   assert.equal(await host.locator('[data-menu] [data-join-url]').textContent(), joinUrl);
@@ -185,6 +186,7 @@ test('R07b: the big join card fits and scans at every display mode and size, and
     for (const profile of ['tv', 'desk', 'handheld', 'auto']) {
       // Pick the profile the way a host does: the menu's Display buttons.
       await host.locator('[data-act=menu]').click();
+      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
       await host.locator(`[data-act=view][data-profile=${profile}]`).click();
       await host.evaluate(() => window.__jjChrome.closeMenu());
       await host.waitForTimeout(400);
@@ -209,6 +211,7 @@ test('R07b: the big join card fits and scans at every display mode and size, and
   // Full screen (the menu's button): the card redraws for the new size.
   await host.setViewportSize({ width: 1366, height: 768 });
   await host.locator('[data-act=menu]').click();
+      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
   await host.locator('[data-act=view][data-profile=auto]').click();
   await host.locator('[data-act=fullscreen]').click();
   await wait(host, () => !!document.fullscreenElement, undefined, 5_000);

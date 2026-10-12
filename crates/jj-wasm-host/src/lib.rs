@@ -239,6 +239,17 @@ pub mod codec {
             "catch-up" => UiCommand::SetCatchUp { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
             "reroll" => UiCommand::Reroll,
+            l if l.starts_with("ready-local:") => UiCommand::LocalReady {
+                source: jj_types::LocalSourceId(l[12..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("pick-local:") => {
+                let (source, vehicle) = l[11..].split_once(':').unwrap_or(("0", ""));
+                UiCommand::LocalPick {
+                    source: jj_types::LocalSourceId(source.parse().unwrap_or(0)),
+                    vehicle: vehicle.to_owned(),
+                    open: on,
+                }
+            }
             l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {
                 seat: jj_types::SeatId(l[12..].parse().unwrap_or(0)),
             },

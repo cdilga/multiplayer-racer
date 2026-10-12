@@ -89,6 +89,8 @@ pub enum Rule {
     Arena,
     /// A declared house-roof landing cannot receive its aimed kicker at design speed.
     RoofReach,
+    /// A bridge's deck, ramp grade or lower-road clearance breaks the crossing contract (R124).
+    Crossing,
 }
 
 impl Rule {
@@ -120,6 +122,7 @@ impl Rule {
             Self::GameplayHash => "gameplay-hash",
             Self::Arena => "arena",
             Self::RoofReach => "roof-reach",
+            Self::Crossing => "crossing",
         }
     }
 }
@@ -353,7 +356,24 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                 .map(|(a, b)| a.0 * b.1 - b.0 * a.1)
                 .sum::<f64>()
                 / 2.0;
-            if area.abs() < MIN_GATE_LOOP_AREA_MM2 {
+            // Grade-separated figure-8 lobes turn in opposite directions and can cancel their signed area. Their
+            // ordered gates still enclose two real lobes. Keep the old winding check for undeclared crossings;
+            // a bridge additionally earns its geometry/clearance through the Crossing rule below.
+            let enclosed = if map.features.iter().any(|f| f.kind == FeatureKind::Bridge) {
+                let centre = pts.iter().fold((0.0, 0.0), |s, p| (s.0 + p.0, s.1 + p.1));
+                let centre = (centre.0 / pts.len() as f64, centre.1 / pts.len() as f64);
+                pts.iter()
+                    .zip(pts.iter().cycle().skip(1))
+                    .map(|(a, b)| {
+                        ((a.0 - centre.0) * (b.1 - centre.1) - (b.0 - centre.0) * (a.1 - centre.1))
+                            .abs()
+                    })
+                    .sum::<f64>()
+                    / 2.0
+            } else {
+                area.abs()
+            };
+            if enclosed < MIN_GATE_LOOP_AREA_MM2 {
                 add(
                     &mut v,
                     Rule::GateWinding,
@@ -669,6 +689,11 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
             FeatureKind::Bowl => {
                 for detail in crate::arena::problems(map, f) {
                     add(&mut v, Rule::Arena, &at, detail);
+                }
+            }
+            FeatureKind::Bridge => {
+                for detail in crate::bridge::problems(map, f) {
+                    add(&mut v, Rule::Crossing, &at, detail);
                 }
             }
             FeatureKind::Crest | FeatureKind::Whoops | FeatureKind::CreekDip => {}

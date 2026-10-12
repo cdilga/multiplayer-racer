@@ -1,0 +1,221 @@
+[
+  {
+    "biomes": [
+      "town"
+    ],
+    "hash": "4e891065dfe504aabefcb7a820420a5c9f39d9a699d4dacae73be373175fbfd4",
+    "recoveries": 0,
+    "seed": 0,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 13290,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "town"
+    ],
+    "hash": "d338ee118bb5a2277b2d48ab235e4ecdf0ecea5908f2f5462eb029df05f42cce",
+    "recoveries": 0,
+    "seed": 1,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 14157,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "town"
+    ],
+    "hash": "49d76a7965175a954b101f95d678b714a6bb4e959d5f0f2a709696bf99c25f44",
+    "recoveries": 0,
+    "seed": 2,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 8305,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "rocks"
+    ],
+    "hash": "7c8e85a118b80ea8ad5c49dbc0eae88b2030b6e75ea9166cfbe5207ea714e7ee",
+    "recoveries": 0,
+    "seed": 0,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 13627,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "rocks"
+    ],
+    "hash": "cd61dd65a9c9659fa45370ecee050daa767293b325317ed8af3f3d97e966b288",
+    "recoveries": 0,
+    "seed": 1,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 14509,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "rocks"
+    ],
+    "hash": "04303c0f770929e6221fe69cb0d66da0fbca2bdd1bc5b555c5af9f42a1dee9a0",
+    "recoveries": 0,
+    "seed": 2,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 8584,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-dirt"
+    ],
+    "hash": "ddbf75dba45022b7bcf424ae607d9e2351c49daacfbc8e45d74fc19c35e0b257",
+    "recoveries": 0,
+    "seed": 0,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 13626,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-dirt"
+    ],
+    "hash": "232294bf976b35ff258aeb22cefc2e939b0d8a6d3e3c637a8d77fd3539682554",
+    "recoveries": 0,
+    "seed": 1,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 14508,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-dirt"
+    ],
+    "hash": "8db394b6034fd32f9551297ccbfc52323aa2dd5b1f460c76b74dc80860cfa01b",
+    "recoveries": 0,
+    "seed": 2,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 8565,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-bitumen"
+    ],
+    "hash": "70c6042a6dffe72fe2e524805d1a4a172b9d8f3a4665babd22146b95972d2440",
+    "recoveries": 0,
+    "seed": 0,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 13290,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-bitumen"
+    ],
+    "hash": "556baa29eb802f6a80418ab4c8ebab6cb55f82798e89d030e4091781cce46988",
+    "recoveries": 0,
+    "seed": 1,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 14157,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "outback-bitumen"
+    ],
+    "hash": "b0c164dfdc00e91bf622f7cee0b62bc055fb5d25bceca0378ccc0184c90cfc66",
+    "recoveries": 0,
+    "seed": 2,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 8305,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "town",
+      "rocks",
+      "outback-dirt",
+      "outback-bitumen"
+    ],
+    "hash": "ae2a8c30c543d368495deddbfbcdaded3aade3de94d9e8707de0ba049bc3bc01",
+    "recoveries": 0,
+    "seed": 0,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 13413,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "town",
+      "rocks",
+      "outback-dirt",
+      "outback-bitumen"
+    ],
+    "hash": "9c32af92c7b6eb4d34567b6bc58746d200f5698ab282874cbd60e4fa3aadd3e5",
+    "recoveries": 0,
+    "seed": 1,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 14278,
+    "wrecks": 0
+  },
+  {
+    "biomes": [
+      "town",
+      "rocks",
+      "outback-dirt",
+      "outback-bitumen"
+    ],
+    "hash": "969982339a10446cea6a4ca5faadbcea7cead0e8af594badb6601030c33095c7",
+    "recoveries": 0,
+    "seed": 2,
+    "seen": [
+      true,
+      true
+    ],
+    "ticks": 8407,
+    "wrecks": 0
+  }
+]

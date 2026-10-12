@@ -10,6 +10,7 @@
 #![forbid(unsafe_code)]
 
 pub mod arena;
+pub mod bridge;
 pub mod canon;
 mod geom;
 pub mod jump;

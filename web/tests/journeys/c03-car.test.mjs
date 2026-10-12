@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C03: the lobby's car picker, offline on the state opener. Any number of cars from data (`&roster=N` stands extra cars in), the
 // pick kept per device, and Ready never behind it. (The TV's "choosing" state and the host seeing the pick need a wire message
 // that doesn't exist yet: see the self-review.)
@@ -36,6 +37,7 @@ async function open(fragment, size = { width: 844, height: 390 }) {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`${server.origin}${BASE}j/ABCD#state=${fragment}`);
   await page.waitForFunction(() => document.documentElement.dataset.jjController === 'ready', undefined, { timeout: 30_000 });
+  await confirmInitialVehicle(page);
   // The tutorial offers itself to a newcomer in the Lobby; the picker is behind it until it is skipped.
   const skip = page.getByRole('button', { name: 'Skip tutorial' });
   if (await skip.count()) await skip.click();
@@ -49,7 +51,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
   await race.ctx.close();
   const { ctx, page, errors } = await open('playing&round=lobby');
   assert.equal(await page.locator('[data-act=car]').isVisible(), true);
-  await page.getByRole('button', { name: /^Car/ }).click();
+  await page.getByRole('button', { name: 'Choose vehicle' }).click();
   await page.locator('[data-overlay=cars]').waitFor();
   await page.waitForFunction(() => document.querySelector('.carimg.big')?.complete, undefined, { timeout: 10_000 });
   const r = await page.evaluate(() => ({
@@ -62,7 +64,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
   }));
   assert.deepEqual([r.name, r.tag, r.stats, r.arrows, r.thumbs, r.img], ['Cruz Missile', 'Aussie classic', 4, 2, 2, true]);
   await shot(page, 'c03-car-one-844x390');
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Use this vehicle' }).click();
   assert.equal(await picker(page), null);
   assert.deepEqual(errors, []);
   await ctx.close();
@@ -70,7 +72,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
 
 test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, and the pick is kept per device', { timeout: 60_000 }, async () => {
   const { ctx, page } = await open('playing&round=lobby&roster=40');
-  await page.getByRole('button', { name: /^Car/ }).click();
+  await page.getByRole('button', { name: 'Choose vehicle' }).click();
   await page.locator('[data-overlay=cars]').waitFor();
   assert.equal(await page.locator('.thumb').count(), 40, 'forty cars, no cap');
   const name = () => page.locator('[data-car-name]').textContent();
@@ -93,15 +95,15 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   }, [box.x, box.y + 40]);
   assert.equal(await name(), 'Test car 9');
   await shot(page, 'c03-car-many-844x390');
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Use this vehicle' }).click();
   // Kept: the next visit to the picker starts on it, and the session carries it.
   assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-6');
-  await page.getByRole('button', { name: /^Car/ }).click();
+  await page.getByRole('button', { name: 'Choose vehicle' }).click();
   assert.equal(await page.locator('.thumb[aria-selected=true]').getAttribute('data-i'), '8');
   await ctx.close();
 });
 
-test('Ready is never behind the picker: it is there and enabled without picking, and the picker is closed by the countdown', { timeout: 60_000 }, async () => {
+test('Ready follows the explicit vehicle confirmation and remains visible in the lobby', { timeout: 60_000 }, async () => {
   const { ctx, page } = await open('playing&round=lobby');
   const ready = page.getByRole('button', { name: /^Ready/ });
   assert.equal(await ready.isEnabled(), true);
@@ -112,9 +114,9 @@ test('Ready is never behind the picker: it is there and enabled without picking,
 test('the picker fits phones in landscape, portrait and the small phone, with Done reachable', { timeout: 90_000 }, async () => {
   for (const [label, size] of [['landscape-844x390', { width: 844, height: 390 }], ['portrait-390x844', { width: 390, height: 844 }], ['small-375x667', { width: 375, height: 667 }], ['short-640x300', { width: 640, height: 300 }]]) {
     const { ctx, page } = await open('playing&round=lobby&roster=6', size);
-    await page.getByRole('button', { name: /^Car/ }).click();
+    await page.getByRole('button', { name: 'Choose vehicle' }).click();
     await page.locator('[data-overlay=cars]').waitFor();
-    const done = page.getByRole('button', { name: 'Done' });
+    const done = page.getByRole('button', { name: 'Use this vehicle' });
     await done.scrollIntoViewIfNeeded();
     const fit = await page.evaluate(() => {
       const d = document.querySelector('[data-act=car-done]').getBoundingClientRect();

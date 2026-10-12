@@ -73,6 +73,16 @@ pub enum UiCommand {
     SetCatchUp {
         on: bool,
     },
+    /// Host keyboard/pad lobby choice, using the same seat Pick path as a phone.
+    LocalPick {
+        source: LocalSourceId,
+        vehicle: String,
+        open: bool,
+    },
+    /// A lobby button is a reliable command, independent of sampled input edges.
+    LocalReady {
+        source: LocalSourceId,
+    },
 }
 
 /// Main → sim.

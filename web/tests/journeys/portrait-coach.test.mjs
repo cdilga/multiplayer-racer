@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // br-2cy4: the rotate prompt owns portrait until the player turns sideways or chooses to play upright.
 // JJ_CAPTURE_DIR=<dir> saves the portrait/landscape self-review images; ordinary runs write no committed artifacts.
 import assert from 'node:assert/strict';
@@ -53,6 +54,7 @@ for (const [engine, launcher] of [['Chromium', chromium], ['WebKit', webkit]]) {
         await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
         await phone.getByRole('button', { name: 'Join the race' }).click();
         await wait(phone, () => window.__jjController.inspect().phase === 'playing');
+        await confirmInitialVehicle(phone);
         const name = `${engine.toLowerCase()}-${portrait.width}`;
         await shot(phone, `${name}-portrait-rotate`);
         await oneCard(phone, 'rotate');
@@ -72,6 +74,7 @@ for (const [engine, launcher] of [['Chromium', chromium], ['WebKit', webkit]]) {
         await phone.locator('[data-overlay=coach]').waitFor({ state: 'visible' });
         await oneCard(phone, 'coach');
         await shot(phone, `${name}-portrait-coach`);
+        await confirmInitialVehicle(phone);
         await phone.getByRole('button', { name: 'Skip tutorial' }).click();
         await turn(phone, { width: 915, height: 412 });
         await turn(phone, portrait);

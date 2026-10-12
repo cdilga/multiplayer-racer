@@ -1,0 +1,5 @@
+    Checking jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+    Checking jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Checking jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+    Checking jj-tools v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-tools)
+    Finished `release` profile [optimized] target(s) in 7.55s

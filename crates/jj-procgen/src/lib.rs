@@ -19,6 +19,7 @@ pub mod arena;
 pub mod assemble;
 pub mod biome;
 pub mod course;
+pub mod crossings;
 pub mod features;
 pub mod lineside;
 pub mod playtest;
@@ -42,7 +43,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "15";
+pub const GENERATOR_VERSION: &str = "16";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -97,7 +98,11 @@ pub fn generate_tuned_from(
 ) -> Result<(Map, Report), biome::SelectError> {
     let course = course::design_with(&mut st.structure, &data.course);
     let centerline = centred(&resample(&course.points));
-    let sel = biome::select(&centerline, recipe, &mut st.structure)?;
+    let sel = if course.crossing.is_some() {
+        biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
+    } else {
+        biome::select(&centerline, recipe, &mut st.structure)?
+    };
     let props = placeholder_props(&mut st, &centerline);
     let n = centerline.len();
     let blend: Vec<(Biome, Biome, f64)> = (0..n).map(|i| sel.blend_at(i)).collect();
@@ -123,6 +128,9 @@ pub fn generate_tuned_from(
         .map(|&(a, b, t)| data.terrain(a).lerp(&data.terrain(b), t))
         .collect();
     terrain::undulate_along(&mut map, &mut st.terrain, &along);
+    if course.crossing.is_some() {
+        crossings::place(&mut map, &course, &data.course.crossing);
+    }
     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
     let ranges: Vec<(f64, f64, features::Density)> = sel
         .segments()
@@ -142,6 +150,7 @@ pub fn generate_tuned_from(
             (lo, hi, data.density(b))
         })
         .collect();
+    let ranges = crossings::feature_ranges(&map, &ranges);
     features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
     biome::wayfinding::place(&mut map);
     let registry = biome::registry();
@@ -187,8 +196,20 @@ pub fn generate_tuned_from(
     map.route.segments = sel.route_segments();
     // Last: check the complete street/scatter before adding stunt lots. Canonicalisation rebases
     // their dressing references; no earlier placement pass may fill the approach afterwards.
+    crossings::clear_corridors(&mut map, &registry);
+    // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
+    // out of the same crossing envelopes as ordinary features.
+    let eligible: Vec<bool> = sel
+        .s
+        .iter()
+        .map(|s| ranges.iter().any(|(a, b, _)| s >= a && s <= b))
+        .collect();
     roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
-        sel.weight(Biome::Town, i)
+        if course.crossing.is_none() || eligible[i] {
+            sel.weight(Biome::Town, i)
+        } else {
+            0.0
+        }
     });
     Ok((map, report(&course)))
 }

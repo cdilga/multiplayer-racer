@@ -444,7 +444,7 @@ export class Session {
       }
       this.endpoint.setClassic(this.srcIdx, this.classicLayout);
       this.set('playing');
-      if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
+      if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, this.pickOpen));
       if (this.camDistance !== 'host') this.sendCameraDistance();
       if (this.assistLevel !== 'off') this.sendAssist();
       this.onChange();
@@ -576,6 +576,7 @@ export class Session {
 
   /** The lobby's car pick goes to the host: a roster id, and whether the picker is still open (the TV says "Choosing car…"). */
   pick(vehicle: string, open: boolean): void {
+    this.pickOpen = open;
     this.carChoice = vehicle;
     this.send('cmd', wasm.encodePick(vehicle, open));
   }
@@ -635,6 +636,7 @@ export class Session {
   }
   /** The car the player picked in the lobby (an id from roster.json); a per-device preference, not on the wire yet. */
   carChoice = '';
+  private pickOpen = false;
 
   ready(on: boolean): void {
     this.send('cmd', wasm.encodeReady(on));

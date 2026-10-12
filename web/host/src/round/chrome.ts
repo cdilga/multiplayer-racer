@@ -30,6 +30,7 @@ export interface ChromeOptions {
   onDisband?: () => void;
   /** The host's own numbers for diagnostics: frame time and its p95 (ms), and host pads' input age p50 (ms). */
   hostStats?: () => Promise<HostStats>;
+  controllers?: HTMLElement;
 }
 
 export interface HostStats {
@@ -42,6 +43,8 @@ export interface Chrome {
   footer: HTMLElement;
   /** Where the renderer's status chip goes (main.ts appends it here). */
   readouts: HTMLElement;
+  sound: HTMLElement;
+  display: HTMLElement;
   update(room: RoomView): void;
   openMenu(): void;
   /** The big join card (P1-R07b): the footer's docked QR opens it; a race pauses under it so a phone can join. */
@@ -50,7 +53,7 @@ export interface Chrome {
   /** Open the Remove confirmation for a seat (a lobby card click, or the menu's player list). */
   askRemove(seat: number): void;
   toggleDiagnostics(on?: boolean): void;
-  readonly state: { menu: boolean; join: boolean; confirm: string | null; diagnostics: boolean; controls: boolean };
+  readonly state: { menu: boolean; join: boolean; confirm: string | null; diagnostics: boolean; controls: boolean; page: string };
   /** The menu's Controls page (P1-C14): one card per source kind, read from the live key and wheel data. */
   openControls(): void;
 }
@@ -66,7 +69,12 @@ const colour = (s: Seat) => `--b:var(--id-${s.colourIndex % tokenData.seatColors
 
 export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: ParentNode) => void): Chrome {
   let room: RoomView | null = null;
-  const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false, controls: false };
+  const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false, controls: false, page: '' };
+  const sound = document.createElement('div');
+  sound.className = 'mn-sound';
+  const display = document.createElement('div');
+  const readouts = document.createElement('div');
+  readouts.dataset.readouts = '';
   let paused = false;
   let target: number | null = null;
 
@@ -78,14 +86,11 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     <span class="foot-code" data-foot-code><b>${esc(opts.code)}</b><span class="foot-domain"> · ${esc(opts.domain)}</span></span>
     <span class="foot-count" data-foot-count></span>
     <span class="foot-pos" data-foot-pos data-count="0" aria-label="Positions"><span class="foot-pos-track"></span></span>
-    <button class="foot-btn quiet" type="button" data-act="diagnostics" aria-pressed="false">Diagnostics</button>
-    <span class="foot-readouts" data-readouts></span>
     <span class="foot-logo display">Joystick Jammers</span>`;
   const layer = document.createElement('div');
   layer.className = 'jj-overlays';
   root.append(layer, footer);
   const menuBtn = footer.querySelector<HTMLButtonElement>('[data-act=menu]')!;
-  const diagBtn = footer.querySelector<HTMLButtonElement>('[data-act=diagnostics]')!;
 
   // ---------- Docked positions (P1-R04.3, owner POC round 5) ----------
   // With no spare grid cell for the standings, every racer's position docks here: all of them, scrolling as a ticker
@@ -200,23 +205,43 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p>
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></div></div></section>`;
+    } else if (state.page === 'rules') {
+      menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>
+        <h3 class="display">Catch-up</h3><p>Give trailing racers a small speed and boost recharge advantage.</p>
+        <div class="mn-acts" role="group" aria-label="Catch-up">${[false, true].map((on) => `<button class="btn brush${(room!.catchUp !== false) === on ? ' primary' : ''}" type="button" data-act="catch-up" data-on="${on}" aria-pressed="${(room!.catchUp !== false) === on}">${on ? 'Light' : 'Off'}</button>`).join('')}</div>
+        <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+    } else if (state.page === 'display') {
+      const fs = fullscreenSupport();
+      menuEl.innerHTML = `<section class="mn-panel controls" data-display-sound aria-labelledby="mn-t"><h2 id="mn-t" class="display">Display <span class="acc">&amp; sound</span></h2>
+        <h3 class="display">Viewing distance</h3><div class="mn-view" role="group" aria-label="Viewing distance">${PROFILES.map((p) => `<button class="btn brush${profileChoice() === p ? ' primary' : ''}" type="button" data-act="view" data-profile="${p}" aria-pressed="${profileChoice() === p}">${p === 'auto' ? `Auto (${activeProfile()})` : p === 'tv' ? 'TV' : p === 'desk' ? 'Desk' : 'Handheld'}</button>`).join('')}
+        ${fs.fullscreen ? '<button class="btn brush" type="button" data-act="fullscreen">Full screen</button>' : ''}</div>
+        ${fs.addToHomeScreenHint ? '<p class="mn-hint" data-a2hs>For full screen on this iPhone: Share, then Add to Home Screen, and open the room from there.</p>' : ''}
+        <div data-display-slot></div><h3 class="display">Sound</h3><div data-sound-slot></div><div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+      menuEl.querySelector('[data-display-slot]')!.append(display);
+      menuEl.querySelector('[data-sound-slot]')!.append(sound);
+    } else if (state.page === 'advanced') {
+      menuEl.innerHTML = `<section class="mn-panel controls" data-advanced aria-labelledby="mn-t"><h2 id="mn-t" class="display">Ad<span class="acc">vanced</span></h2>
+        <div data-render-readouts></div><button class="btn brush" type="button" data-act="diagnostics" aria-pressed="${state.diagnostics}">Diagnostics</button><div data-diag-slot></div>
+        <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+      menuEl.querySelector('[data-diag-slot]')!.append(diagEl);
+      menuEl.querySelector('[data-render-readouts]')!.append(readouts);
     } else if (state.controls) {
       menuEl.innerHTML = `<section class="mn-panel controls" data-controls-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Con<span class="acc">trols</span></h2>
         ${controlsPage(controlsData(), { compact: true })}
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+    } else if (state.page === 'controllers') {
+      menuEl.innerHTML = `<section class="mn-panel controls" data-controllers-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Con<span class="acc">trollers</span></h2><div data-controllers-slot></div>
+        <div class="mn-acts"><button class="btn brush" data-act="controls">Control mappings</button><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+      if (opts.controllers) menuEl.querySelector('[data-controllers-slot]')!.append(opts.controllers);
     } else {
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
-      const fs = fullscreenSupport();
       // Two columns on a wide screen (round.css): the menu, and the join card with Credits beside it.
       menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><div class="mn-main"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
         <div class="mn-acts main"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
-        <button class="btn brush" type="button" data-act="controls">Controls</button>
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
-        <h3 class="display">Display</h3>
-        <div class="mn-view" data-view role="group" aria-label="Viewing distance">${PROFILES.map((p) => `<button class="btn brush${profileChoice() === p ? ' primary' : ''}" type="button" data-act="view" data-profile="${p}" aria-pressed="${profileChoice() === p}">${p === 'auto' ? `Auto (${activeProfile()})` : p === 'tv' ? 'TV' : p === 'desk' ? 'Desk' : 'Handheld'}</button>`).join('')}
-          ${fs.fullscreen ? '<button class="btn brush" type="button" data-act="fullscreen">Full screen</button>' : ''}</div>
-        ${fs.addToHomeScreenHint ? '<p class="mn-hint" data-a2hs>For full screen on this iPhone: Share, then Add to Home Screen, and open the room from there.</p>' : ''}
+        <h3 class="display">Host settings</h3><div class="mn-acts main">
+        <button class="btn brush" data-act="rules">Race rules</button><button class="btn brush" data-act="controllers">Controllers</button><button class="btn brush" data-act="display">Display &amp; sound</button><button class="btn brush quiet" data-act="advanced">Advanced</button></div>
         <h3 class="display">Players <span class="acc">${seats.length}</span></h3>
         <ul class="mn-players" data-players>${
           seats.length
@@ -231,9 +256,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
           <a class="btn brush mn-credits" data-credits href="${basePath()}credits" target="_blank" rel="noopener">Credits</a></div></section>`;
     }
     if (!state.confirm) placeJoinCard(menuEl.querySelector<HTMLElement>('[data-join]'), state.join);
+    diagEl.hidden = !state.diagnostics || state.page !== 'advanced';
     paint(menuEl);
     if (state.join && !state.confirm) fitJoinCard();
-    menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
   };
 
   const setPause = (on: boolean) => {
@@ -244,6 +270,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   const openMenu = (join = false, controls = false) => {
     state.menu = true;
     state.controls = controls;
+    state.page = controls ? 'controllers' : '';
     state.join = join;
     state.confirm = null;
     target = null;
@@ -257,6 +284,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     state.menu = false;
     state.join = false;
     state.controls = false;
+    state.page = '';
+    toggleDiagnostics(false);
     state.confirm = null;
     menuEl.hidden = true;
     menuBtn.setAttribute('aria-expanded', 'false');
@@ -286,6 +315,19 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       case 'host-menu':
         state.join = false;
         state.controls = false;
+        state.page = '';
+        return renderMenu();
+      case 'rules':
+      case 'controllers':
+      case 'display':
+      case 'advanced':
+        state.page = b.dataset.act;
+        return renderMenu();
+      case 'catch-up':
+        send('catch-up', b.dataset.on === 'true');
+        return;
+      case 'diagnostics':
+        toggleDiagnostics();
         return renderMenu();
       case 'controls':
         state.controls = true;
@@ -325,7 +367,6 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   diagEl.className = 'jj-diag';
   diagEl.hidden = true;
   diagEl.setAttribute('aria-label', 'Diagnostics');
-  layer.append(diagEl);
   let diagTimer = 0;
   const renderDiag = async () => {
     if (!room || !state.diagnostics) return;
@@ -364,7 +405,6 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   const toggleDiagnostics = (on = !state.diagnostics) => {
     state.diagnostics = on;
     diagEl.hidden = !on;
-    diagBtn.setAttribute('aria-pressed', String(on));
     clearInterval(diagTimer);
     if (on) {
       void renderDiag();
@@ -399,10 +439,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, openJoin: () => openMenu(true), openMenu: () => openMenu(false), openControls: () => openMenu(false, true), closeMenu };
   // The input drawer's Controls button asks for the same page (P1-C14).
   window.addEventListener('jj-open-controls', () => openMenu(false, true));
+  window.addEventListener('jj-open-display', () => { openMenu(); state.page = 'display'; renderMenu(); });
 
   return {
     footer,
-    readouts: footer.querySelector<HTMLElement>('[data-readouts]')!,
+    readouts,
+    sound,
+    display,
     state,
     openMenu: () => openMenu(false),
     openJoin: () => openMenu(true),
@@ -427,7 +470,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         if (paused && !racing()) {
           paused = false;
         }
-        const key = `${state.confirm}:${state.join}:${state.controls}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+        const key = `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
         if (menuEl.dataset.key !== key) {
           menuEl.dataset.key = key;
           renderMenu();

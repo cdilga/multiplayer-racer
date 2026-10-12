@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C02, the wire half: what the sticks put on the wire arrives at the host as DRIVE/ACTION semantics (jj-input), read
 // from the sim's applied input for that seat's car. Real host in free drive, real phone page, WebRTC: run on eris.
 //   node --test web/tests/journeys/c02-wire.test.mjs
@@ -36,7 +37,9 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   const endpoint = (await page.evaluate(() => window.__jjController.inspect())).link.endpointId;
   const seen = () =>
