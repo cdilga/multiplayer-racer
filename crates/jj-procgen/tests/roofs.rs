@@ -1,4 +1,6 @@
 //! P1-PT-rooftop: actual town seed lots, canonical target identity and Rapier landings.
+//! Seed 0's second lot regresses the nose strike at the old 2 m ramp-foot transition:
+//! its full car must retain enough launch speed to reach the roof, with unchanged handling.
 use jj_map::{Biome, canonical_bytes, load_canonical};
 use jj_sim::{DriveInput, Sim, SpawnPose, VehicleProfile};
 

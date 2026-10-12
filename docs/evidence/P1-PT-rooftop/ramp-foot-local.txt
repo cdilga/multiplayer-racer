@@ -1,0 +1,43 @@
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.16s
+     Running tests/roofs.rs (target/debug/deps/roofs-1bad2d67a308bf60)
+
+running 1 test
+seed 0 roof 1: release Some(15.447435) m/s, landed [-276.3815, 1.1172079, -292.70056]
+seed 0 roof 2: release Some(16.059341) m/s, landed [-26.059843, 1.4273593, 273.85907]
+seed 0 roof 3: release Some(14.8226) m/s, landed [62.12298, 3.153734, 221.87352]
+seed 0 roof 4: release Some(15.496445) m/s, landed [169.79224, 2.8422744, 173.31763]
+town seed 0: 4 rooftop lots
+seed 1 roof 1: release Some(15.849588) m/s, landed [-1.581711, 0.64891255, 184.83163]
+seed 1 roof 2: release Some(15.646283) m/s, landed [178.10141, 1.4887415, -84.10828]
+seed 1 roof 3: release Some(14.696446) m/s, landed [190.50546, 1.8130823, 197.74478]
+seed 1 roof 4: release Some(16.073307) m/s, landed [345.86407, 0.87804234, -61.17607]
+town seed 1: 4 rooftop lots
+seed 2 roof 1: release Some(15.494472) m/s, landed [9.231888, 1.8105884, 196.61604]
+test town_seed_lots_are_reachable_clear_and_land_a_real_car has been running for over 60 seconds
+seed 2 roof 2: release Some(15.217445) m/s, landed [149.90646, 2.7030463, -81.470795]
+seed 2 roof 3: release Some(14.869242) m/s, landed [126.667595, 1.0240648, 159.54243]
+seed 2 roof 4: release Some(15.488772) m/s, landed [249.40067, 2.7313676, 50.376156]
+town seed 2: 4 rooftop lots
+seed 3 roof 1: release Some(15.516003) m/s, landed [19.958965, 2.7777162, 59.321075]
+town seed 3: 1 rooftop lots
+town seed 4: 0 rooftop lots
+seed 5 roof 1: release Some(15.179947) m/s, landed [-6.2876897, 4.104107, 72.40561]
+seed 5 roof 2: release Some(15.401011) m/s, landed [113.188614, 1.387455, 63.230953]
+town seed 5: 2 rooftop lots
+seed 6 roof 1: release Some(15.333176) m/s, landed [101.61058, 3.1473508, 53.999146]
+town seed 6: 1 rooftop lots
+seed 7 roof 1: release Some(14.722531) m/s, landed [-269.92136, 3.23573, -56.657658]
+seed 7 roof 2: release Some(15.754619) m/s, landed [-256.30896, 2.9281833, -178.51906]
+seed 7 roof 3: release Some(15.481501) m/s, landed [-264.23303, 0.9501492, 314.02524]
+seed 7 roof 4: release Some(15.534705) m/s, landed [-185.56337, 1.2575581, -252.61716]
+seed 7 roof 5: release Some(15.406265) m/s, landed [239.23122, 2.890669, -45.674995]
+seed 7 roof 6: release Some(15.187104) m/s, landed [305.92694, 2.8382788, -288.8569]
+seed 7 roof 7: release Some(15.999746) m/s, landed [315.01126, 2.548731, 89.193825]
+town seed 7: 7 rooftop lots
+town seed 8: 0 rooftop lots
+town seed 9: 0 rooftop lots
+test town_seed_lots_are_reachable_clear_and_land_a_real_car ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 135.22s
+

@@ -184,10 +184,10 @@
     "houseWidthM": 14.0,
     "houseDepthM": 10.0,
     "houseHeightM": 2.8,
-    "rampLengthM": 8.0,
+    "rampLengthM": 10.0,
     "rampWidthM": 4.0,
     "lipHeightM": 2.1,
-    "blendM": 2.0,
+    "blendM": 6.0,
     "lipToHouseM": 16.0,
     "designSpeedMps": 15.0
   }
