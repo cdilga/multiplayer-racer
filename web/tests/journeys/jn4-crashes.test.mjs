@@ -248,7 +248,8 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
   );
   run.pushed = pushed;
   assert.ok(Math.max(...pushed.moved) > 0.3, `a car drove into the debris and moved it: dynamic bodies (${JSON.stringify(pushed.moved)})`);
-  assert.equal(pushed.count, pushed.before, 'nothing was removed or merged');
+  // A harder hit can knock another part off (a new piece, br-gw74.13's faster car); nothing is ever removed or merged.
+  assert.ok(pushed.count >= pushed.before, `nothing was removed or merged (${pushed.count} < ${pushed.before})`);
   await noPause('after hitting the debris');
 
   // A bug clip saved now replays natively to the browser's end state.
