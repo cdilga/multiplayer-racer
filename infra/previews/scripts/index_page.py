@@ -9,7 +9,9 @@ Newest first, pinned builds on top (`pin/<id>` tags; a pin's label such as "Play
                does the same from a shell)
   Open         Host and Join (on the preview's own base path; a build that failed its smoke gets small "Try … anyway" links
                under a "probably not playable" warning instead) and its CI run as evidence
-Retired previews sit below, greyed, with the reason they were retired. Styled from edge/tokens.json (a copy of the
+Retired previews sit below, greyed and folded away, with the reason they were retired. Above the list, the 0.2 brand
+(the wordmark and the Cruz Missile render, served by the edge from /brand/) and a "Jump in" panel for the Latest
+playable build; the share card is the Latest build's own og-card.png. Styled from edge/tokens.json (a copy of the
 game's UI token file: swap it for the accepted set and re-render, no template change).
 """
 
@@ -26,6 +28,7 @@ FONT_BASE = "/"  # the edge serves the design mirror (fonts/…) at the site roo
 # How many commit titles a card lists under What changed before linking to the rest (a size bound, see changed_html).
 CHANGED_SHOWN = 6
 PIN_FORM = "https://git.dilger.dev/cdilga/multiplayer-racer/actions?workflow=deploy-retention.yml"
+PUBLIC = "https://jammers-preview.dilger.dev"
 
 
 def tokens() -> dict:
@@ -45,32 +48,55 @@ def style(t: dict) -> str:
     ink_w = t["ink"]["outlinePx"]["desk"]
     shadow_y = t["ink"]["stickerShadow"]["y"]
     return faces + f"""
-  :root {{ {vars_} --display:'{t['fonts']['display']['family']}', {fallback}; --body:'{t['fonts']['body']['family']}', {fallback}; --line:{ink_w}px; --lift:{shadow_y}px; }}
+  :root {{ {vars_} --display:'{t['fonts']['display']['family']}', {fallback}; --body:'{t['fonts']['body']['family']}', {fallback}; --line:{ink_w}px; --lift:{shadow_y}px; --sh:0 var(--lift) 0 rgba(21,32,58,.85); }}
   * {{ box-sizing:border-box; }}
-  body {{ margin:0; background:var(--paper-shade); color:var(--ink); font:500 17px/1.45 var(--body); padding:16px; }}
-  main {{ max-width:960px; margin:0 auto; }}
-  h1 {{ margin:10px 0 4px; font:900 clamp(34px,7vw,56px)/1 var(--display); text-transform:uppercase; letter-spacing:.5px; }}
-  h1 span {{ color:var(--red-earth); }}
-  h2 {{ font:800 22px/1.2 var(--display); text-transform:uppercase; margin:28px 0 4px; color:var(--ink-soft); }}
-  .tag {{ display:inline-block; background:var(--saffron); border:var(--line) solid var(--ink); border-radius:8px; padding:1px 10px; font:800 15px/1.5 var(--display); text-transform:uppercase; transform:rotate(-1.2deg); }}
-  .card {{ border:var(--line) solid var(--ink); border-radius:14px; background:var(--paper); padding:14px 16px; margin:16px 0; box-shadow:0 var(--lift) 0 rgba(21,32,58,.85); display:grid; gap:10px 20px; grid-template-columns:minmax(0,1.1fr) minmax(0,1.5fr) minmax(0,1fr); }}
-  .card.pinned {{ border-color:var(--red-earth); }}
-  .card.retired {{ opacity:.7; background:var(--paper-shade); box-shadow:none; }}
+  html {{ background:var(--red-earth); }}
+  body {{ margin:0; color:var(--ink); font:500 17px/1.45 var(--body);
+    background:radial-gradient(rgba(21,32,58,.13) 28%,transparent 31%) 0 0/11px 11px,linear-gradient(var(--sandstone) 0 420px,var(--ochre) 420px 452px,var(--red-earth) 452px); }}
+  main {{ max-width:1040px; margin:0 auto; padding:0 16px 40px; }}
+  .hero {{ position:relative; overflow-x:clip; min-height:420px; display:grid; align-content:center; padding:28px 0 40px; }}
+  .hero .word {{ width:min(560px,82vw); height:auto; display:block; filter:drop-shadow(0 6px 0 rgba(21,32,58,.25)); }}
+  .hero p {{ max-width:24em; margin:14px 0 0; font:700 clamp(18px,2.4vw,22px)/1.3 var(--body); }}
+  .car {{ position:absolute; right:-40px; bottom:-34px; width:min(520px,52vw); height:auto; animation:drive 1.1s cubic-bezier(.2,.9,.25,1.15) both; filter:drop-shadow(0 14px 0 rgba(21,32,58,.22)); pointer-events:none; }}
+  .dust {{ position:absolute; right:min(470px,47vw); bottom:-10px; width:90px; height:46px; border-radius:50%; background:var(--paper); opacity:0; animation:puff 1.4s .5s ease-out both; }}
+  @keyframes drive {{ from {{ transform:translateX(70vw) rotate(-4deg); }} 70% {{ transform:translateX(-14px) rotate(1.5deg); }} to {{ transform:none; }} }}
+  @keyframes puff {{ 0% {{ opacity:.8; transform:scale(.3); }} to {{ opacity:0; transform:translateX(-60px) scale(1.6); }} }}
+  @media (prefers-reduced-motion:reduce) {{ .car {{ animation:none; }} .dust {{ display:none; }} }}
+  .tag {{ display:inline-block; background:var(--saffron); border:var(--line) solid var(--ink); padding:1px 10px; font:900 italic 16px/1.5 var(--display); text-transform:uppercase; letter-spacing:.04em; transform:rotate(-3deg) skewX(-10deg); }}
+  .tag.t {{ background:var(--teal); }} .tag.r {{ background:var(--red-earth); color:var(--paper); }}
+  .hero .tag {{ justify-self:start; margin-bottom:14px; font-size:20px; }}
+  .play {{ position:relative; margin:-6px 0 26px; background:var(--ink); color:var(--paper); border:var(--line) solid var(--ink); border-radius:16px; padding:22px 24px; box-shadow:0 var(--lift) 0 rgba(0,0,0,.45); display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px 24px; align-items:center; }}
+  .play .tag {{ position:absolute; top:-16px; left:18px; }}
+  .play h2 {{ margin:6px 0 2px; font:900 italic clamp(28px,4.4vw,44px)/1 var(--display); text-transform:uppercase; color:var(--saffron); }}
+  .play .ttl {{ margin:0; color:var(--paper-shade); }}
+  .steps {{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px 18px; margin:0; padding:0; list-style:none; font:700 15px/1.3 var(--body); color:var(--paper-shade); }}
+  .steps b {{ display:inline-grid; place-items:center; width:24px; height:24px; margin-right:6px; border-radius:50%; background:var(--saffron); color:var(--ink); font:900 14px/1 var(--display); }}
+  .acts {{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }}
+  a.btn {{ display:inline-flex; align-items:center; min-height:48px; padding:0 20px; border:var(--line) solid var(--ink); border-radius:10px; background:var(--saffron); color:var(--ink); box-shadow:var(--sh); font:900 italic 20px/1 var(--display); text-transform:uppercase; text-decoration:none; transform:skewX(-6deg); }}
+  a.btn.alt {{ background:var(--paper); }}
+  a.btn:hover {{ transform:skewX(-6deg) translateY(-2px); }}
+  .play a.btn {{ min-height:58px; font-size:26px; padding:0 26px; border-color:var(--paper); }}
+  h2.sec {{ margin:30px 0 6px; font:900 italic 26px/1.1 var(--display); text-transform:uppercase; color:var(--paper); text-shadow:0 3px 0 rgba(21,32,58,.5); }}
+  .card {{ position:relative; border:var(--line) solid var(--ink); border-radius:14px; background:var(--paper); padding:16px 18px; margin:18px 0; box-shadow:var(--sh); display:grid; gap:8px 22px; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); }}
+  .card.pinned {{ box-shadow:0 0 0 5px var(--saffron), 0 calc(var(--lift) + 5px) 0 rgba(21,32,58,.85); }}
+  .card.retired {{ opacity:.72; background:var(--paper-shade); box-shadow:none; }}
   .card h3 {{ margin:0 0 2px; font:800 13px/1.2 var(--display); text-transform:uppercase; letter-spacing:.8px; color:var(--ink-soft); }}
-  .wide {{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }}
-  .id {{ font:800 22px/1.1 var(--display); }}
+  .wide {{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; }}
+  .id {{ font:900 italic 26px/1 var(--display); }}
+  .meta {{ font-size:14px; color:var(--ink-soft); }}
+  .stamp {{ margin-left:auto; padding:2px 10px; border:3px solid currentColor; border-radius:6px; font:900 italic 15px/1.4 var(--display); text-transform:uppercase; transform:rotate(2deg); }}
   code {{ font-size:.9em; }}
   .ok {{ color:var(--success); font-weight:700; }} .bad {{ color:var(--danger); font-weight:700; }}
-  .why {{ background:var(--danger-tint); border-radius:8px; padding:6px 10px; margin:4px 0 0; }}
-  .good {{ background:var(--success-tint); border-radius:8px; padding:6px 10px; margin:4px 0 0; }}
+  .why {{ background:var(--danger-tint); border-radius:8px; padding:6px 10px; margin:4px 0 0; font-size:15px; }}
+  .good {{ background:var(--success-tint); border-radius:8px; padding:6px 10px; margin:4px 0 0; font-size:15px; }}
   .muted {{ color:var(--ink-soft); }}
   details {{ margin-top:6px; }} summary {{ cursor:pointer; font-weight:700; color:var(--cobalt-deep); min-height:32px; }}
   ul.changed {{ margin:6px 0 0; padding-left:20px; }}
-  a.btn {{ display:inline-flex; align-items:center; min-height:48px; padding:0 18px; border:var(--line) solid var(--ink); border-radius:10px; background:var(--saffron); color:var(--ink); font:800 18px/1 var(--display); text-transform:uppercase; text-decoration:none; }}
-  a.btn.alt {{ background:var(--paper); }}
   a.ev {{ color:var(--cobalt-deep); font-weight:700; }}
+  details.gone > summary {{ color:var(--paper); font:900 italic 22px/1.4 var(--display); text-transform:uppercase; }}
+  .foot {{ color:var(--paper); }} .rules {{ margin:0; max-width:52em; font-size:15px; }} .foot a {{ color:var(--saffron); font-weight:700; }}
   a:focus-visible, summary:focus-visible {{ outline:3px solid var(--cobalt); outline-offset:2px; }}
-  @media (max-width:720px) {{ .card {{ grid-template-columns:1fr; }} body {{ padding:12px; }} }}
+  @media (max-width:720px) {{ .card, .play {{ grid-template-columns:1fr; }} .hero {{ min-height:0; padding-bottom:150px; }} .car {{ width:340px; right:-60px; bottom:-20px; }} .stamp {{ margin-left:0; }} }}
 """
 
 
@@ -158,18 +184,38 @@ def title_text(t: str) -> str:
     return t
 
 
+def stamp(p: dict) -> str:
+    if p.get("retired"):
+        return '<span class="stamp muted">Retired</span>'
+    if p.get("status") == "playable":
+        return '<span class="stamp ok">Playable</span>'
+    return '<span class="stamp bad">Not playable</span>'
+
+
 def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], newest: set[str], now: datetime) -> str:
-    tags = "".join(f'<span class="tag">{html.escape(label)}</span> ' for label in pinned_by + (["Latest"] if is_latest else []))
+    tags = "".join(f'<span class="tag{" r" if label != "Latest" else ""}">{html.escape(label)}</span>'
+                   for label in pinned_by + (["Latest"] if is_latest else []))
     cls = "card" + (" pinned" if pinned_by else "") + (" retired" if p.get("retired") else "")
     branch = html.escape(p.get("branch", ""))
     sha = html.escape(p.get("sha", "")[:12])
     return (f'<article class="{cls}" id="{html.escape(p["id"])}">'
-            f'<div class="wide">{tags}<span class="id">{html.escape(p["id"])}</span></div>'
-            f'<div><h3>Build</h3>{branch + " " if branch else ""}<code>{sha}</code><br>{time_tag(p.get("publishedAt"))}</div>'
-            f'<div><h3>What it is</h3>{html.escape(title_text(p.get("title", ""))) or "<span class=muted>No title</span>"}{changed_html(p)}</div>'
-            f'<div><h3>Status</h3>{status_html(p)}</div>'
-            f'<div><h3>Keep</h3>{keep_html(p, pinned_by, is_latest, keep, newest, now)}</div>'
-            f'<div class="wide"><h3 style="margin:0">Open</h3>{open_html(p)}</div></article>')
+            f'<div class="wide">{tags}<span class="id">{html.escape(p["id"])}</span>{stamp(p)}</div>'
+            f'<div><h3>What it is</h3>{html.escape(title_text(p.get("title", ""))) or "<span class=muted>No title</span>"}{changed_html(p)}'
+            f'<p class="meta">{branch + " " if branch else ""}<code>{sha}</code> · {time_tag(p.get("publishedAt"))}</p></div>'
+            f'<div><h3>Status</h3>{status_html(p)}<h3 style="margin-top:10px">Keep</h3>{keep_html(p, pinned_by, is_latest, keep, newest, now)}</div>'
+            f'<div class="wide acts">{open_html(p)}</div></article>')
+
+
+def jump_in(p: dict | None) -> str:
+    """The Latest playable build, up front: the one most people opening this page want."""
+    if not p or p.get("status") != "playable" or p.get("retired"):
+        return ""
+    base = f"/p/{html.escape(p['id'])}/"
+    return (f'<section class="play" aria-label="Play the latest build"><span class="tag t">Latest build</span>'
+            f'<div><h2>Jump in</h2><p class="ttl">{html.escape(title_text(p.get("title", "")))}</p></div>'
+            f'<div class="acts"><a class="btn" href="{base}host">Host a room</a><a class="btn alt" href="{base}">Join</a></div>'
+            f'<ol class="steps"><li><b>1</b>Open Host on the TV or laptop</li><li><b>2</b>Scan its QR with your phones</li>'
+            f'<li><b>3</b>Race, wreck, repeat</li></ol></section>')
 
 
 SCRIPT = """
@@ -208,14 +254,31 @@ def render(reg: dict, now: datetime | None = None) -> str:
     if not body:
         body = '<article class="card"><div class="wide"><strong>No previews yet.</strong> Every 0.2 build that passes CI lands here.</div></article>'
     if gone:
-        body += "<h2>Retired</h2>" + "".join(card(p, [], False, keep, newest, now) for p in gone)
+        body += (f'<details class="gone"><summary>Retired ({len(gone)})</summary>'
+                 + "".join(card(p, [], False, keep, newest, now) for p in gone) + "</details>")
+    hero_p = next((p for p in live if p["id"] == latest), None)
+    desc = "Every Joystick Jammers 0.2 build that passes CI, live and playable: host on the big screen, steer from your phone."
+    share = ""
+    if hero_p:
+        # The share card ships in every build (web/public/assets/og-card.png); the index names the Latest one's.
+        img = f"{PUBLIC}/p/{html.escape(hero_p['id'])}/assets/og-card.png"
+        share = (f'<meta property="og:image" content="{img}"><meta property="og:image:width" content="1200">'
+                 f'<meta property="og:image:height" content="630"><meta name="twitter:image" content="{img}">')
     return f"""<!doctype html>
 <html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jammers previews</title><style>{style(tokens())}</style></head>
-<body><main><div class="tag">Rainbow previews</div><h1>Joystick <span>Jammers</span> 0.2</h1>
-<p>Every 0.2 build that passes CI lands here, newest first, pinned builds on top. Open <b>Host</b> on the TV or laptop, then scan its QR with your phones. A build that fails its smoke test is listed as not playable, with the reason. The {retention.NEWEST_KEPT} newest builds always stay up, and so does anything under 24 hours old; pinned builds stay until unpinned.</p>
+<title>Jammers previews</title><meta name="description" content="{desc}"><meta name="theme-color" content="#15203A">
+<meta property="og:type" content="website"><meta property="og:url" content="{PUBLIC}/"><meta property="og:site_name" content="Joystick Jammers">
+<meta property="og:title" content="Joystick Jammers 0.2: rainbow previews"><meta property="og:description" content="{desc}">
+<meta name="twitter:card" content="summary_large_image">{share}
+<link rel="icon" href="/brand/favicon.svg"><style>{style(tokens())}</style></head>
+<body><main><header class="hero"><span class="tag">Rainbow previews · 0.2</span>
+<img class="word" src="/brand/wordmark.svg" alt="Joystick Jammers" width="720" height="292">
+<p>Every 0.2 build that passes CI, live and playable. Host on the big screen, steer from your phone.</p>
+<span class="dust" aria-hidden="true"></span><img class="car" src="/brand/renders/cruz-missile-hero.png" alt="" width="956" height="490"></header>
+{jump_in(hero_p)}<h2 class="sec">All builds</h2>
+<p class="foot rules">Newest first, pinned builds on top. A build that fails its smoke test is listed as not playable, with the reason. The {retention.NEWEST_KEPT} newest builds always stay up, and so does anything under 24 hours old; pinned builds stay until unpinned.</p>
 {body}
-<p><small class="muted">The game you can play today is 0.1 at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>.</small></p>
+<p class="foot"><small>The game you can play today is 0.1 at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>.</small></p>
 </main><script>{SCRIPT}</script></body></html>
 """
 
