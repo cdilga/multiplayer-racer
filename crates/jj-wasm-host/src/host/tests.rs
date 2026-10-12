@@ -1369,8 +1369,8 @@ fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the
 
 #[test]
 fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
-    use jj_protocol::cmd::{ActionOutcome, ActionRejection};
-    use jj_protocol::items::{Inventory, ItemEventKind, ItemId, ItemUseRefusal};
+    use jj_protocol::cmd::ActionOutcome;
+    use jj_protocol::items::{Inventory, ItemEventKind, ItemId};
     let mut h = Host::new(&init()).unwrap();
     let send = |h: &mut Host, cmd: ControllerCmd| {
         h.handle(&net("hub-items", Channel::Cmd, cmd.encode()))
