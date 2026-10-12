@@ -7,6 +7,11 @@ import type { Frame } from './snapshot';
 /** How far behind the newest snapshot the renderer draws, in ticks (absorbs publish jitter). */
 export const DELAY_TICKS = 3;
 const KEEP = 8;
+/** The playback clock's rate steering: per tick of error, and its bound (a few percent, invisible as speed). */
+const STEER = 0.03;
+const MAX_STEER = 0.08;
+/** Further than this from the target (a new session, a stalled tab resuming) the clock jumps instead of steering. */
+const SNAP_TICKS = TICK_HZ / 2;
 
 export interface Sampled {
   tick: number;
@@ -27,6 +32,7 @@ export class Interpolator {
   private frames: Frame[] = [];
   private lastArrival = 0;
   private shown = 0;
+  private lastNow: number | null = null;
   /** Set to draw an exact tick (captures); otherwise the clock follows arrivals. */
   fixedTick: number | null = null;
 
@@ -46,14 +52,27 @@ export class Interpolator {
     return this.frames.at(-1) ?? null;
   }
 
-  /** The tick the renderer should draw now. */
+  /**
+   * The tick the renderer should draw now. A playback clock: it advances by frame time and steers its rate a few percent
+   * toward DELAY_TICKS behind the newest snapshot, so uneven snapshot arrivals never show as uneven motion (br-gw74.14:
+   * re-anchoring to each arrival made the world and camera judder). A big gap (new session, resume) snaps instead.
+   */
   renderTick(now = performance.now()): number {
     if (this.fixedTick !== null) return this.fixedTick;
     const last = this.frames.at(-1);
     if (!last) return 0;
     const ahead = Math.min(((now - this.lastArrival) * TICK_HZ) / 1000, DELAY_TICKS);
-    // Never run backwards; never run past the newest snapshot.
-    this.shown = Math.min(Math.max(this.shown, last.tick + ahead - DELAY_TICKS), last.tick);
+    const target = last.tick + ahead - DELAY_TICKS;
+    if (this.lastNow === null || Math.abs(target - this.shown) > SNAP_TICKS) {
+      this.shown = Math.max(this.shown, target);
+    } else {
+      const dt = (Math.max(0, now - this.lastNow) * TICK_HZ) / 1000;
+      const rate = 1 + Math.min(Math.max((target - this.shown - dt) * STEER, -MAX_STEER), MAX_STEER);
+      this.shown += dt * rate;
+    }
+    this.lastNow = now;
+    // Never past the newest snapshot (the clock holds there when snapshots stop).
+    this.shown = Math.min(this.shown, last.tick);
     return this.shown;
   }
 
