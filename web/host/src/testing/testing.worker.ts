@@ -75,6 +75,8 @@ const ext: Extension<Sim> = {
           }
         });
         if (!w.faulted) w.flush(STEPPING.has(String(msg.command.cmd)));
+        // Input ages (P1-C05) measure the live host: whatever was applied while held was applied at the test's pace.
+        if (msg.command.cmd === 'hold') w.clearInputAges();
         w.post({ kind: 'testResult', id: msg.id, ...reply });
         return true;
       }

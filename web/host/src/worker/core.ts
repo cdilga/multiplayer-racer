@@ -207,6 +207,11 @@ export class SimWorker<S extends Sim> {
     this.post({ kind: 'pause', mask, countdownMs });
   }
 
+  /** Forgets the recorded input ages (a held, test-stepped sim applies samples at the test's pace, not the host's). */
+  clearInputAges(): void {
+    this.ages.clear();
+  }
+
   /** The tick boundary just applied every pending local sample: record how old each was. */
   private applied(): void {
     if (this.pending.size === 0) return;
