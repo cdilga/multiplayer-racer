@@ -262,8 +262,11 @@ test('?tune: generator values change the measured length and relief on Regenerat
   // Relief first: the course is the same (its band is unchanged), so only the heights differ.
   await host.evaluate(() => document.querySelectorAll('.jj-tune details').forEach((d) => (d.open = true)));
   for (const b of ['town', 'rocks', 'outbackDirt', 'outbackBitumen']) {
-    await setField(`biomes.${b}.terrain.reliefM`, 40);
-    await setField(`biomes.${b}.terrain.maxGrade`, 0.12);
+    await setField(`biomes.${b}.terrain.reliefM`, 90);
+    // Above every shipped limit (Rocks: 0.18 grade, 0.006 curvature); the profile is curvature-bound, so relief and
+    // grade alone don't raise it.
+    await setField(`biomes.${b}.terrain.maxGrade`, 0.25);
+    await setField(`biomes.${b}.terrain.maxCurvature`, 0.012);
   }
   const regenerate = async () => {
     const n = await host.evaluate(() => window.__jjPrepare.seeds().length);
@@ -288,7 +291,7 @@ test('?tune: generator values change the measured length and relief on Regenerat
   assert.equal(Number(await field('course.classes.standard.lengthMinM').inputValue()), 1100, 'the row goes back to the last good value');
   const held = (await host.evaluate(() => window.__jjTune.inspect())).patch;
   assert.equal(held.generator, 'assets/profiles/generator.json');
-  assert.equal(held.generatorSet.length, 12);
+  assert.equal(held.generatorSet.length, 16);
   assert.ok(held.generatorSet.some(([f, v]) => f === 'course.classes.standard.lengthMinM' && v === '1100'));
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-refused-1920x1080.png` });
   const tuned = await regenerate();
