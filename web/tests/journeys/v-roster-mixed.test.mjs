@@ -11,14 +11,16 @@ import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
-const BASE = '/p/vroster/';
+const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
+const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/vroster/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
 let browser;
 let server;
 
 before(async () => {
-  server = await serve(build('./', 'vroster'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  server = deployed ? { origin: deployed.origin, close: async () => {} }
+    : await serve(build('./', 'vroster'), BASE, { JJ_STUN_URLS: '' });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
 });
 after(async () => {
   await browser?.close();
@@ -31,6 +33,11 @@ const shot = async (page, name) => {
   if (!CAPTURE) return;
   const { mkdirSync } = await import('node:fs');
   mkdirSync(CAPTURE, { recursive: true });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.images].map(image => image.decode().catch(() => {})));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   await page.screenshot({ path: `${CAPTURE}/${name}.png` });
 };
 const observe = (host) => host.evaluate(() => window.__jjTest.observe());
