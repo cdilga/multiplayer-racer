@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { mkdirSync } from 'node:fs';
 import { chromium, webkit } from 'playwright';
-import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { build } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
+import { serveWithLocalStun } from './lib/stun.mjs';
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/owner-lobby/';
 const dist = deployed ? null : build('./', 'owner-lobby');
@@ -16,7 +17,7 @@ const shot = async (page, name) => {
   await page.screenshot({path: `${process.env.JJ_CAPTURE_DIR}/${name}.jpg`, quality: 85});
 };
 for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and pad choose visibly; settings preserve pause and controller actions`, { timeout: 300000 }, async () => {
-  const server = deployed ? {origin:deployed.origin,close:async()=>{}} : await serve(dist, BASE, { JJ_STUN_URLS: '' });
+  const server = deployed ? {origin:deployed.origin,close:async()=>{}} : await serveWithLocalStun(dist, BASE);
   const browser = await engine.launch(engine === chromium ? {channel:process.env.JJ_CHROMIUM_GPU==='native'?'chromium':undefined,args: chromiumArgs} : {});
   const errors = [];
   let host;
@@ -93,7 +94,8 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
       await host.setViewportSize({width,height});
       await shot(host,`${engine.name()}-lobby-${width}x${height}`);
       if(width<500) {
-        await host.locator(`[data-local-ready="${padSource}"]`).scrollIntoViewIfNeeded();
+        // Visual staging: a just-arrived room update can replace this card while Playwright waits for stability.
+        await host.locator(`[data-local-ready="${padSource}"]`).evaluate(el=>el.scrollIntoView({block:'nearest'}));
         await shot(host,`${engine.name()}-lobby-pad-choice-${width}x${height}`);
       }
       await host.getByRole('button',{name:'Host menu',exact:true}).click();
@@ -101,7 +103,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
         await host.getByRole('button',{name:section,exact:true}).click();
         await shot(host,`${engine.name()}-${section.replaceAll(' ','-').replace('&','and')}-${width}x${height}`);
         if(section==='Controllers' && height<500) {
-          await host.getByRole('button',{name:'Back',exact:true}).scrollIntoViewIfNeeded();
+          await host.getByRole('button',{name:'Back',exact:true}).evaluate(el=>el.scrollIntoView({block:'nearest'}));
           await shot(host,`${engine.name()}-Controllers-scrolled-${width}x${height}`);
         }
         if(section==='Display & sound' && width===1920 && await host.locator('[data-act=fullscreen]').count()) {

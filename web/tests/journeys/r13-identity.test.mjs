@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { chromium, webkit } from 'playwright';
-import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { build } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, gpu } from './lib/chromium.mjs';
 import { confirmInitialVehicle } from './lib/vehicle.mjs';
+import { serveWithLocalStun } from './lib/stun.mjs';
 import { CVD_TYPES, simulateCvd } from '../../../art/ui/lib/color.mjs';
 
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
@@ -21,7 +22,7 @@ const wait = async (p, f, arg) => {
   try {return await p.waitForFunction(f, arg, { timeout: 60000 });}
   catch(e) {console.log('identity wait failed',String(f),await p.evaluate(()=>({room:window.__jjRoom?.view(),controller:window.__jjController?.inspect()})));throw e;}
 };
-const server = () => deployed ? {origin:deployed.origin,close:async()=>{}} : serve(dist, BASE, { JJ_STUN_URLS: '' });
+const server = () => deployed ? {origin:deployed.origin,close:async()=>{}} : serveWithLocalStun(dist, BASE);
 
 for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matches real phones, car paint, HUD and other-view nameplates`, {timeout:180000}, async () => {
   const s = await server();
