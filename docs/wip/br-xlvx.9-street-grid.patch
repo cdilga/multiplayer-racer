@@ -1,0 +1,542 @@
+diff --git a/assets/profiles/generator.json b/assets/profiles/generator.json
+index 7cde3c4d..878b616d 100644
+--- a/assets/profiles/generator.json
++++ b/assets/profiles/generator.json
+@@ -81,6 +81,16 @@
+       "barrierWidthMm": 350,
+       "clearanceMm": 5000,
+       "maxGradeMilli": 200
++    },
++    "streetGrid": {
++      "probability": 0.2,
++      "blockMinM": 60,
++      "blockMaxM": 90,
++      "cornerRadiusM": 14,
++      "highwayRadiusM": 30,
++      "highwayMinM": 300,
++      "highwayMaxM": 500,
++      "highwayWidthScale": 1.5
+     }
+   },
+   "biomes": {
+diff --git a/crates/jj-procgen/src/assemble/mod.rs b/crates/jj-procgen/src/assemble/mod.rs
+index 74db4e0e..55e21971 100644
+--- a/crates/jj-procgen/src/assemble/mod.rs
++++ b/crates/jj-procgen/src/assemble/mod.rs
+@@ -30,6 +30,7 @@ pub struct TrackSpec {
+     /// A closed loop, metres (x, z), roughly evenly spaced.
+     pub centerline: Vec<(f64, f64)>,
+     pub width_m: f64,
++    pub point_widths_m: Vec<f64>,
+     /// The road surface; `point_surfaces` (one per centerline point, or empty for this everywhere) overrides it.
+     pub surface: Surface,
+     pub point_surfaces: Vec<Surface>,
+@@ -78,6 +79,7 @@ pub fn assemble(spec: &TrackSpec) -> Map {
+     let n = pts.len();
+     let (s, total) = arc_lengths(pts);
+     let width = mm(spec.width_m) as u32;
++    let width_at = |i: usize| spec.point_widths_m.get(i).copied().unwrap_or(spec.width_m);
+ 
+     let surface_at = |i: usize| spec.point_surfaces.get(i).copied().unwrap_or(spec.surface);
+     let points: Vec<RoutePoint> = pts
+@@ -87,7 +89,7 @@ pub fn assemble(spec: &TrackSpec) -> Map {
+             x: mm(x),
+             y: 0,
+             z: mm(z),
+-            width,
++            width: mm(width_at(i)) as u32,
+             bank: 0,
+             surface: surface_at(i),
+         })
+@@ -138,13 +140,13 @@ pub fn assemble(spec: &TrackSpec) -> Map {
+     let origin_z = bounds.min_z.div_euclid(spacing) * spacing;
+     let cols = ((bounds.max_x - origin_x) / spacing + 2) as u32;
+     let rows = ((bounds.max_z - origin_z) / spacing + 2) as u32;
+-    let half = spec.width_m / 2.0;
+     // Road wherever a cell's corner lies within half the width of a route segment; off-track elsewhere.
+     let mut surfaces = vec![Surface::OffTrack; (cols * rows) as usize];
+     let mut nearest = vec![f64::INFINITY; (cols * rows) as usize];
+     let sp = f64::from(spacing) / 1000.0;
+     let (ox, oz) = (f64::from(origin_x) / 1000.0, f64::from(origin_z) / 1000.0);
+     for i in 0..n {
++        let half = width_at(i).max(width_at((i + 1) % n)) / 2.0;
+         let (a, b) = (pts[i], pts[(i + 1) % n]);
+         let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+         let len2 = dx * dx + dz * dz;
+@@ -162,7 +164,8 @@ pub fn assemble(spec: &TrackSpec) -> Map {
+                 };
+                 let d = libm::hypot(p.0 - (a.0 + t * dx), p.1 - (a.1 + t * dz));
+                 let at = (r * cols + c) as usize;
+-                if d <= half && d < nearest[at] {
++                let road_half = (width_at(i) * (1.0 - t) + width_at((i + 1) % n) * t) / 2.0;
++                if d <= road_half && d < nearest[at] {
+                     nearest[at] = d;
+                     surfaces[at] = surface_at(i);
+                 }
+diff --git a/crates/jj-procgen/src/biome/select.rs b/crates/jj-procgen/src/biome/select.rs
+index 82ab813e..9b2516d7 100644
+--- a/crates/jj-procgen/src/biome/select.rs
++++ b/crates/jj-procgen/src/biome/select.rs
+@@ -26,6 +26,7 @@ pub enum SelectError {
+     EmptyRecipe,
+     /// No straight stretch could hold boundary `n` (0-based) near its target.
+     NoStraight(usize),
++    NoGridLayout,
+ }
+ 
+ /// Where the biomes change along a route.
+diff --git a/crates/jj-procgen/src/course/mod.rs b/crates/jj-procgen/src/course/mod.rs
+index 7bae565b..5ce655e0 100644
+--- a/crates/jj-procgen/src/course/mod.rs
++++ b/crates/jj-procgen/src/course/mod.rs
+@@ -20,6 +20,8 @@
+ use std::collections::BTreeMap;
+ 
+ use crate::seed::Rng;
++mod grid;
++pub use grid::{StreetGrid, design_grid};
+ pub use crate::tuning::{ClassName, CourseData, LengthClass, PresetName};
+ 
+ pub const WIDTH_M: f64 = 12.0;
+@@ -93,6 +95,7 @@ pub struct Course {
+     pub rejects: BTreeMap<&'static str, u32>,
+     /// Upper and lower straight spans in metres along the route, before resampling.
+     pub crossing: Option<[(f64, f64); 2]>,
++    pub street_grid: Option<StreetGrid>,
+ }
+ 
+ #[derive(Clone, Copy, Debug)]
+@@ -510,6 +513,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
+             fallback: false,
+             rejects,
+             crossing: None,
++            street_grid: None,
+         };
+     }
+     let (corners, pieces) = oval((band.length_min_m + band.length_max_m) / 2.0);
+@@ -525,6 +529,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
+         fallback: true,
+         rejects,
+         crossing: None,
++        street_grid: None,
+     }
+ }
+ 
+@@ -587,6 +592,7 @@ fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: Length
+             (straight + angle * radius, 2.0 * straight + angle * radius),
+             (0.0, straight),
+         ]),
++        street_grid: None,
+     }
+ }
+ 
+diff --git a/crates/jj-procgen/src/lib.rs b/crates/jj-procgen/src/lib.rs
+index ddaeaba7..9b9bc4cc 100644
+--- a/crates/jj-procgen/src/lib.rs
++++ b/crates/jj-procgen/src/lib.rs
+@@ -43,12 +43,14 @@ use crate::seed::Streams;
+ 
+ pub const GENERATOR_ID: &str = "jj.procgen.course";
+ /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
+-pub const GENERATOR_VERSION: &str = "18";
++pub const GENERATOR_VERSION: &str = "19";
+ const STEP_M: f64 = 2.5;
+ 
+ /// What a generation produced, for `jj procgen` and the seed bank.
+ #[derive(Clone, Debug)]
+ pub struct Report {
++    pub street_grid: Option<course::StreetGrid>,
++    pub corner_angles_deg: Vec<f64>,
+     pub length_m: f64,
+     /// The seed's length class (R125).
+     pub class: tuning::ClassName,
+@@ -96,9 +98,23 @@ pub fn generate_tuned_from(
+     recipe: &[Biome],
+     data: &tuning::GeneratorData,
+ ) -> Result<(Map, Report), biome::SelectError> {
+-    let course = course::design_with(&mut st.structure, &data.course);
++    let grid = recipe == [Biome::Town]
++        && st.structure.unit() < data.course.street_grid.probability;
++    let course = if grid {
++        course::design_grid(&mut st.structure, &data.course)
++            .ok_or(biome::SelectError::NoGridLayout)?
++    } else {
++        course::design_with(&mut st.structure, &data.course)
++    };
+     let centerline = centred(&resample(&course.points));
+-    let sel = if course.crossing.is_some() {
++    let sel = if let Some(grid) = course.street_grid {
++        let (s, total) = arc_lengths(&centerline);
++        biome::select::Selection {
++            lap: vec![Biome::OutbackBitumen, Biome::Town],
++            cuts: vec![s.iter().rposition(|at| *at <= grid.highway.1).unwrap_or(0)],
++            cut_s: vec![grid.highway.1], s, total,
++        }
++    } else if course.crossing.is_some() {
+         biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
+     } else {
+         biome::select(&centerline, recipe, &mut st.structure)?
+@@ -111,6 +127,13 @@ pub fn generate_tuned_from(
+         .iter()
+         .map(|&(a, b, t)| road(if t < 0.5 { a } else { b }))
+         .collect();
++    let point_widths_m = if let Some(grid) = course.street_grid {
++        sel.s.iter().map(|at| {
++            let fade = ((at - grid.highway.1) / biome::TRANSITION_M).clamp(0.0, 1.0);
++            let seam = ((sel.total - at) / biome::TRANSITION_M).clamp(0.0, 1.0);
++            WIDTH_M * (1.0 + (data.course.street_grid.highway_width_scale - 1.0) * (1.0 - fade).max(1.0 - seam))
++        }).collect()
++    } else { Vec::new() };
+     let mut map = assemble(&TrackSpec {
+         seed: st.seed,
+         generator_id: GENERATOR_ID.into(),
+@@ -118,6 +141,7 @@ pub fn generate_tuned_from(
+         biomes: sel.biomes(),
+         centerline,
+         width_m: WIDTH_M,
++        point_widths_m,
+         surface: road(sel.lap[0]),
+         point_surfaces,
+         dressing: Vec::new(),
+@@ -226,6 +250,8 @@ fn report(course: &Course) -> Report {
+         *corners.entry(c.kind.name()).or_default() += 1;
+     }
+     Report {
++        street_grid: course.street_grid,
++        corner_angles_deg: course.corners.iter().map(|c| c.turn.to_degrees()).collect(),
+         length_m: course.length_m,
+         class: course.class,
+         preset: course.preset,
+diff --git a/crates/jj-procgen/src/tuning/mod.rs b/crates/jj-procgen/src/tuning/mod.rs
+index 0372dee3..f388dcb5 100644
+--- a/crates/jj-procgen/src/tuning/mod.rs
++++ b/crates/jj-procgen/src/tuning/mod.rs
+@@ -84,6 +84,21 @@ pub struct CourseData {
+     pub bend_spacing_m: f64,
+     pub presets: CoursePresets,
+     pub crossing: CrossingData,
++    pub street_grid: StreetGridData,
++}
++
++/// Town-only block geometry; independent of the ordinary corner-list presets.
++#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(rename_all = "camelCase", deny_unknown_fields)]
++pub struct StreetGridData {
++    pub probability: f64,
++    pub block_min_m: f64,
++    pub block_max_m: f64,
++    pub corner_radius_m: f64,
++    pub highway_radius_m: f64,
++    pub highway_min_m: f64,
++    pub highway_max_m: f64,
++    pub highway_width_scale: f64,
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+@@ -347,6 +362,25 @@ impl GeneratorData {
+         }
+         pos("course.minStraightM", c.min_straight_m, &mut bad);
+         pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
++        let grid = c.street_grid;
++        if !(0.0..=1.0).contains(&grid.probability) {
++            bad.push("course.streetGrid.probability: must be in 0..1".into());
++        }
++        for (name, value) in [
++            ("blockMinM", grid.block_min_m), ("blockMaxM", grid.block_max_m),
++            ("cornerRadiusM", grid.corner_radius_m), ("highwayRadiusM", grid.highway_radius_m),
++            ("highwayMinM", grid.highway_min_m), ("highwayMaxM", grid.highway_max_m),
++            ("highwayWidthScale", grid.highway_width_scale),
++        ] {
++            pos(&format!("course.streetGrid.{name}"), value, &mut bad);
++        }
++        if grid.block_min_m > grid.block_max_m || grid.highway_min_m > grid.highway_max_m
++            || grid.corner_radius_m * 2.0 >= grid.block_min_m
++            || grid.corner_radius_m + grid.highway_radius_m >= grid.block_min_m
++            || grid.highway_width_scale < 1.0
++        {
++            bad.push("course.streetGrid: unordered bands, overlapping corner radii or highway narrower than street".into());
++        }
+         let bridge = c.crossing;
+         for (key, value) in [
+             ("deckHeightM", bridge.deck_height_m),
+diff --git a/crates/jj-procgen/src/validate/mod.rs b/crates/jj-procgen/src/validate/mod.rs
+index 08e15a78..6a361f52 100644
+--- a/crates/jj-procgen/src/validate/mod.rs
++++ b/crates/jj-procgen/src/validate/mod.rs
+@@ -123,6 +123,7 @@ pub fn prepare_tuned(
+                     rejected: vec![match e {
+                         SelectError::NoStraight(n) => format!("no straight for boundary {n}"),
+                         SelectError::EmptyRecipe => "empty recipe".into(),
++                        SelectError::NoGridLayout => "no street-grid layout fits the tuned length band".into(),
+                     }],
+                 });
+                 return None;
+diff --git a/crates/jj-procgen/tests/bank.rs b/crates/jj-procgen/tests/bank.rs
+index 90d99963..30cf6975 100644
+--- a/crates/jj-procgen/tests/bank.rs
++++ b/crates/jj-procgen/tests/bank.rs
+@@ -104,7 +104,9 @@ fn the_conservative_recipe_is_always_available() {
+     for seed in 0..seeds().min(30) {
+         let p = prepare(seed, &[Biome::Town]);
+         assert!(p.valid && p.plan == Plan::Requested, "seed {seed}");
+-        assert_eq!(p.map.route.segments.len(), 1);
++        // A town street grid (br-xlvx.9) adds its bitumen highway as a second segment.
++        let names: Vec<&str> = p.map.route.segments.iter().map(|s| s.name.as_str()).collect();
++        assert!(names.len() == 1 || names.len() == 2 && names.iter().any(|n| n.contains("itumen")), "seed {seed}: {names:?}");
+     }
+     // An empty recipe falls to the placeholder; a repeated biome is one biome.
+     assert!(prepare(1, &[]).valid);
+diff --git a/crates/jj-procgen/tests/goldens/recipes.txt b/crates/jj-procgen/tests/goldens/recipes.txt
+index 3978d826..12044632 100644
+--- a/crates/jj-procgen/tests/goldens/recipes.txt
++++ b/crates/jj-procgen/tests/goldens/recipes.txt
+@@ -1,4 +1,4 @@
+-0 e9563d53830f987c05173b0ca012c08f74a73c9ae77aa6ed33df2b34bf8680a7
+-1 088d930960d37905fad0442a8b3349c62d6775a7f79ec7f8c14e1eaa24a3a165
+-2 7c8616e476936183042d9e2ba01c28aea14bb787b217057d1b515b9d3cc7cdca
+-4 ba1b188176ce19c5eaa56ea1ae98f0a469450ba6d5a994bacaa3192490147fe3
++0 fb8138f2d406b6f59c4649906464d222d130d62a320f4caa6a9301ac9af978f3
++1 f03c7c19232c1656aa7acff6ca484679d9c5a3dd7a1c3717c0d16c9205d52cd3
++2 bb6f932979f5616cfea877d2baee3d64cbe9387f4ba5cbfb5607fc148a420a72
++4 c147aeae079669370fdcf13ef3bbf1b409627ec6f4ed024616715c1b65111e81
+diff --git a/crates/jj-procgen/tests/goldens/seeds.txt b/crates/jj-procgen/tests/goldens/seeds.txt
+index 4553d04d..fdfab5ef 100644
+--- a/crates/jj-procgen/tests/goldens/seeds.txt
++++ b/crates/jj-procgen/tests/goldens/seeds.txt
+@@ -1,8 +1,8 @@
+-0 d335ebd7fb93ac9e88801513d2b80e26548621c27b9d01b112121b0a711c0d04
+-1 99cd3fbd93b04f8a77928f76fd173c79be232322d16f2d6533eae184a7166a08
+-2 64df9ecf86756049db0b0ac19c65fef76042022a0ca44440fe92a848435a7167
+-3 c3be22cfd8591c2e294fad078516ddbcb9dfe9b060e3b80d9b3047b4ed95db8e
+-42 15423eccaa7ce69e466871d7afeef7c3b9101461091dabef3309e6c1e9811c51
+-1000003 a937dc5254d6e68528fb0ea25d77a2b137843b37f44205606c7e323b38f77ebe
+-3735928559 8b21a63afaafe7864472adc55ae6a3ea986081694f312bb02194108145939fef
+-18446744073709551615 c18e25d1978cf4d5ba92d7e8a28688e1d3faf29eb5b6e8f8ccde33d75fccd867
++0 6d1f43b5f71718971c224054911af0b43dfbb4b469d67d20ab9794848fc1b80e
++1 07788188bbe0fe563555b0a937cdb0ee658fdbd1262af861402f55eab925630b
++2 54dd05c90eb02875b40fa7aad0e0e33d968941bb4fdfac4825b9edb32221f76f
++3 65b645291aaa967ff5498006d70ea44b4b91b516af5c751efdea0a574c2cf066
++42 61253f41fdef64fefb73d59f9b57842aef60d4b3f01d893977a9b626e6695365
++1000003 5a9f351f660d3143ae91500bf8bb16e9a21a658e95722d73ee82a04cd2e40235
++3735928559 f589197b33b2edc5a3d4fe453f92168c8ee4333b3572e4b004bfed9fb3bcbcd0
++18446744073709551615 f674d4178f817d94dee72b840bd3b312042ef4af57a9f61671ec53def20784a6
+diff --git a/crates/jj-tools/src/procgen.rs b/crates/jj-tools/src/procgen.rs
+index 63b9f4a3..d397f3fa 100644
+--- a/crates/jj-tools/src/procgen.rs
++++ b/crates/jj-tools/src/procgen.rs
+@@ -17,6 +17,9 @@ fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
+         "lengthM": (r.length_m * 10.0).round() / 10.0,
+         "class": r.class.name(),
+         "preset": r.preset.name(),
++        "family": if r.street_grid.is_some() { "streetGrid" } else { r.preset.name() },
++        "cornerAnglesDeg": r.corner_angles_deg,
++        "streetGrid": r.street_grid.map(|g| serde_json::json!({ "blockM": g.block_m, "highwayM": g.highway.1 - g.highway.0, "chicane": g.chicane })),
+         "straightsM": r.straights_m,
+         "corners": r.corners,
+         "attempts": r.attempts,
+diff --git a/crates/jj-procgen/src/course/grid.rs b/crates/jj-procgen/src/course/grid.rs
+new file mode 100644
+index 00000000..8edb64e6
+--- /dev/null
++++ b/crates/jj-procgen/src/course/grid.rs
+@@ -0,0 +1,91 @@
++//! R125 town streets: a simple lattice polygon, rounded at its intersections.
++//! The upper edge is the highway. Longer blocks add a street chicane on the
++//! return leg; no edge or intersection is reused and nothing crosses at grade.
++use super::*;
++
++#[derive(Clone, Copy, Debug, PartialEq)]
++pub struct StreetGrid {
++    pub block_m: f64,
++    pub block_depth_m: f64,
++    pub highway: (f64, f64),
++    pub chicane: bool,
++}
++
++pub fn design_grid(rng: &mut Rng, data: &CourseData) -> Option<Course> {
++    let class = draw_class(rng, data);
++    let band = data.classes.get(class);
++    let g = data.street_grid;
++    for attempt in 1..=MAX_ATTEMPTS {
++        let pitch = rng.range(g.block_min_m, g.block_max_m);
++        let depth = g.block_min_m;
++        // Keep the biome boundary on the straight, clear of the highway corner.
++        let boundary_clear = crate::biome::select::TRANSITION_M;
++        let min_x = libm::ceil((g.highway_min_m + boundary_clear + 2.0 * g.highway_radius_m) / pitch) as usize;
++        let max_x = libm::floor((g.highway_max_m + boundary_clear + 2.0 * g.highway_radius_m) / pitch) as usize;
++        let max_y = libm::ceil(band.length_max_m / (2.0 * depth)) as usize;
++        let mut candidates = Vec::new();
++        for nx in min_x..=max_x {
++            for ny in 1..=max_y {
++                for chicane in [false, true] {
++                    if chicane && (ny < 3 || nx < 5) {
++                        continue;
++                    }
++                    let mut vertices = vec![(0.0, 0.0), (nx as f64 * pitch, 0.0),
++                        (nx as f64 * pitch, ny as f64 * depth)];
++                    if chicane {
++                        // Two neighbouring blocks form a left-right-left-right
++                        // dogleg. All vertices are real grid intersections.
++                        vertices.extend([
++                            ((nx - 1) as f64 * pitch, ny as f64 * depth),
++                            ((nx - 1) as f64 * pitch, (ny - 1) as f64 * depth),
++                            ((nx - 3) as f64 * pitch, (ny - 1) as f64 * depth),
++                            ((nx - 3) as f64 * pitch, ny as f64 * depth),
++                        ]);
++                    }
++                    vertices.push((0.0, ny as f64 * depth));
++                    let (corners, pieces) = rounded(&vertices, g.corner_radius_m, g.highway_radius_m);
++                    let points = sample(&pieces);
++                    let len = length(&points);
++                    if (band.length_min_m..=band.length_max_m).contains(&len) {
++                        candidates.push((corners, pieces, points, len, chicane));
++                    }
++                }
++            }
++        }
++        if candidates.is_empty() {
++            continue;
++        }
++        let at = (rng.unit() * candidates.len() as f64) as usize;
++        let (corners, pieces, points, len, chicane) = candidates.swap_remove(at);
++        if !self_clear(&points) {
++            continue;
++        }
++        let highway = match pieces[0] { Piece::Straight(l) => (0.0, l - boundary_clear), _ => unreachable!() };
++        return Some(Course {
++            corners, straights: straights(&pieces), points, length_m: len,
++            class, preset: PresetName::Flowing, attempts: attempt,
++            fallback: false, rejects: BTreeMap::new(), crossing: None,
++            street_grid: Some(StreetGrid { block_m: pitch, block_depth_m: depth, highway, chicane }),
++        });
++    }
++    // Impossible tuned bands are a rejected generation, never a mislabeled oval.
++    None
++}
++
++fn rounded(v: &[(f64, f64)], street: f64, highway: f64) -> (Vec<Corner>, Vec<Piece>) {
++    let n = v.len();
++    let radius = |i: usize| if i < 2 { highway } else { street };
++    let mut pieces = Vec::new();
++    let mut corners = Vec::new();
++    for i in 0..n {
++        let j = (i + 1) % n;
++        let k = (i + 2) % n;
++        let a = (v[j].0 - v[i].0, v[j].1 - v[i].1);
++        let b = (v[k].0 - v[j].0, v[k].1 - v[j].1);
++        let turn = libm::atan2(a.0 * b.1 - a.1 * b.0, a.0 * b.0 + a.1 * b.1);
++        pieces.push(Piece::Straight(libm::hypot(a.0, a.1) - radius(i) - radius(j)));
++        pieces.push(Piece::Arc { turn, radius: radius(j) });
++        corners.push(Corner { kind: if j < 2 { CornerKind::Sweeper } else { CornerKind::Medium }, turn, radius: radius(j) });
++    }
++    (corners, pieces)
++}
+diff --git a/crates/jj-procgen/tests/street_grid.rs b/crates/jj-procgen/tests/street_grid.rs
+new file mode 100644
+index 00000000..e4484bdc
+--- /dev/null
++++ b/crates/jj-procgen/tests/street_grid.rs
+@@ -0,0 +1,103 @@
++//! br-xlvx.9: inspect the generated blocks and highway, then drive and replay
++//! the actual heightfield with all its town furniture and features intact.
++#![cfg(not(target_arch = "wasm32"))]
++use jj_map::{Biome, canonical_bytes, load_canonical};
++use jj_procgen::{seed::Streams, tuning::GeneratorData};
++
++fn forced() -> GeneratorData {
++    let mut data = GeneratorData::shipped().clone();
++    data.course.street_grid.probability = 1.0;
++    data
++}
++
++#[test]
++fn seed_bank_has_grid_corners_highway_width_and_no_rocks() {
++    let data = forced();
++    let registry = jj_procgen::registry();
++    let mut rows = Vec::new();
++    let mut classes = std::collections::BTreeSet::new();
++    let mut chicanes = 0;
++    for seed in 0..40 {
++        let (map, report) = jj_procgen::generate_tuned_from(Streams::new(seed), &[Biome::Town], &data).unwrap();
++        let grid = report.street_grid.expect("grid choice cannot become an ordinary course");
++        assert!((60.0..=90.0).contains(&grid.block_m));
++        assert!((300.0..=500.0).contains(&(grid.highway.1 - grid.highway.0)));
++        let right = report.corner_angles_deg.iter().filter(|a| (a.abs() - 90.0).abs() <= 10.0).count();
++        assert!(right * 10 >= report.corner_angles_deg.len() * 7);
++        assert!(map.dressing.iter().all(|d| !d.kit_piece.contains("rock")));
++        assert!(map.props.iter().all(|p| !p.kit_piece.contains("rock")));
++        assert_eq!(map.route.points.iter().map(|p| p.width).min(), Some(12_000));
++        assert_eq!(map.route.points.iter().map(|p| p.width).max(), Some(18_000));
++        let band = data.course.classes.get(report.class);
++        assert!((band.length_min_m..=band.length_max_m).contains(&report.length_m));
++        assert!(jj_procgen::validate::check(&map, &registry).is_empty(), "seed {seed}: {:?}", jj_procgen::validate::check(&map, &registry));
++        assert!(!report.fallback);
++        classes.insert(report.class);
++        chicanes += usize::from(grid.chicane);
++        rows.push(serde_json::json!({"seed":seed,"class":report.class.name(),"lengthM":report.length_m,"blockM":grid.block_m,"highwayM":grid.highway.1,"cornersDeg":report.corner_angles_deg,"chicane":grid.chicane}));
++    }
++    assert_eq!(classes.len(), 3);
++    assert!(chicanes > 0, "the bank must include block chicanes");
++    if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
++        std::fs::create_dir_all(&dir).unwrap();
++        std::fs::write(std::path::Path::new(&dir).join("street-grid-bank.json"), serde_json::to_string_pretty(&rows).unwrap()).unwrap();
++    }
++}
++
++#[test]
++fn grid_selection_is_town_only_and_about_twenty_percent() {
++    let data = GeneratorData::shipped();
++    let mut chosen = 0;
++    for seed in 0..1000 {
++        // Selection uses only the structure stream and no generation retry.
++        let mut rng = Streams::new(seed).structure;
++        chosen += usize::from(rng.unit() < data.course.street_grid.probability);
++    }
++    assert!((170..=230).contains(&chosen), "{chosen}/1000 town seeds");
++    for recipe in [&[Biome::Rocks][..], &[Biome::Town, Biome::OutbackBitumen][..]] {
++        let (_, report) = jj_procgen::generate_tuned_from(Streams::new(0), recipe, &forced()).unwrap();
++        assert!(report.street_grid.is_none());
++    }
++}
++
++#[test]
++fn grid_autopilot_laps_and_replays() {
++    let registry = jj_procgen::registry();
++    let data = forced();
++    let first = std::env::var("JJ_SEED_FROM").ok().and_then(|s| s.parse().ok()).unwrap_or(0);
++    let end = std::env::var("JJ_SEEDS").ok().and_then(|s| s.parse().ok()).unwrap_or(8);
++    for seed in first..end {
++        let (raw, report) = jj_procgen::generate_tuned_from(Streams::new(seed), &[Biome::Town], &data).unwrap();
++        assert!(report.street_grid.is_some());
++        let map = load_canonical(&canonical_bytes(&raw), &registry).unwrap();
++        let profile = jj_sim::VehicleProfile::cruz();
++        let mut sim = jj_sim::Sim::new(&map, &registry, seed, profile.clone());
++        let car = sim.spawn_grid(1)[0];
++        sim.start_race(1);
++        sim.set_autopilot(car, true);
++        let mut min_up = 1.0f32;
++        while !sim.race().is_finished(car.0) && sim.tick() < 400 * u64::from(jj_sim::TICK_HZ) {
++            sim.step();
++            min_up = min_up.min(sim.car_state(car).unwrap().up_y);
++        }
++        let race = sim.race().car(car.0).unwrap();
++        if race.finished_at.is_none() {
++            let state = sim.car_state(car).unwrap();
++            let at = raw.route.points.iter().enumerate().min_by(|(_,a),(_,b)| {
++                let d = |p: &jj_map::RoutePoint| (p.x as f64 / 1000.0 - state.position[0] as f64).powi(2) + (p.z as f64 / 1000.0 - state.position[2] as f64).powi(2);
++                d(a).total_cmp(&d(b))
++            }).unwrap();
++            eprintln!("stalled: {state:?}; nearest route {at:?}");
++            if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
++                std::fs::create_dir_all(&dir).unwrap();
++                std::fs::write(std::path::Path::new(&dir).join(format!("grid-seed{seed}-stalled-map.json")), serde_json::to_string_pretty(&raw).unwrap()).unwrap();
++            }
++        }
++        eprintln!("grid seed{seed} {:?} {:.1}m: {} ticks, upY {min_up}, recoveries {}, wrecks {}", report.class, report.length_m, sim.tick(), race.recoveries, race.wrecks);
++        assert!(race.finished_at.is_some(), "seed{seed} stalled");
++        assert_eq!((race.recoveries, race.wrecks), (0, 0));
++        assert!(min_up > 0.5);
++        let replay = jj_sim::Sim::replay(&map, &registry, profile, sim.journal(), sim.tick());
++        assert_eq!(sim.state_hash(), replay.state_hash());
++    }
++}
