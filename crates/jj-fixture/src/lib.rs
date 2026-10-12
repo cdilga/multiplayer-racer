@@ -116,6 +116,9 @@ pub fn items(sim: &Sim) -> Value {
         "effects": sim.items().effects().collect::<Vec<_>>(),
         "events": sim.items().events(),
         "refusals": sim.item_refusals(),
+        "stations": sim.stations(),
+        "offers": sim.station_offers(),
+        "boomerangs": sim.boomerangs(),
     })
 }
 

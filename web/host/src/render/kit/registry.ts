@@ -5,6 +5,7 @@ import { barrier } from './generic/barrier';
 import { bin } from './generic/bin';
 import { boxBuilding } from './generic/box-building';
 import { cone } from './generic/cone';
+import { itemStation } from './generic/item-station';
 import { post } from './generic/post';
 import { OUTBACK_BITUMEN_MODULES } from './outback_bitumen';
 import { OUTBACK_DIRT_MODULES } from './outback_dirt';
@@ -34,6 +35,7 @@ export const MODULES: Record<string, KitModule> = {
   'generic/post': post,
   'generic/box-building': boxBuilding,
   'generic/cone': cone,
+  'generic/item-station': itemStation,
   'generic/bin': bin,
   ...SIGN_MODULES,
   ...WAYFINDING_MODULES,

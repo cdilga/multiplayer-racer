@@ -221,8 +221,24 @@ fn assert_sim_replay(map: &jj_map::LoadedMap, sim: &jj_sim::Sim) {
 }
 
 #[test]
-fn sim_pickups_are_journalled_and_an_unavailable_handler_never_fires_the_fallback() {
-    let (map, mut sim, car) = world();
+fn sim_pickups_are_journalled_and_a_refused_use_never_fires_the_fallback() {
+    // Before the start: a held item is refused (not racing). The boomerang has a handler since P1-W02a, so the refusal
+    // here is the race state, not a missing handler; either way the queue and the cone fallback stay untouched.
+    let map = jj_map::load_json(
+        include_bytes!("../../../maps/greybox-loop.json"),
+        &jj_map::Registry::generic(),
+    )
+    .unwrap();
+    let mut sim = jj_sim::Sim::new(
+        &map,
+        &jj_map::Registry::generic(),
+        17,
+        jj_sim::VehicleProfile::cruz(),
+    );
+    let car = sim.spawn_car(jj_sim::route_spawn(&map, 16, 0.0, 0.6));
+    for _ in 0..240 {
+        sim.step();
+    }
     let before = sim.state_hash();
     sim.pickup_item(car, SeatId(17), ItemId::Boomerang).unwrap();
     sim.pickup_item(car, SeatId(17), ItemId::Sanga).unwrap();
@@ -240,12 +256,13 @@ fn sim_pickups_are_journalled_and_an_unavailable_handler_never_fires_the_fallbac
     assert_eq!(sim.items().queue(car.0), held);
     assert_eq!(
         sim.item_refusals().last().unwrap().2,
-        ItemUseRefusal::Unavailable
+        ItemUseRefusal::NotRacing
     );
     assert!(
         sim.utility_events().is_empty(),
         "holding an item must not drop a cone instead"
     );
+    assert!(sim.boomerangs().is_empty(), "a refused throw never flies");
     sim.step();
     assert_sim_replay(&map, &sim);
 }

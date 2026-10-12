@@ -275,6 +275,8 @@ pub fn place_in_tuned(
     map.features.sort_by_key(order);
     bake(map, &line);
     carve_recovery(map, &line);
+    // Item stations placed before these features never end up on a jump (P1-W04).
+    crate::stations::prune(map, &crate::biome::registry());
 }
 
 fn mm(v: f64) -> i32 {

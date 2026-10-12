@@ -3,7 +3,9 @@
 //! and natural expiry return effect records so implementations can undo their own changes.
 //! Neither operation owns or deletes physics debris.
 
+pub mod boomerang;
 pub mod sanga;
+pub mod stations;
 
 use std::collections::BTreeMap;
 

@@ -86,6 +86,8 @@ const WHEEL_GROUPS: InteractionGroups = groups(
         .union(GROUP_WHEEL),
 );
 const FRESH_DEBRIS_GROUPS: InteractionGroups = groups(GROUP_FRESH, SOLID_WORLD);
+/// What stops a boomerang (P1-W02a): the ground, scenery and debris; cars are hit by distance instead.
+const BOOMERANG_RAYS: InteractionGroups = groups(GROUP_PROP, SOLID_WORLD.union(GROUP_PROP));
 const GHOST_WHEEL_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
 const PROTECTED_WHEEL_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
 
@@ -239,6 +241,11 @@ pub struct Sim {
     utility_events: Vec<(u64, UtilityEvent)>,
     item_cards: crate::items::Cards,
     items: crate::items::Items,
+    /// Boomerangs in the air and the ones that landed this round (P1-W02a).
+    boomerangs: Vec<crate::items::boomerang::Flight>,
+    /// The map's item pickup stations and this tick's offers (P1-W04).
+    stations: Vec<crate::items::stations::Station>,
+    station_offers: Vec<crate::items::stations::Offer>,
     item_refusals: Vec<(u64, u32, jj_types::items::ItemUseRefusal)>,
     /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
     episodes: Episodes,
@@ -521,6 +528,29 @@ impl Sim {
             utility_events: Vec::new(),
             item_cards: crate::items::Cards::shipped().expect("shipped item cards validate"),
             items: crate::items::Items::default(),
+            boomerangs: Vec::new(),
+            stations: map
+                .map
+                .dressing
+                .iter()
+                .enumerate()
+                .filter(|(_, d)| d.kit_piece == jj_map::kit::ITEM_STATION)
+                .map(|(i, d)| crate::items::stations::Station {
+                    dressing: i as u32,
+                    position: {
+                        let (x, z) = (f64::from(d.pose.x) / 1000.0, f64::from(d.pose.z) / 1000.0);
+                        [
+                            x as f32,
+                            jj_map::jump::ground_height_m(&map.map.terrain, x, z) as f32
+                                + crate::items::stations::HOVER_M,
+                            z as f32,
+                        ]
+                    },
+                    ready_at: 0,
+                    taken: 0,
+                })
+                .collect(),
+            station_offers: Vec::new(),
             item_refusals: Vec::new(),
             props,
             statics,
@@ -788,8 +818,8 @@ impl Sim {
                     |effect| {
                         match effect.item {
                             jj_types::items::ItemId::Sanga => Ok(()),
-                            // W02 owns the physical projectile; a missing handler keeps the item.
-                            jj_types::items::ItemId::Boomerang => Err(ItemUseRefusal::Unavailable),
+                            // P1-W02a: the flight starts below, once the use is committed.
+                            jj_types::items::ItemId::Boomerang => Ok(()),
                         }
                     },
                 )
@@ -797,7 +827,10 @@ impl Sim {
             None => Err(ItemUseRefusal::Unavailable),
         };
         match result {
-            Ok(_) => {
+            Ok(effect) => {
+                if effect.item == jj_types::items::ItemId::Boomerang {
+                    self.throw_boomerang(car, &effect);
+                }
                 self.sync_sanga_dominance();
                 true
             }
@@ -2041,11 +2074,313 @@ impl Sim {
         self.check_wheel_wrecks();
         self.settle_protection();
         self.update_derby();
+        self.step_boomerangs();
+        self.offer_stations();
         self.items.expire(self.tick);
         if self.race.over.is_some() || self.derby.as_ref().is_some_and(|d| d.over(self.tick)) {
             self.items.round_end(self.tick);
+            self.drop_boomerangs();
         }
         self.sync_sanga_dominance();
+    }
+
+    /// The map's item stations: where they are, when each is ready again and how many boxes it has given (P1-W04).
+    pub fn stations(&self) -> &[crate::items::stations::Station] {
+        &self.stations
+    }
+
+    /// Each station for the renderer: its position and snapshot kind (a box printed with the item it holds, or recharging).
+    pub fn station_poses(&self) -> Vec<([f32; 3], u32)> {
+        use crate::items::stations::{
+            SNAPSHOT_KIND_READY_BOOMERANG, SNAPSHOT_KIND_READY_SANGA, SNAPSHOT_KIND_RECHARGING,
+        };
+        self.stations
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                let kind = if !s.ready(self.tick) {
+                    SNAPSHOT_KIND_RECHARGING
+                } else if s.draw(self.journal.seed, i) == jj_types::items::ItemId::Sanga {
+                    SNAPSHOT_KIND_READY_SANGA
+                } else {
+                    SNAPSHOT_KIND_READY_BOOMERANG
+                };
+                (s.position, kind)
+            })
+            .collect()
+    }
+
+    /// This tick's box offers: each car inside a ready station, with the item its box holds. The host claims one for
+    /// the car's seat with [`Sim::pickup_item`] and, only if that succeeds, takes the box with [`Sim::take_station`].
+    pub fn station_offers(&self) -> &[crate::items::stations::Offer] {
+        &self.station_offers
+    }
+
+    /// Takes a station's box after a successful pickup (a journaled command): it recharges for 5 s. A station that isn't
+    /// ready is left as it is.
+    pub fn take_station(&mut self, station: u32) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::TakeStation { station }));
+        let tick = self.tick;
+        if let Some(s) = self.stations.get_mut(station as usize)
+            && s.ready(tick)
+        {
+            s.ready_at = tick + crate::items::stations::RECHARGE_TICKS;
+            s.taken += 1;
+            self.station_offers.retain(|o| o.station != station);
+        }
+    }
+
+    /// Offers each ready station's box to every racing, unprotected car inside it.
+    fn offer_stations(&mut self) {
+        use crate::items::stations::{Offer, RADIUS_M, REACH_Y_M};
+        self.station_offers.clear();
+        let racing = self.race.started_at.is_some() && self.race.over.is_none();
+        if !racing {
+            return;
+        }
+        let seed = self.journal.seed;
+        for (si, st) in self.stations.iter().enumerate() {
+            if !st.ready(self.tick) {
+                continue;
+            }
+            let item = st.draw(seed, si);
+            for (j, c) in self.cars.iter().enumerate() {
+                if c.protected_since.is_some() || self.race.is_finished(j as u32) {
+                    continue;
+                }
+                let t = self.world.bodies[c.body].position().translation;
+                if libm::hypotf(t.x - st.position[0], t.z - st.position[2]) <= RADIUS_M
+                    && (t.y - st.position[1]).abs() <= REACH_Y_M
+                {
+                    self.station_offers.push(Offer {
+                        station: si as u32,
+                        car: j as u32,
+                        item,
+                    });
+                }
+            }
+        }
+    }
+
+    /// The boomerangs thrown this round, flying or finished, as data (P1-W02a, R90).
+    pub fn boomerangs(&self) -> &[crate::items::boomerang::Flight] {
+        &self.boomerangs
+    }
+
+    /// The boomerangs in the air for the renderer: position and a spin quaternion (x, y, z, w) about the vertical.
+    pub fn boomerang_poses(&self) -> Vec<([f32; 3], [f32; 4])> {
+        let spin = crate::items::boomerang::SPIN_RAD_PER_TICK * self.tick as f32;
+        self.boomerangs
+            .iter()
+            .filter(|f| f.active())
+            .map(|f| {
+                let a = spin + f.effect as f32;
+                (
+                    f.position,
+                    [0.0, libm::sinf(a / 2.0), 0.0, libm::cosf(a / 2.0)],
+                )
+            })
+            .collect()
+    }
+
+    /// Ends every flight still in the air (round end): it drops. Debris is never touched.
+    fn drop_boomerangs(&mut self) {
+        for f in self.boomerangs.iter_mut().filter(|f| f.active()) {
+            f.ended = Some((self.tick, crate::items::boomerang::End::Dropped));
+        }
+    }
+
+    /// Starts a boomerang flight for a committed use: from the car's front or back, at the throw speed relative to the
+    /// car plus a little sideways spin.
+    fn throw_boomerang(&mut self, car: CarId, effect: &crate::items::Effect) {
+        use crate::items::boomerang::{Flight, HEIGHT_M, Leg, SIDE_MPS, SPEED_MPS};
+        let Some(c) = self.cars.get(car.0 as usize) else {
+            return;
+        };
+        let Some(b) = self.world.bodies.get(c.body) else {
+            return;
+        };
+        let pose = b.position();
+        let fwd = pose.rotation * Vector::Z;
+        let f = Vector::new(fwd.x, 0.0, fwd.z).normalize_or_zero();
+        let side = Vector::new(f.z, 0.0, -f.x);
+        let sign = match effect.direction {
+            UtilityKind::Forward => 1.0,
+            UtilityKind::Rear => -1.0,
+        };
+        let half_l = self.profiles[c.model].chassis_half()[2];
+        let at = pose.translation + f * (sign * (half_l + 0.6));
+        let rel = f * (sign * SPEED_MPS) + side * SIDE_MPS;
+        self.boomerangs.push(Flight {
+            effect: effect.id,
+            car: car.0,
+            life: c.life,
+            position: [at.x, pose.translation.y + HEIGHT_M, at.z],
+            relative_velocity: [rel.x, 0.0, rel.z],
+            leg: Leg::Out,
+            armed_at: effect.armed_at,
+            expires_at: effect.expires_at,
+            hits: Vec::new(),
+            ended: None,
+        });
+    }
+
+    /// One tick of every flight: the spring toward the thrower, walls and debris, hits, the catch and expiry.
+    fn step_boomerangs(&mut self) {
+        use crate::items::boomerang::{
+            CATCH_RADIUS_M, End, HEIGHT_M, HIT_DAMAGE, HIT_DV_MPS, HIT_LIFT, HIT_RADIUS_M, Hit,
+            Leg, OMEGA, SANGA_SCALE,
+        };
+        let tick = self.tick;
+        for k in 0..self.boomerangs.len() {
+            if !self.boomerangs[k].active() {
+                continue;
+            }
+            let f = self.boomerangs[k].clone();
+            let thrower = self.cars.get(f.car as usize).and_then(|c| {
+                (c.life == f.life).then(|| {
+                    let b = &self.world.bodies[c.body];
+                    (b.position().translation, b.linvel())
+                })
+            });
+            let Some((home, home_v)) = thrower.filter(|_| tick < f.expires_at) else {
+                self.boomerangs[k].ended = Some((tick, End::Dropped));
+                continue;
+            };
+            let p = Vector::new(f.position[0], f.position[1], f.position[2]);
+            let r = Vector::new(p.x - home.x, 0.0, p.z - home.z);
+            let mut u = Vector::new(f.relative_velocity[0], 0.0, f.relative_velocity[2]);
+            u -= r * (OMEGA * OMEGA * DT);
+            let v = Vector::new(home_v.x, 0.0, home_v.z) + u;
+            let mut next = p + v * DT;
+            next.y = home.y + HEIGHT_M;
+            let leg = if f.leg == Leg::Out && r.dot(u) < 0.0 {
+                Leg::Back
+            } else {
+                f.leg
+            };
+            // Walls, the ground and debris stop it (cars are hit below, not ray-cast).
+            let step = next - p;
+            let stopped = step.length() > 1e-6 && {
+                let queries = self.world.broad_phase.as_query_pipeline(
+                    self.world.narrow_phase.query_dispatcher(),
+                    &self.world.bodies,
+                    &self.world.colliders,
+                    QueryFilter::default().groups(BOOMERANG_RAYS),
+                );
+                let ray = Ray::new(p, step / step.length());
+                queries
+                    .cast_ray(&ray, step.length(), true)
+                    .map(|(_, toi)| p + ray.dir * toi)
+            }
+            .map(|at| next = at)
+            .is_some();
+            {
+                let f = &mut self.boomerangs[k];
+                f.position = [next.x, next.y, next.z];
+                f.relative_velocity = [u.x, 0.0, u.z];
+                f.leg = leg;
+            }
+            if stopped {
+                self.boomerangs[k].ended = Some((tick, End::Stopped));
+                continue;
+            }
+            if leg == Leg::Back && libm::hypotf(next.x - home.x, next.z - home.z) < CATCH_RADIUS_M {
+                self.boomerangs[k].ended = Some((tick, End::Caught));
+                continue;
+            }
+            if tick < f.armed_at {
+                continue;
+            }
+            let dir = Vector::new(v.x, 0.0, v.z).normalize_or_zero();
+            for j in 0..self.cars.len() {
+                if j as u32 == f.car
+                    || self.cars[j].protected_since.is_some()
+                    || self.race.is_finished(j as u32)
+                    || self.boomerangs[k].hit_this_leg(j as u32)
+                {
+                    continue;
+                }
+                let body = self.cars[j].body;
+                let (q, rot, mass, linvel) = {
+                    let b = &self.world.bodies[body];
+                    (
+                        b.position().translation,
+                        b.position().rotation,
+                        b.mass(),
+                        b.linvel(),
+                    )
+                };
+                if libm::hypotf(next.x - q.x, next.z - q.z) > HIT_RADIUS_M
+                    || (next.y - q.y).abs() > 2.0
+                {
+                    continue;
+                }
+                let scale = if self.sanga_state_at(CarId(j as u32), tick).is_some() {
+                    SANGA_SCALE
+                } else {
+                    1.0
+                };
+                let dv = HIT_DV_MPS * scale;
+                let impulse = (dir + Vector::Y * HIT_LIFT) * (mass * dv);
+                self.ledger +=
+                    f64::from(impulse.dot(linvel) + impulse.length_squared() / (2.0 * mass));
+                if let Some(b) = self.world.bodies.get_mut(body) {
+                    b.apply_impulse(impulse, true);
+                }
+                // The struck part: the one whose pivot is nearest the boomerang, in the car's frame.
+                let local = rot.inverse() * (next - q);
+                let model = self.cars[j].model;
+                let geo = &self.profiles[model].geometry.parts;
+                let t = self.profiles[model].tuning.damage.clone();
+                let part = (1..self.cars[j].parts.len())
+                    .filter(|&i| self.cars[j].damage.state(i, &t) != PartState::Detached)
+                    .min_by(|&a, &b| {
+                        let d = |i: usize| {
+                            geo.get(i).map_or(f32::MAX, |g| {
+                                (Vector::new(g.pivot[0], g.pivot[1], g.pivot[2]) - local)
+                                    .length_squared()
+                            })
+                        };
+                        d(a).total_cmp(&d(b))
+                    });
+                let damage = HIT_DAMAGE * scale;
+                if let Some(i) = part {
+                    let was = self.cars[j].damage.state(i, &t);
+                    self.cars[j].damage.charge(i, damage);
+                    let now = self.cars[j].damage.state(i, &t);
+                    if now != was {
+                        let (cause, instigator) =
+                            (damage::OtherBody::Car { car: f.car }, Some(f.car));
+                        let e = match now {
+                            PartState::Detached => DamageEvent::PartDetached {
+                                car: j as u32,
+                                part: i as u8,
+                                cause,
+                                instigator,
+                            },
+                            _ => DamageEvent::PartLoose {
+                                car: j as u32,
+                                part: i as u8,
+                                cause,
+                                instigator,
+                            },
+                        };
+                        self.damage_events.push((tick, e));
+                    }
+                }
+                self.boomerangs[k].hits.push(Hit {
+                    tick,
+                    car: j as u32,
+                    leg,
+                    part: part.map_or(0, |i| i as u8),
+                    dv_mps: dv,
+                    damage: if part.is_some() { damage } else { 0.0 },
+                });
+            }
+        }
     }
 
     /// Feeds the derby ledger this tick's control modes, protection and damage events (P1-S10).
@@ -2888,6 +3223,15 @@ impl Sim {
         h.update(&race);
         let mut items = Vec::new();
         self.items.hash_into(&mut items);
+        // Boomerang flights and taken stations are hashed only once there are any, so sims without them keep their hashes.
+        for f in &self.boomerangs {
+            f.hash_into(&mut items);
+        }
+        for s in self.stations.iter().filter(|s| s.taken > 0) {
+            items.extend(s.dressing.to_le_bytes());
+            items.extend(s.ready_at.to_le_bytes());
+            items.extend(s.taken.to_le_bytes());
+        }
         h.update(&items);
         // R125: assist state is hashed only where an assist or catch-up is on, so sims without them keep their hashes.
         let mut assist = Vec::new();
@@ -3005,6 +3349,7 @@ impl Sim {
                     Setup::PickupItem { car, seat, item } => {
                         let _ = sim.pickup_item(CarId(*car), *seat, *item);
                     }
+                    Setup::TakeStation { station } => sim.take_station(*station),
                     Setup::RailState {
                         dressing,
                         displacement_m,

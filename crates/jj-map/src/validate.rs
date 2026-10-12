@@ -91,6 +91,8 @@ pub enum Rule {
     RoofReach,
     /// A bridge's deck, ramp grade or lower-road clearance breaks the crossing contract (R124).
     Crossing,
+    /// An item station stands in the start corridor or on a jump (P1-W04).
+    ItemStation,
 }
 
 impl Rule {
@@ -123,6 +125,7 @@ impl Rule {
             Self::Arena => "arena",
             Self::RoofReach => "roof-reach",
             Self::Crossing => "crossing",
+            Self::ItemStation => "item-station",
         }
     }
 }
@@ -449,7 +452,8 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                 let nr = geom.nearest(p.0, p.1);
                 nr.lateral.abs() <= nr.half + CAMERA_MARGIN_MM
             });
-            if near_road && fp.height() > CAMERA_LOW_MM {
+            // An item station hovers over the road on purpose (P1-W04): cars and cameras pass through it.
+            if near_road && fp.height() > CAMERA_LOW_MM && d.kit_piece != crate::kit::ITEM_STATION {
                 v.push(Violation::new(
                     Rule::CameraClearance,
                     &format!("dressing[{i}]"),
@@ -804,6 +808,40 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                     Rule::StartCorridor,
                     "route.start",
                     format!("{what} is in the start corridor"),
+                );
+            }
+        }
+        for (i, d) in map.dressing.iter().enumerate() {
+            if d.kit_piece == crate::kit::ITEM_STATION
+                && in_corridor(f64::from(d.pose.x), f64::from(d.pose.z))
+            {
+                add(
+                    &mut v,
+                    Rule::ItemStation,
+                    &format!("dressing[{i}]"),
+                    "an item station stands in the start corridor".into(),
+                );
+            }
+        }
+    }
+
+    // Item stations (P1-W04) never stand on a jump's ramp or landing, with 2 m to spare.
+    for (i, d) in map.dressing.iter().enumerate() {
+        if d.kit_piece != crate::kit::ITEM_STATION {
+            continue;
+        }
+        let nr = geom.nearest(f64::from(d.pose.x), f64::from(d.pose.z));
+        const SPARE_MM: f64 = 2000.0;
+        for (what, s0, s1, lo, hi) in feature_zones.iter().filter(|z| z.0.contains(" jump ")) {
+            if geom.in_range(nr.s, s0 - SPARE_MM, s1 + SPARE_MM)
+                && nr.lateral >= lo - SPARE_MM
+                && nr.lateral <= hi + SPARE_MM
+            {
+                add(
+                    &mut v,
+                    Rule::ItemStation,
+                    &format!("dressing[{i}]"),
+                    format!("an item station stands on the {what}"),
                 );
             }
         }

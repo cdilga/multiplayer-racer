@@ -152,7 +152,12 @@ fn nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_
                 .map(|k| line[(st.at as usize + n - k) % n])
                 .collect();
             let mut reaches = Vec::new();
-            for d in &map.dressing {
+            // Item pickup stations hover over the road on purpose (P1-W04); everything else stays clear of it.
+            for d in map
+                .dressing
+                .iter()
+                .filter(|d| d.kit_piece != jj_map::kit::ITEM_STATION)
+            {
                 let fp = registry
                     .get(&d.kit_piece)
                     .unwrap()

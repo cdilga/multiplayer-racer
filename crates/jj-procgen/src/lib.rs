@@ -27,6 +27,7 @@ pub mod roofs;
 pub mod scatter;
 pub mod seed;
 pub mod signs;
+pub mod stations;
 pub mod terrain;
 pub mod tuning;
 pub mod validate;
@@ -43,7 +44,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "19";
+pub const GENERATOR_VERSION: &str = "20";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -152,8 +153,9 @@ pub fn generate_tuned_from(
         .collect();
     let ranges = crossings::feature_ranges(&map, &ranges);
     features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
-    biome::wayfinding::place(&mut map);
     let registry = biome::registry();
+    stations::place(&mut map, &data.item_stations, &registry);
+    biome::wayfinding::place(&mut map);
     // Each biome's rules along its own stretches (houses facing the street, lane lines, signs...), before the scatter fills
     // the ground around them.
     for b in sel.biomes() {

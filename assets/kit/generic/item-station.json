@@ -1,0 +1,17 @@
+{
+  "id": "generic/item-station",
+  "version": 1,
+  "what": "An item pickup station (P1-W04): a cardboard delivery box hovering over the road with the item's picture on it. A car driving through it is offered a deterministic draw; it recharges for 5 s after a pickup. Never collides.",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 1300,
+      "y": 1300,
+      "z": 1300
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 40000,
+    "cullBeyondMm": 200000
+  }
+}

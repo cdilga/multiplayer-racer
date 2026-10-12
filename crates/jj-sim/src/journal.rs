@@ -163,6 +163,10 @@ pub enum Setup {
         dressing: u32,
         fixed: bool,
     },
+    /// A station's box was taken after a successful pickup (P1-W04). Appended: variant indices stay stable.
+    TakeStation {
+        station: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -104,7 +104,10 @@ pub struct Registry {
 }
 
 /// The generic pieces M01 ships (`assets/kit/generic/`), compiled in so every target validates the greybox alike.
-pub const GENERIC_PIECES: [(&str, &str); 5] = [
+/// The item pickup station (P1-W04): a delivery box over the road that replenishes; drawn and offered by the sim.
+pub const ITEM_STATION: &str = "generic/item-station";
+
+pub const GENERIC_PIECES: [(&str, &str); 6] = [
     (
         "generic/barrier",
         include_str!("../../../assets/kit/generic/barrier.json"),
@@ -124,6 +127,10 @@ pub const GENERIC_PIECES: [(&str, &str); 5] = [
     (
         "generic/post",
         include_str!("../../../assets/kit/generic/post.json"),
+    ),
+    (
+        ITEM_STATION,
+        include_str!("../../../assets/kit/generic/item-station.json"),
     ),
 ];
 

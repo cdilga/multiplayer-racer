@@ -417,6 +417,7 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::RailFixed { dressing, fixed } => {
             sim.set_rail_fixed(*dressing, *fixed);
         }
+        Setup::TakeStation { station } => sim.take_station(*station),
     }
 }
 

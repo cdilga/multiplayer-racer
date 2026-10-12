@@ -157,6 +157,18 @@ pub struct CrossingData {
     pub max_grade_milli: i64,
 }
 
+/// Item pickup station rows (P1-W04): where along the route, and the boxes' offsets across the road.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StationData {
+    /// The first row's arc length from the route's start, m.
+    pub first_m: f64,
+    /// Arc length between rows, m.
+    pub spacing_m: f64,
+    /// Each box's offset from the centre line, m (+ = left of travel).
+    pub lateral_m: Vec<f64>,
+}
+
 /// Ordinary jump ramp grades (rise/run), tunable before regeneration.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -250,6 +262,7 @@ pub struct GeneratorData {
     pub mix: MixData,
     pub course: CourseData,
     pub jumps: JumpData,
+    pub item_stations: StationData,
     pub biomes: Biomes,
     pub roof_stunts: crate::roofs::RoofStunts,
 }
@@ -329,6 +342,16 @@ impl GeneratorData {
                 "jumps: ramp slopes ordered inside the ordinary-jump envelope, take-off speed 26-45 m/s, landing slope 0.04-0.16"
                     .into(),
             );
+        }
+        let st = &self.item_stations;
+        if !(st.first_m.is_finite() && st.first_m >= 0.0)
+            || !(st.spacing_m.is_finite() && st.spacing_m >= 60.0)
+            || st
+                .lateral_m
+                .iter()
+                .any(|l| !(l.is_finite() && l.abs() <= 4.5))
+        {
+            bad.push("itemStations: firstM >= 0, spacingM >= 60 and each lateralM within 4.5 m of the centre".into());
         }
         if self.version != VERSION {
             bad.push(format!("version {} (expected {VERSION})", self.version));

@@ -183,7 +183,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
-      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
+      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span><span class="item display" data-hud="item" role="status" hidden></span></div>
 </div>
     </section>`;
     // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
@@ -387,9 +387,24 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const posEl = app.querySelector<HTMLElement>('[data-hud=pos]');
     if (posEl) posEl.innerHTML = h?.position ? `${h.position}<sup>${place(h.position).slice(String(h.position).length)}</sup>` : '';
     set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
+    paintItem();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
     updateFullscreen();
+  };
+
+  /** The held item (P1-W04/W05): what a flick of the right stick uses, and whether another is queued behind it. */
+  const paintItem = () => {
+    const el = app.querySelector<HTMLElement>('[data-hud=item]');
+    if (!el) return;
+    const { front, back } = session.inventory;
+    el.hidden = !front;
+    if (!front) return;
+    const what = front === 'boomerang' ? 'Boomerang' : 'Sanga';
+    const how = front === 'boomerang' ? 'flick ↑ throw · ↓ back' : 'flick to eat';
+    el.dataset.item = front;
+    el.setAttribute('aria-label', `${what}: ${how}${back ? ', one more held' : ''}`);
+    el.innerHTML = `${what}${back ? ' <b>+1</b>' : ''} <small>${how}</small>`;
   };
 
   /** The full-screen tool's state, its Add to Home Screen note, and the "Back to full screen" prompt (P1-C02b). */

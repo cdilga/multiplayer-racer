@@ -1,6 +1,6 @@
 {
   "scenario": "item-queue-refusal",
-  "what": "P1-W01: two offers fill the FIFO; a third full-queue offer creates no pickup. An ACTION use retains the queue and says Unavailable until the W02 physical boomerang handler ships. No physical effect is claimed.",
+  "what": "P1-W01: two offers fill the FIFO; a third full-queue offer creates no pickup. Since P1-W02a the ACTION use throws the front boomerang (its flight is the W02 bank's) and the sanga moves to the front.",
   "map": "maps/greybox-loop.json",
   "seed": 17,
   "ticks": 300,

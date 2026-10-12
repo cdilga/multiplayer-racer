@@ -7,6 +7,7 @@
 //   them as shapes (P1-M03d). One draw.
 // - Dressing: one InstancedMesh per kit-piece type (render/kit), so draws scale with types, not placements.
 // Props are dynamic: PropRenderer draws them from the snapshot's debris records with the same kit modules.
+import { stationPad, stationSanga } from '../kit/generic/item-station';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -538,6 +539,8 @@ export class MapRenderer {
     const byType = new Map<string, { pose: Pose; params: Params; dressing: number }[]>();
     for (let r = 0; r < repeat; r++) {
       for (const [dressing, d] of this.map.dressing.entries()) {
+        // Item stations are drawn from the snapshot (ready or recharging, P1-W04), not as static dressing.
+        if (d.kitPiece === 'generic/item-station') continue;
         // Copies shift 3 m sideways per repeat: a draw-count probe, never a shipped placement.
         const pose = r === 0 ? d.pose : { ...d.pose, x: d.pose.x + r * 3000, z: d.pose.z + r * 3000 };
         (byType.get(d.kitPiece) ?? byType.set(d.kitPiece, []).get(d.kitPiece)!).push({ pose, params: d.params ?? {}, dressing });
@@ -671,6 +674,10 @@ export class PropRenderer {
   /** Debris i: a map prop while i is one of them (kind 0), a dropped cone (kind 1), else spawned debris. */
   private pieceOf(i: number, kind: number): { id: string; params: Params } {
     if (kind === 1) return { id: 'generic/cone', params: {} };
+    if (kind === DEBRIS_BOOMERANG) return { id: 'item/boomerang', params: {} };
+    if (kind === STATION_BOOMERANG) return { id: 'generic/item-station', params: {} };
+    if (kind === STATION_SANGA) return { id: 'item/station-sanga', params: {} };
+    if (kind === STATION_RECHARGING) return { id: 'item/station-charging', params: {} };
     return this.mapProps[i] ?? { id: 'debris', params: {} };
   }
 
@@ -681,7 +688,12 @@ export class PropRenderer {
       while (cap < n) cap *= 2;
       if (im) this.scene.remove(im);
       const mod = MODULES[id];
-      im = new InstancedMesh(mod ? mod.geometry() : debrisGeometry(), this.material, cap);
+      const special: Record<string, () => BufferGeometry> = {
+        'item/boomerang': boomerangGeometry,
+        'item/station-sanga': stationSanga,
+        'item/station-charging': stationPad,
+      };
+      im = new InstancedMesh(mod ? mod.geometry() : (special[id] ?? debrisGeometry)(), this.material, cap);
       im.name = `prop:${id}`;
       im.castShadow = true;
       im.frustumCulled = false;
@@ -719,6 +731,43 @@ export class PropRenderer {
   counts(): Record<string, number> {
     return Object.fromEntries([...this.meshes].map(([id, im]) => [id, im.count]));
   }
+}
+
+/** A boomerang in the air (P1-W02a), the snapshot's debris kind 4 after debris, cone, part and husk. */
+const DEBRIS_BOOMERANG = 4;
+/** Item stations (P1-W04): ready with a boomerang, recharging, ready with a sanga. */
+const STATION_BOOMERANG = 5;
+const STATION_RECHARGING = 6;
+const STATION_SANGA = 7;
+
+/** A code-built boomerang (R81): two flat wooden arms at 100 degrees with painted stripes, about 2.4 m tip to tip
+ *  (cartoon-sized so it reads on a TV across the room), centred on its spin axis. */
+function boomerangGeometry(): BufferGeometry {
+  const s = new Soup();
+  const arm = (angle: number, colour: string, lift: number, w: number) => {
+    const [c, si] = [Math.cos(angle), Math.sin(angle)];
+    const [l, t] = [1.25, 0.06];
+    const corner = (u: number, v: number): number[] => [u * c - v * si, lift, u * si + v * c];
+    const top = [corner(0, -w), corner(l, -w), corner(l, w), corner(0, w)].map(([x, y, z]) => [x!, y! + t, z!]);
+    const bottom = [corner(0, w), corner(l, w), corner(l, -w), corner(0, -w)].map(([x, y, z]) => [x!, y! - t, z!]);
+    s.quad(top[0]!, top[3]!, top[2]!, top[1]!, colour);
+    s.quad(bottom[0]!, bottom[3]!, bottom[2]!, bottom[1]!, colour);
+    for (let k = 0; k < 4; k++) {
+      const [a, b] = [top[k]!, top[(k + 1) % 4]!];
+      const [bb, ba] = [[b[0]!, b[1]! - 2 * t, b[2]!], [a[0]!, a[1]! - 2 * t, a[2]!]];
+      s.quad(a, ba, bb, b, colour);
+    }
+  };
+  const half = (100 * Math.PI) / 180 / 2;
+  arm(-half, '#b5763a', 0, 0.2);
+  arm(half, '#b5763a', 0, 0.2);
+  arm(-half, '#f2c230', 0.001, 0.07);
+  arm(half, '#d8452f', 0.001, 0.07);
+  const g = new BufferGeometry();
+  g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
+  g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
+  g.computeVertexNormals();
+  return g;
 }
 
 /** Spawned debris has no kit piece: a dark half-metre chunk. */

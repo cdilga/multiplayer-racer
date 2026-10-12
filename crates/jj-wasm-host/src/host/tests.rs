@@ -3602,3 +3602,41 @@ fn controllers_menu_actions_apply_while_paused_and_survive_resume_sample_discard
         "only the two new seats own active cars; withdrawn dynamic husks may remain"
     );
 }
+
+#[test]
+fn a_thrown_boomerang_is_a_debris_record_of_its_own_kind_in_the_snapshot() {
+    // P1-W02a: the renderer draws a boomerang in the air from the snapshot: kind 4, after the props.
+    let mut h = Host::new(&init()).unwrap();
+    let car = h.sim.spawn_car(jj_sim::route_spawn(
+        &load_json(GREYBOX.as_bytes(), &Registry::generic()).unwrap(),
+        16,
+        0.0,
+        0.6,
+    ));
+    h.sim.start_race(3);
+    for _ in 0..240 {
+        h.sim.step();
+    }
+    h.sim
+        .pickup_item(car, jj_types::SeatId(1), jj_types::items::ItemId::Boomerang)
+        .unwrap();
+    assert!(matches!(
+        h.utility_outcome(car, jj_sim::UtilityKind::Forward),
+        jj_protocol::cmd::ActionOutcome::Applied { .. }
+    ));
+    h.sim.step();
+    let mut buf = vec![0u8; h.snapshot_size()];
+    assert!(h.write_snapshot(&mut buf) > 0);
+    let cars = h.sim().cars().count();
+    let debris = u32::from_le_bytes(buf[32..36].try_into().unwrap()) as usize;
+    let kinds: Vec<u32> = (0..debris)
+        .map(|i| {
+            let at = SNAPSHOT_HEADER + SNAPSHOT_CAR * cars + SNAPSHOT_DEBRIS * i + 28;
+            u32::from_le_bytes(buf[at..at + 4].try_into().unwrap())
+        })
+        .collect();
+    assert!(
+        kinds.contains(&jj_sim::items::boomerang::SNAPSHOT_KIND),
+        "{kinds:?}"
+    );
+}

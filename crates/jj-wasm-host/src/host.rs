@@ -767,7 +767,21 @@ impl Host {
         self.collect_race_events();
         self.collect_utility_events();
         self.collect_damage_events();
+        self.claim_station_offers();
         self.collect_items();
+    }
+
+    /// P1-W04: each box a car is driving through goes to that car's seat; only a successful pickup takes the box.
+    fn claim_station_offers(&mut self) {
+        let offers: Vec<_> = self.sim.station_offers().to_vec();
+        for o in offers {
+            let Some(seat) = self.seat_of_car(o.car) else {
+                continue;
+            };
+            if self.sim.pickup_item(CarId(o.car), seat, o.item).is_ok() {
+                self.sim.take_station(o.station);
+            }
+        }
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
@@ -1583,7 +1597,10 @@ impl Host {
     pub fn snapshot_size(&self) -> usize {
         SNAPSHOT_HEADER
             + SNAPSHOT_CAR * self.sim.cars().count()
-            + SNAPSHOT_DEBRIS * self.sim.debris_poses().len()
+            + SNAPSHOT_DEBRIS
+                * (self.sim.debris_poses().len()
+                    + self.sim.boomerang_poses().len()
+                    + self.sim.station_poses().len())
             + SNAPSHOT_PART * (self.sim.part_records().len() + self.sim.piece_records().len())
             + if self.sim.rail_count() == 0 {
                 0
@@ -1622,7 +1639,11 @@ impl Host {
         w.u32(self.pause_mask());
         w.u32((self.countdown_us() / 1000) as u32);
         w.u32(cars.len() as u32);
-        w.u32(debris.len() as u32);
+        // Boomerangs in the air (P1-W02a) follow the props as debris records of their own kind.
+        let boomerangs = self.sim.boomerang_poses();
+        // ... and item stations (P1-W04), each with its box there or recharging.
+        let stations = self.sim.station_poses();
+        w.u32((debris.len() + boomerangs.len() + stations.len()) as u32);
         let parts = self.sim.part_records();
         let pieces = self.sim.piece_records();
         w.u32((parts.len() + pieces.len()) as u32);
@@ -1669,6 +1690,16 @@ impl Host {
             };
             p.iter().chain(r).for_each(|&v| w.f32(v));
             w.u32(kind);
+        }
+        for (p, r) in &boomerangs {
+            p.iter().chain(r).for_each(|&v| w.f32(v));
+            w.u32(jj_sim::items::boomerang::SNAPSHOT_KIND);
+        }
+        for (p, kind) in &stations {
+            p.iter()
+                .chain(&[0.0, 0.0, 0.0, 1.0])
+                .for_each(|&v| w.f32(v));
+            w.u32(*kind);
         }
         for (car, part, state, angle, body) in parts {
             w.u32(car);

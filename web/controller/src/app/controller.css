@@ -34,6 +34,10 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .strip .pos { font-size: 34px; color: var(--c-saffron); }
 .strip .pos sup { font-size: .5em; vertical-align: .7em; text-transform: none; }
 .strip .lap { font-size: 15px; }
+/* The held item (P1-W04/W05): a cardboard-coloured chip under the lap, with the flick it takes. */
+.strip .item { display: inline-block; margin-top: 4px; padding: 3px 8px; border-radius: 6px; background: #c4955a; color: #1f1a14; font-size: 15px; }
+.strip .item small { display: block; font-size: 11px; opacity: .8; }
+.strip .item b { color: #8a1f12; }
 .tools { display: flex; gap: 8px; justify-content: center; padding: 8px 12px; flex-wrap: wrap; }
 .tools .btn { min-height: 48px; font-size: 15px; padding: 0 12px; }
 .tools .btn.identify { background: var(--seat); color: var(--seat-on); }

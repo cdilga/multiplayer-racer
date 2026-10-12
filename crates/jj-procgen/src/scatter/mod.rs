@@ -290,7 +290,9 @@ pub fn scatter_masked(
     if fresh {
         let kept = crate::lineside::rule_ids();
         map.dressing.retain(|d| {
-            d.kit_piece.starts_with("wayfinding/") || kept.contains(&d.kit_piece.as_str())
+            d.kit_piece.starts_with("wayfinding/")
+                || d.kit_piece == jj_map::kit::ITEM_STATION
+                || kept.contains(&d.kit_piece.as_str())
         });
     }
     let b = map.header.bounds;

@@ -100,6 +100,12 @@ enum Command {
         car: u32,
         item: jj_types::items::ItemId,
     },
+    /// A right-stick flick, as the host applies a controller's `Action` (P1-W05): uses the held item, or fires the
+    /// utility when nothing is held. `forward` false is the rear flick.
+    Utility {
+        car: u32,
+        forward: bool,
+    },
     Step {
         ticks: u64,
     },
@@ -295,6 +301,14 @@ impl Host {
                     self.sim.set_autopilot(c, on);
                 }
                 json!({ "cars": cars.len(), "on": on })
+            }
+            Command::Utility { car, forward } => {
+                let kind = if forward {
+                    jj_sim::UtilityKind::Forward
+                } else {
+                    jj_sim::UtilityKind::Rear
+                };
+                json!({ "outcome": format!("{:?}", self.utility_outcome(jj_sim::CarId(car), kind)) })
             }
             Command::FinishRace => {
                 let ended = self.sim.end_race_now();

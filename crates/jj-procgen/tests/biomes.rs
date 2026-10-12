@@ -135,7 +135,11 @@ fn surface_at(map: &Map, x: f64, z: f64) -> Surface {
 fn on_road_by_design(d: &Dressing) -> bool {
     matches!(
         d.kit_piece.as_str(),
-        "outback_bitumen/centre-line" | "town/side-street" | "town/power-line"
+        "outback_bitumen/centre-line"
+            | "town/side-street"
+            | "town/power-line"
+            // Item pickup stations hover over the road on purpose (P1-W04).
+            | jj_map::kit::ITEM_STATION
     )
 }
 

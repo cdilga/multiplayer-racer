@@ -28,16 +28,13 @@ fn scheduled_offers_preserve_fifo_full_queue_and_action_refusal_and_replay() {
     assert_eq!(front(&rows[0]), "boomerang");
     assert_eq!(back(&rows[0]), "sanga");
     assert_eq!(rows[0]["items"]["events"].as_array().unwrap().len(), 2);
+    // The ACTION use throws the front boomerang (P1-W02a): the sanga moves up, nothing is refused, one flight is out.
     let end = rows.last().unwrap();
-    assert_eq!(front(end), "boomerang");
-    assert_eq!(back(end), "sanga");
-    assert_eq!(end["items"]["refusals"][0][2], "unavailable");
-    assert_eq!(end["items"]["effects"].as_array().unwrap().len(), 0);
-    assert!(output.recorded.trace.iter().any(|row| {
-        row["items"]["refusals"]
-            .as_array()
-            .is_some_and(|r| !r.is_empty())
-    }));
+    assert_eq!(front(end), "sanga");
+    assert!(back(end).is_null());
+    assert!(end["items"]["refusals"].as_array().unwrap().is_empty());
+    assert_eq!(end["items"]["effects"].as_array().unwrap().len(), 1);
+    assert_eq!(end["items"]["boomerangs"].as_array().unwrap().len(), 1);
 }
 
 #[test]

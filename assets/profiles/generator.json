@@ -176,6 +176,11 @@
     "takeoffSpeedMps": 30.0,
     "landingSlope": 0.09
   },
+  "itemStations": {
+    "firstM": 160.0,
+    "spacingM": 320.0,
+    "lateralM": [-3.5, 0.0, 3.5]
+  },
   "roofStunts": {
     "spacingM": 120.0,
     "offsetMinM": 28.0,
