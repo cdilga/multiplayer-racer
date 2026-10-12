@@ -13,3 +13,5 @@ Local Mac validation after the fixture change:
 - Main CI containing this fixture is pending. The earlier eris WebKit host-boot failure was a different environment failure and is not treated as reproduction of this defect.
 
 This receipt proves loopback browser connectivity, not physical Safari/phone networking. Deployed review and containing Linux CI remain required; no bead close is claimed.
+
+GPU run3699/job8472 at11302577 passed15/18 tests, including measured hardware JN5 (34.9s), but all three R13 cases failed immediately with `spawn turnserver ENOENT`. The GPU host executor on eris has Docker, not host coturn. The fixture now uses the existing coturn4.7.0 image pinned by digest, with host networking and the same real STUN binding readiness check, when Linux has no native executable. Cleanup removes the named per-test container. Native coturn remains the main CI/Mac path. This is a real service dependency repair; no test is skipped or assertion relaxed. Mac readiness/start/stop passes; Linux journeys are being repeated on the committed repair.

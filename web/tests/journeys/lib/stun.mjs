@@ -1,6 +1,6 @@
 // Same-engine WebKit journeys need real STUN in Linux CI: the container cannot resolve .local ICE names.
 // Production already supplies STUN. Reuse the transport bank's real coturn/readiness shape, with TURN disabled.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createSocket } from 'node:dgram';
 import { serve } from '../../../landing/tests/lib/site.mjs';
@@ -10,13 +10,26 @@ export async function serveWithLocalStun(dist, base) {
   await new Promise(resolve => free.bind(0, '127.0.0.1', resolve));
   const port = free.address().port;
   free.close();
-  const child = spawn('turnserver', ['-n', '--stun-only', '--no-auth', '--listening-ip=127.0.0.1',
+  const args = ['-n', '--stun-only', '--no-auth', '--listening-ip=127.0.0.1',
     `--listening-port=${port}`, '--realm=jj.test', '--no-tls', '--no-cli',
-    '--relay-threads=1', '--log-file=stdout'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    '--relay-threads=1', '--log-file=stdout'];
+  // The native GPU runner has Docker rather than a host coturn installation.
+  // Host networking keeps the real STUN service on the same loopback as peers.
+  const container = process.platform === 'linux' && spawnSync('which', ['turnserver']).status !== 0
+    ? `jj-journey-stun-${process.pid}-${port}` : null;
+  const child = container
+    ? spawn('docker', ['run', '--rm', '--network=host', '--name', container, 'coturn/coturn@sha256:a00afb5b4890de4df22bbe70379c6b316685dffee297d53cac1271dcb91fab93', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
+    : spawn('turnserver', args, { stdio: ['ignore', 'pipe', 'pipe'] });
   let log = '', failure;
   child.once('error', error => { failure = error; });
   for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { log += chunk; });
   const stop = async () => {
+    if (container) {
+      await new Promise(resolve => {
+        const remove = spawn('docker', ['rm', '-f', container], { stdio: 'ignore' });
+        remove.once('error', resolve); remove.once('close', resolve);
+      });
+    }
     if (!child.pid || child.exitCode !== null || child.signalCode !== null) return;
     await new Promise(resolve => { child.once('close', resolve); child.kill(); });
   };
