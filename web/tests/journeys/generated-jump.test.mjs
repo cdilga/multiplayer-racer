@@ -28,8 +28,10 @@ before(async () => {
   const mapPath = join(mapDir, 'map.json');
   mapJson = readFileSync(mapPath, 'utf8');
   const map = JSON.parse(mapJson);
-  const jump = map.features.filter(f => f.kind === 'jump')[4];
-  assert.ok(jump, 'the recorded seed-7 regression jump exists');
+  // The seed's biggest jump (highest lip; a road-wide one since br-gw74.13.1, generator v21), not a fixed index: the
+  // generator's placements move whenever it changes on purpose.
+  const jump = map.features.filter(f => f.kind === 'jump').sort((a, b) => b.params.lipHeightCm - a.params.lipHeightCm)[0];
+  assert.ok(jump, 'seed 7 places a jump');
   const pts = map.route.points;
   const base = pts.reduce((best, p, i) => (p.x-jump.pose.x)**2 + (p.z-jump.pose.z)**2 < (pts[best].x-jump.pose.x)**2 + (pts[best].z-jump.pose.z)**2 ? i : best, 0);
   const start = (base + pts.length - 4) % pts.length;
