@@ -43,6 +43,8 @@ async function join(host, from, to) {
 /** Presses Identify for seat number `n`; returns what the TV shows for it. */
 async function identify(host, n) {
   const before = await host.evaluate(() => window.__jjRoom.identified().length);
+  const cdp = await host.context().newCDPSession(host);
+  try {
   // A claim flashes Identify itself and starts the seat's 3 s (sim-time) limit; a loaded host runs fewer ticks than real
   // time, so a press soon after joining can be refused as limited. Press again until it lands, as a player would.
   for (let tries = 0; ; tries++) {
@@ -56,13 +58,16 @@ async function identify(host, n) {
         if (!window.__jjRoom.identified().slice(before).some(e => e.seat === seat.seat)) return false;
         const box = document.querySelector(`.hud-tile.identify[data-seat="${seat.seat}"]`);
         if (!box) return false;
+        const marks = window.__jjRender.identifyMarks();
+        // The label follows the rendered snapshot; observe the pulse and its visible billboard together.
+        if (!marks.includes(seat.car)) return false;
         const fits = (el) => !!el && el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width > 0;
         const c = box.querySelector('.hud-cooee')?.getBoundingClientRect();
         const t = box.getBoundingClientRect();
         return {
           seat: seat.seat, car: seat.car,
           pulsing: [...document.querySelectorAll('.hud-tile.identify')].map(b => Number(b.dataset.seat)),
-          marks: window.__jjRender.identifyMarks(),
+          marks,
           badge: box.querySelector('.hud-badge')?.textContent,
           badgeFits: fits(box.querySelector('.hud-badge')),
           cooee: box.querySelector('.hud-cooee')?.textContent,
@@ -71,11 +76,8 @@ async function identify(host, n) {
       }, {n, before}, {timeout:1500,polling:50});
       // Capture the compositor now: Playwright's normal screenshot waits for font/layout stability, which can
       // consume the entire transient on a crowded host. CDP captures the actual browser surface without that wait.
-      const cdp = await host.context().newCDPSession(host);
-      try {
         const { data } = await cdp.send('Page.captureScreenshot', {format:'png',fromSurface:true,captureBeyondViewport:false});
         writeFileSync(`${CAPTURE}/identify-${n === 7 ? '24' : n}.png`, Buffer.from(data,'base64'));
-      } finally { await cdp.detach(); }
       const state = await shown.jsonValue();
       await shown.dispose();
       return state;
@@ -83,6 +85,7 @@ async function identify(host, n) {
       if (tries >= 12) throw e;
     }
   }
+  } finally { await cdp.detach(); }
 }
 
 test("R06: Identify pulses only its seat's tile and floats its number over its car, at 24 seats and at 120 (three digits)", { timeout: 600_000, skip: !gpu && '24-120 tiles need a GPU host (JJ_CHROMIUM_GPU=1); software WebGL stalls the page' }, async () => {

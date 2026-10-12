@@ -66,8 +66,14 @@ export class IdentifyMarks {
   update(s: Sampled): void {
     const now = performance.now();
     for (const [car, m] of this.marks) {
-      if (now > m.until || car >= s.cars) {
+      if (now > m.until) {
         this.drop(car);
+        continue;
+      }
+      // A reliable Identify event can precede the snapshot containing a newly joined car. Keep the flash pending
+      // until that snapshot arrives; an older interpolation sample must not dispose the new seat's label.
+      if (car >= s.cars) {
+        m.sprite.visible = false;
         continue;
       }
       m.sprite.position.set(s.pos[car * 3]!, s.pos[car * 3 + 1]! + LIFT, s.pos[car * 3 + 2]!);
@@ -77,7 +83,7 @@ export class IdentifyMarks {
 
   /** Cars showing a mark now (introspection, R90). */
   active(): number[] {
-    return [...this.marks.keys()];
+    return [...this.marks].filter(([, mark]) => mark.sprite.visible).map(([car]) => car);
   }
 
   private drop(car: number): void {
