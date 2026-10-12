@@ -1,0 +1,106 @@
+{
+  "map": "/home/cdilga/Work/runs/jump-capture/map/map.json",
+  "feature": 0,
+  "params": {
+    "blendMm": 3000,
+    "downBlendMm": 19440,
+    "downSlopeMilli": 90,
+    "landingLengthMm": 126226,
+    "landingWidthMm": 9000,
+    "lipHeightCm": 275,
+    "rampLengthMm": 10500,
+    "rampWidthMm": 9000,
+    "roadWide": 1,
+    "sharp": 1,
+    "tableLengthMm": 81950
+  },
+  "speed": 35,
+  "startRoutePoint": 81,
+  "browser": "Chromium (Playwright headless)",
+  "shots": [
+    {
+      "file": "chase-t45.jpg",
+      "tick": 45,
+      "position": [
+        189.22723388671875,
+        1.4190911054611206,
+        -33.742706298828125
+      ],
+      "speed": 34.40049362182617,
+      "wheels": 4,
+      "upY": 0.9854745864868164
+    },
+    {
+      "file": "chase-t90.jpg",
+      "tick": 90,
+      "position": [
+        196.06295776367188,
+        4.700032711029053,
+        -41.75259017944336
+      ],
+      "speed": 32.02440643310547,
+      "wheels": 2,
+      "upY": 0.9211990237236023
+    },
+    {
+      "file": "chase-t135.jpg",
+      "tick": 135,
+      "position": [
+        203.28753662109375,
+        7.496082305908203,
+        -50.21841812133789
+      ],
+      "speed": 29.405906677246094,
+      "wheels": 0,
+      "upY": 0.945577085018158
+    },
+    {
+      "file": "chase-t180.jpg",
+      "tick": 180,
+      "position": [
+        210.1036376953125,
+        8.7941255569458,
+        -58.2054557800293
+      ],
+      "speed": 27.36151695251465,
+      "wheels": 0,
+      "upY": 0.9779964685440063
+    },
+    {
+      "file": "chase-t240.jpg",
+      "tick": 240,
+      "position": [
+        218.60952758789062,
+        8.347960472106934,
+        -68.17230224609375
+      ],
+      "speed": 25.551132202148438,
+      "wheels": 0,
+      "upY": 0.9993423223495483
+    },
+    {
+      "file": "overview-t45.jpg",
+      "tick": 45,
+      "position": [
+        189.22723388671875,
+        1.4190911054611206,
+        -33.742706298828125
+      ],
+      "speed": 34.40049362182617,
+      "wheels": 4,
+      "upY": 0.9854745864868164
+    },
+    {
+      "file": "overview-t180.jpg",
+      "tick": 180,
+      "position": [
+        210.1036376953125,
+        8.7941255569458,
+        -58.2054557800293
+      ],
+      "speed": 27.36151695251465,
+      "wheels": 0,
+      "upY": 0.9779964685440063
+    }
+  ]
+}

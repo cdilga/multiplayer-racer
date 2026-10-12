@@ -69,6 +69,6 @@ run. The bot bank (`tests/bank.rs`) laps every seed with zero wrecks with road-w
 
 ## Not done here
 
-- Visual self-review of a big jump from the chase and overview cameras: needs the host's WASM rebuilt with generator v21,
-  done on eris after this push (`self-review.md`).
+- Visual self-review: `self-review.md`. The geometry draws right, but big air doesn't read as big air in the chase or
+  overview cameras: br-gw74.13.1.1.
 - Huge gap jumps and jumps over another part of the track stay with br-xlvx.5.
