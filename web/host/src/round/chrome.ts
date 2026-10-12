@@ -70,6 +70,12 @@ const colour = (s: Seat) => `--b:var(--id-${s.colourIndex % tokenData.seatColors
 export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: ParentNode) => void): Chrome {
   let room: RoomView | null = null;
   const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false, controls: false, page: '' };
+  // R90: the menu's recent opens, closes and renders with why and in which phase (br-b2sv: a menu that closed itself).
+  const history: string[] = [];
+  const note = (what: string) => {
+    history.push(`${what}@${room?.phase ?? '-'}`);
+    if (history.length > 24) history.shift();
+  };
   const sound = document.createElement('div');
   sound.className = 'mn-sound';
   const display = document.createElement('div');
@@ -178,6 +184,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
   const renderMenu = () => {
+    note(`render:${state.page || (state.controls ? 'controls' : state.confirm ? `confirm-${state.confirm}` : 'main')}`);
     if (!room) return;
     if (state.confirm === 'remove') {
       const s = target === null ? undefined : seatOf(target);
@@ -268,6 +275,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     send('pause', on);
   };
   const openMenu = (join = false, controls = false) => {
+    note('open');
     state.menu = true;
     state.controls = controls;
     state.page = controls ? 'controllers' : '';
@@ -280,7 +288,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     if (racing()) setPause(true);
     renderMenu();
   };
-  const closeMenu = () => {
+  const closeMenu = (why = 'api') => {
+    note(`close:${why}`);
     state.menu = false;
     state.join = false;
     state.controls = false;
@@ -306,12 +315,12 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   menuEl.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!b) {
-      if (e.target === menuEl) closeMenu();
+      if (e.target === menuEl) closeMenu('backdrop');
       return;
     }
     switch (b.dataset.act) {
       case 'resume':
-        return closeMenu();
+        return closeMenu('resume');
       case 'host-menu':
         state.join = false;
         state.controls = false;
@@ -354,11 +363,11 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         return renderMenu();
       case 'do-end':
         send('end');
-        return closeMenu();
+        return closeMenu('end');
       case 'do-disband':
         send('disband');
         opts.onDisband?.();
-        return closeMenu();
+        return closeMenu('disband');
     }
   });
 
@@ -414,10 +423,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   footer.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
-    if (act === 'menu') state.menu ? closeMenu() : openMenu();
+    if (act === 'menu') state.menu ? closeMenu('footer') : openMenu();
     // The docked QR (no spare cell holds one): the big join card, pausing a race so a phone can join (P1-R07b).
     if (act === 'qr') {
-      if (state.menu && state.join) closeMenu();
+      if (state.menu && state.join) closeMenu('qr');
       else openMenu(true);
     }
     if (act === 'diagnostics') toggleDiagnostics();
@@ -431,12 +440,12 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     if (state.menu && state.confirm) {
       state.confirm = null;
       renderMenu();
-    } else if (state.menu) closeMenu();
+    } else if (state.menu) closeMenu('escape');
     else if (state.diagnostics) toggleDiagnostics(false);
   });
 
   // Test and probe surface (R90): the menu's state and the same opens the footer and the menu button use.
-  (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, openJoin: () => openMenu(true), openMenu: () => openMenu(false), openControls: () => openMenu(false, true), closeMenu };
+  (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, history, openJoin: () => openMenu(true), openMenu: () => openMenu(false), openControls: () => openMenu(false, true), closeMenu };
   // The input drawer's Controls button asks for the same page (P1-C14).
   window.addEventListener('jj-open-controls', () => openMenu(false, true));
   window.addEventListener('jj-open-display', () => { openMenu(); state.page = 'display'; renderMenu(); });

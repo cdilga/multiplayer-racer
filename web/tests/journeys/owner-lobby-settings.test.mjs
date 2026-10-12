@@ -9,7 +9,7 @@ import { serveWithLocalStun } from './lib/stun.mjs';
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/owner-lobby/';
 const dist = deployed ? null : build('./', 'owner-lobby');
-const wait = async (page, fn, arg) => { try { return await page.waitForFunction(fn, arg, { timeout: 30000, polling: 100 }); } catch (e) { console.log('WAIT FAILED', String(fn), await page.evaluate(() => ({room:window.__jjRoom?.view(), controller:window.__jjController?.inspect(), fault:document.querySelector('[data-fault]')?.textContent, chrome:JSON.stringify(window.__jjChrome?.state), menuHidden:!!document.querySelector('[data-menu]')?.closest('[hidden]'), menuText:document.querySelector('[data-menu], [data-controllers-view], [data-controls-view]')?.textContent?.slice(0,200)}))); throw e; } };
+const wait = async (page, fn, arg) => { try { return await page.waitForFunction(fn, arg, { timeout: 30000, polling: 100 }); } catch (e) { console.log('WAIT FAILED', String(fn), await page.evaluate(() => ({room:window.__jjRoom?.view(), controller:window.__jjController?.inspect(), fault:document.querySelector('[data-fault]')?.textContent, chrome:JSON.stringify(window.__jjChrome?.state), history:JSON.stringify(window.__jjChrome?.history), menuHidden:!!document.querySelector('[data-menu]')?.closest('[hidden]'), menuText:document.querySelector('[data-menu], [data-controllers-view], [data-controls-view]')?.textContent?.slice(0,200)}))); throw e; } };
 const shot = async (page, name) => {
   if (!process.env.JJ_CAPTURE_DIR) return;
   mkdirSync(process.env.JJ_CAPTURE_DIR, { recursive: true });
