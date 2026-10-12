@@ -65,3 +65,18 @@ for (const hz of [60, 120, 144]) {
     assert.ok(r.behind <= DELAY_TICKS + 3, 'stays close behind the newest snapshot');
   });
 }
+
+test('after a hitch (a burst of ticks at once) the drawn tick jumps to the newest instead of trailing behind', () => {
+  const ip = new Interpolator();
+  let now = 0;
+  for (let tick = 1; tick <= 120; tick++) {
+    now = (tick * 1000) / TICK_HZ;
+    ip.push({ tick, sessionRev: 0 }, now);
+    ip.renderTick(now);
+  }
+  // 150 ms of nothing, then 18 ticks land together (a stalled tab, or a test stepping the sim).
+  now += 150;
+  for (let tick = 121; tick <= 138; tick++) ip.push({ tick, sessionRev: 0 }, now);
+  const t = ip.renderTick(now + 1);
+  assert.ok(t >= 138 - DELAY_TICKS - 1, `drawn at ${t.toFixed(2)}, newest 138`);
+});

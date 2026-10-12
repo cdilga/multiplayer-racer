@@ -10,8 +10,9 @@ const KEEP = 8;
 /** The playback clock's rate steering: per tick of error, and its bound (a few percent, invisible as speed). */
 const STEER = 0.03;
 const MAX_STEER = 0.08;
-/** Further than this from the target (a new session, a stalled tab resuming) the clock jumps instead of steering. */
-const SNAP_TICKS = TICK_HZ / 2;
+/** Further than this from the target (a hitch: a stalled tab resuming, a new session, a test stepping the sim in a burst)
+ *  the clock jumps instead of steering: about 67 ms, well past ordinary publish jitter (a few ms). */
+const SNAP_TICKS = 8;
 
 export interface Sampled {
   tick: number;
