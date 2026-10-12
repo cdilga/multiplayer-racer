@@ -1491,22 +1491,25 @@ fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
     );
     send(&mut h, action.clone());
     h.step_one();
-    let refused = drain(&mut h);
+    // P1-W02a: the boomerang has its projectile now, so the rear flick throws it (it used to be refused as unavailable).
+    let thrown = drain(&mut h);
     assert!(
-        refused
-            .iter()
-            .any(|(source, cmd)| *source == SourceHandle(7)
-                && *cmd
-                    == HostCmd::ActionResult {
-                        action: ActionId(50),
-                        outcome: ActionOutcome::Rejected {
-                            reason: ActionRejection::Item {
-                                reason: ItemUseRefusal::Unavailable
-                            },
-                        },
-                    })
+        thrown.iter().any(|(source, cmd)| *source == SourceHandle(7)
+            && matches!(
+                cmd,
+                HostCmd::ActionResult {
+                    action: ActionId(50),
+                    outcome: ActionOutcome::Applied { .. },
+                }
+            )),
+        "the throw's result goes to its own hub source: {thrown:?}"
     );
-    assert_eq!(h.inventory_for(seat), held);
+    let after = Inventory {
+        front: Some(ItemId::Sanga),
+        back: None,
+    };
+    assert_eq!(h.inventory_for(seat), after);
+    assert_eq!(h.sim.boomerangs().len(), 1, "one boomerang in the air");
     assert!(
         h.sim.utility_events().is_empty(),
         "no cone is substituted for the held item"
@@ -1514,10 +1517,12 @@ fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
     send(&mut h, action);
     h.step_one();
     assert_eq!(
-        h.sim.item_refusals().len(),
+        h.sim.boomerangs().len(),
         1,
         "resent action is not applied twice"
     );
+    assert_eq!(h.inventory_for(seat), after);
+    // The sanga is still queued: the round end has to clear it.
     assert!(h.sim.end_race_now());
     h.step_one();
     assert!(

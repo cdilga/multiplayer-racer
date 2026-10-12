@@ -9,7 +9,7 @@ import { serveWithLocalStun } from './lib/stun.mjs';
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/owner-lobby/';
 const dist = deployed ? null : build('./', 'owner-lobby');
-const wait = async (page, fn, arg) => { try { return await page.waitForFunction(fn, arg, { timeout: 30000, polling: 100 }); } catch (e) { console.log('WAIT FAILED', String(fn), await page.evaluate(() => ({room:window.__jjRoom?.view(), controller:window.__jjController?.inspect(), fault:document.querySelector('[data-fault]')?.textContent}))); throw e; } };
+const wait = async (page, fn, arg) => { try { return await page.waitForFunction(fn, arg, { timeout: 30000, polling: 100 }); } catch (e) { console.log('WAIT FAILED', String(fn), await page.evaluate(() => ({room:window.__jjRoom?.view(), controller:window.__jjController?.inspect(), fault:document.querySelector('[data-fault]')?.textContent, chrome:JSON.stringify(window.__jjChrome?.state), menuHidden:!!document.querySelector('[data-menu]')?.closest('[hidden]'), menuText:document.querySelector('[data-menu], [data-controllers-view], [data-controls-view]')?.textContent?.slice(0,200)}))); throw e; } };
 const shot = async (page, name) => {
   if (!process.env.JJ_CAPTURE_DIR) return;
   mkdirSync(process.env.JJ_CAPTURE_DIR, { recursive: true });
@@ -158,6 +158,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await host.evaluate(()=>window.__jjTest.hold(false));
     await host.getByRole('button',{name:'Pause',exact:true}).click();
     await wait(host,async()=>((await window.__jjTest.observe()).host.pauseMask & 1) !== 0);
+    await wait(host,()=>window.__jjChrome.state.menu===true && !!document.querySelector('[data-menu] [data-act=display]'));
     await host.getByRole('button',{name:'Display & sound',exact:true}).click();
     await host.locator('#jj-mute').click();
     assert.equal(await host.evaluate(()=>window.__jjAudio.state().muted),true);

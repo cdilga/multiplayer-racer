@@ -19,7 +19,7 @@ after(async () => {
   await server?.close();
 });
 
-test('W01/W03: real pickups fill the FIFO; Sanga ACTION consumes the front; failed boomerang ACTION retains it; round end resets it', { timeout: 120_000 }, async () => {
+test('W01/W03: real pickups fill the FIFO; Sanga ACTION consumes the front; boomerang ACTION throws it; round end resets it', { timeout: 120_000 }, async () => {
   const host = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
   await host.waitForFunction(() => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
@@ -69,13 +69,16 @@ test('W01/W03: real pickups fill the FIFO; Sanga ACTION consumes the front; fail
   await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 1, touch: true }));
   await phone.waitForTimeout(300);
   await host.evaluate(() => window.__jjTest.step(2));
-  await phone.waitForFunction(() => window.__jjController.inspect().itemUseRefusal === 'unavailable');
+  // P1-W02a: the boomerang has its projectile now, so the flick throws it (it used to be refused as unavailable).
+  await phone.waitForFunction(() => window.__jjController.inspect().inventory.front === null && window.__jjController.inspect().itemUseRefusal === null);
   await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
-  const refused = await host.evaluate(() => window.__jjTest.observe());
-  assert.deepEqual((await phone.evaluate(() => window.__jjController.inspect())).inventory, { front: 'boomerang', back: null });
-  assert.equal(refused.items.refusals.length, 1);
-  assert.equal(refused.items.effects.length, 1, 'a missing projectile handler adds no effect');
-  assert.equal(refused.debris.length, picked.debris.length, 'a held item does not substitute a cone');
+  const thrown = await host.evaluate(() => window.__jjTest.observe());
+  assert.equal(thrown.items.refusals.length, 0, `no refusal: ${JSON.stringify(thrown.items.refusals)}`);
+  assert.equal(thrown.items.boomerangs.length, 1, 'the boomerang is in the air');
+  assert.equal(thrown.items.boomerangs[0].car, car, 'thrown by the car that held it');
+  assert.equal(thrown.items.effects.length, 2, 'the throw is an item use with its own effect record');
+  assert.deepEqual([thrown.items.effects[1].item, thrown.items.effects[1].direction], ['boomerang', 'Rear'], 'the back flick throws it backwards');
+  assert.equal(thrown.debris.length, picked.debris.length, 'a thrown boomerang does not substitute a cone');
 
   await host.evaluate(async () => {
     await window.__jjTest.command({ cmd: 'finishRace' });

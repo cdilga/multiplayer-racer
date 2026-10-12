@@ -98,12 +98,17 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   // Stage them on separate stretches of the actual straight, with reverse pointed away from the others. The turning pad
   // goes at the back: its circle (about 20 m across at fun-pass speed) can't reach a car that's driving away from it.
   const claimed = await observe();
-  for (const [endpoint, x] of [['local:100', 30], ['local:101', -40], ['local:1', 130], ['local:2', 10]]) {
+  // The straight ends in a corner near x = 185: the two that drive straight on start side by side at x = 40, far enough
+  // back that a busy CI machine's longer window (the sim can run well past 300 ticks before the next poll) still ends
+  // before the corner at fun-pass speed.
+  for (const [endpoint, x, z] of [['local:100', 40, -3], ['local:101', -40, 0], ['local:1', 40, 3], ['local:2', 0, 0]]) {
     const car = claimed.host.seats.find((s) => s.endpoint === endpoint).car;
-    await page.evaluate(({ car, x }) => window.__jjTest.command({ cmd: 'place', car, pose: { x, y: 0.0073, z: 0, headingDeg: 90 } }), { car, x });
+    await page.evaluate(({ car, x, z }) => window.__jjTest.command({ cmd: 'place', car, pose: { x, y: 0.0073, z, headingDeg: 90 } }), { car, x, z });
   }
-  // Read the start before pressing anything: under CI load the presses and the first observe can be a second or more
-  // apart, and a car that's already driving in that gap reaches the slower turning car ahead (the fun-pass cars are fast).
+  // An exact window: hold the sim, read the start, press, then step 300 ticks (2.5 s) in small steps with frames between
+  // them so the pads and keys are sampled as they are live. Polling a live sim overshot by a second or more on a busy
+  // CI machine, and fun-pass cars then reached the corner at the end of this straight.
+  await page.evaluate(() => window.__jjTest.hold(true));
   const start = await observe();
   await page.evaluate(() => {
     window.__pads.axes(0, [0, -1, 0, 0]);
@@ -117,13 +122,15 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
     return seat && state.cars.find((c) => c.car === seat.car);
   };
   const heading0 = Object.fromEntries(['local:100', 'local:101', 'local:1', 'local:2'].map((e) => [e, carOf(start, e)?.headingDeg]));
-  // 2.5 s of driving in sim time (300 ticks at 120 Hz): the live sim's wall clock slows when the machine is busy (the
-  // host page renders too, and CI runs the browser tests in parallel), so wall time isn't the measure.
-  let driven = await observe();
-  for (const t0 = Date.now(); driven.tick - start.tick < 300; driven = await observe()) {
-    assert.ok(Date.now() - t0 < 30_000, `the sim reached tick ${driven.tick}, not ${start.tick + 300}`);
-    await page.waitForTimeout(100);
+  await page.waitForTimeout(200);
+  let stepped = null;
+  for (let i = 0; i < 30; i++) {
+    stepped = await page.evaluate(() => window.__jjTest.step(10));
+    await page.waitForTimeout(16);
   }
+  const driven = await observe();
+  assert.equal(driven.tick, stepped.tick, 'observed where the steps ended');
+  await page.evaluate(() => window.__jjTest.hold(false));
   assert.equal(driven.host.seats.length, 4, `four seats: ${driven.host.seats.map((s) => s.endpoint)}`);
   const turn = (e) => {
     const d = Math.abs(carOf(driven, e).headingDeg - heading0[e]) % 360;
