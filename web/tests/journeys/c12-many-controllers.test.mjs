@@ -363,6 +363,7 @@ test('Chromium full-slot guidance and second-keyboard actions show the live join
   }
   await host.keyboard.down('Numpad8');
   await until(host, async () => (await seats(host)).some((s) => s.endpoint === 'local:3'), 'numpad press claims');
+  await until(host, async () => typeof (await seats(host)).find((s) => s.endpoint === 'local:3')?.inputSeq === 'number', 'numpad input is applied after its reliable join');
   const numpad = (await seats(host)).find((s) => s.endpoint === 'local:3');
   assert.equal(typeof numpad.inputSeq, 'number', `the real host exposes its applied wire sequence: ${JSON.stringify(numpad)}`);
   await host.keyboard.up('Numpad8');

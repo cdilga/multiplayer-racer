@@ -226,12 +226,16 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // Like the join keys above, hold each sampled key until the host has applied it. A fixed 250 ms tap can fall
   // wholly between two software-rendered frames, leaving the room in the Lobby without either key seat ready.
   for (const [key, number] of [['KeyE', 4], ['KeyO', 5]]) {
+    await applied(n => window.__jjControls.vehicleChoices().some(p => p.seat === window.__jjRoom.view().seats.find(s => s.number === n)?.seat && !p.readyHeld), number);
     // Confirm the remembered vehicle before Ready: the first press is the choice step.
-    await host.keyboard.press(key);
+    await host.keyboard.down(key);
     await applied(n => {
       const s = window.__jjRoom.view().seats.find(s => s.number === n);
       return !!s?.vehicle && !s.choosing;
     }, number);
+    await host.keyboard.up(key);
+    // Observe neutral before the next press can Ready the same seat.
+    await applied(n => window.__jjControls.vehicleChoices().some(p => p.seat === window.__jjRoom.view().seats.find(s => s.number === n)?.seat && !p.readyHeld), number);
     await host.keyboard.down(key);
     await applied(n => window.__jjRoom.view().seats.find(s => s.number === n)?.ready === true || window.__jjRoom.view().phase !== 'Lobby', number);
     await host.keyboard.up(key);

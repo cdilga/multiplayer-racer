@@ -37,7 +37,7 @@
   .strip .seatno.badge { font-size: 26px; padding: 3px 6px 4px; }
   .strip .nm { font-size: 15px; }
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
-  .strip .tools { gap: 3px; }
+  .strip .tools { gap: 1px; }
   .strip .tools .btn { padding: 0 5px; font-size: 12px; min-width: 40px; }
   /* Icon-only tools are squares; seven of them plus Identify's label must fit 640 px beside the number and the place. */
   .strip .tools .btn.icon { width: 40px; padding: 0; }

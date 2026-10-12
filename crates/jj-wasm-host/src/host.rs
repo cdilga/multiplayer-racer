@@ -557,7 +557,8 @@ impl Host {
                     ..
                 } => ControllerCmd::decode(bytes).is_ok_and(|c| session_only(&c)),
                 MainToSim::Ui {
-                    ui: UiCommand::LocalJoin { .. }
+                    ui:
+                        UiCommand::LocalJoin { .. }
                         | UiCommand::LocalLeave { .. }
                         | UiCommand::LocalSitOut { .. },
                     ..

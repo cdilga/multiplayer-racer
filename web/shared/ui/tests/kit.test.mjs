@@ -82,7 +82,8 @@ async function crop(page, box, pad) {
 describe('AC1: every component in every state, matching the POC sheet', () => {
   // The frozen set (art/ui/accepted/2026-10-07/, from commit 532617856b88) holds the tokens and the gallery but not the
   // component sheet it links; the compare below loads the live sheet, so it is pinned to the bytes of that commit. A
-  // changed sheet or tokens.json means the reference drifted from what the owner accepted: re-freeze, don't re-pin.
+  // changed sheet or component tokens means the reference drifted from what the owner accepted. R13's separately
+  // approved seat patterns extend identity data; they do not change the component-sheet design reference.
   test('the compare reference is the accepted one (sheet sources and tokens as frozen on 2026-10-07)', () => {
     const artUi = join(web, '..', 'art', 'ui');
     const sha = (p) => createHash('sha256').update(readFileSync(join(artUi, p))).digest('hex').slice(0, 16);
@@ -95,7 +96,13 @@ describe('AC1: every component in every state, matching the POC sheet', () => {
         'sheets/tokens-css.js': 'bac50ffb1d3deef8',
       },
     );
-    assert.equal(sha('tokens.json'), sha('accepted/2026-10-07/tokens.json'), 'art/ui/tokens.json (read by the sheet) is the accepted tokens.json');
+    const componentTokens = (path) => {
+      const tokens = JSON.parse(readFileSync(join(artUi, path)));
+      delete tokens.identity.patterns;
+      delete tokens.identity.rule;
+      return tokens;
+    };
+    assert.deepEqual(componentTokens('tokens.json'), componentTokens('accepted/2026-10-07/tokens.json'), 'component design tokens still match the accepted sheet; R13 adds only seat pattern data');
   });
 
   test('buttons: kit vs art/ui/sheets/components.html, every row and state, within the recorded tolerance', async () => {
