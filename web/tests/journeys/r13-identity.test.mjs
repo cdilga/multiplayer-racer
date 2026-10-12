@@ -82,7 +82,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       await host.evaluate(()=>document.exitFullscreen()); await shot(host,'chromium-host-after-fullscreen');
     }
     assert.deepEqual(errors,[]);
-  } catch(e) {console.log('host signalling',await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null));throw e;}
+  } catch(e) {console.log('host signalling',JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)));throw e;}
   finally {await b.close();await s.close();}
 });
 
