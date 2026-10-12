@@ -11,7 +11,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 export interface PaperQr {
   /** Modules per side, quiet zone included. */
   modules: number;
-  /** The SVG markup: paper background, ink modules, viewBox in modules, crisp edges. */
+  /** The SVG markup: paper background, ink modules, viewBox in modules. */
   svg: string;
 }
 
@@ -34,7 +34,9 @@ export function paperQrSvg(url: string): PaperQr {
   const { ink, paper } = tokenData.palette;
   return {
     modules: n,
-    svg: `<svg xmlns="${SVG_NS}" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="${paper}"/><path fill="${ink}" d="${path}"/></svg>`,
+    // Integer module sizing keeps the large card sharp. WebKit's crispEdges rasterizer corrupts this path
+    // when the same SVG is reduced to the footer thumbnail, so let the vector rasterizer sample that view.
+    svg: `<svg xmlns="${SVG_NS}" width="${n}" height="${n}" viewBox="0 0 ${n} ${n}"><rect width="${n}" height="${n}" fill="${paper}"/><path fill="${ink}" d="${path}"/></svg>`,
   };
 }
 

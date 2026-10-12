@@ -1,0 +1,173 @@
+{
+  "source": "local real jj-server",
+  "seed": 7,
+  "recipe": "rocks",
+  "generator": {
+    "id": "jj.procgen.course",
+    "version": "18"
+  },
+  "reliefM": 17.318,
+  "climb100mRiseM": 7.09,
+  "climb": 580,
+  "crest": 414,
+  "reference": "art/references/australia/generated/biome-rocks-olgas.png",
+  "method": "real Lobby rerolls, preparation and director; R90 Place stages the actual seated car for visual review; native/WASM route parity; emulated host viewports; unaided laps qualified separately by the physical fixture bank",
+  "rows": [
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-412x915.jpg",
+      "width": 412,
+      "height": 915
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-915x412.jpg",
+      "width": 915,
+      "height": 412
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-375x667.jpg",
+      "width": 375,
+      "height": 667
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-1366x768.jpg",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "browser": "chromium",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-fullscreen-true.jpg",
+      "fullscreen": true
+    },
+    {
+      "browser": "chromium",
+      "state": "climb",
+      "point": 580,
+      "file": "chromium-climb-after-resize.jpg",
+      "width": 915,
+      "height": 412
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "crest",
+      "point": 414,
+      "file": "chromium-crest-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "browser": "chromium",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "state": "field-around-driver",
+      "point": null,
+      "file": "chromium-field-around-driver-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-412x915.jpg",
+      "width": 412,
+      "height": 915
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-915x412.jpg",
+      "width": 915,
+      "height": 412
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-375x667.jpg",
+      "width": 375,
+      "height": 667
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-1366x768.jpg",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "browser": "webkit",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-fullscreen-true.jpg",
+      "fullscreen": true
+    },
+    {
+      "browser": "webkit",
+      "state": "climb",
+      "point": 580,
+      "file": "webkit-climb-after-resize.jpg",
+      "width": 915,
+      "height": 412
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "crest",
+      "point": 414,
+      "file": "webkit-crest-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "browser": "webkit",
+      "renderer": "Apple GPU",
+      "state": "field-around-driver",
+      "point": null,
+      "file": "webkit-field-around-driver-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080
+    }
+  ]
+}

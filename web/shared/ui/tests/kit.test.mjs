@@ -15,7 +15,7 @@ import { dirname, extname, join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import jsQR from 'jsqr';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { analyse } from '../../../landing/tests/bundle-check.mjs';
 import { build } from '../../../landing/tests/lib/site.mjs';
 import { serveArtUi } from '../../../../art/ui/lib/serve.mjs';
@@ -218,6 +218,24 @@ describe('AC2: focus rings wrap the whole slab, shadow included', () => {
 });
 
 describe('AC3: the paper QR', () => {
+  for (const engine of [chromium, webkit]) test(`${engine.name()}: a compact join QR retains its finder squares and decodes after resize`, async () => {
+    const b = await engine.launch();
+    try {
+      const page = await b.newPage({ viewport: { width: 1366, height: 768 } });
+      await page.goto(`${kit.base}/?profile=desk&still=1`);
+      await page.waitForFunction(() => window.kitReady);
+      const card = page.locator('[data-qr-profile="handheld"] .qr-card');
+      const img = card.locator('img.qr');
+      for (const [width, height, edge] of [[1366,768,37],[915,412,74],[375,667,37],[1920,1080,74],[1366,768,37]]) {
+        await page.setViewportSize({ width, height });
+        await card.evaluate((el, px) => el.style.setProperty('--qr-size', `${px}px`), edge);
+        await img.scrollIntoViewIfNeeded();
+        const png = decode(await img.screenshot());
+        assert.equal(jsQR(new Uint8ClampedArray(png.data), png.width, png.height)?.data, JOIN_URL,
+          `${engine.name()} ${width}x${height}: ${edge}px vector QR survives downscaling and resize`);
+      }
+    } finally { await b.close(); }
+  });
   for (const [profile, w, h, modulePx] of [['tv', 1920, 1080, 8], ['handheld', 390, 844, 4]]) {
     test(`decodes to the join URL at the ${profile} smallest size (${modulePx} px per module), with code, domain and quiet zone`, async () => {
       const { page } = await openKit(`profile=${profile}&still=1`, { width: w, height: h });
