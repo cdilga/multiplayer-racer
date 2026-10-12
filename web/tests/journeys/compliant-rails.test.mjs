@@ -65,7 +65,13 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
       const paint = async () => {
         const tick = await page.evaluate(async () => (await window.__jjTest.observe()).tick);
         await page.waitForFunction(t => { window.__jjRender.frame(); return window.__jjRender.stats().tick >= t; }, tick);
-        await page.evaluate(() => { for (let i = 0; i < 80; i++) window.__jjRender.frame(); window.__jjRender.hold(); });
+        // The tick wait has already drawn the collision snapshot. Stop the live loop and let the resize's
+        // layout/paint finish; repeatedly drawing that same tick only burns software-GPU time in CI.
+        await page.evaluate(async () => {
+          window.__jjRender.hold();
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          window.__jjRender.frame();
+        });
         return page.evaluate(() => window.__jjRender.rails());
       };
       const rest = await paint();
