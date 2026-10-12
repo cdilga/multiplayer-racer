@@ -423,6 +423,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   footer.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
+    note(`footer:${act ?? (e.target as Element).nodeName}`);
     if (act === 'menu') state.menu ? closeMenu('footer') : openMenu();
     // The docked QR (no spare cell holds one): the big join card, pausing a race so a phone can join (P1-R07b).
     if (act === 'qr') {

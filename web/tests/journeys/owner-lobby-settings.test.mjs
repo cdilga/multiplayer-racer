@@ -201,5 +201,5 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     },oldLocal);
     await shot(host,`${engine.name()}-race-after-controllers`);
     assert.deepEqual(errors,[]);
-  } catch(e) { console.log('errors', errors, 'host link', JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)), 'menu', JSON.stringify(await host?.evaluate(()=>({state:window.__jjChrome?.state, history:window.__jjChrome?.history, pause:document.querySelector('[data-act=menu]')?.textContent})).catch(()=>null))); throw e; } finally { await browser.close(); await server.close(); }
+  } catch(e) { console.log('errors', errors, 'host link', JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)), 'menu', JSON.stringify(await host?.evaluate(()=>({state:window.__jjChrome?.state, history:window.__jjChrome?.history, pause:document.querySelector('[data-act=menu]')?.textContent, footers:document.querySelectorAll('footer [data-act=menu]').length, menus:document.querySelectorAll('[data-menu]').length, topAtPause:(()=>{const b=document.querySelector('[data-act=menu]')?.getBoundingClientRect(); const el=b&&document.elementFromPoint(b.x+b.width/2,b.y+b.height/2); return el?`${el.nodeName}.${el.className}`:null;})()})).catch(()=>null))); throw e; } finally { await browser.close(); await server.close(); }
 });
