@@ -556,6 +556,12 @@ impl Host {
                     bytes,
                     ..
                 } => ControllerCmd::decode(bytes).is_ok_and(|c| session_only(&c)),
+                MainToSim::Ui {
+                    ui: UiCommand::LocalJoin { .. }
+                        | UiCommand::LocalLeave { .. }
+                        | UiCommand::LocalSitOut { .. },
+                    ..
+                } => true,
                 _ => false,
             });
         self.queued = later;
@@ -916,6 +922,41 @@ impl Host {
             }
             MainToSim::Ui { ui, .. } => match ui {
                 UiCommand::Pause { on } => self.set_pause(Pause::Manual, on),
+                UiCommand::LocalJoin { source } => {
+                    let lb = self.local_buttons.entry(source).or_default();
+                    if lb.left {
+                        lb.left = false;
+                        lb.left_released = false;
+                        lb.last = 0;
+                        lb.generation += 1;
+                        self.locals.remove(&source);
+                    }
+                    self.local_seat(source);
+                }
+                UiCommand::LocalLeave { source } => {
+                    if let Some(&conn) = self.locals.get(&source) {
+                        let lb = self.local_buttons.entry(source).or_default();
+                        lb.left = true;
+                        lb.left_released = false;
+                        for o in self.seats.apply(seats::Input::Leave {
+                            conn,
+                            source: seats::PRIMARY_SOURCE,
+                        }) {
+                            self.seat_output(o);
+                        }
+                    }
+                }
+                UiCommand::LocalSitOut { source, on } => {
+                    if let Some(&conn) = self.locals.get(&source) {
+                        for o in self.seats.apply(seats::Input::SitOut {
+                            conn,
+                            source: seats::PRIMARY_SOURCE,
+                            on,
+                        }) {
+                            self.seat_output(o);
+                        }
+                    }
+                }
                 UiCommand::LocalReady { source } => {
                     if let Some(&conn) = self.locals.get(&source)
                         && let Some(seat) = self.seats.seat_at(conn, seats::PRIMARY_SOURCE)

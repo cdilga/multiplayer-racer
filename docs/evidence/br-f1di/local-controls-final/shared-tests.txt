@@ -1,0 +1,90 @@
+   Compiling jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+   Compiling jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+   Compiling jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.01s
+     Running unittests src/lib.rs (target/debug/deps/jj_protocol-fcedf9176a4983d1)
+
+running 15 tests
+test clock::tests::one_way_samples_bound_the_offset_too ... ok
+test clock::tests::recovers_a_known_offset_within_its_uncertainty ... ok
+test clock::tests::the_window_lets_old_tight_samples_go ... ok
+test tests::decoders_reject_wrong_versions_and_trailing_bytes ... ok
+test tests::every_variant_has_a_golden ... ok
+test tests::splitting_by_the_byte_target ... ok
+test tests::splitting_more_than_255_sources ... ok
+test tests::the_documented_layout_holds ... ok
+test clock::tests::one_way_bound_holds_for_any_delay_inside_the_round_trip ... ok
+test tests::goldens_match_the_committed_bytes ... ok
+test clock::tests::the_true_offset_is_always_inside_the_bound ... ok
+test tests::decoders_never_panic_on_damaged_goldens ... ok
+test tests::decoders_never_panic_on_any_bytes ... ok
+test tests::every_record_survives_splitting ... ok
+test tests::every_message_round_trips ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.49s
+
+     Running unittests src/lib.rs (target/debug/deps/jj_session-5b5e6609d2353b27)
+
+running 47 tests
+test director::tests::a_manual_pause_freezes_the_countdown_too ... ok
+test director::tests::a_round_without_a_limit_is_the_rules_to_end_and_the_limit_applies_from_the_next_round ... ok
+test director::tests::a_late_joiner_unreadying_does_not_cancel_and_neither_does_unready_in_an_auto_start ... ok
+test director::tests::a_map_still_preparing_when_intermission_ends_shows_preparing_then_counts_down ... ok
+test director::tests::a_pause_during_intermission_freezes_its_timer ... ok
+test director::tests::a_join_during_countdown_does_not_restart_it_and_rides_in_the_round ... ok
+test director::tests::a_failed_map_retries_once_with_the_fallback_then_settles ... ok
+test director::tests::an_early_start_cancelled_in_intermission_returns_with_the_time_it_had_left ... ok
+test director::tests::an_emptied_party_settles_in_lobby_and_never_auto_starts ... ok
+test director::tests::an_original_seat_unreadying_cancels_a_ready_based_countdown ... ok
+test director::tests::end_during_preparation_cancels_the_job_and_returns_to_lobby ... ok
+test director::tests::end_voids_an_unfinished_round ... ok
+test director::tests::everyone_leaving_during_a_start_settles_instead_of_starting ... ok
+test director::tests::finalising_never_spins_forever ... ok
+test director::tests::force_start_warns_not_ready_seats_for_ten_seconds_then_starts_everyone ... ok
+test director::tests::game_time_outside_a_running_round_counts_for_nothing ... ok
+test director::tests::lobby_holds_every_car_unless_free_drive_and_disband_is_terminal ... ok
+test director::tests::reroll_during_countdown_waits_for_the_new_map_and_keeps_the_cohort ... ok
+test director::tests::reroll_during_preparation_fences_the_stale_preparation_id ... ok
+test director::tests::a_three_minute_derby_ends_on_game_time_not_on_the_presentation_clock ... ok
+test director::tests::stale_ready_taps_cannot_restart_a_disarmed_lobby ... ok
+test director::tests::start_now_again_skips_the_countdown_but_never_the_map ... ok
+test director::tests::the_game_clock_pauses_with_the_sim ... ok
+test director::tests::the_party_runs_itself_round_after_round ... ok
+test director::tests::the_warning_length_is_host_configurable_within_five_to_fifteen_seconds ... ok
+test results::tests::a_derby_commit_is_idempotent_conflicts_with_other_facts_and_never_counts_as_a_race_finish ... ok
+test results::tests::a_derby_ranks_by_raw_points_with_ties_sharing_and_the_race_table_without_a_finish_bonus ... ok
+test results::tests::a_late_joiner_ranks_on_raw_points_alone_and_a_seat_that_left_keeps_what_it_scored ... ok
+test results::tests::a_repeated_commit_is_idempotent_and_a_conflicting_one_is_refused ... ok
+test results::tests::an_all_stuck_race_ranks_by_legal_progress_then_the_tick_it_was_reached ... ok
+test results::tests::every_derby_rank_past_ten_gets_one_point_and_there_is_no_cap ... ok
+test results::tests::every_rank_past_ten_gets_a_point_and_finishers_get_the_bonus ... ok
+test results::tests::late_joiners_and_leave_return_produce_the_specified_records ... ok
+test results::tests::simultaneous_finishes_and_exact_ties_share_place_and_points ... ok
+test results::tests::the_session_table_adds_up_rounds_and_shares_tied_places ... ok
+test seats::tests::a_duplicate_tab_fences_the_older_one_and_a_wrong_secret_is_refused ... ok
+test seats::tests::identify_rate_limit_table ... ok
+test seats::tests::a_reconnect_welcomes_every_source_back_and_a_dropout_keeps_them_all ... ok
+test seats::names::tests::names_are_cleaned_and_bounded ... ok
+test seats::tests::retries_and_reconnects_never_duplicate_a_seat ... ok
+test seats::tests::opening_never_claims_and_one_car_per_seat ... ok
+test seats::tests::one_endpoint_holds_a_seat_per_source_and_each_acts_alone ... ok
+test seats::tests::stale_input_is_neutralised ... ok
+test seats::tests::the_last_sit_out_choice_before_a_tick_wins_without_cancelling_leave ... ok
+test results::tests::classification_invariants ... ok
+test seats::tests::one_car_per_seat_no_phantoms_stable_numbers ... ok
+test director::tests::invariants_hold_for_random_sequences ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.46s
+
+   Doc-tests jj_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests jj_session
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

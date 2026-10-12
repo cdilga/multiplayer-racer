@@ -83,6 +83,17 @@ pub enum UiCommand {
     LocalReady {
         source: LocalSourceId,
     },
+    /// Controllers menu actions remain reliable while the simulation is paused.
+    LocalJoin {
+        source: LocalSourceId,
+    },
+    LocalLeave {
+        source: LocalSourceId,
+    },
+    LocalSitOut {
+        source: LocalSourceId,
+        on: bool,
+    },
 }
 
 /// Main → sim.

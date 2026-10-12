@@ -239,6 +239,16 @@ pub mod codec {
             "catch-up" => UiCommand::SetCatchUp { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
             "reroll" => UiCommand::Reroll,
+            l if l.starts_with("join-local:") => UiCommand::LocalJoin {
+                source: jj_types::LocalSourceId(l[11..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("leave-local:") => UiCommand::LocalLeave {
+                source: jj_types::LocalSourceId(l[12..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("sit-out-local:") => UiCommand::LocalSitOut {
+                source: jj_types::LocalSourceId(l[14..].parse().unwrap_or(0)),
+                on,
+            },
             l if l.starts_with("ready-local:") => UiCommand::LocalReady {
                 source: jj_types::LocalSourceId(l[12..].parse().unwrap_or(0)),
             },

@@ -324,6 +324,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       roster,
       start: Math.max(0, roster.findIndex((r) => r.id === current().id)),
       colour: hex(session.you.rgb),
+      onLeave: (button) => { if (confirmLeave(button)) session.leave(); },
       onPick: (car) => {
         session.pick(car.id, true);
         try {
@@ -512,19 +513,19 @@ function ordinal(n: number): string {
 
 let leaveArmed = 0;
 /** Leave needs a second tap within 3 s (no browser dialogs: they block the page). */
-function confirmLeave(): boolean {
+function confirmLeave(b = document.querySelector<HTMLElement>('[data-act=leave]')): boolean {
   const now = Date.now();
   if (now - leaveArmed < 3000) return true;
   leaveArmed = now;
-  const b = document.querySelector<HTMLElement>('[data-act=leave]');
   if (b) {
     // The icon button turns into words for three seconds, then goes back to its icon.
     const was = b.innerHTML;
+    const wasIcon = b.classList.contains('icon');
     b.classList.remove('icon');
     b.textContent = 'Tap again to leave';
     setTimeout(() => {
       b.innerHTML = was;
-      b.classList.add('icon');
+      b.classList.toggle('icon', wasIcon);
     }, 3000);
   }
   return false;

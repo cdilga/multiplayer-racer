@@ -167,6 +167,35 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await host.keyboard.press('Escape');
     assert.equal(await host.evaluate(()=>window.__jjChrome.state.menu),false);
     await wait(host,async()=>((await window.__jjTest.observe()).host.pauseMask & 1) === 0);
+    // Controllers actions use the reliable menu lane while paused; the latest Sit out choice wins.
+    await host.getByRole('button',{name:'Pause',exact:true}).click();
+    await host.getByRole('button',{name:'Controllers',exact:true}).click();
+    const localRow = host.locator('[data-jj-input-drawer] li[data-source="1"]');
+    await localRow.getByRole('button',{name:'Sit out',exact:true}).click();
+    await localRow.getByRole('button',{name:'Return',exact:true}).click();
+    await shot(host,`${engine.name()}-controllers-racing-actions`);
+    await host.keyboard.press('Escape');
+    await host.waitForTimeout(4500);
+    await wait(host,()=>window.__jjRoom.view().seats.find(s=>s.localSource===1)?.presence==='Active');
+    const oldLocal = await host.evaluate(()=>window.__jjRoom.view().seats.find(s=>s.localSource===1).seat);
+    await host.getByRole('button',{name:'Pause',exact:true}).click();
+    await host.getByRole('button',{name:'Controllers',exact:true}).click();
+    await localRow.getByRole('button',{name:'Leave',exact:true}).click();
+    await localRow.getByRole('button',{name:'Add',exact:true}).click();
+    await host.evaluate(()=>{
+      const pad = window.__pads[0]; window.__pads[0]=null;
+      const e = new Event('gamepaddisconnected');
+      Object.defineProperty(e,'gamepad',{value:{...pad,connected:false}});
+      window.dispatchEvent(e);
+    });
+    await host.locator(`[data-jj-input-drawer] li[data-source="${padSource}"]`).getByRole('button',{name:'Remove',exact:true}).click();
+    await shot(host,`${engine.name()}-controllers-paused-add-remove`);
+    await host.keyboard.press('Escape');
+    await wait(host,old=>{
+      const seats=window.__jjRoom.view().seats;
+      return seats.length===2 && seats.some(s=>s.localSource===1 && s.seat!==old && s.car!==null);
+    },oldLocal);
+    await shot(host,`${engine.name()}-race-after-controllers`);
     assert.deepEqual(errors,[]);
   } catch(e) { console.log('errors', errors); throw e; } finally { await browser.close(); await server.close(); }
 });

@@ -3523,3 +3523,82 @@ fn lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source() {
     }
     assert!(!h.round.director.is_ready(seat));
 }
+
+#[test]
+fn controllers_menu_actions_apply_while_paused_and_survive_resume_sample_discard() {
+    let mut h = driving_host();
+    h.handle(&pad(4, [0, 20_000], 0)).unwrap();
+    for i in 0..20 {
+        h.advance(i * 16_667);
+    }
+    let old = h.seats.seat_of(h.locals[&LocalSourceId(4)]).unwrap();
+    let command = |ui| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    let held_tick = h.tick();
+    let presence = |h: &Host, seat| h.seats.seats().find(|s| s.id == seat).unwrap().presence;
+    // A later neutral sample must never erase a menu action. No physics tick runs here.
+    h.handle(&command(UiCommand::LocalSitOut {
+        source: LocalSourceId(4),
+        on: true,
+    }))
+    .unwrap();
+    h.handle(&pad(4, [0, 0], 0)).unwrap();
+    h.advance(400_000);
+    assert_eq!(h.tick(), held_tick);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 24..260 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::SittingOut);
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    h.handle(&command(UiCommand::LocalSitOut {
+        source: LocalSourceId(4),
+        on: false,
+    }))
+    .unwrap();
+    h.advance(4_400_000);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 264..500 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::Active);
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    let held_tick = h.tick();
+    h.handle(&command(UiCommand::LocalLeave {
+        source: LocalSourceId(4),
+    }))
+    .unwrap();
+    h.handle(&pad(4, [0, 0], 0)).unwrap();
+    h.advance(8_400_000);
+    h.handle(&command(UiCommand::LocalJoin {
+        source: LocalSourceId(4),
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalJoin {
+        source: LocalSourceId(9),
+    }))
+    .unwrap();
+    h.advance(8_500_000);
+    let new = h.seats.seat_of(h.locals[&LocalSourceId(4)]).unwrap();
+    assert_ne!(old, new, "Add after Leave is a new player");
+    assert_eq!(h.seats.seats().count(), 3);
+    assert_eq!(h.tick(), held_tick);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 510..750 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::Left);
+    assert_eq!(presence(&h, new), seats::Presence::Active);
+    assert!(h.inputs[&new].car.is_some());
+    assert_eq!(
+        h.inputs.values().filter(|i| i.car.is_some()).count(),
+        2,
+        "only the two new seats own active cars; withdrawn dynamic husks may remain"
+    );
+}

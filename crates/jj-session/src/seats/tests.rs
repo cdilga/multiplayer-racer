@@ -353,6 +353,38 @@ fn one_endpoint_holds_a_seat_per_source_and_each_acts_alone() {
 }
 
 #[test]
+fn the_last_sit_out_choice_before_a_tick_wins_without_cancelling_leave() {
+    let mut s = Seats::default();
+    hello(&mut s, 1, 1);
+    let id = welcomed(&claim_src(&mut s, 1, 1, "Pad")).unwrap();
+    s.apply(Input::Tick(Tick(1)));
+    let choose = |s: &mut Seats, on| {
+        s.apply(Input::SitOut {
+            conn: 1,
+            source: PRIMARY_SOURCE,
+            on,
+        });
+    };
+    choose(&mut s, true);
+    choose(&mut s, false);
+    assert!(s.apply(Input::Tick(Tick(2))).is_empty());
+    assert_eq!(s.seat(id).unwrap().presence, Presence::Active);
+    choose(&mut s, true);
+    s.apply(Input::Tick(Tick(3)));
+    choose(&mut s, false);
+    choose(&mut s, true);
+    assert!(s.apply(Input::Tick(Tick(4))).is_empty());
+    assert_eq!(s.seat(id).unwrap().presence, Presence::SittingOut);
+    s.apply(Input::Leave {
+        conn: 1,
+        source: PRIMARY_SOURCE,
+    });
+    choose(&mut s, false);
+    s.apply(Input::Tick(Tick(5)));
+    assert_eq!(s.seat(id).unwrap().presence, Presence::Left);
+}
+
+#[test]
 fn a_reconnect_welcomes_every_source_back_and_a_dropout_keeps_them_all() {
     let mut s = Seats::default();
     hello(&mut s, 1, 1);

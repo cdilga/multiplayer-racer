@@ -15,7 +15,7 @@
 import map from './clusters.json';
 import roster from '../../../shared/src/roster.json';
 import type { SimClient } from '../worker/client';
-import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_SIT_OUT, LOCAL_UNAVAILABLE } from '../worker/messages';
+import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_UNAVAILABLE } from '../worker/messages';
 import { CAL_PROMPTS, Calibration, type PadLike, type WheelProfile, pedal, profileFor, saveProfile, savedProfiles, wheelSample } from './wheel';
 
 type Axes = [number, number, number, number];
@@ -65,8 +65,6 @@ interface Source {
   seq: number;
   /** When Identify + READY started being held together (ms), for Leave. */
   holdSince: number | null;
-  /** Drawer requests riding on the next sample (Sit out, Leave). */
-  once: number;
   /** Let go since leaving (so the next press is a new player). */
   released: boolean;
   /** A pad's Gamepad id (wheel profiles are per device). */
@@ -77,8 +75,6 @@ interface Source {
   /** When the left stick was last pulled all the way back (ms), for the launch: pull back, hold, snap forward. */
   pulledAt?: number;
   pullReleasedAt?: number;
-  /** The drawer's Add: claim (or re-claim after Leave) on the next sample as if a key had been pressed (P1-C14). */
-  wantJoin?: boolean;
 }
 
 /** Whether the host's keyboard plays (the drawer's toggle): remembered per host browser, on by default. */
@@ -154,7 +150,9 @@ export class LocalInput {
     const s = this.sources.get(source);
     if (!s || s.view.kind !== 'keys' || !s.view.connected || !this.keysOn) return;
     if (s.view.claimed && !s.view.left) return;
-    s.wantJoin = true;
+    Object.assign(s.view, { claimed: true, left: false, sittingOut: false, used: [] });
+    s.released = false;
+    this.client.input({ type: 'ui', ui: `join-local:${source}` });
   }
 
   /** An explicit lobby choice. The same Pick reducer serves host sources and phones. */
@@ -213,15 +211,15 @@ export class LocalInput {
     if (!s?.view.claimed || s.view.left || s.view.connected) return;
     Object.assign(s.view, { left: true, sittingOut: false, identifyHeld: false });
     s.released = true;
-    this.send(s, [0, 0, 0, 0], LOCAL_LEAVE);
+    this.client.input({ type: 'ui', ui: `leave-local:${source}` });
   }
 
   /** The drawer's Sit out / Return for a seated source. */
   toggleSitOut(source: number): void {
     const s = this.sources.get(source);
     if (!s?.view.claimed || s.view.left) return;
-    s.once |= LOCAL_SIT_OUT;
     s.view.sittingOut = !s.view.sittingOut;
+    this.client.input({ type: 'ui', ui: `sit-out-local:${source}`, on: s.view.sittingOut });
   }
 
   /** The drawer's "Map as a wheel" / "Calibrate": walk the prompts with this device; its seat gets neutral input. */
@@ -263,7 +261,9 @@ export class LocalInput {
   leave(source: number): void {
     const s = this.sources.get(source);
     if (!s?.view.claimed || s.view.left) return;
-    s.once |= LOCAL_LEAVE;
+    Object.assign(s.view, { left: true, sittingOut: false });
+    s.released = false;
+    this.client.input({ type: 'ui', ui: `leave-local:${source}` });
   }
 
   start(pollMs = 16): void {
@@ -294,7 +294,6 @@ export class LocalInput {
       buttons: 0,
       seq: 0,
       holdSince: null,
-      once: 0,
       released: false,
     };
     this.sources.set(source, s);
@@ -422,28 +421,14 @@ export class LocalInput {
     s.view.identifyHeld = identify;
     if (identifyChanged) window.dispatchEvent(new Event('jj-local-controls'));
     this.trackUse(s, axes, now);
-    const joining = s.wantJoin === true;
-    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || ready || joining;
+    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || ready;
     if (!s.view.claimed && !pressed) return;
     s.view.claimed = true;
-    const wasLeft = s.view.left;
     // After leaving: letting go, then pressing again, is a new player (the worker gives it a new seat).
     if (s.view.left) {
       if (!pressed) s.released = true;
       else if (s.released) Object.assign(s.view, { left: false, sittingOut: false, used: [] }), (s.released = false);
     }
-    // Add after Leave is a new player without a press: the host's rule is "a non-neutral sample after letting go", so the
-    // join rides a one-step nudge on an axis (far below any deadzone).
-    if (joining) {
-      s.wantJoin = false;
-      if (wasLeft) {
-        Object.assign(s.view, { left: false, sittingOut: false, used: [] });
-        s.released = false;
-        axes = [1 / AXIS_MAX, axes[1], axes[2], axes[3]];
-      }
-    }
-    buttons |= s.once;
-    s.once = 0;
     if (buttons & LOCAL_LEAVE) Object.assign(s.view, { left: true, sittingOut: false }), (s.released = false);
     this.send(s, axes, buttons);
   }

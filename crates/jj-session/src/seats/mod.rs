@@ -483,9 +483,15 @@ impl Seats {
             Input::SitOut { conn, source, on } => {
                 if let Some(id) = self.seat_at(conn, source) {
                     let seat = self.seats.get_mut(&id).expect("seat");
-                    match (on, seat.presence) {
-                        (true, Presence::Active) => seat.pending = Some(Pending::SitOut),
-                        (false, Presence::SittingOut) => seat.pending = Some(Pending::Return),
+                    match (on, seat.presence, seat.pending) {
+                        (_, _, Some(Pending::Leave)) => {}
+                        (true, Presence::Active, _) => seat.pending = Some(Pending::SitOut),
+                        (false, Presence::SittingOut, _) => seat.pending = Some(Pending::Return),
+                        // During a pause both clicks can arrive before a tick: the latest explicit choice wins.
+                        (false, Presence::Active, Some(Pending::SitOut))
+                        | (true, Presence::SittingOut, Some(Pending::Return)) => {
+                            seat.pending = None
+                        }
                         _ => {}
                     }
                 }
