@@ -310,7 +310,9 @@ fn draw_params(
                 lip,
                 p["rampLengthMm"],
                 // Generated jumps are built for the arcade cars' take-off speed (data), above the validator's minimum.
-                jumps.takeoff_speed_mps.max(jj_map::limits::JUMP_DESIGN_SPEED_MPS),
+                jumps
+                    .takeoff_speed_mps
+                    .max(jj_map::limits::JUMP_DESIGN_SPEED_MPS),
                 ramp_mm as f64 / (ramp_mm as f64 - LIMITS.jump_blend_m * 500.0),
             );
             // The reserved landing length alone is not a landing surface. Previously the short sampled table

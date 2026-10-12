@@ -1599,8 +1599,7 @@ impl Sim {
                         heading: libm::atan2f(fwd.x, fwd.z),
                         forward_speed: b.linvel().dot(fwd),
                     };
-                    let (out, recover) =
-                        ap.drive(
+                    let (out, recover) = ap.drive(
                         &self.path,
                         pose,
                         p.tuning.max_steer_rad,
@@ -1717,7 +1716,8 @@ impl Sim {
                     // keeps the tyres pressed to whatever they touch, so without this a car could drive up a wall.
                     let info = w.raycast_info();
                     let climbable = if info.is_in_contact {
-                        ((info.contact_normal_ws.y - WALL_NORMAL_Y) / (DRIVABLE_NORMAL_Y - WALL_NORMAL_Y))
+                        ((info.contact_normal_ws.y - WALL_NORMAL_Y)
+                            / (DRIVABLE_NORMAL_Y - WALL_NORMAL_Y))
                             .clamp(0.0, 1.0)
                     } else {
                         1.0

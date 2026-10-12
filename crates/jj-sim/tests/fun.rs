@@ -18,7 +18,11 @@ fn root() -> PathBuf {
 fn straight() -> LoadedMap {
     let mut v: serde_json::Value = serde_json::from_str(GREYBOX).unwrap();
     v["route"]["start"]["at"] = 0.into();
-    load_json(serde_json::to_vec(&v).unwrap().as_slice(), &Registry::generic()).expect("the greybox validates")
+    load_json(
+        serde_json::to_vec(&v).unwrap().as_slice(),
+        &Registry::generic(),
+    )
+    .expect("the greybox validates")
 }
 
 /// Full throttle down the straight from the grid: (seconds to 100 km/h, m/s at 150 m, seconds to 150 m).
@@ -28,13 +32,23 @@ fn launch(map: &LoadedMap, profile: &VehicleProfile, boost: bool) -> (f32, f32, 
     sim.start_race(1);
     let x0 = sim.car_state(car).unwrap().position[0];
     let mut to_100 = f32::INFINITY;
-    for i in 1..=(20 * TICK_HZ as u32) {
+    for i in 1..=(20 * TICK_HZ) {
         let s = sim.car_state(car).unwrap();
         // Hold the straight's heading (+x) and its centre line (z = 0).
-        let err = (s.heading - std::f32::consts::FRAC_PI_2 + std::f32::consts::PI).rem_euclid(std::f32::consts::TAU)
+        let err = (s.heading - std::f32::consts::FRAC_PI_2 + std::f32::consts::PI)
+            .rem_euclid(std::f32::consts::TAU)
             - std::f32::consts::PI;
-        let steer = ((-err * 3.0 + s.position[2] * 0.05) * 20_000.0).clamp(-12_000.0, 12_000.0) as i16;
-        sim.set_input(car, DriveInput { throttle: i16::MAX, steer, boost, ..DriveInput::default() });
+        let steer =
+            ((-err * 3.0 + s.position[2] * 0.05) * 20_000.0).clamp(-12_000.0, 12_000.0) as i16;
+        sim.set_input(
+            car,
+            DriveInput {
+                throttle: i16::MAX,
+                steer,
+                boost,
+                ..DriveInput::default()
+            },
+        );
         sim.step();
         let s = sim.car_state(car).unwrap();
         let t = i as f32 * DT;
@@ -50,7 +64,10 @@ fn launch(map: &LoadedMap, profile: &VehicleProfile, boost: bool) -> (f32, f32, 
 
 /// Before the fun pass (the committed profiles at 79d206ab, measured by this test): (vehicle, 0-100 km/h s, km/h at 150 m).
 /// The Tradie Ute never reached 100 km/h inside 150 m.
-const BEFORE: [(&str, f32, f32); 2] = [("cruz-missile", 8.38, 102.0), ("tradie-ute", f32::INFINITY, 91.0)];
+const BEFORE: [(&str, f32, f32); 2] = [
+    ("cruz-missile", 8.38, 102.0),
+    ("tradie-ute", f32::INFINITY, 91.0),
+];
 
 #[test]
 fn every_vehicle_launches_hard_and_gets_fast() {
@@ -66,9 +83,19 @@ fn every_vehicle_launches_hard_and_gets_fast() {
         // The pass's floor (owner 2026-10-12): launch at least 30 % quicker, speed down the straight at least 20 % higher,
         // and boost is worth having off the line.
         if let Some(&(_, before_100, before_150)) = BEFORE.iter().find(|(n, ..)| *n == name) {
-            assert!(to_100.is_finite() && to_100 <= (before_100 * 0.7).min(4.0), "{name}: 0-100 in {to_100:.2} s");
-            assert!(v150 * 3.6 >= before_150 * 1.2, "{name}: {:.0} km/h at 150 m", v150 * 3.6);
+            assert!(
+                to_100.is_finite() && to_100 <= (before_100 * 0.7).min(4.0),
+                "{name}: 0-100 in {to_100:.2} s"
+            );
+            assert!(
+                v150 * 3.6 >= before_150 * 1.2,
+                "{name}: {:.0} km/h at 150 m",
+                v150 * 3.6
+            );
         }
-        assert!(b100 <= to_100 * 0.8, "{name}: boost shortens the launch ({b100:.2} vs {to_100:.2} s)");
+        assert!(
+            b100 <= to_100 * 0.8,
+            "{name}: boost shortens the launch ({b100:.2} vs {to_100:.2} s)"
+        );
     }
 }

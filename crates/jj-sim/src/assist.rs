@@ -448,7 +448,11 @@ mod tests {
     fn the_standard_profile_is_valid_and_bad_ones_are_refused() {
         let p = AssistProfile::standard();
         // Lots pulls toward the line harder than Some; the shares themselves are tuning data.
-        assert!(0.0 < p.some.steer_to_line && p.some.steer_to_line < p.lots.steer_to_line && p.lots.steer_to_line <= 1.0);
+        assert!(
+            0.0 < p.some.steer_to_line
+                && p.some.steer_to_line < p.lots.steer_to_line
+                && p.lots.steer_to_line <= 1.0
+        );
         assert!(p.allows_wheelie(AssistLevel::Some) && !p.allows_wheelie(AssistLevel::Lots));
         let bad = ASSIST_JSON.replace("\"zeroAt\": 0.85", "\"zeroAt\": 0.1");
         assert!(AssistProfile::from_json(&bad).is_err());
