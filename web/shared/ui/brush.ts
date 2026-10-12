@@ -95,7 +95,7 @@ export interface BrushBgOptions {
 export function brushBg(id: string, { fill, ink = tokenData.palette.ink, stroke = 2, shadow = 'rgb(21 32 58 / .85)', w = 200 }: BrushBgOptions): string {
   const h = 40;
   const d = brushButtonPath(id, w, h);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -1.5 ${w + 6} ${h + 5.5}" preserveAspectRatio="none">`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + 6}" height="${h + 5.5}" viewBox="-3 -1.5 ${w + 6} ${h + 5.5}" preserveAspectRatio="none">`
     + (shadow ? `<path d="${d}" transform="translate(0 3)" fill="${shadow}" stroke="${shadow}" stroke-width="${stroke}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` : '')
     + `<path d="${d}" fill="${fill}" stroke="${ink}" stroke-width="${stroke}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
@@ -125,7 +125,7 @@ function skinPair(kind: Kind, i: number, { stroke, sy, ink, shadow }: { stroke: 
   const d = path(`${kind}-${i}`, w, h);
   const vb = `-4 -3 ${w + 8} ${h + sy + 6}`;
   const st = `stroke-width="${stroke}" vector-effect="non-scaling-stroke" stroke-linejoin="round"`;
-  const head = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" preserveAspectRatio="none">`;
+  const head = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + 8}" height="${h + sy + 6}" viewBox="${vb}" preserveAspectRatio="none">`;
   // mask: the shape with its full outline, and the shadow under it
   const mask = `${head}<path d="${d}" fill="#000" stroke="#000" ${st}/><path d="${d}" transform="translate(0 ${sy})" fill="#000" stroke="#000" ${st}/></svg>`;
   // skin: the shadow where it shows below the shape (shadow minus shape), then the outline on top

@@ -8,7 +8,6 @@ use super::{BiomeData, BiomeDef};
 use crate::features::Density;
 use crate::lineside::{Anchor, Lineside, Side, SignRule, Trigger, Yaw};
 use crate::scatter::{Algorithm, PieceSpec, Spec, piece};
-use crate::terrain::TerrainParams;
 
 pub struct Rocks;
 
@@ -85,15 +84,7 @@ impl BiomeDef for Rocks {
             id: Biome::Rocks,
             road: Surface::PackedDirt,
             ground: Surface::OffTrack,
-            terrain: TerrainParams {
-                relief_m: 10.0,
-                ground_relief_m: 10.0,
-                wavelength_m: 80.0,
-                max_grade: 0.06,
-                max_curvature: 0.0040,
-                max_bank_cdeg: 600,
-                blend_m: 20.0,
-            },
+            terrain: crate::tuning::GeneratorData::shipped().terrain(Biome::Rocks),
             features: Density {
                 jump: 2.5,
                 crest: 2.0,

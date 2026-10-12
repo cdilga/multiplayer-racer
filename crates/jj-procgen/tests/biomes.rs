@@ -531,7 +531,7 @@ fn writes_the_top_down_plots() {
         ("rocks", &[Biome::Rocks]),
         ("outback-dirt", &[Biome::OutbackDirt]),
         ("outback-bitumen", &[Biome::OutbackBitumen]),
-        ("playtest-four-biomes", &jj_procgen::playtest::RECIPE),
+        ("playtest-four-biomes", &jj_procgen::playtest::POOL),
     ];
     for (name, recipe) in plots {
         let map = track(2, recipe);

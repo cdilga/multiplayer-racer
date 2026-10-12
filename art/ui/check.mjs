@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
-import { CVD_TYPES, contrast, deltaE2000, simulateCvd } from './lib/color.mjs';
+import { CVD_TYPES, contrast, deltaE2000, hexToRgb, rgbToHex, simulateCvd } from './lib/color.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const tokens = JSON.parse(readFileSync(join(here, 'tokens.json'), 'utf8'));
@@ -51,6 +51,21 @@ for (const c of colors) {
   const ok = ratio >= MIN.large;
   report.badges.push({ color: c.name, on: c.on, ratio: +ratio.toFixed(2), ok });
   if (!ok) fail(`badge: number (${c.on}) on ${c.name} ${c.hex} is ${ratio.toFixed(2)}:1, needs 3:1`);
+}
+
+// P1-R13: the pattern layer darkens the backing at 28%; numbers must stay readable on both parts of the repeat.
+const patterns = tokens.identity?.patterns ?? [];
+report.patterns = { catalogue: patterns.map(p => p.id), contrast: [], adjacent: [] };
+if (patterns.length < 2 || new Set(patterns.map(p => p.id)).size !== patterns.length || new Set(patterns.map(p => p.svg)).size !== patterns.length) fail('patterns: distinct IDs and paths, at least two, are required');
+for (const c of colors) {
+  const mixed = rgbToHex(hexToRgb(c.hex).map((v, i) => v * .72 + hexToRgb(palette.ink.hex)[i] * .28));
+  const ratio = contrast(hex(c.on), mixed);
+  report.patterns.contrast.push({ color: c.name, patternedBacking: mixed, ratio: +ratio.toFixed(2), ok: ratio >= MIN.large });
+  if (ratio < MIN.large) fail(`pattern number: ${c.name} is ${ratio.toFixed(2)}:1, needs 3:1`);
+}
+for (let number = 1; patterns.length && number <= colors.length * patterns.length; number++) {
+  report.patterns.adjacent.push({ a: number, b: number + 1, patternA: patterns[(number - 1) % patterns.length].id,
+    patternB: patterns[number % patterns.length].id, byPattern: patterns[(number - 1) % patterns.length].id !== patterns[number % patterns.length].id, byNumber: true });
 }
 
 // 4. Adjacent seats (seat n and n+1, wrapping round the palette as N grows) must be told apart by

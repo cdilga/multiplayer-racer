@@ -1,0 +1,1878 @@
+{
+  "software-full": {
+    "pattern": {
+      "bit": 1,
+      "signatures": [
+        "00001",
+        "00010",
+        "00011",
+        "00100",
+        "00101",
+        "00110",
+        "00111",
+        "01000",
+        "01001",
+        "01010",
+        "01011",
+        "01100",
+        "01101",
+        "01110",
+        "01111",
+        "10000",
+        "10001",
+        "10010",
+        "10011",
+        "10100",
+        "10101",
+        "10110",
+        "10111",
+        "11000"
+      ]
+    },
+    "seats": [
+      {
+        "boosting": false,
+        "car": 0,
+        "colour": {
+          "index": 0,
+          "rgb": [
+            229,
+            50,
+            45
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:100",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 1300,
+        "inputDropped": false,
+        "inputSeq": 222,
+        "menuOpen": false,
+        "name": "Player 1",
+        "number": 1,
+        "presence": "Active",
+        "seat": 1,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 1,
+        "colour": {
+          "index": 1,
+          "rgb": [
+            37,
+            99,
+            235
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:101",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 1300,
+        "inputDropped": false,
+        "inputSeq": 211,
+        "menuOpen": false,
+        "name": "Player 2",
+        "number": 2,
+        "presence": "Active",
+        "seat": 2,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 2,
+        "colour": {
+          "index": 2,
+          "rgb": [
+            255,
+            122,
+            26
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:102",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 1300,
+        "inputDropped": false,
+        "inputSeq": 202,
+        "menuOpen": false,
+        "name": "Player 3",
+        "number": 3,
+        "presence": "Active",
+        "seat": 3,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 3,
+        "colour": {
+          "index": 3,
+          "rgb": [
+            0,
+            181,
+            184
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:103",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 1300,
+        "inputDropped": false,
+        "inputSeq": 195,
+        "menuOpen": false,
+        "name": "Player 4",
+        "number": 4,
+        "presence": "Active",
+        "seat": 4,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 4,
+        "colour": {
+          "index": 4,
+          "rgb": [
+            255,
+            210,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:1",
+        "fresh": true,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 8,
+        "inputDropped": false,
+        "inputSeq": 192,
+        "menuOpen": false,
+        "name": "Player 5",
+        "number": 5,
+        "presence": "Active",
+        "seat": 5,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 5,
+        "colour": {
+          "index": 5,
+          "rgb": [
+            255,
+            79,
+            163
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:2",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 1300,
+        "inputDropped": false,
+        "inputSeq": 186,
+        "menuOpen": false,
+        "name": "Player 6",
+        "number": 6,
+        "presence": "Active",
+        "seat": 6,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 6,
+        "colour": {
+          "index": 6,
+          "rgb": [
+            42,
+            45,
+            52
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7917,
+        "menuOpen": false,
+        "name": "Pad 1",
+        "number": 7,
+        "presence": "Active",
+        "seat": 7,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 7,
+        "colour": {
+          "index": 7,
+          "rgb": [
+            34,
+            164,
+            71
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7861,
+        "menuOpen": false,
+        "name": "Pad 2",
+        "number": 8,
+        "presence": "Active",
+        "seat": 8,
+        "source": 17
+      },
+      {
+        "boosting": false,
+        "car": 8,
+        "colour": {
+          "index": 8,
+          "rgb": [
+            244,
+            241,
+            234
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7800,
+        "menuOpen": false,
+        "name": "Pad 3",
+        "number": 9,
+        "presence": "Active",
+        "seat": 9,
+        "source": 18
+      },
+      {
+        "boosting": false,
+        "car": 9,
+        "colour": {
+          "index": 9,
+          "rgb": [
+            139,
+            63,
+            217
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7743,
+        "menuOpen": false,
+        "name": "Pad 4",
+        "number": 10,
+        "presence": "Active",
+        "seat": 10,
+        "source": 19
+      },
+      {
+        "boosting": false,
+        "car": 10,
+        "colour": {
+          "index": 10,
+          "rgb": [
+            142,
+            27,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7683,
+        "menuOpen": false,
+        "name": "Pad 5",
+        "number": 11,
+        "presence": "Active",
+        "seat": 11,
+        "source": 20
+      },
+      {
+        "boosting": false,
+        "car": 11,
+        "colour": {
+          "index": 11,
+          "rgb": [
+            94,
+            200,
+            255
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7617,
+        "menuOpen": false,
+        "name": "Pad 6",
+        "number": 12,
+        "presence": "Active",
+        "seat": 12,
+        "source": 21
+      },
+      {
+        "boosting": false,
+        "car": 12,
+        "colour": {
+          "index": 12,
+          "rgb": [
+            229,
+            50,
+            45
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7568,
+        "menuOpen": false,
+        "name": "Keys A",
+        "number": 13,
+        "presence": "Active",
+        "seat": 13,
+        "source": 2
+      },
+      {
+        "boosting": false,
+        "car": 13,
+        "colour": {
+          "index": 13,
+          "rgb": [
+            37,
+            99,
+            235
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-d22b240fe3c1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7515,
+        "menuOpen": false,
+        "name": "Keys B",
+        "number": 14,
+        "presence": "Active",
+        "seat": 14,
+        "source": 3
+      },
+      {
+        "boosting": false,
+        "car": 14,
+        "colour": {
+          "index": 14,
+          "rgb": [
+            255,
+            122,
+            26
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7440,
+        "menuOpen": false,
+        "name": "Pad 1 #15",
+        "number": 15,
+        "presence": "Active",
+        "seat": 15,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 15,
+        "colour": {
+          "index": 15,
+          "rgb": [
+            0,
+            181,
+            184
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7356,
+        "menuOpen": false,
+        "name": "Pad 2 #16",
+        "number": 16,
+        "presence": "Active",
+        "seat": 16,
+        "source": 17
+      },
+      {
+        "boosting": false,
+        "car": 16,
+        "colour": {
+          "index": 16,
+          "rgb": [
+            255,
+            210,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7265,
+        "menuOpen": false,
+        "name": "Pad 3 #17",
+        "number": 17,
+        "presence": "Active",
+        "seat": 17,
+        "source": 18
+      },
+      {
+        "boosting": false,
+        "car": 17,
+        "colour": {
+          "index": 17,
+          "rgb": [
+            255,
+            79,
+            163
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7167,
+        "menuOpen": false,
+        "name": "Pad 4 #18",
+        "number": 18,
+        "presence": "Active",
+        "seat": 18,
+        "source": 19
+      },
+      {
+        "boosting": false,
+        "car": 18,
+        "colour": {
+          "index": 18,
+          "rgb": [
+            42,
+            45,
+            52
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 7060,
+        "menuOpen": false,
+        "name": "Pad 5 #19",
+        "number": 19,
+        "presence": "Active",
+        "seat": 19,
+        "source": 20
+      },
+      {
+        "boosting": false,
+        "car": 19,
+        "colour": {
+          "index": 19,
+          "rgb": [
+            34,
+            164,
+            71
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 6947,
+        "menuOpen": false,
+        "name": "Pad 6 #20",
+        "number": 20,
+        "presence": "Active",
+        "seat": 20,
+        "source": 21
+      },
+      {
+        "boosting": false,
+        "car": 20,
+        "colour": {
+          "index": 20,
+          "rgb": [
+            244,
+            241,
+            234
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 6858,
+        "menuOpen": false,
+        "name": "Keys A #21",
+        "number": 21,
+        "presence": "Active",
+        "seat": 21,
+        "source": 2
+      },
+      {
+        "boosting": false,
+        "car": 21,
+        "colour": {
+          "index": 21,
+          "rgb": [
+            139,
+            63,
+            217
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-ee6a517f9a76",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 6761,
+        "menuOpen": false,
+        "name": "Keys B #22",
+        "number": 22,
+        "presence": "Active",
+        "seat": 22,
+        "source": 3
+      },
+      {
+        "boosting": false,
+        "car": 22,
+        "colour": {
+          "index": 22,
+          "rgb": [
+            142,
+            27,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83be963c1521",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 6622,
+        "menuOpen": false,
+        "name": "Pad 1 #23",
+        "number": 23,
+        "presence": "Active",
+        "seat": 23,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 23,
+        "colour": {
+          "index": 23,
+          "rgb": [
+            94,
+            200,
+            255
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-17b0b9f1a028",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 8,
+        "inputAgeMs": 641,
+        "inputDropped": false,
+        "inputSeq": 6471,
+        "menuOpen": false,
+        "name": "Pad 1 #24",
+        "number": 24,
+        "presence": "Active",
+        "seat": 24,
+        "source": 16
+      }
+    ],
+    "carInputs": [
+      {
+        "car": 0,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 1,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 2,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 3,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 4,
+        "input": {
+          "brake": 1,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 5,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 6,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 7,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 8,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 9,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 10,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 11,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 12,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 13,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 14,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 15,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 16,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 17,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 18,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 19,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 20,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 21,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 22,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 23,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      }
+    ]
+  },
+  "software-quarter": {
+    "pattern": {
+      "bit": 2,
+      "signatures": [
+        "00001",
+        "00010",
+        "00011",
+        "00100",
+        "00101",
+        "00110",
+        "00111",
+        "01000",
+        "01001",
+        "01010",
+        "01011",
+        "01100",
+        "01101",
+        "01110",
+        "01111",
+        "10000",
+        "10001",
+        "10010",
+        "10011",
+        "10100",
+        "10101",
+        "10110",
+        "10111",
+        "11000"
+      ]
+    },
+    "seats": [
+      {
+        "boosting": false,
+        "car": 0,
+        "colour": {
+          "index": 0,
+          "rgb": [
+            229,
+            50,
+            45
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:100",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 225,
+        "menuOpen": false,
+        "name": "Player 1",
+        "number": 1,
+        "presence": "Active",
+        "seat": 1,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 1,
+        "colour": {
+          "index": 1,
+          "rgb": [
+            37,
+            99,
+            235
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:101",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 216,
+        "menuOpen": false,
+        "name": "Player 2",
+        "number": 2,
+        "presence": "Active",
+        "seat": 2,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 2,
+        "colour": {
+          "index": 2,
+          "rgb": [
+            255,
+            122,
+            26
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:102",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 206,
+        "menuOpen": false,
+        "name": "Player 3",
+        "number": 3,
+        "presence": "Active",
+        "seat": 3,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 3,
+        "colour": {
+          "index": 3,
+          "rgb": [
+            0,
+            181,
+            184
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:103",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 196,
+        "menuOpen": false,
+        "name": "Player 4",
+        "number": 4,
+        "presence": "Active",
+        "seat": 4,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 4,
+        "colour": {
+          "index": 4,
+          "rgb": [
+            255,
+            210,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:1",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 191,
+        "menuOpen": false,
+        "name": "Player 5",
+        "number": 5,
+        "presence": "Active",
+        "seat": 5,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 5,
+        "colour": {
+          "index": 5,
+          "rgb": [
+            255,
+            79,
+            163
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "local:2",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 3800,
+        "inputDropped": true,
+        "inputSeq": 185,
+        "menuOpen": false,
+        "name": "Player 6",
+        "number": 6,
+        "presence": "Active",
+        "seat": 6,
+        "source": 1
+      },
+      {
+        "boosting": false,
+        "car": 6,
+        "colour": {
+          "index": 6,
+          "rgb": [
+            42,
+            45,
+            52
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13585,
+        "menuOpen": false,
+        "name": "Pad 1",
+        "number": 7,
+        "presence": "Active",
+        "seat": 7,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 7,
+        "colour": {
+          "index": 7,
+          "rgb": [
+            34,
+            164,
+            71
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13545,
+        "menuOpen": false,
+        "name": "Pad 2",
+        "number": 8,
+        "presence": "Active",
+        "seat": 8,
+        "source": 17
+      },
+      {
+        "boosting": false,
+        "car": 8,
+        "colour": {
+          "index": 8,
+          "rgb": [
+            244,
+            241,
+            234
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13497,
+        "menuOpen": false,
+        "name": "Pad 3",
+        "number": 9,
+        "presence": "Active",
+        "seat": 9,
+        "source": 18
+      },
+      {
+        "boosting": false,
+        "car": 9,
+        "colour": {
+          "index": 9,
+          "rgb": [
+            139,
+            63,
+            217
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13441,
+        "menuOpen": false,
+        "name": "Pad 4",
+        "number": 10,
+        "presence": "Active",
+        "seat": 10,
+        "source": 19
+      },
+      {
+        "boosting": false,
+        "car": 10,
+        "colour": {
+          "index": 10,
+          "rgb": [
+            142,
+            27,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13380,
+        "menuOpen": false,
+        "name": "Pad 5",
+        "number": 11,
+        "presence": "Active",
+        "seat": 11,
+        "source": 20
+      },
+      {
+        "boosting": false,
+        "car": 11,
+        "colour": {
+          "index": 11,
+          "rgb": [
+            94,
+            200,
+            255
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13314,
+        "menuOpen": false,
+        "name": "Pad 6",
+        "number": 12,
+        "presence": "Active",
+        "seat": 12,
+        "source": 21
+      },
+      {
+        "boosting": false,
+        "car": 12,
+        "colour": {
+          "index": 12,
+          "rgb": [
+            229,
+            50,
+            45
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13269,
+        "menuOpen": false,
+        "name": "Keys A",
+        "number": 13,
+        "presence": "Active",
+        "seat": 13,
+        "source": 2
+      },
+      {
+        "boosting": false,
+        "car": 13,
+        "colour": {
+          "index": 13,
+          "rgb": [
+            37,
+            99,
+            235
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-83bcccff3ffa",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13221,
+        "menuOpen": false,
+        "name": "Keys B",
+        "number": 14,
+        "presence": "Active",
+        "seat": 14,
+        "source": 3
+      },
+      {
+        "boosting": false,
+        "car": 14,
+        "colour": {
+          "index": 14,
+          "rgb": [
+            255,
+            122,
+            26
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13149,
+        "menuOpen": false,
+        "name": "Pad 1 #15",
+        "number": 15,
+        "presence": "Active",
+        "seat": 15,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 15,
+        "colour": {
+          "index": 15,
+          "rgb": [
+            0,
+            181,
+            184
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 13069,
+        "menuOpen": false,
+        "name": "Pad 2 #16",
+        "number": 16,
+        "presence": "Active",
+        "seat": 16,
+        "source": 17
+      },
+      {
+        "boosting": false,
+        "car": 16,
+        "colour": {
+          "index": 16,
+          "rgb": [
+            255,
+            210,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12982,
+        "menuOpen": false,
+        "name": "Pad 3 #17",
+        "number": 17,
+        "presence": "Active",
+        "seat": 17,
+        "source": 18
+      },
+      {
+        "boosting": false,
+        "car": 17,
+        "colour": {
+          "index": 17,
+          "rgb": [
+            255,
+            79,
+            163
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12888,
+        "menuOpen": false,
+        "name": "Pad 4 #18",
+        "number": 18,
+        "presence": "Active",
+        "seat": 18,
+        "source": 19
+      },
+      {
+        "boosting": false,
+        "car": 18,
+        "colour": {
+          "index": 18,
+          "rgb": [
+            42,
+            45,
+            52
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12789,
+        "menuOpen": false,
+        "name": "Pad 5 #19",
+        "number": 19,
+        "presence": "Active",
+        "seat": 19,
+        "source": 20
+      },
+      {
+        "boosting": false,
+        "car": 19,
+        "colour": {
+          "index": 19,
+          "rgb": [
+            34,
+            164,
+            71
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12680,
+        "menuOpen": false,
+        "name": "Pad 6 #20",
+        "number": 20,
+        "presence": "Active",
+        "seat": 20,
+        "source": 21
+      },
+      {
+        "boosting": false,
+        "car": 20,
+        "colour": {
+          "index": 20,
+          "rgb": [
+            244,
+            241,
+            234
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12594,
+        "menuOpen": false,
+        "name": "Keys A #21",
+        "number": 21,
+        "presence": "Active",
+        "seat": 21,
+        "source": 2
+      },
+      {
+        "boosting": false,
+        "car": 21,
+        "colour": {
+          "index": 21,
+          "rgb": [
+            139,
+            63,
+            217
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-6a78557d3e69",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12504,
+        "menuOpen": false,
+        "name": "Keys B #22",
+        "number": 22,
+        "presence": "Active",
+        "seat": 22,
+        "source": 3
+      },
+      {
+        "boosting": false,
+        "car": 22,
+        "colour": {
+          "index": 22,
+          "rgb": [
+            142,
+            27,
+            63
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-fac0d4289b81",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12374,
+        "menuOpen": false,
+        "name": "Pad 1 #23",
+        "number": 23,
+        "presence": "Active",
+        "seat": 23,
+        "source": 16
+      },
+      {
+        "boosting": false,
+        "car": 23,
+        "colour": {
+          "index": 23,
+          "rgb": [
+            94,
+            200,
+            255
+          ]
+        },
+        "connected": true,
+        "drifting": false,
+        "endpoint": "c-5de622e9c762",
+        "fresh": false,
+        "idleCued": false,
+        "idleForMs": 9,
+        "inputAgeMs": 1842,
+        "inputDropped": false,
+        "inputSeq": 12201,
+        "menuOpen": false,
+        "name": "Pad 1 #24",
+        "number": 24,
+        "presence": "Active",
+        "seat": 24,
+        "source": 16
+      }
+    ],
+    "carInputs": [
+      {
+        "car": 0,
+        "input": {
+          "brake": 0,
+          "steer": 0.03552354499697685,
+          "throttle": 1
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 8.413351058959961,
+          "mode": "driving",
+          "routePoint": 59,
+          "steer": 0.035523153841495514,
+          "stuckTicks": 0,
+          "target": [
+            157.5,
+            0
+          ],
+          "targetSpeed": 26,
+          "throttle": 1
+        }
+      },
+      {
+        "car": 1,
+        "input": {
+          "brake": 0,
+          "steer": -0.9140293598175049,
+          "throttle": 1
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 6,
+          "mode": "driving",
+          "routePoint": 72,
+          "steer": -0.9140213131904602,
+          "stuckTicks": 215,
+          "target": [
+            183.73699951171875,
+            8.975000381469727
+          ],
+          "targetSpeed": 7.1716461181640625,
+          "throttle": 1
+        }
+      },
+      {
+        "car": 2,
+        "input": {
+          "brake": 0,
+          "steer": 0.10415967553853989,
+          "throttle": 0.4917752742767334
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 7.185073375701904,
+          "mode": "driving",
+          "routePoint": 129,
+          "steer": 0.10417064279317856,
+          "stuckTicks": 0,
+          "target": [
+            61.483001708984375,
+            44.39099884033203
+          ],
+          "targetSpeed": 10.948429107666016,
+          "throttle": 0.491771936416626
+        }
+      },
+      {
+        "car": 3,
+        "input": {
+          "brake": 0,
+          "steer": -1,
+          "throttle": 1
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 6,
+          "mode": "driving",
+          "routePoint": 81,
+          "steer": -1,
+          "stuckTicks": 215,
+          "target": [
+            177.13900756835938,
+            28.191999435424805
+          ],
+          "targetSpeed": 7.171648025512695,
+          "throttle": 1
+        }
+      },
+      {
+        "car": 4,
+        "input": {
+          "brake": 0,
+          "steer": -0.5596179366111755,
+          "throttle": 1
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 6,
+          "mode": "driving",
+          "routePoint": 85,
+          "steer": -0.5596027970314026,
+          "stuckTicks": 215,
+          "target": [
+            167.5,
+            30
+          ],
+          "targetSpeed": 7.17410945892334,
+          "throttle": 1
+        }
+      },
+      {
+        "car": 5,
+        "input": {
+          "brake": 0,
+          "steer": -0.7239906191825867,
+          "throttle": 1
+        },
+        "autopilot": {
+          "brake": 0,
+          "lookAheadM": 6,
+          "mode": "driving",
+          "routePoint": 71,
+          "steer": -0.7239902019500732,
+          "stuckTicks": 215,
+          "target": [
+            182.5570068359375,
+            6.796000003814697
+          ],
+          "targetSpeed": 7.1716461181640625,
+          "throttle": 1
+        }
+      },
+      {
+        "car": 6,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 7,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 8,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 9,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 10,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 11,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 12,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 13,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 14,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 15,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 16,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 17,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 18,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 19,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 20,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 21,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 22,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      },
+      {
+        "car": 23,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "autopilot": null
+      }
+    ]
+  }
+}

@@ -40,6 +40,7 @@ export async function serve(dist, base, extraEnv = {}) {
   });
   let log = '';
   const origin = await new Promise((resolve, reject) => {
+    child.once('error', reject);
     child.stderr.on('data', (d) => {
       log += d;
       const m = /listening on (\S+)/.exec(log);
@@ -50,6 +51,6 @@ export async function serve(dist, base, extraEnv = {}) {
   return {
     origin,
     log: () => log,
-    close: () => new Promise((r) => (child.exitCode !== null ? r() : (child.once('exit', r), child.kill()))),
+    close: () => new Promise((r) => (child.exitCode !== null || child.signalCode !== null ? r() : (child.once('exit', r), child.kill()))),
   };
 }

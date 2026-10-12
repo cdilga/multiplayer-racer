@@ -1,0 +1,24 @@
+✔ two bakes give identical bytes, and they are the committed files (799.529667ms)
+✔ LOD0 loads in three.js with the contract nodes and Spike J's bounds (14.123042ms)
+✔ LOD1 loads in three.js with the contract nodes and Spike J's bounds (2.680917ms)
+✔ LOD2 loads in three.js with the contract nodes and Spike J's bounds (1.936917ms)
+✔ the sidecar declares the pivots the GLBs carry, identical at every LOD (3.870916ms)
+✔ the roster is found from the data and is not empty (8.247708ms)
+✔ cruz-missile LOD0: doors, front and back pivot on their hinge lines (34.15925ms)
+✔ cruz-missile LOD1: doors, front and back pivot on their hinge lines (2.452375ms)
+✔ cruz-missile LOD2: doors, front and back pivot on their hinge lines (1.856625ms)
+✔ cruz-missile: the pivots are the same at every LOD and in the committed sidecar (5.440667ms)
+✔ cruz-missile: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (1.658167ms)
+✔ tradie-ute LOD0: doors, front and back pivot on their hinge lines (6.247416ms)
+✔ tradie-ute LOD1: doors, front and back pivot on their hinge lines (1.938ms)
+✔ tradie-ute LOD2: doors, front and back pivot on their hinge lines (1.254958ms)
+✔ tradie-ute: the pivots are the same at every LOD and in the committed sidecar (5.348ms)
+✔ tradie-ute: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (1.306792ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1865.958625

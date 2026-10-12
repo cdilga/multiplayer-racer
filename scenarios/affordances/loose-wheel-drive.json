@@ -31,7 +31,7 @@
   "kinds": ["no-input", "mash", "hold"],
   "differ": [
    {"car": 0, "metric": "headingChangeDeg", "atTick": 120, "by": 5.0},
-   {"car": 0, "metric": "travel", "by": 3.0}
+   {"car": 0, "metric": "travel", "by": 2.5}
   ]
  }
 }

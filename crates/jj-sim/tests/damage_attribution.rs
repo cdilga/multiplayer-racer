@@ -103,7 +103,8 @@ fn a_hit_by_debris_names_the_car_that_hit_the_debris() {
         z: -30.0,
         heading: h,
     };
-    sim.place_car(CarId(0), pose(56.0), 0.0, [12.0, 0.0, 0.0]);
+    // 12.8 m/s: the yard is off-track (R124 rolling drag), so this arrives at the 12 m/s it used to.
+    sim.place_car(CarId(0), pose(56.0), 0.0, [12.8, 0.0, 0.0]);
     sim.place_car(CarId(1), pose(68.0), 0.0, [0.0, 0.0, 0.0]);
     for _ in 0..120 {
         sim.step();

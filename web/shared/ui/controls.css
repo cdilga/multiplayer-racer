@@ -1,0 +1,30 @@
+/* Controls cards (P1-C14, controls.ts). Everything is in em so the host sets a card's size with one font-size (the lobby strip, a
+   race tile, the menu page) and the phone's Help sets another. Paper card, ink hairline, seat-neutral: the keycaps and sticks
+   are the only drawn things. */
+.jj-cc { --cc-bd: var(--c-ink); min-width: 0; padding: .55em .75em .65em; color: var(--c-ink); background: var(--c-paper); border: .12em solid var(--cc-bd); border-radius: var(--r-panel, 2px); box-shadow: 0 .18em 0 var(--shadow-c, rgb(21 32 58 / .85)); font: 600 1em/1.2 var(--font-body); text-align: left; }
+.jj-cc header { margin: 0 0 .35em; font: 900 italic 1.15em/1 var(--font-display); letter-spacing: .02em; text-transform: uppercase; }
+.jj-cc ul { display: grid; grid-template-columns: max-content 1fr; gap: .32em .8em; align-items: center; margin: 0; padding: 0; list-style: none; }
+.jj-cc li { display: contents; }
+.jj-cc.compact li { display: flex; flex-wrap: wrap; align-items: center; gap: .15em .5em; min-width: 0; }
+.jj-cc.compact li .jj-cn { min-width: 4.6em; }
+.jj-cc .jj-cn { color: var(--c-ink-soft); white-space: nowrap; }
+.jj-cc .jj-cg { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .25em; min-width: 0; }
+.jj-cc small { grid-column: 1 / -1; margin: -.2em 0 0; color: var(--c-ink-soft); font-size: .72em; }
+.jj-cc li small { display: none; }
+.jj-cc.compact ul { grid-template-columns: repeat(2, minmax(0, auto)); gap: .3em 1em; }
+.jj-cc.compact { padding: .4em .6em .5em; font-size: .92em; }
+.jj-cc.compact header { margin-bottom: .25em; }
+
+.jj-key { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em; padding: 0 .3em .1em; font: 800 .95em/1 var(--font-body); color: var(--c-ink); background: var(--c-paper-shade); border: .1em solid var(--c-ink); border-radius: .25em; box-shadow: 0 .1em 0 var(--c-ink); }
+.jj-pill { display: inline-flex; align-items: center; height: 1.5em; padding: 0 .55em .08em; font: 700 .9em/1 var(--font-body); color: var(--c-paper); background: var(--c-ink); border-radius: .75em; white-space: nowrap; }
+.jj-then { color: var(--c-ink-soft); font-weight: 900; padding: 0 .05em; }
+.jj-stick { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.6em; height: 1.6em; border: .1em solid var(--c-ink); border-radius: 50%; background: var(--c-paper-shade); }
+.jj-stick i { position: absolute; width: .62em; height: .62em; border-radius: 50%; background: var(--c-cobalt); border: .08em solid var(--c-ink); left: calc(50% - .31em + var(--dx, 0em)); top: calc(50% - .31em + var(--dy, 0em)); }
+.jj-sg { display: inline-flex; align-items: center; gap: .2em; }
+.jj-sg em { font: 900 .78em/1 var(--font-body); font-style: normal; color: var(--c-ink-soft); }
+.jj-stick[data-dir="u"] { --dy: -.36em; } .jj-stick[data-dir="d"] { --dy: .36em; }
+.jj-stick[data-dir="l"] { --dx: -.36em; } .jj-stick[data-dir="r"] { --dx: .36em; }
+
+.jj-cpage { display: grid; grid-template-columns: repeat(auto-fit, minmax(17em, 1fr)); gap: .9em; align-items: start; }
+.jj-cpage .jj-cnote { grid-column: 1 / -1; margin: 0; color: var(--c-ink-soft); font-size: .8em; }
+@media (prefers-reduced-motion: no-preference) { .jj-cc[data-fold] { transition: opacity var(--dur-base, 200ms) var(--ease-exit, ease-out), transform var(--dur-base, 200ms) var(--ease-exit, ease-out); } }

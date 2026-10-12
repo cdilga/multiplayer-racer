@@ -13,6 +13,7 @@
 //! | `inputs` `{spans: [InputSpan]}` | more scripted input spans (a seated car follows its seat, not the script) | `{spans}` |
 //! | `place` `{car, pose, linvel?}` | teleports a car with a velocity (journaled, so clips replay it) | `{tick, car}` |
 //! | `finishRace` | ends the running race now as the finish window closing would (result frozen, `RaceOver`) | `{tick, ended}` |
+//! | `pickupItem` `{car, item}` | offers an item box to a real seated car (journalled; a full/protected queue refuses it) | `{accepted, reason, queue}` |
 //! | `step` `{ticks}` | exactly that many ticks, held or not | `{tick}` |
 //! | `until` `{until, maxTicks}` | steps until a car's metric is in range (`Until`, as in fixtures) | `{tick, ticks, held}` |
 //! | `observe` | cars (as `jj sim` observations), debris, the fixture's session, the host's seats and pauses | state |
@@ -27,7 +28,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use jj_fixture::{CarSpec, Fixture, Harness, InputSpan, PoseSpec, Until};
-use jj_map::{Registry, load_json};
+use jj_map::load_json;
 use jj_sim::observe::{RouteGeom, observe_cars};
 
 use super::{Host, STALE_MS, tick_ms};
@@ -55,6 +56,9 @@ enum Command {
         fixture: Box<Fixture>,
         #[serde(default)]
         map_json: Option<String>,
+        /// A simulation fixture can supply a profile before its model joins the roster.
+        #[serde(default)]
+        profile_json: Option<String>,
     },
     Spawn {
         cars: Vec<CarSpec>,
@@ -68,6 +72,12 @@ enum Command {
         car: u32,
         part: String,
         health: f32,
+    },
+    #[serde(rename_all = "camelCase")]
+    Rail {
+        dressing: u32,
+        displacement_m: f32,
+        velocity_mps: f32,
     },
     /// Teleports a car with a velocity (the F05b setup, a journaled `place_car`): the staged collisions of P1-G05.
     #[serde(rename_all = "camelCase")]
@@ -86,6 +96,10 @@ enum Command {
     /// Ends the running race now, as the finish window closing would: the race rules freeze the result and emit `RaceOver`,
     /// and the director goes Running → Finalising → Intermission the normal way (R90 "settable", P1-G01).
     FinishRace,
+    PickupItem {
+        car: u32,
+        item: jj_types::items::ItemId,
+    },
     Step {
         ticks: u64,
     },
@@ -131,6 +145,8 @@ impl Host {
             .map(|s| {
                 let input = self.inputs.get(&s.id);
                 let age = input.and_then(|i| i.state.age_ms(now_ms));
+                // What the host reads this seat's sticks as, with the input profile in force (br-2sdu.2).
+                let sem = input.map(|i| i.state.semantics());
                 json!({
                     "seat": s.id.0,
                     "number": s.number.0,
@@ -142,6 +158,13 @@ impl Host {
                     "presence": format!("{:?}", s.presence),
                     "car": input.and_then(|i| i.car).map(|c| c.0),
                     "inputAgeMs": age,
+                    "inputSeq": input.and_then(|i| i.wire_seq),
+                    "menuOpen": input.map(|i| i.menu_open),
+                    "inputDropped": input.map(|i| i.dropped),
+                    "idleCued": input.map(|i| i.idle_cued),
+                    "idleForMs": input.map(|i| now_ms.saturating_sub(i.active_ms)),
+                    "drifting": sem.map(|s| s.drift),
+                    "boosting": sem.map(|s| s.boost),
                     "fresh": age.is_some_and(|a| a <= STALE_MS),
                 })
             })
@@ -155,6 +178,7 @@ impl Host {
                 "tick": self.sim.tick(),
                 "cars": observe_cars(&self.sim, &RouteGeom::new(&self.map.map)),
                 "debris": jj_fixture::debris(&self.sim),
+                "rails": self.sim.rail_states(),
             }),
         };
         state["host"] = json!({
@@ -164,6 +188,7 @@ impl Host {
             "held": self.test.held,
             "queued": self.queued.len(),
         });
+        state["items"] = jj_fixture::items(&self.sim);
         state
     }
 
@@ -176,10 +201,14 @@ impl Host {
                 self.test.held = on;
                 json!({ "tick": self.sim.tick(), "held": on })
             }
-            Command::Load { fixture, map_json } => {
+            Command::Load {
+                fixture,
+                map_json,
+                profile_json,
+            } => {
                 let map = match map_json {
                     Some(text) => {
-                        load_json(text.as_bytes(), &Registry::generic()).map_err(|r| {
+                        load_json(text.as_bytes(), &jj_procgen::registry()).map_err(|r| {
                             format!(
                                 "the map doesn't validate: {:?}",
                                 r.violations
@@ -193,6 +222,16 @@ impl Host {
                 };
                 let held = self.test.held;
                 *self = Host::from_map(map, fixture.seed);
+                if let Some(json) = profile_json {
+                    let profile = jj_sim::VehicleProfile::from_json(&json)?;
+                    self.sim = jj_sim::Sim::new(
+                        &self.map,
+                        &jj_procgen::registry(),
+                        fixture.seed,
+                        profile.clone(),
+                    );
+                    self.vehicles = vec![("simulation-fixture".into(), profile)];
+                }
                 self.test.held = held;
                 let mut h = Harness::new(*fixture, &self.map, &mut self.sim, false)?;
                 h.record(&self.sim, false);
@@ -218,12 +257,25 @@ impl Host {
                 json!({ "spans": n })
             }
             Command::Damage { car, part, health } => {
-                let i = jj_sim::damage::part_index(&part)
+                let i = self
+                    .sim
+                    .profile_of(jj_sim::CarId(car))
+                    .and_then(|p| p.part_index(&part))
                     .filter(|&i| i > 0)
                     .ok_or_else(|| format!("no damageable part {part:?}"))?;
                 self.sim
                     .set_part_health(jj_sim::CarId(car), i as u8, health);
                 json!({ "tick": self.sim.tick(), "part": part, "health": health })
+            }
+            Command::Rail {
+                dressing,
+                displacement_m,
+                velocity_mps,
+            } => {
+                if !self.sim.set_rail(dressing, displacement_m, velocity_mps) {
+                    return Err("unknown rail dressing index or nonfinite rail state".into());
+                }
+                json!({ "tick": self.sim.tick(), "rails": self.sim.rail_states() })
             }
             Command::Place { car, pose, linvel } => {
                 self.sim.place_car(
@@ -247,6 +299,13 @@ impl Host {
             Command::FinishRace => {
                 let ended = self.sim.end_race_now();
                 json!({ "tick": self.sim.tick(), "ended": ended })
+            }
+            Command::PickupItem { car, item } => {
+                let seat = self
+                    .seat_of_car(car)
+                    .ok_or("a pickup needs a real seated car")?;
+                let result = self.sim.pickup_item(jj_sim::CarId(car), seat, item);
+                json!({ "accepted": result.is_ok(), "reason": result.err(), "queue": self.sim.items().queue(car) })
             }
             Command::Step { ticks } => {
                 for _ in 0..ticks {
@@ -330,6 +389,160 @@ mod tests {
 
     fn cmd(h: &mut Host, v: Value) -> Value {
         h.test_command(&v.to_string()).unwrap()
+    }
+
+    const MIXED_HOST: &str = include_str!("../../../../scenarios/roster/mixed-host.json");
+
+    /// The roster's `(id, profile JSON)` pairs from the data files (R123: no vehicle is named in code).
+    fn roster_files() -> Vec<(String, String)> {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let roster: Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("web/shared/src/roster.json")).unwrap(),
+        )
+        .unwrap();
+        roster["cars"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| {
+                let id = c["id"].as_str().unwrap().to_owned();
+                let json = std::fs::read_to_string(root.join(format!("assets/profiles/{id}.json")))
+                    .unwrap();
+                (id, json)
+            })
+            .collect()
+    }
+
+    /// The mixed-roster script (scenarios/roster/mixed-host.json; web/host/tests/roster-wasm.test.mjs runs the same
+    /// steps through the WASM build): free drive, the roster's vehicles sent to the host, two phones claim and pick the
+    /// roster's first two vehicles, both drive (the second steering) for `ticks`; returns the full-state hash.
+    fn mixed_host_hash(ticks: u64) -> String {
+        use jj_protocol::abi::UiCommand;
+        use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
+        use jj_types::{CommandId, SourceHandle};
+        let roster = roster_files();
+        let mut h = host();
+        cmd(&mut h, json!({ "cmd": "hold", "on": true }));
+        h.handle(
+            &MainToSim::Vehicles {
+                vehicles: roster.clone(),
+            }
+            .encode(),
+        )
+        .unwrap();
+        let net = |ep: &str, ch: Channel, bytes: Vec<u8>| {
+            MainToSim::NetBytes {
+                endpoint: EndpointId(ep.into()),
+                channel: ch,
+                bytes,
+            }
+            .encode()
+        };
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(1),
+                ui: UiCommand::FreeDrive { on: true },
+            }
+            .encode(),
+        )
+        .unwrap();
+        for k in 0..2 {
+            let ep = format!("fake-{k}");
+            let hello = ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("harness".into()),
+                endpoint: EndpointId(ep.clone()),
+                resume: None,
+            };
+            let claim = ControllerCmd::Claim {
+                request: RequestId(1),
+                name: format!("P{k}"),
+            };
+            for c in [hello, claim] {
+                h.handle(&net(&ep, Channel::Cmd, c.encode())).unwrap();
+            }
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": 30 }));
+        for (k, (id, _)) in roster.iter().take(2).enumerate() {
+            let pick = ControllerCmd::Pick {
+                vehicle: id.clone(),
+                open: false,
+            };
+            h.handle(&net(&format!("fake-{k}"), Channel::Cmd, pick.encode()))
+                .unwrap();
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": 30 }));
+        let seen = cmd(&mut h, json!({ "cmd": "observe" }));
+        let source = |k: usize| {
+            let seats = seen["host"]["seats"].as_array().unwrap();
+            let s = seats
+                .iter()
+                .find(|s| s["endpoint"] == format!("fake-{k}"))
+                .unwrap();
+            s["source"].as_u64().unwrap() as u16
+        };
+        let start = h.tick();
+        for t in (0..ticks).step_by(6) {
+            for k in 0..2usize {
+                let drive = [if k == 1 { -9_000 } else { 0 }, 32_767];
+                let batch = StateBatch {
+                    minor: STATE_MINOR,
+                    batch_seq: (t / 6) as u16 + 1,
+                    sent_at_ms: 0,
+                    records: vec![StateRecord {
+                        source: SourceHandle(source(k)),
+                        seq: (t / 6) as u16 + 1,
+                        drive,
+                        action: [0, 0],
+                        flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+                    }],
+                };
+                let bytes = net(
+                    &format!("fake-{k}"),
+                    Channel::State,
+                    batch.encode().unwrap(),
+                );
+                h.schedule(start + t, &bytes).unwrap();
+            }
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": ticks }));
+        let seen = cmd(&mut h, json!({ "cmd": "observe" }));
+        let vehicles: Vec<u64> = seen["cars"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["vehicle"].as_u64().unwrap())
+            .collect();
+        assert_eq!(vehicles, [0, 1], "each seat's car is the vehicle it picked");
+        let hash = h.state_hash();
+        jj_map::hex(&hash)
+    }
+
+    /// R123 determinism: a mixed-roster round through the host (vehicles table, picks, free-drive cars) replays to the
+    /// committed hash; web/host/tests/roster-wasm.test.mjs holds the WASM build to the same hash.
+    /// `JJ_BLESS=1` rewrites the committed hash.
+    #[test]
+    fn a_mixed_roster_through_the_host_hashes_to_the_committed_value() {
+        let mut fx: Value = serde_json::from_str(MIXED_HOST).unwrap();
+        let ticks = fx["ticks"].as_u64().unwrap();
+        let hash = mixed_host_hash(ticks);
+        assert_eq!(hash, mixed_host_hash(ticks), "the run repeats");
+        if std::env::var_os("JJ_BLESS").is_some() {
+            fx["hash"] = json!(hash);
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../scenarios/roster/mixed-host.json");
+            std::fs::write(
+                path,
+                format!("{}\n", serde_json::to_string_pretty(&fx).unwrap()),
+            )
+            .unwrap();
+            return;
+        }
+        assert_eq!(
+            hash,
+            fx["hash"].as_str().unwrap(),
+            "re-bless with JJ_BLESS=1 only for a deliberate change"
+        );
     }
 
     /// The `jj sim` loop (crates/jj-tools/src/sim) over the whole fixture: the native reference hash.

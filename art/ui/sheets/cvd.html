@@ -2,12 +2,15 @@
 <html lang="en-AU">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Identity under colour-vision deficiency</title>
 <style>
   body { margin: 0; padding: 32px 40px 40px; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-weight: 500; }
   h1 { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 48px; line-height: .95; margin: 0 0 6px; }
   p.lede { margin: 0 0 20px; font-size: 17px; max-width: 1200px; }
-  .row { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 16px; margin: 10px 0; }
+  .row { display: grid; grid-template-columns: 170px minmax(0, 1fr); align-items: center; gap: 16px; margin: 10px 0; }
+  .tablebox { max-width: 100%; overflow-x: auto; }
+  @media (max-width: 700px) { .row { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
   .row h2 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: 24px; margin: 0; }
   .row h2 small { display: block; font-family: var(--font-body); font-weight: 500; text-transform: none; font-size: 13px; }
   .seats { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -25,7 +28,7 @@
 <h1>Identity under colour-vision deficiency</h1>
 <p class="lede" id="lede"></p>
 <div id="rows"></div>
-<table id="pairs"></table>
+<div class="tablebox"><table id="pairs"></table></div>
 <p class="note" id="note"></p>
 <script type="module">
   import { applyTokens } from './tokens-css.js';

@@ -1,0 +1,2456 @@
+{
+  "browser": "151.0.7922.34",
+  "platform": "darwin/arm64",
+  "gpuMode": "native",
+  "cohorts": [
+    {
+      "n": 1,
+      "on": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 191.60000000000002,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 3,
+        "tick": 99.5,
+        "cars": 1,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 38,
+        "triangles": 21624,
+        "lods": [
+          0
+        ]
+      },
+      "off": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 191.60000000000002,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 4,
+        "tick": 99.5,
+        "cars": 1,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 38,
+        "triangles": 21624,
+        "lods": [
+          0
+        ]
+      },
+      "vehicles": {
+        "capacity": 16,
+        "cars": 1,
+        "patternsEnabled": true,
+        "materials": [
+          {
+            "vehicle": "cruz-missile",
+            "count": 1
+          }
+        ],
+        "drawsPerTile": 8,
+        "hulls": 24,
+        "fx": {
+          "spawned": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "alive": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "particles": 0,
+          "capacity": 512,
+          "drawsPerTile": 0,
+          "reducedMotion": false,
+          "lastImpact": null,
+          "impactCars": [],
+          "impactsByCar": {},
+          "impactSample": [],
+          "drawnBursts": {
+            "count": 0,
+            "visible": false,
+            "first": []
+          }
+        },
+        "types": [
+          {
+            "vehicle": "cruz-missile",
+            "id": "core",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "front",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "back",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FL",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FR",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RL",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RR",
+            "slotsPerCar": 1,
+            "instances": 1,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "wheel",
+            "slotsPerCar": 4,
+            "instances": 4,
+            "capacity": 64,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          }
+        ],
+        "parts": [
+          {
+            "part": "core",
+            "type": "core",
+            "vehicle": "cruz-missile",
+            "position": [
+              30,
+              0,
+              14.925
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "part": "front",
+            "type": "front",
+            "vehicle": "cruz-missile",
+            "position": [
+              30,
+              1.103,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "back",
+            "type": "back",
+            "vehicle": "cruz-missile",
+            "position": [
+              30,
+              1.179,
+              14.095
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FL",
+            "type": "door_FL",
+            "vehicle": "cruz-missile",
+            "position": [
+              30.966,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FR",
+            "type": "door_FR",
+            "vehicle": "cruz-missile",
+            "position": [
+              29.034,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RL",
+            "type": "door_RL",
+            "vehicle": "cruz-missile",
+            "position": [
+              30.94,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RR",
+            "type": "door_RR",
+            "vehicle": "cruz-missile",
+            "position": [
+              29.06,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              30.85,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              29.15,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              30.85,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              29.15,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "interiors": {
+          "cruz-missile.engine": 0,
+          "cruz-missile.cabin": 0,
+          "cruz-missile.boot": 0
+        },
+        "identities": [
+          {
+            "car": 0,
+            "number": 1,
+            "pattern": "stripes"
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "cruz-missile",
+            "loaded": true,
+            "cars": 1
+          },
+          {
+            "id": "tradie-ute",
+            "loaded": false,
+            "cars": 0
+          }
+        ]
+      },
+      "largeNumbers": [
+        {
+          "number": 108,
+          "chunks": [
+            108,
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "number": 10000,
+          "chunks": [
+            0,
+            1,
+            0,
+            5
+          ]
+        },
+        {
+          "number": 16777217,
+          "chunks": [
+            7217,
+            1677,
+            0,
+            8
+          ]
+        },
+        {
+          "number": 4294967295,
+          "chunks": [
+            7295,
+            9496,
+            42,
+            10
+          ]
+        }
+      ],
+      "bounds": []
+    },
+    {
+      "n": 4,
+      "on": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 158.89999999999998,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 3,
+        "tick": 99.5,
+        "cars": 4,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 116,
+        "triangles": 96642,
+        "lods": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "off": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 158.89999999999998,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 4,
+        "tick": 99.5,
+        "cars": 4,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 116,
+        "triangles": 96642,
+        "lods": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "vehicles": {
+        "capacity": 16,
+        "cars": 4,
+        "patternsEnabled": true,
+        "materials": [
+          {
+            "vehicle": "cruz-missile",
+            "count": 1
+          }
+        ],
+        "drawsPerTile": 8,
+        "hulls": 24,
+        "fx": {
+          "spawned": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "alive": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "particles": 0,
+          "capacity": 512,
+          "drawsPerTile": 0,
+          "reducedMotion": false,
+          "lastImpact": null,
+          "impactCars": [],
+          "impactsByCar": {},
+          "impactSample": [],
+          "drawnBursts": {
+            "count": 0,
+            "visible": false,
+            "first": []
+          }
+        },
+        "types": [
+          {
+            "vehicle": "cruz-missile",
+            "id": "core",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "front",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "back",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FL",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FR",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RL",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RR",
+            "slotsPerCar": 1,
+            "instances": 4,
+            "capacity": 16,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "wheel",
+            "slotsPerCar": 4,
+            "instances": 16,
+            "capacity": 64,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          }
+        ],
+        "parts": [
+          {
+            "part": "core",
+            "type": "core",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              0,
+              14.925
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "part": "front",
+            "type": "front",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              1.103,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "back",
+            "type": "back",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              1.179,
+              14.095
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FL",
+            "type": "door_FL",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.166,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FR",
+            "type": "door_FR",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.234,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RL",
+            "type": "door_RL",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.14,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RR",
+            "type": "door_RR",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.26,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.05,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.35,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.05,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.35,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "interiors": {
+          "cruz-missile.engine": 0,
+          "cruz-missile.cabin": 0,
+          "cruz-missile.boot": 0
+        },
+        "identities": [
+          {
+            "car": 0,
+            "number": 1,
+            "pattern": "stripes"
+          },
+          {
+            "car": 1,
+            "number": 2,
+            "pattern": "checks"
+          },
+          {
+            "car": 2,
+            "number": 3,
+            "pattern": "dots"
+          },
+          {
+            "car": 3,
+            "number": 4,
+            "pattern": "zigzag"
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "cruz-missile",
+            "loaded": true,
+            "cars": 4
+          },
+          {
+            "id": "tradie-ute",
+            "loaded": false,
+            "cars": 0
+          }
+        ]
+      },
+      "largeNumbers": [
+        {
+          "number": 108,
+          "chunks": [
+            108,
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "number": 10000,
+          "chunks": [
+            0,
+            1,
+            0,
+            5
+          ]
+        },
+        {
+          "number": 16777217,
+          "chunks": [
+            7217,
+            1677,
+            0,
+            8
+          ]
+        },
+        {
+          "number": 4294967295,
+          "chunks": [
+            7295,
+            9496,
+            42,
+            10
+          ]
+        }
+      ],
+      "bounds": [
+        {
+          "tile": "3",
+          "x": 635.78125,
+          "y": 542,
+          "width": 142.5625,
+          "height": 46,
+          "top": 542,
+          "right": 778.34375,
+          "bottom": 588,
+          "left": 635.78125
+        }
+      ]
+    },
+    {
+      "n": 24,
+      "on": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 8,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 10,
+        "tick": 99.5,
+        "cars": 24,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 651,
+        "triangles": 1425172,
+        "lods": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "off": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1920,
+        "height": 1080,
+        "cssWidth": 1920,
+        "cssHeight": 1080,
+        "dpr": 1,
+        "scale": 1,
+        "userScale": 1,
+        "resolution": "native",
+        "nativeWidth": 1920,
+        "nativeHeight": 1080,
+        "autoEvents": [],
+        "frameMs": 8,
+        "p95Ms": 0,
+        "budgetMs": 50,
+        "limitedBy": null,
+        "frames": 11,
+        "tick": 99.5,
+        "cars": 24,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 651,
+        "triangles": 1425172,
+        "lods": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "vehicles": {
+        "capacity": 32,
+        "cars": 24,
+        "patternsEnabled": true,
+        "materials": [
+          {
+            "vehicle": "cruz-missile",
+            "count": 1
+          }
+        ],
+        "drawsPerTile": 8,
+        "hulls": 24,
+        "fx": {
+          "spawned": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "alive": {
+            "dust": 0,
+            "tyre-smoke": 0,
+            "landing": 0,
+            "boost": 0,
+            "sparks": 0,
+            "impact": 0,
+            "detach": 0,
+            "damage-smoke": 0,
+            "wreck-fire": 0,
+            "lamp": 0
+          },
+          "particles": 0,
+          "capacity": 512,
+          "drawsPerTile": 0,
+          "reducedMotion": false,
+          "lastImpact": null,
+          "impactCars": [],
+          "impactsByCar": {},
+          "impactSample": [],
+          "drawnBursts": {
+            "count": 0,
+            "visible": false,
+            "first": []
+          }
+        },
+        "types": [
+          {
+            "vehicle": "cruz-missile",
+            "id": "core",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "front",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "back",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FL",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_FR",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RL",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "door_RR",
+            "slotsPerCar": 1,
+            "instances": 24,
+            "capacity": 32,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          },
+          {
+            "vehicle": "cruz-missile",
+            "id": "wheel",
+            "slotsPerCar": 4,
+            "instances": 96,
+            "capacity": 128,
+            "shared": true,
+            "layers": [
+              2,
+              4,
+              8
+            ]
+          }
+        ],
+        "parts": [
+          {
+            "part": "core",
+            "type": "core",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              0,
+              14.925
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "part": "front",
+            "type": "front",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              1.103,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "back",
+            "type": "back",
+            "vehicle": "cruz-missile",
+            "position": [
+              25.2,
+              1.179,
+              14.095
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FL",
+            "type": "door_FL",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.166,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_FR",
+            "type": "door_FR",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.234,
+              0.629,
+              15.755
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RL",
+            "type": "door_RL",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.14,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "door_RR",
+            "type": "door_RR",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.26,
+              0.648,
+              14.775
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.05,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_FR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.35,
+              0.4,
+              16.265
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RL",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              26.05,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "part": "wheel_RR",
+            "type": "wheel",
+            "vehicle": "cruz-missile",
+            "position": [
+              24.35,
+              0.4,
+              13.585
+            ],
+            "colour": "#e5322d",
+            "pattern": "stripes",
+            "numberChunks": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "interiors": {
+          "cruz-missile.engine": 0,
+          "cruz-missile.cabin": 0,
+          "cruz-missile.boot": 0
+        },
+        "identities": [
+          {
+            "car": 0,
+            "number": 1,
+            "pattern": "stripes"
+          },
+          {
+            "car": 1,
+            "number": 2,
+            "pattern": "checks"
+          },
+          {
+            "car": 2,
+            "number": 3,
+            "pattern": "dots"
+          },
+          {
+            "car": 3,
+            "number": 4,
+            "pattern": "zigzag"
+          },
+          {
+            "car": 4,
+            "number": 5,
+            "pattern": "flames"
+          },
+          {
+            "car": 5,
+            "number": 6,
+            "pattern": "stripes"
+          },
+          {
+            "car": 6,
+            "number": 7,
+            "pattern": "checks"
+          },
+          {
+            "car": 7,
+            "number": 8,
+            "pattern": "dots"
+          },
+          {
+            "car": 8,
+            "number": 9,
+            "pattern": "zigzag"
+          },
+          {
+            "car": 9,
+            "number": 10,
+            "pattern": "flames"
+          },
+          {
+            "car": 10,
+            "number": 11,
+            "pattern": "stripes"
+          },
+          {
+            "car": 11,
+            "number": 12,
+            "pattern": "checks"
+          },
+          {
+            "car": 12,
+            "number": 13,
+            "pattern": "dots"
+          },
+          {
+            "car": 13,
+            "number": 14,
+            "pattern": "zigzag"
+          },
+          {
+            "car": 14,
+            "number": 15,
+            "pattern": "flames"
+          },
+          {
+            "car": 15,
+            "number": 16,
+            "pattern": "stripes"
+          },
+          {
+            "car": 16,
+            "number": 17,
+            "pattern": "checks"
+          },
+          {
+            "car": 17,
+            "number": 18,
+            "pattern": "dots"
+          },
+          {
+            "car": 18,
+            "number": 19,
+            "pattern": "zigzag"
+          },
+          {
+            "car": 19,
+            "number": 20,
+            "pattern": "flames"
+          },
+          {
+            "car": 20,
+            "number": 21,
+            "pattern": "stripes"
+          },
+          {
+            "car": 21,
+            "number": 22,
+            "pattern": "checks"
+          },
+          {
+            "car": 22,
+            "number": 23,
+            "pattern": "dots"
+          },
+          {
+            "car": 23,
+            "number": 24,
+            "pattern": "zigzag"
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "cruz-missile",
+            "loaded": true,
+            "cars": 24
+          },
+          {
+            "id": "tradie-ute",
+            "loaded": false,
+            "cars": 0
+          }
+        ]
+      },
+      "largeNumbers": [
+        {
+          "number": 108,
+          "chunks": [
+            108,
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "number": 10000,
+          "chunks": [
+            0,
+            1,
+            0,
+            5
+          ]
+        },
+        {
+          "number": 16777217,
+          "chunks": [
+            7217,
+            1677,
+            0,
+            8
+          ]
+        },
+        {
+          "number": 4294967295,
+          "chunks": [
+            7295,
+            9496,
+            42,
+            10
+          ]
+        }
+      ],
+      "bounds": [
+        {
+          "tile": "1",
+          "x": 154.2734375,
+          "y": 119.375,
+          "width": 102.734375,
+          "height": 36.625,
+          "top": 119.375,
+          "right": 257.0078125,
+          "bottom": 156,
+          "left": 154.2734375
+        },
+        {
+          "tile": "1",
+          "x": 192.9921875,
+          "y": 2.375,
+          "width": 108.015625,
+          "height": 36.625,
+          "top": 2.375,
+          "right": 301.0078125,
+          "bottom": 39,
+          "left": 192.9921875
+        },
+        {
+          "tile": "1",
+          "x": 21.3046875,
+          "y": 2.375,
+          "width": 113.984375,
+          "height": 36.625,
+          "top": 2.375,
+          "right": 135.2890625,
+          "bottom": 39,
+          "left": 21.3046875
+        },
+        {
+          "tile": "1",
+          "x": 189.109375,
+          "y": 80.375,
+          "width": 112.78125,
+          "height": 36.625,
+          "top": 80.375,
+          "right": 301.890625,
+          "bottom": 117,
+          "left": 189.109375
+        },
+        {
+          "tile": "1",
+          "x": 182.71875,
+          "y": 41.375,
+          "width": 119.5625,
+          "height": 36.625,
+          "top": 41.375,
+          "right": 302.28125,
+          "bottom": 78,
+          "left": 182.71875
+        },
+        {
+          "tile": "1",
+          "x": 76.9609375,
+          "y": 158.375,
+          "width": 119.234375,
+          "height": 36.625,
+          "top": 158.375,
+          "right": 196.1953125,
+          "bottom": 195,
+          "left": 76.9609375
+        },
+        {
+          "tile": "3",
+          "x": 843.078125,
+          "y": 2.375,
+          "width": 102.84375,
+          "height": 36.625,
+          "top": 2.375,
+          "right": 945.921875,
+          "bottom": 39,
+          "left": 843.078125
+        },
+        {
+          "tile": "3",
+          "x": 790.578125,
+          "y": 41.375,
+          "width": 102.4375,
+          "height": 36.625,
+          "top": 41.375,
+          "right": 893.015625,
+          "bottom": 78,
+          "left": 790.578125
+        },
+        {
+          "tile": "3",
+          "x": 825.890625,
+          "y": 80.375,
+          "width": 116.21875,
+          "height": 36.625,
+          "top": 80.375,
+          "right": 942.109375,
+          "bottom": 117,
+          "left": 825.890625
+        },
+        {
+          "tile": "4",
+          "x": 1147.6796875,
+          "y": 28.015625,
+          "width": 113.640625,
+          "height": 36.625,
+          "top": 28.015625,
+          "right": 1261.3203125,
+          "bottom": 64.640625,
+          "left": 1147.6796875
+        },
+        {
+          "tile": "5",
+          "x": 1467.1796875,
+          "y": 2.375,
+          "width": 113.640625,
+          "height": 36.625,
+          "top": 2.375,
+          "right": 1580.8203125,
+          "bottom": 39,
+          "left": 1467.1796875
+        },
+        {
+          "tile": "5",
+          "x": 1336.515625,
+          "y": 41.375,
+          "width": 113.6875,
+          "height": 36.625,
+          "top": 41.375,
+          "right": 1450.203125,
+          "bottom": 78,
+          "left": 1336.515625
+        },
+        {
+          "tile": "6",
+          "x": 1792.9921875,
+          "y": 2.375,
+          "width": 108.015625,
+          "height": 36.625,
+          "top": 2.375,
+          "right": 1901.0078125,
+          "bottom": 39,
+          "left": 1792.9921875
+        },
+        {
+          "tile": "6",
+          "x": 1789.109375,
+          "y": 41.375,
+          "width": 112.78125,
+          "height": 36.625,
+          "top": 41.375,
+          "right": 1901.890625,
+          "bottom": 78,
+          "left": 1789.109375
+        },
+        {
+          "tile": "7",
+          "x": 202.1328125,
+          "y": 350.375,
+          "width": 102.734375,
+          "height": 36.625,
+          "top": 350.375,
+          "right": 304.8671875,
+          "bottom": 387,
+          "left": 202.1328125
+        },
+        {
+          "tile": "7",
+          "x": 192.9921875,
+          "y": 272.375,
+          "width": 108.015625,
+          "height": 36.625,
+          "top": 272.375,
+          "right": 301.0078125,
+          "bottom": 309,
+          "left": 192.9921875
+        },
+        {
+          "tile": "7",
+          "x": 144.8046875,
+          "y": 428.375,
+          "width": 113.984375,
+          "height": 36.625,
+          "top": 428.375,
+          "right": 258.7890625,
+          "bottom": 465,
+          "left": 144.8046875
+        },
+        {
+          "tile": "7",
+          "x": 189.109375,
+          "y": 311.375,
+          "width": 112.78125,
+          "height": 36.625,
+          "top": 311.375,
+          "right": 301.890625,
+          "bottom": 348,
+          "left": 189.109375
+        },
+        {
+          "tile": "7",
+          "x": 186.8046875,
+          "y": 467.375,
+          "width": 113.390625,
+          "height": 36.625,
+          "top": 467.375,
+          "right": 300.1953125,
+          "bottom": 504,
+          "left": 186.8046875
+        },
+        {
+          "tile": "7",
+          "x": 179.7890625,
+          "y": 389.375,
+          "width": 119.234375,
+          "height": 36.625,
+          "top": 389.375,
+          "right": 299.0234375,
+          "bottom": 426,
+          "left": 179.7890625
+        },
+        {
+          "tile": "9",
+          "x": 843.078125,
+          "y": 272.375,
+          "width": 102.84375,
+          "height": 36.625,
+          "top": 272.375,
+          "right": 945.921875,
+          "bottom": 309,
+          "left": 843.078125
+        },
+        {
+          "tile": "9",
+          "x": 789.5078125,
+          "y": 389.375,
+          "width": 102.515625,
+          "height": 36.625,
+          "top": 389.375,
+          "right": 892.0234375,
+          "bottom": 426,
+          "left": 789.5078125
+        },
+        {
+          "tile": "9",
+          "x": 833.171875,
+          "y": 311.375,
+          "width": 102.4375,
+          "height": 36.625,
+          "top": 311.375,
+          "right": 935.609375,
+          "bottom": 348,
+          "left": 833.171875
+        },
+        {
+          "tile": "9",
+          "x": 825.890625,
+          "y": 350.375,
+          "width": 116.21875,
+          "height": 36.625,
+          "top": 350.375,
+          "right": 942.109375,
+          "bottom": 387,
+          "left": 825.890625
+        },
+        {
+          "tile": "9",
+          "x": 689.3203125,
+          "y": 272.375,
+          "width": 119.421875,
+          "height": 36.625,
+          "top": 272.375,
+          "right": 808.7421875,
+          "bottom": 309,
+          "left": 689.3203125
+        },
+        {
+          "tile": "10",
+          "x": 1137.3203125,
+          "y": 272.375,
+          "width": 105.265625,
+          "height": 36.625,
+          "top": 272.375,
+          "right": 1242.5859375,
+          "bottom": 309,
+          "left": 1137.3203125
+        },
+        {
+          "tile": "10",
+          "x": 1147.6796875,
+          "y": 311.375,
+          "width": 113.640625,
+          "height": 36.625,
+          "top": 311.375,
+          "right": 1261.3203125,
+          "bottom": 348,
+          "left": 1147.6796875
+        },
+        {
+          "tile": "10",
+          "x": 1148.1015625,
+          "y": 350.375,
+          "width": 113.796875,
+          "height": 36.625,
+          "top": 350.375,
+          "right": 1261.8984375,
+          "bottom": 387,
+          "left": 1148.1015625
+        },
+        {
+          "tile": "11",
+          "x": 1467.15625,
+          "y": 272.375,
+          "width": 113.6875,
+          "height": 36.625,
+          "top": 272.375,
+          "right": 1580.84375,
+          "bottom": 309,
+          "left": 1467.15625
+        },
+        {
+          "tile": "11",
+          "x": 1462.71875,
+          "y": 311.375,
+          "width": 119.5625,
+          "height": 36.625,
+          "top": 311.375,
+          "right": 1582.28125,
+          "bottom": 348,
+          "left": 1462.71875
+        },
+        {
+          "tile": "12",
+          "x": 1782.3828125,
+          "y": 298.71875,
+          "width": 119.234375,
+          "height": 36.625,
+          "top": 298.71875,
+          "right": 1901.6171875,
+          "bottom": 335.34375,
+          "left": 1782.3828125
+        },
+        {
+          "tile": "13",
+          "x": 210.62608337402344,
+          "y": 697.36962890625,
+          "width": 65.21659851074219,
+          "height": 24.6044921875,
+          "top": 697.36962890625,
+          "right": 275.8426818847656,
+          "bottom": 721.97412109375,
+          "left": 210.62608337402344
+        },
+        {
+          "tile": "13",
+          "x": 200.96054077148438,
+          "y": 616.80712890625,
+          "width": 69.01641845703125,
+          "height": 24.6044921875,
+          "top": 616.80712890625,
+          "right": 269.9769592285156,
+          "bottom": 641.41162109375,
+          "left": 200.96054077148438
+        },
+        {
+          "tile": "13",
+          "x": 126.22843933105469,
+          "y": 536.22900390625,
+          "width": 68.41810607910156,
+          "height": 24.6044921875,
+          "top": 536.22900390625,
+          "right": 194.64654541015625,
+          "bottom": 560.83349609375,
+          "left": 126.22843933105469
+        },
+        {
+          "tile": "13",
+          "x": 234.01470947265625,
+          "y": 536.22900390625,
+          "width": 72.5643310546875,
+          "height": 24.6044921875,
+          "top": 536.22900390625,
+          "right": 306.57904052734375,
+          "bottom": 560.83349609375,
+          "left": 234.01470947265625
+        },
+        {
+          "tile": "13",
+          "x": 146.7129364013672,
+          "y": 670.51025390625,
+          "width": 76.57411193847656,
+          "height": 24.6044921875,
+          "top": 670.51025390625,
+          "right": 223.28704833984375,
+          "bottom": 695.11474609375,
+          "left": 146.7129364013672
+        },
+        {
+          "tile": "13",
+          "x": 218.6951904296875,
+          "y": 589.94775390625,
+          "width": 75.765869140625,
+          "height": 24.6044921875,
+          "top": 589.94775390625,
+          "right": 294.4610595703125,
+          "bottom": 614.55224609375,
+          "left": 218.6951904296875
+        },
+        {
+          "tile": "13",
+          "x": 163.70925903320312,
+          "y": 724.22900390625,
+          "width": 76.17523193359375,
+          "height": 24.6044921875,
+          "top": 724.22900390625,
+          "right": 239.88449096679688,
+          "bottom": 748.83349609375,
+          "left": 163.70925903320312
+        },
+        {
+          "tile": "13",
+          "x": 227.10488891601562,
+          "y": 563.08837890625,
+          "width": 80.32147216796875,
+          "height": 24.6044921875,
+          "top": 563.08837890625,
+          "right": 307.4263610839844,
+          "bottom": 587.69287109375,
+          "left": 227.10488891601562
+        },
+        {
+          "tile": "13",
+          "x": 168.09010314941406,
+          "y": 643.66650390625,
+          "width": 80.10104370117188,
+          "height": 24.6044921875,
+          "top": 643.66650390625,
+          "right": 248.19114685058594,
+          "bottom": 668.27099609375,
+          "left": 168.09010314941406
+        },
+        {
+          "tile": "13",
+          "x": 37.322635650634766,
+          "y": 563.08837890625,
+          "width": 81.948486328125,
+          "height": 24.6044921875,
+          "top": 563.08837890625,
+          "right": 119.27112197875977,
+          "bottom": 587.69287109375,
+          "left": 37.322635650634766
+        },
+        {
+          "tile": "14",
+          "x": 511.8125,
+          "y": 542.375,
+          "width": 102.84375,
+          "height": 36.625,
+          "top": 542.375,
+          "right": 614.65625,
+          "bottom": 579,
+          "left": 511.8125
+        },
+        {
+          "tile": "14",
+          "x": 429.21875,
+          "y": 581.375,
+          "width": 102.4375,
+          "height": 36.625,
+          "top": 581.375,
+          "right": 531.65625,
+          "bottom": 618,
+          "left": 429.21875
+        },
+        {
+          "tile": "15",
+          "x": 821.7890625,
+          "y": 542.375,
+          "width": 119.421875,
+          "height": 36.625,
+          "top": 542.375,
+          "right": 941.2109375,
+          "bottom": 579,
+          "left": 821.7890625
+        },
+        {
+          "tile": "17",
+          "x": 1446.7421875,
+          "y": 542.375,
+          "width": 108.015625,
+          "height": 36.625,
+          "top": 542.375,
+          "right": 1554.7578125,
+          "bottom": 579,
+          "left": 1446.7421875
+        },
+        {
+          "tile": "17",
+          "x": 1462.71875,
+          "y": 581.375,
+          "width": 119.5625,
+          "height": 36.625,
+          "top": 581.375,
+          "right": 1582.28125,
+          "bottom": 618,
+          "left": 1462.71875
+        },
+        {
+          "tile": "18",
+          "x": 1808.4609375,
+          "y": 737.375,
+          "width": 97.078125,
+          "height": 36.625,
+          "top": 737.375,
+          "right": 1905.5390625,
+          "bottom": 774,
+          "left": 1808.4609375
+        },
+        {
+          "tile": "18",
+          "x": 1795.5390625,
+          "y": 620.375,
+          "width": 102.734375,
+          "height": 36.625,
+          "top": 620.375,
+          "right": 1898.2734375,
+          "bottom": 657,
+          "left": 1795.5390625
+        },
+        {
+          "tile": "18",
+          "x": 1792.9921875,
+          "y": 542.375,
+          "width": 108.015625,
+          "height": 36.625,
+          "top": 542.375,
+          "right": 1901.0078125,
+          "bottom": 579,
+          "left": 1792.9921875
+        },
+        {
+          "tile": "18",
+          "x": 1703.4453125,
+          "y": 698.375,
+          "width": 113.984375,
+          "height": 36.625,
+          "top": 698.375,
+          "right": 1817.4296875,
+          "bottom": 735,
+          "left": 1703.4453125
+        },
+        {
+          "tile": "18",
+          "x": 1789.109375,
+          "y": 581.375,
+          "width": 112.78125,
+          "height": 36.625,
+          "top": 581.375,
+          "right": 1901.890625,
+          "bottom": 618,
+          "left": 1789.109375
+        },
+        {
+          "tile": "18",
+          "x": 1742.1796875,
+          "y": 659.375,
+          "width": 119.234375,
+          "height": 36.625,
+          "top": 659.375,
+          "right": 1861.4140625,
+          "bottom": 696,
+          "left": 1742.1796875
+        },
+        {
+          "tile": "19",
+          "x": 244.40733337402344,
+          "y": 965.43212890625,
+          "width": 65.21659851074219,
+          "height": 24.6044921875,
+          "top": 965.43212890625,
+          "right": 309.6239318847656,
+          "bottom": 990.03662109375,
+          "left": 244.40733337402344
+        },
+        {
+          "tile": "19",
+          "x": 237.50741577148438,
+          "y": 886.83837890625,
+          "width": 69.01641845703125,
+          "height": 24.6044921875,
+          "top": 886.83837890625,
+          "right": 306.5238342285156,
+          "bottom": 911.44287109375,
+          "left": 237.50741577148438
+        },
+        {
+          "tile": "19",
+          "x": 209.0253143310547,
+          "y": 1017.83837890625,
+          "width": 68.41810607910156,
+          "height": 24.6044921875,
+          "top": 1017.83837890625,
+          "right": 277.44342041015625,
+          "bottom": 1042.44287109375,
+          "left": 209.0253143310547
+        },
+        {
+          "tile": "19",
+          "x": 234.01470947265625,
+          "y": 808.22900390625,
+          "width": 72.5643310546875,
+          "height": 24.6044921875,
+          "top": 808.22900390625,
+          "right": 306.57904052734375,
+          "bottom": 832.83349609375,
+          "left": 234.01470947265625
+        },
+        {
+          "tile": "19",
+          "x": 194.9785614013672,
+          "y": 939.22900390625,
+          "width": 76.57411193847656,
+          "height": 24.6044921875,
+          "top": 939.22900390625,
+          "right": 271.55267333984375,
+          "bottom": 963.83349609375,
+          "left": 194.9785614013672
+        },
+        {
+          "tile": "19",
+          "x": 231.3983154296875,
+          "y": 860.63525390625,
+          "width": 75.765869140625,
+          "height": 24.6044921875,
+          "top": 860.63525390625,
+          "right": 307.1641845703125,
+          "bottom": 885.23974609375,
+          "left": 231.3983154296875
+        },
+        {
+          "tile": "19",
+          "x": 229.84988403320312,
+          "y": 991.63525390625,
+          "width": 76.17523193359375,
+          "height": 24.6044921875,
+          "top": 991.63525390625,
+          "right": 306.0251159667969,
+          "bottom": 1016.23974609375,
+          "left": 229.84988403320312
+        },
+        {
+          "tile": "19",
+          "x": 227.10488891601562,
+          "y": 834.43212890625,
+          "width": 80.32147216796875,
+          "height": 24.6044921875,
+          "top": 834.43212890625,
+          "right": 307.4263610839844,
+          "bottom": 859.03662109375,
+          "left": 227.10488891601562
+        },
+        {
+          "tile": "19",
+          "x": 212.09010314941406,
+          "y": 913.04150390625,
+          "width": 80.10105895996094,
+          "height": 24.6044921875,
+          "top": 913.04150390625,
+          "right": 292.191162109375,
+          "bottom": 937.64599609375,
+          "left": 212.09010314941406
+        },
+        {
+          "tile": "19",
+          "x": 160.8226318359375,
+          "y": 1044.04150390625,
+          "width": 81.948486328125,
+          "height": 24.6044921875,
+          "top": 1044.04150390625,
+          "right": 242.7711181640625,
+          "bottom": 1068.64599609375,
+          "left": 160.8226318359375
+        },
+        {
+          "tile": "20",
+          "x": 523.078125,
+          "y": 812.375,
+          "width": 102.84375,
+          "height": 36.625,
+          "top": 812.375,
+          "right": 625.921875,
+          "bottom": 849,
+          "left": 523.078125
+        },
+        {
+          "tile": "20",
+          "x": 522.7421875,
+          "y": 890.375,
+          "width": 102.515625,
+          "height": 36.625,
+          "top": 890.375,
+          "right": 625.2578125,
+          "bottom": 927,
+          "left": 522.7421875
+        },
+        {
+          "tile": "20",
+          "x": 512.015625,
+          "y": 851.375,
+          "width": 102.4375,
+          "height": 36.625,
+          "top": 851.375,
+          "right": 614.453125,
+          "bottom": 888,
+          "left": 512.015625
+        },
+        {
+          "tile": "21",
+          "x": 756.9765625,
+          "y": 812.375,
+          "width": 105.265625,
+          "height": 36.625,
+          "top": 812.375,
+          "right": 862.2421875,
+          "bottom": 849,
+          "left": 756.9765625
+        },
+        {
+          "tile": "21",
+          "x": 803.9296875,
+          "y": 851.375,
+          "width": 113.640625,
+          "height": 36.625,
+          "top": 851.375,
+          "right": 917.5703125,
+          "bottom": 888,
+          "left": 803.9296875
+        },
+        {
+          "tile": "22",
+          "x": 1162.6484375,
+          "y": 851.375,
+          "width": 102.703125,
+          "height": 36.625,
+          "top": 851.375,
+          "right": 1265.3515625,
+          "bottom": 888,
+          "left": 1162.6484375
+        },
+        {
+          "tile": "22",
+          "x": 1133.109375,
+          "y": 812.375,
+          "width": 113.6875,
+          "height": 36.625,
+          "top": 812.375,
+          "right": 1246.796875,
+          "bottom": 849,
+          "left": 1133.109375
+        },
+        {
+          "tile": "23",
+          "x": 1482.1328125,
+          "y": 814.796875,
+          "width": 102.734375,
+          "height": 36.625,
+          "top": 814.796875,
+          "right": 1584.8671875,
+          "bottom": 851.421875,
+          "left": 1482.1328125
+        },
+        {
+          "tile": "24",
+          "x": 1802.1328125,
+          "y": 812.375,
+          "width": 102.734375,
+          "height": 36.625,
+          "top": 812.375,
+          "right": 1904.8671875,
+          "bottom": 849,
+          "left": 1802.1328125
+        },
+        {
+          "tile": "24",
+          "x": 1804.078125,
+          "y": 929.375,
+          "width": 101.84375,
+          "height": 36.625,
+          "top": 929.375,
+          "right": 1905.921875,
+          "bottom": 966,
+          "left": 1804.078125
+        },
+        {
+          "tile": "24",
+          "x": 1786.2421875,
+          "y": 890.375,
+          "width": 113.984375,
+          "height": 36.625,
+          "top": 890.375,
+          "right": 1900.2265625,
+          "bottom": 927,
+          "left": 1786.2421875
+        },
+        {
+          "tile": "24",
+          "x": 1782.3828125,
+          "y": 851.375,
+          "width": 119.234375,
+          "height": 36.625,
+          "top": 851.375,
+          "right": 1901.6171875,
+          "bottom": 888,
+          "left": 1782.3828125
+        }
+      ]
+    }
+  ]
+}

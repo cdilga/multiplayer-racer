@@ -1,0 +1,620 @@
+{
+  "row": "c12-24-sources",
+  "capturedAt": "2026-10-11T13:24:29.102Z",
+  "hardware": "darwin/arm64; browser API emulation",
+  "browser": "Chromium 151.0.7922.34",
+  "build": "f93aaadf83752fca307c2100988c372262aa271f",
+  "topology": "one machine, loopback WebRTC, normal join URL",
+  "cohort": "host 4 pads + 2 clusters; two laptops 6 pads + 2 clusters each; two phones 1 pad each; 24 seats",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+  "clock": {
+    "mode": "same-clock (one machine)",
+    "uncertaintyMs": 0
+  },
+  "result": {
+    "durationSeconds": 8.009,
+    "driveSignatures": [
+      {
+        "seat": 1,
+        "signature": "00001"
+      },
+      {
+        "seat": 2,
+        "signature": "00010"
+      },
+      {
+        "seat": 3,
+        "signature": "00011"
+      },
+      {
+        "seat": 4,
+        "signature": "00100"
+      },
+      {
+        "seat": 5,
+        "signature": "00101"
+      },
+      {
+        "seat": 6,
+        "signature": "00110"
+      },
+      {
+        "seat": 7,
+        "signature": "00111"
+      },
+      {
+        "seat": 8,
+        "signature": "01000"
+      },
+      {
+        "seat": 9,
+        "signature": "01001"
+      },
+      {
+        "seat": 10,
+        "signature": "01010"
+      },
+      {
+        "seat": 11,
+        "signature": "01011"
+      },
+      {
+        "seat": 12,
+        "signature": "01100"
+      },
+      {
+        "seat": 13,
+        "signature": "01101"
+      },
+      {
+        "seat": 14,
+        "signature": "01110"
+      },
+      {
+        "seat": 15,
+        "signature": "01111"
+      },
+      {
+        "seat": 16,
+        "signature": "10000"
+      },
+      {
+        "seat": 17,
+        "signature": "10001"
+      },
+      {
+        "seat": 18,
+        "signature": "10010"
+      },
+      {
+        "seat": 19,
+        "signature": "10011"
+      },
+      {
+        "seat": 20,
+        "signature": "10100"
+      },
+      {
+        "seat": 21,
+        "signature": "10101"
+      },
+      {
+        "seat": 22,
+        "signature": "10110"
+      },
+      {
+        "seat": 23,
+        "signature": "10111"
+      },
+      {
+        "seat": 24,
+        "signature": "11000"
+      }
+    ],
+    "sources": [
+      {
+        "endpoint": 0,
+        "source": 100,
+        "seat": 1,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 15.3,
+          "p95Ms": 24.6,
+          "p99Ms": 28.5,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5428.49099099099,
+        "payloadBytesPerSecond": 678,
+        "localAppliedAge": {
+          "p50Ms": 6.199951171875,
+          "p95Ms": 11.199951171875,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 0,
+        "source": 101,
+        "seat": 2,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 15.3,
+          "p95Ms": 24.5,
+          "p99Ms": 28.5,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5427.5940706955535,
+        "payloadBytesPerSecond": 678,
+        "localAppliedAge": {
+          "p50Ms": 6.2001953125,
+          "p95Ms": 11.2001953125,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 0,
+        "source": 102,
+        "seat": 3,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 15.5,
+          "p95Ms": 24.5,
+          "p99Ms": 28.5,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5426.419466975666,
+        "payloadBytesPerSecond": 678,
+        "localAppliedAge": {
+          "p50Ms": 6.300048828125,
+          "p95Ms": 11.39990234375,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 0,
+        "source": 103,
+        "seat": 4,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 15.6,
+          "p95Ms": 24.5,
+          "p99Ms": 28.5,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5425.206124852768,
+        "payloadBytesPerSecond": 677,
+        "localAppliedAge": {
+          "p50Ms": 6.300048828125,
+          "p95Ms": 11.400146484375,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 0,
+        "source": 1,
+        "seat": 5,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 14.7,
+          "p95Ms": 24.3,
+          "p99Ms": 27.4,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5424.49464922711,
+        "payloadBytesPerSecond": 677,
+        "localAppliedAge": {
+          "p50Ms": 6,
+          "p95Ms": 11,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 0,
+        "source": 2,
+        "seat": 6,
+        "inputAge": {
+          "sent": 501,
+          "seen": 181,
+          "lost": 320,
+          "p50Ms": 14.8,
+          "p95Ms": 24.2,
+          "p99Ms": 27.4,
+          "maxMs": 31.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 5423.769507803121,
+        "payloadBytesPerSecond": 677,
+        "localAppliedAge": {
+          "p50Ms": 6,
+          "p95Ms": 10.900146484375,
+          "p99Ms": 13.300048828125,
+          "uncertaintyMs": 0,
+          "scope": "rolling last 2048 applied samples; may include claim/setup before the full cohort"
+        }
+      },
+      {
+        "endpoint": 1,
+        "source": 16,
+        "seat": 7,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 17,
+        "seat": 8,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 18,
+        "seat": 9,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 19,
+        "seat": 10,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 20,
+        "seat": 11,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 21,
+        "seat": 12,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 2,
+        "seat": 13,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 1,
+        "source": 3,
+        "seat": 14,
+        "inputAge": {
+          "sent": 146,
+          "seen": 144,
+          "lost": 2,
+          "p50Ms": 27.5,
+          "p95Ms": 48.6,
+          "p99Ms": 56.1,
+          "maxMs": 69.7,
+          "uncertaintyMs": 0.5
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 16,
+        "seat": 15,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 17,
+        "seat": 16,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 18,
+        "seat": 17,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 19,
+        "seat": 18,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 20,
+        "seat": 19,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 21,
+        "seat": 20,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 2,
+        "seat": 21,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 2,
+        "source": 3,
+        "seat": 22,
+        "inputAge": {
+          "sent": 146,
+          "seen": 143,
+          "lost": 3,
+          "p50Ms": 26.7,
+          "p95Ms": 48.9,
+          "p99Ms": 51.4,
+          "maxMs": 53.3,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2025.75,
+        "payloadBytesPerSecond": 253,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 3,
+        "source": 16,
+        "seat": 23,
+        "inputAge": {
+          "sent": 146,
+          "seen": 145,
+          "lost": 1,
+          "p50Ms": 28.7,
+          "p95Ms": 49.5,
+          "p99Ms": 51.3,
+          "maxMs": 53.1,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2920,
+        "payloadBytesPerSecond": 365,
+        "localAppliedAge": null
+      },
+      {
+        "endpoint": 4,
+        "source": 16,
+        "seat": 24,
+        "inputAge": {
+          "sent": 145,
+          "seen": 143,
+          "lost": 2,
+          "p50Ms": 26.6,
+          "p95Ms": 49.3,
+          "p99Ms": 55.5,
+          "maxMs": 60.4,
+          "uncertaintyMs": 0
+        },
+        "payloadBytes": 2900,
+        "payloadBytesPerSecond": 362,
+        "localAppliedAge": null
+      }
+    ],
+    "paths": [
+      {
+        "localType": "host",
+        "remoteType": "host",
+        "protocol": "udp",
+        "relayProtocol": null,
+        "relayVia": null,
+        "rttMs": 1
+      },
+      {
+        "localType": "host",
+        "remoteType": "host",
+        "protocol": "udp",
+        "relayProtocol": null,
+        "relayVia": null,
+        "rttMs": 0
+      },
+      {
+        "localType": "host",
+        "remoteType": "host",
+        "protocol": "udp",
+        "relayProtocol": null,
+        "relayVia": null,
+        "rttMs": 0
+      },
+      {
+        "localType": "host",
+        "remoteType": "host",
+        "protocol": "udp",
+        "relayProtocol": null,
+        "relayVia": null,
+        "rttMs": 0
+      }
+    ],
+    "layers": "Network payload: actual 13-byte records plus equal share of each actual 7-byte packet header. Local payload: encoded LocalSource bytes, no network. Network age: first wire dispatch of a sequence to first observed host-applied sequence; includes observation polling latency, an upper bound. Local exact sample-to-tick percentiles also reported. Stable refreshed sequences are not new samples. Unobserved unique sequences count as lost/coalesced. Transport bytes are not attributed per source."
+  }
+}

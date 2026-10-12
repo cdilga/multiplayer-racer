@@ -1,0 +1,85 @@
+    Blocking waiting for file lock on build directory
+   Compiling thiserror v2.0.21
+   Compiling slab v0.4.12
+   Compiling num-traits v0.2.19
+   Compiling futures-util v0.3.34
+   Compiling cobs v0.3.0
+   Compiling postcard v1.1.3
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+   Compiling js-sys v0.3.106
+   Compiling wasm-bindgen-futures v0.4.79
+   Compiling wasm-bindgen-test v0.3.79
+    Finished `release` profile [optimized] target(s) in 15.02s
+     Running unittests src/lib.rs (target/release/deps/jj_map-f8de22f914860f9b)
+
+running 3 tests
+test geom::tests::boxes_keep_exhaustive_bits_at_endpoints_and_extreme_coordinates ... ok
+test geom::tests::nearest_keeps_equal_distance_order_and_interpolated_widths ... ok
+test geom::tests::nearest_bound_matches_exhaustive_bits_across_generated_routes ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/bridges.rs (target/release/deps/bridges-280d55bd67fd7162)
+
+running 6 tests
+test absent_params_and_shared_spans_are_rejected_without_panicking ... ok
+test a_ramp_must_meet_the_ground_and_the_declared_spans_must_cross ... ok
+test declaring_a_bridge_does_not_make_collinear_gates_valid ... ok
+test solid_ground_cannot_be_hidden_by_a_lower_route_height ... ok
+test a_grade_separated_figure_eight_loads_and_round_trips_with_a_closed_mesh ... ok
+test too_little_clearance_and_too_steep_a_ramp_are_rejected ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/broken.rs (target/release/deps/broken-a045c91cea033dfc)
+
+running 2 tests
+test the_unpatched_greybox_passes_the_same_harness ... ok
+test every_broken_fixture_fails_with_the_rule_it_names ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/greybox.rs (target/release/deps/greybox-f0971daa2bfd7ce0)
+
+running 3 tests
+test greybox_carries_the_duel_segments ... ok
+test greybox_validates_and_hashes_to_its_golden ... ok
+test canonical_bytes_round_trip_and_only_canonical_bytes_load ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/roofs.rs (target/release/deps/roofs-ab02c2923e18e95a)
+
+running 1 test
+test sorting_and_reordering_dressing_preserve_the_reachable_house ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/v01_cases.rs (target/release/deps/v01_cases-76b5b5148cd44d99)
+
+running 10 tests
+test nothing_stands_in_the_start_corridor ... ok
+test start_rows_are_clear_and_spaced ... ok
+test drivable_width ... ok
+test missing_terrain_is_a_schema_error ... ok
+test reachable_checkpoints_need_a_clear_road ... ok
+test reachable_checkpoints_need_gates_and_a_finish ... ok
+test reachable_checkpoints_need_a_real_loop ... ok
+test the_baseline_loop_is_valid ... ok
+test landing_checks ... ok
+test wall_thickness ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/wasm_parity.rs (target/release/deps/wasm_parity-acdb04a8cca666fa)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests jj_map
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

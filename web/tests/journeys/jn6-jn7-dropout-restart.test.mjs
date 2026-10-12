@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Journeys JN6 and JN7 (P1-G03) on the real pages over loopback WebRTC through the real jj-server.
 // JN6: mid-race, a phone loses its network: its car goes to the autopilot within ~2 s and the room never pauses; when
 // the network comes back the player's first deliberate input takes the same car back.
@@ -40,6 +41,9 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
+  // A Lobby newcomer dismisses Help before racing; a mid-race join gets prompts without opening the card.
+  if (await page.locator('[data-overlay=coach]').isVisible()) await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page, ep: (await page.evaluate(() => window.__jjController.inspect())).link.endpointId };
 }
 

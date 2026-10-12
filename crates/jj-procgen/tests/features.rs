@@ -3,10 +3,8 @@
 use std::collections::BTreeMap;
 
 use jj_map::{Biome, FeatureKind, Map, validate};
-use jj_procgen::features::{check_envelope, place};
+use jj_procgen::features::check_envelope;
 use jj_procgen::generate;
-use jj_procgen::seed::Rng;
-use jj_procgen::terrain::{params, undulate};
 
 const BIOMES: [Biome; 5] = [
     Biome::Greybox,
@@ -25,12 +23,12 @@ fn seeds() -> u64 {
         .unwrap_or(DEFAULT_SEEDS)
 }
 
-/// The seed's route with `biome`'s terrain and features applied (the generated map re-run for another biome).
+/// Exercise the actual complete generator for every biome, including grade separation.
+/// Re-applying only terrain to a finished map would flatten an already-built deck.
 fn biome_map(seed: u64, biome: Biome) -> Map {
-    let mut m = generate(seed);
-    undulate(&mut m, &mut Rng::stream(seed, "terrain"), &params(biome));
-    place(&mut m, &mut Rng::stream(seed, "features"), biome);
-    m
+    jj_procgen::generate_recipe(seed, &[biome])
+        .expect("one biome needs no boundary")
+        .0
 }
 
 #[test]

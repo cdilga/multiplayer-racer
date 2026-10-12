@@ -63,9 +63,16 @@ fn changing_only_the_dressing_stream_never_moves_the_route() {
             let mut st = Streams::new(seed);
             st.dressing = Rng::stream(other, "dressing");
             let swapped = generate_from(st).0;
-            assert_eq!(
-                swapped.route, base.route,
-                "seed {seed}: the route moved when only the dressing stream changed"
+            assert!(
+                swapped.route == base.route,
+                "seed {seed}: the route moved when only the dressing stream changed; first point difference: {:?}",
+                swapped
+                    .route
+                    .points
+                    .iter()
+                    .zip(&base.route.points)
+                    .enumerate()
+                    .find(|(_, (a, b))| a != b)
             );
             assert_eq!(swapped.header.ref_lap_ms, base.header.ref_lap_ms);
             assert_ne!(

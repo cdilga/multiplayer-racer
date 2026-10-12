@@ -1,0 +1,22 @@
+autopilot under CPU throttle 80
+before click {
+  phase: 'Intermission',
+  remainingMs: 43683,
+  screen: 'Intermission',
+  buttons: [
+    {
+      text: 'Start next round now',
+      rect: '{"x":842.609375,"y":579.484375,"width":412.203125,"height":36.265625,"top":579.484375,"right":1254.8125,"bottom":615.75,"left":842.609375}',
+      display: 'flex',
+      visibility: 'visible'
+    },
+    {
+      text: 'Return to lobby',
+      rect: '{"x":694.90625,"y":622.546875,"width":559.90625,"height":36.265625,"top":622.546875,"right":1254.8125,"bottom":658.8125,"left":694.90625}',
+      display: 'flex',
+      visibility: 'visible'
+    }
+  ],
+  bodyScreens: [ 'results' ]
+}
+{"steps":["room FHTN","join-webrtc (host, 1 ms)","input","resume","drive","hud"],"path":"host","code":"FHTN","ok":false,"step":"round","why":"after room FHTN, join-webrtc (host, 1 ms), input, resume, drive, hud: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Start next round now' })\u001b[22m\n"}

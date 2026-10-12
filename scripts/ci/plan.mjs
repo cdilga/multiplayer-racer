@@ -38,7 +38,7 @@ const TRANSPORT = list('web/shared/transport/tests');
 const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // Hardware fact (R93): these measure host frame time or need 24-120 GPU-rendered tiles, so they run on a `gpu` runner
 // with JJ_CHROMIUM_GPU=1 (on SwiftShader R06 skips itself and C06's 150 ms identify bound is loose).
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|c06-identify-menu)\.test\.mjs$/.test(f));
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';
@@ -124,7 +124,7 @@ const rules = [
   // CI's own files: the next run of this workflow is their test; run everything so it's proven end to end.
   [/^(\.gitea\/|scripts\/ci\/)/, (p) => everything(`CI change (${p})`)],
   // The workspace and shared inputs.
-  [/^(Cargo\.(toml|lock)|rust-toolchain\.toml|deny\.toml|\.cargo\/|\.nvmrc|package(-lock)?\.json|\.gitattributes|\.dockerignore)/, (p) => everything(`workspace input ${p}`)],
+  [/^(Cargo\.(toml|lock)|rust-toolchain\.toml|deny\.toml|\.cargo\/|vendor\/|\.nvmrc|package(-lock)?\.json|\.gitattributes|\.dockerignore)/, (p) => everything(`workspace input ${p}`)],
   [/^(maps|assets|scenarios|art\/vehicles|art\/contracts|tools\/net)\//, (p) => everything(`shared data ${p.split('/').slice(0, 2).join('/')}`)],
   [/^scripts\/(build-host-wasm|wasm-test-runner)\.sh$/, (p) => everything(`build script ${p}`)],
   [/^docker\//, () => (sel.image = true)],

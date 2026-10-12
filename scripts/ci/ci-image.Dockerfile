@@ -2,10 +2,12 @@
 # download per job (Playwright's Chromium system libraries took 10 minutes a job on TrueNAS). Built locally on each
 # runner host by scripts/ci/ci-image.sh, never pulled: the tag is a hash of this file, so a change here is a new tag.
 #
-# What lives here: node (.nvmrc), Playwright's Chromium headless shell and its libraries, coturn, git-lfs, zstd,
+# What lives here: node (.nvmrc), Playwright's Chromium headless shell, WebKit and their libraries, coturn, git-lfs, zstd,
 # wasm-bindgen, cargo-nextest. What doesn't: the Rust toolchain and cargo/npm caches, which stay on the runner's
 # persistent /cargo-cache volume (they change with every rust-toolchain.toml or lockfile bump).
-FROM catthehacker/ubuntu:act-22.04@sha256:3cdab37904fc1798c460f1fadd47fd2c4d24fa2f292d1b57fc12eff072b415ec
+# Ubuntu 24 keeps WebKit's libsoup3 and the system GStreamer/WebRTC plugins on the same ABI.
+# Ubuntu 22's libgstwebrtc pulls libsoup2 into the browser and aborts before any journey can run.
+FROM catthehacker/ubuntu:act-24.04@sha256:4f2d5083a9d10d018c1c511eb8665cd480553c11975e78fd903a46daa830768b
 
 ARG NODE_VERSION=26.10.0
 ARG PLAYWRIGHT_VERSION=1.62.1
@@ -22,8 +24,9 @@ RUN apt-get update -qq \
  && mkdir -p /opt/node \
  && curl -sSfL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" | tar xJ -C /opt/node --strip-components=1 \
  && cd /tmp && npm init -y >/dev/null && npm install -s "playwright@${PLAYWRIGHT_VERSION}" \
- && npx playwright install-deps chromium \
+ && npx playwright install-deps chromium webkit \
  && npx playwright install --only-shell chromium \
+ && npx playwright install webkit \
  && chmod -R a+rX /ms-playwright \
  && rm -rf /tmp/node_modules /tmp/package*.json /root/.npm \
  && curl -sSfL "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WASM_BINDGEN}/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp \
@@ -32,3 +35,11 @@ RUN apt-get update -qq \
  && curl -sSfL "https://get.nexte.st/${NEXTEST}/linux" | tar xz -C /usr/local/bin \
  && git lfs install --system \
  && rm -rf /var/lib/apt/lists/*
+
+# P1-C12 qualifies the real Firefox host in addition to Chromium/WebKit.
+# A separate layer preserves the existing browser/tooling cache on runner hosts.
+RUN cd /tmp && npm init -y >/dev/null && npm install -s "playwright@${PLAYWRIGHT_VERSION}" \
+ && npx playwright install-deps firefox \
+ && npx playwright install firefox \
+ && chmod -R a+rX /ms-playwright \
+ && rm -rf /tmp/node_modules /tmp/package*.json /root/.npm /var/lib/apt/lists/*

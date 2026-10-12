@@ -76,7 +76,11 @@ export function mountFixture(app: HTMLElement, world: World, spec: string): void
     },
     input: (i) => void inputs.push(i),
   };
-  const joinUrl = `${location.origin}/j/ROO7`;
+  // QR density depends on the real join URL (including a pinned preview prefix); settable for
+  // results layout regressions without claiming this fixture connected any controllers.
+  const params = new URL(location.href).searchParams;
+  const joinUrl = params.get('joinfixture') ?? `${location.origin}/j/ROO7`;
+  if (params.has('captionfixture')) document.documentElement.style.setProperty('--jj-caption-space', `${Number(params.get('captionfixture')) || 0}px`);
   let paths: Record<string, PathStats | null> = {};
   let disbands = 0;
   const screens = mountRoundScreens(client, { code: 'ROO7', joinUrl, paths: async () => paths, onDisband: () => void disbands++ });

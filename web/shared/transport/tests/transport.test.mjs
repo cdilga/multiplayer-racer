@@ -6,8 +6,10 @@ import assert from 'node:assert/strict';
 import { execSync, spawn } from 'node:child_process';
 import { createHmac, randomBytes } from 'node:crypto';
 import { createSocket } from 'node:dgram';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../../landing/tests/lib/site.mjs';
 
 const BASE = '/p/n05/';
@@ -42,7 +44,13 @@ async function startController(origin, code, query = '', ms = 15_000) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`${origin}${BASE}j/${code}?hello${query.replace(/^\?/, '&')}`);
-  await until(page, () => window.__jjHello?.link().state === 'connected', undefined, ms);
+  try {
+    await until(page, () => window.__jjHello?.link().state === 'connected', undefined, ms);
+  } catch (e) {
+    console.error('connect failure:', JSON.stringify(await page.evaluate(() => window.__jjHello?.link())));
+    await ctx.close();
+    throw e;
+  }
   return { ctx, page, errors, link: () => page.evaluate(() => window.__jjHello.link()) };
 }
 
@@ -120,6 +128,173 @@ describe('hello room over loopback WebRTC', () => {
     await moveAndSee(host, c, 0.1, -0.9);
     for (const x of [host, c]) await x.ctx.close();
   });
+
+  test('one pending answer does not block another endpoint negotiation', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const first = await browser.newContext();
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    let answerHeld = false;
+    let second;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async (route) => {
+        const message = route.request().postDataJSON();
+        if (message?.kind === 'answer' && !answerHeld) {
+          answerHeld = true;
+          await held;
+        }
+        await route.continue();
+      });
+      const page = await first.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      for (let i = 0; !answerHeld && i < 100; i++) await page.waitForTimeout(20);
+      assert.equal(answerHeld, true, 'the first endpoint is awaiting its answer POST');
+      second = await startController(origin, host.code, '', 5000);
+      await moveAndSee(host, second, 0.2, -0.4);
+      release();
+      await until(page, () => window.__jjHello.link().state === 'connected');
+    } finally {
+      release();
+      await second?.ctx.close();
+      await first.close();
+      await host.ctx.close();
+    }
+  });
+
+  test('a delivered answer with a pending POST response still applies this endpoint ICE candidates', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    let release;
+    const held = new Promise(resolve => { release = resolve; });
+    let delivered = false;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async route => {
+        const message = route.request().postDataJSON();
+        // Remove the reverse trickle path so connectivity proves the host processed the incoming candidates.
+        if (message?.kind === 'candidate') return route.fulfill({status:200,contentType:'application/json',body:'{}'});
+        if (message?.kind === 'answer') {
+          message.payload = message.payload.split('\r\n').filter(line => !line.startsWith('a=candidate:')).join('\r\n');
+          const response = await route.fetch({postData:JSON.stringify(message)});
+          delivered = true;
+          await held;
+          return route.fulfill({response});
+        }
+        return route.continue();
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 5000);
+      assert.equal(delivered, true, 'the answer reached the controller while its POST response remains held');
+      const link = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(link.restarts,0); assert.equal(link.rebuilds,0);
+      await moveAndSee(host, {page,link:()=>page.evaluate(()=>window.__jjHello.link())}, .3, -.2);
+    } finally {
+      release(); await ctx.close(); await host.ctx.close();
+    }
+  });
+
+  test('an answer delayed past the watchdog still connects on the original generation', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    let release;
+    const held = new Promise(resolve => { release = resolve; });
+    let answerHeld = false;
+    try {
+      await host.page.route('**/api/v1/rooms/*/signal', async route => {
+        if (route.request().postDataJSON()?.kind === 'answer') {
+          answerHeld = true;
+          await held;
+        }
+        await route.continue();
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().signaling === 'have-local-offer');
+      const initial = await page.evaluate(() => window.__jjHello.link());
+      await until(page, () => window.__jjHello.link().offerRetries >= 1, undefined, 12_000);
+      assert.equal(answerHeld, true);
+      assert.equal((await page.evaluate(() => window.__jjHello.link())).gen, initial.gen, 'waiting for an answer preserves the negotiation');
+      release();
+      await until(page, () => window.__jjHello.link().state === 'connected', undefined, 5000);
+      const connected = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(connected.gen, initial.gen);
+      assert.equal(connected.rebuilds, 0);
+      assert.equal(connected.registrations, 1);
+      assert.equal((await host.page.evaluate(() => window.__jjHello.transport())).peers.length, 1);
+    } finally {
+      release();
+      await ctx.close(); await host.ctx.close();
+    }
+  });
+
+  test('an answer still applying past the watchdog is not interrupted by recovery', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    try {
+      await ctx.addInitScript(() => {
+        const apply = RTCPeerConnection.prototype.setRemoteDescription;
+        const state = Object.getOwnPropertyDescriptor(RTCPeerConnection.prototype, 'connectionState');
+        let release;
+        const held = new Promise(resolve => { release = resolve; });
+        window.__releaseAnswer = release;
+        Object.defineProperty(RTCPeerConnection.prototype, 'connectionState', {
+          get() { return window.__answerApplying ? 'connecting' : state.get.call(this); },
+        });
+        RTCPeerConnection.prototype.setRemoteDescription = async function(description) {
+          await apply.call(this, description);
+          if (description.type === 'answer') {
+            window.__answerApplying = true;
+            await held;
+            window.__answerApplying = false;
+          }
+        };
+      });
+      const page = await ctx.newPage();
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__answerApplying);
+      const initial = await page.evaluate(() => window.__jjHello.link());
+      await page.waitForTimeout(9000);
+      const pending = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(pending.gen, initial.gen, 'native answer application keeps its original generation');
+      assert.equal(pending.restarts, 0);
+      assert.equal(pending.rebuilds, 0);
+      await page.evaluate(() => window.__releaseAnswer());
+      await until(page, () => window.__jjHello.link().state === 'connected', undefined, 5000);
+      await moveAndSee(host, { page, link: () => page.evaluate(() => window.__jjHello.link()) }, 0.2, -0.4);
+    } finally {
+      await ctx.close(); await host.ctx.close();
+    }
+  });
+
+  test('a lost initial offer recovers on the same endpoint without a test retry', { timeout: 30_000 }, async () => {
+    const host = await startHost(origin);
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    let lost = 0;
+    try {
+      await page.route('**/api/v1/rooms/*/signal', async (route) => {
+        const request = route.request();
+        const message = request.method() === 'POST' ? request.postDataJSON() : null;
+        if (message?.kind === 'offer' && lost === 0) {
+          lost++;
+          return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+        }
+        return route.continue();
+      });
+      await page.goto(`${origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 14_000).catch(async (e) => {
+        console.error('lost-offer timeline:', JSON.stringify(await page.evaluate(() => window.__jjHello.link())));
+        throw e;
+      });
+      const link = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(lost, 1);
+      assert.equal(link.registrations, 1, 'same registered endpoint');
+      assert.ok(link.offerRetries >= 1, 'product retransmitted its unanswered offer itself');
+      await moveAndSee(host, { page, link: () => page.evaluate(() => window.__jjHello.link()) }, 0.2, -0.4);
+    } finally {
+      await ctx.close(); await host.ctx.close();
+    }
+  });
 });
 
 describe('server restart mid-session', () => {
@@ -159,6 +334,27 @@ describe('ICE credential refresh', () => {
   });
 });
 
+test('WebKit joins and exchanges input with the configured coturn UDP URL present (br-gm11)', { timeout: 90_000 }, async () => {
+  const server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: 'webkit-urls', JJ_TURN_URLS: 'turn:127.0.0.1:9?transport=udp' });
+  const phoneBrowser = await webkit.launch();
+  let host;
+  try {
+    host = await startHost(server.origin);
+    const ctx = await phoneBrowser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+    const page = await ctx.newPage();
+    await page.goto(`${server.origin}${BASE}j/${host.code}?hello`);
+    await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 30_000);
+    const ctl = { page, link: () => page.evaluate(() => window.__jjHello.link()) };
+    await moveAndSee(host, ctl, 0.7, -0.4);
+    const configured = await page.evaluate(() => window.__jjHello.link());
+    assert.deepEqual(configured.channels, { state: 'open', cmd: 'open' });
+  } finally {
+    await host?.ctx.close();
+    await phoneBrowser.close();
+    await server.close();
+  }
+});
+
 const haveCoturn = (() => {
   try {
     execSync('command -v turnserver', { stdio: 'ignore' });
@@ -169,6 +365,71 @@ const haveCoturn = (() => {
 })();
 
 describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_COTURN_REQUIRED && 'coturn not installed' }, () => {
+  test('a lost initial TURN Allocate transaction recovers without a fresh controller or test retry', { timeout: 40_000 }, async () => {
+    const turnPort = await freePort('udp'), secret = 'lost-allocate';
+    const coturn = startCoturn(turnPort, secret);
+    let proxy, server, host, ctx;
+    const receipt = { browser: browser.version(), hardware: `${process.platform}/${process.arch}`, boundMs: 20_000 };
+    try {
+      await waitForStun(turnPort);
+      proxy = await lostAllocateProxy(turnPort);
+      server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: secret,
+        JJ_TURN_URLS: `turn:127.0.0.1:${turnPort}?transport=udp` });
+      host = await startHost(server.origin, '&ice=relay');
+      ctx = await browser.newContext();
+      await ctx.addInitScript(() => {
+        window.__iceTimeline = [];
+        const Native = window.RTCPeerConnection;
+        window.RTCPeerConnection = class extends Native {
+          constructor(...args) {
+            super(...args);
+            const record = (event, extra = {}) => window.__iceTimeline.push({ at: performance.now(), event,
+              ice: this.iceConnectionState, pc: this.connectionState, signaling: this.signalingState, ...extra });
+            record('created');
+            for (const event of ['icegatheringstatechange', 'iceconnectionstatechange', 'connectionstatechange', 'signalingstatechange'])
+              this.addEventListener(event, () => record(event));
+            this.addEventListener('icecandidate', (e) => record('candidate', { type: e.candidate?.type ?? 'done' }));
+            this.addEventListener('icecandidateerror', (e) => record('candidate-error', { code: e.errorCode }));
+          }
+        };
+      });
+      const page = await ctx.newPage();
+      // Only this controller uses the loss proxy. Host allocations go directly to the same real coturn.
+      await page.route('**/api/v1/rooms/*/endpoints', async (route) => {
+        const response = await route.fetch(), body = await response.json();
+        body.iceServers = body.iceServers.map((s) => ({ ...s, urls: s.urls.map((u) => u.replace(`:${turnPort}?`, `:${proxy.port}?`)) }));
+        await route.fulfill({ response, json: body });
+      });
+      const started = Date.now();
+      try {
+        await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
+        await until(page, () => window.__jjHello?.link().state === 'connected', undefined, receipt.boundMs);
+        receipt.connectedMs = Date.now() - started;
+        const link = await page.evaluate(() => window.__jjHello.link());
+        assert.equal(link.registrations, 1, 'the same controller registration');
+        assert.ok(link.restarts >= 1 || link.rebuilds >= 1, 'product recovery, not a fresh test context');
+        assert.ok(proxy.dropped > 1, 'the initial transaction and its UDP retransmissions were lost');
+        const c = { page, link: () => page.evaluate(() => window.__jjHello.link()) };
+        await moveAndSee(host, c, -0.35, 0.6);
+        const path = await page.evaluate(() => window.__jjHello.path());
+        assert.equal(path.local, 'relay', JSON.stringify(path));
+        receipt.path = path;
+      } finally {
+        receipt.timeline = await page.evaluate(() => window.__iceTimeline);
+        receipt.link = await page.evaluate(() => window.__jjHello?.link());
+        receipt.loss = proxy.inspect();
+        receipt.coturn = coturn.log();
+        if (process.env.JJ_EVIDENCE_DIR) {
+          mkdirSync(process.env.JJ_EVIDENCE_DIR, { recursive: true });
+          writeFileSync(join(process.env.JJ_EVIDENCE_DIR, 'lost-allocate.json'), JSON.stringify(receipt, null, 2));
+        }
+        console.log(`# lost Allocate: ${JSON.stringify({ connectedMs: receipt.connectedMs, loss: receipt.loss, link: receipt.link })}`);
+      }
+    } finally {
+      await ctx?.close(); await host?.ctx.close(); await server?.close(); proxy?.close(); coturn.stop();
+    }
+  });
+
   test('iceTransportPolicy relay connects host and controller through coturn', async () => {
     const turnPort = await freePort('udp');
     const secret = 'n05-relay';
@@ -185,9 +446,8 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
     });
     try {
       const host = await startHost(server.origin, '&ice=relay');
-      // 60 s like the fallback case below: a relay-only link needs two allocations and a permission round trip through
-      // coturn, and on a loaded runner one of nine runs took past 30 s after coturn had already answered STUN (run 2010).
-      const c = await startController(server.origin, host.code, '?ice=relay', 60_000);
+      // The product's initial-connect watchdog now recovers a stalled allocation on this same controller.
+      const c = await startController(server.origin, host.code, '?ice=relay', 20_000);
       const ep = await moveAndSee(host, c, -0.7, 0.3);
       const paths = await host.page.evaluate(() => window.__jjHello.paths());
       assert.equal(paths[ep]?.local, 'relay', JSON.stringify(paths[ep]));
@@ -289,7 +549,7 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
       const page = await ctx.newPage();
       await script(page);
       await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
-      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 60_000);
+      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 20_000);
       const l = await page.evaluate(() => window.__jjHello.link());
       assert.equal(l.relayFallback.state, 'merged');
       assert.ok(l.restarts >= 1 || l.rebuilds >= 1, 'ICE restarted after the merge');
@@ -304,6 +564,45 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
     }
   });
 });
+
+/** A real coturn with captured diagnostics for the injected-loss receipt. */
+function startCoturn(port, secret) {
+  const child = spawn('turnserver', ['-n', '--listening-ip=127.0.0.1', '--relay-ip=127.0.0.1',
+    `--listening-port=${port}`, '--use-auth-secret', `--static-auth-secret=${secret}`, '--realm=jj.test',
+    '--no-tls', '--no-cli', '--allow-loopback-peers', '--fingerprint', '--log-file=stdout',
+    '--min-port=49152', '--max-port=65535'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  for (const stream of [child.stdout, child.stderr]) stream.on('data', (chunk) => { log += chunk; });
+  return { log: () => log, stop: () => child.kill() };
+}
+
+/** Preserve TURN's client 5-tuple with a separate forwarding socket per client. Lose one Allocate transaction,
+ * including every retransmission of that transaction, but forward fresh transactions and all other packets. */
+async function lostAllocateProxy(turnPort) {
+  const incoming = createSocket('udp4'), clients = new Map(), events = [];
+  let lostTransaction, dropped = 0;
+  incoming.on('message', (packet, client) => {
+    const key = `${client.address}:${client.port}`;
+    if (packet.length >= 20 && packet.readUInt16BE(0) === 0x0003 && packet.readUInt32BE(4) === 0x2112a442) {
+      const transaction = packet.subarray(8, 20).toString('hex');
+      lostTransaction ??= transaction;
+      if (transaction === lostTransaction) {
+        dropped++; events.push({ at: Date.now(), event: 'drop-allocate', transaction }); return;
+      }
+      events.push({ at: Date.now(), event: 'forward-allocate', transaction });
+    }
+    let forwarding = clients.get(key);
+    if (!forwarding) {
+      forwarding = createSocket('udp4'); clients.set(key, forwarding);
+      forwarding.on('message', (response) => incoming.send(response, client.port, client.address));
+    }
+    forwarding.send(packet, turnPort, '127.0.0.1');
+  });
+  await new Promise((resolve) => incoming.bind(0, '127.0.0.1', resolve));
+  return { port: incoming.address().port, get dropped() { return dropped; },
+    inspect: () => ({ dropped, events }),
+    close() { for (const s of clients.values()) s.close(); incoming.close(); } };
+}
 
 /** Waits until coturn answers a STUN binding request on 127.0.0.1:port (a fixed sleep raced coturn's startup on a busy CI
  *  runner: the first allocation went unanswered and the link only came up after a restart, past the test's 15 s). */

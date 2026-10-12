@@ -1,0 +1,217 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "cost": {
+    "eight": {
+      "voices": 8,
+      "seconds": 6,
+      "wallMs": 529,
+      "realtimeFactor": 11.3
+    },
+    "sixteen": {
+      "voices": 16,
+      "seconds": 6,
+      "wallMs": 1575,
+      "realtimeFactor": 3.8
+    },
+    "state": {
+      "mix": "running",
+      "muted": false,
+      "ducked": false,
+      "music": {
+        "cue": "race",
+        "clip": "race-1"
+      },
+      "sfxPeakVoices": 2,
+      "sfxDropped": 0,
+      "engineBudget": 64,
+      "engineCostMs": 0.108,
+      "engineBuildMs": 1.6,
+      "decodeFailures": []
+    },
+    "update": {
+      "voices": 8,
+      "samples": 64,
+      "p95Ms": 0.228,
+      "maxMs": 0.25
+    },
+    "engines": [
+      {
+        "car": 200,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 4570,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 15,
+        "boosting": false,
+        "surface": "tarmac",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 201,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 4874,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 16,
+        "boosting": false,
+        "surface": "dirt",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 202,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 5179,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 17,
+        "boosting": false,
+        "surface": "gravel",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 203,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 5484,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 18,
+        "boosting": false,
+        "surface": "dirt",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 204,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 5788,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 19,
+        "boosting": false,
+        "surface": "tarmac",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 205,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 6093,
+        "gear": 2,
+        "throttle": 0.7,
+        "speed": 20,
+        "boosting": false,
+        "surface": "dirt",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 206,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 4464,
+        "gear": 3,
+        "throttle": 0.7,
+        "speed": 21,
+        "boosting": false,
+        "surface": "gravel",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      },
+      {
+        "car": 207,
+        "profile": "cruz-missile",
+        "ignition": true,
+        "phase": "running",
+        "rpm": 4676,
+        "gear": 3,
+        "throttle": 0.7,
+        "speed": 22,
+        "boosting": false,
+        "surface": "dirt",
+        "damage": 0,
+        "voiced": true,
+        "boostLayerBuilt": false,
+        "boostLevel": 0
+      }
+    ]
+  },
+  "wreck": {
+    "tick": 1224,
+    "car": 0,
+    "race": {
+      "anchorRoutePoint": null,
+      "assisting": false,
+      "finishedAt": null,
+      "gatesPassed": 0,
+      "ghost": false,
+      "held": true,
+      "laps": 0,
+      "late": false,
+      "progressM": 0,
+      "protected": true,
+      "recoveries": 0,
+      "wrecks": 1
+    }
+  },
+  "startStop": [
+    {
+      "at": 1907,
+      "kind": "engine",
+      "car": 0,
+      "profile": "cruz-missile",
+      "boostLayer": false,
+      "reason": "car-seen"
+    },
+    {
+      "at": 1907,
+      "kind": "engine",
+      "car": 0,
+      "ignition": true,
+      "reason": "engine-on"
+    },
+    {
+      "at": 7202,
+      "kind": "engine",
+      "car": 0,
+      "ignition": false,
+      "reason": "wrecked-or-held"
+    },
+    {
+      "at": 7570,
+      "kind": "engine",
+      "car": 0,
+      "ignition": true,
+      "reason": "engine-on"
+    }
+  ]
+}

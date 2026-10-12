@@ -1,6 +1,6 @@
 {
  "scenario": "surface-deltas",
- "what": "§7.3 Surfaces (P1-S03a). On the surface-strips test map, four Cruz Missiles at 15 m/s turn full lock for 1 s on tarmac, packed dirt, gravel and rock. Grip follows the surface (tarmac 1.0, dirt 0.8, gravel 0.7, rock 0.9): the grippier the ground, the more the car turns and the less it slides. Baselines: no input and mashing don't turn like that.",
+ "what": "§7.3 Surfaces (P1-S03a). On the surface-strips test map, four Cruz Missiles at 15 m/s turn full lock for 1 s on tarmac, packed dirt, gravel and rock. Grip follows the surface (tarmac 1.0, dirt 0.7, gravel 0.55, rock 0.9; re-blessed by R124 br-xlvx.1: dirt and gravel grip lowered 0.8/0.7 -> 0.7/0.55 and the surface table adds side-slip compliance, so dirt 38 deg (was 43), gravel 31 deg (was 36))): the grippier the ground, the more the car turns and the less it slides. Baselines: no input and mashing don't turn like that.",
  "map": "maps/test/surface-strips.json",
  "seed": 17,
  "ticks": 120,
@@ -19,8 +19,8 @@
  "expect": [
   {"car": 0, "metric": "headingChangeDeg", "min": 52, "max": 62},
   {"car": 3, "metric": "headingChangeDeg", "min": 46, "max": 52},
-  {"car": 1, "metric": "headingChangeDeg", "min": 40, "max": 46},
-  {"car": 2, "metric": "headingChangeDeg", "min": 33, "max": 40},
+  {"car": 1, "metric": "headingChangeDeg", "min": 35, "max": 41},
+  {"car": 2, "metric": "headingChangeDeg", "min": 27, "max": 34},
   {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
   {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
   {"car": 2, "metric": "minUpY", "min": 0.95, "max": 1.001},

@@ -1,0 +1,27 @@
+# Lobby: three phones and both key clusters
+# Ready: the round starts
+# Countdown: a phone joins and is on the grid
+# Running: five phones drop in, each timed claim → driving
+# Running: Macca claims and drives
+# Running: Robbo claims and drives
+✖ JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2 (175634.000041ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181112.230292
+
+✖ failing tests:
+
+test at web/tests/journeys/jn5-churn.test.mjs:160:1
+✖ JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2 (175634.000041ms)
+  Error: Running: Robbo claims and drives: page.waitForFunction: Timeout 120000ms exceeded. state {"own":{"url":"/p/jn5-slow-local/j/6E82","controller":{"phase":"no-route","you":null,"roomPhase":null,"link":{"state":"connecting","gen":917358209,"endpointId":"c-afdf40b24168","roomId":"rm-96670271e1f490c7","code":"6E82","pc":"new","ice":"new","signaling":"have-local-offer","early":0,"sse":"open","sseReconnects":0,"registrations":1,"restarts":9,"rebuilds":9,"iceExpiresAt":1791743019000,"relayFallback":{"state":"unavailable","reason":"no-relay-candidate","requests":9,"credentialHeld":false},"channels":{"state":"connecting","cmd":"connecting"}}}},"host":{"phase":"Running","seats":7,"net":{"roomId":"rm-96670271e1f490c7","code":"6E82","sse":"open","sseReconnects":0,"reRegistrations":0,"peers":[{"endpointId":"c-899fbd6eaad7","gen":917357661,"pc":"connected","staleIgnored":0,"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-a2c347fda5e3","gen":917357673,"pc":"connected","staleIgnored":0,"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-b78afc0fafe8","gen":917357681,"pc":"connected","staleIgnored":0,"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-2d67dadf76a4","gen":917357744,"pc":"connected","staleIgnored":0,"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-a866bd02c646","gen":917358000,"pc":"connected","staleIgnored":0,"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-afdf40b24168","gen":917358201,"pc":"new","staleIgnored":0,"channels":{"state":"connecting","cmd":"connecting"}}],"bytesIn":290204,"bytesOut":74129,"undeliverable":0},"render":{"frames":183,"scale":0.5}},"contexts":7}
+      at wait (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/jn5-churn.test.mjs:69:11)
+      at async phone (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/jn5-churn.test.mjs:82:3)
+      at async dropIn (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/jn5-churn.test.mjs:137:13)
+      at async TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/tests/journeys/jn5-churn.test.mjs:204:23)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)

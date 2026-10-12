@@ -1,0 +1,291 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "tradie-ute",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "tradie-ute.lod0.glb",
+   "maxTris": 1300
+  },
+  {
+   "file": "tradie-ute.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "tradie-ute.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.59,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    1.24,
+    0.8899999999999999
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.09,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    1.24,
+    -0.8899999999999999
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.09,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FL": {
+   "pivot": [
+    1,
+    0.75,
+    0.8899999999999999
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FR": {
+   "pivot": [
+    -1,
+    0.75,
+    0.8899999999999999
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RL": {
+   "pivot": [
+    1,
+    0.75,
+    0
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RR": {
+   "pivot": [
+    -1,
+    0.75,
+    0
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FL": {
+   "pivot": [
+    0.88,
+    0.43,
+    1.45
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FR": {
+   "pivot": [
+    -0.88,
+    0.43,
+    1.45
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RL": {
+   "pivot": [
+    0.88,
+    0.43,
+    -1.45
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RR": {
+   "pivot": [
+    -0.88,
+    0.43,
+    -1.45
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  }
+ },
+ "interiors": {
+  "engine": {
+   "exposedBy": [
+    "front"
+   ]
+  },
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  },
+  "boot": {
+   "exposedBy": [
+    "back"
+   ]
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   -0.4,
+   1.62,
+   0.15
+  ],
+  "cam_tp_target": [
+   0,
+   1.3,
+   0.5
+  ],
+  "com": [
+   0,
+   0.7,
+   -0.1
+  ],
+  "roof_number": [
+   0,
+   1.99,
+   -0.04
+  ],
+  "lplate_front": [
+   0,
+   0.5,
+   2.58
+  ],
+  "lplate_rear": [
+   0,
+   0.8,
+   -2.66
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "tradie-ute.atlas.png"
+ }
+}

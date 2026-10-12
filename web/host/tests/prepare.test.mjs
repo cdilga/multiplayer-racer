@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath as testEvidencePath } from '../../tests/lib/evidence.mjs';
 // P1-M08a browser tests: round preparation on main. The real RoundPreparer over the real procgen worker (jj-wasm-procgen)
 // and the test chunk's sim worker (jj-wasm-host) in headless Chromium: a stale job never commits, a reroll replaces a
 // prepared map (and supersedes one in flight), a failed preparation retries conservatively and then settles in the Lobby,
 // a broken dev map is refused with the validator's message, and every track names its seed.
 //   scripts/build-host-wasm.sh && npx --prefix web vite build --config web/host/tests/vite.config.ts
 //   node --test web/host/tests/prepare.test.mjs
-// Writes what it measured to docs/evidence/P1-M08a/browser-run.json (JJ_EVIDENCE overrides the path).
+// Recapture what it measured to docs/evidence/P1-M08a/browser-run.json (set JJ_EVIDENCE explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -14,7 +16,7 @@ import { chromium } from 'playwright';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const dist = process.env.JJ_DIST_TEST ?? join(repo, 'web/dist-test');
-const evidencePath = process.env.JJ_EVIDENCE ?? join(repo, 'docs/evidence/P1-M08a/browser-run.json');
+const evidencePath = testEvidencePath('P1-M08a/browser-run.json', 'JJ_EVIDENCE');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 const SEED = 3;
 const evidence = { browser: '', runs: {} };
@@ -276,8 +278,15 @@ test('two rounds back to back play two different generated four-biome tracks', {
   assert.equal(seeds.length, 2);
   assert.notEqual(seeds[0].seed, seeds[1].seed, 'two different seeds');
   assert.notEqual(shown.commitMaps[0], shown.commitMaps[1]);
-  const lap = ['town', 'rocks', 'outback-dirt', 'outback-bitumen', 'town'];
-  assert.deepEqual(shown.commitSegments, [lap, lap], 'each is a four-biome lap, dirt then bitumen');
+  // R125: each seed draws its own one to four biomes in any order; a lap of two or more ends back in its first.
+  const pool = ['town', 'rocks', 'outback-dirt', 'outback-bitumen'];
+  assert.equal(shown.commitSegments.length, 2);
+  for (const segs of shown.commitSegments) {
+    const lap = segs.length > 1 ? segs.slice(0, -1) : segs;
+    assert.ok(lap.length >= 1 && lap.length <= 4 && lap.every((b) => pool.includes(b)), `a drawn mix of the pool: ${segs}`);
+    assert.equal(new Set(lap).size, lap.length, `no biome twice in a lap: ${segs}`);
+    if (segs.length > 1) assert.equal(segs[segs.length - 1], segs[0], 'the lap ends back in its first biome');
+  }
   assert.deepEqual(errors, []);
   evidence.runs.twoRounds = { seeds, presented: shown, firstTrackReadyMs: firstReady, intermissionRemainingWhenReadyMs: remaining };
   await page.close();

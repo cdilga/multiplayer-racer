@@ -82,6 +82,11 @@ impl HostSim {
         self.0.room_json()
     }
 
+    /// The vehicle tuning for the owner tuning menu (br-2sdu.1): `{ tuning, error }`.
+    pub fn tuning_json(&self) -> String {
+        self.0.tuning_json()
+    }
+
     /// The full-state hash as hex.
     pub fn state_hash(&self) -> String {
         self.0
@@ -166,7 +171,7 @@ impl HostSim {
 
 /// Typed encoders for the worker ABI, so the worker (and its test harness) never hand-roll postcard in JS.
 pub mod codec {
-    use jj_map::{Registry, load_json};
+    use jj_map::load_json;
     use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, UiCommand};
     use jj_types::{CommandId, EndpointId, LocalSourceId};
     use wasm_bindgen::prelude::*;
@@ -174,7 +179,7 @@ pub mod codec {
     /// Validates a `jj.map.v1` JSON document and returns its canonical bytes (what `Init` carries).
     #[wasm_bindgen]
     pub fn canonical_map(json: &str) -> Result<Vec<u8>, JsError> {
-        load_json(json.as_bytes(), &Registry::generic())
+        load_json(json.as_bytes(), &jj_procgen::registry())
             .map(|m| m.canonical)
             .map_err(|r| {
                 JsError::new(&format!(
@@ -209,6 +214,15 @@ pub mod codec {
         .encode()
     }
 
+    /// The roster's vehicles (R123): a JSON array of `[id, profile JSON text]` in roster order, from the roster data and
+    /// `assets/profiles/<id>.json`. A car's vehicle in the snapshot is its index here.
+    #[wasm_bindgen]
+    pub fn encode_vehicles(list_json: &str) -> Result<Vec<u8>, JsError> {
+        let vehicles: Vec<(String, String)> =
+            serde_json::from_str(list_json).map_err(|e| JsError::new(&format!("vehicles: {e}")))?;
+        Ok(MainToSim::Vehicles { vehicles }.encode())
+    }
+
     #[wasm_bindgen]
     pub fn encode_lifecycle(visible: bool, render_ok: bool) -> Vec<u8> {
         MainToSim::Lifecycle { visible, render_ok }.encode()
@@ -222,11 +236,45 @@ pub mod codec {
             "end" => UiCommand::EndRound,
             "disband" => UiCommand::DisbandRoom,
             "free-drive" => UiCommand::FreeDrive { on },
+            "catch-up" => UiCommand::SetCatchUp { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
             "reroll" => UiCommand::Reroll,
+            l if l.starts_with("join-local:") => UiCommand::LocalJoin {
+                source: jj_types::LocalSourceId(l[11..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("leave-local:") => UiCommand::LocalLeave {
+                source: jj_types::LocalSourceId(l[12..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("sit-out-local:") => UiCommand::LocalSitOut {
+                source: jj_types::LocalSourceId(l[14..].parse().unwrap_or(0)),
+                on,
+            },
+            l if l.starts_with("ready-local:") => UiCommand::LocalReady {
+                source: jj_types::LocalSourceId(l[12..].parse().unwrap_or(0)),
+            },
+            l if l.starts_with("pick-local:") => {
+                let (source, vehicle) = l[11..].split_once(':').unwrap_or(("0", ""));
+                UiCommand::LocalPick {
+                    source: jj_types::LocalSourceId(source.parse().unwrap_or(0)),
+                    vehicle: vehicle.to_owned(),
+                    open: on,
+                }
+            }
             l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {
                 seat: jj_types::SeatId(l[12..].parse().unwrap_or(0)),
             },
+            // `tune-vehicle:<roster id>`: which vehicle's profile `tune:` edits (R123).
+            l if l.starts_with("tune-vehicle:") => UiCommand::TuneVehicle {
+                vehicle: l[13..].to_owned(),
+            },
+            // `tune:<field>=<json value>` (the owner tuning menu, br-2sdu.1).
+            l if l.starts_with("tune:") => {
+                let (field, value) = l[5..].split_once('=').unwrap_or((&l[5..], ""));
+                UiCommand::SetTuning {
+                    field: field.to_owned(),
+                    value: value.to_owned(),
+                }
+            }
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },
@@ -365,6 +413,16 @@ pub mod test_codec {
             build: BuildId("harness".into()),
             endpoint: EndpointId(endpoint.into()),
             resume: None,
+        }
+        .encode()
+    }
+
+    /// The lobby's car pick (R123): a roster id, and whether the picker is still open.
+    #[wasm_bindgen]
+    pub fn controller_pick(vehicle: &str, open: bool) -> Vec<u8> {
+        ControllerCmd::Pick {
+            vehicle: vehicle.into(),
+            open,
         }
         .encode()
     }

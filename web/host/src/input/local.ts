@@ -13,8 +13,9 @@
 // - An unplugged pad sends one `LOCAL_UNAVAILABLE` sample and goes quiet: neutral at once, its car to the autopilot
 //   after the worker's dropout time, and back when it's plugged in and pressed again.
 import map from './clusters.json';
+import roster from '../../../shared/src/roster.json';
 import type { SimClient } from '../worker/client';
-import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_SIT_OUT, LOCAL_UNAVAILABLE } from '../worker/messages';
+import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_UNAVAILABLE } from '../worker/messages';
 import { CAL_PROMPTS, Calibration, type PadLike, type WheelProfile, pedal, profileFor, saveProfile, savedProfiles, wheelSample } from './wheel';
 
 type Axes = [number, number, number, number];
@@ -39,6 +40,10 @@ export interface LocalSourceView {
   left: boolean;
   /** Its seat is sitting out (from the drawer). */
   sittingOut: boolean;
+  /** Its Identify button is down now (P1-C14: holding it shows the controls card on the seat's tile). */
+  identifyHeld: boolean;
+  /** The controls this seat has used since it joined (P1-C14): the lobby's controls card folds away once all seven are. */
+  used: string[];
   /** A wheel's profile: its name, whether it's confirmed on a device, and the live mapping (−1..1 steer, 0..1 pedals). */
   wheel?: { profile: string; verified: boolean; steer: number; throttle: number; brake: number };
   /** A non-standard device that needs mapping before it can play (P1-C05.2). */
@@ -60,8 +65,6 @@ interface Source {
   seq: number;
   /** When Identify + READY started being held together (ms), for Leave. */
   holdSince: number | null;
-  /** Drawer requests riding on the next sample (Sit out, Leave). */
-  once: number;
   /** Let go since leaving (so the next press is a new player). */
   released: boolean;
   /** A pad's Gamepad id (wheel profiles are per device). */
@@ -69,7 +72,20 @@ interface Source {
   cal?: Calibration;
   /** Just calibrated: the press that finished it isn't a join; everything must be let go first. */
   awaitRelease?: boolean;
+  /** When the left stick was last pulled all the way back (ms), for the launch: pull back, hold, snap forward. */
+  pulledAt?: number;
+  pullReleasedAt?: number;
 }
+
+/** Whether the host's keyboard plays (the drawer's toggle): remembered per host browser, on by default. */
+const KEYS_KEY = 'jj.hostKeyboardPlayers';
+const readKeysOn = (): boolean => {
+  try {
+    return localStorage.getItem(KEYS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
 
 /** A stick past the radial deadzone, rescaled so the edge of the deadzone reads 0. */
 function deadzone(x: number, y: number, dz: number): [number, number] {
@@ -82,10 +98,14 @@ function deadzone(x: number, y: number, dz: number): [number, number] {
 export class LocalInput {
   private sources = new Map<number, Source>();
   private keys = new Set<string>();
+  /** A Lobby Ready event has already sent its toggle; held keys must not toggle again during Preparing. */
+  private readyEvents = new Set<number>();
   private timer: ReturnType<typeof setInterval> | undefined;
   private last = 0;
   /** Profiles saved by calibration (read once, written on save). */
   private saved: Record<string, WheelProfile> = savedProfiles();
+  private keysOn = readKeysOn();
+  private lobbyPicks = new Map<number, { seat: number; vehicle: string; confirmed: boolean; readyHeld: boolean; suppressReady: boolean; direction: number }>();
   private readonly clusterKeys = new Set(
     clusters.flatMap((c) => [...Object.values(c.drive), ...Object.values(c.action), c.identify, c.ready]),
   );
@@ -106,12 +126,100 @@ export class LocalInput {
     return clusters;
   }
 
+  vehicleChoices(): Array<{ source: number; seat: number; vehicle: string; confirmed: boolean; readyHeld: boolean; suppressReady: boolean; direction: number }> {
+    return [...this.lobbyPicks].map(([source, pick]) => ({ source, ...pick }));
+  }
+
+  /** Whether the host's keyboard plays (P1-C14). Off ignores every cluster key and lets them through to the host UI. */
+  keyboardPlayers(): boolean {
+    return this.keysOn;
+  }
+
+  setKeyboardPlayers(on: boolean): void {
+    this.keysOn = on;
+    this.keys.clear();
+    try {
+      localStorage.setItem(KEYS_KEY, on ? 'on' : 'off');
+    } catch {
+      // Storage blocked: the toggle still works for this page.
+    }
+  }
+
+  /** The drawer's Add (P1-C14): a key cluster claims its seat (or a left one a new seat) with no key pressed. */
+  join(source: number): void {
+    const s = this.sources.get(source);
+    if (!s || s.view.kind !== 'keys' || !s.view.connected || !this.keysOn) return;
+    if (s.view.claimed && !s.view.left) return;
+    Object.assign(s.view, { claimed: true, left: false, sittingOut: false, used: [] });
+    s.released = false;
+    this.client.input({ type: 'ui', ui: `join-local:${source}` });
+  }
+
+  /** An explicit lobby choice. The same Pick reducer serves host sources and phones. */
+  choose(source: number, vehicle: string, open = true): void {
+    const pick = this.lobbyPicks.get(source);
+    if (!pick || !roster.cars.some((c) => c.id === vehicle)) return;
+    pick.vehicle = vehicle;
+    pick.confirmed = !open;
+    pick.suppressReady = !open && pick.readyHeld;
+    this.client.input({ type: 'ui', ui: `pick-local:${source}:${vehicle}`, on: open });
+    try { localStorage.setItem(this.vehicleKey(source), vehicle); } catch { /* This visit only. */ }
+  }
+
+  ready(source: number): void {
+    const pick = this.lobbyPicks.get(source);
+    const s = this.sources.get(source);
+    if (pick?.confirmed && s?.view.claimed && !s.view.left) this.client.input({ type: 'ui', ui: `ready-local:${source}` });
+  }
+
+  private vehicleKey(source: number): string {
+    return `jj.hostVehicle.${this.sources.get(source)?.padId ?? source}`;
+  }
+
+  private lobbyChoice(s: Source, axes: Axes, ready: boolean): boolean {
+    if (this.client.room?.phase !== 'Lobby') return ready && !this.readyEvents.has(s.view.source);
+    const seat = this.client.room.seats.find((st) => st.localSource === s.view.source && st.presence !== 'Left');
+    if (!seat) return false; // The joining press is never Ready as well.
+    let pick = this.lobbyPicks.get(s.view.source);
+    if (!pick || pick.seat !== seat.seat) {
+      let saved = '';
+      try { saved = localStorage.getItem(this.vehicleKey(s.view.source)) ?? ''; } catch { /* This visit only. */ }
+      pick = { seat: seat.seat, vehicle: roster.cars.find((c) => c.id === saved)?.id ?? roster.cars[0]!.id, confirmed: false, readyHeld: ready, suppressReady: ready, direction: 0 };
+      this.lobbyPicks.set(s.view.source, pick);
+      this.choose(s.view.source, pick.vehicle);
+    }
+    const pressed = ready && !pick.readyHeld;
+    pick.readyHeld = ready;
+    if (!ready) pick.suppressReady = false;
+    if (!pick.confirmed) {
+      const direction = Math.abs(axes[2]) > .6 ? Math.sign(axes[2]) : 0;
+      if (direction && direction !== pick.direction) {
+        const i = roster.cars.findIndex((c) => c.id === pick!.vehicle);
+        this.choose(s.view.source, roster.cars[(i + direction + roster.cars.length) % roster.cars.length]!.id);
+      }
+      pick.direction = direction;
+      if (pressed) this.choose(s.view.source, pick.vehicle, false);
+      return false;
+    }
+    // Keyboard Ready is delivered from its key event, so a short press survives a long renderer frame.
+    return s.view.kind !== 'keys' && ready && !pick.suppressReady;
+  }
+
+  /** The drawer's Remove (P1-C14): an unplugged pad or wheel's held seat leaves for good, its car with it. */
+  remove(source: number): void {
+    const s = this.sources.get(source);
+    if (!s?.view.claimed || s.view.left || s.view.connected) return;
+    Object.assign(s.view, { left: true, sittingOut: false, identifyHeld: false });
+    s.released = true;
+    this.client.input({ type: 'ui', ui: `leave-local:${source}` });
+  }
+
   /** The drawer's Sit out / Return for a seated source. */
   toggleSitOut(source: number): void {
     const s = this.sources.get(source);
     if (!s?.view.claimed || s.view.left) return;
-    s.once |= LOCAL_SIT_OUT;
     s.view.sittingOut = !s.view.sittingOut;
+    this.client.input({ type: 'ui', ui: `sit-out-local:${source}`, on: s.view.sittingOut });
   }
 
   /** The drawer's "Map as a wheel" / "Calibrate": walk the prompts with this device; its seat gets neutral input. */
@@ -153,7 +261,9 @@ export class LocalInput {
   leave(source: number): void {
     const s = this.sources.get(source);
     if (!s?.view.claimed || s.view.left) return;
-    s.once |= LOCAL_LEAVE;
+    Object.assign(s.view, { left: true, sittingOut: false });
+    s.released = false;
+    this.client.input({ type: 'ui', ui: `leave-local:${source}` });
   }
 
   start(pollMs = 16): void {
@@ -179,12 +289,11 @@ export class LocalInput {
 
   private add(source: number, kind: LocalSourceView['kind'], label: string): Source {
     const s: Source = {
-      view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false },
+      view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false, identifyHeld: false, used: [] },
       axes: [0, 0, 0, 0],
       buttons: 0,
       seq: 0,
       holdSince: null,
-      once: 0,
       released: false,
     };
     this.sources.set(source, s);
@@ -192,14 +301,23 @@ export class LocalInput {
   }
 
   private readonly onKey = (e: KeyboardEvent): void => {
-    if (e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
+    if (!this.keysOn || e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
     e.preventDefault();
     if (e.type === 'keydown') this.keys.add(e.code);
     else this.keys.delete(e.code);
+    const cluster = clusters.find(c => c.ready === e.code);
+    if (cluster && e.type === 'keyup') this.readyEvents.delete(cluster.id);
+    if (cluster && this.client.room?.phase === 'Lobby' && !e.repeat) {
+      const confirmed = this.lobbyPicks.get(cluster.id)?.confirmed === true;
+      if (e.type === 'keydown' && confirmed) this.readyEvents.add(cluster.id);
+      // Sample the press/release immediately for joining and confirmation; Ready itself takes the reliable UI lane.
+      this.sampleCluster(cluster, 0, performance.now());
+      if (e.type === 'keydown' && confirmed) this.ready(cluster.id);
+    }
   };
 
   /** A window that loses focus never sees the key-ups: release everything. */
-  private readonly onBlur = (): void => this.keys.clear();
+  private readonly onBlur = (): void => { this.keys.clear(); this.readyEvents.clear(); };
 
   private readonly onPad = (e: GamepadEvent): void => {
     const source = map.padSourceBase + e.gamepad.index;
@@ -290,7 +408,8 @@ export class LocalInput {
 
   private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number): void {
     s.axes = axes;
-    let buttons = (identify ? LOCAL_IDENTIFY : 0) | (ready ? LOCAL_READY : 0);
+    const lobbyReady = this.lobbyChoice(s, axes, ready);
+    let buttons = (identify ? LOCAL_IDENTIFY : 0) | (lobbyReady ? LOCAL_READY : 0);
     // Identify + READY held together for leaveHoldMs: Leave.
     if (identify && ready) {
       s.holdSince ??= now;
@@ -298,18 +417,48 @@ export class LocalInput {
     } else {
       s.holdSince = null;
     }
-    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0;
+    const identifyChanged = s.view.identifyHeld !== identify;
+    s.view.identifyHeld = identify;
+    if (identifyChanged) window.dispatchEvent(new Event('jj-local-controls'));
+    this.trackUse(s, axes, now);
+    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || ready;
     if (!s.view.claimed && !pressed) return;
     s.view.claimed = true;
     // After leaving: letting go, then pressing again, is a new player (the worker gives it a new seat).
     if (s.view.left) {
       if (!pressed) s.released = true;
-      else if (s.released) Object.assign(s.view, { left: false, sittingOut: false }), (s.released = false);
+      else if (s.released) Object.assign(s.view, { left: false, sittingOut: false, used: [] }), (s.released = false);
     }
-    buttons |= s.once;
-    s.once = 0;
     if (buttons & LOCAL_LEAVE) Object.assign(s.view, { left: true, sittingOut: false }), (s.released = false);
     this.send(s, axes, buttons);
+  }
+
+  /** Which of the seven controls this source has used (steer, go, brake, drift, launch, OI!, cone): the card folds at all of them. */
+  private trackUse(s: Source, axes: Axes, now: number): void {
+    if (!s.view.claimed || s.view.left) return;
+    const used = s.view.used;
+    const mark = (id: string) => used.includes(id) || used.push(id);
+    const [dx, y, steer, flick] = axes;
+    if (Math.abs(steer) > 0.7) mark('steer');
+    if (y > 0.7) mark('go');
+    if (y < -0.7) mark('brake');
+    if (Math.abs(dx) > 0.9) mark('drift');
+    if (flick > 0.7) mark('oi');
+    if (flick < -0.7) mark('cone');
+    if (y < -0.9) {
+      s.pulledAt ??= now;
+      s.pullReleasedAt = undefined;
+    }
+    else {
+      if (s.pulledAt !== undefined) s.pullReleasedAt ??= now;
+      if (s.pulledAt !== undefined && now - s.pulledAt >= 350 && y > 0.7) mark('launch');
+      // Keyboard axes ramp through neutral on their way from brake to throttle. Keep the pull through
+      // that transition; otherwise it is forgotten before the forward sample can tick off Launch.
+      if (y > 0.7 || (s.pullReleasedAt !== undefined && now - s.pullReleasedAt > 600)) {
+        s.pulledAt = undefined;
+        s.pullReleasedAt = undefined;
+      }
+    }
   }
 
   private send(s: Source, axes: Axes, buttons: number): void {

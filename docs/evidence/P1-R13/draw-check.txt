@@ -1,0 +1,9 @@
+✔ identity patterns add zero draws at 1/4/24 tiles; roof numbers and CVD sheet stay distinct (4805.762916ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5670.798209

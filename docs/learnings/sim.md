@@ -80,6 +80,14 @@ not feel targets.
   toward the centre of mass before applying it. That `roll_influence` is private and fixed at Bullet's 0.1, so roll is cut
   by 90 % (0.5° in a hard turn). The sim applies (up · h · (r − 0.1)) × J per wheel after `update_vehicle`, exactly what a
   public `roll_influence` of r would do. It's a profile number, not a fudge factor.
+- **…and too much of it dives the car (2026-10-10, R122).** At r = 0.6 a hard turn rolled the bubbly body onto its sill
+  (its hull sits only 0.115 m off the ground at rest) and flipped it: the handling bank
+  (`crates/jj-procgen/tests/handling.rs`) found 53 roll-overs in 513 thrown-about runs on generated roads and an 84° roll on
+  flat tarmac. r = 0.12 gives none, about 1° of lean at idle-settle and 12.6° worst (a spin under locked brakes at
+  35 m/s). Suspension stiffness, rest length and travel didn't help (rest length doesn't move the ride height: the hard
+  points keep the design pose; capping travel lifts wheels). Below 0.1 changes nothing. The debris-pile escape is
+  chaotic in r (0.1 stuck, 0.12 out in 19 m, 0.15 in 30 m, 0.18 stuck), so it is fragile; drift rear grip went 0.35 →
+  0.31 to keep drifting down a straight at least a tick slower than driving it.
 - **The profile is compiled in** (`include_str!`), so `jj sim` and the host see edits to
   `assets/profiles/cruz-missile.json` only after a rebuild. Tune with `--set`/`--sweep` first, then write the file.
 - **DRIVE y is one stick.** Throttle drives; brake, or a negative throttle (the stick pulled down, as mash baselines
@@ -268,3 +276,88 @@ not feel targets.
   A pull held longer costs more and isn't repaid more, so late and held releases lose; an early one gets nothing.
 - Trap: the "from rest" duel looks like it needs a big launch; the cost it has to beat is the pull's own duration, so the reward
   is a multiple of that cost, not a magic number.
+
+## 2026-10-10 · Determinism traps found by the duel parity lane
+- **A value that feeds the physics must come from libm**, even if it was written for observers. `car_state().heading`
+  used std `atan2`; R125's rolling respawn started feeding it back into the car's velocity and the duel parity lane
+  (native vs WASM full-state hashes) split on `drift-boost-chain.botched` (a spin, an autopilot Recover, a roll). Now
+  `car_state` and `route_spawn` use `libm::atan2f`. `sqrt` is exactly rounded and safe; trig, `pow` and `exp` aren't.
+- **CI's browser runners are several times slower than eris** (a G07 test: 77 s there, 15 s on eris). Long journeys that
+  click after a heavy screen (8 tiles, a 12-player results screen) have timed out in Playwright's "performing click
+  action" while passing on the Mac and eris; those clicks take a 120 s timeout. If one still hangs, the page's main
+  thread is blocked: profile it before widening anything.
+
+## 2026-10-11 · Suspension ray contact is not support (br-qhga)
+
+- R125's longer, varied tracks exposed a turn rollover: seed 2, route point 320, 35 m/s, full lock held. The car reached upY −0.047 with no damage events. The R122 bank failed without changing its envelopes.
+- A Rapier suspension ray can report `is_in_contact` at full extension while `wheel_suspension_force` is zero. At tick 108 every wheel supplied zero support, but one ray still touched terrain; the air-levelling spring stayed off until the car was already tumbling past its 45° eligibility threshold.
+- Airborne control now treats a wheel as support only when its ray contacts and its suspension force is positive. No torque values or physics units changed. The complete flat/generated handling bank and all 156 sim/session/fixture/protocol tests passed on the Mac with test optimisation level 1.
+- This deliberate physics correction changes the mixed-host fixture hash from `6f0f9c4e732a35ac2fb6251bbedc8ef50a2d04b4d835bc0c6a865f9483097508` to `8eae7be56efed7e9e9e5b9b27d518e64b1f61e904ec07c227a6a3c9f56e39ae1`. Native and freshly rebuilt WASM independently produced the same new hash before updating the fixture; the native test also repeats its run.
+- Catch-up belongs at a race's GO. Forcing Light on every host tick also rewrote loaded fixtures and free-drive journals. The lobby choice now defaults to Light, supports Off, and applies at GO; fixture parity remains source-blind.
+- Assist hash state must include the car index: hashing only non-Off levels made moving an identical assist between cars invisible before stepping.
+
+
+## 2026-10-11 · Rapier 0.36 dynamic dominance needs motion reads and body-local anchors (P1-W03a)
+
+- The raw pinned API fixture on Mac and eris used equal 1,200 kg cuboids, gravity/friction/restitution zero and locked rotations. Equal groups share 15 m/s as 7.5 each. Group 1 kept 15 m/s, but the lower body got about 1.5e-7 m/s; the mover passed through it (x=4.5 vs target x=0.993 at 0.5 s). This is a dependency/API bug, not a Sanga mass tuning problem. 0.36.1's solver is unchanged.
+- The SIMD contact builders masked dominant ids to u32::MAX for reads as well as writes, losing their velocities/poses. The narrow phase also froze their anchors as world-attached. A motion-read repair alone pushed the target but left a 1 m penetration; the geometry assertion caught that incomplete fix.
+- The local 0.36.0 patch separates actual motion reads from masked impulse writes for awake dynamic dominance, and localizes their contact anchors to the body's centre of mass. Equal groups and genuinely fixed/sleeping/kinematic conventions keep their original paths. The real body mass, controls and pose are never scripted by the patch.
+- Corrected raw fixture: mover and target 15 m/s, x=4.5/6.5 (2 m separation); a fixed barrier still stops the mover at x≈−2. Setter expiry restores equal-group 7.5 m/s contacts. A deliberately overlapped stationary pair separates to 1.999984 m with peak kinetic energy 1.45e-11 J after expiry. This is the isolated translational API fixture, not the full car/terrain W03 qualification.
+- Source provenance and changed files: vendor/rapier3d/JAMMERS-PATCH.md. Native and WASM API banks pass 9/9. Do not call the Sanga shipped on this evidence; W03 still needs driving, damage immunity, weapon reduction, refresh, timers, effects and running-game/visual tests.
+
+## 2026-10-11 · Sanga contact fixtures must keep normal driving input (P1-W03b)
+
+- The first physical tank-push fixture coasted for 100 ticks after placement: its speed fell from 15 to 11.76285 m/s while pushing the target to 11.95245 m/s. The 90-percent threshold correctly failed. Natural tyre/ground losses across the whole coast are not a collision-only speed measurement. The fixture now keeps ordinary throttle through the collision, retaining the >=13.5 m/s acceptance; the buff never alters engine force or mass. This is a fixture repair, not permission to add a Sanga speed boost.
+- W01 says fired item effects keep causal ownership through owner respawn until natural expiry. Sanga uses that ledger rule too; held items clear on respawn, and the active timer/causal record continue. A test placement also does not cancel a buff.
+- `Fixture.stick` is the jj-input vector (+y is forward); phone `setSticks` uses screen coordinates (-y is forward) and the controller converts them. The first throttle-fixture revision accidentally used the phone sign, braking the car to 6.40943 m/s. Fix the fixture vector, never the engine/buff or the retained speed threshold.
+
+## 2026-10-12 · Mounted guard rails need passive joins and the complete kit registry (br-gw74.9)
+
+- Ground/rail and overlapped rail/rail contacts pinned the mounted section's spring return. Exclude those contacts while retaining car/debris/protected-car contact; do not tune the spring around ground friction. Rounded collider ends remain inside the authored beam footprint. Passive normal springs join adjacent endpoints and spread a contact into neighbouring sections.
+- Compare corner cases with identical open-loop inputs. At seed 197, 25 m/s entry completes the actual road exit with compliant rails while rigid/absent controls miss its envelope. A separate 3 m/s entry uses the rail and stays intact; rigid also succeeds there, so that case establishes safe low-speed use rather than a need for give.
+- Host initialization, canonical map encoding and `jj sim` used the generic kit registry; generated wayfinding maps were rejected before physics started. Use the same complete procgen registry already used by generated-map validation and replay. Native CLI and both browser engines now match the corner's full-state hash, including the rail springs.
+- The workspace debris source guard originally banned every fixed body, including the mounted rail's anchor and its R90 rigid comparison. Keep removal, count and expiry bans global; permit only the exact anchor constructor and the two fixed-body statements inside `set_rail_fixed`, which addresses `rail.body` only. The minute-long debris persistence/dynamic-body fixture passes after this guard correction.
+
+## 2026-10-12 · Roof landing fixtures must park without selecting reverse (br-gw74.11)
+
+- `DriveInput.brake` selects reverse near rest unless `no_reverse` is set. The first roof-stay experiment reversed off
+  the roof; fixing the fixture's input, rather than changing physics, kept four suspension contacts. Scenario inputs
+  now expose the same optional `noReverse` field as the sim input.
+- A setup command at the final tick is replayed before the next stepped tick. Step once after Recover before comparing
+  full-state hashes; otherwise the original has applied the command while replay has not reached it.
+- Decompose the visible house into roof/walls/deck/posts but retain its complete registry placement footprint. Roof
+  suspension contact selects ground grip/audio; it must not inherit off-track tyre behaviour from terrain below it.
+
+## 2026-10-12 · Two-wheel support and arcade balance (br-bwju.4)
+
+- A bike has one ray per axle and no lateral suspension baseline. Generalise axle splits, drive/brake shares and
+  damage names from profile topology; retaining four-wheel indices silently loses its rear contact and misclassifies
+  wheel-loss wrecks. The fixture has six proxies, including a rider; it is not an accepted vehicle model.
+- Rapier applies suspension impulses at contact patches. Cancel their exact roll moment for a bike, leaving support
+  and pitch, then apply the balance spring once as torque × dt. Move the tyre drive/brake pitch lever to COM height
+  by cancelling its exact applied pitch moment; keep the explicit wheelie lift and suspension pitch.
+- Include the rider in the inertia envelope and use the mass-weighted proxy centroid for COM. This fixture's
+  220 kg, 0.54 × 1.15 × 1.4 m envelope gives roll inertia 29.59 and pitch inertia 60.18 kg·m². Roll K=1800 has
+  critical damping 2√(KI)=462; pitch response ω=8 rad/s gives K=Iω²=3850 and D=2Iω=963. These are real torque units.
+- Rail-impact traces showed pitch stability disappears with one wheel still supported. Bike pitch levelling starts
+  then, rather than waiting for both rays to leave; intentional wheelies retain free pitch while rear-supported.
+  Car flight/tumble behavior is unchanged. Bike roll already has an actuator, so flight levelling supplies pitch only.
+- Differentiate the measured world-up lean angle for its damping. Angular velocity dotted with body-forward includes
+  yaw while pitched; a fast tilted impact otherwise makes the damper resist standing up. Balance continues airborne.
+- Raw-stick fixtures must put DRIVE fully sideways for R120 drift; a diagonal vector outside that sector is ordinary
+  throttle. CLI `jj sim --profile` and the WASM fixture load use the same versioned bike profile and named damage setters.
+
+## 2026-10-12 · Support-loss levelling and exact duel timing (br-xlvx.7 / br-qhga)
+
+- Generator v15 exposed Cruz turns at seed 2/point 280 and seed 5/point 200 that the previous geometry did not.
+  Loaded wheel contacts matter: three define a car support plane; fewer can leave a rough-verge tilt unarrested.
+  The 45° flight cutoff then removed damping during an otherwise recoverable lean. Keep levelling through the
+  upright hemisphere and hand fully inverted cars to flip assist.
+- Applying levelling to every partial contact also changed ordinary road driving enough to break the six-seed
+  learner bank. Start it beyond `support_level_tilt_rad` (10° initially), retaining road attitude and deliberate
+  supported wheelies. Reuse the existing spring/damping gains; do not add a large-force multiplier. Canceling
+  the car's entire partial-contact suspension roll moment instead worsened the seed-2 roll and was rejected.
+- Core health is always zero: it has no part health. A zero there does not prove a wreck or collision damage.
+  Read damage events and changes in the actual part-health vector before attributing a tumble.
+- The .05 s duel margin is exactly six 120 Hz ticks. Subtracting displayed seconds (5.60−5.55) can round below
+  that margin. Preserve gate ticks and compare their difference before converting to seconds for display.

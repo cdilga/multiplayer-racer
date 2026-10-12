@@ -1,0 +1,10 @@
+# autopilot after 4394 ms without the phone
+✔ JN6: a phone that loses its network goes to the autopilot within ~2 s, the room never pauses, and it takes the car back (34001.270708ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34983.007125

@@ -1,0 +1,17 @@
+✔ force-start: Start race with one player not ready warns, counts down and races both (104800.79875ms)
+✔ End mid-round voids the round, the Lobby has no cars and nobody ready, and a fresh round races (71684.480167ms)
+✔ host page reload: the old room's phones show "That room has ended" (6855.187667ms)
+# host gone after 120 s
+✔ host page reload with the best-effort end blocked: the phones show "Host gone" once the liveness timer passes (125323.57875ms)
+✔ chromium: phone, keys and pad choose visibly; settings preserve pause and controller actions (50968.167792ms)
+✔ webkit: phone, keys and pad choose visibly; settings preserve pause and controller actions (45246.660042ms)
+✔ R07b: the footer QR pauses and shows the big join card; a phone joins from the decoded QR; Resume resumes; the pause menu has the card (36053.658625ms)
+✔ R07b: the big join card fits and scans at every display mode and size, and in full screen (54383.115084ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 312175.195583

@@ -1,0 +1,1 @@
+[RCH] remote required; refusing local fallback (no admissible workers: critical_pressure=1,active_project_exclusion=1) — retryable

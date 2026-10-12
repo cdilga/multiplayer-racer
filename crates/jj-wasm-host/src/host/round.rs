@@ -21,8 +21,10 @@ use super::*;
 pub(super) struct RoundState {
     pub director: Director,
     pub standings: Standings,
-    pub laps: u32,
+    /// The host's laps override (`UiCommand::SetLaps`); `None` follows the track's length class (R125).
+    pub laps: Option<u32>,
     pub free_drive: bool,
+    pub catch_up: jj_sim::assist::CatchUp,
     /// The round on now (Countdown to Intermission), and its seats.
     pub round: Option<RoundId>,
     pub cohort: Vec<SeatId>,
@@ -47,8 +49,9 @@ impl RoundState {
         Self {
             director: Director::new(DirectorConfig::default()),
             standings: Standings::default(),
-            laps: jj_sim::race::DEFAULT_LAPS,
+            laps: None,
             free_drive: false,
+            catch_up: jj_sim::assist::CatchUp::Light,
             round: None,
             cohort: Vec::new(),
             late: Vec::new(),
@@ -73,6 +76,21 @@ fn room_phase(p: Phase) -> RoomPhase {
 }
 
 impl Host {
+    /// The laps the next race runs: the host's override, else the track's length class (R125: sprint, standard and epic
+    /// tracks run more or fewer laps so a race lasts about the same time; the data is `assets/profiles/generator.json`).
+    pub(super) fn effective_laps(&self) -> u32 {
+        self.round.laps.unwrap_or_else(|| {
+            let pts = &self.map.map.route.points;
+            let len_m: f64 = (0..pts.len())
+                .map(|i| {
+                    let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
+                    f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0
+                })
+                .sum();
+            jj_procgen::tuning::GeneratorData::shipped().laps_for_length(len_m)
+        })
+    }
+
     /// What cars may do now.
     pub(super) fn driving(&self) -> Driving {
         self.round.director.driving()
@@ -125,7 +143,9 @@ impl Host {
                 self.round.round = Some(round);
                 self.round.cohort = seats;
                 self.round.late.clear();
-                self.sim.start_race(self.round.laps);
+                let laps = self.effective_laps();
+                self.sim.set_catch_up(self.round.catch_up);
+                self.sim.start_race(laps);
                 self.room_state_all();
                 vec![]
             }
@@ -182,7 +202,8 @@ impl Host {
             .copied()
             .filter(|s| self.inputs.contains_key(s))
             .collect();
-        let cars = self.sim.spawn_grid(seats.len());
+        let models: Vec<usize> = seats.iter().map(|&s| self.vehicle_of_seat(s)).collect();
+        let cars = self.sim.spawn_grid_as(&models);
         for (seat, car) in seats.iter().zip(cars) {
             if let Some(input) = self.inputs.get_mut(seat) {
                 input.car = Some(car);
@@ -200,7 +221,7 @@ impl Host {
         if self.round.free_drive {
             let seats: Vec<SeatId> = self.inputs.keys().copied().collect();
             for seat in seats {
-                let car = self.sim.spawn_grid(1)[0];
+                let car = self.sim.spawn_grid_as(&[self.vehicle_of_seat(seat)])[0];
                 if let Some(input) = self.inputs.get_mut(&seat) {
                     input.car = Some(car);
                 }
@@ -209,13 +230,22 @@ impl Host {
         self.session_rev += 1;
     }
 
+    /// The vehicle table or a pick changed: in the Lobby with free drive on, the world is rebuilt so every seat's car is its
+    /// pick; otherwise a new world is built at the next Countdown anyway, and nothing happens here.
+    pub(super) fn rebuild_for_vehicles(&mut self) {
+        if self.round.round.is_none() && self.phase() == Phase::Lobby {
+            self.enter_lobby();
+        }
+    }
+
     /// A new sim on the same map and seed: every car, prop and piece of debris from before is gone with it.
     fn reset_world(&mut self) {
-        self.sim = Sim::new(
+        // The tuned profile (owner tuning menu) carries into every round's new world.
+        self.sim = Sim::with_profiles(
             &self.map,
             &jj_procgen::registry(),
             self.round.seed,
-            VehicleProfile::cruz(),
+            self.vehicles.iter().map(|(_, p)| p.clone()).collect(),
         );
         for input in self.inputs.values_mut() {
             input.car = None;
@@ -224,16 +254,21 @@ impl Host {
         self.seen_race_events = 0;
         self.seen_utility_events = 0;
         self.seen_damage_events = 0;
+        self.seen_item_events = 0;
+        self.sent_inventory.clear();
     }
 
     /// A seat got a car from the seat reducer (claimed, or back from sitting out): it drives now in free drive or a
     /// running round (drop-in); otherwise it waits for the next Countdown's grid.
-    pub(super) fn car_wanted(&mut self) -> Option<CarId> {
+    pub(super) fn car_wanted(&mut self, seat: SeatId) -> Option<CarId> {
+        let v = self.vehicle_of_seat(seat);
         match self.driving() {
-            Driving::FreeDrive => Some(self.sim.spawn_grid(1)[0]),
-            Driving::Racing => Some(self.sim.drop_in()),
+            Driving::FreeDrive => Some(self.sim.spawn_grid_as(&[v])[0]),
+            Driving::Racing => Some(self.sim.drop_in_as(v)),
             // A late joiner in the Countdown takes the next grid slot, held with the rest until GO (G02).
-            Driving::Held if self.phase() == Phase::Countdown => Some(self.sim.spawn_grid(1)[0]),
+            Driving::Held if self.phase() == Phase::Countdown => {
+                Some(self.sim.spawn_grid_as(&[v])[0])
+            }
             Driving::Held => None,
         }
     }
@@ -248,20 +283,11 @@ impl Host {
             .iter()
             .map(|&seat| {
                 let car = self.inputs.get(&seat).and_then(|i| i.car);
-                let standing =
-                    car.and_then(|c| race.standings().into_iter().find(|s| s.car == c.0));
-                Entrant {
+                entrant_from_race(
                     seat,
-                    entered: car.is_some(),
-                    finish: standing.and_then(|s| s.finished_at).map(|t| FinishTime {
-                        tick: t,
-                        fraction: 0,
-                    }),
-                    progress_mm: standing.map_or(0, |s| (s.progress_m.max(0.0) * 1000.0) as u64),
-                    progress_tick: self.sim.tick(),
-                    withdrawn: car.is_none(),
-                    late: self.round.late.contains(&seat),
-                }
+                    car.and_then(|c| race.car(c.0)),
+                    self.round.late.contains(&seat),
+                )
             })
             .collect();
         let facts = RoundFacts {
@@ -404,11 +430,21 @@ impl Host {
                     "choosing": self.picks.get(&s.id).is_some_and(|p| p.1),
                     "presence": format!("{:?}", s.presence),
                     "local": s.endpoint.0.starts_with("local:"),
+                    // P1-C14: which host pad, wheel or key cluster holds this seat ("local:<source>" or "local:<source>#<n>"), so the
+                    // tile can show that source's own controls card and glyphs.
+                    "localSource": s.endpoint.0.strip_prefix("local:").and_then(|r| r.split('#').next()).and_then(|n| n.parse::<u32>().ok()),
+                    // The transport endpoint (an id, never the secret): diagnostics match it to the peer's path.
+                    "endpoint": (!s.endpoint.0.starts_with("local:")).then_some(s.endpoint.0.as_str()),
                     "car": car,
                     "laps": race.map(|r| r.laps),
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
+                    // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
+                    "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
+                    // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
+                    "assist": self.inputs.get(&s.id).map_or(0, |i| i.assist.as_u8()),
+                    "inventory": self.inventory_for(s.id),
                     "prompt": self.inputs.get(&s.id).filter(|i| i.prompt.showing()).map(|i| serde_json::json!({ "step": i.prompt.step, "of": super::prompts::STEPS.len(), "done": i.prompt.done() })),
                 })
             })
@@ -425,8 +461,11 @@ impl Host {
             "phase": format!("{:?}", d.phase()),
             "remainingMs": d.remaining_ms(),
             "round": d.round().map(|r| r.0),
-            "laps": self.round.laps,
+            "laps": self.effective_laps(),
             "freeDrive": self.round.free_drive,
+            "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
+            // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
+            "vehicles": self.vehicles.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
             "armed": d.armed(),
             "preparation": {
                 "external": self.round.prepare_maps,
@@ -443,17 +482,95 @@ impl Host {
         .to_string()
     }
 
+    /// The vehicle tuning as the owner tuning menu shows it (br-2sdu.1): every field, and why the last change was
+    /// refused, if it was.
+    pub fn tuning_json(&self) -> String {
+        // Through text, so the f32 thresholds read as 0.8 and not 0.800000011.
+        let input: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&self.input_profile).unwrap_or_default())
+                .unwrap_or_default();
+        let ids: Vec<&str> = self.vehicles.iter().map(|(id, _)| id.as_str()).collect();
+        let tuned = &self.vehicles[self.tuning_vehicle];
+        serde_json::json!({
+            "tuning": tuned.1.tuning, "input": input, "error": self.tuning_error,
+            "vehicle": tuned.0, "vehicles": ids,
+        })
+        .to_string()
+    }
+
+    /// Reads every seat's sticks with the (changed) input profile, and tells every connected controller.
+    fn apply_input_profile(&mut self) {
+        let resolved = self.input_profile.resolve();
+        for seat in self.inputs.values_mut() {
+            seat.state.set_profile(resolved);
+        }
+        let bytes = HostCmd::InputProfile(self.input_profile.to_wire()).encode();
+        for endpoint in self.net_endpoints() {
+            self.out.push(SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes: bytes.clone(),
+            });
+        }
+    }
+
     /// A host UI command for the round loop.
     pub(super) fn round_ui(&mut self, ui: UiCommand) {
         match ui {
             UiCommand::StartRound => self.director_apply(DirIn::StartNow),
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
-            UiCommand::SetLaps { laps } => self.round.laps = laps.max(1),
+            UiCommand::SetLaps { laps } => self.round.laps = Some(laps.max(1)),
+            UiCommand::SetCatchUp { on } => {
+                self.round.catch_up = if on {
+                    jj_sim::assist::CatchUp::Light
+                } else {
+                    jj_sim::assist::CatchUp::Off
+                };
+                self.session_rev += 1;
+            }
             UiCommand::PrepareMaps { on } => self.round.prepare_maps = on,
             // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
             UiCommand::Reroll => self.director_apply(DirIn::Reroll),
             UiCommand::RemoveSeat { seat } => self.remove_seat(seat),
+            // `input.<section>.<field>`: the input profile (br-2sdu.2), live to every seat and controller.
+            UiCommand::SetTuning { field, value } if field.starts_with("input.") => {
+                match self
+                    .input_profile
+                    .with_fields(&[(field["input.".len()..].to_owned(), value)])
+                    .and_then(|p| jj_input::InputProfile::from_wire(&p.to_wire()))
+                {
+                    Ok(p) => {
+                        self.input_profile = p;
+                        self.tuning_error = None;
+                        self.apply_input_profile();
+                    }
+                    Err(e) => self.tuning_error = Some(format!("{field}: {e}")),
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::SetTuning { field, value } => {
+                let at = self.tuning_vehicle;
+                match jj_fixture::profile_from(
+                    self.vehicles[at].1.clone(),
+                    &[(field.clone(), value)],
+                ) {
+                    Ok(p) => {
+                        // Only cars of the tuned vehicle change (R123).
+                        self.sim.set_tuning_for(at, p.tuning.clone());
+                        self.vehicles[at].1 = p;
+                        self.tuning_error = None;
+                    }
+                    Err(e) => self.tuning_error = Some(e),
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::TuneVehicle { vehicle } => {
+                if let Some(at) = self.vehicles.iter().position(|(id, _)| *id == vehicle) {
+                    self.tuning_vehicle = at;
+                }
+                self.session_rev += 1;
+            }
             UiCommand::FreeDrive { on } => {
                 self.round.free_drive = on;
                 let cfg = DirectorConfig {
@@ -527,5 +644,27 @@ impl Host {
         });
         self.session_rev += 1;
         self.room_state(seat);
+    }
+}
+
+/// Keep the authoritative same-tick finish and unfinished-progress tie-breaks at the session boundary.
+pub(super) fn entrant_from_race(
+    seat: SeatId,
+    car: Option<&jj_sim::race::CarRace>,
+    late: bool,
+) -> Entrant {
+    Entrant {
+        seat,
+        entered: car.is_some(),
+        finish: car.and_then(|c| {
+            c.finished_at.map(|tick| FinishTime {
+                tick,
+                fraction: c.finish_fraction,
+            })
+        }),
+        progress_mm: car.map_or(0, |c| c.best_progress_mm),
+        progress_tick: car.map_or(0, |c| c.best_progress_tick),
+        withdrawn: car.is_none(),
+        late,
     }
 }

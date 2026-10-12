@@ -4,6 +4,7 @@
 // the cameras P1-R05 (`tiles` is a plain chase-camera view until then). Instance buffers grow with the field: there is
 // no car or debris cap.
 import {
+  type Camera,
   Color,
   DirectionalLight,
   GridHelper,
@@ -20,14 +21,20 @@ import {
 import type { Snapshot } from '../worker/client';
 import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
-import { decodeSnapshot } from './snapshot';
+import { decodeSnapshot, type Frame } from './snapshot';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
+import { rosterSources } from './vehicles/registry';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
+
+export interface NameplatePoint {
+  tile: number; car: number; id: number; x: number; y: number; font: number;
+  clip: { left: number; right: number; top: number; bottom: number };
+}
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
 const PAPER = new Color('#FFF4DE');
@@ -47,6 +54,10 @@ export interface TileView {
   /** Degrees a tile's debug camera swings round its car from behind (captures of a car's side); a tile with an orbit
    *  bypasses its seat's camera. */
   orbit?: number[];
+  /** Capture framing of an actual car-under-car crossing; used only by the debug orbit. */
+  orbitDistance?: number;
+  orbitHeight?: number;
+  orbitTargetHeight?: number;
   /** Each seat's starting camera mode (the controller's SetCamera changes it). */
   modes?: CameraMode[];
   /** Free drive (P1-G04): one tile per car in the snapshot, growing and shrinking as seats join and leave. */
@@ -109,11 +120,18 @@ export class World {
   readonly rig = new CameraRig();
   private mirrorCam = new PerspectiveCamera(46, 2, 0.3, 600);
   private lastFrame = 0;
+  /** Paused (any pause reason): frames are drawn only until `heldUntil` after the last change, then the loop idles. */
+  private held = false;
+  private heldUntil = 0;
+  /** Frames skipped while held (introspection for the pause probe, R90). */
+  heldSkips = 0;
   /** Called when the set of off-screen arrows changes: per tile, the rect (device px) and the arrow's angle. */
   onArrows: (arrows: { x: number; y: number; w: number; h: number; angle: number }[], dpr: number) => void = () => {};
   private arrowKey = '';
   /** Called with the grid's layout (device pixels) and the device pixel ratio when the tiles move. */
   onLayout: (layout: Layout | null, dpr: number) => void = () => {};
+  onNameplates: (points: NameplatePoint[]) => void = () => {};
+  private nameplatePoints: NameplatePoint[] = [];
   map: MapRenderer | null = null;
   private props: PropRenderer;
   private ground: Mesh;
@@ -128,6 +146,8 @@ export class World {
   private v = new Vector3();
   private target = new Vector3();
   private half: [number, number] = [25, 25];
+  private overviewDepth = 0;
+  private mapBottom = 0;
   readonly stats: WorldStats;
   private userScale: number;
   /** Set only by a measured frame-budget miss; always below the user's choice; cleared only by choosing a setting. */
@@ -144,6 +164,10 @@ export class World {
   onResolution: () => void = () => {};
   /** Called after each drawn frame. */
   onFrame: (stats: WorldStats) => void = () => {};
+  /** Decoded presentation data, before the pooled wire buffer is released. */
+  onSnapshotFrame: (frame: Frame) => void = () => {};
+  /** A separate playback world's broadcast camera, keyed by recorded car identity. */
+  replayCamera: { car: number; orbit: number } | null = null;
 
   constructor(
     readonly backend: Backend,
@@ -204,6 +228,7 @@ export class World {
       const e = entries[0];
       const box = e?.devicePixelContentBoxSize?.[0];
       this.devicePx = box ? [box.inlineSize, box.blockSize] : null;
+      this.invalidate();
     });
     try {
       this.observer.observe(canvas, { box: 'device-pixel-content-box' });
@@ -237,8 +262,10 @@ export class World {
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
-    this.ground.position.y = Math.min(0, ...map.terrain.heights.map((h) => h / 100)) - 0.05;
+    this.mapBottom = Math.min(0, ...map.terrain.heights.map((h) => h / 100));
+    this.ground.position.y = this.mapBottom - 0.05;
     const t = map.terrain;
+    this.invalidate();
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
     return this.map;
   }
@@ -257,7 +284,8 @@ export class World {
 
   /** Loads the baked vehicle (P1-V02) and draws cars with it. */
   async loadVehicles(): Promise<VehicleRenderer> {
-    this.vehicles = await VehicleRenderer.load(this.scene);
+    this.vehicles = await VehicleRenderer.load(this.scene, rosterSources());
+    this.vehicles.onLoaded = () => this.invalidate();
     return this.vehicles;
   }
 
@@ -266,7 +294,10 @@ export class World {
   attach(source: SnapshotSource): void {
     const next = source.onSnapshot;
     source.onSnapshot = (s: Snapshot) => {
-      this.interp.push(decodeSnapshot(s.view));
+      const frame = decodeSnapshot(s.view);
+      this.interp.push(frame);
+      this.onSnapshotFrame(frame);
+      this.invalidate();
       next(s);
     };
   }
@@ -301,13 +332,37 @@ export class World {
   }
 
   private changed(): void {
+    this.invalidate();
     this.resize();
     this.onResolution();
+  }
+
+  /** Pauses or resumes drawing (owner playtest 1: a paused host should be paused). While held the world is frozen, so
+   *  a frame is drawn only for a while after something changes (`invalidate`) or while an Identify mark is up. */
+  hold(on: boolean): void {
+    if (on === this.held) return;
+    this.held = on;
+    this.invalidate();
+  }
+
+  /** Something visible changed (a resize, a setting, the room, an event): a held world draws for the next 600 ms. */
+  invalidate(): void {
+    this.heldUntil = performance.now() + 600;
+  }
+
+  get isHeld(): boolean {
+    return this.held;
   }
 
   start(): void {
     const loop = (now: number) => {
       this.raf = requestAnimationFrame(loop);
+      if (this.held && now > this.heldUntil && this.identifyMarks.active().length === 0) {
+        // Idle: no draw, and the gap isn't fed to the frame budget when drawing resumes.
+        this.heldSkips++;
+        this.lastRaf = 0;
+        return;
+      }
       if (this.lastRaf && this.realFrameTimes) this.noteFrameTime(now - this.lastRaf);
       this.lastRaf = now;
       this.frame();
@@ -318,6 +373,21 @@ export class World {
   stop(): void {
     cancelAnimationFrame(this.raf);
     this.observer.disconnect();
+  }
+
+  /** Release an independently owned playback world and its renderer. Shared vehicle assets stay cache-owned. */
+  dispose(): void {
+    this.stop();
+    this.map?.dispose();
+    this.props.dispose();
+    this.vehicles?.dispose();
+    this.ground.geometry.dispose();
+    (this.ground.material as MeshLambertMaterial).dispose();
+    this.grid.geometry.dispose();
+    for (const m of Array.isArray(this.grid.material) ? this.grid.material : [this.grid.material]) m.dispose();
+    this.scene.traverse(object => { if (object instanceof DirectionalLight) object.shadow.dispose(); });
+    this.backend.renderer.dispose();
+    this.scene.clear();
   }
 
   /** Matches the backing store to the canvas's on-screen size in device pixels (R111), times the setting. */
@@ -351,10 +421,22 @@ export class World {
 
   /** Draws one frame at the interpolator's render tick. */
   frame(): void {
+    this.nameplatePoints.length = 0;
     this.resize();
     const t = this.interp.renderTick();
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
+    if (this.replayCamera) {
+      const i = s.id.subarray(0, s.cars).indexOf(this.replayCamera.car);
+      if (i >= 0) {
+        this.v.fromArray(s.pos, i * 3);
+        const angle = this.replayCamera.orbit * Math.PI / 180;
+        this.camera.position.set(8 * Math.sin(angle), 4.2, 8 * Math.cos(angle)).add(this.v);
+        this.target.copy(this.v).y += .6;
+        this.camera.near = .3; this.camera.far = 2000;
+        this.camera.updateProjectionMatrix(); this.camera.lookAt(this.target);
+      }
+    }
     this.vehicles?.update(s);
     this.identifyMarks.update(s);
     const r = this.backend.renderer;
@@ -369,7 +451,8 @@ export class World {
       useLod(this.camera, lod);
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
-      this.backend.render(this.scene, this.camera);
+      this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
+      this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0);
       st.lods = [lod];
     }
     st.frames++;
@@ -379,6 +462,7 @@ export class World {
     st.snapped = s.snapped;
     st.drawCalls = this.backend.drawCalls();
     st.triangles = this.backend.triangles();
+    this.onNameplates(this.nameplatePoints);
     this.onFrame(st);
   }
 
@@ -430,8 +514,9 @@ export class World {
         const orbit = view.orbit?.[k];
         if (orbit !== undefined && orbit !== 0) {
           const a = (orbit * Math.PI) / 180;
-          cam.position.set(-6.2 * Math.sin(a), 2.4, -6.2 * Math.cos(a)).applyQuaternion(this.q).add(this.v);
-          this.target.set(0, 0.6, 0).applyQuaternion(this.q).add(this.v);
+          const distance=view.orbitDistance ?? 6.2;
+          cam.position.set(-distance * Math.sin(a), view.orbitHeight ?? 2.4, -distance * Math.cos(a)).applyQuaternion(this.q).add(this.v);
+          this.target.set(0, view.orbitTargetHeight ?? 0.6, 0).applyQuaternion(this.q).add(this.v);
           cam.lookAt(this.target);
         } else {
           this.rig.update(t.seat, cam, { pos: this.v.clone(), rot: this.q.clone(), life: s.life[i]! }, dt);
@@ -452,6 +537,7 @@ export class World {
       r.setClearColor(SKY);
       r.clear();
       this.backend.render(this.scene, cam);
+      this.nameplates(s, cam, t, t.seat, i);
       if (mode === 'fp' && i >= 0) {
         // Segmented first person: the rear-view mirror in its strip of the tile (rects are fractions, top-down).
         const M = CAMERA.firstPerson.mirror;
@@ -475,6 +561,18 @@ export class World {
     r.setScissorTest(false);
     r.autoClear = true;
     return lods;
+  }
+
+  private nameplates(s: Sampled, camera: Camera, rect: { x: number; y: number; w: number; h: number }, tile: number, own = -1): void {
+    const scale = this.stats.dpr * this.scale;
+    const clip = { left: rect.x / scale, right: (rect.x + rect.w) / scale, top: rect.y / scale, bottom: (rect.y + rect.h) / scale };
+    for (let car = 0; car < s.cars; car++) {
+      if (car === own) continue;
+      const p = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]! + 2.2, s.pos[car * 3 + 2]!).project(camera);
+      if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z < -1 || p.z > 1) continue;
+      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale,
+        y: (rect.y + (1 - p.y) * rect.h / 2) / scale, font: Math.max(14, Math.min(28, rect.h / scale * .07)), clip });
+    }
   }
 
   /** Each tile's rect on the backing store, in device pixels (what the viewports drew into), for the receipts. */
@@ -556,6 +654,7 @@ export class World {
     for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
     const f = s.frame;
     this.props.update(f);
+    this.map?.updateRails(f);
     // With cars on the field the camera frames them and the props; with none, the whole map (or the props).
     if (s.cars > 0 || !this.mapBox) for (let i = 0; f && i < f.debris; i++) grow(f.debrisPos[i * 3]!, f.debrisPos[i * 3 + 2]!);
     else [box[0], box[1], box[2], box[3]] = this.mapBox;
@@ -583,6 +682,9 @@ export class World {
       }
       if (fits) break;
     }
+    // Camera-space depth of the far ground edge. Near/far haze follows the overview's actual framing after resize;
+    // chase and replay cameras pass no override and retain the accepted road-level look.
+    this.overviewDepth = dist + hz * Math.cos(tilt) - this.mapBottom * Math.sin(tilt);
   }
 }
 

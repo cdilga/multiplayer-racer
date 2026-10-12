@@ -1,0 +1,10 @@
+✔ Chromium room welcome caption leaves controller administration readable while visible (29128.283ms)
+✔ WebKit room welcome caption leaves controller administration readable while visible (30572.673959ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60925.777083

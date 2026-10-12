@@ -24,6 +24,8 @@ jobs:
     timeout-minutes: 40
     env:
       CARGO_TARGET_DIR: /home/cdilga/.cache/jj-ci/target-gpu
+      # Keep CI browser installs separate from interactive runs and their install locks.
+      PLAYWRIGHT_BROWSERS_PATH: /home/cdilga/.cache/jj-ci/browsers-gpu
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,6 +46,7 @@ jobs:
         run: |
           scripts/build-host-wasm.sh
           npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
+          npx playwright install chromium firefox webkit
           npm --prefix web run build
           cargo build --locked -q -p jj-server --bin jj-server
       - name: GPU journeys (JJ_CHROMIUM_GPU=1, ANGLE on Vulkan)

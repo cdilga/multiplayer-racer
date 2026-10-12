@@ -9,13 +9,15 @@ import { BUILD_LABEL } from '../../shared/src/build';
 import { mountAudio } from './audio';
 import { mountDrawer } from './input/drawer';
 import { mountGridOverlay } from './layout/overlay';
+import { attachLocalInput, controlsData, setControlsData } from './input/controls-data';
 import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
-import { paperQrCard } from '../../shared/ui';
+import { controlsPage, paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
+import { mountReel } from './reel/mount';
 import { HostHub } from '../../shared/transport';
 import { ClipRecorder, installHotkey } from './clips/recorder';
 import { SessionRecorder } from './clips/session';
@@ -24,7 +26,10 @@ import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
 import { SyntheticSource } from './render/synthetic';
+import { rosterProfiles } from './render/vehicles/registry';
 import { World } from './render/world';
+import { mountNameplates } from './identity/nameplates';
+import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
 
 const app = document.querySelector<HTMLElement>('#app')!;
@@ -60,6 +65,7 @@ async function boot(): Promise<void> {
   const maxCanvas = Number(params.get('maxcanvas')); // test hook: pretends the browser's max canvas edge is this small
   if (maxCanvas > 0) backend.maxSize = Math.min(backend.maxSize, maxCanvas);
   const world = new World(backend, canvas, chosen);
+  mountNameplates(app, world);
   world.autoLower = override === null && params.get('autores') !== 'off';
   world.realFrameTimes = params.get('autores') !== 'injected';
   await world.loadVehicles();
@@ -72,6 +78,10 @@ async function boot(): Promise<void> {
   const list = (k: string) => params.get(k)?.split(',').map(Number);
   if (params.has('tiles')) {
     world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
+    for (const key of ['orbitDistance','orbitHeight','orbitTargetHeight'] as const) {
+      const value=Number(params.get(key));
+      if (params.has(key) && Number.isFinite(value)) world.tiles[key]=value;
+    }
     // The grid's spare cells (P1-R04): the join QR points at the join page until rooms exist (G00).
     const overlay = mountGridOverlay(app, new URL('../controller/', location.href).href);
     world.onLayout = (layout, scale) => overlay.render(layout, scale);
@@ -82,15 +92,27 @@ async function boot(): Promise<void> {
     if (camdist === 'near' || camdist === 'mid' || camdist === 'far') world.rig.hostDistance = camdist;
   }
   const chip = mountOverlay(document.body, world, BUILD_LABEL);
-  mountResolutionSetting(document.body, world, chip);
+  const resolutionSetting = mountResolutionSetting(document.body, world, chip);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
+    /** Paused drawing (owner playtest 1): whether the world is held and how many frames it has skipped. */
+    idle: () => ({ held: world.isHeld, skips: world.heldSkips }),
     frame: () => world.frame(),
+    /** Compiled shader programs so far (WebGL backend; null elsewhere): a rise during a frame is a shader compile (P1-Q01's
+     *  hitch attribution). Read by the perf helper once per frame; never logged. */
+    programs: () => (world.backend.renderer as unknown as { info: { programs?: unknown[] } }).info.programs?.length ?? null,
     /** Capture hook (P1-R12): stops the frame loop, so the canvas keeps the frame just drawn (a short-lived flash included)
      *  for a screenshot that takes longer than the effect lives. */
     hold: () => world.stop(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
+    setIdentityPatterns: (on: boolean) => { world.vehicles?.setPatternsEnabled(on); world.invalidate(); },
+    identityNumberChunks: (number: number) => numberData(number),
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
+    /** Actual scene haze after the last viewport render (overview/chase regression probe, R90). */
+    haze: () => world.scene.fog && 'near' in world.scene.fog ? { near: world.scene.fog.near, far: world.scene.fog.far } : null,
+    rails: () => world.map?.railPoses() ?? [],
+    jumpShapes: () => world.map?.jumpShapes() ?? [],
+    bridgeShapes: () => world.map?.bridgeShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
     cameras: () => world.rig.inspect(),
@@ -110,6 +132,11 @@ async function boot(): Promise<void> {
     tileRects: () => world.tileRects(),
     /** The cars the grid's tiles follow, tile 1 first (a room's seated cars in seat-number order). */
     follow: () => world.tiles?.follow?.slice() ?? null,
+    /** Renderer setup probe (R90): switch the same scene between an overview and a grid following explicit cars. */
+    setFollow: (cars: number[] | null) => {
+      world.tiles = cars === null ? null : { count: cars.length, follow: cars.slice() };
+      world.invalidate();
+    },
     /** Cars showing Identify's number over them now (P1-R06). */
     identifyMarks: () => world.identifyMarks.active(),
     /** Every Identify mark put up over a car (car, label), oldest first. */
@@ -134,6 +161,7 @@ async function boot(): Promise<void> {
       freezeAt: freeze === null ? undefined : Number(freeze),
       damage: params.has('damage'),
       strip: params.get('damage') === 'strip',
+      mixed: params.get('vehicles') === 'mixed',
     });
     world.attach(source);
     if (freeze !== null) world.interp.fixedTick = Number(freeze) - 0.5;
@@ -153,7 +181,7 @@ async function boot(): Promise<void> {
   }
   const seed = 1;
   const client = new SimClient(testing?.createWorker());
-  await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live', describe: true } : {});
+  await client.start({ mapJson: greybox, seed, vehicles: rosterProfiles() }, testing ? { live: params.get('test') === 'live', describe: true } : {});
   client.followVisibility();
   // Bug clips and the dev session recorder (P1-F07, P1-F12): Ctrl/Cmd+Shift+B saves a clip; the test surface attaches
   // its own recorders.
@@ -168,7 +196,7 @@ async function boot(): Promise<void> {
   // Host pads and key clusters (P1-C05): players from their first press, listed in the input drawer.
   const input = new LocalInput(client);
   input.start();
-  mountDrawer(document.body, input);
+  attachLocalInput(input);
   testing?.attach(client, { mapJson: greybox, seed, input });
   // The round loop (P1-G01) runs in the worker. A host page opens a room: the Lobby has no driving cars (R110) and a
   // round puts the players on the grid. Free drive (P1-G04, `?drive`) is the dev/test mode where claimed seats drive at
@@ -179,9 +207,27 @@ async function boot(): Promise<void> {
   const laps = Number(params.get('laps'));
   if (laps > 0) client.input({ type: 'ui', ui: `laps:${laps}` });
   const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
-  if (online) await openRoom(client, world, params, freeDrive);
+  if (online) await openRoom(client, world, params, freeDrive, input);
+  else mountDrawer(document.body, input);
+  if (roundScreens) {
+    roundScreens.chrome.readouts.append(chip);
+    roundScreens.chrome.display.append(resolutionSetting);
+    resolutionSetting.dataset.embedded = '';
+    resolutionSetting.removeAttribute('style');
+    chip.removeAttribute('style');
+  }
   // The real room prepares each round's map in the procgen worker (P1-M08a); free drive and plain test pages race the start map.
   if (online && !freeDrive) await (await import('./procgen/start')).startPreparation(client, world, params);
+  // Test and probe surface (R90, P1-C14): the data the controls cards read, swappable so a test can change it and see the page follow.
+  (window as unknown as { __jjControls: unknown }).__jjControls = {
+    data: () => controlsData(),
+    setData: (d: Parameters<typeof setControlsData>[0]) => setControlsData(d),
+    page: () => controlsPage(controlsData()),
+    keyboardPlayers: () => input.keyboardPlayers(),
+    /** The host's own pads, wheels and key clusters as the drawer lists them (with the controls each has used). */
+    sources: () => input.list(),
+    vehicleChoices: () => input.vehicleChoices(),
+  };
   (window as unknown as { __jjRoom: unknown }).__jjRoom = {
     view: () => client.room,
     start: () => client.input({ type: 'ui', ui: 'start' }),
@@ -247,9 +293,16 @@ async function boot(): Promise<void> {
     }
   };
   // Identity (P1-R06): each car is painted in its seat's colour, the same colour as that player's phone.
-  let seatPaint = new Map<number, string>();
+  const seatPaint = new Map<number, string>();
+  const seatNumber = new Map<number, number>();
+  const seatName = new Map<number, string>();
+  let identityRound: number | null = null;
   let painted = false;
   client.watchRoom((room) => {
+    if (identityRound !== room.round) {
+      identityRound = room.round;
+      seatPaint.clear(); seatNumber.clear(); seatName.clear();
+    }
     // The page knows the round's phase (the input drawer folds away while racing so it covers no tile).
     document.body.dataset.jjPhase = room.phase;
     // In a room the grid's tiles are the seated cars in seat-number order: a car withdrawn by Leave or Sit out stays in
@@ -261,21 +314,48 @@ async function boot(): Promise<void> {
         applyCams();
       }
     }
-    seatPaint = new Map(room.seats.filter((st) => st.car !== null).map((st) => [st.car!, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`]));
+    // Retain identity for withdrawn cars and their dynamic debris for the round.
+    for (const st of room.seats) if (st.car !== null) {
+      seatPaint.set(st.car, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`);
+      seatNumber.set(st.car, st.number);
+      seatName.set(st.car, st.name || 'Player');
+    }
     const v = world.vehicles;
+    // The cars the seats picked in the lobby load their models now, so they are ready when the grid forms (R123).
+    for (const st of room.seats) if (st.vehicle) void v?.ensureId(st.vehicle);
     if (!v || painted) return;
     painted = true;
     const palette = v.paintOf;
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
+    v.numberOf = (car) => seatNumber.get(car) ?? car;
+    v.nameOf = (car) => seatName.get(car) ?? `Player ${car}`;
   });
   world.attach(client);
+  if (roundScreens) mountReel(client, world, roundScreens);
+  // The owner tuning menu (br-2sdu.1): previews only, and only in a browser the owner switched on with `?tune`
+  // (remembered; `?tune=off` switches it off). Its code is a separate chunk that a production build never contains.
+  if (__JJ_OWNER_TOOLS__ && ownerTools(params)) {
+    void import('./tuning/panel').then(async (m) => {
+      const prep = (window as unknown as { __jjPrepare?: { seeds(): Array<{ preparation: number; seed: number; lengthM?: number; reliefM?: number }>; regenerate(g?: string): void } }).__jjPrepare;
+      // The generator rows exist where rounds are prepared in the procgen worker (the real room), not on free-drive pages.
+      const generator = prep ? await import('./tuning/generator').then((g) => g.generatorHooks(prep)) : undefined;
+      const panel = await m.mountTuningPanel(client, generator);
+      (window as unknown as { __jjTune: unknown }).__jjTune = panel;
+    });
+  }
+  // Paused means paused (owner playtest 1): the world stops drawing while the worker holds the sim, and wakes for a
+  // moment when the room, an event, a setting or the page changes so menus and resizes still show.
+  client.onPause = (reasons) => world.hold(reasons.length > 0);
+  client.watchRoom(() => world.invalidate());
+  client.watchEvents(() => world.invalidate());
+  for (const t of ['pointerdown', 'keydown', 'input', 'resize'] as const) addEventListener(t, () => world.invalidate(), { passive: true });
   // Audio (P1-A03/A05/A07) taps the client's snapshot, event and room feeds last, so it wraps whatever the page set.
-  mountAudio(client);
+  mountAudio(client, document, roundScreens?.chrome.sound);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
 
-async function openRoom(client: SimClient, world: World, params: URLSearchParams, freeDrive: boolean): Promise<void> {
+async function openRoom(client: SimClient, world: World, params: URLSearchParams, freeDrive: boolean, input: LocalInput): Promise<void> {
   const bridge = new NetBridge(client, () => {}, { iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   world.tiles = { count: 1, auto: true };
   try {
@@ -288,6 +368,9 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     console.warn('jj: no room server; free drive is local only', e);
   }
   const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
+  const controllers = document.createElement('div');
+  controllers.dataset.controllersPanel = '';
+  mountDrawer(!freeDrive && bridge.hub.code ? controllers : document.body, input, { joinUrl, code: bridge.hub.code });
   const overlay = mountGridOverlay(app, joinUrl);
   // Free drive always shows the paper QR with the code, so phones can join any time; a real room's join panel is the
   // round screens' (R07).
@@ -299,7 +382,14 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   }
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
   // The round screens (P1-R07) own the lobby and results; the per-tile HUD follows the tile rects the grid reports.
-  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl }) : null;
+  // Diagnostics read the real network paths and the host's own numbers (owner playtest 1: the panel showed none);
+  // Disband ends the room on the network side too.
+  const hostStats = async () => {
+    const pads = await client.inputStats().catch(() => []);
+    const ages = pads.filter((p) => p.samples > 0).map((p) => p.p50);
+    return { frameMs: world.stats.frameMs, p95Ms: world.stats.p95Ms ?? null, padAgeMs: ages.length ? Math.max(...ages) : null };
+  };
+  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl, paths: () => bridge.hub.paths(), onDisband: () => void bridge.hub.end(), hostStats, controllers, localChoose: (source, vehicle, open) => input.choose(source, vehicle, open), localReady: (source) => input.ready(source) }) : null;
   roundScreens = screens;
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);
@@ -313,5 +403,19 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     dropPeer: (ep: string) => bridge.hub.dropPeer(ep),
   };
 }
+
+/** The owner flag: `?tune` switches the owner's tools on in this browser, `?tune=off` off; storage may be missing. */
+function ownerTools(params: URLSearchParams): boolean {
+  const KEY = 'jj-owner-tools';
+  try {
+    if (params.get('tune') === 'off') localStorage.removeItem(KEY);
+    else if (params.has('tune')) localStorage.setItem(KEY, '1');
+    return localStorage.getItem(KEY) === '1';
+  } catch {
+    return params.has('tune') && params.get('tune') !== 'off';
+  }
+}
+
+declare const __JJ_OWNER_TOOLS__: boolean;
 
 void boot();

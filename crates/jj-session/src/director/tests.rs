@@ -564,6 +564,111 @@ fn lobby_holds_every_car_unless_free_drive_and_disband_is_terminal() {
 
 // Random sequences: the invariants hold whatever the host, phones and jobs do.
 
+// Derby (P1-S10): the round ends from the director on the game-time clock.
+
+/// A started round with a game limit of `limit_ms`.
+fn running_with_limit(limit_ms: Option<u32>) -> Director {
+    let mut d = in_ready_countdown(&[A, B]);
+    d.apply(Input::SetGameLimit(limit_ms));
+    elapse(&mut d, 3_000);
+    assert_eq!(d.phase(), Phase::Running);
+    d
+}
+
+#[test]
+fn a_three_minute_derby_ends_on_game_time_not_on_the_presentation_clock() {
+    let mut d = running_with_limit(Some(180_000));
+    assert_eq!(d.game_remaining_ms(), Some(180_000));
+    // Presentation time passing (a paused sim, a slow frame) never ends it.
+    elapse(&mut d, 600_000);
+    assert_eq!(d.phase(), Phase::Running);
+    // Game time in 8 ms steps (120 Hz is 8.33 ms; whole ms here): 179.992 s in, one tick short.
+    for _ in 0..22_499 {
+        assert!(d.apply(Input::GameElapsed { ms: 8 }).is_empty());
+    }
+    assert_eq!(d.game_ms(), 179_992);
+    assert_eq!(d.phase(), Phase::Running);
+    let out = d.apply(Input::GameElapsed { ms: 8 });
+    assert_eq!(d.phase(), Phase::Finalising);
+    assert_eq!(
+        out,
+        vec![
+            Output::RoundTimeUp { round: RoundId(1) },
+            Output::PhaseChanged {
+                phase: Phase::Finalising
+            },
+            Output::RoundFinalising { round: RoundId(1) },
+        ]
+    );
+    // The clock stops at the limit; the results commit takes the round on as for any other round.
+    assert_eq!((d.game_ms(), d.game_remaining_ms()), (180_000, Some(0)));
+    d.apply(Input::ResultsCommitted { saved: true });
+    assert_eq!(d.phase(), Phase::Intermission);
+}
+
+#[test]
+fn the_game_clock_pauses_with_the_sim() {
+    let mut d = running_with_limit(Some(10_000));
+    d.apply(Input::GameElapsed { ms: 4_000 });
+    d.apply(Input::Pause {
+        reason: Pause::Manual,
+        on: true,
+    });
+    // Paused: the host's sim doesn't step, and whatever reaches the director counts for nothing.
+    d.apply(Input::GameElapsed { ms: 60_000 });
+    assert_eq!((d.phase(), d.game_ms()), (Phase::Running, 4_000));
+    d.apply(Input::Pause {
+        reason: Pause::Manual,
+        on: false,
+    });
+    d.apply(Input::GameElapsed { ms: 5_999 });
+    assert_eq!(d.phase(), Phase::Running);
+    d.apply(Input::GameElapsed { ms: 1 });
+    assert_eq!(d.phase(), Phase::Finalising);
+}
+
+#[test]
+fn a_round_without_a_limit_is_the_rules_to_end_and_the_limit_applies_from_the_next_round() {
+    let mut race = running_with_limit(None);
+    d_no_end(&mut race);
+    // A limit set mid-round applies to the next one (§10.12: changes apply next round).
+    race.apply(Input::SetGameLimit(Some(1_000)));
+    d_no_end(&mut race);
+    assert_eq!(race.game_remaining_ms(), None);
+    race.apply(Input::RoundOver);
+    race.apply(Input::ResultsCommitted { saved: true });
+    let mut out = Vec::new();
+    for s in [A, B] {
+        out.extend(ready(&mut race, s, true));
+    }
+    let id = requested(&out)
+        .or_else(|| race.preparation().map(|p| p.0))
+        .expect("the next map");
+    race.apply(Input::PrepareFinished { id, ok: true });
+    elapse(&mut race, 3_000);
+    assert_eq!(race.phase(), Phase::Running);
+    assert_eq!(race.game_remaining_ms(), Some(1_000));
+    race.apply(Input::GameElapsed { ms: 1_000 });
+    assert_eq!(race.phase(), Phase::Finalising);
+}
+
+fn d_no_end(d: &mut Director) {
+    d.apply(Input::GameElapsed { ms: 3_600_000 });
+    assert_eq!(
+        d.phase(),
+        Phase::Running,
+        "a round with no limit doesn't end on game time"
+    );
+}
+
+#[test]
+fn game_time_outside_a_running_round_counts_for_nothing() {
+    let mut d = in_ready_countdown(&[A, B]);
+    d.apply(Input::SetGameLimit(Some(1_000)));
+    d.apply(Input::GameElapsed { ms: 5_000 });
+    assert_eq!((d.phase(), d.game_ms()), (Phase::Countdown, 0));
+}
+
 fn arb_input() -> impl Strategy<Value = Input> {
     let seat = (1u32..=4).prop_map(SeatId);
     prop_oneof![
@@ -576,6 +681,8 @@ fn arb_input() -> impl Strategy<Value = Input> {
         1 => Just(Input::Reroll),
         3 => (1u32..8, prop::bool::weighted(0.85)).prop_map(|(id, ok)| Input::PrepareFinished { id: PreparationId(id), ok }),
         2 => Just(Input::RoundOver),
+        2 => (0u32..200_000).prop_map(|ms| Input::GameElapsed { ms }),
+        1 => prop::option::of(1u32..400_000).prop_map(Input::SetGameLimit),
         1 => any::<bool>().prop_map(|saved| Input::ResultsCommitted { saved }),
         1 => (0usize..5, any::<bool>()).prop_map(|(i, on)| Input::Pause {
             reason: [Pause::Manual, Pause::HostHidden, Pause::RendererUnavailable, Pause::PerformanceStall, Pause::Fault][i],

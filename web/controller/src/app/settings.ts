@@ -10,12 +10,12 @@
 import { apply_curve } from '../pkg/jj_wasm_input.js';
 import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
-import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type Controls, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
+import { DEFAULTS, PRESETS, sanitise, type Assist, type CameraDistance, type Controls, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
 import type { Tilt } from './tilt';
 import type { FullscreenControl } from './fullscreen';
 
 export { DEFAULTS, PRESETS, sanitise };
-export type { CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadzone, TiltSensitivity };
+export type { Assist, CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadzone, TiltSensitivity };
 
 /** Applies the personal curve to one stick sample (per axis, y keeps its sign). */
 export function shape(v: Stick, steering: Steering): Stick {
@@ -173,6 +173,16 @@ export class SettingsSheet {
       unFs?.();
     };
     this.render();
+    // The bottom fade says there's more to scroll to (data-more), on the sheet and as the window changes size.
+    const more = () => this.el.toggleAttribute('data-more', this.el.scrollTop + this.el.clientHeight < this.el.scrollHeight - 4);
+    this.el.addEventListener('scroll', more, { passive: true });
+    addEventListener('resize', more);
+    requestAnimationFrame(more);
+    const unResize = this.unsub;
+    this.unsub = () => {
+      unResize();
+      removeEventListener('resize', more);
+    };
     d.onOpen();
   }
 
@@ -191,6 +201,7 @@ export class SettingsSheet {
         <div class="row">Controls${seg('controls', 'Stick layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)']], p.controls)}</div>
         <div class="row">Steering${seg('steering', 'Steering response', [['gentle', 'Gentle'], ['direct', 'Direct']], p.steering)}</div>
         <div class="row">Camera distance${seg('cameraDistance', 'Camera distance', [['near', 'Near'], ['host', "Host's"], ['far', 'Far']], p.cameraDistance)}</div>
+        <div class="row assist-row" data-row="assist"><span>Driving help<small>New to this? Some steers and brakes for bends; Lots drives the throttle too.</small></span>${seg('assist', 'Driving help', [['off', 'Off'], ['some', 'Some'], ['lots', 'Lots']], p.assist)}</div>
         ${toggle('vibration', 'Vibration', haptics && p.vibration, haptics ? '' : "This phone can't vibrate from a web page", !haptics)}
         ${toggle('reducedMotion', 'Reduced motion', p.reducedMotion, 'Fewer flashes, no shake')}
         ${this.fullscreenRow()}

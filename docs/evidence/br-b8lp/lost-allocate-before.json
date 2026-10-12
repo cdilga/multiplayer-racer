@@ -1,0 +1,111 @@
+{
+  "browser": "151.0.7922.34",
+  "hardware": "darwin/arm64",
+  "boundMs": 20000,
+  "timeline": [
+    {
+      "at": 52.299999952316284,
+      "event": "created",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "stable"
+    },
+    {
+      "at": 58,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer"
+    },
+    {
+      "at": 59,
+      "event": "icegatheringstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer"
+    },
+    {
+      "at": 63.5,
+      "event": "candidate-error",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "have-local-offer",
+      "code": 701
+    },
+    {
+      "at": 66.29999995231628,
+      "event": "signalingstatechange",
+      "ice": "new",
+      "pc": "new",
+      "signaling": "stable"
+    }
+  ],
+  "link": {
+    "state": "connecting",
+    "gen": 917278722,
+    "endpointId": "c-b5a873eba3e8",
+    "roomId": "rm-364ad359d53c57bb",
+    "code": "8YEN",
+    "pc": "new",
+    "ice": "new",
+    "signaling": "stable",
+    "early": 0,
+    "sse": "open",
+    "sseReconnects": 0,
+    "registrations": 1,
+    "restarts": 0,
+    "rebuilds": 0,
+    "iceExpiresAt": 1791735072000,
+    "relayFallback": {
+      "state": "unavailable",
+      "reason": "offer-timeout",
+      "requests": 1,
+      "credentialHeld": false
+    },
+    "channels": {
+      "state": "connecting",
+      "cmd": "connecting"
+    }
+  },
+  "loss": {
+    "dropped": 7,
+    "events": [
+      {
+        "at": 1791727872288,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727872562,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727873080,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727874094,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727876102,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727880125,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      },
+      {
+        "at": 1791727888136,
+        "event": "drop-allocate",
+        "transaction": "32724b4a783976585a6e596c"
+      }
+    ]
+  },
+  "coturn": "2026-10-12T00:11:11.228+1000 INFO Listener address to use: 127.0.0.1\n2026-10-12T00:11:11.228+1000 INFO Listener address to use: 127.0.0.1\n2026-10-12T00:11:11.229+1000 INFO Relay address to use: 127.0.0.1\n2026-10-12T00:11:11.229+1000 ERROR no-cli option is deprecated, see --cli\n2026-10-12T00:11:11.229+1000 INFO System cpu num is 8\n2026-10-12T00:11:11.229+1000 INFO System enable num is 8\n2026-10-12T00:11:11.229+1000 INFO Configured cpu num is 8\n2026-10-12T00:11:11.229+1000 INFO Coturn Version Coturn-4.18.0 'Gorst'\n2026-10-12T00:11:11.229+1000 INFO Max number of open files/sockets allowed for this process: 9223372036854775807\n2026-10-12T00:11:11.229+1000 INFO Due to the open files/sockets limitation, max supported number of TURN Sessions possible is: 4611686018427387500 (approximately)\n2026-10-12T00:11:11.229+1000 INFO ==== Show him the instruments, Practical Frost: ====\n2026-10-12T00:11:11.229+1000 INFO OpenSSL compile-time version: OpenSSL 3.6.4 25 Aug 2026 (0x30600040)\n2026-10-12T00:11:11.229+1000 INFO TLS 1.2 supported\n2026-10-12T00:11:11.229+1000 INFO TLS 1.3 supported\n2026-10-12T00:11:11.229+1000 INFO DTLS 1.2 supported\n2026-10-12T00:11:11.229+1000 INFO TURN/STUN ALPN supported\n2026-10-12T00:11:11.229+1000 INFO Third-party authorization (oAuth) supported\n2026-10-12T00:11:11.229+1000 INFO GCM (AEAD) supported\n2026-10-12T00:11:11.229+1000 INFO SQLite supported, default database location is /opt/homebrew/var/db/turndb\n2026-10-12T00:11:11.229+1000 INFO Redis supported\n2026-10-12T00:11:11.229+1000 INFO PostgreSQL supported\n2026-10-12T00:11:11.229+1000 INFO MySQL is not supported\n2026-10-12T00:11:11.229+1000 INFO MongoDB is not supported\n2026-10-12T00:11:11.229+1000 INFO Net Engine: UDP thread per CPU core\n2026-10-12T00:11:11.229+1000 INFO Domain name: \n2026-10-12T00:11:11.229+1000 INFO Default realm: jj.test\n2026-10-12T00:11:11.229+1000 WARNING CONFIG: allow_loopback_peers opens a possible security vulnerability. Do not use in production!!\n2026-10-12T00:11:11.229+1000 WARNING Certificate file not found or not readable: /Users/cdilga/Documents/dev/multiplayer-racer/turn_server_cert.pem\n2026-10-12T00:11:11.229+1000 WARNING Private key file not found or not readable: /Users/cdilga/Documents/dev/multiplayer-racer/turn_server_pkey.pem\n2026-10-12T00:11:11.229+1000 WARNING Cannot create pid file: /var/run/turnserver.pid\n2026-10-12T00:11:11.229+1000 INFO pid file created: /var/tmp/turnserver.pid\n2026-10-12T00:11:11.231+1000 INFO IO method: kqueue\n2026-10-12T00:11:11.231+1000 INFO RFC5780 disabled! /NAT behavior discovery/\n2026-10-12T00:11:11.231+1000 INFO Wait for relay ports initialization...\n2026-10-12T00:11:11.231+1000 INFO   relay 127.0.0.1 initialization...\n2026-10-12T00:11:11.375+1000 INFO   relay 127.0.0.1 initialization done\n2026-10-12T00:11:11.375+1000 INFO Relay ports initialization done\n2026-10-12T00:11:11.375+1000 INFO Total relay threads: 8\n2026-10-12T00:11:11.376+1000 INFO Total auth threads: 2\n2026-10-12T00:11:11.376+1000 INFO turnserver compiled without prometheus support\n2026-10-12T00:11:12.307+1000 INFO stateless-nonce: listener fast-path challenge active\n"
+}

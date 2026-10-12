@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-S04b browser test: loose and detached parts in the running host, through the real path (the sim worker's `testing`
 // build, a fake controller that joins like a phone and drives, the instanced vehicle renderer on the real web build
 // `web/dist`). The damage itself is set with the test surface's `damage` command (health on a named part: a crash isn't
 // needed to see what a loose door or a missing bumper looks like). Software GL, headless Chromium; no WebRTC phone.
 // Needs: scripts/build-host-wasm.sh && npm --prefix web run build.
 //   node --test --test-concurrency=1 web/host/tests/damage.test.mjs
-// Writes captures and numbers to docs/evidence/P1-S04b/ (JJ_EVIDENCE_DIR overrides).
+// Recapture captures and numbers to docs/evidence/P1-S04b/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -13,7 +15,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-S04b');
+const evidenceDir = evidencePath('P1-S04b');
 const runs = {};
 let browser;
 let server;
@@ -163,14 +165,15 @@ test('a missing door shows the core\'s dark bay, on the real host path', { timeo
   await page.evaluate(() => { window.__stick = [0, 0]; window.__steer = 0; });
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed < 0.5, { maxTicks: 60, every: 6 }));
   const before = await vehicles(page, 0);
-  assert.deepEqual(before.interiors, { engine: 0, cabin: 0, boot: 0 }, 'an intact car shows no interior');
+  // R123: interior keys are namespaced by vehicle so different roster cars can share part names.
+  assert.deepEqual(before.interiors, { 'cruz-missile.engine': 0, 'cruz-missile.cabin': 0, 'cruz-missile.boot': 0 }, 'an intact car shows no interior');
   await page.screenshot({ path: join(evidenceDir, 'ingame-intact-left.jpg'), quality: 82 });
   await damage(page, car, 'door_FL', 0);
   await damage(page, car, 'door_RL', 0);
   await page.waitForTimeout(1500);
   await frames(page, 6);
   const v = await vehicles(page, 0);
-  assert.ok(v.interiors.cabin >= 1, `the cabin bay shows where the doors were: ${JSON.stringify(v.interiors)}`);
+  assert.ok(v.interiors['cruz-missile.cabin'] >= 1, `the cabin bay shows where the doors were: ${JSON.stringify(v.interiors)}`);
   await page.screenshot({ path: join(evidenceDir, 'ingame-missing-door-bay.jpg'), quality: 82 });
   runs.bay = { interiors: v.interiors };
   assert.deepEqual(errors, []);

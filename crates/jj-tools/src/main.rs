@@ -3,11 +3,13 @@
 //! ```text
 //! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry), vehicle
 //!                                               sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs) and
-//!                                               vehicle profiles (jj.vehicle-profile.v1, against their sidecar)
+//!                                               vehicle profiles (jj.vehicle-profile.v1, against their sidecar), and
+//!                                               item cards (jj.item.v1, P1-W01)
 //! jj sim [--json] [--trace] [--set k=v] <fixture.json>…   set up, step, observe, assert and replay (`jj sim --help`)
 //! jj sim --compare <accepted> <current> [<tuned>]           ACCEPTED | CURRENT | TUNED trace table
 //! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
 //! jj vehicle sync <profile.json>…               derive a vehicle profile's geometry from its baked sidecar
+//! jj vehicle tune <patch.json> [--check]        write an owner tuning export into its vehicle profile
 //! jj --version
 //! ```
 //! Exit: 0 everything valid, 1 a file failed validation, 2 usage or I/O.
@@ -19,7 +21,7 @@ mod procgen;
 mod sim;
 mod vehicle;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj vehicle sync <profile.json>…\n       jj --version";
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj vehicle sync <profile.json>…\n       jj vehicle tune <patch.json> [--check]\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -61,6 +63,13 @@ fn load_registry(dir: &Path) -> std::io::Result<jj_map::Registry> {
                 );
                 files.push((id, std::fs::read(&path)?));
             }
+        }
+    }
+    // Procedural wayfinding contracts live with the generator. Fill missing entries while
+    // preserving explicit --kit overrides (including their schema errors).
+    for (id, json) in jj_procgen::biome::WAYFINDING_PIECES {
+        if !files.iter().any(|(existing, _)| existing == id) {
+            files.push((id.into(), json.as_bytes().to_vec()));
         }
     }
     files.sort();
@@ -143,6 +152,29 @@ fn validate(args: &[String]) -> ExitCode {
             }
             continue;
         }
+        // Item cards share the data-validation entry point; invalid cards never enter a round's item pool.
+        if serde_json::from_slice::<serde_json::Value>(&bytes)
+            .is_ok_and(|v| v.get("item").is_some())
+        {
+            let problems = match jj_contracts::item::parse(&bytes) {
+                Ok(_) => Vec::new(),
+                Err(problems) => problems,
+            };
+            all_ok &= problems.is_empty();
+            if json {
+                results.push(serde_json::json!({
+                    "file": file.display().to_string(), "kind": "item", "ok": problems.is_empty(), "problems": problems,
+                }));
+            } else if problems.is_empty() {
+                println!("{}: ok (jj.item.v1)", file.display());
+            } else {
+                println!("{}: {} problem(s)", file.display(), problems.len());
+                for problem in problems {
+                    println!("  {problem}");
+                }
+            }
+            continue;
+        }
         // Vehicle profiles (jj.vehicle-profile.v1): the geometry must still match the sidecar it was derived from.
         if serde_json::from_slice::<serde_json::Value>(&bytes).is_ok_and(|v| {
             v.get("profile").and_then(|p| p.as_str()) == Some(jj_sim::profile::PROFILE)
@@ -196,11 +228,23 @@ fn validate(args: &[String]) -> ExitCode {
                 }
             }
         }
-        let (report, hash) =
-            match jj_map::load_json(&bytes, registry.as_ref().expect("loaded above")) {
-                Ok(loaded) => (jj_map::Report::of(vec![]), Some(jj_map::hex(&loaded.hash))),
-                Err(report) => (report, None),
-            };
+        let (report, hash, jump_shapes) = match jj_map::load_json(
+            &bytes,
+            registry.as_ref().expect("loaded above"),
+        ) {
+            Ok(loaded) => {
+                let shapes: Vec<serde_json::Value> = loaded.map.features.iter().enumerate().filter_map(|(feature, f)| {
+                        let mesh = jj_map::jump::jump_mesh(&loaded.map, f)?;
+                        Some(serde_json::json!({"feature":feature,"triangles":mesh.1.len(),"fingerprint":format!("{:016x}",jj_map::jump::render_fingerprint(&mesh))}))
+                    }).collect();
+                (
+                    jj_map::Report::of(vec![]),
+                    Some(jj_map::hex(&loaded.hash)),
+                    shapes,
+                )
+            }
+            Err(report) => (report, None, Vec::new()),
+        };
         all_ok &= report.ok;
         if json {
             results.push(serde_json::json!({
@@ -209,6 +253,7 @@ fn validate(args: &[String]) -> ExitCode {
                 "ok": report.ok,
                 "gameplayHash": hash,
                 "violations": report.violations,
+                "jumpShapes": jump_shapes,
             }));
         } else if report.ok {
             println!(

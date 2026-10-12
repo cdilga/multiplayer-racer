@@ -1,0 +1,10 @@
+✔ chromium: physical underpass matches native and both cars remain visible (42748.124167ms)
+✔ webkit: physical underpass matches native and both cars remain visible (6804.381ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52118.145875

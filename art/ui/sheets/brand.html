@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>Joystick Jammers brand sheet</title>
-<meta name="viewport" content="width=1600">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
-    width: 1600px;
+    max-width: 1600px;
+    overflow-wrap: anywhere;
     background: var(--c-paper);
     color: var(--c-ink);
     font-family: var(--font-body);
@@ -40,42 +41,43 @@
     box-shadow: var(--sticker-shadow);
   }
   .ink { background: var(--c-ink); color: var(--c-paper); }
-  .row { display: flex; gap: 32px; align-items: flex-start; margin-top: 28px; }
-  .cell { display: flex; flex-direction: column; }
+  .row { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 28px; }
+  .cell { display: flex; flex-direction: column; min-width: 0; max-width: 100%; }
 
   /* wordmark */
-  .wm-panel { flex: none; width: 100%; height: 360px; display: flex; align-items: center; justify-content: center; }
-  .wm-panel img { width: 660px; display: block; }
-  .wm-sizes { display: flex; align-items: flex-end; gap: 28px; margin-top: 18px; }
+  .wm-panel { flex: none; width: 100%; height: 360px; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .wm-panel img { width: 660px; max-width: 100%; height: auto; display: block; }
+  .wm-sizes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px; margin-top: 18px; }
+  .wm-sizes img { max-width: 100%; height: auto; }
   .chip { padding: 20px 24px; display: flex; align-items: center; justify-content: center; }
   .rules { margin: 14px 0 0; padding-left: 20px; font-weight: 600; font-size: 15px; color: var(--c-ink-soft); }
   .rules li { margin: 3px 0; }
 
   /* icons */
-  .icon-big { width: 512px; height: 512px; border-radius: 22%; display: block; box-shadow: var(--sticker-shadow); }
+  .icon-big { width: 512px; max-width: 100%; height: auto; aspect-ratio: 1; border-radius: 22%; display: block; box-shadow: var(--sticker-shadow); }
   .icon-180 { width: 180px; height: 180px; border-radius: 22.37%; display: block; box-shadow: var(--sticker-shadow); }
-  .stack { display: flex; flex-direction: column; gap: 30px; }
-  .sizes { display: flex; gap: 20px; align-items: flex-end; }
+  .stack { display: flex; flex-direction: column; gap: 30px; min-width: 0; max-width: 100%; }
+  .sizes { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
   .tile { width: 112px; height: 96px; border: var(--outline) solid var(--c-ink); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 14px; }
   .tile.dark { background: var(--c-ink); border-color: var(--c-ink); }
   .tile.paper { background: var(--c-paper); }
   .tab { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 12px; background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-bottom: 0; border-radius: 10px 10px 0 0; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
-  .tabbar { background: var(--c-paper-shade); border: var(--outline) solid var(--c-ink); border-radius: 8px; padding: 10px 14px 0; width: 330px; height: 52px; display: flex; align-items: flex-end; margin-top: 4px; }
+  .tabbar { background: var(--c-paper-shade); border: var(--outline) solid var(--c-ink); border-radius: 8px; padding: 10px 14px 0; width: 330px; max-width: 100%; height: 52px; display: flex; align-items: flex-end; margin-top: 4px; }
   #zoom { width: 128px; height: 128px; image-rendering: pixelated; border: var(--outline) solid var(--c-ink); border-radius: 6px; background: var(--c-paper-shade); display: block; }
 
   /* qr */
-  .qr-wrap { display: flex; gap: 48px; align-items: flex-start; margin-top: 28px; }
-  .qr-wrap img { width: 880px; display: block; }
-  .facts { flex: 1; font-weight: 600; font-size: 17px; }
+  .qr-wrap { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; margin-top: 28px; }
+  .qr-wrap img { width: 880px; max-width: 100%; height: auto; display: block; }
+  .facts { flex: 1 1 320px; min-width: 0; font-weight: 600; font-size: 17px; }
   .facts h3 { font-family: var(--font-display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 28px; margin: 0 0 8px; line-height: 1; }
   .facts ul { margin: 0 0 20px; padding-left: 20px; }
   .facts li { margin: 5px 0; }
   .facts .num { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--c-cobalt-deep); font-variant-numeric: tabular-nums; }
-  .donts { display: flex; gap: 40px; margin-top: 36px; }
-  .dont { flex: 1 1 0; min-width: 0; }
+  .donts { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 36px; }
+  .dont { flex: 1 1 260px; min-width: 0; }
   .dont .frame { position: relative; width: 100%; height: 300px; border: var(--outline) solid var(--c-ink); border-radius: 12px; background: var(--c-paper-shade); display: flex; align-items: center; justify-content: center; }
-  .dont .frame img { width: 220px; height: 220px; display: block; }
-  .dont .cross { position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; margin: -125px 0 0 -125px; overflow: hidden; }
+  .dont .frame img { width: 220px; max-width: 80%; height: auto; aspect-ratio: 1; display: block; }
+  .dont .cross { position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; max-width: 90%; max-height: 90%; transform: translate(-50%, -50%); overflow: hidden; }
   .dont .cap { margin-top: 12px; display: flex; gap: 10px; align-items: flex-start; font-weight: 700; font-size: 17px; }
   .dont .x { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--c-danger); color: var(--c-paper); display: grid; place-items: center; }
   .dont .x svg { width: 14px; height: 14px; }
@@ -88,11 +90,11 @@
 <section id="wordmark">
   <h2><span>Wordmark</span></h2>
   <div class="row">
-    <div class="cell" style="flex:1 1 0">
+    <div class="cell" style="flex:1 1 340px">
       <div class="panel wm-panel"><img id="wm-paper" src="../brand/wordmark.svg" alt="Joystick Jammers wordmark on paper"></div>
       <div class="label"><b>wordmark.svg</b> for paper and light grounds. JOYSTICK ink, JAMMERS saffron, ink outline, hard shadow.</div>
     </div>
-    <div class="cell" style="flex:1 1 0">
+    <div class="cell" style="flex:1 1 340px">
       <div class="panel ink wm-panel"><img id="wm-ink" src="../brand/wordmark-on-ink.svg" alt="Joystick Jammers wordmark on ink"></div>
       <div class="label"><b>wordmark-on-ink.svg</b> for ink grounds. JOYSTICK paper, paper keyline round the whole sticker.</div>
     </div>

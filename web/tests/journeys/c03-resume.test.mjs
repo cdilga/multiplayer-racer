@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C03 on a live room (real host page, real phone pages, real jj-server, WebRTC: run on eris): resume, fencing, retried
 // claims, the scripted cause of every §11 state, names remembered per device and realm, and Leave with its confirmation.
 // The wording of each state with no network at all is `c03-states.test.mjs`.
@@ -43,6 +44,7 @@ async function joined(joinUrl, name = 'Marlene', init) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   return { ctx, page, you: (await inspect(page)).you, endpoint: (await inspect(page)).link.endpointId };
 }
 const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s) => ({ name: s.name, number: s.number, presence: s.presence })));
@@ -253,12 +255,15 @@ test('Leave asks for a second tap, then the seat goes; Sit out from Settings par
   const p = await joined(joinUrl, 'Marlene');
   const q = await joined(joinUrl, 'Shazza');
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  await confirmInitialVehicle(q.page);
   await wait(q.page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(q.page);
   await q.page.getByRole('button', { name: 'Skip tutorial' }).click();
   await q.page.getByRole('button', { name: /Settings/ }).click();
   await q.page.getByRole('button', { name: 'Sit out' }).click();
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
   assert.equal((await seats(host)).length, 2, 'sitting out keeps the seat');
+  await p.page.getByRole('button', { name: 'Skip tutorial' }).click();
   const leave = p.page.locator('[data-act=leave]');
   await leave.click();
   assert.match(await leave.textContent(), /Tap again to leave/i);

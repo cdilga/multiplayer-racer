@@ -52,7 +52,12 @@ test('four controllers play two consecutive 1-lap rounds hands-off', { timeout: 
     await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 600_000);
     const v = await view(host);
     assert.equal(v.results.length, N, `round ${round}: ${N} results ${JSON.stringify(v.results)}`);
-    assert.deepEqual(v.results.map((r) => r.place).sort(), [1, 2, 3, 4]);
+    const places = v.results.map((r) => r.place).sort((a, b) => a - b);
+    assert.equal(places[0], 1);
+    for (let i = 1; i < places.length; i++) {
+      assert.ok(places[i] === places[i - 1] || places[i] === i + 1, `legal competition ranks, including exact ties: ${places}`);
+    }
+    assert.equal(new Set(v.results.map((r) => r.number)).size, N, 'each entrant classified exactly once');
     assert.equal(v.seats.length, N, 'no phantom seats');
     rounds.push({ round, places: v.results.map((r) => r.place) });
     // Everyone un-readies on the results screen (a fresh round needs a fresh Ready), then readies again in the loop.

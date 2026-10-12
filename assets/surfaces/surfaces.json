@@ -1,0 +1,31 @@
+{
+  "schema": "jj.surfaces.v1",
+  "note": "Per-ground-class tyre behaviour beyond the profile's peak-grip multiplier (profile tuning.surfaces). side_stiffness scales Rapier's side_friction_stiffness (the share of a wheel's sideways velocity its tyre pushes back per tick, so below 1 the car slides further and more progressively before the grip limit); rolling_resistance is force per newton of wheel load; speed_drag adds force per newton of load per m/s of the wheel's ground speed (soft ground plows harder the faster it goes). Tarmac rolling_resistance is 0: bitumen's rolling loss is the profile's linear_damping, so only the other grounds add drag on top of it (adding it to tarmac made jump landings in the R122/jump bank marginal).",
+  "surfaces": {
+    "tarmac": {
+      "side_stiffness": 1.0,
+      "rolling_resistance": 0.0,
+      "speed_drag": 0
+    },
+    "packed_dirt": {
+      "side_stiffness": 0.6,
+      "rolling_resistance": 0.025,
+      "speed_drag": 0.0025
+    },
+    "gravel": {
+      "side_stiffness": 0.5,
+      "rolling_resistance": 0.04,
+      "speed_drag": 0.005
+    },
+    "rock": {
+      "side_stiffness": 0.9,
+      "rolling_resistance": 0.015,
+      "speed_drag": 0
+    },
+    "off_track": {
+      "side_stiffness": 0.8,
+      "rolling_resistance": 0.06,
+      "speed_drag": 0.01
+    }
+  }
+}

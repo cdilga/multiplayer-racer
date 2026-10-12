@@ -1,9 +1,12 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // Journey JN5 (P1-G02): mixed controllers join and leave through every phase of a round on the real host page
 // (`B/host?room&test=live&laps=99`, the test surface finishes the round) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
 // the Countdown, five more drop in mid-race (each timed from its accepted claim to its car moving under its own
 // throttle, and each gets its Identify flash and a tile), the room grows to 12, then Leave and Sit out shrink it to 2
 // through Intermission. The room never lists a seat that left, nobody is refused and the standings keep their rows.
-// Writes the drop-in samples to $JJ_EVIDENCE_DIR/dropin.json (default docs/evidence/P1-G02); `JJ_CAPTURE_DIR=<dir>`
+// Writes the drop-in samples to $JJ_EVIDENCE_DIR/dropin.json (default OS scratch); `JJ_CAPTURE_DIR=<dir>`
 // saves the visual self-review matrix.
 //   node --test web/tests/journeys/jn5-churn.test.mjs
 import assert from 'node:assert/strict';
@@ -18,18 +21,40 @@ import { chromiumArgs, gpu } from './lib/chromium.mjs';
 const ID = `jn5${process.env.JJ_BUILD_SUFFIX ?? ''}`;
 const BASE = `/p/${ID}/`;
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
-const EVIDENCE = process.env.JJ_EVIDENCE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G02');
+const EVIDENCE = evidencePath('P1-G02');
 let browser;
 let server;
+let profiler;
+
+async function stopHostProfile() {
+  if (!profiler) return;
+  const session = profiler;
+  profiler = null;
+  let timer;
+  try {
+    const { profile } = await Promise.race([
+      session.send('Profiler.stop'),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('CPU profile stop timed out')), 30_000); }),
+    ]);
+    writeFileSync(process.env.JJ_HOST_PROFILE, JSON.stringify(profile));
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 before(async () => {
   server = await serve(build('./', ID), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
-  await browser?.close();
-  await server?.close();
+  try {
+    // Profiling is optional diagnostic evidence. A stalled target must still release its browser/server.
+    await stopHostProfile();
+  } finally {
+    await browser?.close();
+    await server?.close();
+  }
 });
 
 let step = '';
@@ -49,14 +74,14 @@ async function stateOf(page) {
       return {
         url: location.pathname,
         controller: c && { phase: c.phase, you: c.you, roomPhase: c.roomPhase, link: c.link },
-        room: room && { phase: room.phase, seats: room.seats.map((s) => `${s.name}:${s.presence}:car${s.car}`) },
+        room: room && { phase: room.phase, seats: room.seats.map((s) => `${s.name}:${s.presence}:ready${s.ready}:car${s.car}`) },
         paths: window.__jjNet?.inspect?.(),
       };
     }),
   );
   const hostSide =
     hostPage && hostPage !== page
-      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: { frames: window.__jjRender.stats().frames, scale: window.__jjRender.stats().scale } })))
+      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: window.__jjRender.stats(), preparation: window.__jjPrepare?.seeds?.() })))
       : null;
   return JSON.stringify({ own, host: hostSide, contexts: browser.contexts().length });
 }
@@ -81,26 +106,35 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing', undefined, 120_000);
+  await confirmInitialVehicle(page);
   const endpoint = await page.evaluate(() => window.__jjController.inspect().link.endpointId);
   // Newcomers get the tutorial in the Lobby; these players skip it.
   await page.getByRole('button', { name: 'Skip tutorial' }).click({ timeout: 2000 }).catch(() => {});
   return { ctx, page, name, endpoint };
 }
 
-async function leave(host, p) {
+async function leave(host, p, { held = false } = {}) {
   // Leave asks for a second tap within 3 s (no browser dialogs).
-  const btn = p.page.getByRole('button', { name: /Leave/ });
+  const chooserLeave = p.page.locator('[data-overlay=cars] [data-act=car-leave]');
+  const btn = await chooserLeave.count() ? chooserLeave : p.page.getByRole('button', { name: /Leave/ });
   const t0 = Date.now();
   await btn.click();
   const t1 = Date.now();
   // The second tap goes straight to the button: after the first, it changes its label and animates, and Playwright's
   // wait for a stable target ran past the 3 s confirm window on a slow runner (run 2292: 3273 ms), which no thumb does.
-  await p.page.locator('[data-act=leave]').first().dispatchEvent('click');
+  await btn.dispatchEvent('click');
   const t2 = Date.now();
   // The host has the Leave before the phone goes: closing the page sooner (run 1706: 500 ms on a slow runner) lost the
   // command, and a vanished phone is a dropout whose seat is held for its return, not a leave.
   try {
-    await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
+    if (held) {
+      const started = Date.now();
+      while ((await view(host)).seats.some((s) => s.name === p.name)) {
+        assert.ok(Date.now() - started < 60_000, `${p.name} never left the held Intermission`);
+        await host.evaluate(() => window.__jjTest.step(1));
+        await host.waitForTimeout(50);
+      }
+    } else await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
   } catch (e) {
     // Which side lost it (runs 2058, 2271): the phone's own view of the two taps and whether it sent the Leave.
     const phoneSide = await p.page
@@ -148,15 +182,31 @@ async function dropIn(host, url, name) {
   return { p, ms };
 }
 
-test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
+// This is a rendered twelve-seat journey, including a three-second drop-in bound. CI's software renderer reached
+// 5 s per frame / 6.5 M triangles, starving real browser negotiation. Run the complete cohort and timing on the GPU
+// lane rather than lowering the cohort, hiding the world, or relaxing its GPU drop-in bound.
+test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000, skip: !gpu && 'rendered twelve-seat churn is qualified in the GPU lane' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   hostPage = host;
+  if (process.env.JJ_HOST_PROFILE) {
+    profiler = await host.context().newCDPSession(host);
+    await profiler.send('Profiler.enable');
+    await profiler.send('Profiler.setSamplingInterval', { interval: 10_000 });
+    await profiler.send('Profiler.start');
+  }
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   // JJ_HOST_CPU_THROTTLE=<n> slows the host page n times (a CDP CPU throttle), to reproduce a slow CI runner on a fast box.
   if (process.env.JJ_HOST_CPU_THROTTLE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  const renderer = await host.evaluate(() => {
+    const gl = document.querySelector('canvas')?.getContext('webgl2');
+    const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+    return gl && ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+  });
+  assert.ok(renderer && !/swiftshader|llvmpipe|software/i.test(renderer), `GPU cohort requires a measured hardware renderer: ${renderer}`);
+  console.log('# host renderer', renderer);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
 
   at('Lobby: three phones and both key clusters');
@@ -171,23 +221,58 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-lobby-5');
 
   at('Ready: the round starts');
+  // Keep the short Countdown observable even when a software-rendered host stalls the page.
+  // Inputs still arrive through the real phone/key path; only the worker clock is stepped here.
+  await host.evaluate(() => window.__jjTest.hold(true));
+  const applied = async (fn, arg) => {
+    for (const started = Date.now(); ;) {
+      await host.evaluate(() => window.__jjTest.step(1));
+      if (await host.evaluate(fn, arg)) return;
+      assert.ok(Date.now() - started < 30_000, 'the held clock applies the join/Ready input');
+      await host.waitForTimeout(25);
+    }
+  };
   for (const p of phones) await p.page.getByRole('button', { name: /^Ready/ }).click();
-  for (const k of ['KeyE', 'KeyO']) await host.keyboard.press(k, { delay: 250 });
-  await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
+  // Like the join keys above, hold each sampled key until the host has applied it. A fixed 250 ms tap can fall
+  // wholly between two software-rendered frames, leaving the room in the Lobby without either key seat ready.
+  for (const [key, number] of [['KeyE', 4], ['KeyO', 5]]) {
+    await applied(n => window.__jjControls.vehicleChoices().some(p => p.seat === window.__jjRoom.view().seats.find(s => s.number === n)?.seat && !p.readyHeld), number);
+    // Confirm the remembered vehicle before Ready: the first press is the choice step.
+    await host.keyboard.down(key);
+    await applied(n => {
+      const s = window.__jjRoom.view().seats.find(s => s.number === n);
+      return !!s?.vehicle && !s.choosing;
+    }, number);
+    await host.keyboard.up(key);
+    // Observe neutral before the next press can Ready the same seat.
+    await applied(n => window.__jjControls.vehicleChoices().some(p => p.seat === window.__jjRoom.view().seats.find(s => s.number === n)?.seat && !p.readyHeld), number);
+    await host.keyboard.down(key);
+    await applied(n => window.__jjRoom.view().seats.find(s => s.number === n)?.ready === true || window.__jjRoom.view().phase !== 'Lobby', number);
+    await host.keyboard.up(key);
+  }
+  await applied(() => window.__jjRoom.view().phase === 'Countdown');
 
   at('Countdown: a phone joins and is on the grid');
-  phones.push(await phone(joinUrl, 'Kylie'));
-  await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Kylie')?.car !== null);
+  const newcomer = phone(joinUrl, 'Kylie');
+  await applied(() => {
+    const s = window.__jjRoom.view().seats.find(s => s.name === 'Kylie');
+    return s && s.car !== null;
+  });
+  phones.push(await newcomer);
   await shot(host, 'tv-countdown-6');
+  await host.evaluate(() => window.__jjTest.hold(false));
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 30_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
 
   at('Running: five phones drop in, each timed claim → driving');
   const samples = [];
   for (const n of ['Macca', 'Robbo', 'Gazza', 'Thommo', 'Jonesy']) {
+    at(`Running: ${n} claims and drives`);
     const { p, ms } = await dropIn(host, joinUrl, n);
     samples.push({ name: n, ms });
     phones.push(p);
+    // Capture before an overloaded target stops answering CDP; the rest of the journey still runs.
+    if (process.env.JJ_HOST_PROFILE_UNTIL === n) await stopHostProfile();
     const seat = (await view(host)).seats.find((s) => s.name === n);
     const identified = await host.evaluate((seat) => window.__jjRoom.events().some((e) => e.event.Identify?.seat === seat), seat.seat);
     assert.ok(identified, `${n}'s Identify fired on joining`);
@@ -206,19 +291,20 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)];
   console.log(`# drop-in claim → driving: ${JSON.stringify(samples)} p95 ${p95} ms`);
   mkdirSync(EVIDENCE, { recursive: true });
-  // The 3 s target is a host drawing on a GPU; on software WebGL (CI's runner) eleven tiles hold the host's main thread,
-  // which delays the claim and the first inputs, so there the samples get a loose bound only.
-  const renderer = gpu ? 'host on a GPU' : 'host on SwiftShader (software WebGL)';
-  const limit = gpu ? 3000 : 45_000; // software WebGL: a loose bound, see DROP_IN_GIVE_UP_MS
+  const limit = 3000;
   writeFileSync(join(EVIDENCE, 'dropin.json'), `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', renderer, samples, p95Ms: p95, targetP95Ms: 3000 }, null, 1)}\n`);
   assert.ok(p95 <= limit, `drop-in p95 ${p95} ms > ${limit} ms (${renderer})`);
 
   at('Running: two phones leave, a key cluster sits out');
   await leave(host, phones[0]);
   await leave(host, phones[1]);
-  // The drawer's buttons are dispatched by their data attributes: the round screens may sit over the drawer, and it
-  // folds to its head on the grid and in the race (its buttons stay in the page, at no size).
-  await host.locator('[data-jj-input-drawer] button[data-act="sit-out"]').first().dispatchEvent('click');
+  // Local controller actions live in the accepted pause menu during racing.
+  // Keyboard activation is the same real footer action and remains usable while this software-GL churn cohort
+  // reflows. Pointer/scroll-observer latency is covered by the owner journey, not qualified by this loaded run.
+  await host.locator('.jj-foot [data-act=menu]').press('Enter');
+  await host.getByRole('button', { name: 'Controllers', exact: true }).click();
+  await host.locator('[data-jj-input-drawer] button[data-act="sit-out"]').first().click();
+  await host.keyboard.press('Escape');
   await wait(host, () => window.__jjRoom.view().seats.length === 10 && window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
   assert.ok(!(await names(host)).includes('Davo') && !(await names(host)).includes('Shazza'), 'no phantom seats');
   // The grid reflows to the seated cars: the leavers' and the sitter's withdrawn cars keep no tile.
@@ -267,7 +353,13 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission: results and standings');
   // The round runs 99 laps so a slow host (2 s frames) never finishes it mid-churn (run 1659); the test surface finishes the race here, as the finish window closing would
   // (`finishRace`: the race rules freeze the result and the director takes the normal way to Intermission).
-  await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
+  // Hold before ending the race. A software-rendered page can observe a queued Intermission view after the worker
+  // has already advanced into the next round; holding after that observation preserves the wrong phase.
+  await host.evaluate(async () => {
+    await window.__jjTest.hold(true);
+    await window.__jjTest.command({ cmd: 'finishRace' });
+    await window.__jjTest.step(2);
+  });
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 120_000);
   const atResults = await view(host);
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
@@ -276,8 +368,21 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission and Lobby: shrink to 2');
   // One phone leaves in the Intermission itself; the results screen counts down to the next round, and on a slow host
   // six leaves outlast it (run 1656), so the host takes the room back to the Lobby next and the rest leave there.
-  await leave(host, phones[2]); // Bazza
-  await host.getByRole('button', { name: 'Return to lobby' }).click();
+  await leave(host, phones[2], { held: true }); // Bazza
+  assert.equal((await view(host)).phase, 'Intermission', 'a real phone leaves during the results phase');
+  // A real pointer click, without waiting for two stable animation frames on the software-rendered host.
+  // Visibility and the resulting Lobby transition remain asserted; this does not dispatch a synthetic UI command.
+  const returnButton = host.getByRole('button', { name: 'Return to lobby' });
+  await returnButton.waitFor({ state: 'visible' });
+  await returnButton.click({ force: true }).catch(async (e) => {
+    const screen = await host.evaluate(() => ({
+      phase: document.documentElement.dataset.jjPhase,
+      screens: [...document.querySelectorAll('[data-screen]')].map((el) => el.dataset.screen),
+      buttons: [...document.querySelectorAll('.jj-screen button')].map((el) => el.textContent),
+    }));
+    throw new Error(`${e.message}\nresults screen ${JSON.stringify(screen)}, errors ${JSON.stringify(errors)}, room ${JSON.stringify(await view(host))}`);
+  });
+  await host.evaluate(async () => { await window.__jjTest.step(1); await window.__jjTest.hold(false); });
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   for (const p of phones.slice(3, 8)) await leave(host, p); // … Thommo; Jonesy and Sheila stay
   await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters
@@ -286,6 +391,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // (The drawer rebuilds its rows when a source's state changes, so a click can land on a row just replaced: retry.)
   // Until only Jonesy and Sheila are left (a removal can land after the click that caused it, so the count isn't taken
   // per click).
+  await host.locator('.jj-foot [data-act=menu]').click();
+  await host.getByRole('button', { name: 'Controllers', exact: true }).click();
   for (let tries = 0; (await view(host)).seats.length > 2; tries++) {
     assert.ok(tries < 20, `a key cluster never left: ${JSON.stringify(await names(host))}`);
     const leaveBtn = host.locator('[data-jj-input-drawer] button[data-act="leave"]');
@@ -298,6 +405,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
     await leaveBtn.first().dispatchEvent('click');
     await host.waitForTimeout(500);
   }
+  await host.keyboard.press('Escape');
   await wait(host, () => window.__jjRoom.view().seats.length === 2, undefined, 30_000);
   const end = await view(host);
   assert.deepEqual(end.seats.map((s) => s.name).sort(), ['Jonesy', 'Sheila'], 'the two who stayed');

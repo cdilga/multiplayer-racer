@@ -1,0 +1,11 @@
+ok   /p/c12/host?drive 412x915 -> /tmp/jj-m5l0-live-final/p_c12_host_drive_412x915.png
+ok   /p/c12/host?drive 915x412 -> /tmp/jj-m5l0-live-final/p_c12_host_drive_915x412.png
+ok   /p/c12/host?drive 375x667 -> /tmp/jj-m5l0-live-final/p_c12_host_drive_375x667.png
+ok   /p/c12/host?drive 1366x768 -> /tmp/jj-m5l0-live-final/p_c12_host_drive_1366x768.png
+ok   /p/c12/host?drive 1920x1080 -> /tmp/jj-m5l0-live-final/p_c12_host_drive_1920x1080.png
+ok   /p/c12/host?room 412x915 -> /tmp/jj-m5l0-live-final/p_c12_host_room_412x915.png
+ok   /p/c12/host?room 915x412 -> /tmp/jj-m5l0-live-final/p_c12_host_room_915x412.png
+ok   /p/c12/host?room 375x667 -> /tmp/jj-m5l0-live-final/p_c12_host_room_375x667.png
+ok   /p/c12/host?room 1366x768 -> /tmp/jj-m5l0-live-final/p_c12_host_room_1366x768.png
+ok   /p/c12/host?room 1920x1080 -> /tmp/jj-m5l0-live-final/p_c12_host_room_1920x1080.png
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

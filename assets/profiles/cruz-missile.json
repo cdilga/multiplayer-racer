@@ -2563,9 +2563,9 @@
     "drive": "Rear",
     "linear_damping": 0.15,
     "angular_damping": 0.8,
-    "roll_influence": 0.6,
-    "drift_rear_grip": 0.35,
-    "drift_recovery_s": 0.4,
+    "roll_influence": 0.12,
+    "drift_rear_grip": 0.37,
+    "drift_recovery_s": 0.15,
     "boost_start": 0.5,
     "boost_min_start": 0.25,
     "boost_engine_gain": 0.6,
@@ -2584,12 +2584,20 @@
     "wheelie_max_reverse_mps": 0.5,
     "air_pitch_torque": 900.0,
     "air_roll_torque": 1500.0,
+    "drift_exit_min_s": 0.25,
+    "drift_exit_min_slip_deg": 4.0,
+    "drift_exit_boost_per_s": 2.0,
+    "drift_exit_boost_max_s": 3.0,
+    "drift_exit_boost_gain": 2.5,
+    "air_level_torque": 3200.0,
+    "air_level_damping": 2200.0,
+    "support_level_tilt_rad": 0.17453292,
     "surfaces": {
       "tarmac": 1.0,
-      "packed_dirt": 0.8,
-      "gravel": 0.7,
+      "packed_dirt": 0.7,
+      "gravel": 0.62,
       "rock": 0.9,
-      "off_track": 0.6
+      "off_track": 0.45
     },
     "damage": {
       "health_front": 100.0,
@@ -2606,7 +2614,8 @@
       "attribution_margin_m": 0.3,
       "spring_stiffness": 25.0,
       "spring_damping": 4.0,
-      "loose_wheel_grip_loss": 0.15,
+      "loose_wheel_grip_loss": 0.0,
+      "wheel_loss_respawn_s": 2.0,
       "detach_kick_mps": 1.5,
       "detach_clear_ms": 250.0
     }

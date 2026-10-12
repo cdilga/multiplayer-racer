@@ -1,15 +1,18 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-C05: host pads and key clusters, on the real web build in headless Chromium with an emulated Gamepad API and real
 // key events. The host runs live (`?test=live`) so the worker's clock, the dropout rule and input ages are real.
-// Writes docs/evidence/P1-C05/receipt.json and seats.json (JJ_EVIDENCE_DIR overrides the folder).
+// Explicit evidence can go to docs/evidence/P1-C05/receipt.json and seats.json (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
+import clusterData from '../src/input/clusters.json' with { type: 'json' };
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-C05');
+const evidenceDir = evidencePath('P1-C05');
 let browser;
 let server;
 
@@ -79,13 +82,32 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   };
   await page.evaluate(() => window.__pads.axes(0, [0, -1, 0, 0]));
   await seated(1);
+  await page.evaluate(() => window.__pads.axes(0, [0, 0, 0, 0]));
   await page.evaluate(() => window.__pads.axes(1, [0, -0.7, 0.8, 0]));
   await seated(2);
+  await page.evaluate(() => window.__pads.axes(1, [0, 0, 0, 0]));
   await page.keyboard.down('KeyW');
   await seated(3);
+  await page.keyboard.up('KeyW');
   await page.keyboard.down('KeyK');
   await page.keyboard.down('KeyJ');
   await seated(4);
+  await page.keyboard.up('KeyK');
+  await page.keyboard.up('KeyJ');
+  // The grid puts a turning pad beside Keys A: their bodies can collide during this input-routing probe.
+  // Stage them on separate stretches of the actual straight, with reverse pointed away from the others.
+  const claimed = await observe();
+  for (const [endpoint, x] of [['local:100', 30], ['local:101', 80], ['local:1', 130], ['local:2', 10]]) {
+    const car = claimed.host.seats.find((s) => s.endpoint === endpoint).car;
+    await page.evaluate(({ car, x }) => window.__jjTest.command({ cmd: 'place', car, pose: { x, y: 0.0073, z: 0, headingDeg: 90 } }), { car, x });
+  }
+  await page.evaluate(() => {
+    window.__pads.axes(0, [0, -1, 0, 0]);
+    window.__pads.axes(1, [0, -0.7, 0.8, 0]);
+  });
+  await page.keyboard.down('KeyW');
+  await page.keyboard.down('KeyK');
+  await page.keyboard.down('KeyJ');
   const start = await observe();
   const carOf = (state, endpoint) => {
     const seat = state.host.seats.find((s) => s.endpoint === endpoint);
@@ -108,12 +130,13 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
     ['local:100', 'local:101', 'local:1', 'local:2'].map((e) => [e, { forwardSpeed: carOf(driven, e).forwardSpeed, turnDeg: turn(e) }]),
   );
   console.log(JSON.stringify(result));
+  if (process.env.JJ_C05_DIAGNOSTICS) console.log('C05 physical trace:', JSON.stringify({ start: start.cars, driven: driven.cars, events: await page.evaluate(() => window.__jjTest.lines()) }));
   assert.ok(result['local:100'].forwardSpeed > 4 && result['local:100'].turnDeg < 10, 'pad 1 drives straight on');
   assert.ok(result['local:101'].forwardSpeed > 2 && result['local:101'].turnDeg > 15, 'pad 2 turns');
   assert.ok(result['local:1'].forwardSpeed > 4 && result['local:1'].turnDeg < 10, 'keys A drive straight on');
   assert.ok(result['local:2'].forwardSpeed < -0.5, 'keys B reverse');
   const drawer = await page.evaluate(() => [...document.querySelectorAll('[data-jj-input-drawer] li[data-source]')].map((li) => `${li.dataset.source}:${li.dataset.state}`));
-  assert.deepEqual(drawer.sort(), ['1:playing', '2:playing', '100:playing', '101:playing'].sort());
+  assert.deepEqual(drawer.sort(), [...clusterData.clusters.map((c) => `${c.id}:${[1, 2].includes(c.id) ? 'playing' : 'press to join'}`), '100:playing', '101:playing'].sort());
 
   // Enough samples per source to measure input age before pad 1 is unplugged: the host samples on main-thread timers,
   // which run slower while the page renders on a software rasteriser (headless CI), so hold until there are.
@@ -212,10 +235,10 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
   await page.evaluate(() => [0, 1].forEach((i) => window.__pads.axes(i, [0, 0, 0, 0])));
   const id = Object.fromEntries(['local:100', 'local:101', 'local:1', 'local:2'].map((e) => [e, seat(joined, e).seat]));
 
-  // The drawer's legend shows each cluster's keys, Identify and READY included.
-  const legend = await page.evaluate(() => document.querySelector('[data-jj-input-drawer]').textContent);
-  for (const part of ['Keys A: throttle, brake and steer WASD, drift and flicks TFGH, Identify Q, READY E', 'Keys B: throttle, brake and steer IJKL, drift and flicks UpLeftDownRight, Identify U, READY O'])
-    assert.ok(legend.includes(part), `legend has "${part}": ${legend}`);
+  // The drawer's legend is each cluster's controls card (P1-C14): every key of the cluster, Identify and READY included.
+  const cardKeys = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-jj-input-drawer] [data-card^="keys-"]')].map((c) => [c.dataset.card, [...c.querySelectorAll('kbd')].map((k) => k.dataset.code)])));
+  for (const [n, codes] of [['keys-1', ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyT', 'KeyF', 'KeyG', 'KeyH', 'KeyQ', 'KeyE']], ['keys-2', ['KeyI', 'KeyJ', 'KeyK', 'KeyL', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'KeyU', 'KeyO']]])
+    for (const code of codes) assert.ok(cardKeys[n]?.includes(code), `${n} card has ${code}: ${JSON.stringify(cardKeys)}`);
 
   // Joining flashes each seat once; past the seat reducer's 3 s limit, Identify flashes that seat only.
   await page.waitForTimeout(3300);
@@ -248,7 +271,7 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
   await page.waitForTimeout(300);
   assert.equal((await observe()).host.seats.length, 4, 'no seat while still holding');
   await page.evaluate(() => window.__pads.buttons(1, []));
-  await page.waitForTimeout(200);
+  await page.waitForFunction(() => window.__jjTest.localSources().find((s) => s.source === 101)?.identifyHeld === false, undefined, { timeout: 5000 });
   await page.evaluate(() => window.__pads.axes(1, [0, -1, 0, 0]));
   const rejoined = await until('a new seat for pad 2', (s) => seat(s, 'local:101#2')?.presence === 'Active');
   assert.equal(rejoined.host.seats.length, 5);

@@ -6,7 +6,6 @@ use jj_map::{Biome, Surface};
 use super::{BiomeData, BiomeDef};
 use crate::features::Density;
 use crate::scatter::{Algorithm, BITUMEN_RADIUS_M, Spec, piece};
-use crate::terrain::TerrainParams;
 
 pub struct Greybox;
 
@@ -44,15 +43,7 @@ impl BiomeDef for Greybox {
             id: Biome::Greybox,
             road: Surface::Tarmac,
             ground: Surface::OffTrack,
-            terrain: TerrainParams {
-                relief_m: 2.0,
-                ground_relief_m: 2.0,
-                wavelength_m: 100.0,
-                max_grade: 0.03,
-                max_curvature: 0.0020,
-                max_bank_cdeg: 200,
-                blend_m: 20.0,
-            },
+            terrain: crate::tuning::GeneratorData::shipped().terrain(Biome::Greybox),
             features: Density {
                 jump: 2.0,
                 crest: 1.5,

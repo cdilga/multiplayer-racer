@@ -1,5 +1,8 @@
 # P1-Q01: headed Mac frame-pacing receipt (owner step)
 
+> 2026-10-10: an agent took this receipt on the owner's unlocked Mac (`frame-pacing-mac.json`, results in `README.md`). The
+> steps below stay as the rerun checklist, e.g. for the TCL at true 4K.
+
 This is the one Q01 receipt an agent can't take: it needs a real display, a real GPU and no other GPU work. The Mac has to be
 quiet, so it's an owner step, listed in the P1-Q02 checklist. The helper refuses a headless run and refuses to start while another
 browser's GPU process or another perf run is using the GPU (`web/tests/journeys/harness/perf.mjs`), so a polluted run can't produce

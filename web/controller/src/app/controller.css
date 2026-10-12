@@ -182,6 +182,8 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 
 /* review fixes (P1-U03 round 2) */
 .menusheet { position: absolute; inset: 0; z-index: 5; overflow: auto; padding: 16px; background: rgb(21 32 58 / .97); }
+/* More below (owner playtest 1: a cut-off row read as broken): the bottom edge fades until you've scrolled to the end. */
+.menusheet[data-more] { mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), rgb(0 0 0 / .15)); }
 .menusheet h2 { margin: 0 0 10px; font-size: 26px; }
 .banner { pointer-events: none; }
 .zone.action .knob { border-radius: 18px; display: grid; place-items: center; }
@@ -251,13 +253,14 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
   .pod-cd { width: 100%; text-align: center; }
 }
 
-/* POC1-21: the identify flash on the controller, the TV's tween in the player's colour */
-.cooee-phone { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: var(--seat); overflow: hidden; pointer-events: none; }
+/* POC1-21: the identify flash on the controller, the TV's tween in the player's colour. A see-through wash (owner playtest 1):
+   the sticks stay visible under it, and touches pass through, so you keep driving while it shows. */
+.cooee-phone { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: color-mix(in srgb, var(--seat) 30%, transparent); overflow: hidden; pointer-events: none; }
 .cooee-phone .flash { position: absolute; inset: 0; background: radial-gradient(closest-side, rgb(255 255 255 / .95), color-mix(in srgb, #fff 45%, var(--seat)) 55%, transparent 100%); opacity: 0; animation: cooee-flash 1.5s cubic-bezier(.2, .7, .3, 1) forwards; }
 .cooee-phone .lab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards; opacity: 0; }
 .cooee-phone b { padding: .08em .45em; background: var(--seat); color: var(--seat-on); border: 4px solid var(--c-ink); box-shadow: 0 6px 0 var(--c-ink); font-size: min(17vw, 26vh); font-style: italic; text-transform: none; white-space: nowrap; }
 .cooee-phone .lab span { padding: 4px 12px; background: var(--c-ink); color: var(--c-paper); font-size: 20px; font-weight: 700; }
-@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: 1; } 30% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: .55; } 30% { opacity: .4; } 100% { opacity: 0; } }
 @keyframes cooee-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 85% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(1); } }
 @keyframes cooee-held { 0% { opacity: .6; } 100% { opacity: 0; } }
 @keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
@@ -268,7 +271,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 }
 
 /* POC1-20: the tutorial, bigger and central; goals tick as you do them */
-.coach { left: 50%; top: 8px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; z-index: 6; }
+.coach { left: 50%; top: 8px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); max-height: calc(100% - 16px); overflow: auto; padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; z-index: 6; }
+.coach-actions { display: flex; gap: 12px; }
+.coach-actions .btn { flex: 1; min-height: 48px; }
 .coach-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .coach h2 { margin: 2px 0 0; font-size: 34px; }
 .coach p { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; }
@@ -369,7 +374,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
    keep straight edges here because their torn banners overhang them, which a shape mask would cut off. */
 :is(.badge, .goal, .cooee-phone b, .meter, .row, .gatecard .tip) {
   -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
-  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--identity-pattern, none) 0 0 / 24px 24px repeat, var(--bz-fill, var(--c-paper)) !important;
   border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
 }
 .badge { --bz-mask: var(--bz-badge-0-mask); --bz-skin: var(--bz-badge-0-skin); --bz-fill: var(--seat); padding-inline: 12px; }
@@ -409,7 +414,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .scroll, .picker { touch-action: pan-y; }
 :is(.tools .btn, .strip-acts .btn, .btn.icon:not(.brush), .banner, .seg, .field input, .thumb) {
   -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
-  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--identity-pattern, none) 0 0 / 24px 24px repeat, var(--bz-fill, var(--c-paper)) !important;
   border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
 }
 :is(.tools .btn, .strip-acts .btn) { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin-on-ink); --bz-fill: var(--c-ink-raised); padding-inline: 16px; padding-bottom: 4px; }
@@ -446,3 +451,11 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 /* The wheelie launch (the boost, R116): its cooldown is a paper ring on the left stick's knob, and the pod bar shows it ready. */
 .zone.drive .preload.cool { background: conic-gradient(var(--c-paper) var(--p, 0%), transparent 0); opacity: .9; }
 .pod-boost[data-cooling] .dir { opacity: .5; }
+
+/* Help's Controls page (P1-C14): the cards scroll inside the Help card on a short phone rather than push the page. */
+.coach[data-page='controls'] { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 16px); }
+.coach-controls { overflow: auto; min-height: 0; font-size: 13px; padding: 2px 2px 6px; }
+
+/* P1-R13: the persistent number chip carries the same pattern as the car. */
+.strip .seatno.badge { color: var(--on); -webkit-text-stroke: 0; padding: 4px 12px 6px; --bz-fill: var(--seat); text-shadow: 0 1px 1px rgb(21 32 58 / .35); }
+.strip .seatno.badge { margin-top: 0; height: auto; min-width: 1.8em; line-height: 1.15; font-size: 40px; }

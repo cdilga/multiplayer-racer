@@ -1,0 +1,14 @@
+✔ Chromium scroll drawer paint stays in its frame after resize and fullscreen (27379.188917ms)
+✔ WebKit scroll drawer paint stays in its frame after resize and fullscreen (10904.814459ms)
+✔ Chromium drive welcome caption leaves the expanded drawer readable while visible (36820.200958ms)
+✔ Chromium room welcome caption leaves the expanded drawer readable while visible (30977.899375ms)
+✔ WebKit drive welcome caption leaves the expanded drawer readable while visible (27193.391125ms)
+✔ WebKit room welcome caption leaves the expanded drawer readable while visible (27050.572292ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161050.596292

@@ -54,6 +54,14 @@ pub struct ActionState {
     pub utility_fired: [u32; 2],
     /// The tick the wheelie launch can next fire (the cooldown, P1-C11).
     pub wheelie_ready: u64,
+    /// R120: seconds of real drift held so far (the handbrake on, rear sliding, at speed), and the drift-exit boost's
+    /// ticks left once it's let go ("drop a gear and disappear"); how many exit boosts this car has fired.
+    pub drift_held_s: f32,
+    pub exit_boost_ticks: u32,
+    pub exit_boosts: u32,
+    /// The exit boost is banked but waits for the rear tyres to bite again (the drift blend back under half and the rear slipping under `drift_exit_min_slip_deg`): drive
+    /// while the rear is still sliding sideways is lost to the tyres, so the burst starts when the car straightens.
+    pub exit_boost_wait: bool,
 }
 
 impl ActionState {
@@ -67,6 +75,10 @@ impl ActionState {
             utility_ready: [0; 2],
             utility_fired: [0; 2],
             wheelie_ready: 0,
+            drift_held_s: 0.0,
+            exit_boost_ticks: 0,
+            exit_boosts: 0,
+            exit_boost_wait: false,
         }
     }
 
@@ -83,21 +95,48 @@ impl ActionState {
     ) {
         let t = &p.tuning;
         self.wheelie_ticks = self.wheelie_ticks.saturating_sub(1);
+        if !self.exit_boost_wait {
+            self.exit_boost_ticks = self.exit_boost_ticks.saturating_sub(1);
+        }
+        // R120: a held drift banks exit boost; letting the handbrake go after at least `drift_exit_min_s` of it fires a
+        // burst of `drift_exit_boost_per_s` seconds per second held (up to `drift_exit_boost_max_s`).
+        let real = self.drift > 0.5
+            && rear_slip_deg >= t.drift_exit_min_slip_deg
+            && speed >= t.drift_charge_min_mps;
+        if input.drift {
+            if real {
+                self.drift_held_s += dt;
+            }
+        } else if self.drift_held_s > 0.0 {
+            if t.drift_exit_boost_per_s > 0.0 && self.drift_held_s >= t.drift_exit_min_s {
+                let s =
+                    (self.drift_held_s * t.drift_exit_boost_per_s).min(t.drift_exit_boost_max_s);
+                self.exit_boost_ticks = libm::roundf(s * crate::sim::TICK_HZ as f32) as u32;
+                self.exit_boosts += 1;
+                self.exit_boost_wait = true;
+            }
+            self.drift_held_s = 0.0;
+        }
         self.drift = if input.drift {
             1.0
         } else {
             (self.drift - dt / t.drift_recovery_s).max(0.0)
         };
+        if self.exit_boost_wait && self.drift <= 0.5 && rear_slip_deg < t.drift_exit_min_slip_deg {
+            self.exit_boost_wait = false;
+        }
         // A burst starts from `boost_min_start` of meter and runs while held, down to empty; an empty meter ends it
         // until boost is let go. So holding boost forever is one burst, and boosting again means choosing when
         // (§7.3a "boost-forever isn't the best line").
         if !input.boost {
             self.armed = true;
         }
-        self.boosting = input.boost
+        let metered = input.boost
             && self.armed
             && (self.boost >= t.boost_min_start || (self.boosting && self.boost > 0.0));
-        if self.boosting {
+        // The exit boost is boost (the same drive, flame and sound), but free: it never drains the meter.
+        self.boosting = metered || (self.exit_boost_ticks > 0 && !self.exit_boost_wait);
+        if metered {
             self.boost -= t.boost_drain_per_s * dt;
             if self.boost <= 0.0 {
                 self.armed = false;
@@ -122,18 +161,20 @@ pub fn wheel_commands(
     input: DriveInput,
     action: ActionState,
     forward_speed: f32,
-    grip: [f32; 4],
+    grip: impl AsRef<[f32]>,
     dt: f32,
-) -> [WheelCommand; 4] {
+) -> Vec<WheelCommand> {
     let t = &p.tuning;
     let (throttle, brake) = stick(input);
     let steer = dequantise_axis(input.steer);
     let driven = |i: usize| match t.drive {
-        Drive::Front => i < 2,
-        Drive::Rear => i >= 2,
+        Drive::Front => i < p.front_wheels(),
+        Drive::Rear => i >= p.front_wheels(),
         Drive::All => true,
     };
-    let n_driven = (0..4).filter(|&i| driven(i)).count() as f32;
+    let count = p.geometry.wheels.len();
+    let grip = grip.as_ref();
+    let n_driven = (0..count).filter(|&i| driven(i)).count() as f32;
     // Boost is full forward drive and then some, whatever DRIVE says: letting go of it is how a booster slows for a
     // corner (§7.3a "boost-forever isn't the best line"). Otherwise down brakes while rolling forward and reverses near
     // rest, and up drives forward but brakes while rolling backwards.
@@ -147,7 +188,14 @@ pub fn wheel_commands(
         }
     };
     let (engine, braking) = if action.boosting {
-        let gain = 1.0 + t.boost_engine_gain;
+        // The drift-exit burst can drive harder than the meter's boost; whichever is bigger applies.
+        let exit_burning = action.exit_boost_ticks > 0 && !action.exit_boost_wait;
+        let extra = if exit_burning {
+            t.boost_engine_gain.max(t.drift_exit_boost_gain)
+        } else {
+            t.boost_engine_gain
+        };
+        let gain = 1.0 + extra;
         (
             drive(t.max_engine_force * gain, t.max_engine_power_w * gain),
             0.0,
@@ -178,16 +226,26 @@ pub fn wheel_commands(
     // The handbrake drift loosens the rear tyres.
     let rear_grip = 1.0 - action.drift * (1.0 - t.drift_rear_grip);
     let lock = p.steer_lock(forward_speed);
-    let mut out = [WheelCommand::default(); 4];
+    let mut out = vec![WheelCommand::default(); count];
     for (i, w) in out.iter_mut().enumerate() {
-        w.steering = if i < 2 { steer * lock } else { 0.0 };
+        w.steering = if i < p.front_wheels() {
+            steer * lock
+        } else {
+            0.0
+        };
         // Rapier ignores `brake` while an engine force is set.
         if braking > 0.0 {
-            w.brake_impulse = braking * t.max_brake_force / 4.0 * dt;
+            w.brake_impulse = braking * t.max_brake_force / count as f32 * dt;
         } else if driven(i) {
             w.engine_force = engine / n_driven;
         }
-        w.friction_slip = t.friction_slip * grip[i] * if i >= 2 { rear_grip } else { 1.0 };
+        w.friction_slip = t.friction_slip
+            * grip[i]
+            * if i >= p.front_wheels() {
+                rear_grip
+            } else {
+                1.0
+            };
     }
     out
 }
@@ -295,8 +353,61 @@ mod tests {
         assert!(fast[0].steering < slow[0].steering && slow[2].steering == 0.0);
         let base = p.tuning.friction_slip;
         assert_eq!(
-            slow.map(|w| w.friction_slip),
-            [base, base * 0.8, base * 0.7, base * 0.9]
+            slow.iter().map(|w| w.friction_slip).collect::<Vec<_>>(),
+            vec![base, base * 0.8, base * 0.7, base * 0.9]
         );
+    }
+}
+
+#[cfg(test)]
+mod r120_tests {
+    use super::*;
+
+    /// R120: a held real drift, let go, fires the exit boost for the profile's seconds per second held; it is boost
+    /// (`boosting`) without draining the meter.
+    #[test]
+    fn letting_go_of_a_held_drift_fires_a_free_exit_boost() {
+        let p = VehicleProfile::cruz();
+        let t = &p.tuning;
+        let mut a = ActionState::new(&p);
+        let dt = 1.0 / crate::sim::TICK_HZ as f32;
+        let drift = DriveInput {
+            drift: true,
+            ..DriveInput::default()
+        };
+        for _ in 0..crate::sim::TICK_HZ {
+            a.update(&p, drift, 20.0, 15.0, dt);
+        }
+        assert!(
+            a.drift_held_s > 0.9,
+            "one second of real drift held: {}",
+            a.drift_held_s
+        );
+        let meter = a.boost;
+        a.update(&p, DriveInput::default(), 0.0, 15.0, dt);
+        let want = (1.0 * t.drift_exit_boost_per_s).min(t.drift_exit_boost_max_s);
+        assert!(
+            a.exit_boost_ticks as f32 / crate::sim::TICK_HZ as f32 > want * 0.9,
+            "{a:?}"
+        );
+        assert!(a.exit_boosts == 1, "{a:?}");
+        // It waits for the rear tyres to bite again (blend under half, no slide), then burns.
+        assert!(a.exit_boost_wait && !a.boosting, "waiting: {a:?}");
+        let ticks = a.exit_boost_ticks;
+        for _ in 0..crate::sim::TICK_HZ / 2 {
+            a.update(&p, DriveInput::default(), 0.0, 15.0, dt);
+        }
+        assert!(!a.exit_boost_wait && a.boosting, "burning: {a:?}");
+        assert!(a.exit_boost_ticks < ticks, "it counts down once it burns");
+        assert!(a.boost >= meter, "free: the meter doesn't drain");
+        // Still sliding sideways, it keeps waiting.
+        let mut b = ActionState::new(&p);
+        for _ in 0..crate::sim::TICK_HZ {
+            b.update(&p, drift, 20.0, 15.0, dt);
+        }
+        for _ in 0..crate::sim::TICK_HZ {
+            b.update(&p, DriveInput::default(), 30.0, 15.0, dt);
+        }
+        assert!(b.exit_boost_wait && !b.boosting, "sliding: {b:?}");
     }
 }

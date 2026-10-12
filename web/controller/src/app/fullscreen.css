@@ -16,3 +16,6 @@
 }
 /* Icons are masks in currentColor: ink on the paper chips. */
 .fs-prompt .btn.icon { color: var(--c-ink); }
+/* Owner playtest 1: a sheet over the sticks (settings has its own full-screen switch, cars, the scanner) hides the prompt,
+   which sat over the sheet's controls; it comes back when the sheet closes and you're driving again. */
+:root:has([data-overlay=settings], [data-overlay=cars], [data-overlay=scan]) .fs-prompt { display: none; }

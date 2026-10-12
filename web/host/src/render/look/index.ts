@@ -334,6 +334,15 @@ export function prepareScene(scene: Scene): void {
   scene.background = sky();
 }
 
+/** An overview must show the field it frames. Start dust beyond its farthest ground corner; every player/replay
+ *  view restores the accepted chase distances, including when it follows an overview on the same scene. */
+export function frameHaze(scene: Scene, beyond?: number): void {
+  if (!look.enabled || !(scene.fog instanceof Fog)) return;
+  const near = beyond === undefined ? RIG.hazeNear : Math.max(RIG.hazeNear, beyond);
+  scene.fog.near = near;
+  scene.fog.far = near + RIG.hazeFar - RIG.hazeNear;
+}
+
 /** Keeps the sun's shadow box over the field: call each frame with the field's centre (metres). */
 export function followSun(x: number, z: number): void {
   if (!sun || !look.enabled) return;

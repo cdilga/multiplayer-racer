@@ -1,0 +1,106 @@
+{
+  "scenario": "sanga-ends-cleanly",
+  "what": "W03: deliberately set an overlap for the last buff tick, expire at its exact boundary and check the shared energy metric for a launch. Placements are fixture setup, never gameplay movement.",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 1100,
+  "cars": [
+    {
+      "pose": {
+        "x": -60,
+        "y": 0.6,
+        "z": -20
+      }
+    },
+    {
+      "pose": {
+        "x": -40,
+        "y": 0.6,
+        "z": -20
+      }
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 251,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 260,
+      "toTick": 280,
+      "stick": [
+        0,
+        0
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    }
+  ],
+  "place": [
+    {
+      "tick": 250,
+      "car": 0,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -25
+      }
+    },
+    {
+      "tick": 250,
+      "car": 1,
+      "pose": {
+        "x": 10,
+        "y": 0.6,
+        "z": -25
+      }
+    },
+    {
+      "tick": 979,
+      "car": 0,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -25
+      }
+    },
+    {
+      "tick": 979,
+      "car": 1,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -21
+      }
+    }
+  ],
+  "observe": [
+    281,
+    978,
+    979,
+    980,
+    981,
+    1000,
+    1100
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "energyGainJ",
+      "atTick": 1100,
+      "min": 0,
+      "max": 500
+    }
+  ]
+}

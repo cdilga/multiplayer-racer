@@ -1,0 +1,598 @@
+  [2m2026-10-11T17:21:13.486351Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:14.198181Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:14.198240Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:15.195870Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:15.196146Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:22.262272Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 0 files, 856338 bytes in 6734ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:22.698004Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test --config 'profile.test.opt-level=1' -p jj-procgen --test jumps --test procgen --test biome --test features --config 'env.RCH_BUILD_SOURCE.value="82478ca5da2618f6c94c98aa90c1bbec0e55648b-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true' -- --nocapture[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:22.706831Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:21:22.706881Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+
+running 8 tests
+test writes_the_capture ... ok
+test the_trait_is_all_a_biome_needs_and_every_biome_is_pure_data ... ok
+test missing_or_shortened_rail_sections_are_rejected_as_gaps ... ok
+[1m[92m    Finished[0m `test` profile [optimized + debuginfo] target(s) in 1.24s
+[1m[92m     Running[0m tests/biome.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/biome-6e4d0020dd2f4549)
+test a_transition_blends_the_terrain_and_switches_the_road_in_the_middle ... ok
+test chevrons_and_rail_stand_on_the_outside_of_the_turn ... ok
+test two_biome_recipes_hash_to_the_committed_goldens ... ok
+seed  corners  chevron posts  rail sections  gantry legs
+   0       13             69             183            2
+   0       13             69             183            2
+   1       15             84             217            2
+
+40 routes, 280 corners: every one with a chevron row and a rail; every route a 2-leg gantry; no checkpoint pieces.
+
+test every_corner_has_chevrons_and_rail_and_the_finish_has_a_gantry_on_every_route ... ok
+[1m[92m     Running[0m tests/features.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/features-1c432b9d291dc04f)
+recipe (the lap ends in the first biome)       result
+greybox -> outback-dirt (-> greybox)            20/20 seeds found every boundary (0 had no straight), worst route grade 1.64 %
+town, rocks, outback-dirt, outback-bitumen      18/20 seeds found every boundary (2 had no straight), worst route grade 1.66 %
+
+test a_two_biome_placeholder_track_validates_with_its_transition ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.76s
+
+
+running 2 tests
+test writes_the_profile_image ... ok
+features placed over 20 seeds x 5 biomes, every one passing check_envelope and validate:
+{
+    "Greybox CreekDip": 27,
+    "Greybox Crest": 39,
+    "Greybox Jump": 49,
+    "Greybox Whoops": 25,
+    "OutbackBitumen CreekDip": 28,
+    "OutbackBitumen Crest": 52,
+    "OutbackBitumen Jump": 11,
+    "OutbackDirt CreekDip": 38,
+    "OutbackDirt Crest": 26,
+    "OutbackDirt Jump": 49,
+    "OutbackDirt Whoops": 35,
+    "Rocks Crest": 48,
+    "Rocks Jump": 61,
+    "Rocks Whoops": 14,
+    "Town Crest": 26,
+}
+
+test every_placed_feature_passes_its_envelope_and_the_validator_across_the_seed_bank ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.79s
+
+
+running 4 tests
+[1m[92m     Running[0m tests/jumps.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jumps-fd2ceb934746d708)
+test a_reserved_landing_without_a_receiving_surface_is_rejected ... ok
+94 jumps, worst lip error 0.8 cm
+test every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds ... ok
+biome seed jump lipSpeed(m/s) boosting flight(s) totalAir(s) landingUpY minLandingUpY endUpY recovered
+Greybox 0 0 24.112 true 1.075 1.417 1.000 0.994 1.000 false
+Greybox 0 1 25.092 true 0.900 1.258 1.000 0.994 1.000 false
+Greybox 0 2 25.190 true 0.950 0.992 0.982 0.980 1.000 false
+Greybox 0 3 24.537 true 1.067 1.417 1.000 0.995 1.000 false
+Greybox 0 4 25.118 true 1.067 1.442 1.000 0.995 1.000 false
+Greybox 1 0 24.832 true 0.925 1.250 1.000 0.996 1.000 false
+Greybox 1 1 24.314 true 1.142 1.525 0.999 0.993 1.000 false
+Greybox 1 2 25.409 true 0.908 1.158 0.983 0.983 1.000 false
+Greybox 1 3 25.025 true 1.075 1.375 1.000 0.993 1.000 false
+Greybox 2 0 24.119 true 1.100 1.450 1.000 0.993 1.000 false
+Greybox 2 1 25.189 true 1.017 1.383 1.000 0.996 0.999 false
+Greybox 2 2 24.363 true 1.150 1.508 1.000 0.992 1.000 false
+Greybox 3 0 24.285 true 1.025 1.392 1.000 0.994 1.000 false
+Greybox 4 0 24.853 true 0.950 1.342 1.000 0.994 1.000 false
+Greybox 4 1 23.814 true 1.075 1.425 1.000 0.996 0.999 false
+Greybox 5 0 25.231 true 0.992 1.383 1.000 0.995 1.000 false
+Greybox 5 1 24.623 true 0.967 1.267 1.000 0.991 1.000 false
+Greybox 6 0 24.854 true 0.958 1.150 0.983 0.983 1.000 false
+Greybox 7 0 24.804 true 0.975 1.350 1.000 0.995 1.000 false
+Greybox 7 1 25.345 true 0.917 1.317 1.000 0.994 1.000 false
+Greybox 7 2 25.555 true 0.908 1.300 1.000 0.995 0.999 false
+Greybox 7 3 24.965 true 0.975 1.133 0.983 0.983 1.000 false
+Greybox 7 4 25.754 true 0.925 1.275 1.000 0.994 1.000 false
+Greybox 8 0 24.205 true 0.975 1.158 0.976 0.976 1.000 false
+Greybox 8 1 24.779 true 1.042 1.367 1.000 0.996 1.000 false
+Greybox 9 0 24.695 true 1.100 1.425 1.000 0.988 1.000 false
+Greybox 9 1 24.923 true 1.108 1.417 1.000 0.988 1.000 false
+Rocks 0 0 22.701 true 0.983 1.317 0.999 0.993 1.000 false
+Rocks 0 1 24.060 true 0.883 1.242 1.000 0.992 1.000 false
+Rocks 0 2 24.859 true 0.950 0.950 0.981 0.979 0.999 false
+Rocks 0 3 23.865 true 1.025 1.358 1.000 0.994 1.000 false
+Rocks 0 4 24.121 true 1.025 1.383 1.000 0.995 1.000 false
+Rocks 0 5 24.439 true 0.808 0.817 0.985 0.985 0.999 false
+Rocks 1 0 23.866 true 0.883 1.192 1.000 0.994 1.000 false
+Rocks 1 1 24.484 true 0.975 1.333 1.000 0.994 1.000 false
+Rocks 1 2 23.716 true 1.117 1.500 0.999 0.992 1.000 false
+Rocks 1 3 23.904 true 1.000 1.333 1.000 0.997 0.999 false
+Rocks 1 4 24.608 true 0.900 1.158 0.989 0.988 1.000 false
+Rocks 1 5 24.013 true 1.025 1.342 1.000 0.995 1.000 false
+Rocks 2 0 23.519 true 1.092 1.433 1.000 0.992 1.000 false
+Rocks 2 1 24.569 true 0.975 1.325 1.000 0.997 0.999 false
+Rocks 2 2 23.381 true 1.108 1.475 0.999 0.992 1.000 false
+Rocks 3 0 23.639 true 0.975 1.350 1.000 0.993 1.000 false
+Rocks 4 0 24.392 true 0.958 1.283 1.000 0.994 1.000 false
+Rocks 4 1 23.749 true 0.883 1.250 1.000 0.994 0.999 false
+Rocks 4 2 22.808 true 1.042 1.367 0.999 0.995 0.999 false
+Rocks 5 0 24.074 true 0.933 1.308 1.000 0.994 1.000 false
+Rocks 5 1 23.974 true 0.925 1.233 1.000 0.993 1.000 false
+Rocks 6 0 23.943 true 0.925 1.108 0.985 0.985 1.000 false
+Rocks 6 1 24.500 true 0.883 1.242 1.000 0.995 0.999 false
+Rocks 7 0 24.367 true 0.942 1.308 1.000 0.994 1.000 false
+Rocks 7 1 24.545 true 0.883 1.275 1.000 0.995 1.000 false
+Rocks 7 2 24.658 true 0.875 1.258 1.000 0.996 0.999 false
+Rocks 7 3 24.308 true 0.975 1.158 0.984 0.982 0.999 false
+Rocks 7 4 24.950 true 0.892 1.242 1.000 0.996 0.999 false
+Rocks 7 5 24.444 true 1.033 1.425 1.000 0.994 1.000 false
+Rocks 8 0 24.098 true 0.942 1.117 0.981 0.981 1.000 false
+Rocks 8 1 23.754 true 1.000 1.308 1.000 0.996 1.000 false
+Rocks 9 0 23.714 true 1.033 1.367 1.000 0.989 1.000 false
+Rocks 9 1 24.589 true 1.117 1.425 1.000 0.987 1.000 false
+OutbackDirt 0 0 23.159 true 1.017 1.342 1.000 0.993 1.000 false
+OutbackDirt 0 1 24.293 true 0.883 1.242 1.000 0.993 1.000 false
+OutbackDirt 0 2 24.690 true 0.933 0.933 0.981 0.981 1.000 false
+OutbackDirt 0 3 23.954 true 1.017 1.358 1.000 0.995 1.000 false
+OutbackDirt 0 4 24.094 true 1.025 1.375 1.000 0.995 1.000 false
+OutbackDirt 1 0 24.098 true 0.892 1.200 1.000 0.994 1.000 false
+OutbackDirt 1 1 23.662 true 1.108 1.483 0.999 0.992 1.000 false
+OutbackDirt 1 2 24.435 true 0.900 1.158 0.994 0.988 1.000 false
+OutbackDirt 1 3 24.146 true 1.025 1.333 1.000 0.995 1.000 false
+OutbackDirt 2 0 24.130 true 1.092 1.442 0.999 0.993 1.000 false
+OutbackDirt 2 1 24.310 true 0.967 1.317 1.000 0.997 0.999 false
+OutbackDirt 2 2 23.569 true 1.125 1.500 1.000 0.995 1.000 false
+OutbackDirt 3 0 23.950 true 0.992 1.358 1.000 0.993 1.000 false
+OutbackDirt 4 0 23.737 true 0.892 1.267 1.000 0.994 0.999 false
+OutbackDirt 4 1 22.628 true 1.058 1.375 0.995 0.995 0.999 false
+OutbackDirt 5 0 24.076 true 0.933 1.317 1.000 0.995 1.000 false
+OutbackDirt 5 1 23.919 true 0.933 1.250 1.000 0.993 1.000 false
+OutbackDirt 6 0 23.936 true 0.917 1.100 0.983 0.983 1.000 false
+OutbackDirt 7 0 24.275 true 0.942 1.308 1.000 0.995 1.000 false
+OutbackDirt 7 1 24.627 true 0.900 1.283 1.000 0.995 1.000 false
+OutbackDirt 7 2 24.713 true 0.875 1.258 1.000 0.996 0.999 false
+OutbackDirt 7 3 24.363 true 0.967 1.150 0.984 0.982 1.000 false
+OutbackDirt 7 4 24.869 true 0.892 1.242 1.000 0.996 0.999 false
+OutbackDirt 8 0 23.893 true 0.950 1.117 0.988 0.986 1.000 false
+OutbackDirt 8 1 23.895 true 1.017 1.333 1.000 0.996 1.000 false
+OutbackDirt 9 0 23.772 true 1.050 1.375 1.000 0.988 1.000 false
+OutbackDirt 9 1 24.559 true 1.100 1.408 1.000 0.987 1.000 false
+OutbackBitumen 0 0 25.602 true 0.967 1.050 0.981 0.980 1.000 false
+OutbackBitumen 0 1 24.798 true 1.067 1.408 1.000 0.995 1.000 false
+OutbackBitumen 1 0 24.975 true 1.067 1.367 1.000 0.994 1.000 false
+OutbackBitumen 2 0 25.378 true 1.008 1.375 1.000 0.997 0.999 false
+OutbackBitumen 5 0 24.456 true 0.958 1.258 1.000 0.991 1.000 false
+OutbackBitumen 7 0 24.974 true 1.000 1.150 0.983 0.981 1.000 false
+OutbackBitumen 9 0 24.788 true 1.092 1.425 1.000 0.987 1.000 false
+
+test every_generated_jump_releases_a_car_actually_boosting_at_the_lip ... ok
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster has been running for over 60 seconds
+biome seed jump lip(cm) ramp(m) speed  airborne(s)  landingUpY  minUpY  endUpY  offLine(m)
+Greybox    0    0      140      7.5    15         0.95        1.00    0.99    1.00    0.1
+Greybox    0    0      140      7.5    22         1.15        1.00    0.99    1.00    0.0
+Greybox    0    0      140      7.5    26         1.26        1.00    0.99    1.00    0.1
+Greybox    0    0      140      7.5    30         1.34        1.00    0.99    1.00    0.0
+Greybox    0    1      135      8.5    15         0.82        1.00    0.99    1.00    0.1
+Greybox    0    1      135      8.5    22         1.03        1.00    0.99    1.00    0.0
+Greybox    0    1      135      8.5    26         1.11        1.00    0.99    1.00    0.1
+Greybox    0    1      135      8.5    30         1.16        1.00    0.99    1.00    0.0
+Greybox    0    2      125      7.5    15         0.59        1.00    0.99    1.00    0.1
+Greybox    0    2      125      7.5    22         0.83        1.00    0.99    1.00    0.1
+Greybox    0    2      125      7.5    26         0.84        1.00    0.99    1.00    0.0
+Greybox    0    2      125      7.5    30         0.83        0.99    0.99    1.00    0.0
+Greybox    0    3      135      7.5    15         0.92        1.00    0.99    1.00    0.1
+Greybox    0    3      135      7.5    22         1.13        1.00    0.99    1.00    0.0
+Greybox    0    3      135      7.5    26         1.23        1.00    0.99    1.00    0.1
+Greybox    0    3      135      7.5    30         1.29        1.00    0.99    1.00    0.0
+Greybox    0    4      145      8.0    15         0.93        1.00    0.99    1.00    0.1
+Greybox    0    4      145      8.0    22         1.15        1.00    0.99    1.00    0.1
+Greybox    0    4      145      8.0    26         1.25        1.00    0.99    1.00    0.1
+Greybox    0    4      145      8.0    30         1.31        1.00    0.99    1.00    0.0
+Greybox    1    0      120      7.5    15         0.79        1.00    0.99    1.00    0.1
+Greybox    1    0      120      7.5    22         1.02        1.00    0.99    1.00    0.0
+Greybox    1    0      120      7.5    26         1.10        1.00    0.99    1.00    0.1
+Greybox    1    0      120      7.5    30         1.15        1.00    0.99    1.00    0.0
+Greybox    1    1      160      8.0    15         1.03        1.00    0.99    1.00    0.0
+Greybox    1    1      160      8.0    22         1.23        1.00    0.99    1.00    0.1
+Greybox    1    1      160      8.0    26         1.35        1.00    0.99    1.00    0.1
+Greybox    1    1      160      8.0    30         1.40        1.00    0.99    1.00    0.0
+Greybox    1    2      150      9.0    15         0.75        1.00    0.99    1.00    0.0
+Greybox    1    2      150      9.0    22         0.95        1.00    0.99    1.00    0.1
+Greybox    1    2      150      9.0    26         1.02        1.00    0.99    1.00    0.1
+Greybox    1    2      150      9.0    30         1.07        1.00    0.99    1.00    0.1
+Greybox    1    3      135      7.5    15         0.93        1.00    1.00    1.00    0.0
+Greybox    1    3      135      7.5    22         1.14        1.00    0.99    1.00    0.1
+Greybox    1    3      135      7.5    26         1.21        1.00    0.99    1.00    0.1
+Greybox    1    3      135      7.5    30         1.25        1.00    0.99    1.00    0.0
+Greybox    2    0      140      7.5    15         0.95        1.00    0.99    1.00    0.0
+Greybox    2    0      140      7.5    22         1.18        1.00    0.99    1.00    0.0
+Greybox    2    0      140      7.5    26         1.30        1.00    0.99    1.00    0.1
+Greybox    2    0      140      7.5    30         1.35        1.00    0.99    1.00    0.0
+Greybox    2    1      140      8.0    15         0.88        1.00    0.99    1.00    0.0
+Greybox    2    1      140      8.0    22         1.10        1.00    1.00    1.00    0.0
+Greybox    2    1      140      8.0    26         1.19        1.00    1.00    1.00    0.1
+Greybox    2    1      140      8.0    30         1.25        1.00    1.00    1.00    0.0
+Greybox    2    2      160      8.0    15         1.04        1.00    0.99    1.00    0.0
+Greybox    2    2      160      8.0    22         1.26        1.00    0.99    1.00    0.0
+Greybox    2    2      160      8.0    26         1.35        1.00    0.99    1.00    0.1
+Greybox    2    2      160      8.0    30         1.39        1.00    0.99    1.00    0.0
+Greybox    3    0      145      8.0    15         0.93        1.00    0.99    1.00    0.0
+Greybox    3    0      145      8.0    22         1.14        1.00    0.99    1.00    0.0
+Greybox    3    0      145      8.0    26         1.25        1.00    0.99    1.00    0.1
+Greybox    3    0      145      8.0    30         1.32        1.00    0.99    1.00    0.0
+Greybox    4    0      155      9.0    15         0.88        1.00    0.99    1.00    0.3
+Greybox    4    0      155      9.0    22         1.10        1.00    0.99    1.00    0.4
+Greybox    4    0      155      9.0    26         1.18        1.00    0.99    1.00    0.5
+Greybox    4    0      155      9.0    30         1.24        1.00    0.99    1.00    0.5
+Greybox    4    1      145      7.5    15         0.97        1.00    0.99    1.00    0.0
+Greybox    4    1      145      7.5    22         1.19        1.00    0.99    1.00    0.0
+Greybox    4    1      145      7.5    26         1.30        1.00    0.99    1.00    0.1
+Greybox    4    1      145      7.5    30         1.34        1.00    0.99    1.00    0.0
+Greybox    5    0      150      8.5    15         0.91        1.00    0.99    1.00    0.0
+Greybox    5    0      150      8.5    22         1.13        1.00    0.99    1.00    0.0
+Greybox    5    0      150      8.5    26         1.21        1.00    0.99    1.00    0.1
+Greybox    5    0      150      8.5    30         1.27        1.00    0.99    1.00    0.0
+Greybox    5    1      135      8.0    15         0.85        1.00    0.99    1.00    0.0
+Greybox    5    1      135      8.0    22         1.07        1.00    0.99    1.00    0.0
+Greybox    5    1      135      8.0    26         1.15        1.00    0.99    1.00    0.1
+Greybox    5    1      135      8.0    30         1.18        1.00    0.99    1.00    0.0
+Greybox    6    0      150      8.5    15         0.75        1.00    0.98    1.00    0.1
+Greybox    6    0      150      8.5    22         0.96        1.00    0.98    1.00    0.0
+Greybox    6    0      150      8.5    26         1.04        1.00    0.99    1.00    0.1
+Greybox    6    0      150      8.5    30         1.07        1.00    0.98    1.00    0.0
+Greybox    7    0      145      8.5    15         0.87        1.00    0.99    1.00    0.0
+Greybox    7    0      145      8.5    22         1.09        1.00    0.99    1.00    0.0
+Greybox    7    0      145      8.5    26         1.19        1.00    0.99    1.00    0.1
+Greybox    7    0      145      8.5    30         1.23        1.00    0.99    1.00    0.0
+Greybox    7    1      155      9.5    15         0.83        1.00    0.99    1.00    0.0
+Greybox    7    1      155      9.5    22         1.10        1.00    0.99    1.00    0.1
+Greybox    7    1      155      9.5    26         1.14        1.00    0.99    1.00    0.1
+Greybox    7    1      155      9.5    30         1.20        1.00    0.99    1.00    0.0
+Greybox    7    2      155      9.5    15         0.82        1.00    0.99    1.00    0.0
+Greybox    7    2      155      9.5    22         1.06        1.00    0.99    1.00    0.1
+Greybox    7    2      155      9.5    26         1.13        1.00    0.99    1.00    0.1
+Greybox    7    2      155      9.5    30         1.18        1.00    0.99    1.00    0.0
+Greybox    7    3      175      9.5    15         0.73        1.00    0.98    1.00    0.0
+Greybox    7    3      175      9.5    22         0.93        1.00    0.98    1.00    0.0
+Greybox    7    3      175      9.5    26         1.02        1.00    0.98    1.00    0.1
+Greybox    7    3      175      9.5    30         1.02        1.00    0.98    1.00    0.0
+Greybox    7    4      135      8.5    15         0.79        1.00    0.99    1.00    0.2
+Greybox    7    4      135      8.5    22         1.04        1.00    0.99    1.00    0.3
+Greybox    7    4      135      8.5    26         1.11        1.00    1.00    1.00    0.3
+Greybox    7    4      135      8.5    30         1.17        1.00    1.00    1.00    0.3
+Greybox    8    0      130      7.5    15         0.75        1.00    0.98    1.00    0.0
+Greybox    8    0      130      7.5    22         0.94        1.00    0.99    1.00    0.0
+Greybox    8    0      130      7.5    26         1.03        1.00    0.99    1.00    0.1
+Greybox    8    0      130      7.5    30         1.09        1.00    0.99    1.00    0.1
+Greybox    8    1      120      7.0    15         0.87        1.00    0.99    1.00    0.0
+Greybox    8    1      120      7.0    22         1.10        1.00    0.99    1.00    0.1
+Greybox    8    1      120      7.0    26         1.18        1.00    1.00    1.00    0.1
+Greybox    8    1      120      7.0    30         1.25        1.00    1.00    1.00    0.1
+Greybox    9    0      180      9.0    15         0.95        1.00    0.99    1.00    0.4
+Greybox    9    0      180      9.0    22         1.14        1.00    0.99    1.00    0.5
+Greybox    9    0      180      9.0    26         1.26        1.00    0.99    1.00    0.6
+Greybox    9    0      180      9.0    30         1.28        1.00    0.99    1.00    0.6
+Greybox    9    1      160      8.5    15         0.93        1.00    0.99    1.00    0.1
+Greybox    9    1      160      8.5    22         1.12        1.00    0.99    1.00    0.1
+Greybox    9    1      160      8.5    26         1.23        1.00    0.99    1.00    0.1
+Greybox    9    1      160      8.5    30         1.27        1.00    0.99    1.00    0.1
+Rocks    0    0      140      7.5    15         0.88        1.00    0.99    1.00    0.0
+Rocks    0    0      140      7.5    22         1.08        1.00    0.99    1.00    0.1
+Rocks    0    0      140      7.5    26         1.21        1.00    0.99    1.00    0.1
+Rocks    0    0      140      7.5    30         1.33        1.00    0.99    1.00    0.0
+Rocks    0    1      135      8.5    15         0.76        1.00    0.99    1.00    0.0
+Rocks    0    1      135      8.5    22         1.01        1.00    0.99    1.00    0.0
+Rocks    0    1      135      8.5    26         1.10        1.00    0.99    1.00    0.1
+Rocks    0    1      135      8.5    30         1.17        1.00    0.99    1.00    0.0
+Rocks    0    2      125      7.5    15         0.57        1.00    0.99    1.00    0.1
+Rocks    0    2      125      7.5    22         0.81        1.00    0.99    1.00    0.0
+Rocks    0    2      125      7.5    26         0.86        1.00    0.99    1.00    0.0
+Rocks    0    2      125      7.5    30         0.86        0.99    0.99    1.00    0.1
+Rocks    0    3      135      7.5    15         0.86        1.00    0.99    1.00    0.1
+Rocks    0    3      135      7.5    22         1.09        1.00    0.99    1.00    0.0
+Rocks    0    3      135      7.5    26         1.21        1.00    0.99    1.00    0.1
+Rocks    0    3      135      7.5    30         1.27        1.00    0.99    1.00    0.0
+Rocks    0    4      145      8.0    15         0.85        1.00    0.99    1.00    0.1
+Rocks    0    4      145      8.0    22         1.10        1.00    0.99    1.00    0.0
+Rocks    0    4      145      8.0    26         1.21        1.00    0.99    1.00    0.1
+Rocks    0    4      145      8.0    30         1.27        1.00    0.99    1.00    0.1
+Rocks    0    5      135      8.5    15         0.48        1.00    0.99    1.00    0.1
+Rocks    0    5      135      8.5    22         0.68        1.00    0.99    1.00    0.0
+Rocks    0    5      135      8.5    26         0.69        1.00    0.99    1.00    0.1
+Rocks    0    5      135      8.5    30         0.69        1.00    0.99    1.00    0.1
+Rocks    1    0      120      7.5    15         0.73        1.00    0.99    1.00    0.0
+Rocks    1    0      120      7.5    22         0.96        1.00    0.99    1.00    0.0
+Rocks    1    0      120      7.5    26         1.07        1.00    0.99    1.00    0.1
+Rocks    1    0      120      7.5    30         1.14        1.00    0.99    1.00    0.0
+Rocks    1    1      135      8.0    15         0.80        1.00    0.99    1.00    0.0
+Rocks    1    1      135      8.0    22         1.04        1.00    0.99    1.00    0.0
+Rocks    1    1      135      8.0    26         1.14        1.00    0.99    1.00    0.1
+Rocks    1    1      135      8.0    30         1.21        1.00    0.99    1.00    0.0
+Rocks    1    2      160      8.0    15         0.97        1.00    0.99    1.00    0.0
+Rocks    1    2      160      8.0    22         1.18        1.00    0.99    1.00    0.0
+Rocks    1    2      160      8.0    26         1.31        1.00    0.99    1.00    0.1
+Rocks    1    2      160      8.0    30         1.39        1.00    0.99    1.00    0.0
+Rocks    1    3      135      7.5    15         0.82        1.00    0.99    1.00    0.0
+Rocks    1    3      135      7.5    22         1.06        1.00    1.00    1.00    0.0
+Rocks    1    3      135      7.5    26         1.17        1.00    1.00    1.00    0.1
+Rocks    1    3      135      7.5    30         1.23        1.00    1.00    1.00    0.1
+Rocks    1    4      150      9.0    15         0.73        1.00    0.99    1.00    0.0
+Rocks    1    4      150      9.0    22         0.93        1.00    0.99    1.00    0.0
+Rocks    1    4      150      9.0    26         1.02        1.00    0.99    1.00    0.1
+Rocks    1    4      150      9.0    30         1.06        1.00    0.99    1.00    0.1
+Rocks    1    5      135      7.5    15         0.82        1.00    0.99    1.00    0.0
+Rocks    1    5      135      7.5    22         1.08        1.00    1.00    1.00    0.0
+Rocks    1    5      135      7.5    26         1.18        1.00    1.00    1.00    0.1
+Rocks    1    5      135      7.5    30         1.26        1.00    1.00    1.00    0.1
+Rocks    2    0      140      7.5    15         0.92        1.00    0.99    1.00    0.0
+Rocks    2    0      140      7.5    22         1.14        1.00    0.99    1.00    0.0
+Rocks    2    0      140      7.5    26         1.27        1.00    0.99    1.00    0.1
+Rocks    2    0      140      7.5    30         1.35        1.00    0.99    1.00    0.0
+Rocks    2    1      140      8.0    15         0.79        1.00    0.99    1.00    0.0
+Rocks    2    1      140      8.0    22         1.02        1.00    1.00    1.00    0.0
+Rocks    2    1      140      8.0    26         1.14        1.00    1.00    1.00    0.1
+Rocks    2    1      140      8.0    30         1.20        1.00    1.00    1.00    0.1
+Rocks    2    2      160      8.0    15         0.97        1.00    0.99    1.00    0.0
+Rocks    2    2      160      8.0    22         1.21        1.00    0.99    1.00    0.0
+Rocks    2    2      160      8.0    26         1.33        1.00    0.99    1.00    0.1
+Rocks    2    2      160      8.0    30         1.42        1.00    0.99    1.00    0.0
+Rocks    3    0      145      8.0    15         0.87        1.00    0.99    1.00    0.0
+Rocks    3    0      145      8.0    22         1.08        1.00    0.99    1.00    0.0
+Rocks    3    0      145      8.0    26         1.19        1.00    0.99    1.00    0.1
+Rocks    3    0      145      8.0    30         1.26        1.00    0.99    1.00    0.0
+Rocks    4    0      125      7.5    15         0.78        1.00    0.99    1.00    0.0
+Rocks    4    0      125      7.5    22         1.01        1.00    0.99    1.00    0.0
+Rocks    4    0      125      7.5    26         1.13        1.00    0.99    1.00    0.1
+Rocks    4    0      125      7.5    30         1.19        1.00    0.99    1.00    0.0
+Rocks    4    1      155      9.0    15         0.80        1.00    0.99    1.00    0.3
+Rocks    4    1      155      9.0    22         1.01        1.00    0.99    1.00    0.5
+Rocks    4    1      155      9.0    26         1.11        1.00    0.99    1.00    0.5
+Rocks    4    1      155      9.0    30         1.18        1.00    0.99    1.00    0.5
+Rocks    4    2      145      7.5    15         0.88        1.00    0.99    1.00    0.0
+Rocks    4    2      145      7.5    22         1.09        1.00    1.00    1.00    0.0
+Rocks    4    2      145      7.5    26         1.24        1.00    1.00    1.00    0.1
+Rocks    4    2      145      7.5    30         1.31        1.00    1.00    1.00    0.0
+Rocks    5    0      150      8.5    15         0.83        1.00    0.99    1.00    0.0
+Rocks    5    0      150      8.5    22         1.04        1.00    0.99    1.00    0.0
+Rocks    5    0      150      8.5    26         1.14        1.00    0.99    1.00    0.1
+Rocks    5    0      150      8.5    30         1.20        1.00    0.99    1.00    0.0
+Rocks    5    1      135      8.0    15         0.80        1.00    0.99    1.00    0.0
+Rocks    5    1      135      8.0    22         1.02        1.00    0.99    1.00    0.0
+Rocks    5    1      135      8.0    26         1.11        1.00    1.00    1.00    0.1
+Rocks    5    1      135      8.0    30         1.16        1.00    0.99    1.00    0.0
+Rocks    6    0      150      8.5    15         0.71        1.00    0.98    1.00    0.1
+Rocks    6    0      150      8.5    22         0.90        1.00    0.98    1.00    0.0
+Rocks    6    0      150      8.5    26         1.00        1.00    0.98    1.00    0.1
+Rocks    6    0      150      8.5    30         1.05        1.00    0.98    1.00    0.0
+Rocks    6    1      135      8.5    15         0.72        1.00    0.99    1.00    0.1
+Rocks    6    1      135      8.5    22         0.97        1.00    0.99    1.00    0.0
+Rocks    6    1      135      8.5    26         1.06        1.00    0.99    1.00    0.1
+Rocks    6    1      135      8.5    30         1.10        1.00    1.00    1.00    0.0
+Rocks    7    0      145      8.5    15         0.80        1.00    0.99    1.00    0.0
+Rocks    7    0      145      8.5    22         1.04        1.00    0.99    1.00    0.0
+Rocks    7    0      145      8.5    26         1.14        1.00    0.99    1.00    0.1
+Rocks    7    0      145      8.5    30         1.19        1.00    0.99    1.00    0.0
+Rocks    7    1      155      9.5    15         0.78        1.00    0.99    1.00    0.0
+Rocks    7    1      155      9.5    22         1.02        1.00    0.99    1.00    0.0
+Rocks    7    1      155      9.5    26         1.12        1.00    0.99    1.00    0.1
+Rocks    7    1      155      9.5    30         1.15        1.00    0.99    1.00    0.1
+Rocks    7    2      155      9.5    15         0.74        1.00    0.99    1.00    0.0
+Rocks    7    2      155      9.5    22         0.98        1.00    0.99    1.00    0.0
+Rocks    7    2      155      9.5    26         1.08        1.00    1.00    1.00    0.1
+Rocks    7    2      155      9.5    30         1.13        1.00    1.00    1.00    0.1
+Rocks    7    3      175      9.5    15         0.71        1.00    0.98    1.00    0.0
+Rocks    7    3      175      9.5    22         0.93        1.00    0.98    1.00    0.0
+Rocks    7    3      175      9.5    26         1.02        1.00    0.98    1.00    0.1
+Rocks    7    3      175      9.5    30         1.06        1.00    0.98    1.00    0.0
+Rocks    7    4      135      8.5    15         0.71        1.00    0.99    1.00    0.2
+Rocks    7    4      135      8.5    22         0.96        1.00    1.00    1.00    0.3
+Rocks    7    4      135      8.5    26         1.07        1.00    1.00    1.00    0.3
+Rocks    7    4      135      8.5    30         1.11        1.00    1.00    1.00    0.3
+Rocks    7    5      155      8.5    15         0.87        1.00    0.99    1.00    0.0
+Rocks    7    5      155      8.5    22         1.12        1.00    0.99    1.00    0.0
+Rocks    7    5      155      8.5    26         1.23        1.00    0.99    1.00    0.1
+Rocks    7    5      155      8.5    30         1.28        1.00    0.99    1.00    0.1
+Rocks    8    0      130      7.5    15         0.71        1.00    0.99    1.00    0.0
+Rocks    8    0      130      7.5    22         0.92        1.00    0.98    1.00    0.0
+Rocks    8    0      130      7.5    26         1.02        1.00    0.98    1.00    0.1
+Rocks    8    0      130      7.5    30         1.06        1.00    0.99    1.00    0.1
+Rocks    8    1      120      7.0    15         0.78        1.00    0.99    1.00    0.0
+Rocks    8    1      120      7.0    22         1.04        1.00    1.00    1.00    0.0
+Rocks    8    1      120      7.0    26         1.15        1.00    1.00    1.00    0.1
+Rocks    8    1      120      7.0    30         1.23        1.00    1.00    1.00    0.1
+Rocks    9    0      180      9.0    15         0.93        1.00    0.99    1.00    0.4
+Rocks    9    0      180      9.0    22         1.09        1.00    0.99    1.00    0.5
+Rocks    9    0      180      9.0    26         1.21        1.00    0.99    1.00    0.6
+Rocks    9    0      180      9.0    30         1.27        1.00    0.99    1.00    0.6
+Rocks    9    1      160      8.5    15         0.91        1.00    0.99    1.00    0.1
+Rocks    9    1      160      8.5    22         1.12        1.00    0.98    1.00    0.0
+Rocks    9    1      160      8.5    26         1.23        1.00    0.99    1.00    0.1
+Rocks    9    1      160      8.5    30         1.30        1.00    0.99    1.00    0.1
+OutbackDirt    0    0      140      7.5    15         0.88        1.00    0.99    1.00    0.0
+OutbackDirt    0    0      140      7.5    22         1.08        1.00    0.99    1.00    0.0
+OutbackDirt    0    0      140      7.5    26         1.20        1.00    0.99    1.00    0.1
+OutbackDirt    0    0      140      7.5    30         1.28        1.00    0.99    1.00    0.0
+OutbackDirt    0    1      135      8.5    15         0.76        1.00    0.99    1.00    0.0
+OutbackDirt    0    1      135      8.5    22         1.00        1.00    0.99    1.00    0.0
+OutbackDirt    0    1      135      8.5    26         1.10        1.00    0.99    1.00    0.1
+OutbackDirt    0    1      135      8.5    30         1.15        1.00    0.99    1.00    0.0
+OutbackDirt    0    2      125      7.5    15         0.56        1.00    0.99    1.00    0.1
+OutbackDirt    0    2      125      7.5    22         0.78        1.00    0.99    1.00    0.0
+OutbackDirt    0    2      125      7.5    26         0.86        1.00    0.99    1.00    0.0
+OutbackDirt    0    2      125      7.5    30         0.87        0.99    0.99    1.00    0.1
+OutbackDirt    0    3      135      7.5    15         0.85        1.00    0.99    1.00    0.1
+OutbackDirt    0    3      135      7.5    22         1.08        1.00    0.99    1.00    0.0
+OutbackDirt    0    3      135      7.5    26         1.20        1.00    0.99    1.00    0.1
+OutbackDirt    0    3      135      7.5    30         1.27        1.00    0.99    1.00    0.0
+OutbackDirt    0    4      145      8.0    15         0.86        1.00    0.99    1.00    0.1
+OutbackDirt    0    4      145      8.0    22         1.10        1.00    0.99    1.00    0.0
+OutbackDirt    0    4      145      8.0    26         1.21        1.00    0.99    1.00    0.1
+OutbackDirt    0    4      145      8.0    30         1.27        1.00    0.99    1.00    0.1
+OutbackDirt    1    0      120      7.5    15         0.74        1.00    0.99    1.00    0.0
+OutbackDirt    1    0      120      7.5    22         0.97        1.00    0.99    1.00    0.0
+OutbackDirt    1    0      120      7.5    26         1.08        1.00    0.99    1.00    0.1
+OutbackDirt    1    0      120      7.5    30         1.14        1.00    0.99    1.00    0.0
+OutbackDirt    1    1      160      8.0    15         0.97        1.00    0.99    1.00    0.0
+OutbackDirt    1    1      160      8.0    22         1.19        1.00    0.99    1.00    0.0
+OutbackDirt    1    1      160      8.0    26         1.31        1.00    0.99    1.00    0.1
+OutbackDirt    1    1      160      8.0    30         1.39        1.00    0.99    1.00    0.0
+OutbackDirt    1    2      150      9.0    15         0.73        1.00    0.99    1.00    0.0
+OutbackDirt    1    2      150      9.0    22         0.94        1.00    0.99    1.00    0.0
+OutbackDirt    1    2      150      9.0    26         1.04        1.00    0.99    1.00    0.1
+OutbackDirt    1    2      150      9.0    30         1.03        1.00    0.99    1.00    0.1
+OutbackDirt    1    3      135      7.5    15         0.83        1.00    0.99    1.00    0.0
+OutbackDirt    1    3      135      7.5    22         1.08        1.00    1.00    1.00    0.0
+OutbackDirt    1    3      135      7.5    26         1.20        1.00    1.00    1.00    0.1
+OutbackDirt    1    3      135      7.5    30         1.24        1.00    1.00    1.00    0.1
+OutbackDirt    2    0      140      7.5    15         0.91        1.00    0.99    1.00    0.0
+OutbackDirt    2    0      140      7.5    22         1.14        1.00    0.99    1.00    0.0
+OutbackDirt    2    0      140      7.5    26         1.25        1.00    0.99    1.00    0.1
+OutbackDirt    2    0      140      7.5    30         1.32        1.00    0.99    1.00    0.0
+OutbackDirt    2    1      140      8.0    15         0.78        1.00    0.99    1.00    0.0
+OutbackDirt    2    1      140      8.0    22         1.04        1.00    1.00    1.00    0.0
+OutbackDirt    2    1      140      8.0    26         1.14        1.00    1.00    1.00    0.1
+OutbackDirt    2    1      140      8.0    30         1.19        1.00    1.00    1.00    0.1
+OutbackDirt    2    2      160      8.0    15         0.97        1.00    0.99    1.00    0.0
+OutbackDirt    2    2      160      8.0    22         1.22        1.00    0.99    1.00    0.0
+OutbackDirt    2    2      160      8.0    26         1.32        1.00    0.99    1.00    0.1
+OutbackDirt    2    2      160      8.0    30         1.40        1.00    0.99    1.00    0.0
+OutbackDirt    3    0      145      8.0    15         0.87        1.00    0.99    1.00    0.0
+OutbackDirt    3    0      145      8.0    22         1.08        1.00    0.99    1.00    0.0
+OutbackDirt    3    0      145      8.0    26         1.19        1.00    0.99    1.00    0.1
+OutbackDirt    3    0      145      8.0    30         1.27        1.00    0.99    1.00    0.0
+OutbackDirt    4    0      155      9.0    15         0.81        1.00    0.99    1.00    0.3
+OutbackDirt    4    0      155      9.0    22         1.02        1.00    0.99    1.00    0.4
+OutbackDirt    4    0      155      9.0    26         1.12        1.00    0.99    1.00    0.5
+OutbackDirt    4    0      155      9.0    30         1.18        1.00    0.99    1.00    0.5
+OutbackDirt    4    1      145      7.5    15         0.88        1.00    0.99    1.00    0.0
+OutbackDirt    4    1      145      7.5    22         1.11        1.00    0.99    1.00    0.0
+OutbackDirt    4    1      145      7.5    26         1.26        1.00    0.99    1.00    0.1
+OutbackDirt    4    1      145      7.5    30         1.33        1.00    1.00    1.00    0.0
+OutbackDirt    5    0      150      8.5    15         0.83        1.00    0.99    1.00    0.0
+OutbackDirt    5    0      150      8.5    22         1.05        1.00    0.99    1.00    0.0
+OutbackDirt    5    0      150      8.5    26         1.15        1.00    0.99    1.00    0.1
+OutbackDirt    5    0      150      8.5    30         1.21        1.00    0.99    1.00    0.0
+OutbackDirt    5    1      135      8.0    15         0.78        1.00    0.99    1.00    0.0
+OutbackDirt    5    1      135      8.0    22         1.02        1.00    0.99    1.00    0.0
+OutbackDirt    5    1      135      8.0    26         1.12        1.00    1.00    1.00    0.1
+OutbackDirt    5    1      135      8.0    30         1.16        1.00    0.99    1.00    0.0
+OutbackDirt    6    0      150      8.5    15         0.69        1.00    0.98    1.00    0.1
+OutbackDirt    6    0      150      8.5    22         0.90        1.00    0.98    1.00    0.0
+OutbackDirt    6    0      150      8.5    26         1.02        1.00    0.98    1.00    0.1
+OutbackDirt    6    0      150      8.5    30         1.03        1.00    0.98    1.00    0.0
+OutbackDirt    7    0      145      8.5    15         0.81        1.00    0.99    1.00    0.0
+OutbackDirt    7    0      145      8.5    22         1.05        1.00    0.99    1.00    0.0
+OutbackDirt    7    0      145      8.5    26         1.15        1.00    0.99    1.00    0.1
+OutbackDirt    7    0      145      8.5    30         1.21        1.00    0.99    1.00    0.0
+OutbackDirt    7    1      155      9.5    15         0.76        1.00    0.99    1.00    0.0
+OutbackDirt    7    1      155      9.5    22         1.02        1.00    0.99    1.00    0.0
+OutbackDirt    7    1      155      9.5    26         1.12        1.00    0.99    1.00    0.1
+OutbackDirt    7    1      155      9.5    30         1.17        1.00    0.99    1.00    0.1
+OutbackDirt    7    2      155      9.5    15         0.76        1.00    0.99    1.00    0.0
+OutbackDirt    7    2      155      9.5    22         0.96        1.00    0.99    1.00    0.0
+OutbackDirt    7    2      155      9.5    26         1.08        1.00    1.00    1.00    0.1
+OutbackDirt    7    2      155      9.5    30         1.13        1.00    0.99    1.00    0.1
+OutbackDirt    7    3      175      9.5    15         0.72        1.00    0.98    1.00    0.0
+OutbackDirt    7    3      175      9.5    22         0.92        1.00    0.98    1.00    0.0
+OutbackDirt    7    3      175      9.5    26         1.00        1.00    0.98    1.00    0.1
+OutbackDirt    7    3      175      9.5    30         1.04        1.00    0.98    1.00    0.0
+OutbackDirt    7    4      135      8.5    15         0.72        1.00    0.99    1.00    0.2
+OutbackDirt    7    4      135      8.5    22         0.96        1.00    0.99    1.00    0.3
+OutbackDirt    7    4      135      8.5    26         1.07        1.00    1.00    1.00    0.3
+OutbackDirt    7    4      135      8.5    30         1.12        1.00    1.00    1.00    0.3
+OutbackDirt    8    0      130      7.5    15         0.68        1.00    0.99    1.00    0.0
+OutbackDirt    8    0      130      7.5    22         0.92        1.00    0.99    1.00    0.0
+OutbackDirt    8    0      130      7.5    26         1.00        1.00    0.99    1.00    0.1
+OutbackDirt    8    0      130      7.5    30         1.07        1.00    0.99    1.00    0.1
+OutbackDirt    8    1      120      7.0    15         0.79        1.00    0.99    1.00    0.0
+OutbackDirt    8    1      120      7.0    22         1.04        1.00    1.00    1.00    0.0
+OutbackDirt    8    1      120      7.0    26         1.15        1.00    1.00    1.00    0.1
+OutbackDirt    8    1      120      7.0    30         1.23        1.00    1.00    1.00    0.1
+OutbackDirt    9    0      180      9.0    15         0.93        1.00    0.99    1.00    0.4
+OutbackDirt    9    0      180      9.0    22         1.10        1.00    0.99    1.00    0.5
+OutbackDirt    9    0      180      9.0    26         1.21        1.00    0.99    1.00    0.6
+OutbackDirt    9    0      180      9.0    30         1.27        1.00    0.99    1.00    0.6
+OutbackDirt    9    1      160      8.5    15         0.91        1.00    0.99    1.00    0.1
+OutbackDirt    9    1      160      8.5    22         1.11        1.00    0.98    1.00    0.0
+OutbackDirt    9    1      160      8.5    26         1.23        1.00    0.99    1.00    0.1
+OutbackDirt    9    1      160      8.5    30         1.27        1.00    0.99    1.00    0.1
+OutbackBitumen    0    0      125      7.5    15         0.59        1.00    0.99    1.00    0.1
+OutbackBitumen    0    0      125      7.5    22         0.82        1.00    0.99    1.00    0.1
+OutbackBitumen    0    0      125      7.5    26         0.82        0.99    0.99    1.00    0.0
+OutbackBitumen    0    0      125      7.5    30         0.84        0.99    0.99    1.00    0.1
+OutbackBitumen    0    1      135      7.5    15         0.91        1.00    0.99    1.00    0.1
+OutbackBitumen    0    1      135      7.5    22         1.14        1.00    0.99    1.00    0.0
+OutbackBitumen    0    1      135      7.5    26         1.25        1.00    0.99    1.00    0.1
+OutbackBitumen    0    1      135      7.5    30         1.31        1.00    0.99    1.00    0.0
+OutbackBitumen    1    0      135      7.5    15         0.92        1.00    1.00    1.00    0.0
+OutbackBitumen    1    0      135      7.5    22         1.12        1.00    0.99    1.00    0.1
+OutbackBitumen    1    0      135      7.5    26         1.20        1.00    0.99    1.00    0.1
+OutbackBitumen    1    0      135      7.5    30         1.26        1.00    0.99    1.00    0.0
+OutbackBitumen    2    0      140      8.0    15         0.87        1.00    0.99    1.00    0.0
+OutbackBitumen    2    0      140      8.0    22         1.10        1.00    1.00    1.00    0.0
+OutbackBitumen    2    0      140      8.0    26         1.19        1.00    1.00    1.00    0.1
+OutbackBitumen    2    0      140      8.0    30         1.24        1.00    1.00    1.00    0.0
+OutbackBitumen    5    0      135      8.0    15         0.85        1.00    0.99    1.00    0.0
+OutbackBitumen    5    0      135      8.0    22         1.06        1.00    0.99    1.00    0.0
+OutbackBitumen    5    0      135      8.0    26         1.13        1.00    0.99    1.00    0.1
+OutbackBitumen    5    0      135      8.0    30         1.18        1.00    0.99    1.00    0.0
+OutbackBitumen    7    0      175      9.5    15         0.75        1.00    0.98    1.00    0.0
+OutbackBitumen    7    0      175      9.5    22         0.96        1.00    0.98    1.00    0.0
+OutbackBitumen    7    0      175      9.5    26         1.05        1.00    0.98    1.00    0.1
+OutbackBitumen    7    0      175      9.5    30         1.04        1.00    0.98    1.00    0.0
+OutbackBitumen    9    0      180      9.0    15         0.97        1.00    0.99    1.00    0.4
+OutbackBitumen    9    0      180      9.0    22         1.13        1.00    0.99    1.00    0.5
+OutbackBitumen    9    0      180      9.0    26         1.24        1.00    0.99    1.00    0.6
+OutbackBitumen    9    0      180      9.0    30         1.28        1.00    0.99    1.00    0.6
+
+mean continuous flight at racing speed 0.80 s
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 193.26s
+
+
+running 5 tests
+[1m[92m     Running[0m tests/procgen.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/procgen-59ce933aeeb939f1)
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.65s
+
+  [2m2026-10-11T17:24:56.477297Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 213551ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:24:56.635813Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:24:56.636409Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:24:56.908930Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:24:57.166740Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 530ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T17:24:57.193042Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 530ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+
+[RCH] remote eris (224.2s)

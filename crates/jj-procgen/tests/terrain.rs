@@ -5,9 +5,24 @@
 //! write the seed-bank table and the edge image (`docs/evidence/P1-M03c/`).
 
 use jj_map::{Biome, Map, Surface, validate};
-use jj_procgen::generate;
 use jj_procgen::seed::Rng;
 use jj_procgen::terrain::{ground_height_m, params, undulate};
+
+/// This component bank re-applies ground terrain alone. Explicit decks are a
+/// separate surface and are exercised by crossings.rs through the full pipeline.
+fn generate(seed: u64) -> Map {
+    let mut data = jj_procgen::tuning::GeneratorData::shipped().clone();
+    data.course
+        .presets
+        .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    jj_procgen::generate_tuned_from(
+        jj_procgen::seed::Streams::new(seed),
+        &[Biome::Greybox],
+        &data,
+    )
+    .unwrap()
+    .0
+}
 
 const BIOMES: [Biome; 5] = [
     Biome::Greybox,

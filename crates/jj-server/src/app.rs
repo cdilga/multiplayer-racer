@@ -176,7 +176,7 @@ impl App {
             (_, "") if get => self.bundle.page(Page::Landing),
             (_, "host" | "host/") if get => self.bundle.page(Page::Host),
             (_, "credits" | "credits/") if get => self.bundle.page(Page::Credits),
-            (_, "c" | "c/" | "hub" | "hub/") if get => self.bundle.page(Page::Controller),
+            (_, "c" | "c/") if get => self.bundle.page(Page::Controller),
             (_, r) if get && r.starts_with("j/") && RoomCode::parse(&r[2..]).is_some() => {
                 self.bundle.page(Page::Controller)
             }

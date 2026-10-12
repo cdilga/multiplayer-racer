@@ -1,0 +1,32 @@
+✔ footer: the host menu, room code and domain, count and diagnostics sit in the bottom margin, clear of every tile and card (52781.448709ms)
+✔ footer: the announcer caption (WELCOME, MATE!) sits above the footer, clear of its buttons (5168.729209ms)
+✔ footer: in a race the tiles stay above it (the grid keeps its bottom safe margin) (13127.85425ms)
+✔ pause flow: the menu pauses a race first, Resume lifts it; End round and Disband room each ask, with different words (52269.968709ms)
+✔ lobby and intermission: the menu has Disband but no End round, and does not pause anything (6816.237833ms)
+✔ Remove (G07): from the menu list and from a lobby card, after a confirmation naming the player; backing out sends nothing (6442.534416ms)
+✔ Remove (G07) mid-race: the menu pauses the race, a removal leaves the pause on until Resume (8531.216583ms)
+✔ diagnostics: room code, direct or relay and RTT per seat, no addresses (7907.663083ms)
+✔ HUD: boost meter and wreck countdown render from the room view; pre-race tiles show no place or lap (3763.506875ms)
+✔ results: the next-race caption and buttons never overlap the QR card (address line included) at any aspect (113712.068208ms)
+﹣ captures: menu, confirmations and diagnostics on a phone and a 4K TV (0.385ms) # SKIP
+✔ phone host 360x800 portrait: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3175.965167ms)
+✔ phone host 360x800 landscape: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3574.250667ms)
+✔ phone host 390x844 portrait: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3196.079791ms)
+✔ phone host 390x844 landscape: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3057.199666ms)
+✔ phone host 412x915 portrait: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3644.733875ms)
+✔ phone host 412x915 landscape: a 4-player race lays out four tiles, HUD inside each, nothing under the footer (3593.389542ms)
+✔ DPR 2 portrait: every tile's backing store equals its on-screen size in device pixels (render/resolution.ts), or the cap is named (3752.77525ms)
+✔ DPR 2 landscape: every tile's backing store equals its on-screen size in device pixels (render/resolution.ts), or the cap is named (3474.109959ms)
+✔ DPR 3 portrait: every tile's backing store equals its on-screen size in device pixels (render/resolution.ts), or the cap is named (3530.861042ms)
+✔ DPR 3 landscape: every tile's backing store equals its on-screen size in device pixels (render/resolution.ts), or the cap is named (4035.656ms)
+✔ ultrawide host: 21:9 and 32:9 races, lobby and results lay out, the footer stays in the bottom margin (42302.682083ms)
+✔ profiles: the display picks a default (TV, desk, handheld), the host overrides it live and it is remembered (26456.243709ms)
+✔ phone host menu: Full screen is offered (from a gesture), and the lobby fits a phone with the footer (3662.147208ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 270817.631292

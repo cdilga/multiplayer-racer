@@ -233,6 +233,48 @@ test("the wayfinding kit: each piece's rendered bounds are its collider's, stand
   void snapshotBytes;
 });
 
+test('corner chevron board stands forward of its post and higher than the old 1.19 m board', () => {
+  const mod = WAYFINDING_MODULES['wayfinding/chevron-post'];
+  const entry = JSON.parse(readFileSync(join(repo, 'crates/jj-procgen/kit/wayfinding/chevron-post.json'), 'utf8'));
+  const p = Object.fromEntries(Object.entries(entry.params).map(([k, v]) => [k, v.default]));
+  const g = mod.decor.geometry(mod.decor.variant({ ...p, radiusMm: entry.params.radiusMm.max }));
+  const pos = g.attributes.position, colours = g.attributes.color;
+  // The printed yellow sheet is the board, independent of its steel mounting geometry.
+  const yellow = [];
+  const mounting = [];
+  for (let i = 0; i < pos.count; i++) if (colours.getX(i) > 0.8 && colours.getY(i) > 0.45 && colours.getZ(i) < 0.05)
+    yellow.push([pos.getX(i), pos.getY(i), pos.getZ(i)]);
+  else if (colours.getX(i) > 0.3 && colours.getZ(i) > 0.3)
+    mounting.push([pos.getX(i), pos.getY(i), pos.getZ(i)]);
+  assert.ok(yellow.length > 0);
+  const lower = Math.min(...yellow.map((v) => v[1])) + mod.decor.lift(p);
+  const upper = Math.max(...yellow.map((v) => v[1])) + mod.decor.lift(p);
+  const back = Math.min(...yellow.map((v) => v[2]));
+  assert.ok(upper - lower > 1.19, 'taller than the preceding complete board');
+  assert.ok(lower > 0.8 && upper > 2, 'raised clear of the low roadside position');
+  assert.ok(back - entry.params.radiusMm.max / 1000 >= 0.04, 'even the largest post has a bracket-depth gap behind the board');
+  assert.ok(mounting.length > 0, 'mounting hardware is present');
+  for (const side of [-1, 1]) {
+    const bolt = mounting.filter((v) => Math.sign(v[1]) === side);
+    assert.ok(bolt.some((v) => v[2] < -entry.params.radiusMm.max / 1000), 'the U bend wraps behind the post');
+    assert.ok(bolt.some((v) => v[0] < -entry.params.radiusMm.max / 1000) && bolt.some((v) => v[0] > entry.params.radiusMm.max / 1000), 'both threaded legs flank the post');
+    assert.ok(Math.max(...bolt.map((v) => v[2])) >= back, 'the mounting connects to the board back');
+    assert.ok(bolt.every((v) => v[1] + mod.decor.lift(p) > 0 && v[1] + mod.decor.lift(p) < p.heightCm / 100), 'both U-bolts meet the post below its top');
+  }
+  for (const radiusMm of [entry.params.radiusMm.min, p.radiusMm, entry.params.radiusMm.max]) {
+    const geometry = mod.decor.geometry(mod.decor.variant({ ...p, radiusMm }));
+    const vertices = geometry.attributes.position, colours = geometry.attributes.color;
+    const steel = [];
+    for (let i = 0; i < vertices.count; i++) if (colours.getX(i) > 0.3 && colours.getZ(i) > 0.3)
+      steel.push([vertices.getX(i), vertices.getY(i), vertices.getZ(i)]);
+    for (const y of [-0.38, 0.38]) {
+      const rear = steel.filter(([x, vy, z]) => Math.abs(x) < 0.001 && Math.abs(vy - y) < 0.001 && z < 0);
+      assert.ok(rear.length > 0 && Math.abs(Math.max(...rear.map((v) => v[2])) + radiusMm / 1000) < 0.0001, 'the inner U bend bears on the actual post, without a floating hoop');
+      assert.ok(steel.some(([x, vy, z]) => Math.abs(x) < 0.05 && Math.abs(vy - y) < 0.03 && Math.abs(z - radiusMm / 1000) < 0.0001), 'the saddle bears on the post front');
+    }
+  }
+});
+
 test('a layer that grows past its first slots draws every particle (three.js caches the instance limit on first draw)', async () => {
   const { InstancedBufferGeometry } = await import('three');
   const { growBuffers } = await import('../src/render/fx/buffers.ts');

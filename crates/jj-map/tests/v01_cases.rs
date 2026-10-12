@@ -220,13 +220,24 @@ fn landing_checks() {
         ]),
     };
     let mut ok = rect(12_000);
-    ok.features.push(jump(25_000));
+    ok.features.push(jump(32_000));
     assert!(check(&ok).ok, "{:#?}", check(&ok));
     let mut short = rect(12_000);
     short.features.push(jump(5_000));
     assert!(check(&short).has(Rule::LandingEnvelope));
+    // Long enough for the old minimum, too short for the flight: a car at the design speed (26 m/s) leaves this 1 m
+    // lip on a 6 m ramp and comes down about 27 m on, past a 25 m landing (owner playtest 1, landable jumps).
+    let flight = jj_map::limits::jump_flight_m(100, 6000, jj_map::limits::JUMP_DESIGN_SPEED_MPS);
+    assert!((26.0..28.5).contains(&flight), "the flight: {flight}");
+    let mut unlandable = rect(12_000);
+    unlandable.features.push(jump(25_000));
+    let r = check(&unlandable);
+    assert!(
+        r.has(Rule::LandingEnvelope) && format!("{r:?}").contains("flies"),
+        "{r:#?}"
+    );
     let mut blocked = rect(12_000);
-    blocked.features.push(jump(25_000));
+    blocked.features.push(jump(32_000));
     blocked.props.push(Prop {
         kit_piece: "generic/bin".into(),
         pose: Pose {

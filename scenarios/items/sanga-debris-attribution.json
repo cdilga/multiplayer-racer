@@ -1,0 +1,107 @@
+{
+  "scenario": "sanga-debris-attribution",
+  "what": "W03: tanking a dynamic prop still credits the buffed driver for its impulse, while ignoring damage to the driver. Causal ownership must survive immunity.",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 500,
+  "cars": [
+    {
+      "pose": {
+        "x": -60,
+        "y": 0.6,
+        "z": -20
+      }
+    },
+    {
+      "pose": {
+        "x": -40,
+        "y": 0.6,
+        "z": -20
+      }
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 251,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 250,
+      "toTick": 500,
+      "stick": [
+        0,
+        1
+      ]
+    },
+    {
+      "car": 0,
+      "fromTick": 260,
+      "toTick": 280,
+      "stick": [
+        0,
+        1
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    }
+  ],
+  "place": [
+    {
+      "tick": 250,
+      "car": 0,
+      "pose": {
+        "x": -10,
+        "y": 0.6,
+        "z": -25,
+        "headingDeg": 90
+      },
+      "linvel": [
+        15,
+        0,
+        0
+      ]
+    },
+    {
+      "tick": 250,
+      "car": 1,
+      "pose": {
+        "x": 15,
+        "y": 0.6,
+        "z": -25,
+        "headingDeg": 90
+      }
+    }
+  ],
+  "observe": [
+    281,
+    350,
+    500
+  ],
+  "expect": [],
+  "debris": [
+    {
+      "tick": 250,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -25
+      },
+      "half": [
+        0.6,
+        0.4,
+        0.6
+      ]
+    }
+  ]
+}

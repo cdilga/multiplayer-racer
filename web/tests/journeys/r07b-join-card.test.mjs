@@ -1,10 +1,12 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-R07b: the host footer's docked QR opens the big join card. A race runs with enough synthetic seats that no spare grid
 // cell holds the QR (html[data-grid-dock~=qr]), so the footer docks it; clicking it pauses the race and shows the kit's paper
 // QR card (QR, room code, domain) with the join URL, big and centred. The QR is decoded from the screen and a real phone
 // (loopback WebRTC) joins the room from that URL while the race is paused; Resume lifts the pause. The pause menu carries
 // the join card too (its QR decodes to the same URL). Then the card is checked at every display mode (TV, desk, handheld,
 // auto) and size (1920x1080, 1366x768, a phone host both ways, full screen): on screen, clear of the footer, scannable.
-// Captures go to $JJ_CAPTURE_DIR (default docs/evidence/P1-R07b).
+// Explicit captures can go to $JJ_CAPTURE_DIR (default OS scratch).
 //   node --test web/tests/journeys/r07b-join-card.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -17,13 +19,13 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/r07b/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R07b');
+const CAPTURE = evidencePath('P1-R07b', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 
 before(async () => {
   server = await serve(build('./', 'r07b'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
@@ -145,7 +147,7 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');
 
   // The pause menu carries the join card too.
-  await host.locator('[data-act=menu]').click();
+  await host.locator('[data-act=menu]').click({ noWaitAfter: true });
   await host.locator('[data-menu] [data-join-card=menu]').waitFor();
   await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
   assert.equal(await host.locator('[data-menu] [data-join-url]').textContent(), joinUrl);
@@ -183,6 +185,7 @@ test('R07b: the big join card fits and scans at every display mode and size, and
     for (const profile of ['tv', 'desk', 'handheld', 'auto']) {
       // Pick the profile the way a host does: the menu's Display buttons.
       await host.locator('[data-act=menu]').click();
+      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
       await host.locator(`[data-act=view][data-profile=${profile}]`).click();
       await host.evaluate(() => window.__jjChrome.closeMenu());
       await host.waitForTimeout(400);
@@ -207,6 +210,7 @@ test('R07b: the big join card fits and scans at every display mode and size, and
   // Full screen (the menu's button): the card redraws for the new size.
   await host.setViewportSize({ width: 1366, height: 768 });
   await host.locator('[data-act=menu]').click();
+      await host.getByRole('button', {name:'Display & sound',exact:true}).click();
   await host.locator('[data-act=view][data-profile=auto]').click();
   await host.locator('[data-act=fullscreen]').click();
   await wait(host, () => !!document.fullscreenElement, undefined, 5_000);

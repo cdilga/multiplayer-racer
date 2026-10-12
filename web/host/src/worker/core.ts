@@ -26,6 +26,8 @@ export interface Sim {
   countdown_ms(): number;
   state_hash(): string;
   room_json(): string;
+  /** The vehicle tuning for the owner tuning menu: `{ tuning, error }` (br-2sdu.1). */
+  tuning_json(): string;
   /** What the journal gained since the last call (bug clips, P1-F07): JSON. */
   journal_poll(hash: boolean): string;
 }
@@ -36,6 +38,7 @@ export interface WasmHost<S extends Sim> {
   HostSim: new (init: Uint8Array) => S;
   canonical_map(json: string): Uint8Array;
   encode_init(mapBytes: Uint8Array, seed: number): Uint8Array;
+  encode_vehicles(listJson: string): Uint8Array;
   encode_lifecycle(visible: boolean, renderOk: boolean): Uint8Array;
   encode_local_source(source: number, dx: number, dy: number, ax: number, ay: number, buttons: number, seq: number): Uint8Array;
   encode_net_bytes(endpoint: string, state: boolean, bytes: Uint8Array): Uint8Array;
@@ -61,6 +64,8 @@ export interface Extension<S extends Sim> {
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const LOOP_MS = 2;
+/** While paused (and no resume countdown runs) nothing steps, so the loop only drains joins and menu input. */
+const PAUSED_LOOP_MS = 25;
 
 export class SimWorker<S extends Sim> {
   sim: S | null = null;
@@ -75,6 +80,8 @@ export class SimWorker<S extends Sim> {
   private pool: ArrayBuffer[] = [];
   private uiCommand = 1;
   private lastPause = '';
+  /** Paused with no resume countdown: the loop slows to `PAUSED_LOOP_MS`. */
+  private idle = false;
   /** Local sources' latest unapplied sample time, and their recent host-applied input ages (P1-C05). */
   private pending = new Map<number, number>();
   private ages = new Map<number, number[]>();
@@ -193,6 +200,7 @@ export class SimWorker<S extends Sim> {
   private pauseState(s: S): void {
     const mask = s.pause_mask();
     const countdownMs = s.countdown_ms();
+    this.idle = mask !== 0 && countdownMs === 0;
     const key = `${mask}:${Math.ceil(countdownMs / 1000)}`;
     if (key === this.lastPause) return;
     this.lastPause = key;
@@ -247,7 +255,7 @@ export class SimWorker<S extends Sim> {
       }
     });
     this.pump();
-    if (!this.faulted) setTimeout(() => this.loop(), LOOP_MS);
+    if (!this.faulted) setTimeout(() => this.loop(), this.idle ? PAUSED_LOOP_MS : LOOP_MS);
   }
 
   private async receive(msg: ToWorker | ({ kind: string } & Record<string, unknown>)): Promise<void> {
@@ -258,6 +266,7 @@ export class SimWorker<S extends Sim> {
         try {
           const map = init.mapBytes ?? this.wasm.canonical_map(init.mapJson ?? '');
           this.sim = new this.wasm.HostSim(this.wasm.encode_init(map, init.seed));
+          if (init.vehicles?.length) this.sim.handle(this.wasm.encode_vehicles(JSON.stringify(init.vehicles)));
           this.tap = new JournalTap((init as { clipEveryTicks?: number }).clipEveryTicks ?? 12, (init as { clipHashEvery?: number }).clipHashEvery ?? 600);
           this.ext.init?.(this, init);
         } catch (err) {
@@ -290,6 +299,9 @@ export class SimWorker<S extends Sim> {
       }
       case 'inputStats':
         this.post({ kind: 'inputStats', id: (msg as { id: number }).id, sources: this.inputStats() });
+        return;
+      case 'tuning':
+        this.post({ kind: 'tuning', id: (msg as { id: number }).id, json: this.sim?.tuning_json() ?? '{}' });
         return;
       case 'lifecycle': {
         const { visible, renderOk } = msg as { visible: boolean; renderOk: boolean };

@@ -1,0 +1,62 @@
+{
+  "phase": "Running",
+  "tick": 6190,
+  "seats": [
+    {
+      "boosting": false,
+      "car": 0,
+      "connected": true,
+      "drifting": false,
+      "fresh": false,
+      "idleCued": false,
+      "idleForMs": 48592,
+      "inputAgeMs": 1808,
+      "inputDropped": true,
+      "inputSeq": 7002,
+      "menuOpen": false,
+      "name": "Davo",
+      "number": 1,
+      "presence": "Active",
+      "seat": 1,
+      "source": 1
+    },
+    {
+      "boosting": false,
+      "car": 1,
+      "connected": true,
+      "drifting": false,
+      "fresh": false,
+      "idleCued": false,
+      "idleForMs": 48592,
+      "inputAgeMs": 1808,
+      "inputDropped": true,
+      "inputSeq": 6622,
+      "menuOpen": false,
+      "name": "Shazza",
+      "number": 2,
+      "presence": "Active",
+      "seat": 2,
+      "source": 1
+    }
+  ],
+  "cars": [
+    {
+      "car": 0,
+      "autopilot": true,
+      "input": {
+        "brake": 0,
+        "steer": 0.10000915825366974,
+        "throttle": 0.39158299565315247
+      }
+    },
+    {
+      "car": 1,
+      "autopilot": true,
+      "input": {
+        "brake": 0,
+        "steer": 0.11566515266895294,
+        "throttle": 0.39329203963279724
+      }
+    }
+  ]
+}

@@ -1,7 +1,9 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R02 browser tests: the instanced vehicle renderer on the real web build (web/dist) in headless Chromium.
 // Needs: scripts/build-host-wasm.sh && npm --prefix web run build.
 //   node --test web/host/tests/vehicles.test.mjs
-// Writes its captures and numbers to docs/evidence/P1-R02/ (JJ_EVIDENCE_DIR overrides).
+// Recapture its captures and numbers to docs/evidence/P1-R02/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -10,7 +12,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R02');
+const evidenceDir = evidencePath('P1-R02');
 const runs = {};
 let browser;
 let server;
@@ -73,7 +75,8 @@ test('a car with loose and detached parts renders in adjacent tiles at different
   }
   // Interior blocks (P1-V03) draw only where exposed: car 2's front, rear door and back expose engine, cabin and boot
   // for that car alone; the undamaged car 0 exposes none (car 1's loose door adds a cabin).
-  assert.deepEqual(v.interiors, { engine: 1, cabin: 2, boot: 0 });
+  // Keys are namespaced by vehicle (R123): two vehicles may both have an `engine` block.
+  assert.deepEqual(v.interiors, { 'cruz-missile.engine': 1, 'cruz-missile.cabin': 2, 'cruz-missile.boot': 0 });
   const near = Math.hypot(byPart.wheel_FL.position[0] - byPart.core.position[0], byPart.wheel_FL.position[2] - byPart.core.position[2]);
   assert.ok(near < 2, 'an intact wheel is on the car');
   assert.deepEqual(errors, []);

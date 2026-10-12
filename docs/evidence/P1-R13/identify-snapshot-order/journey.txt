@@ -1,0 +1,9 @@
+✔ R06: Identify pulses only its seat's tile and floats its number over its car, at 24 seats and at 120 (three digits) (165056.742166ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166195.448334

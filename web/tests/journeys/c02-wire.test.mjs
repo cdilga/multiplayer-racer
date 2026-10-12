@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C02, the wire half: what the sticks put on the wire arrives at the host as DRIVE/ACTION semantics (jj-input), read
 // from the sim's applied input for that seat's car. Real host in free drive, real phone page, WebRTC: run on eris.
 //   node --test web/tests/journeys/c02-wire.test.mjs
@@ -27,6 +28,7 @@ const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { tim
 
 test('R116: the left stick drives, drifts and launches, the right stick steers: each independent of the other', { timeout: 240_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  if (process.env.JJ_C02_CPU_RATE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_C02_CPU_RATE) });
   await host.goto(`${server.origin}${BASE}host?drive&test=live`);
   await wait(host, () => window.__jjNet?.code() && window.__jjTest, undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
@@ -35,7 +37,9 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   const endpoint = (await page.evaluate(() => window.__jjController.inspect())).link.endpointId;
   const seen = () =>
@@ -43,7 +47,7 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
       const o = await window.__jjTest.observe();
       const seat = o.host.seats.find((s) => s.endpoint === ep);
       const car = o.cars.find((c) => c.car === seat?.car);
-      return { ...car?.input, action: car?.action, autopilot: car?.autopilot != null };
+      return { tick: o.tick, ...car?.input, action: car?.action, autopilot: car?.autopilot != null, physical: { speed: car?.speed, forwardSpeed: car?.forwardSpeed, wheels: car?.wheels, position: car?.position } };
     }, endpoint);
   const set = (drive, action) => page.evaluate(([d, a]) => window.__jjController.setSticks({ ...d, touch: d.x !== 0 || d.y !== 0 }, { ...a, touch: a.x !== 0 || a.y !== 0 }), [drive, action]);
   const until = async (what, ok, ms = 25_000) => {
@@ -51,6 +55,7 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
     for (const t0 = Date.now(); ; await host.waitForTimeout(150)) {
       s = await seen();
       if (!s.autopilot && ok(s)) return s;
+      if (Date.now() - t0 >= ms && process.env.JJ_C02_DIAGNOSTICS) console.log('C02 failure controller:', JSON.stringify(await page.evaluate(() => window.__jjController.inspect())));
       assert.ok(Date.now() - t0 < ms, `${what}: the host saw ${JSON.stringify(s)}`);
     }
   };
@@ -73,14 +78,24 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
   await set({ x: 0, y: 1 }, still);
   const down = await until('brake', (s) => s.brake > 0.5 || s.throttle < -0.5);
   assert.ok(!(down.throttle > 0.1), `down is not throttle: ${JSON.stringify(down)}`);
-  // A fresh, timed pull: held 500 ms (past the 350 ms the lift wants, well short of the 900 ms after which it reads as reverse, which the
-  // checks above could not promise on a slow runner), then the snap.
+  // Neutral inside the detector's release window preserves the previous brake preload. Wait for the
+  // actual reset, then stop any reverse from the preceding brake check before a single fresh launch.
+  await set(still, still);
+  await wait(page, () => !window.__jjController.inspect().launch.preloading);
+  await set({ x: 0, y: 0.85 }, still); // full brake at the detent, outside the preload zone
+  await until('grounded launch setup', (s) => Math.abs(s.physical.forwardSpeed) < 0.2 && s.physical.wheels.filter((w) => w.contact).length >= 3);
   await set(still, still);
   await set({ x: 0, y: 1 }, still);
   await host.waitForTimeout(500);
   // The launch is the boost (R116): the brake held a moment, then the stick snapped to full forward: the front lifts (a wheelie).
   // Full throttle and full lock together come with it, on different sticks.
-  await set({ x: 0, y: -1 }, { x: 1, y: 0 });
+  const snap = await page.evaluate(() => {
+    const before = window.__jjController.inspect();
+    window.__jjController.setSticks({ x: 0, y: -1, touch: true }, { x: 1, y: 0, touch: true });
+    return { before, after: window.__jjController.inspect() };
+  });
+  assert.ok(snap.after.launch.lastDetectedAction.preloadMs >= 350 && snap.after.launch.lastDetectedAction.preloadMs < 900, `a fresh pull stays in the launch window: ${JSON.stringify(snap.after.launch)}`);
+  if (process.env.JJ_C02_DIAGNOSTICS) console.log('C02 snap:', JSON.stringify(snap));
   await until('the launch', (s) => s.action.wheelie === true, 15_000);
   const both = await until('throttle and lock', (s) => s.throttle > 0.8 && Math.abs(s.steer) > 0.8);
   assert.ok(!both.action.boosting && !both.action.drift, `full throttle with full lock is neither drift nor boost: ${JSON.stringify(both)}`);

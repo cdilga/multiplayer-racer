@@ -5,6 +5,8 @@ export type Layout = 'floating' | 'fixed';
 export type Steering = 'gentle' | 'direct';
 /** The stick layout: R116 two sticks (default) or the old one-stick layout (steer on the left stick, the right stick's sectors). */
 export type Controls = 'dual' | 'classic';
+/** Learner assist (R125): Off, Some (steering and brake help) or Lots (auto-throttle too). */
+export type Assist = 'off' | 'some' | 'lots';
 export type CameraDistance = 'near' | 'host' | 'far';
 export type TiltDeadzone = 'small' | 'medium' | 'large';
 export type TiltSensitivity = 'gentle' | 'normal' | 'sharp';
@@ -15,6 +17,7 @@ export interface ControllerPreferences {
   controls: Controls;
   steering: Steering;
   cameraDistance: CameraDistance;
+  assist: Assist;
   vibration: boolean;
   reducedMotion: boolean;
   /** Full screen and a screen wake lock where the phone allows it (R101). */
@@ -34,6 +37,7 @@ export const DEFAULTS: ControllerPreferences = {
   controls: 'dual',
   steering: 'gentle',
   cameraDistance: 'host',
+  assist: 'off',
   vibration: true,
   reducedMotion: false,
   keepAwake: true,
@@ -62,6 +66,7 @@ export function sanitise(raw: unknown): ControllerPreferences {
     controls: oneOf(r.controls, ['dual', 'classic'], DEFAULTS.controls),
     steering: oneOf(r.steering, ['gentle', 'direct'], DEFAULTS.steering),
     cameraDistance: oneOf(r.cameraDistance, ['near', 'host', 'far'], DEFAULTS.cameraDistance),
+    assist: oneOf(r.assist, ['off', 'some', 'lots'], DEFAULTS.assist),
     vibration: bool(r.vibration, DEFAULTS.vibration),
     reducedMotion: bool(r.reducedMotion, DEFAULTS.reducedMotion),
     keepAwake: bool(r.keepAwake, DEFAULTS.keepAwake),

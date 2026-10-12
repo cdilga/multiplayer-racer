@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 pub const PROFILE: &str = "jj.vehicle-profile.v1";
 /// The Cruz Missile's profile, compiled in: what the host's worker and fixtures without their own use.
 pub const CRUZ_MISSILE_JSON: &str = include_str!("../../../assets/profiles/cruz-missile.json");
+/// The Tradie Ute's profile (`assets/profiles/tradie-ute.json`, br-bwju.2): heavier and torquier than the Cruz.
+pub const TRADIE_UTE_JSON: &str = include_str!("../../../assets/profiles/tradie-ute.json");
 /// Gravity used to size the static sag, m/s² (the world's gravity).
 const G: f32 = 9.81;
 
@@ -41,13 +43,25 @@ pub struct Source {
 pub struct VehicleGeometry {
     /// The chassis proxy's points; the sim builds their convex hull.
     pub hull: Vec<[f32; 3]>,
-    pub wheels: [[f32; 3]; 4],
+    /// Front axle first, then rear axle: FL/FR/RL/RR for a car, F/R for a bike.
+    pub wheels: Vec<[f32; 3]>,
     pub wheel_radius: f32,
     pub com: [f32; 3],
     /// Every part's own collider proxy, in the contract's part order (`core`, `front`, `back`, the four doors, the
     /// four wheels): P1-S04a builds one convex collider per part from these.
     #[serde(default)]
     pub parts: Vec<PartGeometry>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BikeBalance {
+    /// Roll spring N·m/rad and damping N·m·s/rad/s.
+    pub torque_per_rad: f32,
+    pub damping: f32,
+    pub max_lean_rad: f32,
+    /// Lean fades in with speed, m/s, so a stopped bike stays upright.
+    pub lean_speed_mps: f32,
 }
 
 /// One part from the sidecar: pivot, hinge, mass share and collider proxy points, in vehicle space.
@@ -78,6 +92,9 @@ pub struct SurfaceGrip {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Tuning {
+    /// Arcade bike auto-balance. Absent for cars; gains are tunable in real torque units.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bike_balance: Option<BikeBalance>,
     /// Total mass, kg (S04 splits it across the parts by their sidecar mass fractions).
     pub mass: f32,
     /// A multiplier on the hull's box inertia: lower turns quicker.
@@ -152,6 +169,29 @@ pub struct Tuning {
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
+    /// R120 drift exit: the least drift held (s) that earns a boost on release, seconds of boost per second held, its cap.
+    #[serde(default)]
+    pub drift_exit_min_s: f32,
+    /// … counting only while the rear slides at least this much (deg): any real slide, not the meter's 10° charge.
+    #[serde(default)]
+    pub drift_exit_min_slip_deg: f32,
+    #[serde(default)]
+    pub drift_exit_boost_per_s: f32,
+    #[serde(default)]
+    pub drift_exit_boost_max_s: f32,
+    /// The exit boost's extra drive (like `boost_engine_gain`, which it replaces while it burns if larger; 0 = the meter boost's).
+    #[serde(default)]
+    pub drift_exit_boost_gain: f32,
+    /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
+    #[serde(default)]
+    pub air_level_torque: f32,
+    /// … damped on its pitch and roll rate (N·m·s per rad/s).
+    #[serde(default)]
+    pub air_level_damping: f32,
+    /// When a car loses its support plane, start levelling beyond this tilt
+    /// (radians). Normal supported road attitude and deliberate wheelies stay free.
+    #[serde(default = "support_level_tilt")]
+    pub support_level_tilt_rad: f32,
     pub surfaces: SurfaceGrip,
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
@@ -185,8 +225,10 @@ pub struct DamageTuning {
     /// (1/s). Visual springs on the chassis' accelerations; they never push back on the body.
     pub spring_stiffness: f32,
     pub spring_damping: f32,
-    /// A loose wheel loses this fraction of its friction slip.
+    /// A loose wheel loses this fraction of its friction slip (0 since R121: damage costs nothing until a wheel comes off).
     pub loose_wheel_grip_loss: f32,
+    /// After the first wheel comes off, the car drives on this long, s, then is wrecked and respawns fresh (R121).
+    pub wheel_loss_respawn_s: f32,
     /// A detaching part leaves at this much extra speed, m/s, away from the chassis' centre of mass (an authorised input
     /// to the energy ledger).
     pub detach_kick_mps: f32,
@@ -212,7 +254,8 @@ impl Default for DamageTuning {
             attribution_margin_m: 0.3,
             spring_stiffness: 25.0,
             spring_damping: 4.0,
-            loose_wheel_grip_loss: 0.15,
+            loose_wheel_grip_loss: 0.0,
+            wheel_loss_respawn_s: 2.0,
             detach_kick_mps: 1.5,
             detach_clear_ms: 250.0,
         }
@@ -245,15 +288,126 @@ impl VehicleProfile {
         if f.profile != PROFILE {
             return Err(format!("profile {:?}, expected {PROFILE:?}", f.profile));
         }
-        Ok(Self {
+        let p = Self {
             geometry: f.geometry,
             tuning: f.tuning,
-        })
+        };
+        p.validate_geometry()?;
+        Ok(p)
+    }
+
+    /// Checks topology before the sim indexes axles and damage proxies. Counts describe
+    /// the vehicle's physical structure, never the number of participants in a room.
+    pub fn validate_geometry(&self) -> Result<(), String> {
+        let g = &self.geometry;
+        if !self.tuning.support_level_tilt_rad.is_finite()
+            || !(0.0..std::f32::consts::FRAC_PI_2).contains(&self.tuning.support_level_tilt_rad)
+        {
+            return Err("support levelling tilt must be finite and below 90 degrees".into());
+        }
+        if g.wheels.len() < 2 || !g.wheels.len().is_multiple_of(2) {
+            return Err("wheels must have nonempty equally sized front and rear axles".into());
+        }
+        if !g.wheel_radius.is_finite()
+            || g.wheel_radius <= 0.0
+            || g.wheels
+                .iter()
+                .flatten()
+                .chain(g.com.iter())
+                .chain(g.hull.iter().flatten())
+                .any(|v| !v.is_finite())
+            || g.hull.len() < 4
+        {
+            return Err(
+                "vehicle geometry needs finite points, a hull and a positive wheel radius".into(),
+            );
+        }
+        if g.parts.is_empty() {
+            if g.wheels.len() != 4 || self.tuning.bike_balance.is_some() {
+                return Err("legacy geometry without proxies describes a four-wheel car".into());
+            }
+        } else {
+            if g.parts.len() < 3
+                || g.parts[..3]
+                    .iter()
+                    .map(|p| p.name.as_str())
+                    .ne(["core", "front", "back"])
+            {
+                return Err("damage proxies start with core, front and back".into());
+            }
+            let mut names = std::collections::BTreeSet::new();
+            for p in &g.parts {
+                if p.name.is_empty()
+                    || !names.insert(&p.name)
+                    || p.points.len() < 4
+                    || !p.mass_fraction.is_finite()
+                    || p.mass_fraction <= 0.0
+                    || p.points
+                        .iter()
+                        .flatten()
+                        .chain(p.pivot.iter())
+                        .any(|v| !v.is_finite())
+                {
+                    return Err(
+                        "damage proxies need unique names, finite hulls and positive mass shares"
+                            .into(),
+                    );
+                }
+            }
+            if g.parts
+                .iter()
+                .filter(|p| p.name.starts_with("wheel_"))
+                .count()
+                != g.wheels.len()
+            {
+                return Err("each suspension wheel needs one wheel damage proxy".into());
+            }
+        }
+        if let Some(b) = &self.tuning.bike_balance
+            && (g.wheels.len() != 2
+                || [b.torque_per_rad, b.damping, b.lean_speed_mps]
+                    .iter()
+                    .any(|v| !v.is_finite() || *v <= 0.0)
+                || !b.max_lean_rad.is_finite()
+                || !(0.0..std::f32::consts::FRAC_PI_2).contains(&b.max_lean_rad))
+        {
+            return Err(
+                "bike balance needs two wheels, positive finite gains and a lean below 90 degrees"
+                    .into(),
+            );
+        }
+        Ok(())
     }
 
     /// The Cruz Missile (`assets/profiles/cruz-missile.json`).
     pub fn cruz() -> Self {
         Self::from_json(CRUZ_MISSILE_JSON).expect("the compiled-in Cruz Missile profile parses")
+    }
+
+    /// The Tradie Ute (`assets/profiles/tradie-ute.json`).
+    pub fn tradie_ute() -> Self {
+        Self::from_json(TRADIE_UTE_JSON).expect("the compiled-in Tradie Ute profile parses")
+    }
+
+    /// Every roster vehicle's profile, in roster order (R123): `(id, profile)` for each row of `web/shared/src/roster.json`,
+    /// read from `assets/profiles/<id>.json` under `repo_root`. Adding a vehicle is a roster row and its profile file: no
+    /// code lists vehicles. Native only (tests, tools); the browser sends the same files to the host as `Vehicles`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn roster(repo_root: &std::path::Path) -> Result<Vec<(String, Self)>, String> {
+        let read = |p: std::path::PathBuf| {
+            std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()))
+        };
+        let roster: serde_json::Value =
+            serde_json::from_str(&read(repo_root.join("web/shared/src/roster.json"))?)
+                .map_err(|e| format!("roster.json: {e}"))?;
+        let cars = roster["cars"].as_array().ok_or("roster.json has no cars")?;
+        cars.iter()
+            .map(|c| {
+                let id = c["id"].as_str().ok_or("a roster row without an id")?;
+                let json = read(repo_root.join(format!("assets/profiles/{id}.json")))?;
+                Ok((id.to_owned(), Self::from_json(&json)?))
+            })
+            .collect()
     }
 
     /// The hull's axis-aligned box: (min, max).
@@ -280,11 +434,49 @@ impl VehicleProfile {
     }
 
     pub fn axle_front_z(&self) -> f32 {
-        (self.geometry.wheels[0][2] + self.geometry.wheels[1][2]) / 2.0
+        let front = &self.geometry.wheels[..self.front_wheels()];
+        front.iter().map(|w| w[2]).sum::<f32>() / front.len() as f32
     }
 
     pub fn axle_rear_z(&self) -> f32 {
-        (self.geometry.wheels[2][2] + self.geometry.wheels[3][2]) / 2.0
+        let rear = &self.geometry.wheels[self.front_wheels()..];
+        rear.iter().map(|w| w[2]).sum::<f32>() / rear.len() as f32
+    }
+
+    pub fn front_wheels(&self) -> usize {
+        self.geometry.wheels.len() / 2
+    }
+
+    /// Legacy car profiles without individual proxies retain the original car part layout.
+    pub fn part_count(&self) -> usize {
+        if self.geometry.parts.is_empty() {
+            crate::damage::PARTS
+        } else {
+            self.geometry.parts.len()
+        }
+    }
+
+    pub fn part_name(&self, i: usize) -> &str {
+        self.geometry
+            .parts
+            .get(i)
+            .map_or_else(|| crate::damage::PART_NAMES[i], |p| p.name.as_str())
+    }
+
+    pub fn part_index(&self, name: &str) -> Option<usize> {
+        (0..self.part_count()).find(|&i| self.part_name(i) == name)
+    }
+
+    pub fn is_wheel_part(&self, i: usize) -> bool {
+        self.part_name(i).starts_with("wheel_")
+    }
+
+    /// Wheel proxies are ordered like suspension rays in the profile.
+    pub fn wheel_part(&self, wheel: usize) -> usize {
+        (0..self.part_count())
+            .filter(|&i| self.is_wheel_part(i))
+            .nth(wheel)
+            .expect("each suspension wheel has a matching part")
     }
 
     pub fn wheelbase(&self) -> f32 {
@@ -325,4 +517,8 @@ impl VehicleProfile {
 
 fn no_reverse_limit() -> f32 {
     f32::MAX
+}
+
+fn support_level_tilt() -> f32 {
+    10.0f32.to_radians()
 }

@@ -1,0 +1,9 @@
+   Compiling jj-tools v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-tools)
+    Finished `release` profile [optimized] target(s) in 1.70s
+     Running tests/procgen_cli.rs (target/aarch64-apple-darwin/release/deps/procgen_cli-94488456ac580ecd)
+
+running 1 test
+test jj_procgen_generates_validates_and_dumps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.19s
+

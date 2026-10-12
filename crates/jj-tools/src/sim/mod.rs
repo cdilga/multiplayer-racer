@@ -43,7 +43,7 @@ use std::process::ExitCode;
 use serde::Serialize;
 use serde_json::{Value, json};
 
-use jj_fixture::{BaselineResult, Check, Fixture, Recorded, RunOutput, profile_with};
+use jj_fixture::{BaselineResult, Check, Fixture, Recorded, RunOutput, profile_from};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -76,6 +76,8 @@ pub struct Options {
     pub out: Option<PathBuf>,
     /// `--set key=value` vehicle-profile overrides (the TUNED run).
     pub set: Vec<(String, String)>,
+    /// `--profile file.json`: a versioned profile for fixture runs, their journal replay and sweeps.
+    pub profile: Option<PathBuf>,
 }
 
 /// Resolves a path in a fixture: relative to the working directory, else to the repo root above the fixture file.
@@ -98,6 +100,13 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     let kit = crate::find_kit(map_path.parent().unwrap_or(Path::new(".")))
         .ok_or("no assets/kit for the map")?;
     let registry = crate::load_registry(&kit).map_err(|e| e.to_string())?;
+    // Generated routes use the complete wayfinding kit before assets/kit carries those families.
+    // Match `jj procgen` and the browser host, so R90 fixtures can drive their actual guard rails.
+    let registry = if registry.get("wayfinding/chevron-post").is_some() {
+        registry
+    } else {
+        jj_procgen::registry()
+    };
     let map = jj_map::load_json(
         &std::fs::read(&map_path).map_err(|e| format!("{}: {e}", map_path.display()))?,
         &registry,
@@ -111,7 +120,14 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
                 .collect::<Vec<_>>()
         )
     })?;
-    let profile = profile_with(&opts.set)?;
+    let base = match &opts.profile {
+        Some(path) => jj_sim::VehicleProfile::from_json(
+            &std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?,
+        )?,
+        None => jj_sim::VehicleProfile::cruz(),
+    };
+    let profile = profile_from(base, &opts.set)?;
+    profile.validate_geometry()?;
     let tuned: Vec<String> = opts.set.iter().map(|(k, v)| format!("{k}={v}")).collect();
     let out_dir = opts.out.clone().unwrap_or_else(|| {
         let suffix = if tuned.is_empty() { "" } else { "-tuned" };
@@ -261,7 +277,7 @@ fn print_human(o: &Outcome) {
 
 pub const HELP: &str = "jj sim: load a fixture, set up cars, seats and the round phase, step, read state as JSON, replay.
 
-usage: jj sim [--json] [--trace] [--out <dir>] [--set <field>=<value>]… <fixture.json>…
+usage: jj sim [--json] [--trace] [--out <dir>] [--profile <vehicle.json>] [--set <field>=<value>]… <fixture.json>…
        jj sim --sweep <field>=<from>..<to>[:<steps>] [--set …] <fixture.json>…   (one CSV row per value × car)
        jj sim --replay [--json] [--trace] [--out <dir>] [--build <id>|--any-build] <clip.jjclip|session.jjsession>…
        jj sim [--json] <fixture.json> --compare <accepted trace|run dir>   (runs CURRENT, plus TUNED with --set)
@@ -282,6 +298,7 @@ examples:
   jj sim --json crates/jj-tools/tests/fixtures/sim/three-seats.json   # 3 cars, 3 seats, 600 ticks
   jj sim --trace scenarios/straight-throttle.json      # one JSON row per tick + a summary row
   jj sim --trace --set max_engine_force=4000 scenarios/straight-throttle.json
+  jj sim --profile scenarios/bikes/profile.json scenarios/bikes/controls.json
   jj sim scenarios/straight-throttle.json --compare baselines/straight-throttle.trace.jsonl --set max_engine_force=4000
   jj sim --compare old/trace.jsonl target/jj-runs/sim-straight-throttle
   jj sim --sweep max_steer_rad=0.35..0.75:5 scenarios/affordances/authority.json > sweep.csv
@@ -384,6 +401,10 @@ pub fn command(args: &[String]) -> ExitCode {
             }
             "--json" => json_out = true,
             "--trace" => opts.trace = true,
+            "--profile" => match it.next() {
+                Some(p) => opts.profile = Some(PathBuf::from(p)),
+                None => return usage("--profile needs a vehicle profile file"),
+            },
             "--out" => match it.next() {
                 Some(d) => opts.out = Some(PathBuf::from(d)),
                 None => return usage("--out needs a directory"),

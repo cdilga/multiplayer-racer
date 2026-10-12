@@ -7,7 +7,10 @@
 //! - **Straights between them.** The first straight is the start straight, long enough for the start corridor behind
 //!   the finish. The loop closes exactly by solving for two other straights' lengths (a 2×2 linear system), since
 //!   headings are fixed once the corners are.
-//! - **Checks.** The length is inside [`LENGTH_BAND_M`], and no two parts of the road more than
+//! - **Length is real (R125).** The seed draws a length class (sprint, standard, epic) by the data's weights, and each
+//!   draw targets a length in that class's band: the corners are drawn, then the straights share what the target leaves
+//!   after the arcs and the start straight, and longer tracks add left-right bend pairs. Nothing here is a fixed count.
+//! - **Checks.** The length is inside the class's band, and no two parts of the road more than
 //!   [`NEIGHBOUR_WINDOW_M`] apart along it come closer than [`CLEARANCE_M`] (no self-intersection, no overlapping
 //!   roads). A failed draw redraws from the same stream (deterministic) up to [`MAX_ATTEMPTS`] times, then falls back
 //!   to a conservative oval: never an endless reroll (master §11.2a).
@@ -17,14 +20,9 @@
 use std::collections::BTreeMap;
 
 use crate::seed::Rng;
+pub use crate::tuning::{ClassName, CourseData, LengthClass, PresetName};
 
-/// The lap length band (TUNE): laps of ~47–73 s at the 15 m/s reference speed.
-pub const LENGTH_BAND_M: (f64, f64) = (700.0, 1100.0);
 pub const WIDTH_M: f64 = 12.0;
-/// The start straight: long enough for the 60 m to the finish plus room past it.
-pub const START_STRAIGHT_M: (f64, f64) = (110.0, 160.0);
-pub const STRAIGHT_M: (f64, f64) = (18.0, 90.0);
-pub const MIN_STRAIGHT_M: f64 = 12.0;
 /// Two parts of the road further apart than this along it must stay [`CLEARANCE_M`] apart.
 pub const NEIGHBOUR_WINDOW_M: f64 = 60.0;
 pub const CLEARANCE_M: f64 = WIDTH_M + 8.0;
@@ -85,11 +83,16 @@ pub struct Course {
     /// the first).
     pub points: Vec<(f64, f64)>,
     pub length_m: f64,
+    /// The length class drawn for the seed.
+    pub class: ClassName,
+    pub preset: PresetName,
     pub attempts: u32,
     /// True when every draw failed and the conservative oval was used.
     pub fallback: bool,
     /// Why earlier draws were rejected (introspection for the seed bank).
     pub rejects: BTreeMap<&'static str, u32>,
+    /// Upper and lower straight spans in metres along the route, before resampling.
+    pub crossing: Option<[(f64, f64); 2]>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -201,13 +204,22 @@ fn range(rng: &mut Rng, (lo, hi): (f64, f64)) -> f64 {
 }
 
 /// One draw: a corner list and straights, closed exactly, or why it couldn't be.
-fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
+fn draw(
+    rng: &mut Rng,
+    data: &CourseData,
+    preset: &crate::tuning::CoursePreset,
+    target_m: f64,
+) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     // The turn budget: 360° of left-hand turning net, plus whatever an optional right-hander takes back.
-    let right = (rng.unit() < 0.4).then(|| range(rng, (40.0, 75.0)));
+    let right = (rng.unit() < preset.opposite_corner_probability).then(|| range(rng, (40.0, 75.0)));
     let total = 360.0 + right.unwrap_or(0.0);
     // Hairpins first (one, sometimes two), then sweepers and medium corners filling what's left, scaled to fit.
     let mut corners = Vec::new();
-    let hairpins = if rng.unit() < 0.35 { 2 } else { 1 };
+    let hairpins = if rng.unit() < preset.hairpin_probability {
+        1 + usize::from(rng.unit() < preset.second_hairpin_probability)
+    } else {
+        0
+    };
     for _ in 0..hairpins {
         let ((a0, a1), r) = CornerKind::Hairpin.ranges();
         corners.push(Corner {
@@ -225,7 +237,7 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     let others = libm::round(rest / 75.0).max(1.0) as usize;
     let mut fill: Vec<Corner> = (0..others)
         .map(|_| {
-            let kind = if rng.unit() < 0.5 {
+            let kind = if rng.unit() < preset.sweeper_probability {
                 CornerKind::Sweeper
             } else {
                 CornerKind::Medium
@@ -240,11 +252,21 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
         .collect();
     let drawn: f64 = fill.iter().map(|c| c.turn).sum();
     for c in &mut fill {
-        c.turn *= rest / drawn;
         let ((lo, hi), _) = c.kind.ranges();
-        if c.turn < lo || c.turn > hi {
-            return Err("corner out of range after fitting the turn budget");
-        }
+        c.turn = (c.turn * rest / drawn).clamp(lo, hi);
+    }
+    // Fit within the actual angle ranges instead of rejecting a whole course
+    // when one proportional angle overshoots. Redistribute the residual only
+    // through available capacity; an infeasible type list still redraws.
+    let mut remaining = rest - fill.iter().map(|c| c.turn).sum::<f64>();
+    for c in &mut fill {
+        let ((lo, hi), _) = c.kind.ranges();
+        let add = remaining.clamp(lo - c.turn, hi - c.turn);
+        c.turn += add;
+        remaining -= add;
+    }
+    if remaining.abs() > 1e-6 {
+        return Err("corner types cannot fit the turn budget");
     }
     corners.extend(fill);
     if let Some(r) = right {
@@ -255,16 +277,40 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
             radius: range(rng, radius),
         });
     }
-    for _ in 0..(rng.next_u64() % 3) {
+    // Longer tracks bend more: left-right pairs (net zero turn) in proportion to the length.
+    let pairs = libm::floor(
+        (target_m / (data.bend_spacing_m * preset.bend_spacing_scale) - 3.0).max(0.0) + rng.unit(),
+    ) as usize;
+    for _ in 0..pairs {
+        let kind = if rng.unit() < preset.sweeper_probability {
+            CornerKind::Sweeper
+        } else {
+            CornerKind::Medium
+        };
+        let (_, r) = kind.ranges();
+        let turn = range(rng, (30.0, 60.0));
+        let radius = range(rng, r);
+        let side = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
+        for sign in [side, -side] {
+            corners.push(Corner {
+                kind,
+                turn: sign * turn,
+                radius,
+            });
+        }
+    }
+    let chicanes = libm::floor(target_m / 1000.0 * preset.chicanes_per_km + rng.unit()) as usize;
+    for _ in 0..chicanes {
         let (a, r) = CornerKind::Chicane.ranges();
         corners.push(Corner {
             kind: CornerKind::Chicane,
-            turn: range(rng, a),
+            turn: range(rng, a) * preset.chicane_angle_scale,
             radius: range(rng, r),
         });
     }
     for c in &mut corners {
         c.turn = deg(c.turn);
+        c.radius *= preset.radius_scale;
     }
     // A shuffled order, but never two hairpins back to back.
     for i in (1..corners.len()).rev() {
@@ -278,7 +324,10 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
         return Err("two hairpins back to back");
     }
     // Pieces: the start straight, then each corner followed by a straight. A chicane is two opposite arcs back to back.
-    let mut pieces = vec![Piece::Straight(range(rng, START_STRAIGHT_M))];
+    let mut pieces = vec![Piece::Straight(range(
+        rng,
+        (data.start_straight_min_m, data.start_straight_max_m),
+    ))];
     for c in &corners {
         if c.kind == CornerKind::Chicane {
             let side = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
@@ -296,7 +345,35 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
                 radius: c.radius,
             });
         }
-        pieces.push(Piece::Straight(range(rng, STRAIGHT_M)));
+        // A share of the lap; the scale that brings the lap to the target comes after.
+        pieces.push(Piece::Straight(range(
+            rng,
+            (1.0 - data.straight_spread, 1.0 + data.straight_spread),
+        )));
+    }
+    let arcs: f64 = pieces
+        .iter()
+        .map(|p| match *p {
+            Piece::Arc { turn, radius } => turn.abs() * radius,
+            Piece::Straight(_) => 0.0,
+        })
+        .sum();
+    let start = match pieces[0] {
+        Piece::Straight(l) => l,
+        Piece::Arc { .. } => 0.0,
+    };
+    let shares: f64 = pieces[1..]
+        .iter()
+        .map(|p| if let Piece::Straight(l) = p { *l } else { 0.0 })
+        .sum();
+    let scale = (target_m - arcs - start) / shares;
+    if scale * (1.0 - data.straight_spread) < data.min_straight_m {
+        return Err("the target length leaves the straights too short");
+    }
+    for p in &mut pieces[1..] {
+        if let Piece::Straight(l) = p {
+            *l *= scale;
+        }
     }
     // Close the position: of every pair of straights (not the start straight), the one whose adjustment keeps both
     // straights long enough with the least total change.
@@ -319,7 +396,7 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
             }
             let a = (ex * dj.1 - ez * dj.0) / det;
             let b = (di.0 * ez - di.1 * ex) / det;
-            if li + a < MIN_STRAIGHT_M || lj + b < MIN_STRAIGHT_M {
+            if li + a < data.min_straight_m || lj + b < data.min_straight_m {
                 continue;
             }
             let cost = a.abs() + b.abs();
@@ -337,9 +414,10 @@ fn draw(rng: &mut Rng) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     Ok((corners, pieces))
 }
 
-/// The conservative fallback: a plain oval inside the length band.
-fn oval() -> (Vec<Corner>, Vec<Piece>) {
-    let (straight, radius) = (240.0, 40.0);
+/// The conservative fallback: a plain oval of the target length.
+fn oval(target_m: f64) -> (Vec<Corner>, Vec<Piece>) {
+    let radius = 40.0;
+    let straight = (target_m - 2.0 * core::f64::consts::PI * radius) / 2.0;
     let half = Corner {
         kind: CornerKind::Hairpin,
         turn: deg(180.0),
@@ -362,11 +440,44 @@ fn oval() -> (Vec<Corner>, Vec<Piece>) {
     )
 }
 
-/// Designs a course from the structure stream.
+/// Designs a course from the structure stream with the shipped generator data.
 pub fn design(rng: &mut Rng) -> Course {
+    design_with(rng, &crate::tuning::GeneratorData::shipped().course)
+}
+
+/// [`design`] with explicit course data (the owner tuning menu's length classes and straights).
+pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
+    let class = draw_class(rng, data);
+    let total: f64 = PresetName::ALL
+        .iter()
+        .map(|n| data.presets.weight(*n))
+        .sum();
+    let mut pick = rng.unit() * total;
+    let preset = PresetName::ALL
+        .into_iter()
+        .find(|n| {
+            let weight = data.presets.weight(*n);
+            if pick < weight {
+                true
+            } else {
+                pick -= weight;
+                false
+            }
+        })
+        .unwrap_or(PresetName::Speedway);
+    let band = *data.classes.get(class);
+    if preset == PresetName::FigureEight {
+        return figure_eight(rng, data, class, band);
+    }
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
-        let (corners, pieces) = match draw(rng) {
+        let target = range(rng, (band.length_min_m, band.length_max_m));
+        let (corners, pieces) = match draw(
+            rng,
+            data,
+            data.presets.get(preset).expect("ordinary course preset"),
+            target,
+        ) {
             Ok(d) => d,
             Err(why) => {
                 *rejects.entry(why).or_default() += 1;
@@ -375,9 +486,9 @@ pub fn design(rng: &mut Rng) -> Course {
         };
         let points = sample(&pieces);
         let len = length(&points);
-        let why = if len < LENGTH_BAND_M.0 {
+        let why = if len < band.length_min_m {
             Some("shorter than the length band")
-        } else if len > LENGTH_BAND_M.1 {
+        } else if len > band.length_max_m {
             Some("longer than the length band")
         } else if !self_clear(&points) {
             Some("the road comes too close to itself")
@@ -393,22 +504,107 @@ pub fn design(rng: &mut Rng) -> Course {
             straights: straights(&pieces),
             points,
             length_m: len,
+            class,
+            preset,
             attempts: attempt,
             fallback: false,
             rejects,
+            crossing: None,
         };
     }
-    let (corners, pieces) = oval();
+    let (corners, pieces) = oval((band.length_min_m + band.length_max_m) / 2.0);
     let points = sample(&pieces);
     Course {
         corners,
         straights: straights(&pieces),
         length_m: length(&points),
         points,
+        class,
+        preset,
         attempts: MAX_ATTEMPTS,
         fallback: true,
         rejects,
+        crossing: None,
     }
+}
+
+/// Opposite-hand lobes joined by long tangent straights, crossing once at a real angle.
+/// The upper straight's grade is applied after terrain, never baked into the lower road.
+fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: LengthClass) -> Course {
+    let target = rng.range(band.length_min_m, band.length_max_m);
+    let angle = deg(rng.range(
+        data.crossing.lobe_turn_min_deg,
+        data.crossing.lobe_turn_max_deg,
+    ));
+    let ratio = -libm::tan(angle / 2.0);
+    let mut radius = target / (4.0 * ratio + 2.0 * angle);
+    let mut straight = 2.0 * ratio * radius;
+    let sign = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
+    let pieces = [
+        Piece::Straight(straight),
+        Piece::Arc {
+            turn: sign * angle,
+            radius,
+        },
+        Piece::Straight(straight),
+        Piece::Arc {
+            turn: -sign * angle,
+            radius,
+        },
+    ];
+    let mut points = sample(&pieces);
+    // Arc chords are shorter than analytical arcs. Fit the sampled route to the
+    // requested length, rather than letting the shortest band undershoot.
+    let scale = target / length(&points);
+    for p in &mut points {
+        p.0 *= scale;
+        p.1 *= scale;
+    }
+    radius *= scale;
+    straight *= scale;
+    Course {
+        corners: vec![
+            Corner {
+                kind: CornerKind::Sweeper,
+                turn: sign * angle,
+                radius,
+            },
+            Corner {
+                kind: CornerKind::Sweeper,
+                turn: -sign * angle,
+                radius,
+            },
+        ],
+        straights: vec![straight, straight],
+        length_m: length(&points),
+        points,
+        class,
+        preset: PresetName::FigureEight,
+        attempts: 1,
+        fallback: false,
+        rejects: BTreeMap::new(),
+        crossing: Some([
+            (straight + angle * radius, 2.0 * straight + angle * radius),
+            (0.0, straight),
+        ]),
+    }
+}
+
+/// The seed's length class, by the data's weights (the first draw of the structure stream).
+fn draw_class(rng: &mut Rng, data: &CourseData) -> ClassName {
+    let total: f64 = ClassName::ALL
+        .iter()
+        .map(|c| data.classes.get(*c).weight)
+        .sum();
+    let mut pick = rng.unit() * total;
+    for c in ClassName::ALL {
+        let w = data.classes.get(c).weight;
+        if pick < w {
+            return c;
+        }
+        pick -= w;
+    }
+    ClassName::Standard
 }
 
 fn straights(pieces: &[Piece]) -> Vec<f64> {

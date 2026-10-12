@@ -60,15 +60,26 @@ pub struct Fixture {
     /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
     #[serde(default)]
     pub debris: Vec<DebrisSpec>,
+    /// Scheduled item-box offers (P1-W01/W04); refused offers are journalled without consuming a box.
+    #[serde(default)]
+    pub pickups: Vec<PickupSpec>,
     /// Part health set at a tick (R90 "settable", P1-S04b): the damage state without a crash.
     #[serde(default)]
     pub damage: Vec<PartHealthSpec>,
+    /// Guard-rail motion set at a tick (R90); dressing index in the map, metres and metres/second.
+    #[serde(default)]
+    pub rails: Vec<RailSpec>,
     /// Cars wrecked at a tick, as the stuck-flip rule would (P1-S04c).
     #[serde(default)]
     pub wreck: Vec<RecoverSpec>,
     /// The autopilot takes a car (`on`) or hands it back (P1-S07).
     #[serde(default)]
     pub autopilot: Vec<AutopilotSpec>,
+    /// A derby round (P1-S10): the sim's ledger starts at `atTick` and the fixture's director runs the round on the same
+    /// game-time clock (`limitMs`, 3 minutes by default), so `expect` can read `derbyPoints`, `derbyRank`, `derbyTimeLeftS`
+    /// and `roundOver`.
+    #[serde(default)]
+    pub derby: Option<DerbySpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     /// How the raw `stick` / `action` spans are read: `"dual"` (R116, the default: the right stick steers on x and
@@ -87,6 +98,48 @@ pub struct Fixture {
     /// and the metrics that must come out different from the deliberate run's (§7.3a, P1-S03).
     #[serde(default)]
     pub baselines: Option<Baselines>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PickupSpec {
+    pub tick: u64,
+    pub car: u32,
+    pub seat: jj_types::SeatId,
+    pub item: jj_types::items::ItemId,
+}
+
+/// Every held queue and causal effect/event/refusal, shared by native fixtures and the host probe.
+pub fn items(sim: &Sim) -> Value {
+    json!({
+        "queues": sim.cars().map(|car| json!({ "car": car.0, "queue": sim.items().queue(car.0) })).collect::<Vec<_>>(),
+        "effects": sim.items().effects().collect::<Vec<_>>(),
+        "events": sim.items().events(),
+        "refusals": sim.item_refusals(),
+    })
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DerbySpec {
+    /// The tick the derby starts (and its game clock with it); 0 unless a fixture starts it mid-run.
+    #[serde(default)]
+    pub at_tick: u64,
+    /// The round's game-time limit, ms.
+    #[serde(default)]
+    pub limit_ms: Option<u32>,
+}
+
+impl DerbySpec {
+    /// The limit in ms (3 minutes unless the fixture says shorter, to keep a bank fixture quick).
+    pub fn limit_ms(&self) -> u32 {
+        self.limit_ms.unwrap_or(180_000)
+    }
+
+    /// The same limit in sim ticks (rounded up: the final tick's events count).
+    pub fn limit_ticks(&self) -> u64 {
+        (u64::from(self.limit_ms()) * u64::from(jj_sim::TICK_HZ)).div_ceil(1000)
+    }
 }
 
 /// Baseline runs, and what must come out different in each of them.
@@ -205,6 +258,17 @@ pub struct PartHealthSpec {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RailSpec {
+    pub tick: u64,
+    pub dressing: u32,
+    pub displacement_m: f32,
+    pub velocity_mps: f32,
+    #[serde(default)]
+    pub fixed: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DebrisSpec {
     pub tick: u64,
     pub pose: PoseSpec,
@@ -276,6 +340,9 @@ pub struct InputSpan {
     pub steer: f32,
     #[serde(default)]
     pub brake: f32,
+    /// Hold the brakes at rest without selecting reverse (parking/landing fixtures).
+    #[serde(default)]
+    pub no_reverse: bool,
     /// ACTION left held: the handbrake drift (P1-S03b).
     #[serde(default)]
     pub drift: bool,
@@ -380,8 +447,9 @@ pub fn debris(sim: &Sim) -> Vec<Value> {
     sim.debris_footprints()
         .iter()
         .zip(sim.prop_kinds())
+        .enumerate()
         .map(
-            |(d, k)| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l, "kind": k }),
+            |(i, (d, k))| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l, "kind": k, "dynamic": sim.debris_dynamic(i) }),
         )
         .collect()
 }
@@ -396,6 +464,21 @@ pub struct Recorded {
     pub observations: Vec<Value>,
     /// One row per tick when tracing.
     pub trace: Vec<Value>,
+}
+
+/// A car's metric from its tracker, except the round's own (`roundOver`: 1 once the fixture's director has ended the round),
+/// which is the session's.
+fn metric_of(
+    trackers: &[SignatureTracker],
+    session: &Session,
+    car: u32,
+    metric: Metric,
+) -> Option<f64> {
+    if metric == Metric::RoundOver {
+        trackers.get(car as usize)?;
+        return Some(f64::from(u8::from(session.round_over())));
+    }
+    trackers.get(car as usize)?.metric(metric)
 }
 
 /// A fixture's run around a [`Sim`] the caller owns and steps.
@@ -446,6 +529,9 @@ impl Harness {
             }
         }
         let mut session = Session::new(&fx.seats)?;
+        if let Some(d) = &fx.derby {
+            session.set_game_limit(Some(d.limit_ms()));
+        }
         if let Some(phase) = fx.phase {
             session.jump(phase)?;
         }
@@ -507,6 +593,9 @@ impl Harness {
         if let Some(r) = fx.race.as_ref().filter(|r| r.at_tick == t) {
             sim.start_race(r.laps);
         }
+        if let Some(d) = fx.derby.as_ref().filter(|d| d.at_tick == t) {
+            sim.start_derby(d.limit_ticks());
+        }
         for p in fx.place.iter().filter(|p| p.tick == t) {
             sim.place_car(
                 CarId(p.car),
@@ -516,9 +605,16 @@ impl Harness {
             );
         }
         for d in fx.damage.iter().filter(|d| d.tick == t) {
-            if let Some(part) = jj_sim::damage::part_index(&d.part) {
+            if let Some(part) = sim
+                .profile_of(CarId(d.car))
+                .and_then(|p| p.part_index(&d.part))
+            {
                 sim.set_part_health(CarId(d.car), part as u8, d.health);
             }
+        }
+        for r in fx.rails.iter().filter(|r| r.tick == t) {
+            sim.set_rail_fixed(r.dressing, r.fixed);
+            sim.set_rail(r.dressing, r.displacement_m, r.velocity_mps);
         }
         for r in fx.wreck.iter().filter(|r| r.tick == t) {
             sim.wreck(CarId(r.car));
@@ -528,6 +624,9 @@ impl Harness {
         }
         for d in fx.debris.iter().filter(|d| d.tick == t) {
             sim.spawn_debris(d.pose.spawn(), d.half);
+        }
+        for p in fx.pickups.iter().filter(|p| p.tick == t) {
+            let _ = sim.pickup_item(CarId(p.car), p.seat, p.item);
         }
         for _ in fx.drop_in.iter().filter(|d| d.tick == t) {
             sim.drop_in();
@@ -596,7 +695,7 @@ impl Harness {
                 brake: quantise_axis(i.brake.max(0.0)),
                 drift: i.drift,
                 boost: i.boost,
-                no_reverse: false,
+                no_reverse: i.no_reverse,
             });
             sim.set_input(CarId(car), input);
         }
@@ -644,8 +743,12 @@ impl Harness {
 
     /// The full state now: cars (`jj_sim::observe`), debris footprints and the fixture's session.
     pub fn observe(&self, sim: &Sim) -> Value {
-        json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim),
-                "session": self.session.observe() })
+        let mut state = json!({ "tick": sim.tick(), "cars": observe_cars(sim, &self.route), "debris": debris(sim), "rails": sim.rail_states(),
+                "session": self.session.observe() });
+        if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+            state["items"] = items(sim);
+        }
+        state
     }
 
     /// Records the state after a tick (`end`: the last one); returns whether the `until` predicate holds.
@@ -669,14 +772,19 @@ impl Harness {
         let tick = sim.tick();
         self.check(tick, end);
         if end || self.fx.observe.contains(&tick) {
-            self.observations.push(
-                json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": self.session.observe() }),
-            );
+            let mut state = json!({ "tick": tick, "cars": cars, "debris": debris(sim), "rails": sim.rail_states(), "session": self.session.observe() });
+            if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+                state["items"] = items(sim);
+            }
+            self.observations.push(state);
         }
         if self.trace_on {
             let events = self.events(sim);
-            self.trace
-                .push(json!({ "tick": tick, "cars": cars, "events": events }));
+            let mut row = json!({ "tick": tick, "cars": cars, "events": events });
+            if !sim.items().events().is_empty() || !sim.item_refusals().is_empty() {
+                row["items"] = items(sim);
+            }
+            self.trace.push(row);
         }
         self.fx.until.as_ref().is_some_and(|u| self.holds(u))
     }
@@ -687,11 +795,9 @@ impl Harness {
             .is_some_and(|v| u.min.is_none_or(|m| v >= m) && u.max.is_none_or(|m| v <= m))
     }
 
-    /// A car's metric now (state now, or a signature accumulator).
+    /// A car's metric now (state now, or a signature accumulator); `roundOver` is the fixture's director's.
     pub fn metric(&self, car: u32, metric: Metric) -> Option<f64> {
-        self.trackers
-            .get(car as usize)
-            .and_then(|t| t.metric(metric))
+        metric_of(&self.trackers, &self.session, car, metric)
     }
 
     /// `until` stopped the run at this tick: it's the end, so check the end-of-run envelopes and snapshot it.
@@ -700,7 +806,7 @@ impl Harness {
         self.check(tick, true);
         if !self.fx.observe.contains(&tick) {
             self.observations.push(json!({ "tick": tick, "cars": observe_cars(sim, &self.route),
-                                            "debris": debris(sim), "session": self.session.observe() }));
+                                            "debris": debris(sim), "rails": sim.rail_states(), "session": self.session.observe() }));
         }
     }
 
@@ -716,8 +822,8 @@ impl Harness {
             .iter_mut()
             .filter(|c| c.at_tick == Some(tick) || (end && c.at_tick.is_none()))
         {
-            if let Some(t) = self.trackers.get(c.car as usize) {
-                c.actual = t.metric(c.metric);
+            if self.trackers.get(c.car as usize).is_some() {
+                c.actual = metric_of(&self.trackers, &self.session, c.car, c.metric);
                 c.ok = c.actual.is_some_and(|v| v >= c.min && v <= c.max);
             }
         }

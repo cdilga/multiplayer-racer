@@ -1,0 +1,122 @@
+{
+ "scenario": "bowl-transition",
+ "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car's up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back).",
+ "map": "maps/derby-bowl-16.json",
+ "seed": 11,
+ "ticks": 1440,
+ "cars": [
+  {
+   "pose": {
+    "x": 11.37,
+    "y": 0.12,
+    "z": 4.138,
+    "headingDeg": 70.0
+   },
+   "linvel": [
+    5.638,
+    0.0,
+    2.052
+   ]
+  },
+  {
+   "pose": {
+    "x": -9.269,
+    "y": 0.12,
+    "z": 7.778,
+    "headingDeg": -50.0
+   },
+   "linvel": [
+    -7.66,
+    0.0,
+    6.428
+   ]
+  },
+  {
+   "pose": {
+    "x": -2.101,
+    "y": 0.12,
+    "z": -11.916,
+    "headingDeg": -170.0
+   },
+   "linvel": [
+    -2.605,
+    0.0,
+    -14.772
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "maxRadiusM",
+   "min": 22.5,
+   "max": 30.75
+  },
+  {
+   "car": 0,
+   "metric": "airtimeS",
+   "min": 0,
+   "max": 0.15
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.4,
+   "max": 1.001
+  },
+  {
+   "car": 0,
+   "metric": "height",
+   "min": -0.2,
+   "max": 0.9
+  },
+  {
+   "car": 1,
+   "metric": "maxRadiusM",
+   "min": 22.5,
+   "max": 30.75
+  },
+  {
+   "car": 1,
+   "metric": "airtimeS",
+   "min": 0,
+   "max": 0.15
+  },
+  {
+   "car": 1,
+   "metric": "minUpY",
+   "min": 0.4,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "height",
+   "min": -0.2,
+   "max": 0.9
+  },
+  {
+   "car": 2,
+   "metric": "maxRadiusM",
+   "min": 22.5,
+   "max": 30.75
+  },
+  {
+   "car": 2,
+   "metric": "airtimeS",
+   "min": 0,
+   "max": 0.15
+  },
+  {
+   "car": 2,
+   "metric": "minUpY",
+   "min": 0.4,
+   "max": 1.001
+  },
+  {
+   "car": 2,
+   "metric": "height",
+   "min": -0.2,
+   "max": 0.9
+  }
+ ]
+}

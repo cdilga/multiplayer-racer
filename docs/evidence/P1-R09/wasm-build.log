@@ -1,0 +1,17 @@
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+   Compiling jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `release` profile [optimized] target(s) in 7.95s
+   Compiling jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `release` profile [optimized] target(s) in 3.41s
+    Finished `release` profile [optimized] target(s) in 0.05s
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling jj-wasm-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-procgen)
+    Finished `release` profile [optimized] target(s) in 3.34s
+web/host/src/procgen/pkg/jj_wasm_procgen_bg.wasm: 1044516 bytes
+web/controller/src/pkg/jj_wasm_input_bg.wasm: 310911 bytes
+web/host/src/testing/pkg/jj_wasm_host_testing_bg.wasm: 5344927 bytes
+web/host/src/worker/pkg/jj_wasm_host_bg.wasm: 4656457 bytes

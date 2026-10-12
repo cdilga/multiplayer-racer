@@ -1,0 +1,59 @@
+  2026-10-12T00:17:44.605300Z  INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)
+    at rch/src/hook.rs:3354 on ThreadId(1)
+
+  2026-10-12T00:17:46.467526Z  INFO rch::hook::transfer_orchestration: Starting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)
+    at rch/src/hook/transfer_orchestration.rs:943 on ThreadId(1)
+
+  2026-10-12T00:17:46.467593Z  INFO rch::hook::transfer_orchestration: Prepared dependency sync manifest for 1 roots
+    at rch/src/hook/transfer_orchestration.rs:965 on ThreadId(1)
+
+  2026-10-12T00:17:47.732290Z  INFO rch::hook::transfer_orchestration: Syncing project to worker eris...
+    at rch/src/hook/transfer_orchestration.rs:1201 on ThreadId(1)
+
+  2026-10-12T00:17:47.732467Z  INFO rch::transfer: Syncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)
+    at rch/src/transfer.rs:4907 on ThreadId(1)
+
+  2026-10-12T00:18:11.275179Z  INFO rch::hook::transfer_orchestration: Sync complete: 284 files, 33689225 bytes in 23113ms
+    at rch/src/hook/transfer_orchestration.rs:1590 on ThreadId(1)
+
+  2026-10-12T00:18:12.831098Z  INFO rch::hook::transfer_orchestration: Executing command remotely: cargo test -p jj-procgen --test biomes --release --config 'env.RCH_BUILD_SOURCE.value="32bb8de00acaf6ee4bd5d820fd63b9cfafd7410e-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'
+    at rch/src/hook/transfer_orchestration.rs:1691 on ThreadId(1)
+
+  2026-10-12T00:18:12.842560Z  INFO rch::transfer: Rewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba
+    at rch/src/transfer.rs:2911 on ThreadId(1)
+
+  2026-10-12T00:18:12.842636Z  INFO rch::transfer: Wrapping command with external timeout protection, kind: cargo test, timeout_secs: 1800
+    at rch/src/transfer.rs:3754 on ThreadId(1)
+
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+
+running 5 tests
+test writes_the_top_down_plots ... ok
+    Finished `release` profile [optimized] target(s) in 11.28s
+     Running tests/biomes.rs (.rch-target-eris-pool-1d074062279c60cd0fc9234c61deaaba/release/deps/biomes-e43c84350ab90eb4)
+test town_houses_face_straight_streets_with_junctions_and_signs ... ok
+test bitumen_lane_lines_posts_and_rail_are_pieces_and_it_meets_the_placeholder ... ok
+test rocks_domes_vary_by_seed_only_and_reuse_the_cores_features ... ok
+test outback_dirt_has_two_species_clear_of_the_route_and_the_autopilot_laps_three_seeds ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.67s
+
+  2026-10-12T00:18:49.389311Z  INFO rch::hook::transfer_orchestration: Remote command finished: exit=0 in 36312ms
+    at rch/src/hook/transfer_orchestration.rs:1904 on ThreadId(1)
+
+  2026-10-12T00:18:50.480596Z  INFO rch::hook::transfer_orchestration: Retrieving build artifacts...
+    at rch/src/hook/transfer_orchestration.rs:2000 on ThreadId(1)
+
+  2026-10-12T00:18:50.480927Z  INFO rch::transfer: Retrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris
+    at rch/src/transfer.rs:5733 on ThreadId(1)
+
+  2026-10-12T00:18:50.819814Z  INFO rch::transfer: Artifact retrieval budget from selected remote files, selected_bytes: 0, total_timeout_ms: 30000
+    at rch/src/transfer.rs:2632 on ThreadId(1)
+
+  2026-10-12T00:18:51.090771Z  INFO rch::transfer: Artifacts retrieved in 609ms (0 files, 43 bytes)
+    at rch/src/transfer.rs:5794 on ThreadId(1)
+
+  2026-10-12T00:18:51.112930Z  INFO rch::hook::transfer_orchestration: Artifacts retrieved: 0 files, 43 bytes in 609ms
+    at rch/src/hook/transfer_orchestration.rs:2046 on ThreadId(1)
+

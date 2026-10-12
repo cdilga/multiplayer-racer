@@ -1,0 +1,265 @@
+  [2m2026-10-12T01:52:49.515392Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:52:50.264687Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: 2a6e8cda30a218ca)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:52:50.264769Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:52:51.402516Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:52:51.402660Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mSyncing /Users/cdilga/Documents/dev/multiplayer-racer -> /Users/cdilga/Documents/dev/multiplayer-racer on eris (streaming)[0m
+    [2;3mat[0m rch/src/transfer.rs:4907 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:53:05.231064Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 216 files, 23077381 bytes in 13491ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:53:05.736799Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo check --workspace --target x86_64-unknown-linux-gnu --config 'env.RCH_BUILD_SOURCE.value="c0095947feff3a86f7786f1f3ba960480bf4668e-dirty"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:53:05.746289Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /Users/cdilga/Documents/dev/multiplayer-racer/.rch-target-eris-pool-ebe4e812fddc9c2191ad8faae5499701[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:53:05.746350Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo check, [1;32mtimeout_secs[0m[32m: 300[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m unicode-ident v1.0.26
+[1m[92m   Compiling[0m proc-macro2 v1.0.107
+[1m[92m   Compiling[0m quote v1.0.47
+[1m[92m   Compiling[0m libc v0.2.189
+[1m[92m    Checking[0m cfg-if v1.0.5
+[1m[92m    Checking[0m typenum v1.20.1
+[1m[92m   Compiling[0m autocfg v1.5.1
+[1m[92m   Compiling[0m syn v2.0.119
+[1m[92m   Compiling[0m syn v3.0.6
+[1m[92m   Compiling[0m libm v0.2.16
+[1m[92m   Compiling[0m serde_core v1.0.229
+[1m[92m   Compiling[0m num-traits v0.2.19
+[1m[92m    Checking[0m hybrid-array v0.4.15
+[1m[92m   Compiling[0m getrandom v0.4.3
+[1m[92m    Checking[0m rand_core v0.10.1
+[1m[92m    Checking[0m crypto-common v0.2.2
+[1m[92m   Compiling[0m zeroize_derive v1.5.0
+[1m[92m    Checking[0m memchr v2.8.3
+[1m[92m    Checking[0m zeroize v1.9.1
+[1m[92m   Compiling[0m thiserror v2.0.21
+[1m[92m   Compiling[0m serde v1.0.229
+[1m[92m   Compiling[0m thiserror-impl v2.0.21
+[1m[92m   Compiling[0m serde_derive v1.0.229
+[1m[92m    Checking[0m cmov v0.5.4
+[1m[92m    Checking[0m ctutils v0.4.3
+[1m[92m    Checking[0m block-buffer v0.12.1
+[1m[92m   Compiling[0m zmij v1.0.23
+[1m[92m    Checking[0m cpufeatures v0.3.1
+[1m[92m   Compiling[0m serde_json v1.0.151
+[1m[92m    Checking[0m itoa v1.0.18
+[1m[92m   Compiling[0m version_check v0.9.5
+[1m[92m   Compiling[0m generic-array v0.14.7
+[1m[92m    Checking[0m num-integer v0.1.47
+[1m[92m    Checking[0m cobs v0.3.0
+[1m[92m    Checking[0m const-oid v0.10.2
+[1m[92m    Checking[0m bitflags v2.13.2
+[1m[92m    Checking[0m digest v0.11.3
+[1m[92m   Compiling[0m rustversion v1.0.23
+[1m[92m    Checking[0m smallvec v1.16.2
+[1m[92m    Checking[0m crypto-common v0.1.7
+[1m[92m    Checking[0m block-buffer v0.10.4
+[1m[92m    Checking[0m getrandom v0.2.17
+[1m[92m    Checking[0m bytemuck v1.25.2
+[1m[92m    Checking[0m equivalent v1.0.2
+[1m[92m    Checking[0m log v0.4.34
+[1m[92m   Compiling[0m wasm-bindgen-shared v0.2.129
+[1m[92m    Checking[0m allocator-api2 v0.2.21
+[1m[92m    Checking[0m foldhash v0.2.0
+[1m[92m    Checking[0m safe_arch v1.2.0
+[1m[92m    Checking[0m hashbrown v0.17.1
+[1m[92m    Checking[0m digest v0.10.7
+[1m[92m    Checking[0m jj-types v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-types)
+[1m[92m    Checking[0m postcard v1.1.3
+[1m[92m    Checking[0m sha2 v0.11.0
+[1m[92m    Checking[0m approx v0.5.1
+[1m[92m    Checking[0m inout v0.2.2
+[1m[92m   Compiling[0m matrixmultiply v0.3.11
+[1m[92m   Compiling[0m shlex v2.0.1
+[1m[92m   Compiling[0m find-msvc-tools v0.1.14
+[1m[92m    Checking[0m wide v1.7.1
+[1m[92m   Compiling[0m cc v1.6.0
+[1m[92m    Checking[0m num-complex v0.4.6
+[1m[92m    Checking[0m minimal-lexical v0.2.1
+[1m[92m    Checking[0m slab v0.4.12
+[1m[92m    Checking[0m base64ct v1.8.3
+[1m[92m   Compiling[0m semver v1.0.28
+[1m[92m   Compiling[0m num-conv v0.2.2
+[1m[92m    Checking[0m rawpointer v0.2.1
+[1m[92m   Compiling[0m heapless v0.8.0
+[1m[92m   Compiling[0m zerocopy v0.8.59
+[1m[92m    Checking[0m byteorder v1.5.0
+[1m[92m   Compiling[0m time-core v0.1.9
+[1m[92m    Checking[0m once_cell v1.21.4
+[1m[92m    Checking[0m hash32 v0.3.1
+[1m[92m   Compiling[0m time-macros v0.2.32
+[1m[92m   Compiling[0m ring v0.17.14
+[1m[92m   Compiling[0m rustc_version v0.4.1
+[1m[92m    Checking[0m pem-rfc7468 v0.7.0
+[1m[92m    Checking[0m nom v7.1.3
+[1m[92m    Checking[0m cipher v0.5.2
+[1m[92m    Checking[0m glam v0.33.12
+[1m[92m    Checking[0m jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+[1m[92m    Checking[0m simba v0.10.2
+[1m[92m    Checking[0m num-rational v0.4.2
+[1m[92m    Checking[0m universal-hash v0.6.1
+[1m[92m   Compiling[0m nalgebra-macros v0.3.0
+[1m[92m   Compiling[0m synstructure v0.13.2
+[1m[92m    Checking[0m stable_deref_trait v1.2.1
+[1m[92m    Checking[0m tinyvec v1.13.3
+[1m[92m    Checking[0m const-oid v0.9.6
+[1m[92m   Compiling[0m rustix v1.1.5
+[1m[92m    Checking[0m deranged v0.5.8
+[1m[92m    Checking[0m powerfmt v0.2.1
+[1m[92m    Checking[0m der v0.7.10
+[1m[92m    Checking[0m time v0.3.55
+[1m[92m    Checking[0m unicode-normalization v0.1.25
+[1m[92m   Compiling[0m asn1-rs-derive v0.6.0
+[1m[92m    Checking[0m nalgebra v0.35.0
+[1m[92m    Checking[0m rusticata-macros v4.1.0
+[1m[92m   Compiling[0m curve25519-dalek v4.1.3
+[1m[92m    Checking[0m signature v2.2.0
+[1m[92m    Checking[0m rand_core v0.6.4
+[1m[92m   Compiling[0m displaydoc v0.2.7
+[1m[92m   Compiling[0m asn1-rs-impl v0.2.0
+[1m[92m   Compiling[0m anyhow v1.0.104
+[1m[92m    Checking[0m subtle v2.6.1
+[1m[92m    Checking[0m cpubits v0.1.1
+[1m[92m    Checking[0m cpufeatures v0.2.17
+[1m[92m    Checking[0m linux-raw-sys v0.12.1
+[1m[92m    Checking[0m asn1-rs v0.7.2
+[1m[92m    Checking[0m glamx v0.3.1
+[1m[92m    Checking[0m ppv-lite86 v0.2.21
+[1m[92m    Checking[0m rstar v0.13.0
+[1m[92m    Checking[0m spki v0.7.3
+[1m[92m    Checking[0m jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+[1m[92m    Checking[0m indexmap v2.14.2
+[1m[92m    Checking[0m ena v0.14.4
+[1m[92m    Checking[0m rustls-pki-types v1.15.1
+[1m[92m   Compiling[0m num-derive v0.5.1
+[1m[92m   Compiling[0m profiling-procmacros v1.0.18
+[1m[92m   Compiling[0m curve25519-dalek-derive v0.1.1
+[1m[92m    Checking[0m ordered-float v5.5.0
+[1m[92m   Compiling[0m memoffset v0.9.1
+[1m[92m   Compiling[0m cfg_aliases v0.2.2
+[1m[92m    Checking[0m downcast-rs v2.0.2
+[1m[92m   Compiling[0m oid-registry v0.8.1
+[1m[92m   Compiling[0m bumpalo v3.20.3
+[1m[92m    Checking[0m arrayvec v0.7.8
+[1m[92m   Compiling[0m parking_lot_core v0.9.12
+[1m[92m    Checking[0m static_assertions v1.1.0
+[1m[92m   Compiling[0m either v1.18.0
+[1m[92m    Checking[0m untrusted v0.9.0
+[1m[92m   Compiling[0m getrandom v0.3.4
+[1m[92m   Compiling[0m crossbeam-utils v0.8.23
+[1m[92m    Checking[0m base64 v0.23.1
+[1m[92m   Compiling[0m itertools v0.14.0
+[1m[92m    Checking[0m parry3d v0.31.1
+[1m[92m   Compiling[0m wasm-bindgen-macro-support v0.2.129
+[1m[92m   Compiling[0m nix v0.31.3
+[1m[92m    Checking[0m profiling v1.0.18
+[1m[92m    Checking[0m pkcs8 v0.10.2
+[1m[92m    Checking[0m rand_chacha v0.3.1
+[1m[92m    Checking[0m sha2 v0.10.9
+[1m[92m    Checking[0m polyval v0.7.3
+[1m[92m    Checking[0m ed25519 v2.2.3
+[1m[92m    Checking[0m jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+[1m[92m    Checking[0m aead v0.6.1
+[1m[92m   Compiling[0m wasm-bindgen v0.2.129
+[1m[92m    Checking[0m num-bigint v0.4.8
+[1m[92m    Checking[0m errno v0.3.14
+[1m[92m    Checking[0m fastrand v2.5.0
+[1m[92m   Compiling[0m rustls v0.23.45
+[1m[92m   Compiling[0m bincode-next v3.1.1
+[1m[92m   Compiling[0m virtue-next v0.1.3
+[1m[92m    Checking[0m data-encoding v2.11.1
+[1m[92m    Checking[0m scopeguard v1.2.0
+[1m[92m   Compiling[0m signal-hook v0.4.5
+[1m[92m   Compiling[0m crc32fast v1.5.2
+[1m[92m    Checking[0m lock_api v0.4.14
+[1m[92m   Compiling[0m bincode_derive-next v3.1.1
+[1m[92m    Checking[0m der-parser v10.0.0
+[1m[92m    Checking[0m signal-hook-registry v1.4.8
+[1m[92m    Checking[0m ed25519-dalek v2.2.0
+[1m[92m    Checking[0m ghash v0.6.0
+[1m[92m    Checking[0m rapier3d v0.36.0 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/rapier3d)
+[1m[92m   Compiling[0m prost-derive v0.14.4
+[1m[92m   Compiling[0m wasm-bindgen-macro v0.2.129
+[1m[92m    Checking[0m rand v0.8.8
+[1m[92m    Checking[0m signatory v0.27.1
+[1m[92m    Checking[0m rustls-webpki v0.103.15
+[1m[92m    Checking[0m aes v0.9.3
+[1m[92m    Checking[0m poly1305 v0.9.1
+[1m[92m    Checking[0m ctr v0.10.1
+[1m[92m    Checking[0m chacha20 v0.10.2
+[1m[92m    Checking[0m jj-contracts v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-contracts)
+[1m[92m    Checking[0m franken-evidence v0.5.0
+[1m[92m    Checking[0m franken-kernel v0.5.0
+[1m[92m    Checking[0m rapidhash v4.5.1
+[1m[92m   Compiling[0m pin-project-internal v1.1.13
+[1m[92m    Checking[0m rmp v0.8.15
+[1m[92m    Checking[0m pin-project-lite v0.2.17
+[1m[92m    Checking[0m bytes v1.12.1
+[1m[92m    Checking[0m unty-next v0.1.2
+[1m[92m    Checking[0m futures-io v0.3.34
+[1m[92m    Checking[0m unicode-segmentation v1.13.3
+[1m[92m   Compiling[0m pastey v0.2.3
+[1m[92m    Checking[0m futures-core v0.3.34
+[1m[92m    Checking[0m lazy_static v1.5.1
+[1m[92m    Checking[0m parking v2.2.1
+[1m[92m   Compiling[0m asupersync v0.5.0
+[1m[92m    Checking[0m futures-lite v2.6.1
+[1m[92m    Checking[0m x509-parser v0.18.1
+[1m[92m    Checking[0m jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+[1m[92m    Checking[0m jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+[1m[92m    Checking[0m pin-project v1.1.13
+[1m[92m    Checking[0m prost v0.14.4
+[1m[92m    Checking[0m rmp-serde v1.3.1
+[1m[92m    Checking[0m franken-decision v0.5.0
+[1m[92m    Checking[0m chacha20poly1305 v0.11.0
+[1m[92m    Checking[0m aes-gcm v0.11.1
+[1m[92m    Checking[0m crossbeam-queue v0.3.14
+[1m[92m    Checking[0m tempfile v3.27.0
+[1m[92m    Checking[0m parking_lot v0.12.5
+[1m[92m    Checking[0m nkeys v0.4.5
+[1m[92m    Checking[0m xattr v1.6.1
+[1m[92m    Checking[0m polling v3.11.0
+[1m[92m    Checking[0m webpki-roots v1.0.9
+[1m[92m    Checking[0m jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+[1m[92m    Checking[0m sha1 v0.11.0
+[1m[92m    Checking[0m hmac v0.13.0
+[1m[92m    Checking[0m sysinfo v0.39.6
+[1m[92m    Checking[0m socket2 v0.6.5
+[1m[92m    Checking[0m hex v0.4.3
+[1m[92m    Checking[0m jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+[1m[92m    Checking[0m jj-wasm-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-procgen)
+[1m[92m    Checking[0m jj-wasm-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-input)
+[1m[92m    Checking[0m jj-tools v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-tools)
+[1m[92m    Checking[0m jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+[1m[92m    Checking[0m jj-server v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-server)
+[1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 1m 57s
+  [2m2026-10-12T01:55:04.616592Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 118677ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:55:04.783748Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:55:04.784033Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /Users/cdilga/Documents/dev/multiplayer-racer on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:55:05.072113Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:55:05.314989Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 530ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-12T01:55:05.337085Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 530ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+

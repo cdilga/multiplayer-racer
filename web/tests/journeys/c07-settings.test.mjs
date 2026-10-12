@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C07 personal controller settings, through a real host and a real phone page (WebRTC: run on eris).
 //   node --test web/tests/journeys/c07-settings.test.mjs   (JJ_CHROMIUM_GPU=1 on eris)
 // Menu{open} is checked without knowing the wire encoding: the Help card (the tutorial, C06) already sends Menu{true} on
@@ -70,7 +71,9 @@ async function seated(init, mode = 'room') {
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   await shot(page, 'c07-play-screen-with-settings-button-844x390');
   return { host, page, ctx, joinUrl };
@@ -78,6 +81,7 @@ async function seated(init, mode = 'room') {
 
 const prefs = (page) => page.evaluate(() => window.__jjSettings.inspect().prefs);
 const openSettings = async (page) => {
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: /^Settings/ }).click();
   await page.waitForSelector('[data-overlay=settings]');
 };
@@ -146,9 +150,11 @@ test('opening Settings sends neutral and Menu{open:true}; closing sends Menu{ope
   const menus = (from) => page.evaluate((n) => window.__cmds.slice(n).filter((c) => c.length === 6 && c.startsWith('010a')), from); // Menu is variant 10 (Ready and Tutorial are as short)
   const m0 = await page.evaluate(() => window.__cmds.length);
   await page.getByRole('button', { name: /^Help/ }).click();
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   const menuTrue = (await menus(m0)).at(-1);
   const m1 = await page.evaluate(() => window.__cmds.length);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   const menuFalse = (await menus(m1)).at(-1);
   assert.ok(menuFalse && menuTrue && menuTrue !== menuFalse, 'reference Menu{true} and Menu{false} captured');

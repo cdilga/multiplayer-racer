@@ -22,6 +22,7 @@ export class SimClient {
   private fault: string | null = null;
   private mask = 0;
   private statsWaiters = new Map<number, (s: InputStat[]) => void>();
+  private tuningWaiters = new Map<number, (json: string) => void>();
   private nextStats = 1;
   /** Milliseconds left on the resume countdown when it last changed second (0: none). */
   countdownMs = 0;
@@ -101,6 +102,10 @@ export class SimClient {
         this.statsWaiters.get(m.id)?.(m.sources);
         this.statsWaiters.delete(m.id);
         return;
+      case 'tuning':
+        this.tuningWaiters.get(m.id)?.(m.json);
+        this.tuningWaiters.delete(m.id);
+        return;
       case 'ready':
         return;
       default:
@@ -151,6 +156,15 @@ export class SimClient {
     });
   }
 
+  /** The vehicle tuning as the sim holds it now, and the last refusal (the owner tuning menu, br-2sdu.1). */
+  tuning(): Promise<{ tuning: Record<string, unknown>; error: string | null; vehicle?: string; vehicles?: string[] }> {
+    const id = this.nextStats++;
+    return new Promise((resolve) => {
+      this.tuningWaiters.set(id, (json) => resolve(JSON.parse(json)));
+      this.send({ kind: 'tuning', id });
+    });
+  }
+
   /** The pause reasons the host shows, plus `fault` if the worker broke. */
   pauseReasons(): PauseReason[] {
     const reasons = pauseReasons(this.mask);
@@ -168,11 +182,14 @@ export interface RoomView {
   remainingMs: number | null;
   round: number | null;
   laps: number;
+  catchUp?: boolean;
   freeDrive: boolean;
+  /** The roster's vehicle ids in the host's table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123). */
+  vehicles?: string[];
   /** Round preparation (P1-M08a, the R90 readout): main prepares maps, the pending job and its seed, whether a map is waiting for the next Countdown, stale `MapReady`s dropped, and the last validator verdict. */
   preparation?: { external: boolean; pending: { id: number; seed: number } | null; prepared: boolean; staleDropped: number; verdict: string };
   armed: boolean;
-  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; car: number | null; laps: number | null; position: number | null; finished: boolean; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null }>;
+  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; /** P1-C14: the host pad, wheel or key cluster (its source id) that holds this seat; null for a joined controller. */ localSource?: number | null; /** The transport endpoint (not for host pads). */ endpoint?: string | null; car: number | null; laps: number | null; position: number | null; finished: boolean; /** R119: ms this seat's pad has been unplugged (null while plugged); the seat is held, nothing expires it. */ unpluggedMs?: number | null; /** R125: the seat's learner assist, 0 Off, 1 Some, 2 Lots (an L-plate shows on its tile while it is not 0). */ assist?: number; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

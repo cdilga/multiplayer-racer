@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Journey JN1 (P1-G04): free drive on the greybox. The real host page (`B/host?drive&test=live`) and real controller
 // pages from one build, served by the real jj-server, over loopback WebRTC in Chromium. One phone joins by the QR the
 // host shows (decoded from the screen), one by typing the code on the landing page; both claim, get a seat and a car,
@@ -71,6 +72,7 @@ async function joinAndClaim(p, url, name) {
   await p.page.locator('#name').fill(name);
   await p.page.getByRole('button', { name: 'Join the race' }).click();
   await wait(p.page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(p.page);
   return p.page.evaluate(() => window.__jjController.inspect());
 }
 
@@ -90,6 +92,22 @@ async function driveTicks(host, ticks) {
   return { start, now };
 }
 
+// Advance the held worker just enough to process the real join commands, independently of how
+// long the browser/ICE takes. Network traffic still uses the actual WebRTC controller path.
+async function joinWhileHeld(host, p, url, name) {
+  let done = false;
+  const joining = joinAndClaim(p, url, name)
+    .then((value) => ({ value }), (error) => ({ error }))
+    .finally(() => { done = true; });
+  while (!done) {
+    await host.evaluate(() => window.__jjTest.step(1));
+    await host.waitForTimeout(50);
+  }
+  const result = await joining;
+  if (result.error) throw result.error;
+  return result.value;
+}
+
 const turn = (a, b) => {
   const d = Math.abs(a - b) % 360;
   return Math.min(d, 360 - d);
@@ -98,6 +116,7 @@ const turn = (a, b) => {
 test('JN1: phones join by QR and by code, claim, and each drives its own car; keys beside them; a late phone joins; reload resumes', { timeout: 300_000 }, async () => {
   const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const host = await hostCtx.newPage();
+  if (process.env.JJ_HOST_CPU_THROTTLE) await (await hostCtx.newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
   const hostErrors = [];
   host.on('pageerror', (e) => hostErrors.push(e.message));
   at('host opens a room');
@@ -168,11 +187,26 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
 
   at('recover');
   // Recover is for a stuck car (slow for a second, or upside down): brake to a stop first, then ask.
+  // Down becomes reverse once the car is slow. CI 3331 missed the short stopped window
+  // between two wall-clock observations and then waited for a reversing car to stop.
+  // Sample small fixed intervals while the real phone sends its brake/release frames.
+  await host.evaluate(() => window.__jjTest.hold(true));
   await hold(a, { x: 0, y: 1 });
-  for (const t0 = Date.now(); Math.abs(carOf(await observe(host), epA).forwardSpeed) > 0.5; await host.waitForTimeout(100)) {
-    assert.ok(Date.now() - t0 < 15_000, 'A never stopped');
+  let braking = carOf(await observe(host), epA);
+  for (const t0 = Date.now(); Math.abs(braking.forwardSpeed) > 0.5; braking = carOf(await observe(host), epA)) {
+    assert.ok(Date.now() - t0 < 30_000, `A never stopped: ${JSON.stringify(braking)}`);
+    await host.evaluate(() => window.__jjTest.step(3));
+    await host.waitForTimeout(50);
   }
   await a.page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  for (const t0 = Date.now(); ; ) {
+    await host.evaluate(() => window.__jjTest.step(1));
+    const released = carOf(await observe(host), epA);
+    if (released.input.brake === 0 && released.input.throttle === 0) break;
+    assert.ok(Date.now() - t0 < 10_000, `A never released its brake: ${JSON.stringify(released)}`);
+    await host.waitForTimeout(50);
+  }
+  await host.evaluate(() => window.__jjTest.hold(false));
   await driveTicks(host, 150);
   const recoveries = (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries;
   await a.page.getByRole('button', { name: /Recover/ }).click();
@@ -187,12 +221,32 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.equal(tiles, 3);
 
   at('phone C joins mid-drive');
+  // CI 3319: A still carried throttle=1, but travelled from x=174 m into the bend's barrier
+  // at x=185 m and detached its bumper. Stage a clear straight, then compare a fixed simulation
+  // interval: a slower join must not turn the undisturbed-driver check into a crash test.
+  await host.evaluate(() => window.__jjTest.hold(true));
+  const runningA = carOf(await observe(host), epA);
+  assert.ok(runningA.forwardSpeed > 4, `A is driving before the late join: ${JSON.stringify(runningA)}`);
+  await host.evaluate(({ car, y, speed }) => window.__jjTest.command({
+    cmd: 'place', car, pose: { x: 0, y, z: -3.5, headingDeg: 90 }, linvel: [speed, 0, 0],
+  }), { car: runningA.car, y: runningA.position[1], speed: runningA.forwardSpeed });
+  const beforeJoin = await observe(host);
   const c = await phone();
-  const youC = await joinAndClaim(c, joinUrl, 'Robbo');
-  const after1 = await driveTicks(host, 120);
+  const youC = await joinWhileHeld(host, c, joinUrl, 'Robbo');
+  // Keep the actual phones sending fresh input while those ticks run. A single synchronous
+  // 120-tick jump would correctly age the last packet out before another browser frame arrives.
+  for (let i = 0; i < 20; i++) {
+    await host.evaluate(() => window.__jjTest.step(6));
+    await host.waitForTimeout(50);
+  }
+  const after1 = { start: beforeJoin, now: await observe(host) };
   assert.equal(after1.now.host.seats.length, 4);
   assert.ok(carOf(after1.now, youC.link.endpointId), 'C has a car');
-  assert.ok(carOf(after1.now, epA).forwardSpeed > 4, 'A undisturbed');
+  assert.equal(carOf(after1.now, epA).car, runningA.car, 'A keeps its own car across the join');
+  assert.equal(carOf(after1.now, epA).input.throttle, 1, 'A keeps its own real controller input');
+  assert.deepEqual(carOf(after1.now, epA).parts.map((p) => [p.state, p.health]), runningA.parts.map((p) => [p.state, p.health]), 'the late join does not damage A');
+  assert.ok(carOf(after1.now, epA).forwardSpeed > 4, `A undisturbed: before ${JSON.stringify(carOf(after1.start, epA))}, after ${JSON.stringify(carOf(after1.now, epA))}`);
+  await host.evaluate(() => window.__jjTest.hold(false));
   await wait(host, () => window.__jjRender.tileRects().length === 4);
   await shot(host, 'tv-1280x720-four-seats');
   if (CAPTURE) {

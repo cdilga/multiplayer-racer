@@ -8,7 +8,6 @@ use super::{BiomeData, BiomeDef};
 use crate::features::Density;
 use crate::lineside::{Anchor, Lineside, Side, SignRule, Trigger, Yaw};
 use crate::scatter::{Algorithm, BITUMEN_RADIUS_M, PieceSpec, Spec, piece};
-use crate::terrain::TerrainParams;
 
 pub struct OutbackBitumen;
 
@@ -64,7 +63,9 @@ const ROAD: &[Lineside] = &[
         offset_m: (2.6, 2.6),
         params: &[],
         yaw: Yaw::Random,
-        avoid_corners: true,
+        // Reflectors mark the highway through bends too. The shared placement
+        // checks still keep them off the road and clear of chevrons/guard rails.
+        avoid_corners: false,
         ..line("outback_bitumen/reflector-post", Side::Both, 0.0)
     },
     // Short runs of the shared W-beam rail at culvert ends: 24 m of rail every 160 m, both sides.
@@ -116,15 +117,7 @@ impl BiomeDef for OutbackBitumen {
             id: Biome::OutbackBitumen,
             road: Surface::Tarmac,
             ground: Surface::OffTrack,
-            terrain: TerrainParams {
-                relief_m: 4.0,
-                ground_relief_m: 4.0,
-                wavelength_m: 220.0,
-                max_grade: 0.035,
-                max_curvature: 0.0015,
-                max_bank_cdeg: 400,
-                blend_m: 24.0,
-            },
+            terrain: crate::tuning::GeneratorData::shipped().terrain(Biome::OutbackBitumen),
             features: Density {
                 jump: 0.5,
                 crest: 2.0,

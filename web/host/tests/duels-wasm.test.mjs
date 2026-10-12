@@ -34,8 +34,8 @@ function world(wasm, fx, mapJson) {
   return { sim, cmd };
 }
 
-/** A car's time to the gate in WASM (null: never reached it, or left the road by more than the gate allows). */
-function gateTime(wasm, fx, mapJson, car, gate) {
+/** Gate tick (null: never reached it, or left the road by more than the gate allows). */
+function gateTick(wasm, fx, mapJson, car, gate) {
   const { sim, cmd } = world(wasm, fx, mapJson);
   const r = cmd({ cmd: 'until', until: { car, metric: gate.metric, min: gate.at }, maxTicks: fx.ticks });
   if (!r.held) {
@@ -47,7 +47,7 @@ function gateTime(wasm, fx, mapJson, car, gate) {
   const sig = cmd({ cmd: 'outcome' }).signature.find((s) => s.car === car) ?? {};
   sim.free();
   if (gate.maxOffsetM !== undefined && (sig.maxRouteOffsetM ?? 0) > gate.maxOffsetM) return null;
-  return r.tick / TICK_HZ;
+  return r.tick;
 }
 
 const matching = (rows, pat) => (pat.endsWith('*') ? rows.filter((r) => r.label.startsWith(pat.slice(0, -1))) : rows.filter((r) => r.label === pat));
@@ -75,16 +75,18 @@ test('duels: WASM holds every ordering and matches the native hashes', { timeout
       const { stateHash } = cmd({ cmd: 'hash' });
       sim.free();
       if (stateHash !== native.get(fx.scenario)?.stateHash) failures.push(`${o.duel}/${file}: native and WASM full-state hashes differ`);
-      for (const p of pairs.filter((q) => q.file === file)) rows.push({ label: p.label, time: gateTime(wasm, fx, mapJson, p.car, o.gate) });
+      for (const p of pairs.filter((q) => q.file === file)) rows.push({ label: p.label, tick: gateTick(wasm, fx, mapJson, p.car, o.gate) });
     }
-    for (const r of rows) table.push(`${o.duel} ${r.label} ${r.time === null ? 'DNF' : r.time.toFixed(2)}`);
+    for (const r of rows) table.push(`${o.duel} ${r.label} ${r.tick === null ? 'DNF' : (r.tick / TICK_HZ).toFixed(2)}`);
     for (const b of o.beats) {
       const [fast, slow] = [matching(rows, b.faster), matching(rows, b.slower)];
       assert.ok(fast.length && slow.length, `${o.duel}: ${JSON.stringify(b)} matches no car`);
       for (const f of fast) {
         for (const s of slow) {
-          const ok = f.time !== null && (s.time === null || s.time - f.time >= b.byS);
-          if (!b.gap && !ok) failures.push(`${o.duel}: ${f.label} (${f.time}) must beat ${s.label} (${s.time}) by ${b.byS} s`);
+          // Compare tick differences before converting to seconds: 5.60 - 5.55
+          // rounds below .05, despite being exactly six ticks at 120 Hz.
+          const ok = f.tick !== null && (s.tick === null || (s.tick >= f.tick && s.tick - f.tick >= b.byS * TICK_HZ));
+          if (!b.gap && !ok) failures.push(`${o.duel}: ${f.label} (${f.tick} ticks) must beat ${s.label} (${s.tick} ticks) by ${b.byS} s`);
           if (b.gap && ok) failures.push(`${o.duel}: the gap closed (${f.label} beats ${s.label}): delete its gap`);
         }
       }

@@ -1,0 +1,750 @@
+{
+  "takenAt": "2026-10-11T22:31:33.528Z",
+  "browser": "WebKit 26.5, darwin/arm64",
+  "preview": "https://jammers-preview.dilger.dev/p/v02-04a9054b/",
+  "cohort": 2,
+  "realWebRTC": true,
+  "frameStepped": true,
+  "damageSetup": true,
+  "recorded": {
+    "ownedBytes": 174490,
+    "highWaterBytes": 174490,
+    "budgetBytes": 67108864,
+    "ringFrames": 273,
+    "oldestRingTick": 1206,
+    "retainedClips": 1,
+    "rejectedIntervals": 0,
+    "evictedClips": 0,
+    "latestTick": 2294,
+    "captureSamples": 279,
+    "captureMeanMs": 0.1039426523297491,
+    "captureMaxMs": 1,
+    "clips": [
+      {
+        "start": 1334,
+        "end": 2054,
+        "events": [
+          {
+            "tick": 1694,
+            "kind": "detach",
+            "actors": [
+              {
+                "seat": 1,
+                "car": 0,
+                "number": 1,
+                "name": "Roo",
+                "rgb": [
+                  229,
+                  50,
+                  45
+                ]
+              }
+            ]
+          },
+          {
+            "tick": 1754,
+            "kind": "detach",
+            "actors": [
+              {
+                "seat": 2,
+                "car": 1,
+                "number": 2,
+                "name": "Gazza",
+                "rgb": [
+                  37,
+                  99,
+                  235
+                ]
+              }
+            ]
+          },
+          {
+            "tick": 1814,
+            "kind": "wreck",
+            "actors": [
+              {
+                "seat": 1,
+                "car": 0,
+                "number": 1,
+                "name": "Roo",
+                "rgb": [
+                  229,
+                  50,
+                  45
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "before": {
+    "reel": {
+      "recorder": {
+        "ownedBytes": 174490,
+        "highWaterBytes": 174490,
+        "budgetBytes": 67108864,
+        "ringFrames": 273,
+        "oldestRingTick": 1206,
+        "retainedClips": 1,
+        "rejectedIntervals": 0,
+        "evictedClips": 0,
+        "latestTick": 2294,
+        "captureSamples": 279,
+        "captureMeanMs": 0.1039426523297491,
+        "captureMaxMs": 1,
+        "clips": [
+          {
+            "start": 1334,
+            "end": 2054,
+            "events": [
+              {
+                "tick": 1694,
+                "kind": "detach",
+                "actors": [
+                  {
+                    "seat": 1,
+                    "car": 0,
+                    "number": 1,
+                    "name": "Roo",
+                    "rgb": [
+                      229,
+                      50,
+                      45
+                    ]
+                  }
+                ]
+              },
+              {
+                "tick": 1754,
+                "kind": "detach",
+                "actors": [
+                  {
+                    "seat": 2,
+                    "car": 1,
+                    "number": 2,
+                    "name": "Gazza",
+                    "rgb": [
+                      37,
+                      99,
+                      235
+                    ]
+                  }
+                ]
+              },
+              {
+                "tick": 1814,
+                "kind": "wreck",
+                "actors": [
+                  {
+                    "seat": 1,
+                    "car": 0,
+                    "number": 1,
+                    "name": "Roo",
+                    "rgb": [
+                      229,
+                      50,
+                      45
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "player": {
+        "state": "playing",
+        "tick": 1388.12,
+        "clip": 0,
+        "drawnFrames": 9,
+        "paused": true,
+        "cars": 2,
+        "label": "{\"tick\":1694,\"kind\":\"detach\",\"actors\":[{\"seat\":1,\"car\":0,\"number\":1,\"name\":\"Roo\",\"rgb\":[229,50,45]}]}",
+        "separateWorld": true
+      }
+    },
+    "room": {
+      "armed": true,
+      "catchUp": true,
+      "freeDrive": false,
+      "laps": 99,
+      "phase": "Intermission",
+      "preparation": {
+        "external": true,
+        "pending": null,
+        "prepared": true,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "rejectedFrames": 0,
+      "remainingMs": 59959,
+      "results": [
+        {
+          "name": "Roo",
+          "number": 1,
+          "place": 1,
+          "points": 25,
+          "time_ms": null
+        },
+        {
+          "name": "Gazza",
+          "number": 2,
+          "place": 2,
+          "points": 18,
+          "time_ms": null
+        }
+      ],
+      "round": 1,
+      "seats": [
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 0,
+          "choosing": false,
+          "colourIndex": 0,
+          "endpoint": "c-88dd58f57a6c",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Roo",
+          "number": 1,
+          "position": 1,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            229,
+            50,
+            45
+          ],
+          "seat": 1,
+          "unpluggedMs": null,
+          "vehicle": null
+        },
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 1,
+          "choosing": false,
+          "colourIndex": 1,
+          "endpoint": "c-033859dfbfae",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Gazza",
+          "number": 2,
+          "position": 2,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            37,
+            99,
+            235
+          ],
+          "seat": 2,
+          "unpluggedMs": null,
+          "vehicle": null
+        }
+      ],
+      "standings": [
+        {
+          "place": 1,
+          "points": 25,
+          "seat": 1,
+          "wins": 1
+        },
+        {
+          "place": 2,
+          "points": 18,
+          "seat": 2,
+          "wins": 0
+        }
+      ],
+      "vehicles": [
+        "cruz-missile",
+        "tradie-ute"
+      ]
+    },
+    "hash": {
+      "stateHash": "cd41d8eca5fee68d8ff55516474cc8fbd0949f7740c54faf62ff2426f1fe0fec",
+      "tick": 2300
+    },
+    "standingsWidth": 597.53125
+  },
+  "hidden": {
+    "reel": {
+      "recorder": {
+        "ownedBytes": 174490,
+        "highWaterBytes": 174490,
+        "budgetBytes": 67108864,
+        "ringFrames": 273,
+        "oldestRingTick": 1206,
+        "retainedClips": 1,
+        "rejectedIntervals": 0,
+        "evictedClips": 0,
+        "latestTick": 2294,
+        "captureSamples": 279,
+        "captureMeanMs": 0.1039426523297491,
+        "captureMaxMs": 1,
+        "clips": [
+          {
+            "start": 1334,
+            "end": 2054,
+            "events": [
+              {
+                "tick": 1694,
+                "kind": "detach",
+                "actors": [
+                  {
+                    "seat": 1,
+                    "car": 0,
+                    "number": 1,
+                    "name": "Roo",
+                    "rgb": [
+                      229,
+                      50,
+                      45
+                    ]
+                  }
+                ]
+              },
+              {
+                "tick": 1754,
+                "kind": "detach",
+                "actors": [
+                  {
+                    "seat": 2,
+                    "car": 1,
+                    "number": 2,
+                    "name": "Gazza",
+                    "rgb": [
+                      37,
+                      99,
+                      235
+                    ]
+                  }
+                ]
+              },
+              {
+                "tick": 1814,
+                "kind": "wreck",
+                "actors": [
+                  {
+                    "seat": 1,
+                    "car": 0,
+                    "number": 1,
+                    "name": "Roo",
+                    "rgb": [
+                      229,
+                      50,
+                      45
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "player": {
+        "state": "hidden",
+        "tick": 1778,
+        "clip": 0,
+        "drawnFrames": 156,
+        "paused": false,
+        "cars": 0,
+        "label": "",
+        "separateWorld": true
+      }
+    },
+    "room": {
+      "armed": true,
+      "catchUp": true,
+      "freeDrive": false,
+      "laps": 99,
+      "phase": "Intermission",
+      "preparation": {
+        "external": true,
+        "pending": null,
+        "prepared": true,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "rejectedFrames": 0,
+      "remainingMs": 59959,
+      "results": [
+        {
+          "name": "Roo",
+          "number": 1,
+          "place": 1,
+          "points": 25,
+          "time_ms": null
+        },
+        {
+          "name": "Gazza",
+          "number": 2,
+          "place": 2,
+          "points": 18,
+          "time_ms": null
+        }
+      ],
+      "round": 1,
+      "seats": [
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 0,
+          "choosing": false,
+          "colourIndex": 0,
+          "endpoint": "c-88dd58f57a6c",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Roo",
+          "number": 1,
+          "position": 1,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            229,
+            50,
+            45
+          ],
+          "seat": 1,
+          "unpluggedMs": null,
+          "vehicle": null
+        },
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 1,
+          "choosing": false,
+          "colourIndex": 1,
+          "endpoint": "c-033859dfbfae",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Gazza",
+          "number": 2,
+          "position": 2,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            37,
+            99,
+            235
+          ],
+          "seat": 2,
+          "unpluggedMs": null,
+          "vehicle": null
+        }
+      ],
+      "standings": [
+        {
+          "place": 1,
+          "points": 25,
+          "seat": 1,
+          "wins": 1
+        },
+        {
+          "place": 2,
+          "points": 18,
+          "seat": 2,
+          "wins": 0
+        }
+      ],
+      "vehicles": [
+        "cruz-missile",
+        "tradie-ute"
+      ]
+    },
+    "hash": {
+      "stateHash": "cd41d8eca5fee68d8ff55516474cc8fbd0949f7740c54faf62ff2426f1fe0fec",
+      "tick": 2300
+    },
+    "width": 1312.25
+  },
+  "next": {
+    "room": {
+      "armed": true,
+      "catchUp": true,
+      "freeDrive": false,
+      "laps": 99,
+      "phase": "Running",
+      "preparation": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "rejectedFrames": 0,
+      "remainingMs": null,
+      "results": [
+        {
+          "name": "Roo",
+          "number": 1,
+          "place": 1,
+          "points": 25,
+          "time_ms": null
+        },
+        {
+          "name": "Gazza",
+          "number": 2,
+          "place": 2,
+          "points": 18,
+          "time_ms": null
+        }
+      ],
+      "round": 2,
+      "seats": [
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 0,
+          "choosing": false,
+          "colourIndex": 0,
+          "endpoint": "c-88dd58f57a6c",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Roo",
+          "number": 1,
+          "position": 2,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            229,
+            50,
+            45
+          ],
+          "seat": 1,
+          "unpluggedMs": null,
+          "vehicle": null
+        },
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 1,
+          "choosing": false,
+          "colourIndex": 1,
+          "endpoint": "c-033859dfbfae",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Gazza",
+          "number": 2,
+          "position": 1,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            37,
+            99,
+            235
+          ],
+          "seat": 2,
+          "unpluggedMs": null,
+          "vehicle": null
+        }
+      ],
+      "standings": [
+        {
+          "place": 1,
+          "points": 25,
+          "seat": 1,
+          "wins": 1
+        },
+        {
+          "place": 2,
+          "points": 18,
+          "seat": 2,
+          "wins": 0
+        }
+      ],
+      "vehicles": [
+        "cruz-missile",
+        "tradie-ute"
+      ]
+    },
+    "reel": {
+      "recorder": {
+        "ownedBytes": 40630,
+        "highWaterBytes": 40630,
+        "budgetBytes": 67108864,
+        "ringFrames": 0,
+        "oldestRingTick": null,
+        "retainedClips": 0,
+        "rejectedIntervals": 0,
+        "evictedClips": 0,
+        "latestTick": null,
+        "captureSamples": 0,
+        "captureMeanMs": 0,
+        "captureMaxMs": 0,
+        "clips": []
+      },
+      "player": {
+        "state": "idle",
+        "tick": 1778,
+        "clip": 0,
+        "drawnFrames": 156,
+        "paused": false,
+        "cars": 0,
+        "label": "",
+        "separateWorld": true
+      }
+    }
+  },
+  "progression": {
+    "stepped": 7800,
+    "room": {
+      "armed": true,
+      "catchUp": true,
+      "freeDrive": false,
+      "laps": 99,
+      "phase": "Running",
+      "preparation": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "rejectedFrames": 0,
+      "remainingMs": null,
+      "results": [
+        {
+          "name": "Roo",
+          "number": 1,
+          "place": 1,
+          "points": 25,
+          "time_ms": null
+        },
+        {
+          "name": "Gazza",
+          "number": 2,
+          "place": 2,
+          "points": 18,
+          "time_ms": null
+        }
+      ],
+      "round": 2,
+      "seats": [
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 0,
+          "choosing": false,
+          "colourIndex": 0,
+          "endpoint": "c-88dd58f57a6c",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Roo",
+          "number": 1,
+          "position": 2,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            229,
+            50,
+            45
+          ],
+          "seat": 1,
+          "unpluggedMs": null,
+          "vehicle": null
+        },
+        {
+          "assist": 0,
+          "boost": 255,
+          "car": 1,
+          "choosing": false,
+          "colourIndex": 1,
+          "endpoint": "c-033859dfbfae",
+          "finished": false,
+          "inventory": {
+            "back": null,
+            "front": null
+          },
+          "laps": 0,
+          "local": false,
+          "localSource": null,
+          "name": "Gazza",
+          "number": 2,
+          "position": 1,
+          "presence": "Active",
+          "prompt": null,
+          "ready": false,
+          "rgb": [
+            37,
+            99,
+            235
+          ],
+          "seat": 2,
+          "unpluggedMs": null,
+          "vehicle": null
+        }
+      ],
+      "standings": [
+        {
+          "place": 1,
+          "points": 25,
+          "seat": 1,
+          "wins": 1
+        },
+        {
+          "place": 2,
+          "points": 18,
+          "seat": 2,
+          "wins": 0
+        }
+      ],
+      "vehicles": [
+        "cruz-missile",
+        "tradie-ute"
+      ]
+    }
+  }
+}

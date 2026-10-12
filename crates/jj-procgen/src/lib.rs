@@ -15,19 +15,23 @@
 
 #![forbid(unsafe_code)]
 
+pub mod arena;
 pub mod assemble;
 pub mod biome;
 pub mod course;
+pub mod crossings;
 pub mod features;
 pub mod lineside;
 pub mod playtest;
+pub mod roofs;
 pub mod scatter;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
+pub mod tuning;
 pub mod validate;
 
-pub use validate::{Plan, Prepared, prepare, prepare_with};
+pub use validate::{Plan, Prepared, prepare, prepare_tuned, prepare_with};
 
 use std::collections::BTreeMap;
 
@@ -39,13 +43,17 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "7";
+pub const GENERATOR_VERSION: &str = "18";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
 #[derive(Clone, Debug)]
 pub struct Report {
     pub length_m: f64,
+    /// The seed's length class (R125).
+    pub class: tuning::ClassName,
+    pub preset: tuning::PresetName,
+    pub straights_m: Vec<f64>,
     pub attempts: u32,
     pub fallback: bool,
     pub corners: BTreeMap<&'static str, u32>,
@@ -75,12 +83,26 @@ pub fn generate_recipe(seed: u64, recipe: &[Biome]) -> Result<(Map, Report), bio
 /// [`generate_recipe`] from explicit streams. The pipeline: course, biome selection, assembly (route surfaces by biome),
 /// terrain, features, the shared wayfinding family, then each biome's scatter.
 pub fn generate_recipe_from(
-    mut st: Streams,
+    st: Streams,
     recipe: &[Biome],
 ) -> Result<(Map, Report), biome::SelectError> {
-    let course = course::design(&mut st.structure);
+    generate_tuned_from(st, recipe, tuning::GeneratorData::shipped())
+}
+
+/// [`generate_recipe_from`] with explicit generator data (the owner tuning menu's regenerate): the course's length band
+/// and straights, each biome's terrain and feature mix. With the shipped data this is the untuned generator.
+pub fn generate_tuned_from(
+    mut st: Streams,
+    recipe: &[Biome],
+    data: &tuning::GeneratorData,
+) -> Result<(Map, Report), biome::SelectError> {
+    let course = course::design_with(&mut st.structure, &data.course);
     let centerline = centred(&resample(&course.points));
-    let sel = biome::select(&centerline, recipe, &mut st.structure)?;
+    let sel = if course.crossing.is_some() {
+        biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
+    } else {
+        biome::select(&centerline, recipe, &mut st.structure)?
+    };
     let props = placeholder_props(&mut st, &centerline);
     let n = centerline.len();
     let blend: Vec<(Biome, Biome, f64)> = (0..n).map(|i| sel.blend_at(i)).collect();
@@ -103,9 +125,12 @@ pub fn generate_recipe_from(
     });
     let along: Vec<terrain::TerrainParams> = blend
         .iter()
-        .map(|&(a, b, t)| terrain::params(a).lerp(&terrain::params(b), t))
+        .map(|&(a, b, t)| data.terrain(a).lerp(&data.terrain(b), t))
         .collect();
-    terrain::undulate_along(&mut map, &mut st.terrain, &along);
+    terrain::undulate_along_crossing(&mut map, &mut st.terrain, &along, course.crossing);
+    if course.crossing.is_some() {
+        crossings::place(&mut map, &course, &data.course.crossing);
+    }
     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
     let ranges: Vec<(f64, f64, features::Density)> = sel
         .segments()
@@ -122,10 +147,11 @@ pub fn generate_recipe_from(
             } else {
                 sel.total
             };
-            (lo, hi, features::density(b))
+            (lo, hi, data.density(b))
         })
         .collect();
-    features::place_in(&mut map, &mut st.features, &ranges);
+    let ranges = crossings::feature_ranges(&map, &ranges);
+    features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
     biome::wayfinding::place(&mut map);
     let registry = biome::registry();
     // Each biome's rules along its own stretches (houses facing the street, lane lines, signs...), before the scatter fills
@@ -168,6 +194,23 @@ pub fn generate_recipe_from(
         );
     }
     map.route.segments = sel.route_segments();
+    // Last: check the complete street/scatter before adding stunt lots. Canonicalisation rebases
+    // their dressing references; no earlier placement pass may fill the approach afterwards.
+    crossings::clear_corridors(&mut map, &registry);
+    // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
+    // out of the same crossing envelopes as ordinary features.
+    let eligible: Vec<bool> = sel
+        .s
+        .iter()
+        .map(|s| ranges.iter().any(|(a, b, _)| s >= a && s <= b))
+        .collect();
+    roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
+        if course.crossing.is_none() || eligible[i] {
+            sel.weight(Biome::Town, i)
+        } else {
+            0.0
+        }
+    });
     Ok((map, report(&course)))
 }
 
@@ -184,6 +227,9 @@ fn report(course: &Course) -> Report {
     }
     Report {
         length_m: course.length_m,
+        class: course.class,
+        preset: course.preset,
+        straights_m: course.straights.clone(),
         attempts: course.attempts,
         fallback: course.fallback,
         corners,

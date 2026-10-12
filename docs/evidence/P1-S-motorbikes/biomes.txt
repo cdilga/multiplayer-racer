@@ -1,0 +1,22 @@
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 5.28s
+     Running tests/bikes.rs (target/aarch64-apple-darwin/release/deps/bikes-e7e478bec46e49cb)
+
+running 1 test
+Town seed 0: tick 19027, minUp 0.9988444, recoveries 0, wrecks 0
+Town seed 1: tick 19937, minUp 0.99868846, recoveries 0, wrecks 0
+Town seed 2: tick 10420, minUp 0.99806327, recoveries 0, wrecks 0
+Rocks seed 0: tick 19739, minUp 0.95771813, recoveries 0, wrecks 0
+Rocks seed 1: tick 20643, minUp 0.97002494, recoveries 0, wrecks 0
+Rocks seed 2: tick 10800, minUp 0.97270614, recoveries 0, wrecks 0
+OutbackDirt seed 0: tick 19807, minUp 0.962307, recoveries 0, wrecks 0
+OutbackDirt seed 1: tick 20597, minUp 0.97057164, recoveries 0, wrecks 0
+OutbackDirt seed 2: tick 10845, minUp 0.96530634, recoveries 0, wrecks 0
+OutbackBitumen seed 0: tick 19436, minUp 0.9756882, recoveries 0, wrecks 0
+OutbackBitumen seed 1: tick 21509, minUp 0.94984204, recoveries 0, wrecks 0
+OutbackBitumen seed 2: tick 10460, minUp 0.97512174, recoveries 0, wrecks 0
+test bike_laps_every_generated_biome_upright_and_replays ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.81s
+

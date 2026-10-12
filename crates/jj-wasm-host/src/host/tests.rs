@@ -4,7 +4,7 @@
 use jj_map::{Registry, load_json};
 use jj_protocol::PROTOCOL_VERSION;
 use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimToMain, UiCommand};
-use jj_protocol::cmd::{ControllerCmd, HostCmd};
+use jj_protocol::cmd::{ControllerCmd, HostCmd, InputThresholds};
 use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
 use jj_types::{BuildId, CommandId, EndpointId, LocalSourceId, RequestId, SourceHandle};
 
@@ -12,6 +12,101 @@ use super::*;
 
 const GREYBOX: &str = include_str!("../../../../maps/greybox-loop.json");
 const MS: u64 = 1000;
+
+#[test]
+fn snapshot_transfers_compliant_rails_by_map_dressing_index() {
+    let map = load_json(
+        include_bytes!("../../../../scenarios/rails/yard.json"),
+        &jj_procgen::registry(),
+    )
+    .unwrap();
+    let mut h = Host::new(
+        &MainToSim::Init {
+            abi_version: ABI_VERSION,
+            rules_hash: [0; 32],
+            map_bytes: map.canonical,
+            vehicle_sidecars: vec![],
+            seed: 91,
+        }
+        .encode(),
+    )
+    .unwrap();
+    assert!(h.sim.set_rail(0, 0.25, 0.0));
+    let mut buf = vec![0; h.snapshot_size()];
+    assert_eq!(h.write_snapshot(&mut buf), buf.len());
+    assert_eq!(
+        u16::from_le_bytes(buf[6..8].try_into().unwrap()),
+        1,
+        "rail trailer flag"
+    );
+    let at = SNAPSHOT_HEADER;
+    assert_eq!(
+        u32::from_le_bytes(buf[at..at + 4].try_into().unwrap()),
+        1,
+        "all rail sections"
+    );
+    assert_eq!(
+        u32::from_le_bytes(buf[at + 4..at + 8].try_into().unwrap()),
+        0,
+        "dressing index"
+    );
+    assert_eq!(
+        f32::from_le_bytes(buf[at + 8..at + 12].try_into().unwrap()),
+        0.25,
+        "physical displacement"
+    );
+    assert_eq!(
+        h.write_snapshot(&mut buf[..SNAPSHOT_HEADER]),
+        0,
+        "never truncate entities to fit a buffer"
+    );
+}
+
+#[test]
+fn race_classification_preserves_crossing_fraction_progress_and_exact_ties() {
+    use jj_session::results::{RoundFacts, Ruleset, classify};
+    use jj_types::{RoundId, SeatId};
+    let mut h = driving_host();
+    h.sim.spawn_grid_as(&[0]);
+    let base = h.sim.race().car(0).unwrap().clone();
+    let mut states = vec![base; 5];
+    for (i, state) in states.iter_mut().enumerate() {
+        state.best_progress_mm = 123_456;
+        state.best_progress_tick = if i == 3 { 80 } else { 90 };
+        if i < 3 {
+            state.finished_at = Some(100);
+            state.finish_fraction = if i < 2 { 10_000 } else { 20_000 };
+        }
+    }
+    let entrants = states
+        .iter()
+        .enumerate()
+        .map(|(i, state)| super::round::entrant_from_race(SeatId(i as u32 + 1), Some(state), false))
+        .collect::<Vec<_>>();
+    assert_eq!(entrants[0].finish.unwrap().fraction, 10_000);
+    assert_eq!(entrants[3].progress_mm, 123_456);
+    assert_eq!(entrants[3].progress_tick, 80);
+    let result = classify(&RoundFacts {
+        round: RoundId(1),
+        ruleset: Ruleset::default(),
+        entrants,
+    })
+    .unwrap();
+    assert_eq!(
+        result
+            .rows
+            .iter()
+            .map(|r| r.place.unwrap())
+            .collect::<Vec<_>>(),
+        vec![1, 1, 3, 4, 5]
+    );
+    assert_eq!(
+        result.rows[0].points, result.rows[1].points,
+        "exact finish ties share points"
+    );
+    let missing = super::round::entrant_from_race(SeatId(6), None, true);
+    assert!(!missing.entered && missing.withdrawn && missing.late);
+}
 
 /// A host in G04's free drive, where a claimed seat drives at once: the driving-mechanics tests run there. The round
 /// loop's own tests (G01) start from `Host::new` with the real Lobby, which holds every car.
@@ -99,6 +194,172 @@ fn pad_script() -> Vec<(u64, Vec<u8>)> {
         s.push((t, local(1, drive)));
     }
     s
+}
+
+/// The owner tuning menu (br-2sdu.1): a tuning change is a journalled UI command applied at a tick boundary, so it
+/// changes the run, the same script replays bit for bit, and a bad field is refused without touching the car.
+#[test]
+fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
+    let tune = |field: &str, value: &str| {
+        MainToSim::Ui {
+            command: CommandId(7),
+            ui: UiCommand::SetTuning {
+                field: field.into(),
+                value: value.into(),
+            },
+        }
+        .encode()
+    };
+    let plain = pad_script();
+    let mut tuned = pad_script();
+    tuned.push((60, tune("max_engine_force", "14000")));
+    let a = run(16_667, 720, &tuned);
+    let b = run(16_667, 720, &tuned);
+    assert_eq!(a, b, "the tuned run replays bit for bit");
+    assert_ne!(
+        a.1,
+        run(16_667, 720, &plain).1,
+        "and the tuning changed the run"
+    );
+
+    let mut h = driving_host();
+    h.schedule(5, &tune("max_engine_force", "9000")).unwrap();
+    h.schedule(6, &tune("no_such_field", "1")).unwrap();
+    h.stop_at(10);
+    let mut now = 0;
+    while h.tick() < 10 {
+        h.advance(now);
+        now += 16_667;
+    }
+    assert_eq!(
+        h.sim.profile().tuning.max_engine_force,
+        9000.0,
+        "the sim drives with the new value"
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        shown["tuning"]["max_engine_force"], 9000.0,
+        "the menu reads it back"
+    );
+    assert!(
+        shown["error"]
+            .as_str()
+            .unwrap_or("")
+            .contains("no_such_field"),
+        "a bad field is refused: {shown}"
+    );
+}
+
+/// The owner tuning menu part 2 (br-2sdu.2): an input-profile change is a journalled UI command; the host reads its
+/// seats' sticks with it at once, every connected controller is sent the whole profile, one that joins later is sent it
+/// after its Welcome, a refused value changes nothing, and the same script replays bit for bit.
+#[test]
+fn an_input_profile_change_reaches_the_host_and_every_controller() {
+    let tune = |field: &str, value: &str| {
+        MainToSim::Ui {
+            command: CommandId(8),
+            ui: UiCommand::SetTuning {
+                field: field.into(),
+                value: value.into(),
+            },
+        }
+        .encode()
+    };
+    let join = |ep: &str| {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(ep.into()),
+            resume: Some(format!("secret-{ep}")),
+        };
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        };
+        [
+            net(ep, Channel::Cmd, hello.encode()),
+            net(ep, Channel::Cmd, claim.encode()),
+        ]
+    };
+    let mut h = driving_host();
+    for m in join("early") {
+        h.schedule(0, &m).unwrap();
+    }
+    h.schedule(30, &tune("input.drift.enterDeflection", "0.8"))
+        .unwrap();
+    h.schedule(31, &tune("input.drift.enterAngleDeg", "65"))
+        .unwrap();
+    // exitDeflection must stay under the entry deflection: refused, nothing changes.
+    h.schedule(32, &tune("input.drift.exitDeflection", "0.99"))
+        .unwrap();
+    for m in join("late") {
+        h.schedule(60, &m).unwrap();
+    }
+    h.stop_at(120);
+    let mut now = 0;
+    let mut got: std::collections::BTreeMap<String, Vec<InputThresholds>> = Default::default();
+    let mut welcomed = std::collections::BTreeSet::new();
+    while h.tick() < 120 {
+        h.advance(now);
+        now += 16_667;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes,
+            } = m
+            {
+                match HostCmd::decode(&bytes) {
+                    Ok(HostCmd::Welcome { .. }) => {
+                        welcomed.insert(endpoint.0.clone());
+                    }
+                    Ok(HostCmd::InputProfile(w)) => {
+                        assert!(
+                            welcomed.contains(&endpoint.0),
+                            "the profile follows the Welcome"
+                        );
+                        got.entry(endpoint.0).or_default().push(w);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    let early = &got["early"];
+    assert_eq!(early.len(), 2, "one message per accepted change: {early:?}");
+    assert_eq!(early[0].drift_enter_deflection, 8000);
+    assert_eq!(early[1].drift_enter_angle, 6500);
+    assert_eq!(early[1].drift_enter_deflection, 8000, "the whole profile");
+    assert_eq!(
+        got["late"],
+        vec![early[1]],
+        "a later joiner gets the tuned profile"
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(shown["input"]["drift"]["enterDeflection"], 0.8);
+    assert!(
+        shown["error"]
+            .as_str()
+            .unwrap_or("")
+            .contains("exitDeflection"),
+        "a value the validator refuses is shown: {shown}"
+    );
+    // Replays bit for bit, and the host's own reading of a drift push changes with the threshold.
+    let drift_push = |extra: &[(u64, Vec<u8>)]| {
+        let mut s = Vec::new();
+        for t in (0..300u64).step_by(6) {
+            s.push((t, local(7, [26_000, 6_000])));
+        }
+        s.extend_from_slice(extra);
+        run(16_667, 300, &s)
+    };
+    let tuned = [(2u64, tune("input.drift.enterDeflection", "0.8"))];
+    assert_eq!(drift_push(&tuned), drift_push(&tuned), "replays");
+    assert_ne!(
+        drift_push(&tuned).1,
+        drift_push(&[]).1,
+        "and the threshold changed the run"
+    );
 }
 
 #[test]
@@ -355,6 +616,44 @@ fn a_fault_stops_the_sim() {
 }
 
 #[test]
+fn replay_air_flag_uses_suspension_contacts_instead_of_terrain_height() {
+    let mut h = driving_host();
+    h.sim.spawn_grid_as(&[0]);
+    for _ in 0..120 {
+        h.sim.step();
+    }
+    let read = |h: &Host| {
+        let mut buf = vec![0; h.snapshot_size()];
+        h.write_snapshot(&mut buf);
+        u32::from_le_bytes(
+            buf[SNAPSHOT_HEADER + 52..SNAPSHOT_HEADER + 56]
+                .try_into()
+                .unwrap(),
+        ) & 256
+    };
+    assert!(h.sim.car_state(CarId(0)).unwrap().wheels_in_contact > 0);
+    assert_eq!(read(&h), 0, "a grounded car is not an air highlight");
+    h.sim.place_car(
+        CarId(0),
+        jj_sim::SpawnPose {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+            heading: 0.0,
+        },
+        0.0,
+        [0.0; 3],
+    );
+    h.sim.step();
+    assert_eq!(h.sim.car_state(CarId(0)).unwrap().wheels_in_contact, 0);
+    assert_eq!(
+        read(&h),
+        256,
+        "an actual flight is marked for the presentation recorder"
+    );
+}
+
+#[test]
 fn snapshots_carry_cars_and_skip_when_the_buffer_is_short() {
     let mut h = driving_host();
     h.handle(&local(1, [0, 20_000])).unwrap();
@@ -451,7 +750,7 @@ fn loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_even
 
 #[test]
 fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event() {
-    // P1-S04c through the real host path: two detached wheels wreck the car. Main gets Wrecked (with the wheel's cause);
+    // P1-S04c through the real host path: detached wheels wreck the car once R121's grace runs out. Main gets Wrecked (with the wheel's cause);
     // the snapshot has the husk (part 255) and the ten parts as pieces (state 3: they belong to a car that has since been
     // rebuilt), the debris list keeps their slots (kind 2), and the respawned car's parts are all intact.
     use jj_protocol::abi::SimEvent;
@@ -464,7 +763,8 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     }
     h.sim.set_part_health(CarId(0), 7, 0.0);
     h.sim.set_part_health(CarId(0), 10, 0.0);
-    for _ in 0..30 {
+    let grace = (h.sim.profile().tuning.damage.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
+    for _ in 0..grace + 30 {
         h.advance(now);
         now += 8_334;
     }
@@ -565,6 +865,96 @@ fn boost_then_drift_classic() {
         h.sim()
             .applied_input(CarId(0))
             .is_some_and(|i| i.drift && !i.boost)
+    );
+}
+
+/// P1-C13 (R119): a source on a shared connection that says it is unplugged keeps getting its 20 Hz refresh sent with the
+/// others, so it is never silent; it still goes to the autopilot after DROPOUT_MS, the seat is held (and says for how long),
+/// and plugging back in and pressing takes the car back.
+#[test]
+fn an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_and_is_held() {
+    let mut h = driving_host();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("laptop".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Pad".into(),
+        },
+    ] {
+        h.schedule(0, &net("laptop", Channel::Cmd, c.encode()))
+            .unwrap();
+    }
+    let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
+    // Throttle until 1 s, unplugged (refreshes keep coming, flagged unavailable) from 1 s to 5 s, plugged and pressed after.
+    for (k, t) in (0..ms(7_000)).step_by(3).enumerate() {
+        let (drive, flags) = if t < ms(1_000) || t >= ms(5_000) {
+            ([0, 32_767], StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH)
+        } else {
+            ([0, 0], 0)
+        };
+        let batch = StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: k as u16 + 1,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(1),
+                seq: k as u16 + 1,
+                drive,
+                action: [0, 0],
+                flags: StateFlags(flags),
+            }],
+        };
+        h.schedule(t, &net("laptop", Channel::State, batch.encode().unwrap()))
+            .unwrap();
+    }
+    let unplugged = |h: &Host| {
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"][0]["unpluggedMs"].as_u64()
+    };
+    while h.tick() < ms(900) {
+        h.step_one();
+    }
+    assert!(!h.sim().has_autopilot(CarId(0)) && unplugged(&h).is_none());
+    while h.tick() < ms(2_500) {
+        h.step_one();
+    }
+    assert!(
+        !h.sim().has_autopilot(CarId(0)),
+        "not yet: the dropout time has not passed"
+    );
+    assert!(
+        unplugged(&h).is_some_and(|u| (1_300..=1_700).contains(&u)),
+        "{:?}",
+        unplugged(&h)
+    );
+    while h.tick() < ms(4_500) {
+        h.step_one();
+    }
+    assert!(
+        h.sim().has_autopilot(CarId(0)),
+        "autopilot after DROPOUT_MS though the stream never went quiet"
+    );
+    assert!(
+        unplugged(&h).is_some_and(|u| u >= 3_300),
+        "held and counting: {:?}",
+        unplugged(&h)
+    );
+    assert_eq!(h.seats.seats().count(), 1, "the seat is held");
+    while h.tick() < ms(6_500) {
+        h.step_one();
+    }
+    assert!(unplugged(&h).is_none(), "plugged in again");
+    assert!(
+        !h.sim().has_autopilot(CarId(0))
+            || matches!(
+                h.sim().autopilot_state(CarId(0)).map(|a| a.mode),
+                Some(jj_sim::autopilot::Mode::Handback)
+            ),
+        "the press took the car back"
     );
 }
 
@@ -738,6 +1128,24 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
         }
     }
     assert_eq!(seats_at(&h), 2);
+    // R119: the room view says how long the unplugged seat has been unplugged (and nothing else is).
+    let unplugged: Vec<Option<u64>> = serde_json::from_str::<serde_json::Value>(&h.room_json())
+        .unwrap()["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["unpluggedMs"].as_u64())
+        .collect();
+    assert_eq!(
+        unplugged.iter().filter(|u| u.is_some()).count(),
+        1,
+        "only the unplugged pad: {unplugged:?}"
+    );
+    let held_for = unplugged.iter().flatten().next().copied().unwrap();
+    assert!(
+        (2_700..=2_900).contains(&held_for),
+        "unplugged for about 2.8 s: {held_for}"
+    );
     let at = autopiloted_at.expect("the unplugged pad's car went to the autopilot");
     assert!(
         at > ms(2_000) + ms(DROPOUT_MS) - 6 && at <= ms(2_000) + ms(DROPOUT_MS) + 2,
@@ -755,6 +1163,14 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
         matches!(back, None | Some(Some(jj_sim::autopilot::Mode::Handback))),
         "fresh input took it back: {back:?}"
     );
+    assert!(
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|s| s["unpluggedMs"].is_null()),
+        "plugged again: nothing is unplugged"
+    );
 }
 
 #[test]
@@ -766,7 +1182,7 @@ fn a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat() {
     let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
     h.schedule(0, &pad(4, [0, 20_000], 0)).unwrap();
     h.schedule(0, &pad(9, [0, 20_000], 0)).unwrap();
-    // Past the seat reducer's 3 s Identify limit (joining auto-flashes).
+    // Past the seat reducer's Identify limit (joining auto-flashes).
     h.schedule(ms(3_500), &pad(4, [0, 0], LOCAL_IDENTIFY))
         .unwrap();
     h.schedule(ms(3_600), &pad(4, [0, 0], 0)).unwrap();
@@ -948,6 +1364,167 @@ fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the
         u32::from_le_bytes(buf[at..at + 4].try_into().unwrap()),
         1,
         "the cone's debris record says cone"
+    );
+}
+
+#[test]
+fn item_inventory_events_and_use_refusals_follow_only_their_hub_source() {
+    use jj_protocol::cmd::{ActionOutcome, ActionRejection};
+    use jj_protocol::items::{Inventory, ItemEventKind, ItemId, ItemUseRefusal};
+    let mut h = Host::new(&init()).unwrap();
+    let send = |h: &mut Host, cmd: ControllerCmd| {
+        h.handle(&net("hub-items", Channel::Cmd, cmd.encode()))
+            .unwrap();
+    };
+    let wrapped = |source, cmd| ControllerCmd::ForSource {
+        source: SourceHandle(source),
+        cmd: Box::new(cmd),
+    };
+    send(
+        &mut h,
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("hub-items".into()),
+            resume: None,
+        },
+    );
+    for source in [7, 9] {
+        send(
+            &mut h,
+            wrapped(
+                source,
+                ControllerCmd::Claim {
+                    request: RequestId(source.into()),
+                    name: format!("Pad {source}"),
+                },
+            ),
+        );
+    }
+    h.step_one();
+    for source in [7, 9] {
+        send(&mut h, wrapped(source, ControllerCmd::Ready { on: true }));
+    }
+    for _ in 0..1200 {
+        h.step_one();
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    for _ in 0..240 {
+        h.step_one();
+    }
+    let seat = h
+        .seats
+        .seats()
+        .find(|s| s.source == SourceHandle(7))
+        .unwrap()
+        .id;
+    let car = h.inputs[&seat].car.unwrap();
+    assert!(!h.sim.is_protected(car));
+    while h.next_message().is_some() {}
+    h.sim.pickup_item(car, seat, ItemId::Boomerang).unwrap();
+    h.sim.pickup_item(car, seat, ItemId::Sanga).unwrap();
+    assert_eq!(
+        h.sim.pickup_item(car, seat, ItemId::Boomerang),
+        Err(jj_sim::items::PickupRefusal::Full)
+    );
+    h.step_one();
+    let drain = |h: &mut Host| {
+        let mut cmds = Vec::new();
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                channel: Channel::Cmd,
+                bytes,
+                endpoint,
+            } = m
+                && let Ok(HostCmd::ForSource { source, cmd }) = HostCmd::decode(&bytes)
+            {
+                assert_eq!(endpoint.0, "hub-items");
+                cmds.push((source, *cmd));
+            }
+        }
+        cmds
+    };
+    let picked = drain(&mut h);
+    let held = Inventory {
+        front: Some(ItemId::Boomerang),
+        back: Some(ItemId::Sanga),
+    };
+    assert!(
+        picked
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7) && *cmd == HostCmd::Inventory(held))
+    );
+    let events = picked
+        .iter()
+        .filter_map(|(source, cmd)| match cmd {
+            HostCmd::ItemEvent(e) => {
+                assert_eq!(*source, SourceHandle(7));
+                assert_eq!(e.owner, seat);
+                Some(*e)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        events.len(),
+        2,
+        "a refused third box creates no pickup event"
+    );
+    assert_eq!(
+        (events[0].item, events[1].item),
+        (ItemId::Boomerang, ItemId::Sanga)
+    );
+    assert!(events.iter().all(|e| e.kind == ItemEventKind::Picked));
+    let action = wrapped(
+        7,
+        ControllerCmd::Action {
+            action: ActionId(50),
+            source: SourceHandle(7),
+            kind: ActionKind::UtilityRear,
+            round: jj_types::RoundId(0),
+            life: jj_types::LifeId(0),
+            at_source_seq: 1,
+        },
+    );
+    send(&mut h, action.clone());
+    h.step_one();
+    let refused = drain(&mut h);
+    assert!(
+        refused
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7)
+                && *cmd
+                    == HostCmd::ActionResult {
+                        action: ActionId(50),
+                        outcome: ActionOutcome::Rejected {
+                            reason: ActionRejection::Item {
+                                reason: ItemUseRefusal::Unavailable
+                            },
+                        },
+                    })
+    );
+    assert_eq!(h.inventory_for(seat), held);
+    assert!(
+        h.sim.utility_events().is_empty(),
+        "no cone is substituted for the held item"
+    );
+    send(&mut h, action);
+    h.step_one();
+    assert_eq!(
+        h.sim.item_refusals().len(),
+        1,
+        "resent action is not applied twice"
+    );
+    assert!(h.sim.end_race_now());
+    h.step_one();
+    assert!(
+        drain(&mut h)
+            .iter()
+            .any(|(source, cmd)| *source == SourceHandle(7)
+                && *cmd == HostCmd::Inventory(Inventory::default()))
     );
 }
 
@@ -1190,6 +1767,74 @@ fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_race
         "every racer is placed"
     );
     assert_eq!(room["standings"].as_array().unwrap().len(), 4);
+}
+
+/// Owner playtest 1 (br-gw74.1): Identify answers every press after a round starts. Each round builds a new sim whose
+/// tick restarts at 0; the seats keep their own clock, so a long Lobby doesn't freeze the Identify limit in the race.
+#[test]
+fn identify_answers_every_press_after_a_long_lobby_and_a_round_start() {
+    let mut h = Host::new(&init()).unwrap();
+    for (k, p) in ["p1", "p2"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    }
+    let mut now = 0u64;
+    let mut flashes = 0usize;
+    let mut step = |h: &mut Host, ticks: u64, flashes: &mut usize| {
+        for _ in 0..ticks {
+            h.advance(now);
+            now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Events { batch } = m {
+                    *flashes += batch
+                        .iter()
+                        .filter(|e| matches!(e, SimEvent::Identify { .. }))
+                        .count();
+                }
+            }
+        }
+    };
+    // A long Lobby (60 s): the sim ticks far ahead of where the round's new world will start.
+    step(&mut h, 120 * 60, &mut flashes);
+    for p in ["p1", "p2"] {
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        step(&mut h, 60, &mut flashes);
+        guard += 1;
+        assert!(guard < 600, "the round starts on its own");
+    }
+    step(&mut h, 240, &mut flashes);
+    for press in 1..=3 {
+        let before = flashes;
+        h.handle(&net("p1", Channel::Cmd, ControllerCmd::Identify.encode()))
+            .unwrap();
+        step(&mut h, 30, &mut flashes);
+        assert!(
+            flashes > before,
+            "press {press} in the race flashed (sim tick {})",
+            h.tick()
+        );
+        step(&mut h, 2 * 120, &mut flashes); // 2 s between presses
+    }
 }
 
 /// P1-M08a (host side): with main preparing maps, the director's request becomes a `PrepareRequested` event with the
@@ -2280,6 +2925,126 @@ fn a_camera_distance_choice_is_an_event_for_that_seat() {
     )));
 }
 
+/// R125 (br-2mxa): the phone's assist level reaches the seat's car in the sim and the room view (the L-plate), and
+/// catch-up is on for everyone by default.
+#[test]
+fn the_seats_assist_level_reaches_its_car_and_the_room_view() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&phone(c)).unwrap();
+    }
+    let mut now = 0;
+    let mut pump = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    let assist_in_view = |h: &Host| -> serde_json::Value {
+        let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        v["seats"][0]["assist"].clone()
+    };
+    pump(&mut h, 20);
+    assert_eq!(assist_in_view(&h), 0, "a new seat has no help");
+    assert_eq!(
+        h.round.catch_up,
+        jj_sim::assist::CatchUp::Light,
+        "the lobby defaults to Light"
+    );
+    assert_eq!(
+        h.sim.catch_up(),
+        jj_sim::assist::CatchUp::Off,
+        "free drive keeps its own rules"
+    );
+    for (level, want, sim_level) in [
+        (
+            jj_protocol::cmd::AssistLevel::Some,
+            1,
+            jj_sim::assist::AssistLevel::Some,
+        ),
+        (
+            jj_protocol::cmd::AssistLevel::Lots,
+            2,
+            jj_sim::assist::AssistLevel::Lots,
+        ),
+        (
+            jj_protocol::cmd::AssistLevel::Off,
+            0,
+            jj_sim::assist::AssistLevel::Off,
+        ),
+    ] {
+        h.handle(&phone(ControllerCmd::SetAssist { level }))
+            .unwrap();
+        pump(&mut h, 5);
+        assert_eq!(assist_in_view(&h), want);
+        let car = h
+            .inputs
+            .values()
+            .next()
+            .and_then(|i| i.car)
+            .expect("the seat has a car");
+        assert_eq!(h.sim.assist_level(car), sim_level);
+    }
+}
+
+/// Catch-up is a lobby choice applied at GO and retained for subsequent rounds, never a fixture override.
+#[test]
+fn catch_up_is_a_round_rule_and_the_host_can_switch_it_off() {
+    for on in [false, true] {
+        let mut h = Host::new(&init()).unwrap();
+        let ui = |ui| {
+            MainToSim::Ui {
+                command: CommandId(1),
+                ui,
+            }
+            .encode()
+        };
+        h.handle(&ui(UiCommand::SetCatchUp { on })).unwrap();
+        h.handle(&local(1, [0, 32767])).unwrap();
+        h.step_one();
+        let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        assert_eq!(room["catchUp"], on);
+        assert_eq!(h.sim.catch_up(), jj_sim::assist::CatchUp::Off);
+        h.handle(&ui(UiCommand::StartRound)).unwrap();
+        h.step_one();
+        h.handle(&ui(UiCommand::StartRound)).unwrap(); // the host's second press skips the force-start warning
+        for _ in 0..120 * 10 {
+            h.step_one();
+            if h.phase() == jj_session::director::Phase::Running {
+                break;
+            }
+        }
+        assert_eq!(h.phase(), jj_session::director::Phase::Running);
+        let expected = if on {
+            jj_sim::assist::CatchUp::Light
+        } else {
+            jj_sim::assist::CatchUp::Off
+        };
+        assert_eq!(h.sim.catch_up(), expected);
+        for _ in 0..120 {
+            h.step_one();
+        }
+        assert_eq!(
+            h.sim.catch_up(),
+            expected,
+            "ticks never overwrite the chosen rule"
+        );
+    }
+}
+
 /// P1-C06: the host tracks the seat's first-drive prompts from what it sees; skip hides them and never pauses anything.
 #[test]
 fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
@@ -2476,4 +3241,364 @@ fn a_host_pads_right_stick_steers_and_its_left_stick_drives() {
     let i = h.sim().applied_input(CarId(0)).expect("the pad has a car");
     assert!(i.throttle > 15_000, "the left stick drives: {i:?}");
     assert!(i.steer.abs() > 15_000, "the right stick steers: {i:?}");
+}
+
+/// The roster's `(id, profile JSON)` pairs, in roster order, read from the data files (R123: no vehicle is named in code).
+fn roster_files() -> Vec<(String, String)> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let roster: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("web/shared/src/roster.json")).unwrap(),
+    )
+    .unwrap();
+    roster["cars"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| {
+            let id = c["id"].as_str().unwrap().to_owned();
+            let json =
+                std::fs::read_to_string(root.join(format!("assets/profiles/{id}.json"))).unwrap();
+            (id, json)
+        })
+        .collect()
+}
+
+/// br-bwju.7 (R123): two phones pick different roster vehicles; each car is built from its own profile, the snapshot
+/// names each car's vehicle, and the tuning menu edits one vehicle's profile only.
+#[test]
+fn each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicle() {
+    let roster = roster_files();
+    assert!(roster.len() >= 2, "the roster has at least two vehicles");
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    h.handle(
+        &MainToSim::Vehicles {
+            vehicles: roster.clone(),
+        }
+        .encode(),
+    )
+    .unwrap();
+    let mut now = 0;
+    let mut step = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    for (k, who) in ["phone-a", "phone-b"].into_iter().enumerate() {
+        let phone = |c: ControllerCmd| net(who, Channel::Cmd, c.encode());
+        h.handle(&phone(ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(who.into()),
+            resume: None,
+        }))
+        .unwrap();
+        h.handle(&phone(ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("P{k}"),
+        }))
+        .unwrap();
+        step(&mut h, 30);
+        h.handle(&phone(ControllerCmd::Pick {
+            vehicle: roster[k].0.clone(),
+            open: false,
+        }))
+        .unwrap();
+        step(&mut h, 30);
+    }
+    let sim = h.sim();
+    let cars: Vec<CarId> = sim.cars().collect();
+    assert_eq!(cars.len(), 2);
+    for (k, &c) in cars.iter().enumerate() {
+        let want = jj_sim::VehicleProfile::from_json(&roster[k].1).unwrap();
+        assert_eq!(sim.vehicle_of(c), Some(k));
+        assert_eq!(sim.profile_of(c).unwrap().tuning.mass, want.tuning.mass);
+        assert_eq!(
+            sim.profile_of(c).unwrap().tuning.max_engine_force,
+            want.tuning.max_engine_force
+        );
+    }
+    // The snapshot carries each car's vehicle in the top half of its flags (record 64 B after the 40 B header).
+    let mut buf = vec![0; h.snapshot_size()];
+    assert_eq!(h.write_snapshot(&mut buf), buf.len());
+    let flags = |k: usize| {
+        let at = SNAPSHOT_HEADER + k * SNAPSHOT_CAR + 52;
+        u32::from_le_bytes(buf[at..at + 4].try_into().unwrap())
+    };
+    assert_eq!((flags(0) >> 16, flags(1) >> 16), (0, 1));
+    // The room names the table, so a renderer maps the index to a roster id.
+    let tuning: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        tuning["vehicles"],
+        serde_json::json!(roster.iter().map(|r| &r.0).collect::<Vec<_>>())
+    );
+    // Tuning follows the selected vehicle: the second one's rows change only its cars.
+    let before = h.sim().profile_at(0).unwrap().tuning.max_engine_force;
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(1),
+            ui: UiCommand::TuneVehicle {
+                vehicle: roster[1].0.clone(),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(2),
+            ui: UiCommand::SetTuning {
+                field: "max_engine_force".into(),
+                value: "12345".into(),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    step(&mut h, 5);
+    assert_eq!(
+        h.sim().profile_of(cars[1]).unwrap().tuning.max_engine_force,
+        12345.0
+    );
+    assert_eq!(
+        h.sim().profile_of(cars[0]).unwrap().tuning.max_engine_force,
+        before
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        (
+            shown["vehicle"].as_str(),
+            shown["tuning"]["max_engine_force"].as_f64()
+        ),
+        (Some(roster[1].0.as_str()), Some(12345.0))
+    );
+}
+
+/// P1-C14: a host pad's seat names its source, and its first-drive prompts run from its own samples with no phone to ask.
+#[test]
+fn a_host_pads_seat_names_its_source_and_runs_its_prompts() {
+    let mut h = driving_host();
+    for t in (0..300u64).step_by(6) {
+        h.schedule(
+            t,
+            &MainToSim::LocalSource {
+                source: LocalSourceId(7),
+                axes: [0, 0, 26_000, 0],
+                buttons: 0,
+                seq: 0,
+            }
+            .encode(),
+        )
+        .unwrap();
+    }
+    while h.tick() < 200 {
+        h.step_one();
+    }
+    let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let seat = &v["seats"][0];
+    assert_eq!(seat["localSource"], 7);
+    assert_eq!(seat["prompt"]["step"], 0, "the prompts start on their own");
+    assert_eq!(seat["prompt"]["done"], serde_json::json!(["right"]));
+}
+
+#[test]
+fn host_local_vehicle_choice_uses_each_sources_existing_seat() {
+    let roster = roster_files();
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    h.handle(
+        &MainToSim::Vehicles {
+            vehicles: roster.clone(),
+        }
+        .encode(),
+    )
+    .unwrap();
+    let pick = |source, vehicle: String, open| {
+        MainToSim::Ui {
+            command: jj_types::CommandId(1),
+            ui: UiCommand::LocalPick {
+                source: LocalSourceId(source),
+                vehicle,
+                open,
+            },
+        }
+        .encode()
+    };
+    h.handle(&pick(99, roster[1].0.clone(), true)).unwrap();
+    for now in (0..10).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    assert_eq!(
+        h.seats.seats().count(),
+        0,
+        "choosing never claims an absent source"
+    );
+    h.handle(&local(1, [0, 1])).unwrap();
+    h.handle(&local(2, [0, 1])).unwrap();
+    for now in (10..30).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    h.handle(&pick(1, roster[1].0.clone(), true)).unwrap();
+    for now in (30..40).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    let seat = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(1)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    assert_eq!(h.picks.get(&seat), Some(&(roster[1].0.clone(), true)));
+    h.handle(&pick(1, roster[1].0.clone(), false)).unwrap();
+    for now in (40..50).map(|i| i * 16_667) {
+        h.advance(now);
+    }
+    assert_eq!(h.picks.get(&seat), Some(&(roster[1].0.clone(), false)));
+    let other = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(2)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    assert_eq!(h.vehicle_of_seat(other), 0);
+    assert_eq!(h.vehicle_of_seat(seat), 1);
+    assert_eq!(h.sim().cars().count(), 2);
+}
+
+#[test]
+fn lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source() {
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(&local(1, [0, 1])).unwrap();
+    h.handle(&local(2, [0, 1])).unwrap();
+    for i in 0..20 {
+        h.advance(i * 16_667);
+    }
+    let seat = h
+        .seats
+        .seat_at(h.locals[&LocalSourceId(1)], seats::PRIMARY_SOURCE)
+        .unwrap();
+    let command = |ui| {
+        MainToSim::Ui {
+            command: jj_types::CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&command(UiCommand::LocalPick {
+        source: LocalSourceId(1),
+        vehicle: "cruz-missile".into(),
+        open: true,
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(99),
+    }))
+    .unwrap();
+    for i in 20..30 {
+        h.advance(i * 16_667);
+    }
+    assert!(!h.round.director.is_ready(seat));
+    assert_eq!(h.seats.seats().count(), 2);
+    h.handle(&command(UiCommand::LocalPick {
+        source: LocalSourceId(1),
+        vehicle: "cruz-missile".into(),
+        open: false,
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    for i in 30..40 {
+        h.advance(i * 16_667);
+    }
+    assert!(h.round.director.is_ready(seat));
+    h.handle(&command(UiCommand::LocalReady {
+        source: LocalSourceId(1),
+    }))
+    .unwrap();
+    for i in 40..50 {
+        h.advance(i * 16_667);
+    }
+    assert!(!h.round.director.is_ready(seat));
+}
+
+#[test]
+fn controllers_menu_actions_apply_while_paused_and_survive_resume_sample_discard() {
+    let mut h = driving_host();
+    h.handle(&pad(4, [0, 20_000], 0)).unwrap();
+    for i in 0..20 {
+        h.advance(i * 16_667);
+    }
+    let old = h.seats.seat_of(h.locals[&LocalSourceId(4)]).unwrap();
+    let command = |ui| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    let held_tick = h.tick();
+    let presence = |h: &Host, seat| h.seats.seats().find(|s| s.id == seat).unwrap().presence;
+    // A later neutral sample must never erase a menu action. No physics tick runs here.
+    h.handle(&command(UiCommand::LocalSitOut {
+        source: LocalSourceId(4),
+        on: true,
+    }))
+    .unwrap();
+    h.handle(&pad(4, [0, 0], 0)).unwrap();
+    h.advance(400_000);
+    assert_eq!(h.tick(), held_tick);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 24..260 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::SittingOut);
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    h.handle(&command(UiCommand::LocalSitOut {
+        source: LocalSourceId(4),
+        on: false,
+    }))
+    .unwrap();
+    h.advance(4_400_000);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 264..500 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::Active);
+    h.handle(&command(UiCommand::Pause { on: true })).unwrap();
+    let held_tick = h.tick();
+    h.handle(&command(UiCommand::LocalLeave {
+        source: LocalSourceId(4),
+    }))
+    .unwrap();
+    h.handle(&pad(4, [0, 0], 0)).unwrap();
+    h.advance(8_400_000);
+    h.handle(&command(UiCommand::LocalJoin {
+        source: LocalSourceId(4),
+    }))
+    .unwrap();
+    h.handle(&command(UiCommand::LocalJoin {
+        source: LocalSourceId(9),
+    }))
+    .unwrap();
+    h.advance(8_500_000);
+    let new = h.seats.seat_of(h.locals[&LocalSourceId(4)]).unwrap();
+    assert_ne!(old, new, "Add after Leave is a new player");
+    assert_eq!(h.seats.seats().count(), 3);
+    assert_eq!(h.tick(), held_tick);
+    h.handle(&command(UiCommand::Pause { on: false })).unwrap();
+    for i in 510..750 {
+        h.advance(i * 16_667);
+    }
+    assert_eq!(presence(&h, old), seats::Presence::Left);
+    assert_eq!(presence(&h, new), seats::Presence::Active);
+    assert!(h.inputs[&new].car.is_some());
+    assert_eq!(
+        h.inputs.values().filter(|i| i.car.is_some()).count(),
+        2,
+        "only the two new seats own active cars; withdrawn dynamic husks may remain"
+    );
 }

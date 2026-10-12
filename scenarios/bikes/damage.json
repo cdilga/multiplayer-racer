@@ -1,0 +1,20 @@
+{
+  "scenario": "bike-r121-damage",
+  "what": "br-bwju.4: a rider detaches as persistent debris, a front wheel then detaches, the bike drives through R121's grace and respawns fresh. Names come from the bike profile, never car aliases.",
+  "map": "scenarios/bikes/flat-strips.json",
+  "seed": 21,
+  "ticks": 1080,
+  "cars": [{"pose":{"x":20,"y":0.1,"z":-20,"headingDeg":0}}],
+  "damage":[
+    {"tick":240,"car":0,"part":"rider","health":20},
+    {"tick":300,"car":0,"part":"rider","health":0},
+    {"tick":360,"car":0,"part":"wheel_F","health":0}
+  ],
+  "observe":[240,241,301,361,598,604,840,1080],
+  "expect":[
+    {"car":0,"atTick":598,"metric":"wrecks","min":0,"max":0},
+    {"car":0,"atTick":604,"metric":"wrecks","min":1,"max":1},
+    {"car":0,"metric":"husks","min":1,"max":1},
+    {"car":0,"metric":"wheelsInContact","min":2,"max":2}
+  ]
+}

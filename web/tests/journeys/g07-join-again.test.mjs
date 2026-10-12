@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-G07, the controller's side: a connected phone is removed by the host mid-race and shows "The host removed you" with
 // Join again; Join again is a fresh claim (a new number, never the old one), and the removed seat's tile is gone from the TV.
 //   node --test web/tests/journeys/g07-join-again.test.mjs   (WebRTC: run on eris; JJ_CAPTURE_DIR saves the screens)
@@ -44,7 +45,9 @@ test('G07: a connected player removed mid-race sees "The host removed you" and J
   const a = await phone(joinUrl, { width: 844, height: 390 });
   const b = await phone(joinUrl, { width: 844, height: 390 });
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  await confirmInitialVehicle(a);
   await a.getByRole('button', { name: 'Skip tutorial' }).click();
+  await confirmInitialVehicle(b);
   await b.getByRole('button', { name: 'Skip tutorial' }).click();
   await a.locator('[data-act=ready]').click();
   await b.locator('[data-act=ready]').click();

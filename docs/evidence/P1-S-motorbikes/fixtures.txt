@@ -1,0 +1,14 @@
+    Blocking waiting for file lock on build directory
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+    Finished `release` profile [optimized] target(s) in 12.43s
+     Running tests/bikes.rs (target/aarch64-apple-darwin/release/deps/bikes-a2d8c935cfb8d888)
+
+running 4 tests
+test malformed_axles_and_missing_wheel_proxies_are_rejected_before_simulation ... ok
+test a_bike_wall_collision_charges_its_own_damage_proxies_and_replays ... ok
+test rider_and_wheel_damage_leave_dynamic_debris_and_a_fresh_bike ... ok
+test raw_stick_and_named_damage_fixtures_replay_through_the_shared_harness ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

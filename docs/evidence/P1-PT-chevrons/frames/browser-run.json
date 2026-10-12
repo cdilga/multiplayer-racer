@@ -1,0 +1,400 @@
+{
+  "browser": "Chromium 151.0.7922.34",
+  "hardware": "darwin/arm64",
+  "shots": [
+    "small-tile",
+    "kit-front",
+    "kit-right",
+    "kit-rear",
+    "kit-side",
+    "chase-1366x768",
+    "chase-1920x1080",
+    "chase-915x412",
+    "chase-412x915",
+    "chase-375x667",
+    "chase-fullscreen",
+    "chase-after-fullscreen"
+  ],
+  "readability": {
+    "viewport": [
+      192,
+      108
+    ],
+    "yellowPixels": 735,
+    "blackPixels": 236,
+    "scope": "close board in smallest sample tile; distant boards still shrink naturally"
+  },
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+  "generated": {
+    "setup": {
+      "target": 181,
+      "at": 173,
+      "turn": 1.0560588881249817,
+      "state": {
+        "cars": [
+          {
+            "action": {
+              "boost": 1,
+              "boosting": false,
+              "cones": 0,
+              "drift": 0,
+              "oi": 0,
+              "wheelie": false
+            },
+            "angvel": [
+              0.0001924660464283079,
+              -3.0290032704272107e-09,
+              5.314680606716138e-07
+            ],
+            "authorisedJ": -13105.1263556825,
+            "autopilot": null,
+            "car": 0,
+            "derby": null,
+            "energyJ": -12656.273143291473,
+            "forwardSpeed": 0.0010942515218630433,
+            "headingDeg": 2.0380709171295166,
+            "husks": 0,
+            "input": {
+              "brake": 0,
+              "steer": 0,
+              "throttle": 0
+            },
+            "linvel": [
+              1.1115620509372093e-05,
+              -0.03188943490386009,
+              0.0009681358351372182
+            ],
+            "massKg": 1200,
+            "maxEngineForce": 7000,
+            "parts": [
+              {
+                "angleDeg": 0,
+                "health": 0,
+                "part": "core",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "front",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "back",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RR",
+                "state": "intact"
+              }
+            ],
+            "position": [
+              243.21299743652344,
+              -1.6152284145355225,
+              108.28923034667969
+            ],
+            "progress": {
+              "distanceM": 432.8206577441105,
+              "fraction": 0.33211433317471345,
+              "lateralM": 1.0753732717617247e-05,
+              "routePoint": 173
+            },
+            "race": {
+              "anchorRoutePoint": null,
+              "assisting": false,
+              "finishedAt": null,
+              "gatesPassed": 0,
+              "ghost": false,
+              "held": false,
+              "laps": 0,
+              "late": false,
+              "progressM": 0,
+              "protected": false,
+              "recoveries": 0,
+              "wrecks": 0
+            },
+            "rotation": [
+              0.0019818642176687717,
+              0.01778441108763218,
+              3.575278242351487e-05,
+              0.9998399615287781
+            ],
+            "speed": 0.031904127448797226,
+            "upY": 0.999992311000824,
+            "vehicle": 0,
+            "wheels": [
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0035456556361168623,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 2944.248779296875,
+                "suspensionLength": 0.20470735430717468
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0035456563346087933,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 2944.302734375,
+                "suspensionLength": 0.20470783114433289
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0035450439900159836,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 2943.57666015625,
+                "suspensionLength": 0.20460769534111023
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": -0.0035450439900159836,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 2943.62841796875,
+                "suspensionLength": 0.20460829138755798
+              }
+            ],
+            "wheelsInContact": 4
+          }
+        ],
+        "debris": [
+          {
+            "halfL": 0.46063995361328125,
+            "halfW": 0.459014892578125,
+            "kind": "Debris",
+            "x": 140.822998046875,
+            "z": 34.597023010253906
+          },
+          {
+            "halfL": 0.46025848388671875,
+            "halfW": 0.458770751953125,
+            "kind": "Debris",
+            "x": 156.50900268554688,
+            "z": 23.209003448486328
+          },
+          {
+            "halfL": 0.41204071044921875,
+            "halfW": 0.380584716796875,
+            "kind": "Debris",
+            "x": 171.85653686523438,
+            "z": 76.99452209472656
+          },
+          {
+            "halfL": 0.181396484375,
+            "halfW": 0.1841888427734375,
+            "kind": "Debris",
+            "x": -197.65150451660156,
+            "z": -130.41757202148438
+          },
+          {
+            "halfL": 0.1827850341796875,
+            "halfW": 0.181396484375,
+            "kind": "Debris",
+            "x": -155.1163787841797,
+            "z": -151.6867218017578
+          },
+          {
+            "halfL": 0.18280029296875,
+            "halfW": 0.185577392578125,
+            "kind": "Debris",
+            "x": -87.56804656982422,
+            "z": -130.46131896972656
+          },
+          {
+            "halfL": 0.185577392578125,
+            "halfW": 0.19384765625,
+            "kind": "Debris",
+            "x": 250.54794311523438,
+            "z": 139.0592041015625
+          },
+          {
+            "halfL": 0.3591270446777344,
+            "halfW": 0.3147315979003906,
+            "kind": "Debris",
+            "x": 32.7596321105957,
+            "z": -43.3247184753418
+          },
+          {
+            "halfL": 0.36119842529296875,
+            "halfW": 0.3148689270019531,
+            "kind": "Debris",
+            "x": 36.21721649169922,
+            "z": -61.85647201538086
+          },
+          {
+            "halfL": 0.4554100036621094,
+            "halfW": 0.46337890625,
+            "kind": "Debris",
+            "x": 154.14889526367188,
+            "z": 52.74507141113281
+          },
+          {
+            "halfL": 0.4517478942871094,
+            "halfW": 0.4607086181640625,
+            "kind": "Debris",
+            "x": 169.63392639160156,
+            "z": 41.51193618774414
+          }
+        ],
+        "host": {
+          "countdownMs": 0,
+          "held": true,
+          "pauseMask": 0,
+          "queued": 0,
+          "seats": [
+            {
+              "boosting": false,
+              "car": 0,
+              "colour": {
+                "index": 0,
+                "rgb": [
+                  229,
+                  50,
+                  45
+                ]
+              },
+              "connected": true,
+              "drifting": false,
+              "endpoint": "fake-0",
+              "fresh": false,
+              "idleCued": false,
+              "idleForMs": 1075,
+              "inputAgeMs": null,
+              "inputDropped": false,
+              "inputSeq": null,
+              "menuOpen": false,
+              "name": "Chevron check",
+              "number": 1,
+              "presence": "Active",
+              "seat": 1,
+              "source": 1
+            }
+          ]
+        },
+        "items": {
+          "effects": [],
+          "events": [],
+          "queues": [
+            {
+              "car": 0,
+              "queue": {
+                "back": null,
+                "front": null
+              }
+            }
+          ],
+          "refusals": []
+        },
+        "tick": 1287
+      }
+    },
+    "kit": {
+      "generic/box-building": 3,
+      "outback_bitumen/centre-line": 74,
+      "outback_bitumen/reflector-post": 22,
+      "outback_dirt/desert-oak": 50,
+      "outback_dirt/spinifex": 527,
+      "rocks/dome": 14,
+      "rocks/shrub": 21,
+      "rocks/spinifex": 83,
+      "signs/big-red-rock": 1,
+      "signs/crest": 1,
+      "signs/jumps-crest": 1,
+      "signs/kangaroo": 1,
+      "signs/stuart-hwy": 2,
+      "signs/unsealed-road": 1,
+      "town/gum-tree": 34,
+      "town/house": 8,
+      "town/mailbox": 6,
+      "town/power-line": 2,
+      "town/power-pole": 4,
+      "town/shopfront": 8,
+      "town/water-tower": 2,
+      "wayfinding/chevron-post": 48,
+      "wayfinding/finish-gantry": 2,
+      "wayfinding/guard-rail": 160
+    },
+    "stats": {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "width": 1366,
+      "height": 768,
+      "cssWidth": 1366,
+      "cssHeight": 768,
+      "dpr": 1,
+      "scale": 1,
+      "userScale": 1,
+      "resolution": "native",
+      "nativeWidth": 1366,
+      "nativeHeight": 768,
+      "autoEvents": [],
+      "frameMs": 9.600000000000364,
+      "p95Ms": 9.799999999999272,
+      "budgetMs": 50,
+      "limitedBy": null,
+      "frames": 1328,
+      "tick": 1287,
+      "cars": 1,
+      "debris": 11,
+      "snapped": 0,
+      "drawCalls": 90,
+      "triangles": 834294,
+      "lods": [
+        0
+      ]
+    }
+  },
+  "server": "real jj-server, local macOS arm64",
+  "join": "test-source join through existing probe; normal room Start"
+}

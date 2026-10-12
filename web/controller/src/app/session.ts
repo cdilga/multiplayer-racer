@@ -6,6 +6,7 @@
 // tab that comes back gets the same seat (`Hello{resume: secret}`); rooms reported ended/not-found are pruned. Storage
 // that throws still plays, with `persisted = false` for the honest note.
 import { underBase } from '../../../shared/src/base';
+import type { ItemEvent, ItemInventory, ItemUseRefusal } from '../../../shared/src/items';
 import { ApiError, ControllerLink, type LinkState, type TransportOptions } from '../../../shared/transport';
 import init, * as wasm from '../pkg/jj_wasm_input.js';
 
@@ -132,8 +133,16 @@ export class Session {
   onSticks: (drive: Stick, action: Stick) => void = () => {};
   /** A discrete action fired (wheelie, OI!, cone): the tutorial listens. */
   onAction: (kind: number) => void = () => {};
+  inventory: ItemInventory = { front: null, back: null };
+  itemUseRefusal: ItemUseRefusal | null = null;
+  lastItemEvent: ItemEvent | null = null;
+  /** Every reliable event is delivered to W05's presentation; lastItemEvent is only the current probe fact. */
+  onItemEvent: (event: ItemEvent) => void = () => {};
 
   private endpoint: wasm.WasmEndpoint | null = null;
+  /** The host's last `InputProfile` (owner tuning menu): whether the endpoint accepted it, and when it arrived. */
+  private inputProfileApplied: boolean | null = null;
+  private inputProfileAt: number | null = null;
   private srcIdx = -1;
   private stored: Stored | null = null;
   private store = storage();
@@ -390,6 +399,34 @@ export class Session {
       return;
     }
     if (typeof cmd !== 'object') return;
+    if ('Inventory' in cmd) {
+      this.inventory = cmd.Inventory as ItemInventory;
+      this.onChange();
+      return;
+    }
+    if ('ItemEvent' in cmd) {
+      this.lastItemEvent = cmd.ItemEvent as ItemEvent;
+      this.onItemEvent(this.lastItemEvent);
+      this.onChange();
+      return;
+    }
+    if ('ActionResult' in cmd) {
+      const { outcome } = cmd.ActionResult as { outcome: string | { Rejected?: { reason: string | { Item?: { reason: ItemUseRefusal } } }; Applied?: { tick: number } } };
+      if (typeof outcome === 'object' && outcome.Rejected && typeof outcome.Rejected.reason === 'object' && outcome.Rejected.reason.Item) {
+        this.itemUseRefusal = outcome.Rejected.reason.Item.reason;
+      } else if (typeof outcome === 'object' && outcome.Applied) this.itemUseRefusal = null;
+      this.onChange();
+      return;
+    }
+    if ('InputProfile' in cmd) {
+      // The owner tuning menu changed the input thresholds (br-2sdu.2): every source of this connection reads them from
+      // its next sample. Endpoint-wide, so it reaches the hub's shared endpoint as well as this session's own.
+      const json = JSON.stringify(cmd.InputProfile);
+      this.inputProfileApplied = (this.endpoint?.setInputProfile(json) ?? true) && (this.shared?.setInputProfile(json) ?? true);
+      this.inputProfileAt = performance.now();
+      this.onChange();
+      return;
+    }
     if ('Welcome' in cmd) {
       const w = cmd.Welcome as { seat: number; number: number; colour: { rgb: [number, number, number] }; source: number };
       this.you = { seat: w.seat, number: w.number, rgb: w.colour.rgb, source: w.source };
@@ -402,12 +439,14 @@ export class Session {
       } else {
         this.endpoint?.free();
         this.endpoint = new wasm.WasmEndpoint();
+        this.inputProfileApplied = null; // a new endpoint reads the shipped thresholds until the host sends a tuned profile
         this.srcIdx = this.endpoint.addSource(w.source);
       }
       this.endpoint.setClassic(this.srcIdx, this.classicLayout);
       this.set('playing');
-      if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
+      if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, this.pickOpen));
       if (this.camDistance !== 'host') this.sendCameraDistance();
+      if (this.assistLevel !== 'off') this.sendAssist();
       this.onChange();
     } else if ('ClaimRejected' in cmd) {
       const r = (cmd.ClaimRejected as { reason: string }).reason;
@@ -454,6 +493,8 @@ export class Session {
     this.sample();
   }
 
+  private lastDetectedAction: { kind: number; preloadMs: number; at: number; atSourceSeq: number } | null = null;
+
   private sample(): void {
     if (!this.endpoint || this.srcIdx < 0) return;
     const q = (v: number) => wasm.quantise(v);
@@ -469,6 +510,7 @@ export class Session {
       performance.now(),
     );
     for (const a of actions) {
+      this.lastDetectedAction = { kind: a.kindTag, preloadMs: a.preloadMs, at: performance.now(), atSourceSeq: a.atSourceSeq };
       const r = this.you;
       this.send('cmd', wasm.encodeAction(a.id, r?.source ?? 0, a.kindTag, a.preloadMs, 0, 0, a.atSourceSeq));
       this.stats.actions += 1;
@@ -534,6 +576,7 @@ export class Session {
 
   /** The lobby's car pick goes to the host: a roster id, and whether the picker is still open (the TV says "Choosing car…"). */
   pick(vehicle: string, open: boolean): void {
+    this.pickOpen = open;
     this.carChoice = vehicle;
     this.send('cmd', wasm.encodePick(vehicle, open));
   }
@@ -578,8 +621,22 @@ export class Session {
   private sendCameraDistance(): void {
     this.send('cmd', wasm.encodeSetCameraDistance(this.camDistance === 'near' ? 1 : this.camDistance === 'far' ? 2 : 0));
   }
+  /** The player's learner assist (R125): Off, Some or Lots. Changing it tells the host at once (`SetAssist`); a (re)welcome sends it again. */
+  private assistLevel: 'off' | 'some' | 'lots' = 'off';
+  get assist(): 'off' | 'some' | 'lots' {
+    return this.assistLevel;
+  }
+  set assist(a: 'off' | 'some' | 'lots') {
+    if (a === this.assistLevel) return;
+    this.assistLevel = a;
+    if (this.you) this.sendAssist();
+  }
+  private sendAssist(): void {
+    this.send('cmd', wasm.encodeSetAssist(this.assistLevel === 'some' ? 1 : this.assistLevel === 'lots' ? 2 : 0));
+  }
   /** The car the player picked in the lobby (an id from roster.json); a per-device preference, not on the wire yet. */
   carChoice = '';
+  private pickOpen = false;
 
   ready(on: boolean): void {
     this.send('cmd', wasm.encodeReady(on));
@@ -595,12 +652,13 @@ export class Session {
 
   private onVisibility = (): void => {
     for (const k of [...this.kids.values()]) k.onVisibility();
-    if (!this.endpoint || this.srcIdx < 0) return;
-    if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
-    else {
-      this.endpoint.resume(this.srcIdx);
-      this.link?.resume();
+    if (this.endpoint && this.srcIdx >= 0) {
+      if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
+      else this.endpoint.resume(this.srcIdx);
     }
+    // The connection is the carrier's (R119): a laptop that carries only pads and keys, with no touch seat of its own,
+    // retries it the moment its page is shown again too. A source riding a carrier leaves that to the carrier.
+    if (!this.parent && document.visibilityState !== 'hidden') this.link?.resume();
   };
 
   /** One tab per seat (§11): a newer tab for the same room fences this one; "Use this one" takes it back. */
@@ -661,19 +719,27 @@ export class Session {
       code: this.code,
       you: this.you,
       hud: this.hud,
+      inventory: { ...this.inventory },
+      itemUseRefusal: this.itemUseRefusal,
+      lastItemEvent: this.lastItemEvent,
       roomPhase: this.roomPhase,
       ready: this.isReady,
       countdownMs: this.countdownMs,
       results: this.results,
       persisted: this.persisted,
       cameraDistance: this.cameraDistance,
+      assist: this.assist,
       carChoice: this.carChoice,
       sticks: { drive: { ...this.drive }, action: { ...this.action } },
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,
       source: this.parent ? this.via : null,
       kids: [...this.kids.keys()],
+      inputProfile: this.endpoint
+        ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown, driftHeld: this.srcIdx >= 0 ? this.endpoint.driftHeld(this.srcIdx) : false }
+        : null,
       inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
+      launch: { preloading: this.endpoint && this.srcIdx >= 0 ? this.endpoint.wheeliePreload(this.srcIdx) : false, cooldown: this.launchCooldown(), lastDetectedAction: this.lastDetectedAction },
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
     };
   }

@@ -218,9 +218,10 @@ describe('the player colour and Identify', () => {
     const { ctx, page } = await open(eng, 'playing&seat=12', LAND);
     const seat = await page.evaluate(() => getComputedStyle(document.querySelector('.screen.play')).getPropertyValue('--seat').trim());
     assert.match(seat, /^#[0-9a-f]{6}$/i);
-    const colours = await page.evaluate(() => ({ number: getComputedStyle(document.querySelector('.strip .seatno')).color, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor }));
+    const colours = await page.evaluate(() => ({ numberPaint: getComputedStyle(document.querySelector('.strip .seatno')).getPropertyValue('--bz-fill').trim(), pattern: document.querySelector('.strip .seatno').dataset.identityPattern, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor }));
     const rgb = (h) => `rgb(${[1, 3, 5].map((i) => Number.parseInt(h.slice(i, i + 2), 16)).join(', ')})`;
-    assert.equal(colours.number, rgb(seat), 'the number in the strip is the seat colour');
+    assert.equal(colours.numberPaint.toLowerCase(), seat.toLowerCase(), 'the patterned number badge is painted in the seat colour');
+    assert.ok(colours.pattern, 'the badge also carries the seat pattern');
     assert.equal(colours.knob, rgb(seat), 'the DRIVE knob is the seat colour');
     // The frame round the whole screen (POC1-21): the pixels at the very edge are the seat colour.
     const png = PNG.sync.read(await page.screenshot());
@@ -235,6 +236,35 @@ describe('the player colour and Identify', () => {
     assert.match(await page.locator('.cooee-phone').textContent(), /Cooee #12/i);
     await shot(page, 'c02-identify-flash');
     await page.locator('.cooee-phone').waitFor({ state: 'detached', timeout: 5000 });
+    await ctx.close();
+  });
+
+  test('the Cooee flash is see-through and both sticks keep driving under it (owner playtest 1)', { timeout: 60_000 }, async () => {
+    const eng = engines.find((e) => e.name === 'chromium');
+    const { ctx, page } = await open(eng, 'playing&seat=12', LAND);
+    const cdp = await ctx.newCDPSession(page);
+    const d = await box(page, '.zone.drive');
+    const a = await box(page, '.zone.action');
+    await page.locator('[data-act=identify]').click();
+    await page.locator('.cooee-phone').waitFor({ timeout: 5000 });
+    const look = await page.evaluate(([dx, dy]) => {
+      const o = document.querySelector('.cooee-phone');
+      const alpha = (c) => { const m = c.match(/rgba?\(([^)]+)\)/) ?? c.match(/color\(srgb ([^)]+)\)/); const parts = m ? m[1].split(/[ ,/]+/).filter(Boolean) : []; return parts.length >= 4 ? Number(parts[3]) : 1; };
+      return { bg: alpha(getComputedStyle(o).backgroundColor), events: getComputedStyle(o).pointerEvents, hit: document.elementFromPoint(dx, dy)?.closest('.cooee-phone') !== null };
+    }, [d.x + d.width / 2, d.y + d.height / 2]);
+    assert.ok(look.bg <= 0.5, `the wash lets the sticks show through (background alpha ${look.bg})`);
+    assert.equal(look.events, 'none', 'touches pass through the flash');
+    assert.equal(look.hit, false, 'the drive stick, not the flash, is what a thumb lands on');
+    const p1 = { x: d.x + d.width / 2, y: d.y + d.height / 2, id: 1 };
+    const p2 = { x: a.x + a.width / 2, y: a.y + a.height / 2, id: 2 };
+    const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+    await touch('touchStart', [p1, p2]);
+    await touch('touchMove', [{ ...p1, y: p1.y - 150 }, { ...p2, x: p2.x + 150 }]);
+    assert.ok(await page.locator('.cooee-phone').count(), 'still flashing while driving');
+    const s = await sticks(page);
+    assert.ok(s.drive.y < -0.9 && s.action.x > 0.9 && s.drive.touch && s.action.touch, `both sticks drive under the flash: ${JSON.stringify(s)}`);
+    await shot(page, 'c02-identify-flash-driving');
+    await touch('touchEnd', []);
     await ctx.close();
   });
 });

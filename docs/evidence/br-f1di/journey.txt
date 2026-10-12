@@ -1,0 +1,10 @@
+✔ chromium: phone, keys and pad choose visibly; settings preserve pause and controller actions (73320.094791ms)
+✔ webkit: phone, keys and pad choose visibly; settings preserve pause and controller actions (15365.345625ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 89503.24625

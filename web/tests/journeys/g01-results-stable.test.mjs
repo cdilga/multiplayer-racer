@@ -24,7 +24,10 @@ after(async () => {
 });
 
 const wait = (page, fn, arg, ms = 90_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
-const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
+const frame = (host, endpoint, f) => host.evaluate(async ([endpoint, f]) => {
+  window.__jjTest.input({ type: 'controller', endpoint, frame: f });
+  await window.__jjTest.step(1);
+}, [endpoint, f]);
 
 test('results screen: Ready and presence churn leaves the same buttons in the page, and a click on Start next round now works', { timeout: 420_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
@@ -44,6 +47,9 @@ test('results screen: Ready and presence churn leaves the same buttons in the pa
   await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 180_000);
   await wait(host, () => document.querySelector('[data-screen=results] [data-act=start]'));
+  // R90: roster setup must not consume the whole intermission on a busy software renderer.
+  // Each synthetic packet below is applied at an explicit worker boundary; resume live time for the real click.
+  await host.evaluate(() => window.__jjTest.hold(true));
   await host.evaluate(() => {
     window.__start = document.querySelector('[data-act=start]');
     window.__lobby = document.querySelector('[data-act=lobby]');
@@ -69,6 +75,7 @@ test('results screen: Ready and presence churn leaves the same buttons in the pa
   }));
   assert.deepEqual(same, { start: true, lobby: true, list: true, phase: 'Intermission' }, 'the results screen was not rebuilt by the roster churning');
 
+  await host.evaluate(() => window.__jjTest.hold(false));
   await host.getByRole('button', { name: 'Start next round now' }).click({ timeout: 30_000 });
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase) && window.__jjRoom.view().round === 2, undefined, 120_000);
   assert.deepEqual(errors, []);

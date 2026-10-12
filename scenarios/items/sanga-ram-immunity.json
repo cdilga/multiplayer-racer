@@ -1,0 +1,95 @@
+{
+  "scenario": "sanga-ram-immunity",
+  "what": "W03: a stationary shielded car is rammed at 15 m/s and remains healthy with minimal heading change. A matching unshielded control must take damage.",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 350,
+  "cars": [
+    {
+      "pose": {
+        "x": -60,
+        "y": 0.6,
+        "z": -20
+      }
+    },
+    {
+      "pose": {
+        "x": -40,
+        "y": 0.6,
+        "z": -20
+      }
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 251,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 260,
+      "toTick": 280,
+      "stick": [
+        0,
+        0
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    }
+  ],
+  "place": [
+    {
+      "tick": 250,
+      "car": 0,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -25
+      }
+    },
+    {
+      "tick": 250,
+      "car": 1,
+      "pose": {
+        "x": 0,
+        "y": 0.6,
+        "z": -35
+      },
+      "linvel": [
+        0,
+        0,
+        15
+      ]
+    }
+  ],
+  "observe": [
+    281,
+    350
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "headingChangeDeg",
+      "atTick": 350,
+      "min": 0,
+      "max": 2
+    },
+    {
+      "car": 0,
+      "metric": "forwardSpeed",
+      "atTick": 350,
+      "min": -0.1,
+      "max": 0.1
+    }
+  ]
+}

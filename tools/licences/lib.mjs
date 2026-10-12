@@ -2,14 +2,14 @@
 // list still matches the lockfiles and the policy. Pure functions; `generate.mjs` feeds them cargo metadata and the web
 // lockfile, `check.mjs` feeds them the committed list and the lockfiles, and `check.test.mjs` feeds them an injected case.
 
-/** `name@version` for every `[[package]]` of a Cargo.lock that comes from a registry or git (our own crates have no source). */
-export function cargoLockPackages(text) {
+/** Registry/git dependencies and identified vendored crates; our own crates have no source. */
+export function cargoLockPackages(text, vendored = []) {
   const out = [];
   for (const block of text.split('[[package]]').slice(1)) {
     const name = /^name = "(.*)"$/m.exec(block)?.[1];
     const version = /^version = "(.*)"$/m.exec(block)?.[1];
     const source = /^source = "(.*)"$/m.exec(block)?.[1];
-    if (name && version && source) out.push(`${name}@${version}`);
+    if (name && version && (source || vendored.includes(`${name}@${version}`))) out.push(`${name}@${version}`);
   }
   return out.sort();
 }
@@ -88,11 +88,11 @@ export function licenceAllowed(expr, allow) {
  * What is wrong with the committed list: a lockfile package it doesn't account for, a shipped dependency with no licence or
  * one outside the policy, an entry for a package that is no longer locked. An empty array is a pass.
  */
-export function problems({ list, cargoLock, npmLock, policy }) {
+export function problems({ list, cargoLock, npmLock, policy, vendored = [] }) {
   const out = [];
   const shipped = new Map([...list.rust, ...list.web].map((e) => [`${e.name}@${e.version}`, e]));
   const notShipped = new Set([...(list.rustNotShipped ?? []), ...(list.webNotShipped ?? [])]);
-  const locked = [...cargoLockPackages(cargoLock), ...npmAllPackages(npmLock)];
+  const locked = [...cargoLockPackages(cargoLock, vendored), ...npmAllPackages(npmLock)];
   for (const id of locked) {
     if (!shipped.has(id) && !notShipped.has(id)) out.push(`${id} is locked but has no entry in the licence list: run node tools/licences/generate.mjs`);
   }

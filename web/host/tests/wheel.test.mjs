@@ -1,3 +1,5 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-C05.2: steering wheels with pedals as host players, on the real web build in headless Chromium with an emulated
 // Gamepad API (a simulated device, not a real wheel). The host runs live (`?test=live`), so the join path, the worker's
 // clock and input ages are real.
@@ -7,7 +9,7 @@
 // - A wheel matching a shipped profile (Logitech G29 ids) maps at once, marked unconfirmed until "Looks right".
 // - The receipt row per wheel: host-applied input age and the encoded bytes per sample. The live run's wheel trace is
 //   recorded and written as a scenario fixture (R90): `jj sim` replays it through jj-input and the sim.
-// Writes docs/evidence/P1-C05.2/ (JJ_EVIDENCE_DIR overrides): receipt.json, wheel-trace.json, wheel-trace.fixture.json.
+// Explicit evidence can go to docs/evidence/P1-C05.2/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch): receipt.json, wheel-trace.json, wheel-trace.fixture.json.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -17,7 +19,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-C05.2');
+const evidenceDir = evidencePath('P1-C05.2');
 let browser;
 let server;
 const receipt = [];

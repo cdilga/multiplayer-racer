@@ -7,15 +7,21 @@
 
 #![forbid(unsafe_code)]
 
+pub mod assist;
 pub mod autopilot;
 pub mod damage;
+pub mod derby;
+pub mod items;
 pub mod journal;
 pub mod observe;
 pub mod placement;
 pub mod profile;
 pub mod race;
+pub mod rails;
 pub mod rng;
+mod roofs;
 pub mod sim;
+pub mod surface;
 pub mod utility;
 pub mod vehicle;
 

@@ -5,6 +5,7 @@
 import { Color, DirectionalLight, HemisphereLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene } from 'three';
 import { createBackend, type Backend, type BackendKind } from './backend';
 import type { Sampled } from './interp';
+import { rosterSources } from './vehicles/registry';
 import { useLod, VehicleRenderer } from './vehicles/vehicles';
 
 export interface BenchRun {
@@ -46,7 +47,7 @@ async function scene(n: number, shadows: boolean): Promise<{ scene: Scene; vehic
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = shadows;
   s.add(ground);
-  const vehicles = await VehicleRenderer.load(s);
+  const vehicles = await VehicleRenderer.load(s, rosterSources());
   const poses = pack(n);
   const sample: Sampled = {
     tick: 0,

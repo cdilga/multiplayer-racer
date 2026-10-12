@@ -1,0 +1,13 @@
+{
+  "browser": "Playwright Chromium 151.0.7922.34",
+  "viewport": "1280x720",
+  "racingFps": 8,
+  "pausedFps": 0,
+  "resumedFps": 9.5,
+  "mainThreadBusySecPerSec": {
+    "racing": 1.0260155000000002,
+    "paused": 0.008025799999999705
+  },
+  "pausedTicks": 0,
+  "skipsWhilePaused": 300
+}

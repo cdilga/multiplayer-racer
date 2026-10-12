@@ -48,6 +48,8 @@ pub const DELIBERATE_AXIS: f32 = 0.25;
 #[derive(Clone, Debug)]
 pub struct Path {
     pts: Vec<(f32, f32)>,
+    heights: Vec<f32>,
+    layered: bool,
     s: Vec<f32>,
     curvature: Vec<f32>,
     total: f32,
@@ -86,6 +88,18 @@ impl Path {
             .collect();
         Self {
             pts,
+            heights: map
+                .map
+                .route
+                .points
+                .iter()
+                .map(|p| p.y as f32 / 1000.0)
+                .collect(),
+            layered: map
+                .map
+                .features
+                .iter()
+                .any(|f| f.kind == jj_map::FeatureKind::Bridge),
             s,
             curvature,
             total,
@@ -97,12 +111,19 @@ impl Path {
     }
 
     /// The nearest point to (x, z) over the whole route (only when the autopilot first takes over).
-    fn nearest(&self, x: f32, z: f32) -> usize {
+    fn nearest(&self, x: f32, y: f32, z: f32) -> usize {
         (0..self.n())
             .min_by(|&a, &b| {
                 let da = libm::hypotf(self.pts[a].0 - x, self.pts[a].1 - z);
                 let db = libm::hypotf(self.pts[b].0 - x, self.pts[b].1 - z);
-                da.total_cmp(&db)
+                let vertical = |i: usize| {
+                    if self.layered {
+                        (self.heights[i] - y).powi(2)
+                    } else {
+                        0.0
+                    }
+                };
+                (da * da + vertical(a)).total_cmp(&(db * db + vertical(b)))
             })
             .unwrap_or(0)
     }
@@ -123,12 +144,97 @@ impl Path {
     fn ahead(&self, a: usize, b: usize) -> f32 {
         (self.s[b] - self.s[a]).rem_euclid(self.total)
     }
+
+    /// The speed the autopilot plans at (x, z) from a standing start: the tightest curvature within its braking horizon
+    /// at full speed sets it, as `drive` does (R125's rolling respawn starts from a fraction of it).
+    pub fn planned_speed(&self, x: f32, y: f32, z: f32) -> f32 {
+        let n = self.n();
+        let idx = self.nearest(x, y, z);
+        let horizon = MAX_SPEED * MAX_SPEED / (2.0 * PLAN_BRAKE);
+        let (mut k_max, mut p) = (0.0f32, idx);
+        while self.ahead(idx, p) <= horizon {
+            k_max = k_max.max(self.curvature[p]);
+            p = (p + 1) % n;
+            if p == idx {
+                break;
+            }
+        }
+        if k_max > 1e-4 {
+            SKILL * libm::sqrtf(LATERAL_GRIP / k_max)
+        } else {
+            MAX_SPEED
+        }
+        .clamp(MIN_SPEED, MAX_SPEED)
+    }
+}
+
+/// What a steering assist reads off the route for one car (R125, `crate::assist`): the route point nearest the car, the
+/// steer (−1..1 of full lock, positive left, the sim's sign) that pure pursuit would use to rejoin the line, and the
+/// tightest curvature within braking distance.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LineProbe {
+    pub idx: usize,
+    pub steer: f32,
+    pub max_curvature: f32,
+}
+
+impl Path {
+    /// Pure pursuit on the centerline for an assist: the same geometry as [`Autopilot::drive`], without noise or state. The
+    /// `look` is `[look-ahead s, minimum look-ahead m, planned braking m/s²]`. The `hint` is the last route point (searched forward only; a car that has jumped, or a hint that is no longer near,
+    /// searches the whole route).
+    pub fn probe(
+        &self,
+        hint: Option<usize>,
+        car: Pose2,
+        max_steer: f32,
+        wheelbase: f32,
+        look: [f32; 3],
+    ) -> LineProbe {
+        let [look_s, min_look_m, plan_brake] = look;
+        let n = self.n();
+        let mut idx = match hint {
+            Some(i) => self.track(i, car.x, car.z, 24),
+            None => self.nearest(car.x, car.y, car.z),
+        };
+        let off = |i: usize| libm::hypotf(self.pts[i].0 - car.x, self.pts[i].1 - car.z);
+        if hint.is_some() && off(idx) > 15.0 {
+            idx = self.nearest(car.x, car.y, car.z);
+        }
+        let speed = car.forward_speed.max(0.0);
+        let look = (look_s * speed).max(min_look_m);
+        let mut t = idx;
+        while self.ahead(idx, t) < look && self.ahead(idx, (t + 1) % n) > self.ahead(idx, t) {
+            t = (t + 1) % n;
+        }
+        let target = self.pts[t];
+        let (sh, ch) = (libm::sinf(car.heading), libm::cosf(car.heading));
+        let (dx, dz) = (target.0 - car.x, target.1 - car.z);
+        let (local_left, local_fwd) = (dx * ch - dz * sh, dx * sh + dz * ch);
+        let alpha = libm::atan2f(local_left, local_fwd);
+        let wheel = libm::atanf(2.0 * libm::sinf(alpha) / look * wheelbase);
+        let horizon = speed * speed / (2.0 * plan_brake) + look;
+        let (mut max_curvature, mut p) = (0.0f32, idx);
+        while self.ahead(idx, p) <= horizon {
+            max_curvature = max_curvature.max(self.curvature[p]);
+            p = (p + 1) % n;
+            if p == idx {
+                break;
+            }
+        }
+        LineProbe {
+            idx,
+            steer: (wheel / max_steer).clamp(-1.0, 1.0),
+            max_curvature,
+        }
+    }
 }
 
 /// What the car looks like to the autopilot.
 #[derive(Clone, Copy, Debug)]
 pub struct Pose2 {
     pub x: f32,
+    /// Height disambiguates overlapping roads when acquiring the route.
+    pub y: f32,
     pub z: f32,
     /// Radians about +y, 0 = +z.
     pub heading: f32,
@@ -244,7 +350,7 @@ impl Autopilot {
         let n = path.n();
         let idx = match self.idx {
             Some(i) => path.track(i, car.x, car.z, 24),
-            None => path.nearest(car.x, car.z),
+            None => path.nearest(car.x, car.y, car.z),
         };
         self.idx = Some(idx);
         let speed = car.forward_speed.max(0.0);

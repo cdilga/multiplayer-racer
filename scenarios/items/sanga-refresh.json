@@ -1,0 +1,67 @@
+{
+  "scenario": "sanga-refresh",
+  "what": "W03: six-second card duration, refresh without a multiplier, exact expiry boundaries and deterministic cleanup; unchanged driving compared with the same inputs without the item.",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 1250,
+  "cars": [
+    {
+      "routePoint": 16
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 240,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    },
+    {
+      "tick": 241,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 260,
+      "toTick": 280,
+      "stick": [
+        0,
+        0
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    },
+    {
+      "car": 0,
+      "fromTick": 500,
+      "toTick": 520,
+      "stick": [
+        0,
+        0
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    }
+  ],
+  "place": [],
+  "observe": [
+    281,
+    521,
+    981,
+    1219,
+    1220
+  ],
+  "expect": []
+}

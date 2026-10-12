@@ -1,0 +1,218 @@
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 6.53s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/release/deps/jj_procgen-9c4561f27b145835)
+
+running 4 tests
+test seed::tests::streams_are_reproducible_and_separate ... ok
+test tuning::tests::the_shipped_file_validates_and_matches_the_owner_rulings ... ok
+test tuning::tests::the_validator_names_each_problem ... ok
+test tuning::tests::a_change_applies_whole_or_not_at_all ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/arena.rs (target/aarch64-apple-darwin/release/deps/arena-1215fa1ef4a1eeb4)
+
+running 9 tests
+test debug_trace ... ignored
+test the_scenario_bank_maps_are_the_generators_output ... ok
+test golden_arenas_hash_to_the_committed_values ... ok
+test the_bowl_profile_is_smooth_and_concave_and_its_mesh_is_closed_and_faces_out ... ok
+test there_is_no_cap_a_thousand_cars_get_a_bowl_and_a_place_each ... ok
+test bowl_transition_never_catches_or_launches_a_car ... ok
+test arenas_for_8_16_and_32_cars_validate_and_place_everyone_on_the_floor ... ok
+test bowl_containment_airborne_rams_never_leave ... ok
+test bowl_containment_rams_from_many_angles_and_speeds_never_leave ... ok
+
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 54.74s
+
+     Running tests/bank.rs (target/aarch64-apple-darwin/release/deps/bank-215ecabac19eb092)
+
+running 4 tests
+test the_conservative_recipe_is_always_available ... ok
+test every_seed_prepares_a_valid_track_and_every_fallback_is_counted ... ok
+test the_autopilot_laps_a_sample_of_every_mix_and_length_class ... ok
+test the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock has been running for over 60 seconds
+test the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 78.36s
+
+     Running tests/bikes.rs (target/aarch64-apple-darwin/release/deps/bikes-e7e478bec46e49cb)
+
+running 1 test
+test bike_laps_every_generated_biome_upright_and_replays ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.88s
+
+     Running tests/biome.rs (target/aarch64-apple-darwin/release/deps/biome-e0806e15a5388876)
+
+running 8 tests
+test the_trait_is_all_a_biome_needs_and_every_biome_is_pure_data ... ok
+test missing_or_shortened_rail_sections_are_rejected_as_gaps ... ok
+test a_transition_blends_the_terrain_and_switches_the_road_in_the_middle ... ok
+test writes_the_capture ... ok
+test chevrons_and_rail_stand_on_the_outside_of_the_turn ... ok
+test two_biome_recipes_hash_to_the_committed_goldens ... ok
+test every_corner_has_chevrons_and_rail_and_the_finish_has_a_gantry_on_every_route ... ok
+test a_two_biome_placeholder_track_validates_with_its_transition ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.01s
+
+     Running tests/biomes.rs (target/aarch64-apple-darwin/release/deps/biomes-abd6c844552a306f)
+
+running 5 tests
+test writes_the_top_down_plots ... ok
+test town_houses_face_straight_streets_with_junctions_and_signs ... ok
+test bitumen_lane_lines_posts_and_rail_are_pieces_and_it_meets_the_placeholder ... ok
+test rocks_domes_vary_by_seed_only_and_reuse_the_cores_features ... ok
+test outback_dirt_has_two_species_clear_of_the_route_and_the_autopilot_laps_three_seeds ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.60s
+
+     Running tests/course.rs (target/aarch64-apple-darwin/release/deps/course-29caf7b9dee5b067)
+
+running 1 test
+test a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.71s
+
+     Running tests/features.rs (target/aarch64-apple-darwin/release/deps/features-0f9d7f74ca185723)
+
+running 2 tests
+test writes_the_profile_image ... ok
+test every_placed_feature_passes_its_envelope_and_the_validator_across_the_seed_bank ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.77s
+
+     Running tests/handling.rs (target/aarch64-apple-darwin/release/deps/handling-9c861fc7e8045d3c)
+
+running 6 tests
+test cruz_generated_rough_verge_turns_do_not_roll ... ok
+test bike_flat_speed_lock_bank ... ok
+test bike_generated_full_lock_regressions_stay_upright ... ok
+test on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills ... ok
+test a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over has been running for over 60 seconds
+test bike_generated_road_speed_lock_bank has been running for over 60 seconds
+test bike_generated_road_speed_lock_bank ... ok
+test a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 145.33s
+
+     Running tests/jumps.rs (target/aarch64-apple-darwin/release/deps/jumps-c43f3291d874b325)
+
+running 5 tests
+test a_corner_inside_the_jump_approach_is_rejected ... ok
+test a_reserved_landing_without_a_receiving_surface_is_rejected ... ok
+test every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds ... ok
+test every_generated_jump_releases_a_car_actually_boosting_at_the_lip ... ok
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster has been running for over 60 seconds
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 89.20s
+
+     Running tests/playtest.rs (target/aarch64-apple-darwin/release/deps/playtest-7e0a171187598bae)
+
+running 4 tests
+test the_drawn_biome_counts_follow_the_weights_and_every_biome_appears_alone ... ok
+test the_track_is_a_pure_function_of_the_seed ... ok
+test the_length_classes_follow_the_weights_and_the_courses_are_built_to_their_bands ... ok
+test every_drawn_mix_validates_and_runs_its_biomes_in_lap_order ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.99s
+
+     Running tests/presets.rs (target/aarch64-apple-darwin/release/deps/presets-85e6a4c25a92d286)
+
+running 2 tests
+test preset_seed_bank_reports_geometry ... ok
+test each_preset_autopilot_laps_each_biome_across_seeds_and_replays has been running for over 60 seconds
+test each_preset_autopilot_laps_each_biome_across_seeds_and_replays ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 74.14s
+
+     Running tests/procgen.rs (target/aarch64-apple-darwin/release/deps/procgen-19c3c3f35f498e5a)
+
+running 5 tests
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.84s
+
+     Running tests/respawn.rs (target/aarch64-apple-darwin/release/deps/respawn-88b18a860031cdc4)
+
+running 2 tests
+test every_anchor_is_on_the_road_before_any_hazard_and_faces_along_it ... ok
+test a_respawn_holds_then_rolls_off_and_two_at_once_never_overlap ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+
+     Running tests/roofs.rs (target/aarch64-apple-darwin/release/deps/roofs-5e311c69f03ee7b0)
+
+running 2 tests
+test roof_stunt_dimensions_are_tunable_and_invalid_values_are_refused ... ok
+test town_seed_lots_are_reachable_clear_and_land_a_real_car ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.36s
+
+     Running tests/scatter.rs (target/aarch64-apple-darwin/release/deps/scatter-125dbc07ea9713e1)
+
+running 5 tests
+test writes_the_capture ... ok
+test scatter_is_a_pure_function_of_the_dressing_stream ... ok
+test bitumen_poisson_radius_confirms_m02s_recommendation ... ok
+test poisson_biomes_are_even_and_cluster_biomes_clump_with_clearings ... ok
+test nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.87s
+
+     Running tests/signs.rs (target/aarch64-apple-darwin/release/deps/signs-d000f204c9c575da)
+
+running 10 tests
+test every_shipped_sign_passes_its_grammar ... ok
+test a_pictogram_outside_the_known_set_fails ... ok
+test registry_entries_load_in_jj_map_beside_the_generic_kit ... ok
+test sidecars_record_family_and_a_real_copy_needs_its_commons_source_and_licence ... ok
+test a_wrong_colour_family_fails ... ok
+test a_new_shape_fails ... ok
+test direction_and_tourist_grammar_hold ... ok
+test the_invented_sign_follows_the_warning_grammar ... ok
+test text_too_long_or_not_upper_case_fails ... ok
+test data_files_registry_entries_and_the_compiled_lists_stay_paired ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/terrain.rs (target/aarch64-apple-darwin/release/deps/terrain-992b34cf36424cf3)
+
+running 6 tests
+test undulation_is_idempotent_and_leaves_the_route_plan_alone ... ok
+test corners_bank_toward_the_turn_with_the_inside_edge_lower ... ok
+test writes_the_evidence_images ... ok
+test town_and_bitumen_are_gentler_than_rocks ... ok
+test grade_curvature_and_bank_stay_inside_each_biomes_limits_along_the_route_band ... ok
+test the_painted_road_edge_has_no_cell_sized_saw_tooth ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.90s
+
+     Running tests/tuning.rs (target/aarch64-apple-darwin/release/deps/tuning-8fd7367922fe2aea)
+
+running 4 tests
+test a_tuned_mix_draws_the_biome_counts_it_is_given ... ok
+test a_tuned_length_class_builds_tracks_inside_its_band ... ok
+test a_tuned_relief_changes_the_built_height_range ... ok
+test the_shipped_data_builds_the_same_tracks_as_the_untuned_generator ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.25s
+
+     Running tests/wasm_parity.rs (target/aarch64-apple-darwin/release/deps/wasm_parity-adadfb5ea1b670ba)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests jj_procgen
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,189 @@
+{
+  "engine": "Chromium",
+  "version": "151.0.7922.34",
+  "hardware": "linux/x64",
+  "gpuMode": "1",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.341 (NVIDIA NVIDIA GeForce RTX 2080 SUPER (0x00001E81)), NVIDIA)",
+  "measurements": [
+    {
+      "position": "top",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 988.265625
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "bottom",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 988.265625
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "top",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 396,
+        "height": 845.25
+      },
+      "changed": 0,
+      "sampled": 9120
+    },
+    {
+      "position": "bottom",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 396,
+        "height": 845.25
+      },
+      "changed": 0,
+      "sampled": 9120
+    },
+    {
+      "position": "top",
+      "viewport": {
+        "width": 915,
+        "height": 412
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 358
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "bottom",
+      "viewport": {
+        "width": 915,
+        "height": 412
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 358
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "top",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 359,
+        "height": 609.640625
+      },
+      "changed": 0,
+      "sampled": 8232
+    },
+    {
+      "position": "bottom",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 359,
+        "height": 609.640625
+      },
+      "changed": 0,
+      "sampled": 8232
+    },
+    {
+      "position": "top",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 705.59375
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "bottom",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 705.59375
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "fullscreen",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 988.265625
+      },
+      "changed": 0,
+      "sampled": 11136
+    },
+    {
+      "position": "after-fullscreen",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 480,
+        "height": 988.265625
+      },
+      "changed": 0,
+      "sampled": 11136
+    }
+  ]
+}

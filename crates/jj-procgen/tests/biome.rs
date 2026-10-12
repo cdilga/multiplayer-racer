@@ -133,14 +133,47 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                 "seed {seed} {label}: no {want:?} road for {b:?}"
             );
         }
-        // Grade along the road never beats the strictest biome on the route.
-        let strictest = recipe
+        // R124: each biome keeps its own grade budget, blended at transitions; town must not flatten the rocks.
+        let (s, total) = jj_procgen::assemble::arc_lengths(&route(&map));
+        let cuts: Vec<usize> = map
+            .route
+            .segments
             .iter()
-            .map(|b| def(*b).data().terrain.max_grade)
-            .fold(f64::INFINITY, f64::min);
+            .take(map.route.segments.len() - 1)
+            .map(|seg| seg.span.to as usize)
+            .collect();
+        let selection = jj_procgen::biome::Selection {
+            lap: map
+                .route
+                .segments
+                .iter()
+                .map(|seg| {
+                    *recipe
+                        .iter()
+                        .find(|b| segment_name(**b) == seg.name)
+                        .unwrap()
+                })
+                .collect(),
+            cut_s: cuts.iter().map(|i| s[*i]).collect(),
+            cuts,
+            s,
+            total,
+        };
+        let grade_at = |i| {
+            let (a, b, t) = selection.blend_at(i);
+            def(a)
+                .data()
+                .terrain
+                .lerp(&def(b).data().terrain, t)
+                .max_grade
+        };
         let n = map.route.points.len();
         let near_feature = |i: usize| {
             map.features.iter().any(|f| {
+                if let Some(d) = jj_map::bridge::BridgeDesign::of(f) {
+                    return jj_map::bridge::indices(&map, d.upper)
+                        .is_some_and(|ix| ix.contains(&i));
+                }
                 f64::from(f.pose.x - map.route.points[i].x)
                     .hypot(f64::from(f.pose.z - map.route.points[i].z))
                     < 80_000.0
@@ -153,13 +186,15 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
             let (a, b) = (&map.route.points[i], &map.route.points[(i + 2) % n]);
             let run = f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0;
             if run > 1.0 && (i + 2) % n >= 2 {
-                worst_grade = worst_grade.max(f64::from(b.y - a.y).abs() / 1000.0 / run);
+                let grade = f64::from(b.y - a.y).abs() / 1000.0 / run;
+                let budget = grade_at(i).max(grade_at((i + 2) % n));
+                assert!(
+                    grade <= budget + 0.02,
+                    "seed {seed} {label} point{i}: grade{grade:.3} vs local budget{budget}"
+                );
+                worst_grade = worst_grade.max(grade);
             }
         }
-        assert!(
-            worst_grade <= strictest + 0.02,
-            "seed {seed} {label}: grade {worst_grade:.3} vs {strictest}"
-        );
     }
     *table += &format!(
         "{label:<46} {ok:>3}/{} seeds found every boundary ({no_straight} had no straight), worst route grade {:.2} %\n",
@@ -331,10 +366,55 @@ fn chevrons_and_rail_stand_on_the_outside_of_the_turn() {
                         "seed {seed}: {} on the inside ({lateral:.1} m)",
                         d.kit_piece
                     );
+                    if d.kit_piece == CHEVRON {
+                        let yaw = f64::from(d.pose.yaw) / 100.0 * std::f64::consts::PI / 180.0;
+                        let front = (-yaw.sin(), yaw.cos());
+                        assert!(
+                            front.0 * tx / l + front.1 * tz / l < -0.85,
+                            "seed {seed}: board front must face approaching traffic, not hide behind the post"
+                        );
+                        assert_eq!(
+                            d.params.get("rightArrow"),
+                            Some(&i64::from(!c.left)),
+                            "seed {seed}: the printed arrow must point into the bend"
+                        );
+                    }
                 }
             }
         }
     }
+}
+
+#[test]
+fn missing_or_shortened_rail_sections_are_rejected_as_gaps() {
+    let map = generate(0);
+    assert!(wayfinding::check(&map).is_empty());
+    let rail = map
+        .dressing
+        .iter()
+        .enumerate()
+        .filter(|(_, d)| d.kit_piece == GUARD_RAIL)
+        .max_by_key(|(_, d)| d.params["lengthMm"])
+        .unwrap()
+        .0;
+    let mut missing = map.clone();
+    missing.dressing.remove(rail);
+    assert!(
+        wayfinding::check(&missing)
+            .iter()
+            .any(|b| b.contains("guard rail gap")),
+        "removing a middle section must leave a rejected gap"
+    );
+    let mut shortened = map;
+    shortened.dressing[rail]
+        .params
+        .insert("lengthMm".into(), 1000);
+    assert!(
+        wayfinding::check(&shortened)
+            .iter()
+            .any(|b| b.contains("guard rail gap")),
+        "a nearby post must not hide a short beam"
+    );
 }
 
 /// The recipes' goldens (`goldens/recipes.txt`), pinned like the seeds', checked in WASM too.

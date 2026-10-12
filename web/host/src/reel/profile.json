@@ -1,0 +1,17 @@
+{
+  "tickHz": 120,
+  "captureHz": 30,
+  "ringSeconds": 20,
+  "preSeconds": 3,
+  "postSeconds": 2,
+  "reelSeconds": 60,
+  "budgetBytes": 67108864,
+  "maxGapSeconds": 0.25,
+  "airSeconds": 1.2,
+  "closeFinishSeconds": 1,
+  "orbitDegreesPerSecond": 8,
+  "orbitStartDegrees": 55,
+  "eventWeights": { "detach": 4, "wreck": 10, "air": 6, "finish": 2, "close-finish": 8 },
+  "coverageWeight": 12,
+  "rarityWeight": 3
+}

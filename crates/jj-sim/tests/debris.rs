@@ -177,8 +177,9 @@ fn debris_persists_dynamic_sleeps_and_wakes_on_contact() {
 
 #[test]
 fn nothing_converts_deletes_merges_or_budgets_debris() {
-    // The source scan: no code path in the sim makes a body static, removes one, truncates the prop list or names a
-    // cap, budget or lifetime for debris.
+    // The source scan: no debris path makes a body static, removes one, truncates the prop list or names a
+    // cap, budget or lifetime. The mounted rails have fixed anchors and an R90 rigid-rail comparison seam; neither
+    // owns debris. Allow only those specific fixed-body statements, keeping every removal/count/expiry ban global.
     const FORBIDDEN: [&str; 14] = [
         "set_body_type",
         "RigidBodyType::Fixed",
@@ -213,12 +214,37 @@ fn nothing_converts_deletes_merges_or_budgets_debris() {
     let mut hits = Vec::new();
     for f in &files {
         let text = std::fs::read_to_string(f).unwrap();
+        // R58 forbids debris expiry; W01 explicitly requires natural expiry of item effects.
+        // The item ledger owns no physics bodies. Keep the body-deletion/count bans below
+        // everywhere, but do not mistake its card timing or the typed ledger call for debris TTL.
+        let item_ledger = f.starts_with(Path::new(env!("CARGO_MANIFEST_DIR")).join("src/items"));
+        let mut rail_comparison = false;
         for (n, line) in text.lines().enumerate() {
             let code = line.split("//").next().unwrap_or("");
+            if f.ends_with("sim.rs") && code.contains("pub fn set_rail_fixed(") {
+                rail_comparison = true;
+            }
+            if code == "    }" {
+                rail_comparison = false;
+            }
             for pat in FORBIDDEN {
                 if code.contains(pat) {
+                    let rail_anchor = f.ends_with("rails.rs")
+                        && code.trim()
+                            == ".insert(RigidBodyBuilder::fixed().translation(centre).rotation(yaw));";
+                    let comparison_statement = rail_comparison
+                        && matches!(
+                            code.trim(),
+                            "self.world.bodies[rail.body].set_body_type(" | "RigidBodyType::Fixed"
+                        );
+                    if rail_anchor || comparison_statement {
+                        continue;
+                    }
                     hits.push(format!("{}:{}: {pat}", f.display(), n + 1));
                 }
+            }
+            if item_ledger || code.trim() == "self.items.expire(self.tick);" {
+                continue;
             }
             let lower = code.to_lowercase();
             for word in ["ttl", "expire", "lifetime"] {

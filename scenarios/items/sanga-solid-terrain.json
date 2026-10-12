@@ -1,0 +1,73 @@
+{
+  "scenario": "sanga-solid-terrain",
+  "what": "W03: the buff cannot push through fixed terrain/barriers. A real car hits the yard wall at 15 m/s and stops while its shield preserves contact health.",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 350,
+  "cars": [
+    {
+      "pose": {
+        "x": -60,
+        "y": 0.6,
+        "z": -20
+      }
+    }
+  ],
+  "race": {
+    "atTick": 0,
+    "laps": 99
+  },
+  "pickups": [
+    {
+      "tick": 251,
+      "car": 0,
+      "seat": 17,
+      "item": "sanga"
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 260,
+      "toTick": 280,
+      "stick": [
+        0,
+        0
+      ],
+      "action": [
+        0,
+        -1
+      ]
+    }
+  ],
+  "place": [
+    {
+      "tick": 250,
+      "car": 0,
+      "pose": {
+        "x": 32,
+        "y": 0.6,
+        "z": -30,
+        "headingDeg": 90
+      },
+      "linvel": [
+        15,
+        0,
+        0
+      ]
+    }
+  ],
+  "observe": [
+    281,
+    350
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "forwardSpeed",
+      "atTick": 350,
+      "min": -0.5,
+      "max": 0.5
+    }
+  ]
+}

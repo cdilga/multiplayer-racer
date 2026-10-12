@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "what": "Generator data (R124/R125): the course length classes (sprint, standard, epic: weight, length band, laps) and straights, each biome's terrain and feature mix, and the biome mix (weights for one to four biomes per track). Tuned in the owner tuning menu and changed here, never in code; jj-procgen validates the file at load. A committed change moves the goldens: bump GENERATOR_VERSION and re-bless tests/goldens.",
+  "mix": {
+    "oneBiome": 35.0,
+    "twoBiomes": 35.0,
+    "threeBiomes": 15.0,
+    "fourBiomes": 15.0
+  },
+  "course": {
+    "classes": {
+      "sprint": {
+        "weight": 30.0,
+        "lengthMinM": 600.0,
+        "lengthMaxM": 900.0,
+        "laps": 5
+      },
+      "standard": {
+        "weight": 50.0,
+        "lengthMinM": 1000.0,
+        "lengthMaxM": 1600.0,
+        "laps": 3
+      },
+      "epic": {
+        "weight": 20.0,
+        "lengthMinM": 1800.0,
+        "lengthMaxM": 2500.0,
+        "laps": 2
+      }
+    },
+    "startStraightMinM": 110.0,
+    "startStraightMaxM": 160.0,
+    "straightSpread": 0.6,
+    "minStraightM": 18.0,
+    "bendSpacingM": 350.0,
+    "presets": {
+      "twisty": {
+        "weight": 1,
+        "hairpinProbability": 1,
+        "secondHairpinProbability": 0.35,
+        "sweeperProbability": 0.15,
+        "oppositeCornerProbability": 0.5,
+        "bendSpacingScale": 0.85,
+        "chicanesPerKm": 2,
+        "chicaneAngleScale": 1.4,
+        "radiusScale": 0.9
+      },
+      "flowing": {
+        "weight": 1,
+        "hairpinProbability": 0.35,
+        "secondHairpinProbability": 0.1,
+        "sweeperProbability": 0.8,
+        "oppositeCornerProbability": 0.45,
+        "bendSpacingScale": 1.2,
+        "chicanesPerKm": 0.6,
+        "chicaneAngleScale": 1.1,
+        "radiusScale": 1.05
+      },
+      "speedway": {
+        "weight": 1,
+        "hairpinProbability": 0,
+        "secondHairpinProbability": 0,
+        "sweeperProbability": 1,
+        "oppositeCornerProbability": 0,
+        "bendSpacingScale": 3,
+        "chicanesPerKm": 0,
+        "chicaneAngleScale": 1,
+        "radiusScale": 1.05
+      },
+      "figureEight": {
+        "weight": 0.6
+      }
+    },
+    "crossing": {
+      "lobeTurnMinDeg": 220,
+      "lobeTurnMaxDeg": 225,
+      "deckHeightM": 6.5,
+      "plateauHalfM": 12,
+      "thicknessMm": 400,
+      "barrierHeightMm": 750,
+      "barrierWidthMm": 350,
+      "clearanceMm": 5000,
+      "maxGradeMilli": 200
+    }
+  },
+  "biomes": {
+    "greybox": {
+      "terrain": {
+        "reliefM": 2.0,
+        "groundReliefM": 2.0,
+        "wavelengthM": 100.0,
+        "maxGrade": 0.03,
+        "maxCurvature": 0.002,
+        "maxBankCdeg": 200,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.0,
+        "crest": 1.5,
+        "whoops": 1.5,
+        "creek": 1.0
+      }
+    },
+    "town": {
+      "terrain": {
+        "reliefM": 3.0,
+        "groundReliefM": 3.0,
+        "wavelengthM": 60.0,
+        "maxGrade": 0.03,
+        "maxCurvature": 0.002,
+        "maxBankCdeg": 200,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 0.0,
+        "crest": 1.0,
+        "whoops": 0.0,
+        "creek": 0.0
+      }
+    },
+    "rocks": {
+      "terrain": {
+        "reliefM": 45.0,
+        "groundReliefM": 30.0,
+        "wavelengthM": 180.0,
+        "maxGrade": 0.18,
+        "maxCurvature": 0.006,
+        "maxBankCdeg": 600,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.5,
+        "crest": 2.0,
+        "whoops": 1.0,
+        "creek": 0.0
+      }
+    },
+    "outbackDirt": {
+      "terrain": {
+        "reliefM": 5.0,
+        "groundReliefM": 5.0,
+        "wavelengthM": 120.0,
+        "maxGrade": 0.05,
+        "maxCurvature": 0.003,
+        "maxBankCdeg": 500,
+        "blendM": 20.0
+      },
+      "features": {
+        "jump": 2.0,
+        "crest": 1.0,
+        "whoops": 2.0,
+        "creek": 1.5
+      }
+    },
+    "outbackBitumen": {
+      "terrain": {
+        "reliefM": 4.0,
+        "groundReliefM": 4.0,
+        "wavelengthM": 220.0,
+        "maxGrade": 0.035,
+        "maxCurvature": 0.0015,
+        "maxBankCdeg": 400,
+        "blendM": 24.0
+      },
+      "features": {
+        "jump": 0.5,
+        "crest": 2.0,
+        "whoops": 0.0,
+        "creek": 1.0
+      }
+    }
+  },
+  "jumps": {
+    "minRampSlope": 0.18,
+    "maxRampSlope": 0.21
+  },
+  "roofStunts": {
+    "spacingM": 120.0,
+    "offsetMinM": 28.0,
+    "offsetMaxM": 70.0,
+    "offsetStepM": 14.0,
+    "runInM": 20.0,
+    "maxGroundGrade": 0.1,
+    "houseWidthM": 14.0,
+    "houseDepthM": 10.0,
+    "houseHeightM": 2.8,
+    "rampLengthM": 10.0,
+    "rampWidthM": 4.0,
+    "lipHeightM": 2.1,
+    "blendM": 6.0,
+    "lipToHouseM": 16.0,
+    "designSpeedMps": 15.0
+  }
+}

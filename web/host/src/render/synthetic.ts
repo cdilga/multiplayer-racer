@@ -3,8 +3,8 @@
 // SimClient's snapshot surface (`onSnapshot`, `release`), so the renderer takes either; with no free buffer it skips
 // the publish, like the worker. Poses are a pure function of the tick (cars lapping an oval in lanes, each respawning
 // on its own 10 s cycle with its `life` bumped), so a frozen tick renders the same frame every time.
-import sidecar from '../../../../art/vehicles/cruz-missile/cruz-missile.asset.json';
 import type { Snapshot } from '../worker/client';
+import { VEHICLE_IDS, vehicleSource } from './vehicles/registry';
 import { encodeSnapshot, PART_DETACHED, PART_LOOSE, PART_PIECE, PIECE_HUSK, snapshotBytes, type CarPose, type PartPose } from './snapshot';
 
 export const TICK_HZ = 120;
@@ -27,6 +27,8 @@ export interface SyntheticOptions {
   /** The effects demo (P1-R12; `?fxdemo`): cars cycle through the families' triggers (dirt and gravel driving, a drift, a
    *  boost, impacts, landings, a part coming off) and a husk burns beside the oval. Presentation fixtures only. */
   fxDemo?: boolean;
+  /** Cars take the roster's vehicles in turn (R123; `?vehicles=mixed`), so a grid shows every model; otherwise all draw the first. */
+  mixed?: boolean;
 }
 
 const SPEED = 18; // m/s
@@ -74,6 +76,8 @@ export function syntheticPose(i: number, n: number, tick: number): CarPose {
   return { id: i + 1, life, pos: [x, 0, z], rot: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)], steer: 0 };
 }
 
+// Every vehicle shares the part contract (jj.vehicle.v1 part names and order), so the first roster vehicle's sidecar names the parts.
+const sidecar = vehicleSource(VEHICLE_IDS[0]!).sidecar;
 const PART = Object.fromEntries(Object.keys(sidecar.parts).map((id, i) => [id, i])) as Record<string, number>;
 const deg = Math.PI / 180;
 
@@ -228,6 +232,7 @@ export class SyntheticSource implements SnapshotSource {
     const n = this.opts.cars;
     const strip = this.opts.strip;
     const cars = Array.from({ length: n }, (_, i) => (strip ? stripPose(i) : syntheticPose(i, n, tick)));
+    if (this.opts.mixed) cars.forEach((c, i) => (c.vehicle = i % VEHICLE_IDS.length));
     if (this.fxDemo && !strip) cars.forEach((c, i) => Object.assign(c, fxDemoState(i, n, tick)));
     const parts = this.fxDemo && !strip
       ? [...(this.opts.damage ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat() : []), ...fxDemoParts(n, tick)]

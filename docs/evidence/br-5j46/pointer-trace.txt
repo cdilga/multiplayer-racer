@@ -1,0 +1,40 @@
+autopilot under CPU throttle 80
+target {
+  x: 1048.1640625,
+  y: 597.6171875,
+  phase: 'Intermission',
+  remainingMs: 23683
+}
+after pointer {
+  phase: 'Running',
+  remainingMs: null,
+  clicked: { trusted: true, phase: 'Intermission', round: 1 },
+  trace: [
+    {
+      type: 'pointerdown',
+      target: '<button class="btn brush primary big" data-act="start" type="button"><svg class="bb" width="413" height="36" viewBox="0 0 413 36" aria-hidden="true"><g class="bb-rings"><path class="bb-ring bb-gp-edge" d="M8.6 -0.4L35.3 -0.0L62.0 0.2L88.6 -0.2L115.3 ',
+      x: 1048.1640625,
+      y: 597.6171875,
+      trusted: true,
+      phase: 'Intermission'
+    },
+    {
+      type: 'pointerup',
+      target: '<button class="btn brush primary big" data-act="start" type="button"><svg class="bb" width="413" height="36" viewBox="0 0 413 36" aria-hidden="true"><g class="bb-rings"><path class="bb-ring bb-gp-edge" d="M8.6 -0.4L35.3 -0.0L62.0 0.2L88.6 -0.2L115.3 ',
+      x: 1048.1640625,
+      y: 597.6171875,
+      trusted: true,
+      phase: 'Intermission'
+    },
+    {
+      type: 'click',
+      target: '<button class="btn brush primary big" data-act="start" type="button"><svg class="bb" width="413" height="36" viewBox="0 0 413 36" aria-hidden="true"><g class="bb-rings"><path class="bb-ring bb-gp-edge" d="M8.6 -0.4L35.3 -0.0L62.0 0.2L88.6 -0.2L115.3 ',
+      x: 1048,
+      y: 597,
+      trusted: true,
+      phase: 'Intermission'
+    }
+  ],
+  buttons: []
+}
+{"steps":["room YSMB","join-webrtc (host, 1 ms)","input","resume","drive","hud","round"],"path":"host","code":"YSMB","ok":true}

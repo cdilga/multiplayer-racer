@@ -81,14 +81,27 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
 }
 
 /// [`undulate`] with a biome's parameters at every route point (`along[i]` for point `i`), for a route that crosses
-/// biomes. The profile's relief, grade and curvature limits are the strictest along the route (so every stretch stays
-/// inside its own biome's limits); the bank limit follows each point; ground relief, wavelength and blend distance are
+/// biomes. Profile strength and its grade/curvature limits follow each point, so a gentle town stretch does not flatten
+/// the rock climbs elsewhere. The whole closed profile uses the largest relief budget; the bank limit follows each
+/// point; ground relief, wavelength and blend distance are
 /// blended smoothly into the cells around the road by the same inverse-distance weights as the heights, so there is no
 /// step where two biomes meet.
 pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
+    undulate_along_crossing(map, rng, along, None);
+}
+
+/// A crossing's upper road is an explicit deck. Inside the lower road's bed its profile must not contribute to the
+/// ground: blending both elevations there makes a narrow bump beneath the deck. Upper influence fades back in beyond
+/// the lower shoulder so the rest of the terrain and the deck's approach ends remain continuous.
+pub fn undulate_along_crossing(
+    map: &mut Map,
+    rng: &mut Rng,
+    along: &[TerrainParams],
+    crossing: Option<[(f64, f64); 2]>,
+) {
     let min = |f: &dyn Fn(&TerrainParams) -> f64| along.iter().map(f).fold(f64::INFINITY, f64::min);
     let p = &TerrainParams {
-        relief_m: min(&|q| q.relief_m),
+        relief_m: along.iter().map(|q| q.relief_m).fold(0.0, f64::max),
         max_grade: min(&|q| q.max_grade),
         max_curvature: min(&|q| q.max_curvature),
         blend_m: along.iter().map(|q| q.blend_m).fold(0.0, f64::max),
@@ -166,23 +179,38 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
             .sum()
     };
     let raw: Vec<f64> = (0..n).map(|i| slope0(s[i] + ds[i] / 2.0)).collect();
+    // Strength is local to the biome and smoothly blended at its boundaries. Weight the zero-mean correction by
+    // that same strength so the loop still closes without forcing all biomes to share the gentlest profile.
+    let strength: Vec<f64> = (0..n)
+        .map(|i| along[i].max_grade.min(along[(i + 1) % n].max_grade) / p.max_grade)
+        .collect();
     let (mut num, mut den) = (0.0, 0.0);
     for i in 0..n {
-        num += f[i] * raw[i] * ds[i];
-        den += f[i] * ds[i];
+        num += f[i] * strength[i] * raw[i] * ds[i];
+        den += f[i] * strength[i] * ds[i];
     }
     let mean = num / den.max(1e-9);
-    let d: Vec<f64> = (0..n).map(|i| f[i] * (raw[i] - mean)).collect();
+    let d: Vec<f64> = (0..n)
+        .map(|i| f[i] * strength[i] * (raw[i] - mean))
+        .collect();
     let mut h = vec![0.0; n];
     for i in 1..n {
         h[i] = h[i - 1] + d[i - 1] * ds[i - 1];
     }
     let lo = h.iter().copied().fold(f64::INFINITY, f64::min);
     let hi = h.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let steepest = (0..n).map(|i| d[i].abs() / f[i]).fold(1e-12, f64::max);
+    let steepest = (0..n)
+        .map(|i| d[i].abs() / (f[i] * strength[i]))
+        .fold(1e-12, f64::max);
     let sharpest = (0..n)
         .map(|i| {
-            (d[i] - d[(i + n - 1) % n]).abs() / ((ds[i] + ds[(i + n - 1) % n]) / 2.0).max(1e-9)
+            let previous = (i + n - 1) % n;
+            let local_limit = along[previous]
+                .max_curvature
+                .min(along[i].max_curvature)
+                .min(along[(i + 1) % n].max_curvature);
+            (d[i] - d[previous]).abs() / ((ds[i] + ds[previous]) / 2.0).max(1e-9) * p.max_curvature
+                / local_limit
         })
         .fold(1e-12, f64::max);
     let gain = (p.relief_m / (hi - lo).max(1e-9))
@@ -241,6 +269,47 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
     );
     let bed = half + BED_SPACINGS * sp;
     let reach_m = bed + p.blend_m + REACH_EXTRA_M;
+    let layer_weight = crossing.map(|[upper, lower]| {
+        let upper: Vec<bool> = s.iter().map(|&v| v >= upper.0 && v <= upper.1).collect();
+        let lower: Vec<usize> = s
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &v)| (v >= lower.0 && v <= lower.1).then_some(i))
+            .collect();
+        // Only cells inside the lower corridor can change an upper weight. Rasterise segment neighbourhoods instead
+        // of searching every lower segment for every cell in the world (important for WASM preparation latency).
+        let mut distances = vec![f64::INFINITY; cols * rows];
+        let fade = bed + p.blend_m;
+        for w in lower.windows(2) {
+            let (a, b) = (pts[w[0]], pts[w[1]]);
+            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+            let c0 = libm::floor(((a.0.min(b.0) - fade - ox) / sp).max(0.0)) as usize;
+            let c1 =
+                (libm::ceil(((a.0.max(b.0) + fade - ox) / sp).max(0.0)) as usize).min(cols - 1);
+            let r0 = libm::floor(((a.1.min(b.1) - fade - oz) / sp).max(0.0)) as usize;
+            let r1 =
+                (libm::ceil(((a.1.max(b.1) + fade - oz) / sp).max(0.0)) as usize).min(rows - 1);
+            for r in r0..=r1 {
+                for c in c0..=c1 {
+                    let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
+                    let t =
+                        (((x - a.0) * dx + (z - a.1) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
+                    let distance = (x - a.0 - t * dx).powi(2) + (z - a.1 - t * dz).powi(2);
+                    let at = r * cols + c;
+                    distances[at] = distances[at].min(distance);
+                }
+            }
+        }
+        let cells: Vec<f64> = distances
+            .into_iter()
+            .map(|distance| {
+                let distance = libm::sqrt(distance);
+                let k = ((distance - bed) / p.blend_m).clamp(0.0, 1.0);
+                k * k * (3.0 - 2.0 * k)
+            })
+            .collect();
+        (upper, cells)
+    });
     let kernel = |d2: f64| 1.0 / ((d2 + 1.0) * (d2 + 1.0) * (d2 + 1.0));
     let edge = kernel(reach_m * reach_m);
     let mut wsum = vec![0.0f64; cols * rows];
@@ -264,9 +333,17 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
                 if d2 >= reach_m * reach_m {
                     continue;
                 }
-                let w = kernel(d2) - edge;
-                let lateral = ((x - px) * nx + (z - pz) * nz).clamp(-half, half);
                 let at = r * cols + c;
+                let layer = layer_weight
+                    .as_ref()
+                    .map_or(1.0, |(upper, cells)| if upper[i] { cells[at] } else { 1.0 });
+                if layer == 0.0 {
+                    continue;
+                }
+                let w = (kernel(d2) - edge) * layer;
+                // Carry the bank across the whole bed, including the vertices beyond the painted edge. Clamping
+                // at the road's half-width flattens those vertices and bilinear sampling loses bank at the edge.
+                let lateral = ((x - px) * nx + (z - pz) * nz).clamp(-bed, bed);
                 wsum[at] += w;
                 hsum[at] += w * (h[i] + lateral * bank[i]);
                 if !uniform {
@@ -304,6 +381,32 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
         }
     }
     map.terrain.heights = heights;
+    // Taller off-road terrain can extend below the old fixed kill plane. Keep every real ground cell above it, with
+    // the same twenty-metre fall margin the flat assembler used. Ground contact must never itself be a wreck.
+    let lowest = i32::from(*map.terrain.heights.iter().min().expect("terrain grid")) * 10;
+    map.header.bounds.kill_y = (-20_000).min(lowest - 20_000);
+
+    // The route describes the surface the car actually drives, including grid quantisation and layer blending.
+    // Taller profiles amplify the small difference between the analytical curve and its heightfield. Project the
+    // painted road/gates onto that ground; the crossing pass supplies the separate upper deck profile afterwards.
+    for q in &mut map.route.points {
+        // Route poses are whole millimetres. Subtract the grid origin as integers so dressing that expands bounds
+        // cannot change a half-millimetre rounding tie through floating-point cancellation in world coordinates.
+        let t = &map.terrain;
+        let coordinate = |v: i32, origin: i32, count: u32| {
+            let spacing = i64::from(t.spacing);
+            let offset =
+                (i64::from(v) - i64::from(origin)).clamp(0, i64::from(count - 1) * spacing);
+            let cell = offset.div_euclid(spacing);
+            let fraction = offset.rem_euclid(spacing) as f64 / spacing as f64;
+            (cell as usize, fraction)
+        };
+        let ((c, fc), (r, fr)) = (
+            coordinate(q.x, t.origin_x, t.cols),
+            coordinate(q.z, t.origin_z, t.rows),
+        );
+        q.y = libm::round(cell_height_m(t, c, r, fc, fr) * 1000.0) as i32;
+    }
 
     // Everything placed stands on the ground.
     let terrain = map.terrain.clone();
@@ -325,15 +428,36 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
 /// The ground height (m) at world `(x, z)` m, bilinear on the heightfield the way the car drives it (clamped to the
 /// grid's edge).
 pub fn ground_height_m(t: &Terrain, x: f64, z: f64) -> f64 {
-    let sp = f64::from(t.spacing) / 1000.0;
-    let c = ((x - f64::from(t.origin_x) / 1000.0) / sp).clamp(0.0, f64::from(t.cols - 1));
-    let r = ((z - f64::from(t.origin_z) / 1000.0) / sp).clamp(0.0, f64::from(t.rows - 1));
-    let (c0, r0) = (libm::floor(c) as usize, libm::floor(r) as usize);
+    // Split the world-grid fraction before subtracting the grid origin. Moving bounds by whole cells (e.g. new
+    // roadside dressing) must not change interpolation or a feature's millimetre rounding tie on the same road.
+    let coordinate = |world_m: f64, origin: i32, count: u32| {
+        let origin = i64::from(origin);
+        let spacing = i64::from(t.spacing);
+        let world = world_m * 1000.0 / f64::from(t.spacing);
+        let whole = libm::floor(world);
+        let fraction = world - whole - origin.rem_euclid(spacing) as f64 / spacing as f64;
+        let carry = libm::floor(fraction);
+        let cell = whole - origin.div_euclid(spacing) as f64 + carry;
+        if cell < 0.0 {
+            (0, 0.0)
+        } else if cell >= f64::from(count - 1) {
+            ((count - 1) as usize, 0.0)
+        } else {
+            (cell as usize, fraction - carry)
+        }
+    };
+    let ((c, fc), (r, fr)) = (
+        coordinate(x, t.origin_x, t.cols),
+        coordinate(z, t.origin_z, t.rows),
+    );
+    cell_height_m(t, c, r, fc, fr)
+}
+
+fn cell_height_m(t: &Terrain, c0: usize, r0: usize, fc: f64, fr: f64) -> f64 {
     let (c1, r1) = (
         (c0 + 1).min(t.cols as usize - 1),
         (r0 + 1).min(t.rows as usize - 1),
     );
-    let (fc, fr) = (c - c0 as f64, r - r0 as f64);
     let g = |cc: usize, rr: usize| f64::from(t.heights[rr * t.cols as usize + cc]) / 100.0;
     let top = g(c0, r0) + (g(c1, r0) - g(c0, r0)) * fc;
     let bot = g(c0, r1) + (g(c1, r1) - g(c0, r1)) * fc;

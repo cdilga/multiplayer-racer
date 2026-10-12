@@ -1,3 +1,4 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // Journey JN3 (P1-G01): the party loop through the real host page (`B/host?room&test=live&laps=1`) and real phones over
 // WebRTC. Two players join; the Lobby has no driving cars (R110); both tap Ready; the countdown puts them on the grid;
 // the autopilot races a 1-lap round (test surface `autopilot`); Round complete shows both results on the TV and each
@@ -37,6 +38,8 @@ async function phone(url, name) {
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
+  await page.getByRole('button', { name: 'Skip tutorial' }).click();
   return { ctx, page };
 }
 
@@ -67,14 +70,29 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).cars.length, 2, 'the countdown puts both on the grid');
 
   await wait(host, () => window.__jjRoom.view().phase === 'Running');
+  // Startup rendering or the tutorial can already have handed a car to autopilot. The idle-cue scenario
+  // starts from two freshly player-driven cars: deliberate input earns the real handback, then both let go.
+  for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: -0.5, touch: true }, { x: 0, y: 0, touch: false }));
+  await wait(host, async () => {
+    const o = await window.__jjTest.observe();
+    return o.host.seats.length === 2 && o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
+      && o.cars.every((c) => c.autopilot == null && c.input.throttle > 0.3);
+  });
+  for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  await wait(host, async () => {
+    const o = await window.__jjTest.observe();
+    return o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
+      && o.cars.every((c) => c.autopilot == null && c.input.throttle < 0.05);
+  });
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
   // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
   await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
     const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
-    const view = await host.evaluate(() => ({ phase: window.__jjRoom.view().phase, stats: window.__jjNet?.stats?.() }));
-    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}: ${e.message}`);
+    const view = await host.evaluate(async () => ({ room: window.__jjRoom.view(), observed: await window.__jjTest.observe() }));
+    const controller = await a.page.evaluate(() => ({ state: window.__jjController.inspect(), tutorial: window.__jjTutorial.inspect() }));
+    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}, controller ${JSON.stringify(controller)}: ${e.message}`);
   });
   await shot(a.page, 'phone-idle-cue');
   await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);

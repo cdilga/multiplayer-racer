@@ -1,0 +1,27 @@
+▶ AC1: every component in every state, matching the POC sheet
+  ✔ the compare reference is the accepted one (sheet sources and tokens as frozen on 2026-10-07) (3.946375ms)
+  ✔ buttons: kit vs art/ui/sheets/components.html, every row and state, within the recorded tolerance (4127.266958ms)
+  ✔ kit renders every component in full motion (601.107625ms)
+  ✔ kit renders every component in reduced motion (584.292083ms)
+✔ AC1: every component in every state, matching the POC sheet (5419.38825ms)
+▶ AC2: focus rings wrap the whole slab, shadow included
+  ✔ geometry and pixels at DPR 1 (409.193542ms)
+  ✔ geometry and pixels at DPR 2 (411.327834ms)
+  ✔ geometry and pixels at DPR 3 (403.273125ms)
+✔ AC2: focus rings wrap the whole slab, shadow included (1224.132625ms)
+▶ AC3: the paper QR
+  ✔ decodes to the join URL at the tv smallest size (8 px per module), with code, domain and quiet zone (460.986791ms)
+  ✔ decodes to the join URL at the handheld smallest size (4 px per module), with code, domain and quiet zone (424.64775ms)
+✔ AC3: the paper QR (885.88225ms)
+▶ AC4: bundles
+  ✔ the landing bundle carries the kit; nothing on the landing or join path holds Three.js, a renderer, the sim or WASM (384.222ms)
+  ✔ the controller bundle imports the kit (4.761292ms)
+✔ AC4: bundles (389.084625ms)
+ℹ tests 11
+ℹ suites 4
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8426.029292

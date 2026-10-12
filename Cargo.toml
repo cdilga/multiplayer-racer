@@ -1,6 +1,11 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
+exclude = ["vendor/rapier3d"]
+
+[patch.crates-io]
+# P1-W03: keep moving dominant bodies readable to the contact solver, without applying its impulses to them.
+rapier3d = { path = "vendor/rapier3d" }
 
 [workspace.package]
 version = "0.2.0"
@@ -31,7 +36,7 @@ serde_json = "1.0.151"
 # Server runtime (P1-F03 pin, R2/R115): Asupersync, no Tokio; native runtime + rustls with the webpki root list.
 asupersync = { version = "=0.5.0", default-features = false, features = ["native-runtime", "tls-webpki-roots"] }
 # Physics (P1-F03 pin, P1-S01 uses it): enhanced-determinism forces libm maths so replays are bit-identical across targets.
-rapier3d = { version = "0.36.0", features = ["enhanced-determinism"] }
+rapier3d = { version = "=0.36.0", features = ["enhanced-determinism"] }
 # Procgen maths (P1-M03a): pure-Rust libm, so sin/cos/atan2 give the same bits natively and in WASM.
 libm = "0.2.16"
 # Server crypto (P1-N03/N04): room tickets (HMAC-SHA256), TURN REST credentials (HMAC-SHA1), base64, OS randomness.

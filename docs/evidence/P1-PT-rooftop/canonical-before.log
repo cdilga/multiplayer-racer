@@ -1,0 +1,26 @@
+[RCH] Cargo target sync active; forcing worker CARGO_TARGET_DIR to an isolated remote target and syncing back to /Users/cdilga/Documents/dev/multiplayer-racer/target
+[RCH] local (no admissible workers: os_gate_excluded=2 required_os=darwin (no worker declares `os = "darwin"` in workers.toml))
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running tests/roofs.rs (target/aarch64-apple-darwin/debug/deps/roofs-770986ab9f5dd1a1)
+
+running 1 test
+test sorting_and_reordering_dressing_preserve_the_reachable_house ... FAILED
+
+failures:
+
+---- sorting_and_reordering_dressing_preserve_the_reachable_house stdout ----
+
+thread 'sorting_and_reordering_dressing_preserve_the_reachable_house' (66067662) panicked at crates/jj-map/tests/roofs.rs:30:5:
+assertion `left == right` failed: canonical target did not move to another house
+  left: Dressing { kit_piece: "town/house", pose: Pose { x: 32000, y: 0, z: 20000, yaw: 0 }, params: {"depthMm": 10000, "heightCm": 280, "roofPitchDeg": 24, "widthMm": 14000}, collides: true }
+ right: Dressing { kit_piece: "town/house", pose: Pose { x: 50000, y: 0, z: 20000, yaw: 0 }, params: {"depthMm": 10000, "heightCm": 280, "roofPitchDeg": 24, "widthMm": 14000}, collides: true }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    sorting_and_reordering_dressing_preserve_the_reachable_house
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p jj-map --test roofs`

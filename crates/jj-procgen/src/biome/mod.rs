@@ -21,7 +21,7 @@ pub mod bitumen;
 pub mod dirt;
 pub mod greybox;
 pub mod rocks;
-mod select;
+pub mod select;
 pub mod town;
 pub mod wayfinding;
 

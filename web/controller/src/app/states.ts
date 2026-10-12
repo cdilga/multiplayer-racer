@@ -6,6 +6,7 @@
 //                                       another-tab, update-needed
 //   &seat=<n>                           the seat number for playing/reconnecting (default 12)
 //   &round=lobby|countdown|racing|results   the room phase shown while playing (default lobby)
+//   &choose=1                          playing in the lobby before vehicle confirmation
 //   &ready=1                            this seat is Ready
 //   &name=<text>                        the player's name
 import { seatColor } from '../../../shared/ui';

@@ -1,0 +1,17 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 22.14s
+     Running tests/crossings.rs (target/aarch64-apple-darwin/release/deps/crossings-59cfb74998c9398f)
+
+running 5 tests
+test dirt_seed16_bridge_has_drivable_edges_without_a_redraw ... ok
+test takeover_observation_and_tyre_grip_choose_the_physical_layer ... ok
+test driving_under_a_bridge_gate_cannot_count_as_passing_it ... ok
+test generated_crossing_bank_validates_without_flattening_or_discarding_the_family ... ok
+test bots_lap_both_levels_without_recovery_and_replay_exactly ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.65s
+

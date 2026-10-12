@@ -1,8 +1,10 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-G07: the host removes a player, through the real host page and synthetic controllers (no WebRTC; the host page's test
 // surface feeds their hello, claim and ready frames). In the Lobby the host opens the menu's player list, removes a
 // player after the confirmation and the seat's card goes; then in a race the host removes a connected player from the
-// pause menu: the seat leaves the room view at a tick boundary and its tile reflows. Captures go to $JJ_CAPTURE_DIR
-// (default docs/evidence/P1-G07). A controller cannot send RemoveSeat: the controller protocol has no such message, and
+// pause menu: the seat leaves the room view at a tick boundary and its tile reflows. Explicit captures can go to $JJ_CAPTURE_DIR
+// (default OS scratch). A controller cannot send RemoveSeat: the controller protocol has no such message, and
 // the host's command sent as controller bytes is refused and counted (`a_controller_cannot_remove_a_seat`, native, in CI).
 // A real phone's "The host removed you" screen and Join again are in g07-join-again.test.mjs.
 //   node --test web/tests/journeys/g07-remove-player.test.mjs
@@ -15,7 +17,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/g07/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G07');
+const CAPTURE = evidencePath('P1-G07', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 
@@ -169,7 +171,7 @@ test('G07: the pause menu at eight players on a phone-sized host lists everyone 
     for (let k = 1; k <= 8; k++) await frame(host, `syn${k}`, { ready: true });
     await wait(host, () => window.__jjRoom.view().phase === 'Running', null, 120_000);
     await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
-    await host.locator('[data-act=menu]').click();
+    await host.locator("[data-act=menu]").click({ timeout: 120_000 }); // 8 tiles on a slow CI runner: see jn5 (runs 2839-2869)
     await wait(host, () => document.querySelectorAll('[data-players] li').length === 8);
     assert.equal(await host.locator('[data-players] [data-act=ask-remove]').count(), 8);
     await host.screenshot({ path: `${CAPTURE}/menu-race-8@phone.jpg`, type: 'jpeg', quality: 80 });

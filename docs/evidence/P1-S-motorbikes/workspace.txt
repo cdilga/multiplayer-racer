@@ -1,0 +1,1286 @@
+  [2m2026-10-11T21:45:36.996504Z[0m [32m INFO[0m [1;32mrch::hook[0m[32m: [32mSelected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.0)[0m
+    [2;3mat[0m rch/src/hook.rs:3354 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:45:37.928403Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mStarting remote compilation pipeline for multiplayer-racer (hash: paired-1e26ae01785c0fb39c5bea065c1c926c)[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:943 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:45:37.928470Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mPrepared dependency sync manifest for 1 roots[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:965 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:45:39.258272Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSyncing project to worker eris...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1201 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:45:39.259950Z[0m [33m WARN[0m [1;33mrch::transfer[0m[33m: [33mProject hash contains non-hex characters, sanitizing: "paired-1e26ae01785c0fb39c5bea065c1c926c"[0m
+    [2;3mat[0m rch/src/transfer.rs:1891 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:46:17.516965Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mSync complete: 0 files, 1093376000 bytes in 28687ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1590 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:46:17.679957Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mExecuting command remotely: cargo test --workspace --all-features --release --config 'build.build-dir="/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43"' --config 'env.RCH_BUILD_SOURCE.value="9ab839ba59688d655985f2a42d44c7d6d4cebc8b"' --config 'env.RCH_BUILD_SOURCE.force=true'[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1691 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:46:17.690879Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRewriting CARGO_TARGET_DIR for remote execution (worker-scoped path): /Users/cdilga/Documents/dev/multiplayer-racer/target -> /tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43[0m
+    [2;3mat[0m rch/src/transfer.rs:2911 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T21:46:17.691211Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mWrapping command with external timeout protection, [1;32mkind[0m[32m: cargo test, [1;32mtimeout_secs[0m[32m: 1800[0m
+    [2;3mat[0m rch/src/transfer.rs:3754 [2;3mon[0m ThreadId(1)
+
+[1m[92m   Compiling[0m unicode-ident v1.0.26
+[1m[92m   Compiling[0m proc-macro2 v1.0.107
+[1m[92m   Compiling[0m quote v1.0.47
+[1m[92m   Compiling[0m cfg-if v1.0.5
+[1m[92m   Compiling[0m libc v0.2.189
+[1m[92m   Compiling[0m serde_core v1.0.229
+[1m[92m   Compiling[0m autocfg v1.5.1
+[1m[92m   Compiling[0m typenum v1.20.1
+[1m[92m   Compiling[0m syn v2.0.119
+[1m[92m   Compiling[0m syn v3.0.6
+[1m[92m   Compiling[0m libm v0.2.16
+[1m[92m   Compiling[0m serde v1.0.229
+[1m[92m   Compiling[0m memchr v2.8.3
+[1m[92m   Compiling[0m serde_derive v1.0.229
+[1m[92m   Compiling[0m num-traits v0.2.19
+[1m[92m   Compiling[0m zmij v1.0.23
+[1m[92m   Compiling[0m thiserror v2.0.21
+[1m[92m   Compiling[0m serde_json v1.0.151
+[1m[92m   Compiling[0m thiserror-impl v2.0.21
+[1m[92m   Compiling[0m zeroize_derive v1.5.0
+[1m[92m   Compiling[0m itoa v1.0.18
+[1m[92m   Compiling[0m zeroize v1.9.1
+[1m[92m   Compiling[0m derive_arbitrary v1.4.2
+[1m[92m   Compiling[0m arbitrary v1.4.2
+[1m[92m   Compiling[0m hybrid-array v0.4.15
+[1m[92m   Compiling[0m getrandom v0.4.3
+[1m[92m   Compiling[0m jj-types v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-types)
+[1m[92m   Compiling[0m rand_core v0.10.1
+[1m[92m   Compiling[0m crypto-common v0.2.2
+[1m[92m   Compiling[0m cobs v0.3.0
+[1m[92m   Compiling[0m postcard v1.1.3
+[1m[92m   Compiling[0m cmov v0.5.4
+[1m[92m   Compiling[0m ctutils v0.4.3
+[1m[92m   Compiling[0m block-buffer v0.12.1
+[1m[92m   Compiling[0m cpufeatures v0.3.1
+[1m[92m   Compiling[0m bitflags v2.13.2
+[1m[92m   Compiling[0m const-oid v0.10.2
+[1m[92m   Compiling[0m slab v0.4.12
+[1m[92m   Compiling[0m digest v0.11.3
+[1m[92m   Compiling[0m num-integer v0.1.47
+[1m[92m   Compiling[0m sha2 v0.11.0
+[1m[92m   Compiling[0m smallvec v1.16.2
+[1m[92m   Compiling[0m equivalent v1.0.2
+[1m[92m   Compiling[0m log v0.4.34
+[1m[92m   Compiling[0m allocator-api2 v0.2.21
+[1m[92m   Compiling[0m foldhash v0.2.0
+[1m[92m   Compiling[0m bytemuck v1.25.2
+[1m[92m   Compiling[0m hashbrown v0.17.1
+[1m[92m   Compiling[0m jj-map v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-map)
+[1m[92m   Compiling[0m safe_arch v1.2.0
+[1m[92m   Compiling[0m approx v0.5.1
+[1m[92m   Compiling[0m matrixmultiply v0.3.11
+[1m[92m   Compiling[0m wide v1.7.1
+[1m[92m   Compiling[0m num-complex v0.4.6
+[1m[92m   Compiling[0m heapless v0.8.0
+[1m[92m   Compiling[0m rawpointer v0.2.1
+[1m[92m   Compiling[0m byteorder v1.5.0
+[1m[92m   Compiling[0m hash32 v0.3.1
+[1m[92m   Compiling[0m glam v0.33.12
+[1m[92m   Compiling[0m simba v0.10.2
+[1m[92m   Compiling[0m num-rational v0.4.2
+[1m[92m   Compiling[0m nalgebra-macros v0.3.0
+[1m[92m   Compiling[0m stable_deref_trait v1.2.1
+[1m[92m   Compiling[0m jj-contracts v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-contracts)
+[1m[92m   Compiling[0m rstar v0.13.0
+[1m[92m   Compiling[0m indexmap v2.14.2
+[1m[92m   Compiling[0m nalgebra v0.35.0
+[1m[92m   Compiling[0m ena v0.14.4
+[1m[92m   Compiling[0m ordered-float v5.5.0
+[1m[92m   Compiling[0m num-derive v0.5.1
+[1m[92m   Compiling[0m profiling-procmacros v1.0.18
+[1m[92m   Compiling[0m static_assertions v1.1.0
+[1m[92m   Compiling[0m either v1.18.0
+[1m[92m   Compiling[0m downcast-rs v2.0.2
+[1m[92m   Compiling[0m arrayvec v0.7.8
+[1m[92m   Compiling[0m profiling v1.0.18
+[1m[92m   Compiling[0m jj-protocol v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-protocol)
+[1m[92m   Compiling[0m rustversion v1.0.23
+[1m[92m   Compiling[0m tinyvec v1.13.3
+[1m[92m   Compiling[0m unicode-normalization v0.1.25
+[1m[92m   Compiling[0m once_cell v1.21.4
+[1m[92m   Compiling[0m jj-input v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-input)
+[1m[92m   Compiling[0m glamx v0.3.1
+[1m[92m   Compiling[0m parry3d v0.31.1
+[1m[92m   Compiling[0m base64 v0.23.1
+[1m[92m   Compiling[0m wasm-bindgen-shared v0.2.129
+[1m[92m   Compiling[0m unicode-segmentation v1.13.3
+[1m[92m   Compiling[0m bumpalo v3.20.3
+[1m[92m   Compiling[0m jj-session v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-session)
+[1m[92m   Compiling[0m wasm-bindgen-macro-support v0.2.129
+[1m[92m   Compiling[0m rapier3d v0.36.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/vendor/rapier3d)
+[1m[92m   Compiling[0m wasm-bindgen v0.2.129
+[1m[92m   Compiling[0m wasm-bindgen-macro v0.2.129
+[1m[92m   Compiling[0m futures-core v0.3.34
+[1m[92m   Compiling[0m pin-project-lite v0.2.17
+[1m[92m   Compiling[0m jj-procgen v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-procgen)
+[1m[92m   Compiling[0m jj-sim v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-sim)
+[1m[92m   Compiling[0m jj-fixture v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-fixture)
+[1m[92m   Compiling[0m futures-task v0.3.34
+[1m[92m   Compiling[0m futures-util v0.3.34
+[1m[92m   Compiling[0m wasm-bindgen-test-macro v0.3.79
+[1m[92m   Compiling[0m async-trait v0.1.92
+[1m[92m   Compiling[0m js-sys v0.3.106
+[1m[92m   Compiling[0m wasm-bindgen-test-shared v0.2.129
+[1m[92m   Compiling[0m nu-ansi-term v0.50.3
+[1m[92m   Compiling[0m cast v0.3.0
+[1m[92m   Compiling[0m oorandom v11.1.5
+[1m[92m   Compiling[0m getrandom v0.3.4
+[1m[92m   Compiling[0m zerocopy v0.8.59
+[1m[92m   Compiling[0m ppv-lite86 v0.2.21
+[1m[92m   Compiling[0m version_check v0.9.5
+[1m[92m   Compiling[0m generic-array v0.14.7
+[1m[92m   Compiling[0m wasm-bindgen-futures v0.4.79
+[1m[92m   Compiling[0m wasm-bindgen-test v0.3.79
+[1m[92m   Compiling[0m crypto-common v0.1.7
+[1m[92m   Compiling[0m block-buffer v0.10.4
+[1m[92m   Compiling[0m getrandom v0.2.17
+[1m[92m   Compiling[0m digest v0.10.7
+[1m[92m   Compiling[0m inout v0.2.2
+[1m[92m   Compiling[0m find-msvc-tools v0.1.14
+[1m[92m   Compiling[0m shlex v2.0.1
+[1m[92m   Compiling[0m cc v1.6.0
+[1m[92m   Compiling[0m num-conv v0.2.2
+[1m[92m   Compiling[0m minimal-lexical v0.2.1
+[1m[92m   Compiling[0m time-core v0.1.9
+[1m[92m   Compiling[0m base64ct v1.8.3
+[1m[92m   Compiling[0m semver v1.0.28
+[1m[92m   Compiling[0m pem-rfc7468 v0.7.0
+[1m[92m   Compiling[0m rustc_version v0.4.1
+[1m[92m   Compiling[0m time-macros v0.2.32
+[1m[92m   Compiling[0m nom v7.1.3
+[1m[92m   Compiling[0m ring v0.17.14
+[1m[92m   Compiling[0m cipher v0.5.2
+[1m[92m   Compiling[0m rand_core v0.9.5
+[1m[92m   Compiling[0m universal-hash v0.6.1
+[1m[92m   Compiling[0m synstructure v0.13.2
+[1m[92m   Compiling[0m powerfmt v0.2.1
+[1m[92m   Compiling[0m rustix v1.1.5
+[1m[92m   Compiling[0m const-oid v0.9.6
+[1m[92m   Compiling[0m deranged v0.5.8
+[1m[92m   Compiling[0m der v0.7.10
+[1m[92m   Compiling[0m time v0.3.55
+[1m[92m   Compiling[0m asn1-rs-derive v0.6.0
+[1m[92m   Compiling[0m rusticata-macros v4.1.0
+[1m[92m   Compiling[0m curve25519-dalek v4.1.3
+[1m[92m   Compiling[0m signature v2.2.0
+[1m[92m   Compiling[0m rand_core v0.6.4
+[1m[92m   Compiling[0m displaydoc v0.2.7
+[1m[92m   Compiling[0m asn1-rs-impl v0.2.0
+[1m[92m   Compiling[0m anyhow v1.0.104
+[1m[92m   Compiling[0m cpufeatures v0.2.17
+[1m[92m   Compiling[0m cpubits v0.1.1
+[1m[92m   Compiling[0m subtle v2.6.1
+[1m[92m   Compiling[0m linux-raw-sys v0.12.1
+[1m[92m   Compiling[0m asn1-rs v0.7.2
+[1m[92m   Compiling[0m spki v0.7.3
+[1m[92m   Compiling[0m rustls-pki-types v1.15.1
+[1m[92m   Compiling[0m curve25519-dalek-derive v0.1.1
+[1m[92m   Compiling[0m memoffset v0.9.1
+[1m[92m   Compiling[0m untrusted v0.9.0
+[1m[92m   Compiling[0m crossbeam-utils v0.8.23
+[1m[92m   Compiling[0m cfg_aliases v0.2.2
+[1m[92m   Compiling[0m parking_lot_core v0.9.12
+[1m[92m   Compiling[0m oid-registry v0.8.1
+[1m[92m   Compiling[0m nix v0.31.3
+[1m[92m   Compiling[0m itertools v0.14.0
+[1m[92m   Compiling[0m pkcs8 v0.10.2
+[1m[92m   Compiling[0m polyval v0.7.3
+[1m[92m   Compiling[0m sha2 v0.10.9
+[1m[92m   Compiling[0m rand_chacha v0.3.1
+[1m[92m   Compiling[0m ed25519 v2.2.3
+[1m[92m   Compiling[0m rand_xorshift v0.4.0
+[1m[92m   Compiling[0m rand v0.9.5
+[1m[92m   Compiling[0m rand_chacha v0.9.0
+[1m[92m   Compiling[0m aead v0.6.1
+[1m[92m   Compiling[0m num-bigint v0.4.8
+[1m[92m   Compiling[0m errno v0.3.14
+[1m[92m   Compiling[0m unarray v0.1.4
+[1m[92m   Compiling[0m data-encoding v2.11.1
+[1m[92m   Compiling[0m crc32fast v1.5.2
+[1m[92m   Compiling[0m fastrand v2.5.0
+[1m[92m   Compiling[0m bincode-next v3.1.1
+[1m[92m   Compiling[0m scopeguard v1.2.0
+[1m[92m   Compiling[0m virtue-next v0.1.3
+[1m[92m   Compiling[0m regex-syntax v0.8.11
+[1m[92m   Compiling[0m rustls v0.23.45
+[1m[92m   Compiling[0m signal-hook v0.4.5
+[1m[92m   Compiling[0m bincode_derive-next v3.1.1
+[1m[92m   Compiling[0m lock_api v0.4.14
+[1m[92m   Compiling[0m der-parser v10.0.0
+[1m[92m   Compiling[0m proptest v1.11.0
+[1m[92m   Compiling[0m signal-hook-registry v1.4.8
+[1m[92m   Compiling[0m rustls-webpki v0.103.15
+[1m[92m   Compiling[0m ed25519-dalek v2.2.0
+[1m[92m   Compiling[0m rand v0.8.8
+[1m[92m   Compiling[0m ghash v0.6.0
+[1m[92m   Compiling[0m prost-derive v0.14.4
+[1m[92m   Compiling[0m signatory v0.27.1
+[1m[92m   Compiling[0m aes v0.9.3
+[1m[92m   Compiling[0m poly1305 v0.9.1
+[1m[92m   Compiling[0m chacha20 v0.10.2
+[1m[92m   Compiling[0m ctr v0.10.1
+[1m[92m   Compiling[0m rapidhash v4.5.1
+[1m[92m   Compiling[0m franken-kernel v0.5.0
+[1m[92m   Compiling[0m franken-evidence v0.5.0
+[1m[92m   Compiling[0m rmp v0.8.15
+[1m[92m   Compiling[0m pin-project-internal v1.1.13
+[1m[92m   Compiling[0m bytes v1.12.1
+[1m[92m   Compiling[0m unty-next v0.1.2
+[1m[92m   Compiling[0m lazy_static v1.5.1
+[1m[92m   Compiling[0m futures-io v0.3.34
+[1m[92m   Compiling[0m asupersync v0.5.0
+[1m[92m   Compiling[0m pastey v0.2.3
+[1m[92m   Compiling[0m parking v2.2.1
+[1m[92m   Compiling[0m futures-lite v2.6.1
+[1m[92m   Compiling[0m prost v0.14.4
+[1m[92m   Compiling[0m x509-parser v0.18.1
+[1m[92m   Compiling[0m pin-project v1.1.13
+[1m[92m   Compiling[0m franken-decision v0.5.0
+[1m[92m   Compiling[0m rmp-serde v1.3.1
+[1m[92m   Compiling[0m aes-gcm v0.11.1
+[1m[92m   Compiling[0m chacha20poly1305 v0.11.0
+[1m[92m   Compiling[0m parking_lot v0.12.5
+[1m[92m   Compiling[0m crossbeam-queue v0.3.14
+[1m[92m   Compiling[0m nkeys v0.4.5
+[1m[92m   Compiling[0m tempfile v3.27.0
+[1m[92m   Compiling[0m webpki-roots v1.0.9
+[1m[92m   Compiling[0m polling v3.11.0
+[1m[92m   Compiling[0m xattr v1.6.1
+[1m[92m   Compiling[0m hmac v0.13.0
+[1m[92m   Compiling[0m sha1 v0.11.0
+[1m[92m   Compiling[0m sysinfo v0.39.6
+[1m[92m   Compiling[0m socket2 v0.6.5
+[1m[92m   Compiling[0m hex v0.4.3
+[1m[92m   Compiling[0m jj-wasm-host v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-wasm-host)
+[1m[92m   Compiling[0m jj-wasm-procgen v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-wasm-procgen)
+[1m[92m   Compiling[0m jj-wasm-input v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-wasm-input)
+[1m[92m   Compiling[0m jj-tools v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-tools)
+[1m[92m   Compiling[0m jj-server v0.2.0 (/var/tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c/crates/jj-server)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+test a_card_has_bounded_timing_and_a_direction_that_matches_its_class ... ok
+test shipped_cards_validate_and_preserve_every_field_on_round_trip ... ok
+test unsupported_versions_and_unknown_fields_fail_instead_of_silently_changing_a_replay ... ok
+test counterplay_cannot_be_absent_empty_or_blank ... ok
+test no_required_card_field_can_be_omitted ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+test the_hand_made_vehicle_passes ... ok
+test the_json_schema_names_the_same_parts_and_anchors ... ok
+test every_broken_vehicle_fails_with_the_rule_it_names ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 3 tests
+[1m[92m    Finished[0m `release` profile [optimized] target(s) in 6m 49s
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_contracts-a3ef8fd6fb329f48)
+[1m[92m     Running[0m tests/items.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/items-5673f89ff8c51b1a)
+[1m[92m     Running[0m tests/vehicle.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/vehicle-51434571381ad368)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_fixture-d2de76e4759251f8)
+test clip::tests::a_clip_cut_at_a_fault_replays_up_to_the_last_polled_tick ... ok
+test clip::tests::a_rebuilt_sim_is_a_new_world_and_a_flipped_checkpoint_is_found ... ok
+test clip::tests::a_world_kept_in_chunks_replays_to_its_checkpoints_and_the_mark ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+
+running 2 tests
+test scheduled_recovery_clears_held_items_and_blocks_a_protected_offensive_offer ... ok
+test scheduled_offers_preserve_fifo_full_queue_and_action_refusal_and_replay ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 4 tests
+[1m[92m     Running[0m tests/items.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/items-4eee8606a7f4c3f3)
+[1m[92m     Running[0m tests/sanga.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/sanga-2b6cb455d882c4a9)
+test immune_contacts_still_give_the_driver_causal_ownership_of_pushed_debris ... ok
+test exact_expiry_during_an_overlap_has_no_launch ... ok
+test six_seconds_refresh_without_stacking_and_no_speed_boost ... ok
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_input-c3ee7c31f7be7569)
+test tank_push_and_ram_immunity_are_physical_and_replay ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+
+running 66 tests
+test action::tests::diagonal_ties_name_no_sector ... ok
+test action::tests::entry_fires_once_and_rearms_only_through_neutral ... ok
+test action::tests::held_sectors_switch_directly ... ok
+test action::tests::hysteresis_holds_through_jitter ... ok
+test action::tests::dominant_is_the_larger_axis ... ok
+test action::tests::rearm_is_the_lowest_threshold ... ok
+test curve::tests::identity_is_the_raw_value ... ok
+test action::tests::reset_releases_and_rearms_without_firing ... ok
+test curve::tests::neutral_and_full_range_are_exact_with_a_deadzone ... ok
+test curve::tests::nonfinite_and_out_of_range_read_sanely ... ok
+test dual::tests::a_drift_at_the_rim_keeps_full_throttle ... ok
+test dual::tests::a_drift_has_hysteresis_in_angle_and_in_deflection ... ok
+test dual::tests::full_throttle_with_full_lock_is_both_at_once_and_fires_nothing ... ok
+test curve::tests::shaping_never_invents_range ... ok
+test curve::tests::monotonic_and_sign_preserving ... ok
+test dual::tests::r120_a_natural_lean_at_full_throttle_never_drifts_and_full_side_lock_does ... ok
+test dual::tests::steering_is_analog_with_a_radial_deadzone_and_a_curve ... ok
+test dual::tests::the_flick_needs_fast_travel_to_the_rim_near_vertical_then_a_cooldown_and_a_rearm ... ok
+test intent::tests::minus_32768_reads_as_full_range ... ok
+test intent::tests::the_y_axis_layout_is_as_documented ... ok
+test intent::tests::thresholds_survive_their_own_quantisation ... ok
+test action::tests::one_entry_one_fire ... ok
+test intent::tests::brake_reaches_full_before_the_wheelie_detent ... ok
+test dual::tests::a_thumb_lean_at_full_throttle_never_drifts ... ok
+test dual::tests::left_x_only_matters_through_a_drift ... ok
+test profile::tests::the_wire_form_round_trips_and_with_fields_validates ... ok
+test scheduler::tests::every_flush_carries_every_source_and_splits_fairly ... ok
+test profile::tests::the_shipped_profile_is_valid_and_round_trips ... ok
+test profile::tests::the_validator_names_every_bad_number ... ok
+test profile::tests::a_changed_value_changes_the_resolved_thresholds_without_code ... ok
+test scheduler::tests::a_prompt_send_bypasses_the_change_interval ... ok
+test intent::tests::diagonal_steer_does_not_reduce_full_throttle ... ok
+test scheduler::tests::cadence_is_60_on_change_and_20_at_rest ... ok
+test scheduler::tests::the_first_poll_flushes_the_initial_state ... ok
+test source::tests::a_paused_or_unavailable_source_samples_neutral_and_never_fires ... ok
+test source::tests::freshness_is_per_source ... ok
+test source::tests::the_record_carries_the_wire_flags ... ok
+test scheduler::tests::the_wheelie_preload_bit_counts_as_change ... ok
+test source::tests::one_source_one_seq_stream ... ok
+test tests::r116_a_throttle_roll_on_after_braking_never_launches ... ok
+test tests::r116_a_pull_held_through_a_countdown_stays_armed_for_the_snap_at_go ... ok
+test tests::r116_a_rim_drift_keeps_full_throttle_and_the_old_layout_still_reads_the_old_way ... ok
+test tests::r116_changing_a_profile_value_changes_the_behaviour_with_no_code_change ... ok
+test tests::r116_full_throttle_and_full_lock_read_together_with_no_fire ... ok
+test tests::r116_pull_then_snap_launches_once_then_cools_down ... ok
+test dual::tests::hard_steering_never_fires ... ok
+test source::tests::action_ids_are_stable_and_increasing ... ok
+test tests::r116_the_old_layout_keeps_the_old_wheelie ... ok
+test tests::r116_a_flick_up_or_down_fires_forward_or_back_and_hard_steering_never_does ... ok
+test tests::r116_a_full_pull_arms_first_and_reverses_only_past_the_delay ... ok
+test tests::ac4_press_release_between_sends_yields_one_action ... ok
+test tests::r116_the_record_carries_the_layout_and_neutralising_clears_both_machines ... ok
+test wheelie::tests::a_dip_out_and_back_keeps_accumulating ... ok
+test wheelie::tests::a_pull_back_after_an_expired_window_is_a_fresh_preload ... ok
+test wheelie::tests::easing_off_slowly_is_just_braking ... ok
+test wheelie::tests::reset_drops_a_pending_release ... ok
+test wheelie::tests::holding_past_the_cancel_point_cancels ... ok
+test wheelie::tests::fired_preload_spans_entry_to_release ... ok
+test tests::wheelie_through_the_source_carries_its_preload ... ok
+test wheelie::tests::reset_kills_any_pending_pattern ... ok
+test wheelie::tests::the_release_window_boundary_is_inclusive ... ok
+test wheelie::tests::the_full_pattern_fires_with_its_preload ... ok
+test wheelie::tests::sample_rate_does_not_change_the_outcome ... ok
+test scheduler::tests::idle_stream_is_20hz ... ok
+test scheduler::tests::refresh_never_stacks_on_change_sends ... ok
+test tests::ac3_neutralisation_never_fires ... ok
+
+test result: ok. 66 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 3 tests
+test geom::tests::nearest_keeps_equal_distance_order_and_interpolated_widths ... ok
+test geom::tests::boxes_keep_exhaustive_bits_at_endpoints_and_extreme_coordinates ... ok
+test geom::tests::nearest_bound_matches_exhaustive_bits_across_generated_routes ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 2 tests
+test the_unpatched_greybox_passes_the_same_harness ... ok
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_map-8980226ffc7c2168)
+[1m[92m     Running[0m tests/broken.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/broken-23cdb953b9db2cfe)
+[1m[92m     Running[0m tests/greybox.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/greybox-2cc2d25565935511)
+[1m[92m     Running[0m tests/roofs.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/roofs-afba0cdabd61d6c0)
+[1m[92m     Running[0m tests/v01_cases.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/v01_cases-cc8d8d12b6f416da)
+[1m[92m     Running[0m tests/wasm_parity.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/wasm_parity-b5f39f1c915f48ba)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_procgen-fff44c5daeb809a4)
+[1m[92m     Running[0m tests/arena.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/arena-f8ec67fb998255fa)
+test every_broken_fixture_fails_with_the_rule_it_names ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+
+running 3 tests
+test greybox_carries_the_duel_segments ... ok
+test greybox_validates_and_hashes_to_its_golden ... ok
+test canonical_bytes_round_trip_and_only_canonical_bytes_load ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 1 test
+test sorting_and_reordering_dressing_preserve_the_reachable_house ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+test start_rows_are_clear_and_spaced ... ok
+test drivable_width ... ok
+test reachable_checkpoints_need_gates_and_a_finish ... ok
+test nothing_stands_in_the_start_corridor ... ok
+test reachable_checkpoints_need_a_real_loop ... ok
+test landing_checks ... ok
+test the_baseline_loop_is_valid ... ok
+test wall_thickness ... ok
+test reachable_checkpoints_need_a_clear_road ... ok
+test missing_terrain_is_a_schema_error ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+test tuning::tests::a_change_applies_whole_or_not_at_all ... ok
+test tuning::tests::the_shipped_file_validates_and_matches_the_owner_rulings ... ok
+test seed::tests::streams_are_reproducible_and_separate ... ok
+test tuning::tests::the_validator_names_each_problem ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+test debug_trace ... ignored
+test the_scenario_bank_maps_are_the_generators_output ... ok
+test golden_arenas_hash_to_the_committed_values ... ok
+test the_bowl_profile_is_smooth_and_concave_and_its_mesh_is_closed_and_faces_out ... ok
+test there_is_no_cap_a_thousand_cars_get_a_bowl_and_a_place_each ... ok
+test bowl_transition_never_catches_or_launches_a_car ... ok
+test arenas_for_8_16_and_32_cars_validate_and_place_everyone_on_the_floor ... ok
+test bowl_containment_airborne_rams_never_leave ... ok
+test bowl_containment_rams_from_many_angles_and_speeds_never_leave has been running for over 60 seconds
+[1m[92m     Running[0m tests/bank.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/bank-67c59672f38d5706)
+test bowl_containment_rams_from_many_angles_and_speeds_never_leave ... ok
+
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 81.69s
+
+
+running 4 tests
+test the_conservative_recipe_is_always_available ... ok
+test every_seed_prepares_a_valid_track_and_every_fallback_is_counted ... ok
+test the_autopilot_laps_a_sample_of_every_mix_and_length_class ... ok
+test the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock has been running for over 60 seconds
+test the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 142.64s
+
+
+running 1 test
+[1m[92m     Running[0m tests/bikes.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/bikes-2146bb1e804ce666)
+test bike_laps_every_generated_biome_upright_and_replays ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.74s
+
+
+running 8 tests
+test writes_the_capture ... ok
+test the_trait_is_all_a_biome_needs_and_every_biome_is_pure_data ... ok
+[1m[92m     Running[0m tests/biome.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/biome-2a467ae01e01abca)
+test missing_or_shortened_rail_sections_are_rejected_as_gaps ... ok
+test a_transition_blends_the_terrain_and_switches_the_road_in_the_middle ... ok
+test chevrons_and_rail_stand_on_the_outside_of_the_turn ... ok
+test two_biome_recipes_hash_to_the_committed_goldens ... ok
+test every_corner_has_chevrons_and_rail_and_the_finish_has_a_gantry_on_every_route ... ok
+[1m[92m     Running[0m tests/biomes.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/biomes-8ff4aa673ed18d5c)
+test a_two_biome_placeholder_track_validates_with_its_transition ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.17s
+
+
+running 5 tests
+test writes_the_top_down_plots ... ok
+test town_houses_face_straight_streets_with_junctions_and_signs ... ok
+test bitumen_lane_lines_posts_and_rail_are_pieces_and_it_meets_the_placeholder ... ok
+test rocks_domes_vary_by_seed_only_and_reuse_the_cores_features ... ok
+[1m[92m     Running[0m tests/course.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/course-eaa61d9fadaf25f3)
+test outback_dirt_has_two_species_clear_of_the_route_and_the_autopilot_laps_three_seeds ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.97s
+
+
+running 1 test
+test a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.33s
+
+
+running 2 tests
+test writes_the_profile_image ... ok
+[1m[92m     Running[0m tests/features.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/features-6614fb39edeef4d6)
+[1m[92m     Running[0m tests/handling.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/handling-16aac75631ff35f5)
+test every_placed_feature_passes_its_envelope_and_the_validator_across_the_seed_bank ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.53s
+
+
+running 5 tests
+test bike_flat_speed_lock_bank ... ok
+test bike_generated_full_lock_regressions_stay_upright ... ok
+test on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills ... ok
+test a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over has been running for over 60 seconds
+test bike_generated_road_speed_lock_bank has been running for over 60 seconds
+test bike_generated_road_speed_lock_bank ... ok
+test a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 354.35s
+
+
+running 4 tests
+[1m[92m     Running[0m tests/jumps.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jumps-f85ff5d0f24883db)
+test a_reserved_landing_without_a_receiving_surface_is_rejected ... ok
+test every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds ... ok
+test every_generated_jump_releases_a_car_actually_boosting_at_the_lip ... ok
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster has been running for over 60 seconds
+[1m[92m     Running[0m tests/playtest.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/playtest-6ec1f0085d02a0f7)
+test cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 160.45s
+
+
+running 4 tests
+test the_drawn_biome_counts_follow_the_weights_and_every_biome_appears_alone ... ok
+test the_track_is_a_pure_function_of_the_seed ... ok
+test the_length_classes_follow_the_weights_and_the_courses_are_built_to_their_bands ... ok
+test every_drawn_mix_validates_and_runs_its_biomes_in_lap_order has been running for over 60 seconds
+[1m[92m     Running[0m tests/procgen.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/procgen-7a1ab953b9e09d96)
+test every_drawn_mix_validates_and_runs_its_biomes_in_lap_order ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 85.69s
+
+
+running 5 tests
+test changing_the_structure_stream_does_move_the_route ... ok
+test seeds_hash_to_the_committed_goldens ... ok
+test the_same_seed_gives_identical_canonical_bytes ... ok
+test generated_maps_pass_the_validator ... ok
+test changing_only_the_dressing_stream_never_moves_the_route ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.26s
+
+
+running 2 tests
+[1m[92m     Running[0m tests/respawn.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/respawn-bba4de3d1fbcbac2)
+test every_anchor_is_on_the_road_before_any_hazard_and_faces_along_it ... ok
+test a_respawn_holds_then_rolls_off_and_two_at_once_never_overlap ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s
+
+
+running 2 tests
+test roof_stunt_dimensions_are_tunable_and_invalid_values_are_refused ... ok
+[1m[92m     Running[0m tests/roofs.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/roofs-2236f086452b5b05)
+[1m[92m     Running[0m tests/scatter.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/scatter-27920826a884e9b8)
+test town_seed_lots_are_reachable_clear_and_land_a_real_car ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.74s
+
+
+running 5 tests
+test writes_the_capture ... ok
+test scatter_is_a_pure_function_of_the_dressing_stream ... ok
+test bitumen_poisson_radius_confirms_m02s_recommendation ... ok
+test poisson_biomes_are_even_and_cluster_biomes_clump_with_clearings ... ok
+test nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank has been running for over 60 seconds
+test nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 105.15s
+
+
+running 10 tests
+test every_shipped_sign_passes_its_grammar ... ok
+test direction_and_tourist_grammar_hold ... ok
+test text_too_long_or_not_upper_case_fails ... ok
+test sidecars_record_family_and_a_real_copy_needs_its_commons_source_and_licence ... ok
+test a_new_shape_fails ... ok
+test the_invented_sign_follows_the_warning_grammar ... ok
+test a_pictogram_outside_the_known_set_fails ... ok
+test registry_entries_load_in_jj_map_beside_the_generic_kit ... ok
+test a_wrong_colour_family_fails ... ok
+test data_files_registry_entries_and_the_compiled_lists_stay_paired ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test writes_the_evidence_images ... ok
+[1m[92m     Running[0m tests/signs.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/signs-0fa13e948bec050a)
+[1m[92m     Running[0m tests/terrain.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/terrain-63c827a7da4fee6a)
+test undulation_is_idempotent_and_leaves_the_route_plan_alone ... ok
+test corners_bank_toward_the_turn_with_the_inside_edge_lower ... ok
+test town_and_bitumen_are_gentler_than_rocks ... ok
+test grade_curvature_and_bank_stay_inside_each_biomes_limits_along_the_route_band ... ok
+test the_painted_road_edge_has_no_cell_sized_saw_tooth ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.67s
+
+
+running 4 tests
+test a_tuned_mix_draws_the_biome_counts_it_is_given ... ok
+[1m[92m     Running[0m tests/tuning.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/tuning-21f6815b933c7814)
+test a_tuned_length_class_builds_tracks_inside_its_band ... ok
+test a_tuned_relief_changes_the_built_height_range ... ok
+test the_shipped_data_builds_the_same_tracks_as_the_untuned_generator ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.23s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 15 tests
+test clock::tests::one_way_samples_bound_the_offset_too ... ok
+test clock::tests::recovers_a_known_offset_within_its_uncertainty ... ok
+test clock::tests::the_window_lets_old_tight_samples_go ... ok
+test tests::decoders_reject_wrong_versions_and_trailing_bytes ... ok
+test tests::every_variant_has_a_golden ... ok
+test tests::splitting_by_the_byte_target ... ok
+test tests::the_documented_layout_holds ... ok
+test tests::splitting_more_than_255_sources ... ok
+test tests::goldens_match_the_committed_bytes ... ok
+test clock::tests::one_way_bound_holds_for_any_delay_inside_the_round_trip ... ok
+test clock::tests::the_true_offset_is_always_inside_the_bound ... ok
+test tests::decoders_never_panic_on_any_bytes ... ok
+test tests::every_record_survives_splitting ... ok
+test tests::decoders_never_panic_on_damaged_goldens ... ok
+[1m[92m     Running[0m tests/wasm_parity.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/wasm_parity-a7eabb1d63dd72f4)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_protocol-4101d7639a2b493d)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_server-c5f2f4b8dfa9f267)
+test tests::every_message_round_trips ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 41 tests
+test crypto::tests::ct_eq_compares ... ok
+test crypto::tests::secret_hash_is_base64url_sha256 ... ok
+test crypto::tests::hmac_sha256_matches_rfc4231_case_2 ... ok
+test ice::broker::tests::a_cloudflare_error_is_summarised_without_its_body ... ok
+test ice::broker::tests::a_cloudflare_failure_is_relay_unavailable_and_not_remembered ... ok
+test ice::broker::tests::endpoint_bucket_is_burst_two_then_one_per_five_minutes ... ok
+test ice::broker::tests::a_wrong_backend_secret_gets_relay_unavailable_through_the_route ... ok
+test ice::broker::tests::a_retried_request_id_returns_the_same_credential_even_when_limited_since ... ok
+test ice::broker::tests::a_wrong_or_other_backends_secret_is_rejected ... ok
+test ice::broker::tests::forty_endpoints_behind_one_ip_all_get_credentials_within_the_worst_case ... ok
+test ice::broker::tests::cloudflare_request_shape ... ok
+test ice::broker::tests::one_credential_per_endpoint_is_reused_for_every_peer_and_the_endpoint_bucket_rations_new_ones ... ok
+test ice::broker::tests::only_the_broker_role_may_hold_the_cloudflare_credentials ... ok
+test ice::broker::tests::port_53_urls_are_dropped_and_the_tls_443_entry_is_kept ... ok
+test ice::broker::tests::preview_id_comes_from_the_base_path ... ok
+test ice::broker::tests::with_the_key_unset_the_broker_says_relay_unavailable_and_never_calls_cloudflare ... ok
+test ice::tests::initial_list_is_stun_then_coturn_with_expiry ... ok
+test rate::tests::burst_then_rate_then_recovers ... ok
+test rate::tests::hundred_registrations_from_one_ip_all_succeed_within_the_rate ... ok
+test statics::tests::pages_point_at_the_base ... ok
+test statics::tests::root_built_pages_also_rebase ... ok
+test tests::a_retried_create_returns_the_same_room ... ok
+test tests::endpoint_conflicts_and_wrong_bearers ... ok
+test tests::after_a_restart_the_host_keeps_its_code_and_controllers_re_register ... ok
+test ice::broker::tests::http_broker_speaks_to_a_broker_over_a_socket_and_retries_a_lost_response_with_the_same_request_id ... ok
+test ice::broker::tests::the_route_returns_cloudflare_entries_and_two_backends_share_one_bucket ... ok
+test tests::ice_refresh_needs_the_endpoint_bearer_and_fallback_is_relay_unavailable ... ok
+test tests::forged_tickets_taken_codes_and_ended_rooms ... ok
+test tests::host_unreachable_after_30_s_and_dropped_after_10_min_virtual_time ... ok
+test tests::last_event_id_resume_delivers_missed_messages_once_within_60_s ... ok
+test tests::production_realm_hides_the_test_surface ... ok
+test tests::sse_wait_wakes_on_a_message_and_when_the_room_ends ... ok
+test tests::version_and_healthz_answer_and_body_limits_hold ... ok
+test tests::bursts_get_429_with_retry_after_and_then_succeed ... ok
+test tests::serves_pages_and_immutable_assets_under_a_preview_base_with_real_404s ... ok
+test ice::tests::fallback_is_unavailable_without_a_broker ... ok
+test ice::broker::tests::with_the_key_unset_the_room_keeps_its_direct_and_coturn_list_and_fallback_is_relay_unavailable ... ok
+test tests::create_resolve_register_and_exchange_offer_answer_candidates_over_sse ... ok
+test ice::tests::credential_matches_turn_probe_format ... ok
+test tests::a_hundred_registrations_from_one_ip_all_succeed ... ok
+test tests::codes_use_the_alphabet_skip_the_deny_list_and_retry_on_collision ... ok
+
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+test a_minted_credential_allocates_on_a_local_coturn ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 46 tests
+test director::tests::a_map_still_preparing_when_intermission_ends_shows_preparing_then_counts_down ... ok
+test director::tests::an_original_seat_unreadying_cancels_a_ready_based_countdown ... ok
+test director::tests::a_join_during_countdown_does_not_restart_it_and_rides_in_the_round ... ok
+test director::tests::a_late_joiner_unreadying_does_not_cancel_and_neither_does_unready_in_an_auto_start ... ok
+test director::tests::a_manual_pause_freezes_the_countdown_too ... ok
+test director::tests::a_three_minute_derby_ends_on_game_time_not_on_the_presentation_clock ... ok
+test director::tests::an_early_start_cancelled_in_intermission_returns_with_the_time_it_had_left ... ok
+test director::tests::end_during_preparation_cancels_the_job_and_returns_to_lobby ... ok
+test director::tests::everyone_leaving_during_a_start_settles_instead_of_starting ... ok
+test director::tests::force_start_warns_not_ready_seats_for_ten_seconds_then_starts_everyone ... ok
+test director::tests::lobby_holds_every_car_unless_free_drive_and_disband_is_terminal ... ok
+test director::tests::reroll_during_countdown_waits_for_the_new_map_and_keeps_the_cohort ... ok
+test director::tests::a_failed_map_retries_once_with_the_fallback_then_settles ... ok
+test director::tests::stale_ready_taps_cannot_restart_a_disarmed_lobby ... ok
+test director::tests::a_pause_during_intermission_freezes_its_timer ... ok
+test director::tests::reroll_during_preparation_fences_the_stale_preparation_id ... ok
+test director::tests::finalising_never_spins_forever ... ok
+test director::tests::a_round_without_a_limit_is_the_rules_to_end_and_the_limit_applies_from_the_next_round ... ok
+test results::tests::a_derby_commit_is_idempotent_conflicts_with_other_facts_and_never_counts_as_a_race_finish ... ok
+test results::tests::a_derby_ranks_by_raw_points_with_ties_sharing_and_the_race_table_without_a_finish_bonus ... ok
+test director::tests::start_now_again_skips_the_countdown_but_never_the_map ... ok
+test director::tests::the_party_runs_itself_round_after_round ... ok
+test results::tests::an_all_stuck_race_ranks_by_legal_progress_then_the_tick_it_was_reached ... ok
+test director::tests::end_voids_an_unfinished_round ... ok
+test results::tests::a_late_joiner_ranks_on_raw_points_alone_and_a_seat_that_left_keeps_what_it_scored ... ok
+test results::tests::a_repeated_commit_is_idempotent_and_a_conflicting_one_is_refused ... ok
+test results::tests::every_derby_rank_past_ten_gets_one_point_and_there_is_no_cap ... ok
+test director::tests::the_game_clock_pauses_with_the_sim ... ok
+test director::tests::an_emptied_party_settles_in_lobby_and_never_auto_starts ... ok
+test results::tests::every_rank_past_ten_gets_a_point_and_finishers_get_the_bonus ... ok
+test director::tests::the_warning_length_is_host_configurable_within_five_to_fifteen_seconds ... ok
+test results::tests::the_session_table_adds_up_rounds_and_shares_tied_places ... ok
+test results::tests::late_joiners_and_leave_return_produce_the_specified_records ... ok
+test seats::tests::a_duplicate_tab_fences_the_older_one_and_a_wrong_secret_is_refused ... ok
+test seats::tests::a_reconnect_welcomes_every_source_back_and_a_dropout_keeps_them_all ... ok
+test director::tests::game_time_outside_a_running_round_counts_for_nothing ... ok
+test results::tests::simultaneous_finishes_and_exact_ties_share_place_and_points ... ok
+test seats::tests::stale_input_is_neutralised ... ok
+test seats::tests::one_endpoint_holds_a_seat_per_source_and_each_acts_alone ... ok
+test seats::names::tests::names_are_cleaned_and_bounded ... ok
+test seats::tests::opening_never_claims_and_one_car_per_seat ... ok
+test seats::tests::retries_and_reconnects_never_duplicate_a_seat ... ok
+test seats::tests::identify_rate_limit_table ... ok
+test results::tests::classification_invariants ... ok
+[1m[92m     Running[0m unittests src/main.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_server-a59dae03b044be40)
+[1m[92m     Running[0m tests/coturn.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/coturn-2fb50ffbcd15a7a3)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_session-aa026fbb9c6953e3)
+test seats::tests::one_car_per_seat_no_phantoms_stable_numbers ... ok
+test director::tests::invariants_hold_for_random_sequences ... ok
+
+test result: ok. 46 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 19 tests
+test derby::tests::a_wreck_pays_once_per_life_and_flips_are_credited_only_within_three_seconds ... ok
+test derby::tests::equal_raw_scores_share_a_rank_and_a_late_joiner_ranks_from_arrival ... ok
+test assist::tests::catch_up_share_is_zero_to_3_s_and_linear_to_full_at_12_s ... ok
+test derby::tests::a_bike_wheel_loss_credits_the_wheel_taker_using_its_profile ... ok
+test derby::tests::loosening_and_damage_to_a_gone_part_pay_nothing ... ok
+test assist::tests::the_standard_profile_is_valid_and_bad_ones_are_refused ... ok
+test derby::tests::debris_attribution_expires_three_seconds_after_the_last_instigator_impulse ... ok
+test derby::tests::damage_is_two_score_units_per_damage_unit_and_bonuses_are_exact_integers ... ok
+test derby::tests::the_clock_counts_game_ticks_and_the_final_tick_still_counts ... ok
+test derby::tests::self_friendly_protected_and_environmental_damage_score_zero ... ok
+test rng::tests::streams_are_reproducible_and_independent ... ok
+test derby::tests::the_master_example_scores_35_points_for_a_human_and_17_5_for_the_autopilot ... ok
+test surface::tests::builtin_table_validates_and_orders_by_drag ... ok
+test surface::tests::validator_rejects_bad_values ... ok
+test utility::tests::cone_density_gives_its_mass ... ok
+test utility::tests::cooldowns_are_game_ticks ... ok
+test vehicle::r120_tests::letting_go_of_a_held_drift_fires_a_free_exit_boost ... ok
+test vehicle::tests::brake_brakes_when_rolling_and_reverses_near_rest ... ok
+test vehicle::tests::steering_lock_falls_with_speed_and_grip_follows_the_surface ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+test the_state_hash_distinguishes_which_car_has_assist_before_it_steps ... ok
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_sim-2fd40a21ae4db12f)
+[1m[92m     Running[0m tests/assist.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/assist-f9f42fe9a68747ca)
+test some_gates_the_drift_and_lots_turns_it_and_the_wheelie_off ... ok
+test lots_rights_a_flipped_car_at_once ... ok
+test lots_auto_throttles_and_brakes_before_bends_and_the_brake_still_works ... ok
+test assists_never_fight_a_full_lock_input ... ok
+test catch_up_closes_a_10_s_gap_by_a_stated_amount_and_never_touches_the_leader ... ok
+test a_scripted_novice_laps_with_lots_and_some_and_crashes_more_with_off ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 55.76s
+
+
+running 5 tests
+test a_heartbeat_or_a_noisy_axis_is_not_deliberate ... ok
+test handback_blends_at_a_tick_boundary_with_no_jolt ... ok
+test it_recovers_itself_after_being_stuck_3_s_and_its_state_is_introspectable ... ok
+[1m[92m     Running[0m tests/autopilot.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/autopilot-70f4d564b8de2adc)
+test autopilot_takeovers_and_handbacks_replay_to_the_same_hash ... ok
+[1m[92m     Running[0m tests/bikes.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/bikes-11de049e81bfe0e4)
+test the_autopilot_completes_three_laps_unaided_then_cools_down ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.16s
+
+
+running 4 tests
+test malformed_axles_and_missing_wheel_proxies_are_rejected_before_simulation ... ok
+test a_bike_wall_collision_charges_its_own_damage_proxies_and_replays ... ok
+test rider_and_wheel_damage_leave_dynamic_debris_and_a_fresh_bike ... ok
+test raw_stick_and_named_damage_fixtures_replay_through_the_shared_harness ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 1 test
+[1m[92m     Running[0m tests/crashes.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/crashes-4bddd471bc539db3)
+test the_staged_crashes_take_their_parts_loose_then_off_and_replay_to_the_same_state ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s
+
+
+running 1 test
+[1m[92m     Running[0m tests/damage.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/damage-5e62d0bcaa36a1cc)
+test the_damage_bank_holds_its_envelopes_and_replays_bit_for_bit ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+
+running 3 tests
+test the_profile_carries_every_part_proxy_in_contract_order ... ok
+test a_hit_by_debris_names_the_car_that_hit_the_debris ... ok
+[1m[92m     Running[0m tests/damage_attribution.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/damage_attribution-06007bf17eaec12f)
+test episodes_and_part_states_show_in_the_jj_sim_output ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 6 tests
+test a_detached_part_inherits_the_chassis_velocity_and_mass_adds_up ... ok
+test a_loose_part_swings_inside_its_limits_and_settles ... ok
+test debris_persists_dynamic_sleeps_and_wakes_on_contact ... ok
+[1m[92m     Running[0m tests/debris.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/debris-370ba4be2f882262)
+test loose_wheel_drive_and_the_energy_fixture_hold ... ok
+test springs_kicks_and_a_debris_pile_never_inject_energy ... ok
+[1m[92m     Running[0m tests/determinism.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/determinism-8104c02ca9e68fba)
+[1m[92m     Running[0m tests/determinism_scan.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/determinism_scan-14fcbab13b5d60be)
+[1m[92m     Running[0m tests/drift_r120.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/drift_r120-5a69dc315b0ff681)
+test nothing_converts_deletes_merges_or_budgets_debris ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.02s
+
+
+running 3 tests
+test placing_a_car_is_journaled_so_the_run_still_replays ... ok
+test journal_replay_reproduces_the_hash ... ok
+test same_inputs_and_seed_give_the_same_hash ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+
+running 2 tests
+test the_scan_catches_injected_cases ... ok
+test sim_code_reads_no_clock_and_draws_no_unseeded_randomness ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+[1m[92m     Running[0m tests/duels.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/duels-bd43ea5be890212e)
+test holding_countersteer_keeps_the_yaw_rate_bounded_through_a_three_second_drift ... ok
+test a_countersteered_drift_makes_the_corner_and_fires_its_exit_boost_and_without_countersteer_it_spins ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+
+running 2 tests
+test the_feel_bank_under_a_tuning ... ok
+[1m[92m     Running[0m tests/feel.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/feel-a338e4d9e4ea3e78)
+test every_duel_holds_its_ordering ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.76s
+
+
+running 1 test
+[1m[92m     Running[0m tests/item_queue.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/item_queue-0562ab101192b467)
+test every_feel_scenario_and_s03_affordance_row_holds_its_envelopes_and_beats_its_baselines ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.34s
+
+
+running 9 tests
+test card_uses_and_cooldown_are_game_time_and_a_protected_car_can_use_a_buff ... ok
+test respawn_clears_held_items_but_keeps_the_fired_effect_owner_until_exact_expiry ... ok
+test protection_and_failed_activation_keep_the_item_and_do_not_allocate_an_effect ... ok
+test full_pickup_is_not_consumed_and_use_shifts_the_fifo ... ok
+test round_retirement_returns_every_effect_and_replayed_transactions_hash_identically ... ok
+test sim_pickups_are_journalled_and_an_unavailable_handler_never_fires_the_fallback ... ok
+test sim_recovery_clears_queues_and_protection_refuses_an_offensive_pickup ... ok
+test sim_round_end_clears_inventory_but_dynamic_debris_keeps_moving_and_replays ... ok
+[1m[92m     Running[0m tests/late_join.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/late_join-32ee9f428438b1c3)
+test a_fired_buff_keeps_its_original_owner_and_timer_through_recovery ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 2 tests
+test on_a_narrow_road_the_newcomer_is_placed_clear_of_the_barriers_too ... ok
+test a_late_joiner_into_a_crowd_with_a_husk_and_debris_drives_away ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.55s
+
+
+running 7 tests
+[1m[92m     Running[0m tests/placement.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/placement-f14da9704177bc0f)
+test respawns_go_through_the_placement_service ... ok
+test the_0_1_spawn_cap_never_returns ... ok
+test a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state ... ok
+test start_grids_of_1_24_40_and_99_place_without_overlap ... ok
+test drop_ins_and_debris_replay_to_the_same_hash ... ok
+test a_crowded_tail_still_yields_a_controllable_protected_car_within_3_s ... ok
+test a_99_car_grid_on_a_24_car_corridor_places_everyone_at_once_under_protection ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.86s
+
+
+running 9 tests
+[1m[92m     Running[0m tests/race.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/race-a43ebcbdb557d453)
+test recover_needs_a_slow_or_inverted_car_and_holds_it_then_rolls_it_off ... ok
+test a_shortcut_across_the_infield_doesnt_count_progress ... ok
+test finished_cars_are_ghosts_to_racers ... ok
+test finishes_carry_a_crossing_fraction_and_progress_keeps_its_high_water_mark ... ok
+test a_race_with_commands_replays_to_the_same_hash ... ok
+test out_of_bounds_always_recovers ... ok
+test the_first_finisher_opens_the_30_s_window ... ok
+test a_flip_from_12_inverted_poses_rights_itself_or_is_wrecked_within_4_s_of_rest ... ok
+test an_all_stuck_race_ends_at_the_deadline ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+
+running 4 tests
+test rail_profile_validates_and_passive_deflection_returns_without_creating_energy ... ok
+test bolted_neighbours_spread_a_setup_deflection_and_return_passively ... ok
+[1m[92m     Running[0m tests/rails.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/rails-e9a2e57e9abc5b47)
+test speed_angle_sweep_moves_the_rail_without_losing_car_parts ... ok
+test compliant_corner_and_low_speed_use_have_intact_replayable_outcomes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.70s
+
+
+running 10 tests
+test dominance_setter_applies_on_the_next_tick_and_equal_contacts_return_on_expiry ... ok
+test per_wheel_state_is_readable ... ok
+test a_sleeping_chassis_wakes_only_on_positive_engine_force ... ok
+test higher_dominance_pushes_dynamic_bodies_but_fixed_barriers_still_stop_it ... ok
+test restoring_equal_dominance_separates_a_stationary_overlap_without_launching_it ... ok
+test update_vehicle_before_step_holds_the_car_on_its_suspension ... ok
+test one_wheel_is_disabled_by_zeroing_its_suspension_and_grip ... ok
+test update_vehicle_pumps_velocity_into_a_sleeping_chassis ... ok
+test engine_force_is_a_force_and_brake_is_an_impulse_per_tick ... ok
+test dominance_contact_models_work_with_either_body_insertion_order ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 4 tests
+test suspension_hits_the_gable_and_verandah_instead_of_a_full_height_box ... ok
+[1m[92m     Running[0m tests/rapier_api.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/rapier_api-fcd3c74581c0ce92)
+[1m[92m     Running[0m tests/roofs.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/roofs-69a11a4f852f3f98)
+[1m[92m     Running[0m tests/roster.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/roster-6f6e58df1cff094d)
+test respawn_clearance_keeps_the_full_house_footprint_after_roof_decomposition ... ok
+test a_design_speed_kicker_lands_on_the_visible_roof_and_the_validator_rejects_an_unreachable_target ... ok
+test an_unprotected_car_lands_stays_on_the_roof_and_drives_off ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 5 tests
+test every_roster_vehicle_has_a_profile_and_an_art_folder ... ok
+test tuning_one_vehicle_changes_only_its_cars ... ok
+test a_fixture_vehicle_added_as_data_drives ... ok
+test each_car_is_built_from_and_driven_by_its_own_profile ... ok
+[1m[92m     Running[0m tests/tradie_ute.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/tradie_ute-418091baf8dea369)
+test a_mixed_roster_replays_bit_for_bit ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+
+running 4 tests
+test the_ute_profile_is_heavier_and_torquier_than_the_cruz ... ok
+test the_ute_settles_on_its_wheels_at_the_design_ride_height ... ok
+test the_ute_responds_to_throttle ... ok
+[1m[92m     Running[0m tests/utility.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/utility-d7561b43e215d40f)
+test the_ute_laps_the_greybox_under_autopilot_without_a_wreck_and_no_faster_than_the_cruz ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.10s
+
+
+running 4 tests
+test each_utility_fires_once_and_its_cooldown_refuses_in_game_time ... ok
+test utilities_replay_from_the_journal ... ok
+test a_car_driving_into_a_cone_pushes_it_and_is_not_wrecked ... ok
+test a_cone_lands_behind_the_bumper_on_the_ground_and_stays_for_the_round ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+
+running 4 tests
+[1m[92m     Running[0m tests/wreck.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/wreck-e069d4c1bbc09b1a)
+test a_lost_wheel_wrecks_the_car_after_its_grace_and_it_respawns_at_its_anchor ... ok
+test a_wreck_never_injects_energy_and_replays_bit_for_bit ... ok
+test stuck_flip_and_out_of_bounds_wrecks_leave_husks_that_persist_dynamic ... ok
+test a_car_with_every_part_loose_laps_as_fast_as_an_intact_one ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.43s
+
+
+running 6 tests
+test vehicle::tests::tune_wrong_contract_errors_and_leaves_file_unchanged ... ok
+test vehicle::tests::tune_unknown_field_errors_and_leaves_file_unchanged ... ok
+test vehicle::tests::tune_check_reports_without_writing ... ok
+test vehicle::tests::tune_applies_input_profile_changes_and_refuses_invalid_ones_whole ... ok
+test vehicle::tests::tune_writes_changed_field_and_keeps_the_rest ... ok
+test vehicle::tests::tune_applies_generator_changes_and_refuses_invalid_ones_whole ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 1 test
+test the_cli_validates_shipped_cards_and_rejects_a_missing_field_or_missing_counterplay ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+[1m[92m     Running[0m unittests src/main.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj-246a619ca4d9389d)
+[1m[92m     Running[0m tests/item_cli.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/item_cli-64c4dc4421da4d12)
+[1m[92m     Running[0m tests/procgen_cli.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/procgen_cli-8c1c44754bd67a5e)
+[1m[92m     Running[0m tests/replay_cli.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/replay_cli-a2a369c43df8f3d4)
+test jj_procgen_generates_validates_and_dumps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.94s
+
+
+running 4 tests
+test a_clip_from_a_different_build_is_refused_with_a_clear_message ... ok
+test a_diverging_checkpoint_fails_the_replay_and_names_the_tick ... ok
+test a_session_replays_round_by_round ... ok
+[1m[92m     Running[0m tests/scenarios.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/scenarios-246bfb5a5367cf24)
+test a_clip_replays_to_its_end_hash_and_the_marked_moment_with_a_trace ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+
+running 1 test
+test every_scenario_in_the_bank_passes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.23s
+
+
+running 4 tests
+test help_has_worked_examples_and_bad_usage_exits_2 ... ok
+[1m[92m     Running[0m tests/sim_cli.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/sim_cli-7f899ec02c68d7d6)
+test a_failing_fixture_prints_what_it_observed_against_its_signature_and_exits_1 ... ok
+test an_agent_sets_up_three_cars_and_seats_steps_600_ticks_reads_json_and_replays ... ok
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_types-5bb42bb4d4ca129c)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_wasm_host-244f7b68b1608f31)
+test trace_feeds_compare_which_shows_the_differing_keys ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+
+
+running 10 tests
+test axis::tests::neutral_and_full_range_are_exact ... ok
+test axis::tests::thresholds_survive_quantisation ... ok
+test ids::tests::room_codes_normalise_and_reject_ambiguous_letters ... ok
+test time::tests::unwraps_across_the_wrap ... ok
+test seq::tests::wraps_around ... ok
+test axis::tests::any_threshold_agrees_with_the_float_comparison_off_its_step ... ok
+test time::tests::recovers_any_time_near_the_reference ... ok
+test axis::tests::round_trip_error_is_half_a_step ... ok
+test seq::tests::a_step_forward_is_always_newer ... ok
+test axis::tests::quantisation_is_monotonic ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 51 tests
+test host::prompts::tests::off_hides_it_and_on_again_repeats_from_the_start ... ok
+test host::prompts::tests::the_sequence_clears_one_control_at_a_time_in_order ... ok
+test host::tests::a_fault_stops_the_sim ... ok
+test host::tests::a_hello_for_another_protocol_is_answered_with_claim_rejected_build_and_no_seat ... ok
+test host::tests::a_camera_distance_choice_is_an_event_for_that_seat ... ok
+test host::tests::a_controller_cannot_remove_a_seat ... ok
+test host::tests::a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the_snapshot ... ok
+test host::testing::tests::bad_commands_say_why ... ok
+test host::tests::a_claim_while_paused_is_welcomed_and_seated_and_places_at_resume ... ok
+test host::tests::a_hidden_host_still_tells_the_phones_why_the_room_is_paused ... ok
+test host::testing::tests::until_steps_to_the_predicate_and_observe_shows_controller_seats ... ok
+test host::tests::a_pick_reaches_the_room_view_and_a_bad_id_does_not ... ok
+test host::tests::a_host_pads_right_stick_steers_and_its_left_stick_drives ... ok
+test host::tests::a_long_stall_pauses_at_the_last_tick_instead_of_catching_up ... ok
+test host::tests::a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host ... ok
+test host::tests::a_host_pads_seat_names_its_source_and_runs_its_prompts ... ok
+test host::tests::a_reloaded_controller_says_hello_again_and_gets_its_seat_back ... ok
+test host::tests::a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event ... ok
+test host::tests::a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat ... ok
+test host::tests::catch_up_is_a_round_rule_and_the_host_can_switch_it_off ... ok
+test host::testing::tests::journal_chunks_kept_by_main_replay_to_the_live_hash_across_worlds ... ok
+test host::tests::each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicle ... ok
+test host::tests::an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_and_is_held ... ok
+test host::tests::hiding_pauses_with_no_catch_up_and_resume_counts_down_with_neutral_input ... ok
+test host::tests::an_input_profile_change_reaches_the_host_and_every_controller ... ok
+test host::tests::input_is_rearmed_at_neutral_after_a_pause ... ok
+test host::tests::an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over ... ok
+test host::testing::tests::spawning_through_the_surface_and_stepping_held_matches_the_native_fixture_run ... ok
+test host::tests::item_inventory_events_and_use_refusals_follow_only_their_hub_source ... ok
+test host::tests::host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back ... ok
+test host::tests::loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_events ... ok
+test host::tests::race_classification_preserves_crossing_fraction_progress_and_exact_ties ... ok
+test host::tests::snapshot_transfers_compliant_rails_by_map_dressing_index ... ok
+test host::tests::identify_answers_every_press_after_a_long_lobby_and_a_round_start ... ok
+test host::tests::controller_bytes_and_local_source_drive_identically ... ok
+test host::tests::the_input_and_vehicle_profiles_agree_on_the_launch ... ok
+test host::tests::replay_air_flag_uses_suspension_contacts_instead_of_terrain_height ... ok
+test host::tests::r116_the_rim_is_not_a_boost_and_a_sideways_push_drifts_at_full_throttle ... ok
+test host::tests::snapshots_carry_cars_and_skip_when_the_buffer_is_short ... ok
+test host::tests::a_hub_endpoint_claims_and_holds_a_seat_per_source_over_one_connection ... ok
+test host::tests::a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit ... ok
+test host::tests::the_seats_assist_level_reaches_its_car_and_the_room_view ... ok
+test host::tests::the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them ... ok
+test host::tests::the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat ... ok
+test host::tests::the_old_layouts_action_stick_still_boosts_then_drifts ... ok
+test host::testing::tests::a_mixed_roster_through_the_host_hashes_to_the_committed_value ... ok
+test host::tests::finishing_the_race_on_demand_gives_intermission_with_standings_for_every_racer ... ok
+test host::tests::render_and_worker_cadence_never_change_the_simulation ... ok
+test host::tests::thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats ... ok
+test host::tests::a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped ... ok
+test host::tests::four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars ... ok
+
+test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.32s
+
+
+running 6 tests
+test cmd::tests::host_commands_decode_to_json ... ok
+test tests::an_endpoint_detects_and_sends ... ok
+test cmd::tests::commands_round_trip ... ok
+test tests::actions_translate_and_encode ... ok
+test tests::the_old_layout_is_a_per_source_setting_and_fires_on_entry ... ok
+test tests::the_launch_cooldown_reads_as_a_fraction_that_empties ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_wasm_input-9ce21f08bfbf73f0)
+[1m[92m     Running[0m unittests src/lib.rs (/tmp/rch/multiplayer-racer/.rch-target-eris-pool-d177aa1c60f3a729504a19ae92b32e43/release/deps/jj_wasm_procgen-9d0ea4e2aba6197e)
+test tests::the_default_recipe_is_the_seeds_own_mix_and_prepares_a_valid_map ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+[1m[92m   Doc-tests[0m jj_contracts
+[1m[92m   Doc-tests[0m jj_fixture
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_input
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_map
+[1m[92m   Doc-tests[0m jj_procgen
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_server
+[1m[92m   Doc-tests[0m jj_session
+[1m[92m   Doc-tests[0m jj_sim
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_types
+[1m[92m   Doc-tests[0m jj_wasm_host
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m   Doc-tests[0m jj_wasm_input
+[1m[92m   Doc-tests[0m jj_wasm_procgen
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+  [2m2026-10-11T22:13:46.159122Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRemote command finished: exit=0 in 1648274ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:1904 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T22:13:46.311057Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mRetrieving build artifacts...[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2000 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T22:13:46.311110Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mRetrieving artifacts from /tmp/rch/multiplayer-racer/paired-1e26ae01785c0fb39c5bea065c1c926c on eris[0m
+    [2;3mat[0m rch/src/transfer.rs:5733 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T22:13:46.548873Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifact retrieval budget from selected remote files, [1;32mselected_bytes[0m[32m: 0, [1;32mtotal_timeout_ms[0m[32m: 30000[0m
+    [2;3mat[0m rch/src/transfer.rs:2632 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T22:13:46.775536Z[0m [32m INFO[0m [1;32mrch::transfer[0m[32m: [32mArtifacts retrieved in 464ms (0 files, 44 bytes)[0m
+    [2;3mat[0m rch/src/transfer.rs:5794 [2;3mon[0m ThreadId(1)
+
+  [2m2026-10-11T22:13:46.795707Z[0m [32m INFO[0m [1;32mrch::hook::transfer_orchestration[0m[32m: [32mArtifacts retrieved: 0 files, 44 bytes in 464ms[0m
+    [2;3mat[0m rch/src/hook/transfer_orchestration.rs:2046 [2;3mon[0m ThreadId(1)
+
+[RCH] clean-overlay receipt: base=9ab839ba59688d655985f2a42d44c7d6d4cebc8b overlay-fingerprint=fe0d5151031be8fda7951fe7fe1f42f7ce344018fdb3ed21e6ada866b230b195 tree=efc32933011a6110825ec5629b1673074e1d92a8

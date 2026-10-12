@@ -1,0 +1,538 @@
+{
+  "browser": "webkit",
+  "transport": "real jj-server, frame-stepped WASM fixture; no controller connection",
+  "rows": [
+    {
+      "file": "webkit-hit-412x915.jpg",
+      "state": "hit",
+      "width": 412,
+      "height": 915,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-hit-412x915.jpg",
+      "state": "fullscreen-hit",
+      "width": 412,
+      "height": 915,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-hit-412x915.jpg",
+      "state": "resized-hit",
+      "width": 412,
+      "height": 915,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-hit-915x412.jpg",
+      "state": "hit",
+      "width": 915,
+      "height": 412,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-hit-915x412.jpg",
+      "state": "fullscreen-hit",
+      "width": 915,
+      "height": 412,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-hit-915x412.jpg",
+      "state": "resized-hit",
+      "width": 915,
+      "height": 412,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-hit-375x667.jpg",
+      "state": "hit",
+      "width": 375,
+      "height": 667,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-hit-375x667.jpg",
+      "state": "fullscreen-hit",
+      "width": 375,
+      "height": 667,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-hit-375x667.jpg",
+      "state": "resized-hit",
+      "width": 375,
+      "height": 667,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-hit-1920x1080.jpg",
+      "state": "hit",
+      "width": 1920,
+      "height": 1080,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-hit-1920x1080.jpg",
+      "state": "fullscreen-hit",
+      "width": 1920,
+      "height": 1080,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-hit-1920x1080.jpg",
+      "state": "resized-hit",
+      "width": 1920,
+      "height": 1080,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-hit-1366x768.jpg",
+      "state": "hit",
+      "width": 1366,
+      "height": 768,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-fullscreen-hit-1366x768.jpg",
+      "state": "fullscreen-hit",
+      "width": 1366,
+      "height": 768,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    },
+    {
+      "file": "webkit-resized-hit-1366x768.jpg",
+      "state": "resized-hit",
+      "width": 1366,
+      "height": 768,
+      "tick": 241,
+      "rails": [
+        {
+          "displacementM": 0.164337158203125,
+          "dressing": 0,
+          "fixed": false,
+          "springEnergyJ": 3240.80419921875,
+          "travelM": 0.6000000238418579,
+          "velocityMps": 17.49606704711914
+        }
+      ]
+    }
+  ],
+  "rest": [
+    {
+      "dressing": 0,
+      "instance": 0,
+      "position": [
+        -40,
+        0,
+        -20
+      ]
+    }
+  ],
+  "hit": [
+    {
+      "dressing": 0,
+      "instance": 0,
+      "position": [
+        -40,
+        0,
+        -19.835662841796875
+      ]
+    }
+  ],
+  "returned": [
+    {
+      "dressing": 0,
+      "instance": 0,
+      "position": [
+        -40,
+        0,
+        -20.000038146972656
+      ]
+    }
+  ],
+  "final": {
+    "cars": [
+      {
+        "action": {
+          "boost": 1,
+          "boosting": false,
+          "cones": 0,
+          "drift": 0,
+          "oi": 0,
+          "wheelie": false
+        },
+        "angvel": [
+          0,
+          0,
+          0
+        ],
+        "authorisedJ": 227167.00927734375,
+        "autopilot": null,
+        "car": 0,
+        "derby": null,
+        "energyJ": 6567.618338685483,
+        "forwardSpeed": 0,
+        "headingDeg": 0,
+        "husks": 0,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "linvel": [
+          0,
+          -0.030618153512477875,
+          0
+        ],
+        "massKg": 1200,
+        "maxEngineForce": 7000,
+        "parts": [
+          {
+            "angleDeg": 0,
+            "health": 0,
+            "part": "core",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ],
+        "position": [
+          -60,
+          0.007726311683654785,
+          -20
+        ],
+        "progress": {
+          "distanceM": 555.277876612995,
+          "fraction": 0.9024830856420677,
+          "lateralM": -20,
+          "routePoint": 222
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "speed": 0.030618153512477875,
+        "upY": 1,
+        "vehicle": 0,
+        "wheels": [
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.622314453125,
+            "suspensionLength": 0.2044450342655182
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.622314453125,
+            "suspensionLength": 0.2044450342655182
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.622314453125,
+            "suspensionLength": 0.2044450342655182
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.622314453125,
+            "suspensionLength": 0.2044450342655182
+          }
+        ],
+        "wheelsInContact": 4
+      }
+    ],
+    "debris": [],
+    "host": {
+      "countdownMs": 0,
+      "held": true,
+      "pauseMask": 0,
+      "queued": 0,
+      "seats": []
+    },
+    "items": {
+      "effects": [],
+      "events": [],
+      "queues": [
+        {
+          "car": 0,
+          "queue": {
+            "back": null,
+            "front": null
+          }
+        }
+      ],
+      "refusals": []
+    },
+    "rails": [
+      {
+        "displacementM": -0.00003814697265625,
+        "dressing": 0,
+        "fixed": false,
+        "springEnergyJ": 0.00017462298274040222,
+        "travelM": 0.6000000238418579,
+        "velocityMps": 0
+      }
+    ],
+    "session": {
+      "driving": "Held",
+      "gameMs": 0,
+      "gameRemainingMs": null,
+      "phase": "Lobby",
+      "readyRevision": 0,
+      "remainingMs": null,
+      "round": null,
+      "seats": [
+        {
+          "car": 0,
+          "colour": {
+            "index": 0,
+            "rgb": [
+              229,
+              50,
+              45
+            ]
+          },
+          "connected": true,
+          "hasCar": true,
+          "name": "Rail test",
+          "number": 1,
+          "presence": "Active",
+          "ready": false,
+          "seat": 1,
+          "source": 1
+        }
+      ]
+    },
+    "tick": 841
+  },
+  "errors": []
+}

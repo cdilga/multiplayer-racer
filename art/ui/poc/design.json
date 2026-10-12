@@ -1,0 +1,26 @@
+{
+  "what": "The design site's index (R126, P1-D03b): its sections and, per entry, the date, bead and status. Statuses live here, not in the HTML: awaiting-review, accepted or changes-asked. Entries are the data-entry ids in poc/index.html; the Vehicles section is generated from vehicles/roster.json. Owner comments on an entry become bug beads that cite it.",
+  "feedback": "Comment on an entry (which state, what to change). Each comment becomes a bug bead citing the entry's id and page; work never waits for a verdict (R126).",
+  "statuses": ["awaiting-review", "accepted", "changes-asked"],
+  "groups": [
+    { "id": "vehicles", "title": "Vehicles", "why": "Every roster vehicle with a review page: reference against model, LODs against budgets, damage, paints, in-world captures, the gate and handling." },
+    { "id": "ui", "title": "UI accepted set", "why": "The design guide, brand, TV and phone mocks the owner accepted on 2026-10-07 (G-DESIGN, P1-U04). The frozen copy is art/ui/accepted/2026-10-07/." },
+    { "id": "look", "title": "Look", "why": "The comic treatment in the world, on the real car and track." },
+    { "id": "audio", "title": "Audio", "why": "Procedural engine and announcer voice." },
+    { "id": "motion", "title": "Motion", "why": "The motion reel and its reduced-motion version." }
+  ],
+  "entries": {
+    "ui-guide": { "date": "2026-10-06", "bead": "P1-U01", "status": "accepted" },
+    "ui-brand": { "date": "2026-10-10", "bead": "P1-U01", "status": "accepted" },
+    "ui-tv-grid": { "date": "2026-10-06", "bead": "P1-U02", "status": "accepted" },
+    "ui-lobby": { "date": "2026-10-06", "bead": "P1-U02", "status": "accepted" },
+    "ui-results": { "date": "2026-10-06", "bead": "P1-U02", "status": "accepted" },
+    "ui-host": { "date": "2026-10-06", "bead": "P1-U02", "status": "accepted" },
+    "ui-phone": { "date": "2026-10-06", "bead": "P1-U03", "status": "accepted" },
+    "ui-overview": { "date": "2026-10-06", "bead": "P1-U02", "status": "accepted" },
+    "look-world": { "date": "2026-10-05", "bead": "P1-U05", "status": "awaiting-review" },
+    "audio-engine": { "date": "2026-10-04", "bead": "P1-A04", "status": "awaiting-review" },
+    "audio-voice": { "date": "2026-10-07", "bead": "P1-A01", "status": "awaiting-review" },
+    "motion-reel": { "date": "2026-10-06", "bead": "P1-U05", "status": "accepted" }
+  }
+}

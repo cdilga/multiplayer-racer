@@ -1,0 +1,40 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running tests/roofs.rs (target/aarch64-apple-darwin/debug/deps/roofs-2c886d553f232445)
+
+running 2 tests
+test roof_stunt_dimensions_are_tunable_and_invalid_values_are_refused ... ok
+seed 0 roof 1: release Some(14.425792) m/s, landed [-350.37506, 3.8822503, -363.50946]
+seed 0 roof 2: release Some(15.045243) m/s, landed [-273.49704, 1.885864, -112.71118]
+seed 0 roof 3: release Some(14.659569) m/s, landed [145.64008, 0.28238434, -343.81235]
+seed 0 roof 4: release Some(14.844262) m/s, landed [270.7387, 2.781908, -110.856636]
+seed 0 roof 5: release Some(14.508537) m/s, landed [392.25592, 3.1965003, -87.34788]
+town seed 0: 5 rooftop lots
+seed 1 roof 1: release Some(14.99794) m/s, landed [-88.27064, 2.7080421, 222.5683]
+seed 1 roof 2: release Some(15.101796) m/s, landed [196.15813, 2.0522616, -84.39452]
+seed 1 roof 3: release Some(15.246225) m/s, landed [257.01083, 1.2810795, 428.95987]
+seed 1 roof 4: release Some(14.680595) m/s, landed [303.01447, 2.8809032, 46.792286]
+seed 1 roof 5: release Some(14.743313) m/s, landed [346.94818, 1.7455349, -295.08435]
+town seed 1: 5 rooftop lots
+seed 2 roof 1: release Some(13.979932) m/s, landed [121.33509, 3.0696225, 61.949505]
+town seed 2: 1 rooftop lots
+town seed 3: 0 rooftop lots
+seed 4 roof 1: release Some(15.063884) m/s, landed [-54.67007, 0.41348642, -71.1015]
+town seed 4: 1 rooftop lots
+seed 5 roof 1: release Some(14.2293) m/s, landed [-128.12204, 1.2648606, -105.2297]
+town seed 5: 1 rooftop lots
+seed 6 roof 1: release Some(14.416418) m/s, landed [-74.29274, 3.4101276, 101.965744]
+test town_seed_lots_are_reachable_clear_and_land_a_real_car has been running for over 60 seconds
+seed 6 roof 2: release Some(14.409497) m/s, landed [-41.798298, 2.0870285, 89.57002]
+town seed 6: 2 rooftop lots
+seed 7 roof 1: release Some(15.132335) m/s, landed [-381.60388, 0.9873756, -114.410545]
+seed 7 roof 2: release Some(15.054246) m/s, landed [179.52037, 2.848035, -273.70157]
+town seed 7: 2 rooftop lots
+seed 8 roof 1: release Some(14.151782) m/s, landed [-49.34944, 3.9389107, -34.890667]
+seed 8 roof 2: release Some(14.418294) m/s, landed [220.27875, 2.3524144, -49.887802]
+town seed 8: 2 rooftop lots
+seed 9 roof 1: release Some(14.791412) m/s, landed [66.32822, 2.9787083, 84.40213]
+town seed 9: 1 rooftop lots
+test town_seed_lots_are_reachable_clear_and_land_a_real_car ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 81.64s
+

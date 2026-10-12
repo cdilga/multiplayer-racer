@@ -1,0 +1,223 @@
+{
+  "expect": [
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "husks",
+      "min": 0
+    }
+  ],
+  "grid": 1,
+  "inputs": [
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 240,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.7999816888943144,
+      "toTick": 241
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 241,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8053834650715659,
+      "toTick": 242
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 242,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8107547227393415,
+      "toTick": 243
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 243,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8160344248786889,
+      "toTick": 244
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 244,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8212225714896084,
+      "toTick": 245
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 245,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8239692373424482,
+      "toTick": 246
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 246,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.826532792138432,
+      "toTick": 247
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 247,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8289437543870357,
+      "toTick": 248
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 248,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8312326425977355,
+      "toTick": 249
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 249,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8332773827326273,
+      "toTick": 250
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 250,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8352916043580432,
+      "toTick": 251
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 251,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8372142704550309,
+      "toTick": 252
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 252,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8390453810235908,
+      "toTick": 253
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 253,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8404187139500107,
+      "toTick": 254
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 254,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8420667134617146,
+      "toTick": 255
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 255,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8486587115085299,
+      "toTick": 256
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 256,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8580278939176611,
+      "toTick": 257
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 257,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 0.8669087801751763,
+      "toTick": 258
+    },
+    {
+      "brake": 0.0,
+      "car": 0,
+      "fromTick": 258,
+      "noReverse": false,
+      "steer": 0.0,
+      "throttle": 1.0,
+      "toTick": 343
+    },
+    {
+      "brake": 1.0,
+      "car": 0,
+      "fromTick": 343,
+      "noReverse": true,
+      "steer": 0.0,
+      "throttle": 0.0,
+      "toTick": 960
+    }
+  ],
+  "map": "docs/evidence/P1-PT-rooftop/generated/map.json",
+  "observe": [
+    240,
+    300,
+    360,
+    480,
+    720,
+    960
+  ],
+  "place": [
+    {
+      "car": 0,
+      "linvel": [
+        11.668550491333008,
+        0,
+        -13.705653190612793
+      ],
+      "pose": {
+        "headingDeg": 139.58999633789062,
+        "x": -368.520751953125,
+        "y": 1.6577574014663696,
+        "z": -342.0647277832031
+      },
+      "tick": 240
+    }
+  ],
+  "scenario": "generated-roof-kicker",
+  "seed": 0,
+  "ticks": 960,
+  "what": "P1-PT-rooftop: town seed 0's first real rooftop lot, full generated map and exact native/WASM replay"
+}

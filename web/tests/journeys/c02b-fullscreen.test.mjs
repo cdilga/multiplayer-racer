@@ -1,10 +1,13 @@
+import { confirmInitialVehicle } from './lib/vehicle.mjs';
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-C02b: full screen on the phone controller. A real phone joins a real room (loopback WebRTC). The tools row's full-screen
 // button enters and leaves full screen and shows the state; the settings sheet's Full screen switch does the same and follows
 // fullscreenchange (an exit the page didn't ask for flips it too). Mid-race, losing full screen without asking (the system
 // gesture: an exit the page didn't make) shows a small "Back to full screen" prompt; the drive stick still drives under it;
 // one tap restores full screen and the prompt goes. Where the Fullscreen API is missing (iPhone Safari; emulated here by
 // removing it before the page loads, as the WebKit lane has no phone Safari), the control explains Add to Home Screen instead.
-// Captures go to $JJ_CAPTURE_DIR (default docs/evidence/P1-C02b).
+// Explicit captures can go to $JJ_CAPTURE_DIR (default OS scratch).
 //   node --test web/tests/journeys/c02b-fullscreen.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -15,7 +18,7 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/c02b/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-C02b');
+const CAPTURE = evidencePath('P1-C02b', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 
@@ -58,7 +61,9 @@ async function joinPhone(joinUrl, { width, height, noApi = false, name = 'Marlen
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await confirmInitialVehicle(page);
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   // Joining asks for full screen once (keep awake on): let that land, then start from the windowed state the owner reported.
   if (!noApi) await wait(page, () => !!document.fullscreenElement, undefined, 5_000);
@@ -131,6 +136,15 @@ test('C02b: the full-screen toggle (tools and settings) enters and leaves and fo
   const drive = await page.evaluate(() => window.__jjController.inspect().sticks.drive);
   assert.ok(drive.touch && (Math.abs(drive.x) > 0.1 || Math.abs(drive.y) > 0.1), `the stick drives under the prompt: ${JSON.stringify(drive)}`);
   await page.mouse.up();
+  // Owner playtest 1: the settings sheet opened over a lost full screen hides the prompt (it covered the sheet's Steering
+  // row and Reset); closing the sheet brings it back for the race.
+  await page.locator('.tools [data-act=settings]').click();
+  await page.locator('[data-overlay=settings]').waitFor();
+  assert.equal(await page.locator('[data-overlay=fs-prompt]').isVisible(), false, 'no prompt over the settings sheet');
+  await shot(page, 'phone-915x412-race-fullscreen-lost-settings');
+  await page.getByRole('button', { name: 'Save and back to driving' }).click();
+  await wait(page, () => !document.querySelector('[data-overlay=settings]'));
+  assert.equal(await page.locator('[data-overlay=fs-prompt]').isVisible(), true, 'the prompt is back once the sheet closes');
   // One tap goes back in; the prompt goes.
   await page.getByRole('button', { name: 'Back to full screen' }).click();
   await wait(page, () => !!document.fullscreenElement);

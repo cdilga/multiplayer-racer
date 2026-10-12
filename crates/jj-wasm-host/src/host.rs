@@ -22,7 +22,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
-use jj_map::{LoadedMap, Registry, load_canonical};
+use jj_map::{LoadedMap, load_canonical};
 use jj_protocol::abi::{
     ABI_VERSION, Channel, DamageCause, EpisodeRecord, HitBody, MainToSim, SimEvent, SimToMain,
     UiCommand,
@@ -107,8 +107,21 @@ enum Origin {
     Local(LocalSourceId),
 }
 
+impl SeatInput {
+    /// Records the first unavailable sample's time and clears it when the source is available again (R119).
+    fn note_plug(&mut self, available: bool, now_ms: u64) {
+        if available {
+            self.unplugged_since_ms = None;
+        } else if self.unplugged_since_ms.is_none() {
+            self.unplugged_since_ms = Some(now_ms);
+        }
+    }
+}
+
 struct SeatInput {
     state: SourceState,
+    /// Latest source sequence received from the wire/local sampler, for send-to-apply probes (P1-C12).
+    wire_seq: Option<u16>,
     car: Option<CarId>,
     /// The controller's recent discrete action ids: a resent `Action` applies once (§5.4).
     seen_actions: Vec<ActionId>,
@@ -120,8 +133,14 @@ struct SeatInput {
     idle_cued: bool,
     /// The controller's menu (Settings, Help) is open: the autopilot drives until it closes and the player steers.
     menu_open: bool,
+    /// R119: when (sim ms) this seat's source reported itself unplugged (unavailable); `None` while it is plugged. The seat is
+    /// held with its car on the autopilot; nothing expires it, the TV and the page show how long.
+    unplugged_since_ms: Option<u64>,
     /// The first-drive prompts (C06): which of the seven controls the host has seen this seat do.
     prompt: prompts::PromptTrack,
+    /// The player's learner-assist level (R125, `SetAssist`): carried to this seat's car every tick, so it holds across
+    /// rounds and new cars; the tile shows an L-plate while it isn't Off.
+    assist: jj_sim::assist::AssistLevel,
 }
 
 /// A host pad or key cluster's button edges and its way back after leaving.
@@ -185,6 +204,23 @@ pub struct Host {
     seen_utility_events: usize,
     /// How many of the sim's damage events have become seat events (P1-S04a).
     seen_damage_events: usize,
+    seen_item_events: usize,
+    sent_inventory: BTreeMap<SeatId, jj_protocol::items::Inventory>,
+    /// The seats' clock: every step, never reset. The sim's tick restarts at 0 with each round's new world, and the
+    /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
+    /// after every round start (owner playtest 1, br-gw74.1).
+    session_tick: u64,
+    /// The roster's vehicles in roster order, `(id, profile)` (R123): every round's world is built with all of them, as the
+    /// owner tuning menu left them, and each car takes the one its seat picked. `Vehicles` from main replaces this table;
+    /// until then it is the Cruz Missile alone.
+    vehicles: Vec<(String, VehicleProfile)>,
+    /// Which vehicle the tuning menu edits (an index into `vehicles`).
+    tuning_vehicle: usize,
+    /// Why the last tuning change was refused (an unknown field, a bad value), for the menu.
+    tuning_error: Option<String>,
+    /// The input profile every seat's sticks are read with: the shipped one until the owner tuning menu changes it
+    /// (br-2sdu.2). Held in its wire (fixed-point) form so the host and every controller resolve the same thresholds.
+    input_profile: jj_input::InputProfile,
     session_rev: u32,
     /// The party loop (G01): director, standings, laps, free drive.
     round: round::RoundState,
@@ -220,6 +256,7 @@ fn session_only(cmd: &ControllerCmd) -> bool {
         | ControllerCmd::Menu { .. }
         | ControllerCmd::SetCamera { .. }
         | ControllerCmd::SetCameraDistance { .. }
+        | ControllerCmd::SetAssist { .. }
         | ControllerCmd::Tutorial { .. } => true,
         _ => false,
     }
@@ -251,7 +288,7 @@ impl Host {
         if abi_version != ABI_VERSION {
             return Err(HostError::Abi(abi_version));
         }
-        let map: LoadedMap = load_canonical(&map_bytes, &Registry::generic()).map_err(|r| {
+        let map: LoadedMap = load_canonical(&map_bytes, &jj_procgen::registry()).map_err(|r| {
             HostError::Map(format!(
                 "{:?}",
                 r.violations
@@ -263,10 +300,15 @@ impl Host {
         Ok(Self::from_map(map, seed))
     }
 
-    /// A host on a validated map with a seed (the generic kit registry and the Cruz Missile profile).
+    /// A host on a validated map with a seed (the complete kit registry and the Cruz Missile profile).
     pub fn from_map(map: LoadedMap, seed: u64) -> Self {
         Self {
-            sim: Sim::new(&map, &Registry::generic(), seed, VehicleProfile::cruz()),
+            sim: Sim::with_profiles(
+                &map,
+                &jj_procgen::registry(),
+                seed,
+                vec![VehicleProfile::cruz()],
+            ),
             map,
             seats: Seats::new(SeatConfig {
                 tick_hz: TICK_HZ,
@@ -297,6 +339,13 @@ impl Host {
             seen_race_events: 0,
             seen_utility_events: 0,
             seen_damage_events: 0,
+            seen_item_events: 0,
+            sent_inventory: BTreeMap::new(),
+            session_tick: 0,
+            vehicles: vec![("cruz-missile".into(), VehicleProfile::cruz())],
+            tuning_vehicle: 0,
+            tuning_error: None,
+            input_profile: jj_input::InputProfile::standard(),
             session_rev: 0,
             round: round::RoundState::new(seed),
             #[cfg(feature = "testing")]
@@ -347,9 +396,36 @@ impl Host {
                 ..
             } => self.set_pause(Pause::Manual, on),
             MainToSim::Init { .. } | MainToSim::ReturnBuffer { .. } => {}
+            MainToSim::Vehicles { vehicles } => self.set_vehicles(vehicles)?,
             other => self.queued.push(other),
         }
         Ok(())
+    }
+
+    /// Replaces the vehicle table with the roster's (R123): parsed profiles in roster order. The world is rebuilt (a
+    /// roster arrives before any round, so no car is lost; free-drive cars respawn as their picks say).
+    fn set_vehicles(&mut self, vehicles: Vec<(String, String)>) -> Result<(), HostError> {
+        let mut table = Vec::with_capacity(vehicles.len());
+        for (id, json) in vehicles {
+            let p = VehicleProfile::from_json(&json)
+                .map_err(|e| HostError::Decode(format!("vehicle {id}: {e}")))?;
+            table.push((id, p));
+        }
+        if table.is_empty() {
+            return Ok(());
+        }
+        self.vehicles = table;
+        self.tuning_vehicle = 0;
+        self.rebuild_for_vehicles();
+        Ok(())
+    }
+
+    /// The vehicle (an index into the table) a seat picked: the first one for no pick or an unknown id.
+    pub(crate) fn vehicle_of_seat(&self, seat: SeatId) -> usize {
+        self.picks
+            .get(&seat)
+            .and_then(|(id, _)| self.vehicles.iter().position(|(v, _)| v == id))
+            .unwrap_or(0)
     }
 
     /// A test/bot hook (R90 "settable"): applies `bytes` exactly at the boundary before `tick` is stepped.
@@ -480,6 +556,13 @@ impl Host {
                     bytes,
                     ..
                 } => ControllerCmd::decode(bytes).is_ok_and(|c| session_only(&c)),
+                MainToSim::Ui {
+                    ui:
+                        UiCommand::LocalJoin { .. }
+                        | UiCommand::LocalLeave { .. }
+                        | UiCommand::LocalSitOut { .. },
+                    ..
+                } => true,
                 _ => false,
             });
         self.queued = later;
@@ -556,7 +639,11 @@ impl Host {
         for msg in std::mem::take(&mut self.queued) {
             self.apply(msg, tick);
         }
-        for o in self.seats.apply(seats::Input::Tick(Tick(tick + 1))) {
+        self.session_tick += 1;
+        for o in self
+            .seats
+            .apply(seats::Input::Tick(Tick(self.session_tick)))
+        {
             self.seat_output(o);
         }
         // A loaded fixture's events and scripted inputs come before the seats' controls, as in `jj sim`.
@@ -606,7 +693,12 @@ impl Host {
                 }
                 continue;
             }
-            if age.is_some_and(|a| a > DROPOUT_MS) {
+            // R119: a source that says it is unplugged keeps its refresh stream going on a shared endpoint (a controller carries
+            // many sources), so it reads as gone after DROPOUT_MS just as a silent one does.
+            let unplugged_for = input
+                .unplugged_since_ms
+                .map_or(0, |t| now_ms.saturating_sub(t));
+            if age.is_some_and(|a| a > DROPOUT_MS) || unplugged_for > DROPOUT_MS {
                 if !input.dropped && !self.sim.has_autopilot(car) {
                     self.sim.set_autopilot(car, true);
                     input.dropped = true;
@@ -648,8 +740,13 @@ impl Host {
             }
         }
         let held = self.driving() == jj_session::director::Driving::Held;
+        // R125: each seat's assist level rides to its car. Catch-up is a round rule applied at GO, so a
+        // free-drive or fixture world retains its own rules and journals rather than being rewritten here.
         for input in self.inputs.values() {
             let Some(car) = input.car else { continue };
+            if self.sim.assist_level(car) != input.assist {
+                self.sim.set_assist(car, input.assist);
+            }
             let fresh = !held
                 && input
                     .state
@@ -670,6 +767,7 @@ impl Host {
         self.collect_race_events();
         self.collect_utility_events();
         self.collect_damage_events();
+        self.collect_items();
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
@@ -711,6 +809,8 @@ impl Host {
                             classic: r.flags.has(StateFlags::CLASSIC),
                         };
                         input.state.sample(r.drive, r.action, flags, now_ms);
+                        input.wire_seq = Some(r.seq);
+                        input.note_plug(flags.available, now_ms);
                         // Seen the moment it arrives: a short deflection between two ticks still counts for the prompts.
                         if input.prompt.on {
                             input.prompt.sample(&input.state.semantics());
@@ -722,7 +822,7 @@ impl Host {
                 source,
                 axes,
                 buttons,
-                ..
+                seq,
             } => {
                 let neutral = axes == [0; 4] && buttons & !LOCAL_UNAVAILABLE == 0;
                 // After leaving and letting go, the next press is a new player: forget the old connection so the
@@ -768,7 +868,8 @@ impl Host {
                         on: !sitting,
                     }));
                 }
-                if identify {
+                // The leave chord holds Identify too: leaving doesn't flash.
+                if identify && !leave {
                     outs.extend(self.seats.apply(seats::Input::Identify {
                         conn,
                         source: seats::PRIMARY_SOURCE,
@@ -798,9 +899,13 @@ impl Host {
                         input
                             .state
                             .sample([axes[0], axes[1]], [axes[2], axes[3]], flags, now_ms);
+                    input.wire_seq = Some(seq);
+                    input.note_plug(flags.available, now_ms);
                     // A host pad's gestures are detected here (a controller sends its own as `Action`).
                     if let Some(car) = input.car {
                         for a in fired {
+                            // The first-drive prompts tick on a host pad's gestures as they do on a phone's `Action`.
+                            input.prompt.action(a.kind);
                             match a.kind {
                                 ActionKind::Wheelie { preload_ms } => {
                                     self.sim.wheelie(car, preload_ms);
@@ -818,6 +923,60 @@ impl Host {
             }
             MainToSim::Ui { ui, .. } => match ui {
                 UiCommand::Pause { on } => self.set_pause(Pause::Manual, on),
+                UiCommand::LocalJoin { source } => {
+                    let lb = self.local_buttons.entry(source).or_default();
+                    if lb.left {
+                        lb.left = false;
+                        lb.left_released = false;
+                        lb.last = 0;
+                        lb.generation += 1;
+                        self.locals.remove(&source);
+                    }
+                    self.local_seat(source);
+                }
+                UiCommand::LocalLeave { source } => {
+                    if let Some(&conn) = self.locals.get(&source) {
+                        let lb = self.local_buttons.entry(source).or_default();
+                        lb.left = true;
+                        lb.left_released = false;
+                        for o in self.seats.apply(seats::Input::Leave {
+                            conn,
+                            source: seats::PRIMARY_SOURCE,
+                        }) {
+                            self.seat_output(o);
+                        }
+                    }
+                }
+                UiCommand::LocalSitOut { source, on } => {
+                    if let Some(&conn) = self.locals.get(&source) {
+                        for o in self.seats.apply(seats::Input::SitOut {
+                            conn,
+                            source: seats::PRIMARY_SOURCE,
+                            on,
+                        }) {
+                            self.seat_output(o);
+                        }
+                    }
+                }
+                UiCommand::LocalReady { source } => {
+                    if let Some(&conn) = self.locals.get(&source)
+                        && let Some(seat) = self.seats.seat_at(conn, seats::PRIMARY_SOURCE)
+                        && self.picks.get(&seat).is_some_and(|p| !p.1)
+                    {
+                        self.set_ready(seat, !self.round.director.is_ready(seat));
+                    }
+                }
+                UiCommand::LocalPick {
+                    source,
+                    vehicle,
+                    open,
+                } => {
+                    if let Some(&conn) = self.locals.get(&source)
+                        && let Some(seat) = self.seats.seat_at(conn, seats::PRIMARY_SOURCE)
+                    {
+                        self.pick_seat(seat, vehicle, open);
+                    }
+                }
                 // Start/End/Disband, laps and free drive are the round loop's (G01); cameras (R05) come from the
                 // controllers and the drawer's Remove is G07's.
                 other => self.round_ui(other),
@@ -936,13 +1095,8 @@ impl Host {
                 vec![]
             }
             ControllerCmd::Pick { vehicle, open } => {
-                let slug = !vehicle.is_empty()
-                    && vehicle.len() <= MAX_VEHICLE_ID
-                    && vehicle
-                        .bytes()
-                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
-                if slug && let Some(seat) = self.seats.seat_at(conn, src) {
-                    self.picks.insert(seat, (vehicle, open));
+                if let Some(seat) = self.seats.seat_at(conn, src) {
+                    self.pick_seat(seat, vehicle, open);
                 }
                 vec![]
             }
@@ -969,6 +1123,21 @@ impl Host {
                     self.events
                         .push(SimEvent::CameraDistanceSet { seat, distance });
                 }
+                vec![]
+            }
+            ControllerCmd::SetAssist { level } => {
+                if let Some(input) = self
+                    .seats
+                    .seat_at(conn, src)
+                    .and_then(|s| self.inputs.get_mut(&s))
+                {
+                    input.assist = match level {
+                        jj_protocol::cmd::AssistLevel::Off => jj_sim::assist::AssistLevel::Off,
+                        jj_protocol::cmd::AssistLevel::Some => jj_sim::assist::AssistLevel::Some,
+                        jj_protocol::cmd::AssistLevel::Lots => jj_sim::assist::AssistLevel::Lots,
+                    };
+                }
+                self.session_rev += 1;
                 vec![]
             }
             ControllerCmd::Tutorial { on } => {
@@ -1001,6 +1170,8 @@ impl Host {
                 kind,
                 ..
             } => {
+                let action_seat = self.seats.input_seat(conn, source);
+                let mut outcome = None;
                 if let Some(input) = self
                     .seats
                     .input_seat(conn, source)
@@ -1018,13 +1189,20 @@ impl Host {
                                 self.sim.wheelie(car, preload_ms);
                             }
                             ActionKind::UtilityForward => {
-                                self.sim.utility(car, UtilityKind::Forward);
+                                outcome = Some(self.utility_outcome(car, UtilityKind::Forward));
                             }
                             ActionKind::UtilityRear => {
-                                self.sim.utility(car, UtilityKind::Rear);
+                                outcome = Some(self.utility_outcome(car, UtilityKind::Rear));
                             }
                         }
                     }
+                }
+                if let (Some(seat), Some(outcome)) = (action_seat, outcome) {
+                    self.out.push(SimToMain::Outbound {
+                        endpoint: endpoint.clone(),
+                        channel: Channel::Cmd,
+                        bytes: self.seat_cmd(seat, HostCmd::ActionResult { action, outcome }),
+                    });
                 }
                 vec![]
             }
@@ -1037,6 +1215,22 @@ impl Host {
     }
 
     /// A host pad or keyboard player's seat, claimed through the seat reducer on its first sample.
+    fn pick_seat(&mut self, seat: SeatId, vehicle: String, open: bool) {
+        let slug = !vehicle.is_empty()
+            && vehicle.len() <= MAX_VEHICLE_ID
+            && vehicle
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
+        if !slug {
+            return;
+        }
+        let before = self.vehicle_of_seat(seat);
+        self.picks.insert(seat, (vehicle, open));
+        if self.round.free_drive && self.vehicle_of_seat(seat) != before {
+            self.rebuild_for_vehicles();
+        }
+    }
+
     fn local_seat(&mut self, source: LocalSourceId) -> Option<SeatId> {
         let conn = match self.locals.get(&source) {
             Some(&c) => c,
@@ -1083,15 +1277,25 @@ impl Host {
                     .iter()
                     .find(|(_, c)| **c == conn)
                     .map_or(Origin::Net(conn), |(&l, _)| Origin::Local(l));
+                self.sent_inventory.remove(&seat);
+                let tuned = self.input_profile.resolve();
                 self.inputs.entry(seat).or_insert_with(|| SeatInput {
-                    state: SourceState::new(source),
+                    state: SourceState::with_profile(source, tuned),
+                    wire_seq: None,
                     car: None,
                     seen_actions: Vec::new(),
                     dropped: false,
                     active_ms: 0,
                     idle_cued: false,
                     menu_open: false,
-                    prompt: prompts::PromptTrack::default(),
+                    unplugged_since_ms: None,
+                    assist: jj_sim::assist::AssistLevel::Off,
+                    // P1-C14: a host pad, wheel or key cluster has no phone to turn the prompts on, so its seat starts with them on.
+                    prompt: {
+                        let mut p = prompts::PromptTrack::default();
+                        p.set(matches!(origin, Origin::Local(_)));
+                        p
+                    },
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)
@@ -1106,10 +1310,18 @@ impl Host {
                         },
                     );
                     self.out.push(SimToMain::Outbound {
-                        endpoint,
+                        endpoint: endpoint.clone(),
                         channel: Channel::Cmd,
                         bytes,
                     });
+                    // A tuned input profile (owner tuning menu) reaches a controller that joins after the change.
+                    if self.input_profile != jj_input::InputProfile::standard() {
+                        self.out.push(SimToMain::Outbound {
+                            endpoint,
+                            channel: Channel::Cmd,
+                            bytes: HostCmd::InputProfile(self.input_profile.to_wire()).encode(),
+                        });
+                    }
                 }
                 self.events.push(SimEvent::SeatJoined { seat, number });
                 self.session_rev += 1;
@@ -1123,7 +1335,7 @@ impl Host {
                 // Through the placement service: a drop-in once a round is running, a grid slot in free drive; in the
                 // Lobby (R110) and the held phases the seat waits for the next Countdown's grid.
                 if self.inputs.get(&seat).is_some_and(|i| i.car.is_none()) {
-                    let car = self.car_wanted();
+                    let car = self.car_wanted(seat);
                     if let Some(input) = self.inputs.get_mut(&seat) {
                         input.car = car;
                     }
@@ -1373,6 +1585,11 @@ impl Host {
             + SNAPSHOT_CAR * self.sim.cars().count()
             + SNAPSHOT_DEBRIS * self.sim.debris_poses().len()
             + SNAPSHOT_PART * (self.sim.part_records().len() + self.sim.piece_records().len())
+            + if self.sim.rail_count() == 0 {
+                0
+            } else {
+                4 + 8 * self.sim.rail_count()
+            }
     }
 
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
@@ -1383,7 +1600,7 @@ impl Host {
     /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting, bits 6-7 the ground under it: 0
-    /// tarmac, 1 dirt, 2 gravel), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
+    /// tarmac, 1 dirt, 2 gravel; bits 16-31 the car's roster vehicle, R123: an index into the room's `vehicles`), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
     /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
     /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
     /// wrecked and rebuilt (state 3; part 255 for a husk; the pose is the part's pivot frame, the vehicle frame for a husk).
@@ -1397,7 +1614,9 @@ impl Host {
         let debris = self.sim.debris_poses();
         w.u32(SNAPSHOT_MAGIC);
         w.u16(1);
-        w.u16(0);
+        // JJS1 flags bit 0: a rail trailer after the part records (count u32, dressing u32/offset f32 each).
+        let rails = self.sim.rail_states();
+        w.u16(u16::from(!rails.is_empty()));
         w.u64(self.sim.tick());
         w.u32(self.session_rev);
         w.u32(self.pause_mask());
@@ -1421,7 +1640,11 @@ impl Host {
                 | (u32::from(race.is_held(car.0, self.sim.tick())) << 3)
                 | (u32::from(action.boosting) << 4)
                 | (u32::from(action.drift > 0.0) << 5)
-                | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6);
+                | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6)
+                // Presentation contact readout for P1-R09 air clips: raised ramps/bridges are ground too.
+                | (u32::from(s.wheels_in_contact == 0) << 8)
+                // Bits 16-31: the car's roster vehicle (R123), an index into the room's `vehicles`.
+                | ((self.sim.vehicle_of(car).unwrap_or(0) as u32 & 0xFFFF) << 16);
             let throttle = self.sim.applied_input(car).map_or(0.0, |i| {
                 jj_types::axis::dequantise_axis(i.throttle).clamp(0.0, 1.0)
             });
@@ -1460,13 +1683,7 @@ impl Host {
             let (p, r) = body.and_then(|i| debris.get(i as usize).copied()).map_or(
                 ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
                 |(p, r)| {
-                    let pivot = self
-                        .sim
-                        .profile()
-                        .geometry
-                        .parts
-                        .get(usize::from(part))
-                        .map_or([0.0; 3], |g| g.pivot);
+                    let pivot = self.part_pivot(car, part);
                     (add_rotated(p, r, pivot), r)
                 },
             );
@@ -1477,13 +1694,7 @@ impl Host {
             let (p, r) = debris.get(body as usize).copied().map_or(
                 ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
                 |(p, r)| {
-                    let pivot = self
-                        .sim
-                        .profile()
-                        .geometry
-                        .parts
-                        .get(usize::from(part))
-                        .map_or([0.0; 3], |g| g.pivot);
+                    let pivot = self.part_pivot(car, part);
                     // A husk (part 255) is the vehicle frame itself.
                     (
                         if part == 255 {
@@ -1501,7 +1712,24 @@ impl Host {
             w.f32(0.0);
             p.iter().chain(&r).for_each(|&v| w.f32(v));
         }
+        if !rails.is_empty() {
+            w.u32(rails.len() as u32);
+            for rail in rails {
+                w.u32(rail.dressing);
+                w.f32(rail.displacement_m);
+            }
+        }
         w.at
+    }
+}
+
+impl Host {
+    /// Part `part`'s pivot in car `car`'s own vehicle space (each roster vehicle has its own parts, R123).
+    fn part_pivot(&self, car: u32, part: u8) -> [f32; 3] {
+        self.sim
+            .profile_of(CarId(car))
+            .and_then(|p| p.geometry.parts.get(usize::from(part)))
+            .map_or([0.0; 3], |g| g.pivot)
     }
 }
 
@@ -1550,6 +1778,7 @@ impl Writer<'_> {
     }
 }
 
+mod items;
 mod prompts;
 mod round;
 

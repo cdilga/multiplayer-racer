@@ -29,7 +29,6 @@ if [[ -f $file ]] && ! zstd -tq "$file"; then
     rm -f -- "$file"
 fi
 if [[ ! -f $file ]]; then
-    sha=$(git rev-parse HEAD)
     api="${GITHUB_SERVER_URL:-http://192.168.11.12:3001}/api/v1/repos/${GITHUB_REPOSITORY:-cdilga/multiplayer-racer}"
     corrupt=0
     for ((i = 0; ; i++)); do
@@ -42,9 +41,17 @@ if [[ ! -f $file ]]; then
             scripts/ci/web-store.sh drop "$key" || true
             rebuild "the stored $key is corrupt (dropped from the store)"
         fi
-        state=$(curl -sf -H "Authorization: token ${GITEA_TOKEN:-}" "$api/commits/$sha/statuses?limit=100" |
-            python3 -c 'import json,sys; s=[x for x in json.load(sys.stdin) if x["context"].startswith("CI / build")]; print(s[0]["status"] if s else "")' || true)
-        [[ $state == failure || $state == error ]] && { echo "fetch-web: the build job failed; nothing to test" >&2; exit 1; }
+        # Commit statuses include previous cancelled/retried runs of the same SHA. Only this run's build can
+        # end our wait (CI3436 otherwise read CI3432's failure while its own build succeeded).
+        state=""
+        if [[ ${GITHUB_RUN_ID:-} =~ ^[0-9]+$ ]]; then
+            state=$(curl -sf -H "Authorization: token ${GITEA_TOKEN:-}" "$api/actions/runs/$GITHUB_RUN_ID/jobs?limit=100" |
+                python3 -c 'import json,sys; s=[x for x in json.load(sys.stdin).get("jobs",[]) if x["name"] == "build" and x["status"] == "completed"]; print(s[0].get("conclusion", "") if s else "")' || true)
+        fi
+        case "$state" in
+            failure|error|cancelled|timed_out|action_required)
+                echo "fetch-web: build in run $GITHUB_RUN_ID ended with $state; nothing to test" >&2; exit 1 ;;
+        esac
         ((i < 180)) || { echo "fetch-web: no build $key after 30 min" >&2; exit 1; }
         sleep 10
     done
@@ -53,6 +60,11 @@ touch "$file"
 if ! tar -I zstd -xf "$file"; then
     rm -f -- "$file"
     rebuild "unpacking $key failed"
+fi
+if ! node scripts/ci/native-check.mjs .ci-bin; then
+    rm -f -- "$file"
+    scripts/ci/web-store.sh drop "$key" || true
+    rebuild "the archived native executables are unusable (dropped from cache and store)"
 fi
 ls -1t "$cache"/*.tar.zst 2>/dev/null | tail -n +13 | xargs -r rm -f
 echo "fetch-web: build $key ready in $((SECONDS - s))s"

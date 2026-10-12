@@ -66,3 +66,4 @@ private/
 # P1-F03 qualification bundle (built for the origin scan, never shipped)
 web/dist-qualify/
 web/dist-test/
+.ci-bin/

@@ -20,13 +20,15 @@ use std::collections::BTreeMap;
 
 use rapier3d::prelude::*;
 
-use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner, PARTS};
+use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner};
 use crate::profile::DamageTuning;
 use crate::sim::TICK_HZ;
 
 /// `RigidBody::user_data` tags: the high bits say what a body is, the low 32 which one.
 pub const TAG_CAR: u128 = 1 << 32;
 pub const TAG_PROP: u128 = 2 << 32;
+/// Owner's compliant guard rails absorb a hit without costing car parts (br-gw74.9).
+pub const TAG_RAIL: u128 = 3 << 32;
 const TAG_MASK: u128 = 0xffff_ffff << 32;
 
 /// A body's state just before the step.
@@ -80,6 +82,7 @@ impl PreStep {
 pub struct CarParts<'a> {
     pub car: u32,
     pub parts: &'a [ColliderHandle],
+    pub contact_immune: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -87,6 +90,7 @@ struct Open {
     other: OtherBody,
     other_owner: Option<Owner>,
     impulse: f32,
+    damage_impulse: f32,
     closing: f32,
     start: u64,
     last: u64,
@@ -113,10 +117,12 @@ impl Episodes {
         world: &PhysicsWorld,
         pre: &PreStep,
         cars: &[CarParts<'_>],
-        t: &DamageTuning,
+        ts: &[&DamageTuning],
         tick: u64,
-    ) {
+    ) -> f64 {
+        let mut dominance_work = 0.0;
         for car in cars {
+            let t = ts[car.car as usize];
             let Some(me) = car
                 .parts
                 .first()
@@ -138,6 +144,12 @@ impl Episodes {
                         continue;
                     };
                     let other_body = other.parent();
+                    if other_body
+                        .and_then(|b| world.bodies.get(b))
+                        .is_some_and(|b| b.user_data & TAG_MASK == TAG_RAIL)
+                    {
+                        continue;
+                    }
                     let other_snap = other_body.and_then(|b| pre.get(b));
                     let kind = match other_body.and_then(|b| world.bodies.get(b)) {
                         Some(b) if b.user_data & TAG_MASK == TAG_CAR => OtherBody::Car {
@@ -158,6 +170,23 @@ impl Episodes {
                             let p = me.iso * local;
                             let v_me = me.velocity_at(p);
                             let v_other = other_snap.map_or(Vector::ZERO, |s| s.velocity_at(p));
+                            // A moving one-way surface supplies normal work J·v to the lower
+                            // dynamic body. Book that authorised buff work, never fixed-world
+                            // collisions or equal-dominance contacts. No energy residual clamp.
+                            let dominant = if mine_is_1 {
+                                m.data.relative_dominance > 0
+                            } else {
+                                m.data.relative_dominance < 0
+                            };
+                            if car.contact_immune
+                                && dominant
+                                && other_body
+                                    .and_then(|h| world.bodies.get(h))
+                                    .is_some_and(RigidBody::is_dynamic)
+                            {
+                                let to_other = if mine_is_1 { n } else { -n };
+                                dominance_work += f64::from(pt.data.impulse * v_me.dot(to_other));
+                            }
                             // The normal points from collider 1 to collider 2.
                             let rel = if mine_is_1 {
                                 v_me - v_other
@@ -174,24 +203,25 @@ impl Episodes {
                             } else {
                                 part
                             };
-                            self.add(car.car, part, kind, pt.data.impulse, closing, tick);
+                            self.add(car, part, kind, pt.data.impulse, closing, tick);
                         }
                     }
                 }
             }
         }
+        dominance_work
     }
 
     fn add(
         &mut self,
-        car: u32,
+        car: &CarParts<'_>,
         part: usize,
         other: OtherBody,
         impulse: f32,
         closing: f32,
         tick: u64,
     ) {
-        let key = (car, part as u8, other.key());
+        let key = (car.car, part as u8, other.key());
         let before = match other {
             OtherBody::Car { car } => Some(Owner { car, tick }),
             OtherBody::Prop { prop } => self.prop_owner.get(&prop).copied(),
@@ -201,16 +231,20 @@ impl Episodes {
             other,
             other_owner: before,
             impulse: 0.0,
+            damage_impulse: 0.0,
             closing: 0.0,
             start: tick,
             last: tick,
         });
         e.impulse += impulse;
+        if !car.contact_immune {
+            e.damage_impulse += impulse;
+        }
         e.closing = e.closing.max(closing);
         e.last = tick;
         // The car now owns what it hit: a prop it knocked into someone is its doing.
         if let OtherBody::Prop { prop } = other {
-            self.prop_owner.insert(prop, Owner { car, tick });
+            self.prop_owner.insert(prop, Owner { car: car.car, tick });
         }
     }
 
@@ -219,14 +253,17 @@ impl Episodes {
     pub(crate) fn close(
         &mut self,
         tick: u64,
-        t: &DamageTuning,
+        ts: &[&DamageTuning],
         damage: &mut [CarDamage],
+        immune: &[bool],
     ) -> Vec<DamageEvent> {
-        let window = (libm::roundf(t.window_ms * 0.001 * TICK_HZ as f32) as u64).max(1);
+        let window_of = |car: u32| {
+            (libm::roundf(ts[car as usize].window_ms * 0.001 * TICK_HZ as f32) as u64).max(1)
+        };
         let due: Vec<_> = self
             .open
             .iter()
-            .filter(|(_, e)| tick + 1 >= e.start + window)
+            .filter(|(k, e)| tick + 1 >= e.start + window_of(k.0))
             .map(|(k, _)| *k)
             .collect();
         let mut events = Vec::new();
@@ -235,14 +272,15 @@ impl Episodes {
                 continue;
             };
             let (car, part) = (key.0, key.1 as usize);
+            let t = ts[car as usize];
             let Some(d) = damage.get_mut(car as usize) else {
                 continue;
             };
             let was = d.state(part, t);
-            let loss = if was == super::PartState::Detached {
+            let loss = if was == super::PartState::Detached || immune[car as usize] {
                 0.0
             } else {
-                CarDamage::k(part, t) * e.impulse
+                d.k(part, t) * e.damage_impulse
             };
             let before = d.health[part];
             d.charge(part, loss);
@@ -288,6 +326,12 @@ impl Episodes {
             out.push(k.1);
             out.extend(e.impulse.to_bits().to_le_bytes());
             out.extend(e.start.to_le_bytes());
+            if e.damage_impulse != e.impulse {
+                out.extend(b"jj-contact-immunity-v1");
+                out.push(k.2.0);
+                out.extend(k.2.1.to_le_bytes());
+                out.extend(e.damage_impulse.to_bits().to_le_bytes());
+            }
         }
         for (p, o) in &self.prop_owner {
             out.extend(p.to_le_bytes());
@@ -301,7 +345,7 @@ impl Episodes {
 /// the core.
 fn attribute_core(world: &PhysicsWorld, car: &CarParts<'_>, local: Vector, margin: f32) -> usize {
     let mut best = (margin, CORE);
-    for part in 1..PARTS {
+    for part in 1..car.parts.len() {
         let Some(c) = car.parts.get(part).and_then(|&c| world.colliders.get(c)) else {
             continue;
         };

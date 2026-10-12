@@ -180,3 +180,21 @@ class Index(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChangedListBound(unittest.TestCase):
+    """The index rides inside the edge app's compose through the TrueNAS middleware (64 kB messages): a card lists the
+    first CHANGED_SHOWN commit titles and links to the rest, and a busy day's previews still fit."""
+
+    def test_a_long_change_list_shows_the_first_titles_and_links_the_rest(self):
+        p = {"sha": "ab" * 20, "changed": [f"P1-X: change number {i}" for i in range(20)]}
+        out = index_page.changed_html(p)
+        self.assertEqual(out.count("<li"), index_page.CHANGED_SHOWN + 1)
+        self.assertIn(f"and {20 - index_page.CHANGED_SHOWN} more", out)
+        self.assertIn("commits/commit/" + "ab" * 20, out)
+        self.assertIn("What changed (20 commits)", out)
+
+    def test_twenty_busy_previews_render_well_under_the_middleware_limit(self):
+        rows = [row(f"v02-{i:08x}", i, changed=[f"P1-X: a fairly long commit title that goes on a while {k}" for k in range(40)]) for i in range(20)]
+        size = len(index_page.render({"previews": rows}))
+        self.assertLess(size, 48_000, f"index {size} bytes")

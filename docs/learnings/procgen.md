@@ -151,3 +151,96 @@
 - A route's segment list can name a biome twice (town at both ends of the lap); `filter(name)[0]` picks the first.
 - Z-fighting between a decal slab and its wall shows up as "dithered" textures; push decals 5 mm or more proud.
 - A power line is a linked span between consecutive poles (`Lineside.link`), not a per-pole piece.
+# 2026-10-11 · Exact nearest-segment pruning
+
+Segment boxes must enclose the *computed* projection endpoints: `a + (b - a)`
+can round differently from `b`. Seed an upper bound from an actual projection's
+original hypot, reject only coordinate lower bounds above it, and retain original
+segment order and strict distance comparisons. Squared-distance comparisons can
+change rounded ties. The exhaustive bit oracle and canonical 24-seed WASM bank
+qualify the optimisation; the 1500 ms preparation budget remains unchanged.
+
+## 2026-10-12 · Generated jumps launch and receive the car (br-gw74.7 / .7.1 / .10)
+
+The apparent grip at the lip came from geometry: the 2.5 m terrain grid rounded a short ramp into a crest.
+The existing explicit jump collider resolves the lip at 25 cm; the final bank probes its worst height error at
+0.8 cm. No tyre grip, suspension, force or impulse multiplier changed.
+
+A reserved landing envelope is not a physical landing. The receiving table previously ended before the design
+flight, so a boosted car fell onto flat ground at full descent. Extend the table through the flight, then descend
+with a concave quadratic transition whose slope reaches zero at the road. The existing 0.012/m vertical-curvature
+limit determines the blend length and descent slope. Subdivide table and descent at 25 cm too, so they follow the
+route and terrain instead of bridging them with one long panel. Validate both the receiving length and the blend;
+reject missing tables, short reservations, zero slope and invalid transitions.
+
+Start the straight-approach fixture inside the generator's guaranteed entry. Five route points put it 12.5 m back,
+beyond the 12 m entry; on Rocks seed 7 its heading was 4.75 degrees against a 12.3-degree ramp. Four points (10 m)
+measure the promised approach without that artificial sideways flight. Keep the speed, airtime and landing bars.
+Measure the longest continuous flight and uprightness from first touchdown through the actual exit, not total
+airtime from unrelated bumps or uprightness after a possible recovery. Ten seeds in Greybox, Rocks, OutbackDirt and
+OutbackBitumen place 94 jumps; exercise each at 15/22/26/30 m/s and with the real boost action at the lip.
+
+The renderer had a separate, stale shape formula. A metadata match would miss that. `jj procgen` and
+`__jjRender.jumpShapes()` now fingerprint expanded triangle positions as uploaded f32 bytes; the generated-jump
+journey compares every jump's actual draw buffer with the Rust collision mesh, then compares native/WASM replay
+state. Captures use full resolution and keep real UI visible; wait for captions to finish naturally rather than
+following the older chrome-hiding advice above.
+
+# 2026-10-12 · Index references must follow canonical sorting (br-gw74.11)
+
+Roof kickers reference dressing indices, but dressing is an unordered collection sorted on load. Rebase `roofTarget`
+to the same house before sorting features, or a multi-house map validates against one house and loads another. The
+regression uses two houses, reverses authoring order with the reference adjusted, compares canonical bytes and checks
+idempotence/round-trip. Generator stages that sort dressing must preserve these references too.
+
+## 2026-10-12 · Course families need feasible angle fitting (br-xlvx.7)
+
+Family weights and corner/straight parameters are generator data. Sampling labels alone cannot establish variety:
+measure every straight and tight-corner density, validate actual generated maps, then lap/replay every family in
+every biome. Speedway need not contain a hairpin; require variety across the mixed bank instead of retaining an
+old per-seed assertion that defeats the owner's course families.
+
+Proportional angle scaling can push one sweeper outside its real range even when the turn budget is feasible.
+Clamp to each kind's range, redistribute the remaining turn through available capacity, and redraw only when the
+type list cannot meet the budget. Preserve self-clearance and length bands; retain rare-fallback measurements.
+
+More curved routes exposed bitumen guidepost under-density: `avoid_corners` suppressed the reflector-post rule.
+Permit those posts beside bends while retaining the shared placement clearance checks. Evidence bank tests that
+write straight to `JJ_EVIDENCE_DIR` require the caller to create that directory before running them.
+
+### Jump approaches need their own straightness check (2026-10-12, br-xlvx.7)
+
+The whole-feature 0.12 rad turn budget admitted a six-degree bend inside seed 9's nominal 12 m jump entry.
+At 30 m/s the Cruz launched diagonally, drifted 3.7 m from the line and landed on the table's sloped edge;
+touchdown upY was almost 1, then fell to .656. This was not a post-landing run-out defect. Trace the actual
+heading, lateral position and receiving-surface height before changing the physics. Placement and envelope
+checks now require the entry through the ramp to be straight (0.01 rad quantization tolerance), while retaining
+the receiving envelope's existing turning budget. Data-defined ordinary ramp grades .18–.21 restore mean
+continuous racing flight (.85 s) without changing boost forces or any landing/flight acceptance threshold.
+
+## 2026-10-12 · Taller rock terrain exposes surface mismatches (br-xlvx.4)
+
+Blending both original road profiles under an explicit crossing made a bump on the lower road as relief increased.
+Seed4 Rocks/Town hit that bump and spun; previous rock budgets completed the same seed unaided. Rasterise the lower
+road corridor and suppress upper-road ground weights inside its bed, fading them back beyond the shoulder. The upper
+road is supplied by its explicit deck, not by the shared ground. The 24 pure/mixed rock lap/replay samples then finished
+without recovery, wreck or slow windows.
+
+Endpoint clearance does not guarantee a bridge approach clears intervening hills. On forced-crossing Rocks seed0,
+gate39 was at y3.44 m while the car drove on ground at y5.55 m. Envelope each approach edge against the actual ground
+edge, retaining the raised cosine where it clears the hill. The 15 forced-crossing laps/replays then reached both
+levels unaided; grade validation remains required.
+
+The analytical route and quantised heightfield diverge more with taller profiles. Project ground-route heights onto
+the actual bilinear surface before explicit decks/features. Derive the kill plane below the lowest ground, retaining
+the twenty-metre fall margin, so an ordinary off-road valley cannot itself wreck a car.
+
+Bank planes must extend across the entire road bed, including grid vertices outside the painted edge. Clamping bank
+at half-width flattened those vertices; bilinear edge sampling exceeded the existing cross-slope tolerance on seed7
+Rocks. Extending the bank to the bed boundary passes the focused sweep without relaxing the assertion.
+
+Floating-point interpolation can let harmless dressing change the road. When dressing expands the terrain bounds,
+subtracting its shifted origin in floating point moves half-millimetre rounding ties (seed13, route point104).
+For integer route poses, split the millimetre offset into cell and remainder as integers. For metre-valued feature
+queries, split the world-grid fraction before subtracting the origin. Keep cell and fraction separate through the
+bilinear sample. The dressing-invariance fixture then passes without changing its whole-route equality assertion.

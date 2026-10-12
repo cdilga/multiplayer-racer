@@ -1,0 +1,4 @@
+    Checking jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Checking jj-tools v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-tools)
+    Checking jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.08s

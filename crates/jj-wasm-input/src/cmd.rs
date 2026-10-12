@@ -3,7 +3,7 @@
 //! externally tagged form, e.g. `{"Welcome":{"seat":3,…}}`) so the page needs no hand-written postcard reader.
 
 use jj_protocol::PROTOCOL_VERSION;
-use jj_protocol::cmd::{CameraDistance, CameraMode, ControllerCmd, HostCmd};
+use jj_protocol::cmd::{AssistLevel, CameraDistance, CameraMode, ControllerCmd, HostCmd};
 use jj_protocol::state::HudUpdate;
 use jj_types::{BuildId, EndpointId, RequestId, SourceHandle};
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -77,6 +77,17 @@ pub fn encode_set_camera_distance(tag: u8) -> Vec<u8> {
         _ => CameraDistance::Host,
     };
     ControllerCmd::SetCameraDistance { distance }.encode()
+}
+
+/// `SetAssist` (R125): 0 Off, 1 Some, 2 Lots (anything else is Off).
+#[wasm_bindgen(js_name = encodeSetAssist)]
+pub fn encode_set_assist(tag: u8) -> Vec<u8> {
+    let level = match tag {
+        1 => AssistLevel::Some,
+        2 => AssistLevel::Lots,
+        _ => AssistLevel::Off,
+    };
+    ControllerCmd::SetAssist { level }.encode()
 }
 
 /// `Tutorial`: the first-drive prompts are wanted (true) or over (false).

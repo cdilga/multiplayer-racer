@@ -13,6 +13,7 @@ use proptest::prelude::*;
 
 use crate::abi::*;
 use crate::cmd::*;
+use crate::items::*;
 use crate::signal::*;
 use crate::state::*;
 use crate::{DecodeError, PROTOCOL_VERSION};
@@ -180,6 +181,9 @@ fn controller_samples() -> Vec<ControllerCmd> {
                 name: "Pad 1".into(),
             }),
         },
+        ControllerCmd::SetAssist {
+            level: crate::cmd::AssistLevel::Lots,
+        },
     ]
 }
 
@@ -202,9 +206,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::SetCameraDistance { .. } => "set-camera-distance",
         ControllerCmd::Tutorial { .. } => "tutorial",
         ControllerCmd::ForSource { .. } => "for-source",
+        ControllerCmd::SetAssist { .. } => "set-assist",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 16] = [
+const CONTROLLER_VARIANTS: [&str; 17] = [
     "hello",
     "claim",
     "action",
@@ -221,6 +226,7 @@ const CONTROLLER_VARIANTS: [&str; 16] = [
     "set-camera-distance",
     "tutorial",
     "for-source",
+    "set-assist",
 ];
 
 fn host_samples() -> Vec<HostCmd> {
@@ -262,6 +268,36 @@ fn host_samples() -> Vec<HostCmd> {
                 source: SourceHandle(4),
             }),
         },
+        HostCmd::InputProfile(InputThresholds {
+            steer_radial_deadzone: 400,
+            steer_gamma: 1000,
+            drift_enter_angle: 7000,
+            drift_enter_deflection: 9000,
+            drift_exit_angle: 5800,
+            drift_exit_deflection: 7500,
+            drift_max_pull_back: 3500,
+            launch_snap_to: 9000,
+            launch_snap_window_ms: 250,
+            launch_cooldown_ms: 4000,
+            launch_reverse_delay_ms: 900,
+            flick_rim: 9000,
+            flick_arm_below: 3500,
+            flick_max_travel_ms: 180,
+            flick_max_angle: 3000,
+            flick_cooldown_ms: 350,
+        }),
+        HostCmd::Inventory(Inventory {
+            front: Some(ItemId::Boomerang),
+            back: Some(ItemId::Sanga),
+        }),
+        HostCmd::ItemEvent(ItemEvent {
+            tick: Tick(7200),
+            owner: SeatId(7),
+            life: LifeId(2),
+            effect: 123,
+            item: ItemId::Boomerang,
+            kind: ItemEventKind::Picked,
+        }),
     ]
 }
 
@@ -276,9 +312,12 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::IdleCue { .. } => "idle-cue",
         HostCmd::Removed => "removed",
         HostCmd::ForSource { .. } => "for-source",
+        HostCmd::InputProfile(_) => "input-profile",
+        HostCmd::Inventory(_) => "inventory",
+        HostCmd::ItemEvent(_) => "item-event",
     }
 }
-const HOST_VARIANTS: [&str; 9] = [
+const HOST_VARIANTS: [&str; 12] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -288,11 +327,14 @@ const HOST_VARIANTS: [&str; 9] = [
     "idle-cue",
     "removed",
     "for-source",
+    "input-profile",
+    "inventory",
+    "item-event",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.
 fn host_detail_samples() -> Vec<(&'static str, HostCmd)> {
-    vec![
+    let mut samples = vec![
         (
             "action-result-expired",
             HostCmd::ActionResult {
@@ -324,7 +366,69 @@ fn host_detail_samples() -> Vec<(&'static str, HostCmd)> {
                 results: None,
             },
         ),
-    ]
+    ];
+    for (name, kind) in [
+        (
+            "item-used-forward",
+            ItemEventKind::Used {
+                direction: ItemDirection::Forward,
+            },
+        ),
+        (
+            "item-used-rear",
+            ItemEventKind::Used {
+                direction: ItemDirection::Rear,
+            },
+        ),
+        (
+            "item-hit-seat",
+            ItemEventKind::Hit {
+                target: Some(SeatId(8)),
+            },
+        ),
+        ("item-hit-world", ItemEventKind::Hit { target: None }),
+        ("item-caught", ItemEventKind::Caught),
+        ("item-expired", ItemEventKind::Expired),
+    ] {
+        samples.push((
+            name,
+            HostCmd::ItemEvent(ItemEvent {
+                tick: Tick(7201),
+                owner: SeatId(7),
+                life: LifeId(2),
+                effect: 123,
+                item: ItemId::Boomerang,
+                kind,
+            }),
+        ));
+    }
+    for (name, reason) in [
+        ("item-refused-empty", ItemUseRefusal::Empty),
+        ("item-refused-cooldown", ItemUseRefusal::Cooldown),
+        ("item-refused-protected", ItemUseRefusal::Protected),
+        ("item-refused-blocked", ItemUseRefusal::Blocked),
+        ("item-refused-unavailable", ItemUseRefusal::Unavailable),
+        ("item-refused-not-racing", ItemUseRefusal::NotRacing),
+    ] {
+        samples.push((
+            name,
+            HostCmd::ActionResult {
+                action: ActionId(45),
+                outcome: ActionOutcome::Rejected {
+                    reason: ActionRejection::Item { reason },
+                },
+            },
+        ));
+    }
+    samples.push(("inventory-empty", HostCmd::Inventory(Inventory::default())));
+    samples.push((
+        "inventory-one",
+        HostCmd::Inventory(Inventory {
+            front: Some(ItemId::Sanga),
+            back: None,
+        }),
+    ));
+    samples
 }
 
 fn main_samples() -> Vec<MainToSim> {
@@ -363,6 +467,9 @@ fn main_samples() -> Vec<MainToSim> {
             map_bytes: b"jj.map.v1\0".to_vec(),
         },
         MainToSim::ReturnBuffer { buf: vec![0; 16] },
+        MainToSim::Vehicles {
+            vehicles: vec![("tradie-ute".into(), "{}".into())],
+        },
     ]
 }
 
@@ -375,9 +482,10 @@ fn main_variant(m: &MainToSim) -> &'static str {
         MainToSim::Lifecycle { .. } => "lifecycle",
         MainToSim::MapReady { .. } => "map-ready",
         MainToSim::ReturnBuffer { .. } => "return-buffer",
+        MainToSim::Vehicles { .. } => "vehicles",
     }
 }
-const MAIN_VARIANTS: [&str; 7] = [
+const MAIN_VARIANTS: [&str; 8] = [
     "init",
     "net-bytes",
     "local-source",
@@ -385,6 +493,7 @@ const MAIN_VARIANTS: [&str; 7] = [
     "lifecycle",
     "map-ready",
     "return-buffer",
+    "vehicles",
 ];
 
 fn ui_samples() -> Vec<UiCommand> {
@@ -400,6 +509,9 @@ fn ui_samples() -> Vec<UiCommand> {
         UiCommand::Pause { on: true },
         UiCommand::RemoveEndpoint {
             endpoint: "c-77".into(),
+        },
+        UiCommand::TuneVehicle {
+            vehicle: "tradie-ute".into(),
         },
     ]
 }
@@ -677,7 +789,7 @@ fn every_variant_has_a_golden() {
         names(sim_samples().iter().map(sim_variant).collect()),
         SIM_VARIANTS.into_iter().collect()
     );
-    assert_eq!(ui_samples().len(), 7, "every UiCommand variant");
+    assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
         12,

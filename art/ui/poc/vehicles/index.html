@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicles: design site</title>
+<link rel="icon" href="../../brand/favicon.svg">
+<link rel="stylesheet" href="./vehicles.css">
+<!-- Self-hosted only (R70): three and its loader/controls come from ../vendor. -->
+<script type="importmap">{ "imports": {
+  "three": "../vendor/three/three.module.min.js",
+  "three/addons/": "../vendor/three/addons/"
+} }</script>
+</head>
+<body>
+<header><div class="in">
+  <img src="../../brand/wordmark-on-ink.svg" alt="Joystick Jammers">
+  <a href="../">Design site</a>
+  <h1>Vehicles</h1>
+  <p>Every vehicle in the roster, turned in the browser from the same baked files the game loads. Each has a full review page: reference against model, LODs against their budgets, damage states, paints, in-world captures, the validation gate and handling. The list is generated from the roster data, so a new vehicle appears by being added.</p>
+</div></header>
+<main>
+  <div class="how"><b>Feedback:</b> comment on a vehicle's page (which view or state, what to change). Each comment becomes a bug bead that cites the page and the car; nothing waits for a verdict (R126).</div>
+  <h2>The roster</h2>
+  <div class="cards" id="cards" aria-live="polite"><p>Loading the roster…</p></div>
+  <h2>Turn it</h2>
+  <p class="why" id="current">Pick a vehicle above.</p>
+  <div class="stage" id="stage"><div class="msg" id="msg">Loading the model…</div></div>
+  <div id="controls"></div>
+</main>
+<script type="module" src="./vehicles.js"></script>
+</body>
+</html>

@@ -58,6 +58,42 @@ pub enum UiCommand {
     RemoveSeat {
         seat: SeatId,
     },
+    /// The owner tuning menu (br-2sdu.1): one vehicle-profile tuning field by name (`max_engine_force`,
+    /// `surfaces.gravel`), the value as JSON. Applied at a tick boundary like every UI command, so it is journalled.
+    SetTuning {
+        field: String,
+        value: String,
+    },
+    /// Which roster vehicle's profile the tuning menu edits (R123): `SetTuning` changes that vehicle's rows only, and the
+    /// menu reads its tuning back. An unknown id is ignored.
+    TuneVehicle {
+        vehicle: String,
+    },
+    /// R125: lobby catch-up choice, applied from the next round's GO.
+    SetCatchUp {
+        on: bool,
+    },
+    /// Host keyboard/pad lobby choice, using the same seat Pick path as a phone.
+    LocalPick {
+        source: LocalSourceId,
+        vehicle: String,
+        open: bool,
+    },
+    /// A lobby button is a reliable command, independent of sampled input edges.
+    LocalReady {
+        source: LocalSourceId,
+    },
+    /// Controllers menu actions remain reliable while the simulation is paused.
+    LocalJoin {
+        source: LocalSourceId,
+    },
+    LocalLeave {
+        source: LocalSourceId,
+    },
+    LocalSitOut {
+        source: LocalSourceId,
+        on: bool,
+    },
 }
 
 /// Main → sim.
@@ -102,6 +138,12 @@ pub enum MainToSim {
     /// A pooled snapshot buffer back to the worker.
     ReturnBuffer {
         buf: Vec<u8>,
+    },
+    /// The roster's vehicles (R123), in roster order: `(id, profile JSON)` each (`assets/profiles/<id>.json`, loaded by
+    /// main from the roster data). A car's vehicle in the snapshot is its index here. Sent before the first round; the
+    /// host's built-in first vehicle stands until then.
+    Vehicles {
+        vehicles: Vec<(String, String)>,
     },
 }
 

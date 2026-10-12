@@ -1,11 +1,13 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../lib/evidence.mjs';
 // P1-R06: Identify on a crowded TV. Synthetic controllers (the host page's test surface feeds their hello, claim,
 // ready and identify frames as they'd arrive from phones, so no WebRTC is needed) fill a room: at 24 one seat's
 // Identify pulses only its own tile and floats its number over its car; then the room grows to 120 (no cap) and a
 // three-digit seat's badge, Cooee label and number over its car render without clipping. Captures `identify-24` and
-// `identify-108` to $JJ_CAPTURE_DIR (default docs/evidence/P1-R06).
+// `identify-108` to $JJ_CAPTURE_DIR (default OS scratch).
 //   JJ_CHROMIUM_GPU=1 node --test web/tests/journeys/r06-identify.test.mjs   (24-120 tiles want a GPU host)
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -13,13 +15,13 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, gpu } from './lib/chromium.mjs';
 
 const BASE = '/p/r06/';
-const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R06');
+const CAPTURE = evidencePath('P1-R06', 'JJ_CAPTURE_DIR');
 let browser;
 let server;
 
 before(async () => {
   server = await serve(build('./', 'r06'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: chromiumArgs });
+  browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {
@@ -41,38 +43,49 @@ async function join(host, from, to) {
 /** Presses Identify for seat number `n`; returns what the TV shows for it. */
 async function identify(host, n) {
   const before = await host.evaluate(() => window.__jjRoom.identified().length);
+  const cdp = await host.context().newCDPSession(host);
+  try {
   // A claim flashes Identify itself and starts the seat's 3 s (sim-time) limit; a loaded host runs fewer ticks than real
   // time, so a press soon after joining can be refused as limited. Press again until it lands, as a player would.
   for (let tries = 0; ; tries++) {
     await frame(host, `syn${n}`, { identify: true });
     try {
-      await wait(host, (b) => window.__jjRoom.identified().length > b, before, 1500);
-      break;
+      // Capture the live pulse atomically with its own new event. A different seat's delayed join flash must
+      // not satisfy this wait, and a second round-trip on a 120-tile host can outlast the 1.6 s pulse.
+      const shown = await host.waitForFunction(({ n, before }) => {
+        const room = window.__jjRoom.view();
+        const seat = room.seats.find((s) => s.number === n);
+        if (!window.__jjRoom.identified().slice(before).some(e => e.seat === seat.seat)) return false;
+        const box = document.querySelector(`.hud-tile.identify[data-seat="${seat.seat}"]`);
+        if (!box) return false;
+        const marks = window.__jjRender.identifyMarks();
+        // The label follows the rendered snapshot; observe the pulse and its visible billboard together.
+        if (!marks.includes(seat.car)) return false;
+        const fits = (el) => !!el && el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width > 0;
+        const c = box.querySelector('.hud-cooee')?.getBoundingClientRect();
+        const t = box.getBoundingClientRect();
+        return {
+          seat: seat.seat, car: seat.car,
+          pulsing: [...document.querySelectorAll('.hud-tile.identify')].map(b => Number(b.dataset.seat)),
+          marks,
+          badge: box.querySelector('.hud-badge')?.textContent,
+          badgeFits: fits(box.querySelector('.hud-badge')),
+          cooee: box.querySelector('.hud-cooee')?.textContent,
+          cooeeInside: !!c && c.left >= t.left && c.right <= t.right,
+        };
+      }, {n, before}, {timeout:1500,polling:50});
+      // Capture the compositor now: Playwright's normal screenshot waits for font/layout stability, which can
+      // consume the entire transient on a crowded host. CDP captures the actual browser surface without that wait.
+        const { data } = await cdp.send('Page.captureScreenshot', {format:'png',fromSurface:true,captureBeyondViewport:false});
+        writeFileSync(`${CAPTURE}/identify-${n === 7 ? '24' : n}.png`, Buffer.from(data,'base64'));
+      const state = await shown.jsonValue();
+      await shown.dispose();
+      return state;
     } catch (e) {
       if (tries >= 12) throw e;
     }
   }
-  return host.evaluate((n) => {
-    const room = window.__jjRoom.view();
-    const seat = room.seats.find((s) => s.number === n);
-    const pulsing = [...document.querySelectorAll('.hud-tile.identify')].map((b) => Number(b.dataset.seat));
-    const box = document.querySelector('.hud-tile.identify');
-    const fits = (el) => !!el && el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width > 0;
-    return {
-      seat: seat.seat,
-      car: seat.car,
-      pulsing,
-      marks: window.__jjRender.identifyMarks(),
-      badge: box?.querySelector('.hud-badge')?.textContent,
-      badgeFits: fits(box?.querySelector('.hud-badge')),
-      cooee: box?.querySelector('.hud-cooee')?.textContent,
-      cooeeInside: (() => {
-        const c = box?.querySelector('.hud-cooee')?.getBoundingClientRect();
-        const t = box?.getBoundingClientRect();
-        return !!c && !!t && c.left >= t.left && c.right <= t.right;
-      })(),
-    };
-  }, n);
+  } finally { await cdp.detach(); }
 }
 
 test("R06: Identify pulses only its seat's tile and floats its number over its car, at 24 seats and at 120 (three digits)", { timeout: 600_000, skip: !gpu && '24-120 tiles need a GPU host (JJ_CHROMIUM_GPU=1); software WebGL stalls the page' }, async () => {
@@ -88,8 +101,6 @@ test("R06: Identify pulses only its seat's tile and floats its number over its c
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(2000);
   const at24 = await identify(host, 7);
-  await host.waitForTimeout(150);
-  await host.screenshot({ path: `${CAPTURE}/identify-24.png`, timeout: 120_000 });
   assert.deepEqual(at24.pulsing, [7], `only #7's tile pulses: ${JSON.stringify(at24)}`);
   assert.deepEqual(at24.marks, [at24.car], 'its number floats over its car');
   assert.equal(at24.cooee, 'Cooee #7');
@@ -99,8 +110,6 @@ test("R06: Identify pulses only its seat's tile and floats its number over its c
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(2500);
   const at108 = await identify(host, 108);
-  await host.waitForTimeout(150);
-  await host.screenshot({ path: `${CAPTURE}/identify-108.png`, timeout: 120_000 });
   assert.deepEqual(at108.pulsing, [108], JSON.stringify(at108));
   assert.equal(at108.badge, '#108');
   assert.ok(at108.badgeFits, `the three-digit badge isn't clipped: ${JSON.stringify(at108)}`);

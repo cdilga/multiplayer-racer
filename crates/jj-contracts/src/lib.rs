@@ -7,4 +7,5 @@
 #![forbid(unsafe_code)]
 
 pub mod glb;
+pub mod item;
 pub mod vehicle;

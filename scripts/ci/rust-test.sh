@@ -36,4 +36,8 @@ for c in jj-map jj-procgen; do if has "$c"; then wasm+=(-p "$c"); fi; done
 if [[ ${#wasm[@]} -gt 0 ]]; then
     t cargo test --locked --target wasm32-unknown-unknown "${wasm[@]}" --test wasm_parity || rc=1
 fi
+# W03's pinned Rapier behavior must hold in the browser simulation as well as natively.
+if has jj-sim; then
+    t cargo test --locked --target wasm32-unknown-unknown -p jj-sim --test rapier_api || rc=1
+fi
 exit $rc

@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "sanga",
+  "version": 1,
+  "class": "buff",
+  "activation": "sector-entry",
+  "direction": "self-use",
+  "uses": 1,
+  "offensive": false,
+  "timing": { "arming_ms": 0, "cooldown_ms": 0, "lifetime_ms": null, "duration_ms": 6000 },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Wait for the visible timer to end", "Use terrain, barriers and the bowl"],
+  "presentation": { "vfx": "sanga-steam", "sfx": "sanga-sizzle", "comic": "TANKED UP!" },
+  "rationale": "P1-W03: a six-second self-use tank-up effect. A second sanga refreshes the timer rather than stacking. The physical effect is implemented by W03."
+}

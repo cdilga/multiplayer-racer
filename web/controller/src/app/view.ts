@@ -2,14 +2,14 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
-import { icon, paintKit } from '../../../shared/ui';
+import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
 import './settings.css';
 import './layout-short.css';
-import { watchBadge } from '../hub/badge';
+import { watchBadge } from '../sources/badge';
 import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shapeSticks } from './settings';
@@ -55,7 +55,7 @@ function dress(root: ParentNode): void {
 }
 
 /** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose vehicle" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:0%"></i></div></div></div>`;
@@ -70,11 +70,20 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let sticks: { drive: StickHandle; action: StickHandle } | null = null;
   let tutorial: Tutorial | null = null;
   let tutorialOffered = false;
+  // Orientation is the first choice; coaching starts once it is settled, without opening a hidden menu.
+  const showTutorial = (from = 0) => {
+    if (!app.querySelector('[data-overlay=rotate]')) tutorial?.show(from);
+  };
   let firstPerson = false;
   let shown: string | null = null;
   let prefs: Preferences | null = null;
   let sheet: SettingsSheet | null = null;
   let cars: CarSheet | null = null;
+  // R90 offline play fixtures show the confirmed controller; &choose=1 explicitly opens the initial vehicle step.
+  const fixture = new URLSearchParams(location.hash.slice(1));
+  let chosenSeat: number | null = fixture.get('state') === 'playing' && fixture.get('choose') !== '1'
+    ? Math.max(1, Number.parseInt(fixture.get('seat') ?? '12', 10) || 12) : null;
+  let rehosting = false;
   const fs = new FullscreenControl();
   let fsNote = false;
   const tilt = new Tilt({ deadzoneDeg: DEADZONES.medium, fullLockDeg: SENSITIVITIES.normal });
@@ -101,6 +110,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   const prefsNow = () => {
     prefs ??= new Preferences(session.realm);
     session.cameraDistance = prefs.value.cameraDistance;
+    session.assist = prefs.value.assist;
     session.classic = prefs.value.controls === 'classic';
     return prefs;
   };
@@ -168,15 +178,20 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const playScreen = () => {
+    // Rebuilding on orientation must release the old card's Menu state before deferring a new one.
+    tutorial?.close(false, true);
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
-      <div class="strip" data-box="strip"><div class="who"><span class="seatno">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
+      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
 </div>
     </section>`;
     // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
     // the tools ride in the strip in landscape and get their own row under it in portrait, so the name keeps its room.
     const screenEl = app.querySelector<HTMLElement>('.screen')!;
+    const identity = screenEl.querySelector<HTMLElement>('.seatno')!;
+    identity.style.setProperty('--on', seatColor(you.number).on);
+    applySeatPattern(identity, you.number);
     const land = matchMedia('(orientation: landscape)').matches;
     const toolsHolder = document.createElement('div');
     toolsHolder.innerHTML = TOOLS;
@@ -205,13 +220,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       area.querySelector('[data-act=upright]')!.addEventListener('click', (e) => {
         uprightOk = true;
         (e.target as HTMLElement).closest('.rotate-card')?.remove();
+        updateHud();
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic);
-    if (session.roomPhase === 'Lobby') {
-      tutorialOffered = true;
-      if (Tutorial.wanted()) tutorial.show();
+    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic, () => openSettings(screenEl));
+    if (session.roomPhase === 'Lobby' && chosenSeat === session.you?.number) {
+      tutorialOffered = !app.querySelector('[data-overlay=rotate]');
+      if (tutorialOffered && Tutorial.wanted()) tutorial.show();
     }
     session.onAction = (kind) => tutorial?.action(kind);
     session.onSticks = (d, a) => {
@@ -238,6 +254,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     cars = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;
+      session.assist = v.assist;
       session.classic = v.controls === 'classic';
       syncTilt();
     });
@@ -246,7 +263,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       fsNote = !fsNote;
       updateFullscreen();
     });
-    app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
+    app.querySelector('[data-act=help]')!.addEventListener('click', () => showTutorial());
     app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
     app.querySelector('[data-act=car]')!.addEventListener('click', () => openCars(screenEl));
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
@@ -290,7 +307,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     });
   };
 
-  /** The lobby's car picker (R101/R110): opened from the Car button, closed with Done; Ready is never behind it. */
+  /** The visible lobby vehicle step: remembered preselection, explicit confirmation, then Ready. */
   const openCars = (host: HTMLElement) => {
     if (cars?.open || sheet?.open || tutorial?.open || !session.you) return;
     const key = `jj.car.${session.realm}`;
@@ -305,8 +322,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     session.pick(current().id, true); // the picker is open: the TV says so
     cars = new CarSheet(host, {
       roster,
-      start: Math.max(0, roster.findIndex((r) => r.id === saved)),
+      start: Math.max(0, roster.findIndex((r) => r.id === current().id)),
       colour: hex(session.you.rgb),
+      onLeave: (button) => { if (confirmLeave(button)) session.leave(); },
       onPick: (car) => {
         session.pick(car.id, true);
         try {
@@ -317,7 +335,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       },
       onClose: () => {
         cars = null;
+        chosenSeat = session.you?.number ?? null;
         session.pick(current().id, false);
+        try { localStorage.setItem(key, current().id); } catch { /* This visit only. */ }
+        updateHud();
       },
     });
   };
@@ -329,6 +350,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       readyBtn.hidden = session.roomPhase !== 'Lobby' && session.roomPhase !== 'Results';
       readyBtn.textContent = session.isReady ? 'Ready ✓' : 'Ready';
       readyBtn.setAttribute('aria-pressed', String(session.isReady));
+      readyBtn.disabled = session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number;
     }
     roundBanner(app, session);
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
@@ -343,9 +365,17 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
     if (cars?.open && session.roomPhase === 'Countdown') cars.close();
     const carBtn = app.querySelector<HTMLButtonElement>('[data-act=car]');
-    if (carBtn) carBtn.hidden = session.roomPhase !== 'Lobby';
+    if (carBtn) {
+      carBtn.hidden = session.roomPhase !== 'Lobby';
+      carBtn.classList.remove('icon');
+      carBtn.textContent = chosenSeat === session.you?.number ? 'Vehicle' : 'Choose vehicle';
+    }
+    if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
+      const host = app.querySelector<HTMLElement>('.screen.play');
+      if (host) openCars(host);
+    }
     // The Lobby state can arrive just after the play screen: offer the tutorial once then.
-    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby') {
+    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby' && chosenSeat === session.you?.number && !cars?.open && !app.querySelector('[data-overlay=rotate]')) {
       tutorialOffered = true;
       if (Tutorial.wanted() && !tutorial.open) tutorial.show();
     }
@@ -416,13 +446,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   (window as unknown as { __jjFullscreen: unknown }).__jjFullscreen = {
     inspect: () => ({ mode: fs.mode, active: fs.active, lost: fs.lostUnasked, prompt: !!app.querySelector('[data-overlay=fs-prompt]'), note: !!app.querySelector('[data-overlay=fs-note]') }),
   };
-  (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
+  (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: showTutorial };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {
     // Turning the phone rebuilds the play screen; an open settings sheet moves onto the new one (still open, Menu still held).
     const keep = sheet?.open ? sheet : null;
     const keepCars = cars?.open ? cars : null;
+    rehosting = true;
     shown = null;
     render();
+    rehosting = false;
     const screenEl = app.querySelector<HTMLElement>('.screen.play');
     if (keep && screenEl) {
       sheet = keep;
@@ -481,19 +513,19 @@ function ordinal(n: number): string {
 
 let leaveArmed = 0;
 /** Leave needs a second tap within 3 s (no browser dialogs: they block the page). */
-function confirmLeave(): boolean {
+function confirmLeave(b = document.querySelector<HTMLElement>('[data-act=leave]')): boolean {
   const now = Date.now();
   if (now - leaveArmed < 3000) return true;
   leaveArmed = now;
-  const b = document.querySelector<HTMLElement>('[data-act=leave]');
   if (b) {
     // The icon button turns into words for three seconds, then goes back to its icon.
     const was = b.innerHTML;
+    const wasIcon = b.classList.contains('icon');
     b.classList.remove('icon');
     b.textContent = 'Tap again to leave';
     setTimeout(() => {
       b.innerHTML = was;
-      b.classList.add('icon');
+      b.classList.toggle('icon', wasIcon);
     }, 3000);
   }
   return false;

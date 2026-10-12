@@ -220,7 +220,9 @@ def air_control():
     ins += lev(1, 1.0, 0.7, -1.0, 0.4)                                       # steer into the tilt, then stop the roll
     ins += [span(2, 0, 1.4, steer=1.0, throttle=0.3), span(2, 1.4, 1.6, steer=-1.0, throttle=0.3), span(2, 1.6, None, throttle=1.0)]  # held far too long
     ins += mash(51, 7, 3) + mash(52, 7, 4)
-    beats = [beat("well", "plain", 0.1), beat("plain", "over", 0.2), beat("well", "mash-*", 0.0)]
+    # Since owner playtest 1 the car levels itself in near-upright flight (air_level_torque, R122's arcade control), so
+    # a plain run lands level too: well-timed air control no longer gains time over it. Over-rotating still costs.
+    beats = [beat("plain", "over", 0.2), beat("well", "over", 0.2), beat("well", "mash-*", 0.0)]
     write("air-control-duel",
           "§7.3b air-control-duel (P1-S09), the feel bank's jump: five Cruz Missiles launched 3 m up at 12 m/s forward and 6 m/s up, tipped 40 degrees onto their right side, all flooring it after 1.6 s. plain: no input in the air, lands tipped and loses speed. well: steers into the tilt to roll level, then stops the roll, and lands on its wheels keeping its speed. over: holds the correction far too long and lands worst. mash: two seeded random scripts. Gate: 70 m from the launch.",
           71, 7, same({"x": 10, "y": 3.0, "z": -4, "headingDeg": 90, "rollDeg": 40}, [12, 6, 0], len(labels)), labels, ins,
@@ -250,7 +252,8 @@ def drift_straight_penalty():
             k += 1
         ins.append(span(car, t0 + dur, None, throttle=1.0))
     ins += mash(81, 9, 3) + mash(82, 9, 4)
-    beats = [beat("plain", "drift-*", 0.02), beat("plain", "mash-*", 0.0)]
+    # One tick (1/60 s) at least: times are tick-quantised, and since R122 (less body roll) the drift costs one or two.
+    beats = [beat("plain", "drift-*", 0.016), beat("plain", "mash-*", 0.0)]
     write("drift-straight-penalty",
           "§7.3b drift-straight-penalty (P1-S09): drifting down a straight is slower than driving it straight. Five Cruz Missiles at 18 m/s on the main straight, time to 150 m on. plain: flat out. drift-short and drift-long: the handbrake held for 1 s and 2 s with the small steering wiggle a driver needs to keep the tail out. mash: two seeded random scripts.",
           81, 9, same({"x": 10, "y": 0.1, "z": 0, "headingDeg": 90}, [18, 0, 0], len(labels)), labels, ins,

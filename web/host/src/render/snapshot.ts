@@ -3,12 +3,13 @@
 //
 // Header (40 B): magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32,
 // cars u32, debris u32, parts u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32 (x, y, z, w),
-// linvel 3×f32, steer f32, flags u32, boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
+// linvel 3×f32, steer f32, flags u32 (bit 8: no suspension contacts; bits 16-31: roster vehicle, R123), boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
 // Part (40 B, P1-R02), one per part that isn't intact: car u32, part u16 (its index in the vehicle sidecar's `parts`
 // order), state u16 (PART_LOOSE, PART_DETACHED), hinge angle f32 (radians, loose), position 3×f32 and rotation 4×f32
 // (the part's pivot frame in the world, detached). A debris record of kind 2 is a detached part's body: the decoder drops
 // it (the part record draws it; the debris list holds only what is drawn as debris). The header's last u32 was reserved and written 0, so a worker that sends no part records
 // still reads as "every part intact".
+// Flags bit 0 adds a trailer after all part records: count u32, then count × (dressing index u32, normal offset f32).
 
 export const SNAPSHOT_MAGIC = 0x4a4a5331;
 export const SNAPSHOT_HEADER = 40;
@@ -61,6 +62,9 @@ export interface Frame {
   piecePart: Uint8Array;
   piecePos: Float32Array;
   pieceRot: Float32Array;
+  rails: number;
+  railDressing: Uint32Array;
+  railOffset: Float32Array;
 }
 
 /** Copies a snapshot out of its pooled buffer (so the buffer can go straight back to the worker). */
@@ -99,6 +103,9 @@ export function decodeSnapshot(view: DataView): Frame {
     piecePart: new Uint8Array(parts),
     piecePos: new Float32Array(parts * 3),
     pieceRot: new Float32Array(parts * 4),
+    rails: 0,
+    railDressing: new Uint32Array(0),
+    railOffset: new Float32Array(0),
   };
   let at = SNAPSHOT_HEADER;
   for (let i = 0; i < cars; i++, at += SNAPSHOT_CAR) {
@@ -140,6 +147,17 @@ export function decodeSnapshot(view: DataView): Frame {
     for (let k = 0; k < 4; k++) f.partRot[n * 4 + k] = view.getFloat32(at + 24 + k * 4, true);
   }
   f.parts = living;
+  if (view.getUint16(6, true) & 1) {
+    const count = view.getUint32(at, true); at += 4;
+    if (count > Math.floor((view.byteLength - at) / 8)) throw new Error('truncated rail snapshot trailer');
+    f.rails = count;
+    f.railDressing = new Uint32Array(count);
+    f.railOffset = new Float32Array(count);
+    for (let i = 0; i < count; i++, at += 8) {
+      f.railDressing[i] = view.getUint32(at, true);
+      f.railOffset[i] = view.getFloat32(at + 4, true);
+    }
+  }
   return f;
 }
 
@@ -154,6 +172,8 @@ export interface CarPose {
   rot: [number, number, number, number];
   steer?: number;
   flags?: number;
+  /** The car's roster vehicle (R123): flags bits 16-31 on the wire; 0 by default. */
+  vehicle?: number;
 }
 
 export interface PartPose {
@@ -192,7 +212,7 @@ export function encodeSnapshot(buf: ArrayBuffer, tick: number, cars: CarPose[], 
     c.rot.forEach((x, k) => v.setFloat32(at + 20 + k * 4, x, true));
     for (let k = 0; k < 3; k++) v.setFloat32(at + 36 + k * 4, c.vel?.[k] ?? 0, true);
     v.setFloat32(at + 48, c.steer ?? 0, true);
-    v.setUint32(at + 52, c.flags ?? 0, true);
+    v.setUint32(at + 52, ((c.flags ?? 0) | ((c.vehicle ?? 0) << 16)) >>> 0, true);
     v.setFloat32(at + 56, c.boost ?? 0, true);
     v.setFloat32(at + 60, c.throttle ?? 0, true);
     at += SNAPSHOT_CAR;

@@ -8,7 +8,6 @@ use super::{BiomeData, BiomeDef};
 use crate::features::Density;
 use crate::lineside::{SignRule, Trigger};
 use crate::scatter::{Algorithm, PieceSpec, Spec, piece};
-use crate::terrain::TerrainParams;
 
 pub struct OutbackDirt;
 
@@ -51,15 +50,7 @@ impl BiomeDef for OutbackDirt {
             id: Biome::OutbackDirt,
             road: Surface::PackedDirt,
             ground: Surface::OffTrack,
-            terrain: TerrainParams {
-                relief_m: 5.0,
-                ground_relief_m: 5.0,
-                wavelength_m: 120.0,
-                max_grade: 0.05,
-                max_curvature: 0.0030,
-                max_bank_cdeg: 500,
-                blend_m: 20.0,
-            },
+            terrain: crate::tuning::GeneratorData::shipped().terrain(Biome::OutbackDirt),
             features: Density {
                 jump: 2.0,
                 crest: 1.0,

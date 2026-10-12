@@ -16,6 +16,14 @@
       "action": { "up": "ArrowUp", "down": "ArrowDown", "left": "ArrowLeft", "right": "ArrowRight" },
       "identify": "KeyU",
       "ready": "KeyO"
+    },
+    {
+      "id": 3,
+      "label": "Keys C · numpad",
+      "drive": { "up": "Numpad8", "down": "Numpad5", "left": "Numpad4", "right": "Numpad6" },
+      "action": { "up": "Numpad9", "down": "Numpad3", "left": "Numpad7", "right": "Numpad1" },
+      "identify": "Numpad0",
+      "ready": "NumpadDecimal"
     }
   ],
   "reserved": {

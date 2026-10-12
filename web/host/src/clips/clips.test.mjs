@@ -37,13 +37,24 @@ after(async () => {
 /** `jj sim --replay …`: the exit code, stdout and stderr. */
 function replay(file, args = []) {
   const [cmd, ...pre] = process.env.JJ_BIN ? [resolve(repo, process.env.JJ_BIN)] : ['cargo', 'run', '--locked', '-q', '-p', 'jj-tools', '--bin', 'jj', '--'];
-  const r = spawnSync(cmd, [...pre, 'sim', '--replay', ...args, file], { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 });
-  return { code: r.status, stdout: r.stdout, stderr: r.stderr };
+  const start = performance.now();
+  const r = spawnSync(cmd, [...pre, 'sim', '--replay', ...args, file], { cwd: repo, maxBuffer: 1 << 28 });
+  const result = { code: r.status, signal: r.signal, error: r.error ? { message: r.error.message, code: r.error.code } : null,
+    seconds: (performance.now() - start) / 1000, stdout: r.stdout?.toString('utf8') ?? '', stderr: r.stderr?.toString('utf8') ?? '',
+    stdoutBytes: { length: r.stdout?.length ?? 0, base64: r.stdout?.toString('base64') ?? '' },
+    stderrBytes: { length: r.stderr?.length ?? 0, base64: r.stderr?.toString('base64') ?? '' } };
+  writeFileSync(`${file}.replay-process.json`, `${JSON.stringify({ ...result, command: cmd, args: [...pre, 'sim', '--replay', ...args, file] }, null, 2)}\n`);
+  return result;
 }
 const replayJson = (file, build) => {
   const r = replay(file, ['--json', '--build', build]);
-  assert.equal(r.code, 0, `${r.stdout}\n${r.stderr}`);
-  return JSON.parse(r.stdout)[0].report;
+  assert.equal(r.error, null, JSON.stringify(r));
+  assert.equal(r.code, 0, JSON.stringify(r));
+  let rows;
+  try { rows = JSON.parse(r.stdout); }
+  catch (e) { throw new Error(`native replay returned invalid JSON: ${JSON.stringify(r)}`, { cause: e }); }
+  assert.ok(Array.isArray(rows) && rows.length === 1 && rows[0].report, `native replay has one report: ${JSON.stringify(r)}`);
+  return rows[0].report;
 };
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });

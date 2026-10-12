@@ -1,9 +1,11 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-A03 / A05 / A07 browser tests: the host's audio on the real web build (web/dist), through the introspection surface
 // `window.__jjAudio` (the trigger log, the engines, the mix state). Sound can't be heard in CI, so each test checks the log
 // (what played, when, with which caption and mix state), the offline-rendered effects (not silent) and the CPU numbers.
 // Needs: scripts/build-host-wasm.sh && npx --prefix web vite build.
 //   node --test --test-concurrency=1 web/host/tests/audio.test.mjs
-// Writes to docs/evidence/P1-A03|A05|A07/ (JJ_EVIDENCE_DIR overrides the root).
+// Recapture to docs/evidence/P1-A03|A05|A07/ (set JJ_EVIDENCE_DIR explicitly; default OS scratch).
 import assert from 'node:assert/strict';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -12,7 +14,7 @@ import { chromium, webkit } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evRoot = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence');
+const evRoot = evidencePath('');
 const ev = (bead) => join(evRoot, bead);
 const runs = { 'P1-A03': {}, 'P1-A05': {}, 'P1-A07': {} };
 let live; // Chromium with autoplay allowed: contexts run, clips decode and "play"
@@ -299,15 +301,24 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   assert.ok(engines.every((e) => e.profile === 'cruz-missile' && e.boostLayerBuilt === false), 'the Cruz Missile has no turbo layer');
   assert.ok(engines.every((e) => e.voiced), 'all eight are voiced within the budget');
   await page.evaluate(() => clearInterval(window.__pump));
+  // Mixing a live 120Hz clock with explicit steps let a loaded renderer miss the whole respawn hold.
+  // Pin the worker's test clock and verify the actual lifecycle, independently of browser wall time.
+  await page.evaluate(async () => { await window.__jjTest.hold(true); });
+  const beforeWreck = await page.evaluate(() => window.__jjTest.observe());
   // Wreck stops the engine (R103), and it starts again when the hold ends.
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_FL', health: 0 }), joined[0].car);
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_RR', health: 0 }), joined[0].car);
-  await page.evaluate(() => window.__jjTest.step(30));
-  await page.waitForTimeout(400);
+  // A lost wheel wrecks the car once its grace runs out (R121: 2 s, 240 ticks).
+  await page.evaluate(() => window.__jjTest.step(250));
+  const wreck = await page.evaluate(() => window.__jjTest.observe());
+  const wrecked = wreck.cars.find(c => c.car === joined[0].car);
+  assert.equal(wrecked.race.wrecks, beforeWreck.cars.find(c => c.car === joined[0].car).race.wrecks + 1);
+  assert.equal(wrecked.race.held, true, 'the wheel-loss wreck is still in its respawn hold');
+  await page.waitForFunction(car => window.__jjAudio.engines().some(e => e.car === car && !e.ignition), joined[0].car);
   let log = await page.evaluate(() => window.__jjAudio.log('engine'));
   assert.ok(log.some((l) => l.car === joined[0].car && l.ignition === false), `the wrecked car's engine stopped: ${JSON.stringify(log.slice(-4))}`);
   await page.evaluate(() => window.__jjTest.step(420));
-  await page.waitForTimeout(400);
+  await page.waitForFunction(car => window.__jjAudio.engines().some(e => e.car === car && e.ignition), joined[0].car);
   log = await page.evaluate(() => window.__jjAudio.log('engine'));
   const last = log.filter((l) => l.car === joined[0].car && 'ignition' in l).at(-1);
   assert.equal(last.ignition, true, 'and starts again after the hold');
@@ -341,12 +352,29 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   assert.ok(out.hay[0].boostLayerBuilt && out.hay[0].boostLevel > 0, `a profile with a boost section does (${JSON.stringify(out.hay[0])})`);
   assert.equal(out.cruz[1].surface, 'gravel');
   // Cost: the engines offline, 8 voices, and the update cost per snapshot.
-  const bench = await page2.evaluate(async () => ({ eight: await window.__jjAudio.benchEngines(8, 6), sixteen: await window.__jjAudio.benchEngines(16, 6), state: window.__jjAudio.state() }));
+  const bench = await page2.evaluate(async () => {
+    const a=window.__jjAudio;
+    const eight=await a.benchEngines(8,6), sixteen=await a.benchEngines(16,6);
+    // The cached EMA after four two-car/profile-switch feeds is not an eight-car
+    // steady update measurement. Exercise the live bank on successive snapshots,
+    // excluding graph construction (already reported separately by the bank).
+    a.useProfile('cruz-missile');
+    const facts=Array.from({length:8},(_,i)=>({car:200+i,speed:15+i,throttle:.7,boosting:false,boost:0,drifting:false,surface:i%4,damage:0,held:false}));
+    const costs=[];
+    for(let sample=0;sample<80;sample++) {
+      await new Promise(requestAnimationFrame);
+      a.feedFacts(facts);
+      if(sample>=16) costs.push(a.state().engineCostMs);
+    }
+    costs.sort((x,y)=>x-y);
+    return {eight,sixteen,state:a.state(),update:{voices:facts.length,samples:costs.length,p95Ms:costs[Math.ceil(costs.length*.95)-1],maxMs:costs.at(-1)},engines:a.engines()};
+  });
   assert.ok(bench.eight.realtimeFactor > 1.5, `8 engines render ${bench.eight.realtimeFactor}x real time (software, headless)`);
-  assert.ok(bench.state.engineCostMs < 2, `update cost ${bench.state.engineCostMs} ms`);
+  assert.ok(bench.update.p95Ms < 2, `steady 8-engine update p95 ${bench.update.p95Ms} ms (${bench.update.samples} snapshots)`);
+  assert.equal(bench.engines.filter(e=>e.voiced).length,8,'the measured bank voices all eight engines');
   assert.deepEqual(errors, []);
   await page2.close();
-  runs['P1-A05'] = { engines, startStop: log.filter((l) => l.car === joined[0].car).slice(-6), turbo: out, cost: bench };
+  runs['P1-A05'] = { engines, wreck: {tick:wreck.tick,car:wrecked.car,race:wrecked.race}, startStop: log.filter((l) => l.car === joined[0].car).slice(-6), turbo: out, cost: bench };
   await writeFile(join(ev('P1-A05'), 'engine-log.json'), `${JSON.stringify({ engines, log: log.slice(-30), turbo: out, cost: bench }, null, 1)}\n`);
 });
 

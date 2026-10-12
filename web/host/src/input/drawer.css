@@ -1,0 +1,53 @@
+/* The input drawer's controls (P1-C14): the keyboard toggle and Controls button, the player rows, and the clusters' cards. The
+   floating shell (position, background, the race-time fold) is in index.html; this folds the new pieces the same way. */
+[data-jj-input-drawer] .dr-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+[data-jj-input-drawer] .dr-rows { margin: 4px 0; padding-left: 18px; }
+[data-jj-input-drawer] .dr-rows li { margin: 2px 0; }
+[data-jj-input-drawer] button { font: inherit; cursor: pointer; }
+[data-jj-input-drawer] button[aria-pressed='false'] { opacity: .8; }
+[data-jj-input-drawer] .dr-cards { display: grid; gap: 8px; margin: 8px 0 4px; font-size: 12px; }
+[data-jj-input-drawer] .dr-options { max-width: 29rem; margin: 8px 0 0; border-top: 1px solid currentColor; padding-top: 6px; }
+[data-jj-input-drawer] .dr-options summary { cursor: pointer; }
+[data-jj-input-drawer] .dr-options p { margin: 6px 0; }
+[data-jj-input-drawer] .dr-legends { padding-left: 18px; font-size: 12px; }
+[data-jj-input-drawer] .dr-legends li { margin-bottom: 6px; }
+[data-jj-input-drawer] .dr-options a { color: inherit; text-decoration: underline; }
+[data-jj-input-drawer] .dr-options .qr-card { margin: 8px 0 0; }
+/* Opening the keyboard actions makes room for their legends and QR on a phone host. The panel still scrolls. */
+html [data-jj-input-drawer]:has([data-keyboard-options][open]) { max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px - var(--jj-caption-space, 0px)); }
+:is([data-jj-phase='Countdown'], [data-jj-phase='Running'], [data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) .dr-options { display: none; }
+:is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards) { display: none; }
+@media (max-width: 960px), (max-height: 500px) { [data-jj-input-drawer] .dr-cards { font-size: 9px; } }
+
+/* In a room the round screens (z 4) cover the page, so the drawer docks above the footer and rides over them (P1-C14): bottom right in
+   every phase (the lobby's roster and its controls cards fill the left; a race's boost meters sit bottom left of each tile), folded
+   to its head in a race. It steps aside for the host menu. */
+html[data-jj-phase] [data-jj-input-drawer] { z-index: 5; top: auto; left: auto; right: 8px; bottom: calc(max(5vh, 30px) + 8px + var(--jj-caption-space, 0px)); translate: none; width: max-content; max-width: min(30rem, calc(100vw - 16px)); max-height: calc(100dvh - max(5vh, 30px) - 24px - var(--jj-caption-space, 0px)); }
+html:is([data-jj-phase='Finalising'], [data-jj-phase='Intermission']) [data-jj-input-drawer]:not(:hover):not(:focus-within) :is(.dr-bar, .dr-cards, .dr-rows) { display: none; }
+html[data-jj-phase] [data-jj-input-drawer] .dr-cards { display: none; }
+html[data-jj-menu] [data-jj-input-drawer] { display: none; }
+
+/* The kit's paper panel (the host's own dark placeholder from index.html gives way): readable on the lobby's paper and over a race. */
+html [data-jj-input-drawer] { display: flex; flex-direction: column; overflow: hidden; padding: 0; background: var(--c-paper, #fff4de); color: var(--c-ink, #15203a); border: 2px solid var(--c-ink, #15203a); border-radius: 3px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 600 13px/1.3 var(--font-body, system-ui); }
+html [data-jj-input-drawer] .drawer-scroll { min-height: 0; overflow: auto; padding: 6px 12px; }
+@media (max-width: 960px), (max-height: 500px) { html [data-jj-input-drawer] .drawer-scroll { padding: 4px 8px; } }
+html [data-jj-input-drawer] .drawer-head { font: 900 italic 15px/1 var(--font-display, system-ui); letter-spacing: .02em; text-transform: uppercase; }
+html [data-jj-input-drawer] button { color: var(--c-ink, #15203a); background: var(--c-paper-shade, #f1e2c2); border: 2px solid var(--c-ink, #15203a); border-radius: 4px; padding: 1px 8px 2px; font-weight: 700; }
+html [data-jj-input-drawer] button:hover:not(:disabled) { background: var(--c-saffron, #ffb400); }
+html [data-jj-input-drawer] button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* The real room keeps input administration inside Host menu → Controllers. */
+html [data-controllers-panel] [data-jj-input-drawer] {
+  position: static; display: flex; width: 100%; max-width: none; max-height: none;
+  translate: none; border: 0; box-shadow: none; font-size: max(13px, calc(17px * var(--rk, 1)));
+}
+html [data-controllers-panel] [data-jj-input-drawer] .drawer-scroll { flex: none; overflow: visible; padding: 0; }
+html [data-controllers-panel] [data-jj-input-drawer] :is(.dr-bar, .dr-cards, .dr-rows, .dr-options) { display: block; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-bar { display: flex; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-cards { display: none; }
+html [data-controllers-panel] [data-jj-input-drawer] button { min-height: 36px; margin: 3px; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-options { max-width: none; }
+/* The old floating drawer's race-time hover fold must never collapse menu actions. */
+html[data-jj-phase][data-jj-menu] [data-controllers-panel] [data-jj-input-drawer] ul {
+  width: auto; max-height: none; overflow: visible;
+}

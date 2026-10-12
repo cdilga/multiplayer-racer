@@ -120,6 +120,49 @@ pub enum Setup {
     /// running order, unfinished cars ranked by legal progress, and the race rules emit `RaceOver`. Refused before the
     /// start or once the race is over.
     EndRace,
+    /// A car built from roster vehicle `vehicle` (an index into the sim's profiles, R123). Vehicle 0 journals as
+    /// `SpawnCar`, so single-vehicle journals keep their bytes. Appended: variant order is the wire format.
+    SpawnCarAs {
+        car: u32,
+        pose: SpawnPose,
+        vehicle: u16,
+    },
+    /// [`Setup::DropIn`] for roster vehicle `vehicle` (R123).
+    DropInAs {
+        vehicle: u16,
+    },
+    /// A player's learner-assist level (R125, 0 Off, 1 Some, 2 Lots). Appended: variant order is the wire format.
+    Assist {
+        car: u32,
+        level: u8,
+    },
+    /// The lobby's catch-up choice (R125, 0 Off, 1 Light).
+    CatchUp {
+        mode: u8,
+    },
+    /// The derby round starts (P1-S10): damage dealt to opponents scores from this tick for `limit_ticks` of game time.
+    /// Appended: variant order is the wire format.
+    StartDerby {
+        limit_ticks: u64,
+    },
+    /// An item box offered to this car (P1-W01/W04). A refusal leaves the box available.
+    /// Appended: existing setup variant indices and no-item journals keep their bytes.
+    PickupItem {
+        car: u32,
+        seat: jj_types::SeatId,
+        item: jj_types::items::ItemId,
+    },
+    /// R90 guard-rail setup. Appended: existing postcard variant indices stay stable.
+    RailState {
+        dressing: u32,
+        displacement_m: f32,
+        velocity_mps: f32,
+    },
+    /// R90 rigid comparison of the same beam/road/input fixture (br-gw74.9 steering-help differential).
+    RailFixed {
+        dressing: u32,
+        fixed: bool,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

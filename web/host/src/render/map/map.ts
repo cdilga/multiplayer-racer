@@ -27,6 +27,8 @@ import type { Params } from '../kit/types';
 import type { Frame } from '../snapshot';
 import { InkHull, toon } from '../look';
 import { finishBanner } from './banner';
+import { bowlDesign, bowlQuads } from './bowl';
+import { bridgeIndices, bridgeMesh } from './bridge';
 
 export interface Pose {
   x: number;
@@ -39,7 +41,7 @@ export interface MapJson {
   route: {
     closed: boolean;
     start: { at: number };
-    points: { x: number; y: number; z: number; width: number; surface: string }[];
+    points: { x: number; y: number; z: number; width: number; bank?: number; surface: string }[];
   };
   features: { kind: string; pose: Pose; params: Params }[];
   dressing: { kitPiece: string; pose: Pose; params?: Params; collides?: boolean }[];
@@ -72,6 +74,13 @@ class Soup {
       this.colour.push(col.r, col.g, col.b);
     }
   }
+  tri(a: number[], b: number[], c: number[], colour: string): void {
+    col.set(colour);
+    for (const v of [a, b, c]) {
+      this.pos.push(v[0]!, v[1]!, v[2]!);
+      this.colour.push(col.r, col.g, col.b);
+    }
+  }
   mesh(material: Material): Mesh {
     const g = new BufferGeometry();
     g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
@@ -85,6 +94,45 @@ class Soup {
 
 /** The sim's yaw: centidegrees, turned clockwise seen from above (jj-sim `yaw_rotation`). */
 export const yawQuat = (yaw: number, q = new Quaternion()) => q.setFromAxisAngle(new Vector3(0, 1, 0), -((yaw / 100) * Math.PI) / 180);
+
+/** A sharp jump's design (jj-map `jump.rs`): its ramp, table and landing ramp are exact geometry above the ground, not part of
+ *  the height grid. Lengths in metres. */
+interface JumpDesign {
+  ramp: number;
+  rampW: number;
+  lip: number;
+  table: number;
+  landW: number;
+  down: number;
+  blend: number;
+  downBlend: number;
+  launchOnly: boolean;
+}
+const EDGE_SLOPE = 1.5;
+const jumpDesign = (p: Params): JumpDesign | null => {
+  if (p.sharp !== 1) return null;
+  const m = (k: string) => (p[k] ?? 0) / 1000;
+  const lip = (p.lipHeightCm ?? 0) / 100;
+  const downBlend = m('downBlendMm');
+  const launchOnly = p.roofTarget !== undefined;
+  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: launchOnly ? 0 : m('tableLengthMm'), landW: launchOnly ? m('rampWidthMm') : m('landingWidthMm'), down: launchOnly ? 0 : lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend: launchOnly ? 0 : downBlend, launchOnly };
+};
+const jumpLength = (d: JumpDesign) => d.ramp + d.table + d.down;
+/** Height along the centreline before any edge slope: the blended kicker, the table, the landing ramp. */
+const jumpProfile = (d: JumpDesign, u: number): number => {
+  if (u < 0 || u > jumpLength(d)) return 0;
+  if (u <= d.ramp) {
+    const slope = d.lip / (d.ramp - d.blend / 2);
+    return u < d.blend ? (slope * u * u) / (2 * d.blend) : slope * (u - d.blend / 2);
+  }
+  if (u <= d.ramp + d.table) return d.lip;
+  const remaining = jumpLength(d) - u;
+  const slope = d.lip / (d.down - d.downBlend / 2);
+  return remaining < d.downBlend ? slope * remaining * remaining / (2 * d.downBlend) : slope * (remaining - d.downBlend / 2);
+};
+const jumpSide = (w: number, lat: number): number => Math.min(1, Math.max(0, (w / 2 + EDGE_SLOPE - Math.abs(lat)) / EDGE_SLOPE));
+/** Height above the ground (m) at `u` along the jump and `lat` from its centreline. */
+const jumpHeight = (d: JumpDesign, u: number, lat: number): number => jumpProfile(d, u) * jumpSide(u <= d.ramp ? d.rampW : d.landW, lat);
 
 export interface MapStats {
   terrainCells: number;
@@ -107,6 +155,56 @@ export class MapRenderer {
   private material = toon(new MeshLambertMaterial({ vertexColors: true }), { halftone: true, grit: true });
   /** Printed sign faces (`decor.face`): unlit, in the haze like everything else. */
   private faceMaterial = new MeshBasicMaterial({ vertexColors: true });
+  private railInstances = new Map<number, { index: number; rest: Matrix4; normal: Vector3 }[]>();
+  private railMatrix = new Matrix4();
+  private jumpRanges: { feature: number; from: number; to: number }[] = [];
+  private bridgeRanges: { feature: number; from: number; to: number }[] = [];
+
+  /** Hash the actual uploaded jump triangles (R90), excluding paint and decorative walls. No work until queried. */
+  jumpShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    return this.shapeFingerprints(this.jumpRanges);
+  }
+
+  bridgeShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    return this.shapeFingerprints(this.bridgeRanges);
+  }
+
+  private shapeFingerprints(ranges: {feature:number;from:number;to:number}[]): {feature:number;triangles:number;fingerprint:string}[] {
+    const mesh = this.group.getObjectByName('features') as Mesh;
+    const positions = mesh.geometry.getAttribute('position').array as Float32Array;
+    return ranges.map(({ feature, from, to }) => {
+      const bytes = new Uint8Array(positions.buffer, positions.byteOffset + from * 4, (to - from) * 4);
+      let hash = 0xcbf29ce484222325n;
+      for (const byte of bytes) hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
+      return { feature, triangles: (to - from) / 9, fingerprint: hash.toString(16).padStart(16, '0') };
+    });
+  }
+
+  /** Simulated W-beam motion, indexed by the map's dressing entries. Still one instanced draw for the family. */
+  updateRails(f: Frame | null): void {
+    const im = this.kit.get('wayfinding/guard-rail');
+    if (!im || !f) return;
+    for (let i = 0; i < f.rails; i++) {
+      for (const rail of this.railInstances.get(f.railDressing[i]!) ?? []) {
+        this.railMatrix.copy(rail.rest);
+        this.railMatrix.elements[12]! += rail.normal.x * f.railOffset[i]!;
+        this.railMatrix.elements[14]! += rail.normal.z * f.railOffset[i]!;
+        im.setMatrixAt(rail.index, this.railMatrix);
+      }
+    }
+    if (f.rails) im.instanceMatrix.needsUpdate = true;
+  }
+
+  /** R90: the matrices actually drawn, rather than the map's rest poses. */
+  railPoses(): { dressing: number; instance: number; position: number[] }[] {
+    const im = this.kit.get('wayfinding/guard-rail');
+    const out: { dressing: number; instance: number; position: number[] }[] = [];
+    if (im) for (const [dressing, instances] of this.railInstances) for (const rail of instances) {
+      im.getMatrixAt(rail.index, this.railMatrix);
+      out.push({ dressing, instance: rail.index, position: this.railMatrix.elements.slice(12, 15) });
+    }
+    return out;
+  }
 
   /** `repeat`: draw the dressing this many times over (offset copies), to show draws don't grow with placements. */
   constructor(
@@ -189,6 +287,11 @@ export class MapRenderer {
     const lift = 0.05;
     const edge = 0.3;
     const segs = r.closed ? p.length : p.length - 1;
+    const elevated = new Set<number>();
+    for (const f of this.map.features) if (f.kind === 'bridge') {
+      const ix = bridgeIndices(this.map,f.params);
+      for (const i of ix.slice(0,-1)) elevated.add(i);
+    }
     // A point at lateral offset `off` from route point `k`, `y` above the ground the sim collides with there (the road lies
     // on the heightfield, so a ramp narrower than the road, or a banked corner, never leaves the ribbon floating).
     const rail = (k: number, off: number, y: number) => {
@@ -198,6 +301,8 @@ export class MapRenderer {
       return [x, this.groundAt(x, z) + y, z];
     };
     for (let k = 0; k < segs; k++) {
+      // The explicit upper deck supplies its road. Never draw that span as a second ribbon on the lower terrain.
+      if (elevated.has(k)) continue;
       const a = p[k]!;
       const b = p[(k + 1) % p.length]!;
       const [wa, wb] = [mm(a.width) / 2, mm(b.width) / 2];
@@ -252,18 +357,133 @@ export class MapRenderer {
     return { point: p[best]!, left: [nx, nz] as const, fwd: [-nz, nx] as const };
   }
 
+  /** Index of the route point nearest (x, z) mm. */
+  private nearestIndex(x: number, z: number): number {
+    let best = 0;
+    let d = Infinity;
+    this.map.route.points.forEach((q, k) => {
+      const dd = (q.x - x) ** 2 + (q.z - z) ** 2;
+      if (dd < d) [d, best] = [dd, k];
+    });
+    return best;
+  }
+
+  /** The point `u` metres along the route polyline from point `base`, with its unit tangent (jj-map `jump.rs` `along`). */
+  private routeAlong(base: number, u: number): { x: number; z: number; tx: number; tz: number } {
+    const p = this.map.route.points;
+    const n = p.length;
+    let rest = Math.max(u, 0);
+    for (let i = base, guard = 0; ; i++, guard++) {
+      const openEnd = !this.map.route.closed && i + 1 >= n;
+      const a = openEnd ? p[n - 2]! : p[i % n]!;
+      const b = openEnd ? p[n - 1]! : p[(i + 1) % n]!;
+      const [dx, dz] = [mm(b.x - a.x), mm(b.z - a.z)];
+      const len = Math.max(Math.hypot(dx, dz), 1e-9);
+      if (openEnd || rest <= len || guard > n) {
+        const o = openEnd ? b : a;
+        const [tx, tz] = [dx / len, dz / len];
+        return { x: mm(o.x) + tx * rest, z: mm(o.z) + tz * rest, tx, tz };
+      }
+      rest -= len;
+    }
+  }
+
+  private jumpFrame(base: number, u: number, pose?: Pose): { x: number; z: number; tx: number; tz: number } {
+    if (!pose) return this.routeAlong(base, u);
+    const angle = pose.yaw / 100 * Math.PI / 180;
+    const [tx, tz] = [Math.cos(angle), Math.sin(angle)];
+    return { x: mm(pose.x) + tx * u, z: mm(pose.z) + tz * u, tx, tz };
+  }
+
+  /** A sharp jump's surface: the same triangles the sim collides with (jj-map `jump_mesh`): cross-sections every 25 cm up the
+   *  ramp, then the table and the landing ramp, plus the table's front skirt at the lip. */
+  private jumpMesh(s: Soup, d: JumpDesign, base: number, pose?: Pose): void {
+    const colour = '#c08a5a';
+    const section = (u: number, w: number): number[][] =>
+      [-w / 2 - EDGE_SLOPE, -w / 2, w / 2, w / 2 + EDGE_SLOPE].map((lat) => {
+        const r = this.jumpFrame(base, u, pose);
+        const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
+        return [x, this.groundAt(x, z) + jumpProfile(d, u) * jumpSide(w, lat), z];
+      });
+    // Counter-clockwise from above, whatever order the corners came in.
+    const tri = (a: number[], b: number[], c: number[]) => {
+      const ny = (b[2]! - a[2]!) * (c[0]! - a[0]!) - (b[0]! - a[0]!) * (c[2]! - a[2]!);
+      if (ny >= 0) s.tri(a, b, c, colour);
+      else s.tri(a, c, b, colour);
+    };
+    const strip = (a: number[][], b: number[][]) => {
+      for (let j = 0; j < 3; j++) {
+        tri(a[j]!, b[j]!, a[j + 1]!);
+        tri(a[j + 1]!, b[j]!, b[j + 1]!);
+      }
+    };
+    const steps = Math.ceil(d.ramp / 0.25);
+    let prev = section(0, d.rampW);
+    for (let k = 1; k <= steps; k++) {
+      const next = section((d.ramp * k) / steps, d.rampW);
+      strip(prev, next);
+      prev = next;
+    }
+    if (d.launchOnly) return;
+    prev = section(d.ramp, d.landW);
+    const skirt = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
+    for (let j = 0; j < 3; j++) {
+      tri(prev[j]!, skirt[j]!, prev[j + 1]!);
+      tri(prev[j + 1]!, skirt[j]!, skirt[j + 1]!);
+    }
+    const tableSteps = Math.max(1, Math.ceil(d.table / .25));
+    for (let k = 1; k <= tableSteps; k++) {
+      const next = section(d.ramp + d.table * k / tableSteps, d.landW);
+      strip(prev, next);
+      prev = next;
+    }
+    const downSteps = Math.ceil(d.down / .25);
+    for (let k = 1; k <= downSteps; k++) {
+      const next = section(d.ramp + d.table + d.down * k / downSteps, d.landW);
+      strip(prev, next);
+      prev = next;
+    }
+  }
+
   /** The core's features as painted markings and ramp walls on the ground they lie on (never floating pads): a jump is a ramp
    *  with low stone walls along its sides and white lines across it; a creek dip is a muddy wash; crests and whoops show as
    *  the ground itself. Everything follows the heightfield. */
   private features(): Mesh {
     const s = new Soup();
-    for (const f of this.map.features) {
+    for (const [feature, f] of this.map.features.entries()) {
+      if (f.kind === 'bridge') {
+        const mesh = bridgeMesh(this.map,f.params);
+        if (mesh) {
+          const from = s.pos.length;
+          for (const [i,tri] of mesh.triangles.entries()) {
+            const colour = mesh.beams[i] ? '#f2efe6' : SURFACE_COLOURS[mesh.surfaces[i]!] ?? SURFACE_COLOURS.tarmac!;
+            s.tri(mesh.vertices[tri[0]!]!,mesh.vertices[tri[1]!]!,mesh.vertices[tri[2]!]!,colour);
+          }
+          this.bridgeRanges.push({feature,from,to:s.pos.length});
+        }
+        continue;
+      }
+      // The derby bowl (P1-M10) is its own revolved mesh, the sim's triangles: no route to follow.
+      if (f.kind === 'bowl') {
+        const bowl = bowlDesign(f.pose, f.params);
+        if (bowl) bowlQuads(bowl, (a, b, c, d, colour) => s.quad(a, b, c, d, colour));
+        continue;
+      }
       const near = this.nearest(f.pose.x, f.pose.z);
       const [fx, fz] = near.fwd;
       const [lx, lz] = near.left;
       const ox = mm(f.pose.x);
       const oz = mm(f.pose.z);
+      // A sharp jump follows the route's polyline and stands above the ground by its exact height (see `jumpMesh`).
+      const design = f.kind === 'jump' ? jumpDesign(f.params) : null;
+      const base = design ? this.nearestIndex(f.pose.x, f.pose.z) : 0;
+      const freePose = design?.launchOnly ? f.pose : undefined;
       const at = (along: number, lat: number, lift: number): number[] => {
+        if (design) {
+          const r = this.jumpFrame(base, along, freePose);
+          const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
+          return [x, this.groundAt(x, z) + jumpHeight(design, along, lat) + lift, z];
+        }
         const [x, z] = [ox + fx * along + lx * lat, oz + fz * along + lz * lat];
         return [x, this.groundAt(x, z) + lift, z];
       };
@@ -291,6 +511,11 @@ export class MapRenderer {
           s.quad(top(a0, l1), top(a1, l1), foot(a1, l1), foot(a0, l1), '#7a3a26');
         }
       };
+      if (design) {
+        const from = s.pos.length;
+        this.jumpMesh(s, design, base, freePose);
+        this.jumpRanges.push({ feature, from, to: s.pos.length });
+      }
       if (f.kind === 'jump') {
         const ramp = mm(f.params.rampLengthMm ?? 8000);
         const width = mm(f.params.rampWidthMm ?? 4500) / 2;
@@ -310,12 +535,12 @@ export class MapRenderer {
   }
 
   private dressing(repeat: number): number {
-    const byType = new Map<string, { pose: Pose; params: Params }[]>();
+    const byType = new Map<string, { pose: Pose; params: Params; dressing: number }[]>();
     for (let r = 0; r < repeat; r++) {
-      for (const d of this.map.dressing) {
+      for (const [dressing, d] of this.map.dressing.entries()) {
         // Copies shift 3 m sideways per repeat: a draw-count probe, never a shipped placement.
         const pose = r === 0 ? d.pose : { ...d.pose, x: d.pose.x + r * 3000, z: d.pose.z + r * 3000 };
-        (byType.get(d.kitPiece) ?? byType.set(d.kitPiece, []).get(d.kitPiece)!).push({ pose, params: d.params ?? {} });
+        (byType.get(d.kitPiece) ?? byType.set(d.kitPiece, []).get(d.kitPiece)!).push({ pose, params: d.params ?? {}, dressing });
       }
     }
     const m = new Matrix4();
@@ -332,9 +557,14 @@ export class MapRenderer {
       im.castShadow = true;
       im.receiveShadow = true;
       im.frustumCulled = false;
-      list.forEach(({ pose, params }, i) => {
+      list.forEach(({ pose, params, dressing }, i) => {
         const p = withDefaults(entry, params);
         im.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.scale(p))));
+        if (id === 'wayfinding/guard-rail') {
+          const instances = this.railInstances.get(dressing) ?? [];
+          instances.push({ index: i, rest: m.clone(), normal: new Vector3(0, 0, 1).applyQuaternion(q) });
+          this.railInstances.set(dressing, instances);
+        }
       });
       this.kit.set(id, im);
       this.group.add(im);
@@ -344,16 +574,23 @@ export class MapRenderer {
         this.group.add(hull.mesh);
       }
       if (mod.decor) {
-        const d = new InstancedMesh(mod.decor.geometry(), mod.decor.face ? this.faceMaterial : this.material, list.length);
-        d.name = `${id}.decor`;
-        d.castShadow = true;
-        d.frustumCulled = false;
-        list.forEach(({ pose, params }, i) => {
-          const p = withDefaults(entry, params);
-          d.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y) + mod.decor!.lift(p), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.decor!.scale(p))));
-        });
-        this.decor.set(id, d);
-        this.group.add(d);
+        const variants = new Map<string, typeof list>();
+        for (const item of list) {
+          const variant = mod.decor.variant?.(withDefaults(entry, item.params)) ?? '';
+          (variants.get(variant) ?? variants.set(variant, []).get(variant)!).push(item);
+        }
+        for (const [variant, instances] of variants) {
+          const d = new InstancedMesh(mod.decor.geometry(variant), mod.decor.face ? this.faceMaterial : this.material, instances.length);
+          d.name = `${id}.decor`;
+          d.castShadow = true;
+          d.frustumCulled = false;
+          instances.forEach(({ pose, params }, i) => {
+            const p = withDefaults(entry, params);
+            d.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y) + mod.decor!.lift(p), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.decor!.scale(p))));
+          });
+          this.decor.set(variant ? `${id}:${variant}` : id, d);
+          this.group.add(d);
+        }
       }
       total += list.length;
     }

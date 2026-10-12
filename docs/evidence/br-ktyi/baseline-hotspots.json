@@ -1,0 +1,40 @@
+{
+  "sampleCount": 32363,
+  "profileSha256": "c88f526ced06ef3e7f4d558f78a4840bf7158c697451b0fc988ea61f8cdfcf9a",
+  "selfUs": {
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 41068771,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 4116001,
+    "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 3320032,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 545873,
+    "libm[f079cffcae4a324f]::math::sqrt::sqrt": 495754,
+    "__multi3": 329026,
+    "jj_procgen[51dd9ee2394ba8a4]::terrain::undulate_along": 312536,
+    "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 239074,
+    "": 213357,
+    "libm[f079cffcae4a324f]::math::hypot::hypot": 172733,
+    "libm[f079cffcae4a324f]::math::rem_pio2::rem_pio2": 110880,
+    "jj_procgen[51dd9ee2394ba8a4]::course::self_clear": 87920
+  },
+  "inclusiveUs": {
+    "(root)": 52233263,
+    "": 50532647,
+    "js-to-wasm": 50227872,
+    "prepare": 50214575,
+    "jj_wasm_procgen[84ad8ed6936a98a9]::prepare_tuned": 50213081,
+    "prepare multivalue shim": 50213081,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned": 49992716,
+    "jj_procgen[51dd9ee2394ba8a4]::playtest::prepare_data": 49992716,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned::{closure#0}": 49978102,
+    "jj_procgen[51dd9ee2394ba8a4]::validate::check": 47666629,
+    "jj_map[89926c83db9c7924]::validate::validate": 47622532,
+    "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 47400029,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 44372942,
+    "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 41068771,
+    "jj_procgen[51dd9ee2394ba8a4]::generate_tuned_from": 2311473,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::scatter_masked": 1368709,
+    "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 737149,
+    "libm[f079cffcae4a324f]::math::sqrt::sqrt": 559459,
+    "libm[f079cffcae4a324f]::math::hypot::hypot": 501698,
+    "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 468956
+  }
+}

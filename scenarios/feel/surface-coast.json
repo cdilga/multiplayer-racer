@@ -1,0 +1,186 @@
+{
+ "scenario": "surface-coast",
+ "what": "R124 (br-xlvx.1): five Cruz Missiles coast at 20 m/s (a 0.17 s throttle blip to hold speed, then no input) for 0.83 s on off-track, tarmac, packed dirt, gravel and rock (maps/test/surface-strips.json). Rolling drag follows the ground under each wheel, so speed lost is fastest off-track, then gravel, then dirt, then rock, then bitumen.",
+ "map": "maps/test/surface-strips.json",
+ "seed": 17,
+ "ticks": 100,
+ "cars": [
+  {
+   "pose": {
+    "x": 2,
+    "y": 0.1,
+    "z": -38,
+    "headingDeg": 90
+   },
+   "linvel": [
+    20,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 2,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    20,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 42,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    20,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 82,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    20,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 122,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    20,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 20,
+   "throttle": 1.0
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "toTick": 20,
+   "throttle": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "toTick": 20,
+   "throttle": 1.0
+  },
+  {
+   "car": 3,
+   "fromTick": 0,
+   "toTick": 20,
+   "throttle": 1.0
+  },
+  {
+   "car": 4,
+   "fromTick": 0,
+   "toTick": 20,
+   "throttle": 1.0
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "speed",
+   "min": 16.1,
+   "max": 17.0
+  },
+  {
+   "car": 3,
+   "metric": "speed",
+   "min": 17.1,
+   "max": 17.7
+  },
+  {
+   "car": 2,
+   "metric": "speed",
+   "min": 17.7,
+   "max": 18.1
+  },
+  {
+   "car": 4,
+   "metric": "speed",
+   "min": 18.15,
+   "max": 18.7
+  },
+  {
+   "car": 1,
+   "metric": "speed",
+   "min": 18.15,
+   "max": 18.7
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 2,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 3,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 4,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 1,
+    "metric": "speed",
+    "by": 0.3
+   },
+   {
+    "car": 0,
+    "metric": "speed",
+    "by": 0.3
+   }
+  ]
+ }
+}

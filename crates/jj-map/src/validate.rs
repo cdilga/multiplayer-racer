@@ -26,6 +26,25 @@ pub mod limits {
     pub const MIN_BYPASS_WIDTH_MM: f64 = 4_000.0;
     pub const MIN_RAMP_LENGTH_MM: i64 = 3_000;
     pub const MAX_LIP_HEIGHT_CM: i64 = 300;
+    /// A jump is landable when a car leaving its lip at this speed comes down inside its landing (owner playtest 1):
+    /// the autopilot's top speed, so a racing line never flies past the reserved landing into whatever comes next.
+    pub const JUMP_DESIGN_SPEED_MPS: f64 = 26.0;
+
+    /// How far (m) past the end of its ramp a car leaving a jump's lip at `speed_mps` comes back down to the road's
+    /// level: a ballistic flight from the lip's height at the ramp's angle (no drag, g = 9.81).
+    pub fn jump_flight_m(lip_cm: i64, ramp_mm: i64, speed_mps: f64) -> f64 {
+        jump_flight_kicker_m(lip_cm, ramp_mm, speed_mps, 1.0)
+    }
+
+    /// [`jump_flight_m`] for a ramp whose height grows as (u/l)^`kicker`: the car leaves the lip at the ramp's end
+    /// slope, `kicker` times the mean slope (a straight wedge is 1).
+    pub fn jump_flight_kicker_m(lip_cm: i64, ramp_mm: i64, speed_mps: f64, kicker: f64) -> f64 {
+        let (h, l) = (lip_cm as f64 / 100.0, (ramp_mm as f64 / 1000.0).max(1e-6));
+        let a = libm::atan(kicker * h / l);
+        let (vx, vy) = (speed_mps * libm::cos(a), speed_mps * libm::sin(a));
+        let t = (vy + libm::sqrt(vy * vy + 2.0 * 9.81 * h)) / 9.81;
+        vx * t
+    }
     /// A kerb across the road stays drivable.
     pub const MAX_KERB_HEIGHT_CM: i64 = 20;
     /// Start grid: rows and columns no tighter than a car needs.
@@ -66,6 +85,12 @@ pub enum Rule {
     RegistryCollider,
     RegistrySchema,
     GameplayHash,
+    /// A derby bowl's profile, size or footprint breaks the arena rules (P1-M10).
+    Arena,
+    /// A declared house-roof landing cannot receive its aimed kicker at design speed.
+    RoofReach,
+    /// A bridge's deck, ramp grade or lower-road clearance breaks the crossing contract (R124).
+    Crossing,
 }
 
 impl Rule {
@@ -95,6 +120,9 @@ impl Rule {
             Self::RegistryCollider => "registry-collider",
             Self::RegistrySchema => "registry-schema",
             Self::GameplayHash => "gameplay-hash",
+            Self::Arena => "arena",
+            Self::RoofReach => "roof-reach",
+            Self::Crossing => "crossing",
         }
     }
 }
@@ -328,7 +356,24 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                 .map(|(a, b)| a.0 * b.1 - b.0 * a.1)
                 .sum::<f64>()
                 / 2.0;
-            if area.abs() < MIN_GATE_LOOP_AREA_MM2 {
+            // Grade-separated figure-8 lobes turn in opposite directions and can cancel their signed area. Their
+            // ordered gates still enclose two real lobes. Keep the old winding check for undeclared crossings;
+            // a bridge additionally earns its geometry/clearance through the Crossing rule below.
+            let enclosed = if map.features.iter().any(|f| f.kind == FeatureKind::Bridge) {
+                let centre = pts.iter().fold((0.0, 0.0), |s, p| (s.0 + p.0, s.1 + p.1));
+                let centre = (centre.0 / pts.len() as f64, centre.1 / pts.len() as f64);
+                pts.iter()
+                    .zip(pts.iter().cycle().skip(1))
+                    .map(|(a, b)| {
+                        ((a.0 - centre.0) * (b.1 - centre.1) - (b.0 - centre.0) * (a.1 - centre.1))
+                            .abs()
+                    })
+                    .sum::<f64>()
+                    / 2.0
+            } else {
+                area.abs()
+            };
+            if enclosed < MIN_GATE_LOOP_AREA_MM2 {
                 add(
                     &mut v,
                     Rule::GateWinding,
@@ -472,6 +517,12 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
         let nr = geom.nearest(f64::from(f.pose.x), f64::from(f.pose.z));
         match f.kind {
             FeatureKind::Jump => {
+                if f.params.contains_key("roofTarget") {
+                    for detail in crate::roof::problems(map, f) {
+                        add(&mut v, Rule::RoofReach, &at, detail);
+                    }
+                    continue;
+                }
                 let Some(p) = need(
                     &[
                         "rampLengthMm",
@@ -531,6 +582,60 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                         ),
                     );
                 }
+                // The lip is steeper than the mean slope by the blend at the ramp's foot (`blendMm`, 0 for a straight wedge).
+                let kicker = f.params.get("blendMm").map_or(1.0, |&b| {
+                    ramp_len as f64 / (ramp_len as f64 - b as f64 / 2.0).max(1.0)
+                });
+                let flight = jump_flight_kicker_m(lip, ramp_len, JUMP_DESIGN_SPEED_MPS, kicker);
+                if f.params.get("sharp") == Some(&1)
+                    && let Some(shape) =
+                        need(&["tableLengthMm", "downSlopeMilli", "blendMm"], &mut v)
+                {
+                    let (table, slope, blend) = (shape[0], shape[1], shape[2]);
+                    let down_blend = f.params.get("downBlendMm").copied().unwrap_or(0);
+                    if table < 0
+                        || slope <= 0
+                        || blend < 0
+                        || blend > ramp_len
+                        || down_blend < 0
+                        || (slope > 0
+                            && down_blend as f64 > 2.0 * lip as f64 * 10_000.0 / slope as f64)
+                    {
+                        add(
+                            &mut v,
+                            Rule::FeatureParams,
+                            &at,
+                            "invalid sharp jump table, descent or transition".into(),
+                        );
+                    } else {
+                        let receiving_mm = table as f64
+                            + lip as f64 * 10_000.0 / slope as f64
+                            + down_blend as f64 / 2.0;
+                        if receiving_mm < flight * 1000.0 || receiving_mm > land_len as f64 {
+                            add(
+                                &mut v,
+                                Rule::LandingEnvelope,
+                                &at,
+                                format!(
+                                    "physical landing ends {:.1} m past the lip: needs to cover the {flight:.1} m flight inside its {:.1} m envelope",
+                                    receiving_mm / 1000.0,
+                                    land_len as f64 / 1000.0
+                                ),
+                            );
+                        }
+                    }
+                }
+                if flight * 1000.0 > land_len as f64 {
+                    add(
+                        &mut v,
+                        Rule::LandingEnvelope,
+                        &at,
+                        format!(
+                            "a car at {JUMP_DESIGN_SPEED_MPS} m/s flies {flight:.1} m past the ramp, beyond its {:.1} m landing",
+                            land_len as f64 / 1000.0
+                        ),
+                    );
+                }
                 if !geom.closed() && s1 > geom.total {
                     add(
                         &mut v,
@@ -580,6 +685,16 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                     -nr.half,
                     nr.half,
                 ));
+            }
+            FeatureKind::Bowl => {
+                for detail in crate::arena::problems(map, f) {
+                    add(&mut v, Rule::Arena, &at, detail);
+                }
+            }
+            FeatureKind::Bridge => {
+                for detail in crate::bridge::problems(map, f) {
+                    add(&mut v, Rule::Crossing, &at, detail);
+                }
             }
             FeatureKind::Crest | FeatureKind::Whoops | FeatureKind::CreekDip => {}
         }

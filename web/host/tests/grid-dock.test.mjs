@@ -1,9 +1,11 @@
+// Artifacts default to OS scratch; set JJ_EVIDENCE_DIR / JJ_EVIDENCE / JJ_CAPTURE_DIR explicitly to recapture a committed receipt.
+import { evidencePath } from '../../tests/lib/evidence.mjs';
 // P1-R04.3 browser test: the race grid fills the display above the footer, and with no spare cell the join QR and the
 // positions dock in the footer instead of taking a strip from the tiles (owner POC round 5). Fixture rooms
 // (`host/?roundfixture=race-N`), real host build, Chromium.
 // Run on eris (no browsers on the Mac): needs the web build (npx vite build; JJ_DIST overrides web/dist).
 //   node --test web/host/tests/grid-dock.test.mjs
-// Captures go to docs/evidence/P1-R04.3 (JJ_EVIDENCE_DIR overrides); JJ_NO_CAPTURES=1 skips them.
+// Explicit captures can go to docs/evidence/P1-R04.3 (set JJ_EVIDENCE_DIR explicitly; default OS scratch); JJ_NO_CAPTURES=1 skips them.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -12,7 +14,7 @@ import { chromium } from 'playwright';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R04.3');
+const evidenceDir = evidencePath('P1-R04.3');
 let browser;
 let server;
 before(async () => {

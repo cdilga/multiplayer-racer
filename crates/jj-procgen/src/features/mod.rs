@@ -5,10 +5,11 @@
 //! - **Sites** are drawn from the `features` stream along straight stretches (a turn budget over the whole envelope),
 //!   clear of the start corridor, of each other, and of the lap seam. Counts come from a per-biome density per km of
 //!   route (data, not a cap); a site that can't be found in 64 draws is skipped.
-//! - **Jump** (standard): a 4 m wide ramp centred on the route (the standard line goes over it), 4 m of bypass either
-//!   side (the validator's rule), a 12 m entry straight, 24+ m of landing flat of features. A gentle ramp (slope
-//!   <= 8 %) so a car at autopilot speed flies a few metres and lands on its wheels. Harder jumps are a later opt-in;
-//!   nothing generates them yet.
+//! - **Jump** (standard, a tabletop since owner playtest 1 found the old 8 % wedge flat): a 4 m wide ramp centred on
+//!   the route (the standard line goes over it) up to a 1.1-2.1 m lip (slope 0.16-0.21, ramp 7-10 m), a table at lip height, then a landing ramp back
+//!   down to the road, 6 m wide with sloped sides; 4 m of bypass either side (the validator's rule) and a 12 m entry
+//!   straight. Too slow and the car lands on the table; at speed it lands on the down-slope; the landing length covers
+//!   the flight at the validator's design speed (jj-map's landability rule). Huge jumps are R124's later opt-in.
 //! - **Crest / creek dip**: a raised-cosine hump or hollow across the whole road; **whoops**: a run of sine bumps under a
 //!   raised-sine envelope. Limits are in [`LIMITS`]: grade and vertical curvature a car at 25 m/s stays grounded over.
 //! - **Heights** are written to the grid, and route `y` follows the new ground. The recovery spans leave out each jump's
@@ -31,10 +32,20 @@ pub struct Limits {
     pub jump_lip_cm: (i64, i64),
     pub jump_ramp_width_mm: i64,
     pub jump_landing_m: (f64, f64),
+    /// The tabletop's flat top after the lip, m.
+    pub jump_table_m: (f64, f64),
+    /// The landing ramp's slope back down to the road (fall over run).
+    pub jump_down_slope: f64,
+    /// Concave transition at the ramp's foot, m (a parabola into the ramp's slope; the lip is that much steeper).
+    pub jump_blend_m: f64,
     /// Steepest ramp (rise over run).
     pub jump_ramp_slope: f64,
+    /// Gentlest ramp: below it a tabletop barely launches a car.
+    pub jump_min_ramp_slope: f64,
     /// Steepest natural road grade across a jump's whole envelope.
     pub jump_road_grade: f64,
+    /// Turning across the approach and ramp, radians (quantization tolerance for a straight).
+    pub jump_entry_turn: f64,
     /// Straight run before the ramp's base, m.
     pub entry_m: f64,
     /// Grade and vertical curvature (1/m) any non-jump piece may add; a car at 25 m/s stays grounded at 0.0157.
@@ -50,12 +61,17 @@ pub struct Limits {
 }
 
 pub const LIMITS: Limits = Limits {
-    jump_ramp_m: (8.0, 12.0),
-    jump_lip_cm: (30, 60),
+    jump_ramp_m: (7.0, 10.0),
+    jump_lip_cm: (110, 210),
     jump_ramp_width_mm: 4_000,
-    jump_landing_m: (24.0, 32.0),
-    jump_ramp_slope: 0.08,
+    jump_landing_m: (34.0, 46.0),
+    jump_table_m: (4.0, 8.0),
+    jump_down_slope: 0.16,
+    jump_blend_m: 3.0,
+    jump_ramp_slope: 0.21,
+    jump_min_ramp_slope: 0.16,
     jump_road_grade: 0.045,
+    jump_entry_turn: 0.01,
     entry_m: 12.0,
     max_grade: 0.16,
     max_curvature: 0.012,
@@ -188,7 +204,22 @@ pub fn place(map: &mut Map, rng: &mut Rng, biome: Biome) {
 /// [`place`] for a route that crosses biomes: `ranges` are `(from, to)` arc lengths (m) with the density that applies
 /// there. A piece's whole envelope stays inside one range, so no piece straddles a biome boundary.
 pub fn place_in(map: &mut Map, rng: &mut Rng, ranges: &[(f64, f64, Density)]) {
-    map.features.clear();
+    place_in_tuned(
+        map,
+        rng,
+        ranges,
+        crate::tuning::GeneratorData::shipped().jumps,
+    );
+}
+
+/// The same placement with explicit generator jump data (owner tuning).
+pub fn place_in_tuned(
+    map: &mut Map,
+    rng: &mut Rng,
+    ranges: &[(f64, f64, Density)],
+    jumps: crate::tuning::JumpData,
+) {
+    map.features.retain(|f| f.kind == FeatureKind::Bridge);
     let line = Line::new(map);
     // Counts per range: whole expected number plus one more with the fractional probability.
     let mut kinds: Vec<(FeatureKind, f64, f64)> = Vec::new();
@@ -208,7 +239,7 @@ pub fn place_in(map: &mut Map, rng: &mut Rng, ranges: &[(f64, f64, Density)]) {
     let mut zones: Vec<Zone> = Vec::new();
     for (kind, from, to) in kinds {
         for _ in 0..ATTEMPTS {
-            let params = draw_params(kind, rng);
+            let params = draw_params(kind, rng, jumps);
             let span = zone_of(kind, 0.0, &params);
             let lo = from.max(LIMITS.earliest_m) + (span.base - span.from);
             let hi = to.min(line.total - LIMITS.seam_m) - (span.to - span.base);
@@ -250,31 +281,71 @@ fn mm(v: f64) -> i32 {
     libm::round(v * 1000.0) as i32
 }
 
-fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
+fn draw_params(
+    kind: FeatureKind,
+    rng: &mut Rng,
+    jumps: crate::tuning::JumpData,
+) -> BTreeMap<String, i64> {
     let mut p = BTreeMap::new();
     let whole =
         |rng: &mut Rng, lo: f64, hi: f64, step: f64| libm::round(rng.range(lo, hi) / step) as i64;
     match kind {
         FeatureKind::Jump => {
-            p.insert(
-                "rampLengthMm".into(),
-                whole(rng, LIMITS.jump_ramp_m.0, LIMITS.jump_ramp_m.1, 0.5) * 500,
-            );
+            // The ramp's length and slope are drawn and the lip follows: no shallow ramp (on a tabletop the air time is
+            // 2·v·sin(angle)/g, so a gentle ramp is a flat jump, owner playtest 1), and the ramp spans at least three
+            // cells of the 2.5 m height grid (a shorter one bakes lumpy and barely launches).
+            let ramp_mm = whole(rng, LIMITS.jump_ramp_m.0, LIMITS.jump_ramp_m.1, 0.5) * 500;
+            let slope = rng.range(jumps.min_ramp_slope, jumps.max_ramp_slope);
+            let lip = (libm::floor(ramp_mm as f64 / 1000.0 * slope * 20.0) as i64 * 5)
+                .clamp(LIMITS.jump_lip_cm.0, LIMITS.jump_lip_cm.1);
+            p.insert("rampLengthMm".into(), ramp_mm);
             p.insert("rampWidthMm".into(), LIMITS.jump_ramp_width_mm);
+            p.insert("lipHeightCm".into(), lip);
             p.insert(
-                "lipHeightCm".into(),
-                whole(
-                    rng,
-                    LIMITS.jump_lip_cm.0 as f64,
-                    LIMITS.jump_lip_cm.1 as f64,
-                    5.0,
-                ) * 5,
+                "tableLengthMm".into(),
+                whole(rng, LIMITS.jump_table_m.0, LIMITS.jump_table_m.1, 1.0) * 1000,
             );
+            // The landing reaches past the flight at the validator's design speed, with 4 m to spare.
+            let flight = jj_map::limits::jump_flight_kicker_m(
+                lip,
+                p["rampLengthMm"],
+                jj_map::limits::JUMP_DESIGN_SPEED_MPS,
+                ramp_mm as f64 / (ramp_mm as f64 - LIMITS.jump_blend_m * 500.0),
+            );
+            // The reserved landing length alone is not a landing surface. Previously the short sampled table
+            // and down-ramp ended well before the design flight, leaving a boosted car to hit flat road at full
+            // descent speed. Keep a level receiving surface through the design flight, then transition back to
+            // the road beyond it. Landing and the turn back to flat ground are separate parts of the envelope.
+            // The landing's foot observes the same vertical-curvature budget as the road. An abrupt change from
+            // a 16% descent to flat ground bottoms the suspension and pitches a boosted car over its nose.
+            // Low lips need a shallower descent so its concave transition fits below the table height.
+            let down_slope_milli = libm::floor(
+                LIMITS
+                    .jump_down_slope
+                    .min(libm::sqrt(2.0 * lip as f64 / 100.0 * LIMITS.max_curvature))
+                    * 1000.0,
+            ) as i64;
+            let down_slope = down_slope_milli as f64 / 1000.0;
+            let down_blend_mm = libm::floor(down_slope / LIMITS.max_curvature * 1000.0) as i64;
+            let down_run = lip as f64 / 100.0 / down_slope + down_blend_mm as f64 / 2000.0;
+            let table_mm = libm::ceil(flight * 1000.0) as i64;
+            p.entry("tableLengthMm".into())
+                .and_modify(|length| *length = (*length).max(table_mm));
+            let land = whole(rng, LIMITS.jump_landing_m.0, LIMITS.jump_landing_m.1, 1.0) * 1000;
             p.insert(
                 "landingLengthMm".into(),
-                whole(rng, LIMITS.jump_landing_m.0, LIMITS.jump_landing_m.1, 1.0) * 1000,
+                land.max(libm::ceil(table_mm as f64 + (down_run + 4.0) * 1000.0) as i64),
             );
             p.insert("landingWidthMm".into(), 6_000);
+            // Sharp geometry (jj_map::jump): the sim collides with, and the renderer draws, the exact ramp, table and
+            // landing ramp instead of a 2.5 m grid's rounding of them.
+            p.insert("sharp".into(), 1);
+            p.insert("downBlendMm".into(), down_blend_mm);
+            p.insert(
+                "blendMm".into(),
+                libm::round(LIMITS.jump_blend_m * 1000.0) as i64,
+            );
+            p.insert("downSlopeMilli".into(), down_slope_milli);
         }
         FeatureKind::Crest => {
             let len = whole(rng, 30.0, 60.0, 5.0) * 5;
@@ -294,7 +365,7 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
             p.insert("lengthMm".into(), whole(rng, 16.0, 24.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
-        FeatureKind::Kerb => {}
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
     }
     p
 }
@@ -327,6 +398,14 @@ fn zone_ok(map: &Map, line: &Line, kind: FeatureKind, z: &Zone, taken: &[Zone]) 
         return false;
     }
     if kind == FeatureKind::Jump {
+        // The whole-envelope budget allows a gentle bend on the receiving surface, but the entry and ramp must
+        // share a heading. A 6-degree turn inside the nominal 12 m entry launched seed 9 diagonally: a longer
+        // flight drifted 3.7 m sideways onto the landing's sloped edge. Keep the promised straight approach through
+        // the lip; 0.01 rad allows millimetre-quantized route tangents without treating a corner as a straight.
+        let ramp_end = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+        if line.turn(i0, ramp_end) > LIMITS.jump_entry_turn {
+            return false;
+        }
         let worst = (i0..i1)
             .map(|i| {
                 libm::fabs(line.y(map, i + 1) - line.y(map, i))
@@ -356,14 +435,31 @@ fn delta(
     };
     match kind {
         FeatureKind::Jump => {
-            let (l, lip) = (get("rampLengthMm") / 1000.0, get("lipHeightCm") / 100.0);
-            let w = get("rampWidthMm") / 1000.0;
-            if !(0.0..=l).contains(&u) {
+            // Jumps with `sharp` geometry are not written into the grid at all (see `bake`).
+            if p.get("sharp") == Some(&1) {
                 return 0.0;
             }
-            // A ramp one cell wide at the edges: the window tapers over a grid spacing.
-            let side = ((w / 2.0 - libm::fabs(lat)) / spacing + 0.5).clamp(0.0, 1.0);
-            lip * u / l * side
+            let (l, lip) = (get("rampLengthMm") / 1000.0, get("lipHeightCm") / 100.0);
+            let (table, down) = (get("tableLengthMm") / 1000.0, lip / LIMITS.jump_down_slope);
+            let (w, lw) = (get("rampWidthMm") / 1000.0, get("landingWidthMm") / 1000.0);
+            if u < 0.0 || u > l + table + down {
+                return 0.0;
+            }
+            if u <= l {
+                // The ramp, one cell wide at the edges: the window tapers over a grid spacing.
+                let side = ((w / 2.0 - libm::fabs(lat)) / spacing + 0.5).clamp(0.0, 1.0);
+                // A kicker: steeper toward the lip (height ∝ (u/l)^1.6), so the take-off survives the 2.5 m grid.
+                return lip * libm::pow(u / l, 1.6) * side;
+            }
+            // The table and the landing ramp: wider than the ramp, their sides sloping down over 1.5 m so a car that
+            // lands off the line drives off them instead of dropping off a wall.
+            let side = ((lw / 2.0 + 1.5 - libm::fabs(lat)) / 1.5).clamp(0.0, 1.0);
+            let h = if u <= l + table {
+                lip
+            } else {
+                lip * (1.0 - (u - l - table) / down)
+            };
+            h * side
         }
         FeatureKind::Crest | FeatureKind::CreekDip => {
             let len = get("lengthMm") / 1000.0;
@@ -390,7 +486,7 @@ fn delta(
                 * libm::sin(core::f64::consts::TAU * u / pitch)
                 * road_wide()
         }
-        FeatureKind::Kerb => 0.0,
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => 0.0,
     }
 }
 
@@ -443,19 +539,31 @@ fn bake(map: &mut Map, line: &Line) {
         let now = ground_height_m(&map.terrain, x, z);
         q.y += libm::round((now - was) * 1000.0) as i32;
     }
+    // The road over a sharp jump follows its centerline profile exactly (the grid carries none of it).
+    for f in &map.features {
+        let Some(d) = jj_map::jump::JumpDesign::of(f) else {
+            continue;
+        };
+        let base = zone_base(line, f);
+        for (i, q) in map.route.points.iter_mut().enumerate() {
+            q.y += libm::round(d.profile(line.s[i] - base) * 1000.0) as i32;
+        }
+    }
     let terrain = map.terrain.clone();
+    let (route, jumps) = (map.route.clone(), map.features.clone());
     for pose in map
         .dressing
         .iter_mut()
         .map(|d| &mut d.pose)
         .chain(map.props.iter_mut().map(|q| &mut q.pose))
     {
-        let y = ground_height_m(
-            &terrain,
-            f64::from(pose.x) / 1000.0,
-            f64::from(pose.z) / 1000.0,
-        );
-        pose.y = mm(y);
+        let (x, z) = (f64::from(pose.x) / 1000.0, f64::from(pose.z) / 1000.0);
+        // Whatever stands on a sharp jump stands on its surface, not inside it.
+        let up: f64 = jumps
+            .iter()
+            .map(|f| jj_map::jump::height_above_ground_m(&route, f, x, z))
+            .fold(0.0, f64::max);
+        pose.y = mm(ground_height_m(&terrain, x, z) + up);
     }
     for f in &mut map.features {
         let i = line.index_at(zone_base(line, f));
@@ -506,6 +614,24 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
+        if f.kind == FeatureKind::Bridge {
+            bad.extend(
+                jj_map::bridge::problems(map, f)
+                    .into_iter()
+                    .map(|p| format!("{name}: {p}")),
+            );
+            continue;
+        }
+        if f.kind == FeatureKind::Jump && f.params.contains_key("roofTarget") {
+            // Free-standing rooftop kickers have their own heading and receiving house, rather
+            // than a tabletop envelope along the centreline. The shared map validator checks it.
+            bad.extend(
+                jj_map::roof::problems(map, f)
+                    .into_iter()
+                    .map(|p| format!("{name}: {p}")),
+            );
+            continue;
+        }
         let get = |key: &str| f.params.get(key).copied();
         let base = zone_base(&line, f);
         let z = zone_of(f.kind, base, &f.params);
@@ -537,6 +663,13 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
         let h = |i: usize| ground_height_m(&map.terrain, line.pts[i % n].0, line.pts[i % n].1);
         match f.kind {
             FeatureKind::Jump => {
+                let lip = line.index_at(z.base + LIMITS.jump_ramp_m.1);
+                if line.turn(i0, lip) > LIMITS.jump_entry_turn + 1e-9 {
+                    bad.push(format!(
+                        "{name}: entry bends {:.3} rad through the ramp",
+                        line.turn(i0, lip)
+                    ));
+                }
                 in_range(
                     "rampLengthMm",
                     LIMITS.jump_ramp_m.0,
@@ -567,9 +700,10 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                         bad.push(format!("{name}: ramp slope {slope:.3}"));
                     }
                 }
-                // Entry and landing: the road itself stays gentle across the whole envelope (the ramp's own rise is
-                // the feature; the entry and the landing are plain road).
-                let ramp_end = z.base + get("rampLengthMm").unwrap_or(0) as f64 / 1000.0;
+                // Entry and landing: the road itself stays gentle across the whole envelope (the ramp, table and
+                // landing ramp are the feature; the entry and the run-out after the landing ramp are plain road).
+                let ramp_end =
+                    z.base + jj_map::jump::JumpDesign::of(f).map_or(0.0, |d| d.length_m());
                 let (e0, r0) = (line.index_at(z.from), line.index_at(z.base));
                 // The drop beyond the lip (a grid cell or two) is the jump itself; the landing proper starts 6 m on.
                 let (l0, l1) = (line.index_at(ramp_end + 6.0), line.index_at(z.base + z.len));
@@ -605,7 +739,7 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 // Whoops are rough by design: grade only.
                 shape_ok(&name, &line, &h, i0, i1, None, &mut bad);
             }
-            FeatureKind::Kerb => {}
+            FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

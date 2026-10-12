@@ -1,0 +1,15 @@
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Finished `release` profile [optimized] target(s) in 6.19s
+     Running tests/handling.rs (target/aarch64-apple-darwin/release/deps/handling-9c861fc7e8045d3c)
+
+running 3 tests
+bike-sim-fixture flat bank: worst roll 13.8 deg (x 20 25 m/s lock 1 ramp true brake true)
+test bike_flat_speed_lock_bank ... ok
+test bike_generated_full_lock_regressions_stay_upright ... ok
+road-only (br-gw74.7's landing envelope): []
+549 runs: 0 dives, 0 grazes, 0 roll-overs in turns
+test bike_generated_road_speed_lock_bank ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 50.89s
+

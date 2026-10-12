@@ -1,7 +1,7 @@
 // The lobby's car picker (P1-C03, R101/R110), ported from the accepted phone mock's `lobby()` (art/ui/poc/phone/phone.js): the
 // car big in a tilted panel with its class tag, name, four stat bars and a line about it, arrows and a swipe through the roster,
 // and a row of thumbnails. The roster is data (roster.json): any number of cars, no cap; with one car the arrows and thumbnails
-// stay out of the way. Ready is never blocked by it: the sheet is opened from a button, and closing it changes nothing else.
+// stay out of the way. Joining opens the remembered choice; confirming it enables Ready. Leave remains accessible here.
 // The pick is kept per device and realm and goes to the host as `Pick{vehicle, open}` (the TV shows "Choosing car…" while the picker
 // is open, then the car's name); the roster lives in web/shared so the TV can name what was picked.
 import { icon } from '../../../shared/ui';
@@ -27,8 +27,8 @@ const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 export const ROSTER: RosterCar[] = data.cars as RosterCar[];
 
 /** The roster for the state opener's `&roster=N` (a test surface for "any number of cars"): the real cars, then silhouettes. */
-export function rosterOf(extra = 0): RosterCar[] {
-  const out = [...ROSTER];
+export function rosterOf(extra = 0, cars: RosterCar[] = ROSTER): RosterCar[] {
+  const out = [...cars];
   const stand = extra - out.length;
   for (let k = 0; k < stand; k++) {
     const shape = SHAPE_NAMES[k % SHAPE_NAMES.length]!;
@@ -49,7 +49,7 @@ export class CarSheet {
 
   constructor(
     host: HTMLElement,
-    private readonly o: { roster: RosterCar[]; start: number; colour: string; onPick: (car: RosterCar, index: number) => void; onClose: () => void },
+    private readonly o: { roster: RosterCar[]; start: number; colour: string; onPick: (car: RosterCar, index: number) => void; onClose: () => void; onLeave: (button: HTMLElement) => void },
   ) {
     this.i = Math.max(0, Math.min(o.roster.length - 1, o.start));
     this.el = document.createElement('div');
@@ -84,7 +84,8 @@ export class CarSheet {
       <div class="side">
         ${many ? `<div class="thumbs" role="listbox" aria-label="Cars">${roster.map((r, k) => `<button type="button" class="thumb" role="option" data-i="${k}" aria-label="${esc(r.name)}" aria-selected="${k === this.i}">${art(r, colour, false)}</button>`).join('')}</div>` : ''}
         <p class="waiting" data-note="car-sent">The big screen shows your pick as you choose.</p>
-        <button type="button" class="btn primary big" data-act="car-done">Done</button>
+        <button type="button" class="btn primary big" data-act="car-done">Use this vehicle</button>
+        <button type="button" class="btn quiet" data-act="car-leave">Leave the room</button>
       </div></div>`;
     for (const el of this.el.querySelectorAll<HTMLElement>('[data-ico]')) el.replaceWith(icon(el.dataset.ico!));
     this.wire();
@@ -115,6 +116,7 @@ export class CarSheet {
       sx = null;
     });
     this.el.querySelector('[data-act=car-done]')!.addEventListener('click', () => this.close());
+    this.el.querySelector<HTMLElement>('[data-act=car-leave]')!.addEventListener('click', (e) => this.o.onLeave(e.currentTarget as HTMLElement));
   }
 
   rehost(host: HTMLElement): void {

@@ -1,0 +1,13 @@
+✔ F07 AC1: a clip saved from a scripted free-drive session replays to the same end-state hash (11259.375375ms)
+✔ F07 AC2: a clip saved after an injected worker fault replays up to the fault's tick (7989.71075ms)
+✔ F07 AC3: a clip from a different build is refused with a clear message (5774.20625ms)
+✔ F07 AC4: saving a clip never pauses or stutters the host (frame time recorded), and Ctrl/Cmd+Shift+B downloads one (69217.127625ms)
+✔ F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round (67487.543041ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 162456.859459

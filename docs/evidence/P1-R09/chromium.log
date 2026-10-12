@@ -1,0 +1,13 @@
+# R09: two phones joined
+# R09: round running, test clock held
+# R09: recorded {"ownedBytes":173482,"highWaterBytes":173482,"budgetBytes":67108864,"ringFrames":270,"oldestRingTick":1345,"retainedClips":1,"rejectedIntervals":3,"evictedClips":0,"latestTick":2421,"captureSamples":276,"captureMeanMs":0.17789855340252753,"captureMaxMs":0.8999999761581421,"clips":[{"start":1461,"end":2181,"events":[{"tick":1821,"kind":"detach","actors":[{"seat":1,"car":0,"number":1,"name":"Roo","rgb":[229,50,45]}]},{"tick":1881,"kind":"detach","actors":[{"seat":2,"car":1,"number":2,"name":"Gazza","rgb":[37,99,235]}]},{"tick":1941,"kind":"wreck","actors":[{"seat":1,"car":0,"number":1,"name":"Roo","rgb":[229,50,45]}]}]}]}
+# R09: results, loading playback {"state":"loading","tick":0,"clip":0,"drawnFrames":0,"paused":false,"cars":0,"label":"","separateWorld":true}
+✔ two real controllers: retained damage plays beside results and QR; Hide leaves the next-round timer running (210739.780208ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 211865.189875

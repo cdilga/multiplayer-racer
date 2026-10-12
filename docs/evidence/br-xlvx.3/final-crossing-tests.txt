@@ -1,0 +1,16 @@
+    Blocking waiting for file lock on build directory
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+    Finished `release` profile [optimized] target(s) in 18.75s
+     Running tests/crossings.rs (target/release/deps/crossings-120094f44ccaccc8)
+
+running 6 tests
+test bitumen_marks_both_crossing_roads_and_keeps_upper_paint_on_the_deck ... ok
+test dirt_seed16_bridge_has_drivable_edges_without_a_redraw ... ok
+test takeover_observation_and_tyre_grip_choose_the_physical_layer ... ok
+test driving_under_a_bridge_gate_cannot_count_as_passing_it ... ok
+test generated_crossing_bank_validates_without_flattening_or_discarding_the_family ... ok
+test bots_lap_both_levels_without_recovery_and_replay_exactly ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.03s
+

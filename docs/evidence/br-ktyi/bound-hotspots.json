@@ -1,0 +1,82 @@
+{
+  "before": {
+    "sampleCount": 10066,
+    "profileSha256": "d75b932e4e0b19f5abdc290493fb67093e4ddc7f6ff2c1aafa5706f529bf936d",
+    "selfUs": {
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 9325821,
+      "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 2306873,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 815897,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 477113,
+      "libm[f079cffcae4a324f]::math::sqrt::sqrt": 381684,
+      "jj_procgen[51dd9ee2394ba8a4]::terrain::undulate_along": 280831,
+      "__multi3": 271452,
+      "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 228506,
+      "libm[f079cffcae4a324f]::math::hypot::hypot": 186075,
+      "libm[f079cffcae4a324f]::math::rem_pio2::rem_pio2": 100395,
+      "jj_procgen[51dd9ee2394ba8a4]::course::self_clear": 71849,
+      "jj_procgen[51dd9ee2394ba8a4]::features::place_in": 59852
+    },
+    "inclusiveUs": {
+      "prepare": 28985430,
+      "(root)": 15281192,
+      "": 14666518,
+      "js-to-wasm": 14494262,
+      "prepare multivalue shim": 14492715,
+      "jj_wasm_procgen[84ad8ed6936a98a9]::prepare_tuned": 14491097,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned": 14312712,
+      "jj_procgen[51dd9ee2394ba8a4]::playtest::prepare_data": 14312712,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned::{closure#0}": 14302378,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::check": 12284705,
+      "jj_map[89926c83db9c7924]::validate::validate": 12255029,
+      "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 12195964,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 9950676,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 9325821,
+      "jj_procgen[51dd9ee2394ba8a4]::generate_tuned_from": 2014740,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::scatter_masked": 1183521,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 626460,
+      "libm[f079cffcae4a324f]::math::hypot::hypot": 432684,
+      "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 426175,
+      "libm[f079cffcae4a324f]::math::sqrt::sqrt": 405769
+    }
+  },
+  "after": {
+    "sampleCount": 5832,
+    "profileSha256": "e55c0497a37b4f5a55ddd6ab2e9967cce8bf442c64a16773acb3e031f1d2920f",
+    "selfUs": {
+      "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 4935892,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 943548,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 509663,
+      "libm[f079cffcae4a324f]::math::sqrt::sqrt": 435281,
+      "__multi3": 284892,
+      "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 257960,
+      "jj_procgen[51dd9ee2394ba8a4]::terrain::undulate_along": 252147,
+      "libm[f079cffcae4a324f]::math::hypot::hypot": 144076,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 108760,
+      "libm[f079cffcae4a324f]::math::rem_pio2::rem_pio2": 82568,
+      "jj_procgen[51dd9ee2394ba8a4]::course::self_clear": 61285,
+      "jj_procgen[51dd9ee2394ba8a4]::features::place_in": 59629
+    },
+    "inclusiveUs": {
+      "prepare": 16629029,
+      "(root)": 8903514,
+      "": 8504428,
+      "js-to-wasm": 8315264,
+      "prepare multivalue shim": 8313767,
+      "jj_wasm_procgen[84ad8ed6936a98a9]::prepare_tuned": 8312240,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned": 8127663,
+      "jj_procgen[51dd9ee2394ba8a4]::playtest::prepare_data": 8127663,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::prepare_tuned::{closure#0}": 8113845,
+      "jj_procgen[51dd9ee2394ba8a4]::validate::check": 6033202,
+      "jj_map[89926c83db9c7924]::validate::validate": 6000692,
+      "<jj_map[89926c83db9c7924]::geom::RouteGeom>::nearest": 5942471,
+      "jj_procgen[51dd9ee2394ba8a4]::generate_tuned_from": 2080643,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::scatter_masked": 1228744,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::hypot::hypot": 1026163,
+      "compiler_builtins[46262d27d817fb3b]::math::libm_math::fma::fma": 943548,
+      "jj_procgen[51dd9ee2394ba8a4]::scatter::poisson": 660405,
+      "libm[f079cffcae4a324f]::math::sqrt::sqrt": 482977,
+      "libm[f079cffcae4a324f]::math::hypot::hypot": 428772,
+      "<jj_procgen[51dd9ee2394ba8a4]::scatter::RoadIndex>::nearest": 423602
+    }
+  }
+}

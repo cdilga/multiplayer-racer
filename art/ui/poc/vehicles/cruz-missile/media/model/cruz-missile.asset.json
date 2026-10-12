@@ -1,0 +1,291 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "cruz-missile",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "cruz-missile.lod0.glb",
+   "maxTris": 1300
+  },
+  {
+   "file": "cruz-missile.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "cruz-missile.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.62,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    1.1031818181818183,
+    0.8300000000000001
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    1.1786363636363637,
+    -0.8300000000000001
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.07,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FL": {
+   "pivot": [
+    0.9655384615384615,
+    0.6288636363636364,
+    0.8300000000000001
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FR": {
+   "pivot": [
+    -0.9655384615384615,
+    0.6288636363636364,
+    0.8300000000000001
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RL": {
+   "pivot": [
+    0.94,
+    0.6476515151515152,
+    -0.15
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RR": {
+   "pivot": [
+    -0.94,
+    0.6476515151515152,
+    -0.15
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FL": {
+   "pivot": [
+    0.85,
+    0.4,
+    1.34
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FR": {
+   "pivot": [
+    -0.85,
+    0.4,
+    1.34
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RL": {
+   "pivot": [
+    0.85,
+    0.4,
+    -1.34
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RR": {
+   "pivot": [
+    -0.85,
+    0.4,
+    -1.34
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  }
+ },
+ "interiors": {
+  "engine": {
+   "exposedBy": [
+    "front"
+   ]
+  },
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  },
+  "boot": {
+   "exposedBy": [
+    "back"
+   ]
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   -0.38,
+   1.25,
+   -0.05
+  ],
+  "cam_tp_target": [
+   0,
+   1.1,
+   0.4
+  ],
+  "com": [
+   0,
+   0.55,
+   0
+  ],
+  "roof_number": [
+   0,
+   1.625,
+   -0.09
+  ],
+  "lplate_front": [
+   0,
+   0.42,
+   2.145
+  ],
+  "lplate_rear": [
+   0,
+   0.66,
+   -2.175
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "cruz-missile.atlas.png"
+ }
+}
