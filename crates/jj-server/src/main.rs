@@ -434,7 +434,7 @@ fn main() {
         broker: false,
     };
     let base = jj_server::app::normalise_base(&cfg.base);
-    let bundle = match Bundle::load(&dist, &base) {
+    let bundle = match Bundle::load(&dist, &base, cfg.public_origin.as_deref()) {
         Ok(b) => b,
         Err(e) => {
             eprintln!(

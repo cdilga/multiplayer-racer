@@ -172,6 +172,23 @@ class Index(unittest.TestCase):
         self.assertIn("width=device-width", h)
         self.assertIn("No previews yet", h)
 
+    def test_latest_playable_build_gets_the_jump_in_panel_and_the_share_card(self):
+        h = index_page.render(self.reg(), NOW)
+        panel = h[h.index('class="play"'):h.index("</section>")]
+        self.assertIn('href="/p/v02-dddddddd/host">Host a room', panel)
+        self.assertNotIn('id="', panel)  # the card below keeps the build's anchor
+        self.assertIn('content="https://jammers-preview.dilger.dev/p/v02-dddddddd/assets/og-card.png"', h)
+        self.assertIn('src="/brand/wordmark.svg"', h)
+
+    def test_no_jump_in_without_a_playable_latest(self):
+        r = self.reg()
+        r["labels"]["Latest"] = "v02-cccccccc"  # the failed one
+        h = index_page.render(r, NOW)
+        self.assertNotIn('class="play"', h)
+        empty = index_page.render({"previews": [], "labels": {}}, NOW)
+        self.assertNotIn('class="play"', empty)
+        self.assertNotIn("og:image", empty)
+
     def test_escaping(self):
         r = self.reg()
         r["previews"][0]["title"] = "<script>alert(1)</script>"

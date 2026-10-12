@@ -65,7 +65,10 @@ pub fn content_type(path: &str) -> &'static str {
 
 /// Rewrites a page's relative asset references (`./assets/`, `../assets/`, `../../assets/` for the credits page, and the same for `test/`) to `{base}assets/`
 /// and adds the base meta tag. `base` starts and ends with `/`.
-pub fn rewrite_page(html: &str, base: &str) -> String {
+///
+/// With a public `origin`, `<meta content>` asset references (the share card's `og:image` and `twitter:image`) become
+/// absolute URLs: link-preview scrapers don't resolve paths against the page, so a preview's card has to name its own host.
+pub fn rewrite_page(html: &str, base: &str, origin: Option<&str>) -> String {
     let mut out = html.to_owned();
     for dir in ["assets/", "test/"] {
         for rel in ["../../", "../", "./"] {
@@ -79,6 +82,13 @@ pub fn rewrite_page(html: &str, base: &str) -> String {
                 out = out.replace(&format!("{q}/{dir}"), &format!("{q}{base}{dir}"));
             }
         }
+    }
+    if let Some(origin) = origin {
+        let origin = origin.trim_end_matches('/');
+        out = out.replace(
+            &format!("content=\"{base}assets/"),
+            &format!("content=\"{origin}{base}assets/"),
+        );
     }
     let meta = format!("<meta name=\"jj-base\" content=\"{base}\" />");
     match out.find("<head>") {
@@ -97,7 +107,7 @@ impl Bundle {
     }
 
     /// Loads `dist/` into memory (the bundle is immutable for the server's life).
-    pub fn load(dist: &Path, base: &str) -> std::io::Result<Self> {
+    pub fn load(dist: &Path, base: &str, origin: Option<&str>) -> std::io::Result<Self> {
         let mut bundle = Self::empty();
         for dir in ["assets", "test"] {
             let root = dist.join(dir);
@@ -126,7 +136,7 @@ impl Bundle {
                 let html = std::fs::read_to_string(&path)?;
                 bundle
                     .pages
-                    .insert(page, rewrite_page(&html, base).into_bytes());
+                    .insert(page, rewrite_page(&html, base, origin).into_bytes());
             }
         }
         Ok(bundle)
@@ -145,7 +155,7 @@ impl Bundle {
 
     pub fn insert_page(&mut self, page: Page, html: &str, base: &str) {
         self.pages
-            .insert(page, rewrite_page(html, base).into_bytes());
+            .insert(page, rewrite_page(html, base, None).into_bytes());
     }
 
     pub fn page(&self, page: Page) -> Response {
@@ -190,7 +200,7 @@ mod tests {
     fn pages_point_at_the_base() {
         let html = "<html><head>\n<script type=\"module\" src=\"../assets/host-1.js\"></script>\
                     <link href='./assets/a.css'></head></html>";
-        let out = rewrite_page(html, "/p/x/");
+        let out = rewrite_page(html, "/p/x/", None);
         assert!(out.contains("src=\"/p/x/assets/host-1.js\""), "{out}");
         assert!(out.contains("href='/p/x/assets/a.css'"), "{out}");
         assert!(out.contains("<meta name=\"jj-base\" content=\"/p/x/\" />"));
@@ -199,6 +209,7 @@ mod tests {
         let deep = rewrite_page(
             "<script src=\"../../assets/credits-1.js\"></script>",
             "/p/x/",
+            None,
         );
         assert!(deep.contains("src=\"/p/x/assets/credits-1.js\""), "{deep}");
     }
@@ -208,9 +219,45 @@ mod tests {
         let out = rewrite_page(
             "<head><script src=\"/assets/h.js\"></script></head>",
             "/p/y/",
+            None,
         );
         assert!(out.contains("src=\"/p/y/assets/h.js\""), "{out}");
-        let root = rewrite_page("<head><script src=\"/assets/h.js\"></script></head>", "/");
+        let root = rewrite_page(
+            "<head><script src=\"/assets/h.js\"></script></head>",
+            "/",
+            None,
+        );
         assert!(root.contains("src=\"/assets/h.js\""), "{root}");
+    }
+
+    #[test]
+    fn share_card_urls_name_the_public_origin() {
+        let html = "<head><meta property=\"og:image\" content=\"/assets/og-card.png\" />\
+                    <script src=\"/assets/h.js\"></script></head>";
+        let out = rewrite_page(html, "/p/z/", Some("https://jammers-preview.dilger.dev/"));
+        assert!(
+            out.contains("content=\"https://jammers-preview.dilger.dev/p/z/assets/og-card.png\""),
+            "{out}"
+        );
+        // Only meta content goes absolute; scripts stay on the page's own origin.
+        assert!(out.contains("src=\"/p/z/assets/h.js\""), "{out}");
+        let prod = rewrite_page(html, "/", Some("https://jammers.dilger.dev"));
+        assert!(
+            prod.contains("content=\"https://jammers.dilger.dev/assets/og-card.png\""),
+            "{prod}"
+        );
+        // Vite emits the card relative to the page, as it does every other asset.
+        let built = rewrite_page(
+            "<head><meta name=\"twitter:image\" content=\"../assets/og-card.png\" /></head>",
+            "/p/z/",
+            Some("https://jammers-preview.dilger.dev"),
+        );
+        assert!(
+            built.contains("content=\"https://jammers-preview.dilger.dev/p/z/assets/og-card.png\""),
+            "{built}"
+        );
+        // Without an origin (local dev) the path is left rooted at the base.
+        let dev = rewrite_page(html, "/p/z/", None);
+        assert!(dev.contains("content=\"/p/z/assets/og-card.png\""), "{dev}");
     }
 }
