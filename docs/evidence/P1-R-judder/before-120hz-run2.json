@@ -1,0 +1,66 @@
+{
+  "browser": "headed 155.0.8059.39",
+  "platform": "darwin/arm64",
+  "modes": {
+    "tp": {
+      "frames": 301,
+      "frameMs": {
+        "p50": 8.3,
+        "p99": 10.2
+      },
+      "tickWithin5pct": 0.897,
+      "tickBackwards": 0,
+      "jerkMpsPerFrame": {
+        "cam": {
+          "p50": 0.48,
+          "p95": 7.128,
+          "p99": 24.952,
+          "max": 52.413
+        },
+        "car": {
+          "p50": 0.48,
+          "p95": 7.128,
+          "p99": 24.952,
+          "max": 52.413
+        }
+      },
+      "fovStepDeg": {
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "carSpeedMps": 32.29
+    },
+    "fp": {
+      "frames": 300,
+      "frameMs": {
+        "p50": 8.3,
+        "p99": 10.2
+      },
+      "tickWithin5pct": 0.943,
+      "tickBackwards": 0,
+      "jerkMpsPerFrame": {
+        "cam": {
+          "p50": 0.415,
+          "p95": 1.952,
+          "p99": 4.405,
+          "max": 5.361
+        },
+        "car": {
+          "p50": 0.415,
+          "p95": 1.952,
+          "p99": 4.405,
+          "max": 5.361
+        }
+      },
+      "fovStepDeg": {
+        "p50": 0.03,
+        "p95": 0.078,
+        "p99": 0.113,
+        "max": 0.12
+      },
+      "carSpeedMps": 32.26
+    }
+  }
+}

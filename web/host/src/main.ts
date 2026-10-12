@@ -116,6 +116,12 @@ async function boot(): Promise<void> {
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
     cameras: () => world.rig.inspect(),
+    /** Judder probe (br-gw74.14): `true` starts recording seat 1's camera every frame, `false` stops and returns the frames. */
+    cameraTrace: (on: boolean) => {
+      const frames = world.cameraTrace ?? [];
+      world.cameraTrace = on ? [] : null;
+      return frames;
+    },
     setCamera: (seat: number, mode: 'fp' | 'tp') => world.rig.setMode(seat, mode),
     project: (x: number, y: number, z: number) => world.project(x, y, z),
     /** The host's Render resolution choice, as the setting does it (applied live, saved). */

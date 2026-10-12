@@ -105,6 +105,19 @@ export interface StagedMap {
   renderer: MapRenderer;
 }
 
+/** One frame of seat 1's camera, as the judder probe reads it. */
+export interface CameraTraceFrame {
+  now: number;
+  /** The frame's rAF timestamp: when it reaches the screen (0 for a frame drawn outside the loop). */
+  vsync: number;
+  tick: number;
+  mode: CameraMode;
+  cam: [number, number, number];
+  fov: number;
+  car: [number, number, number];
+  speed: number;
+}
+
 export class World {
   readonly scene = new Scene();
   /** Identify's number over the car, in every view (P1-R06). */
@@ -120,6 +133,8 @@ export class World {
   readonly rig = new CameraRig();
   private mirrorCam = new PerspectiveCamera(46, 2, 0.3, 600);
   private lastFrame = 0;
+  /** Set to an array to record seat 1's camera every frame (br-gw74.14's judder probe); null records nothing. */
+  cameraTrace: CameraTraceFrame[] | null = null;
   /** Paused (any pause reason): frames are drawn only until `heldUntil` after the last change, then the loop idles. */
   private held = false;
   private heldUntil = 0;
@@ -365,7 +380,7 @@ export class World {
       }
       if (this.lastRaf && this.realFrameTimes) this.noteFrameTime(now - this.lastRaf);
       this.lastRaf = now;
-      this.frame();
+      this.frame(now);
     };
     this.raf = requestAnimationFrame(loop);
   }
@@ -419,11 +434,12 @@ export class World {
     Object.assign(st, { width: w, height: h, cssWidth: Math.round(css.width), cssHeight: Math.round(css.height), dpr, limitedBy, scale, userScale: this.userScale, resolution, nativeWidth: dw, nativeHeight: dh });
   }
 
-  /** Draws one frame at the interpolator's render tick. */
-  frame(): void {
+  /** Draws one frame at the interpolator's render tick. `now` is the frame's vsync time (rAF's timestamp): the playback
+   *  clock and the cameras step by it, not by when this code happens to run, or main-thread jitter shows as judder. */
+  frame(now = performance.now()): void {
     this.nameplatePoints.length = 0;
     this.resize();
-    const t = this.interp.renderTick();
+    const t = this.interp.renderTick(now);
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
     if (this.replayCamera) {
@@ -445,7 +461,7 @@ export class World {
     r.info.autoReset = false;
     r.info.reset();
     // An auto grid with nobody on the field (an empty room's TV) shows the whole map, not one tile chasing no car.
-    if (this.tiles && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles);
+    if (this.tiles && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles, now);
     else {
       const lod = lodForTileHeight(st.height);
       useLod(this.camera, lod);
@@ -468,7 +484,7 @@ export class World {
 
   /** The grid (P1-R04): each seat's tile chases its car with its own camera at its LOD class; spare cells and gutters
    *  are the paper backdrop. The shadow map was drawn once already. */
-  private drawTiles(s: Sampled, view: TileView): number[] {
+  private drawTiles(s: Sampled, view: TileView, now: number): number[] {
     // Auto: one tile per followed car (a room's seated cars), else per car in the snapshot.
     if (view.auto) view.count = Math.max(1, view.follow?.length ?? s.cars);
     const r = this.backend.renderer;
@@ -483,7 +499,6 @@ export class World {
     const gutter = gutterOf(w, h);
     this.tileGrid ??= new GridAnimator(display, safe, { gutter });
     const seats = Array.from({ length: view.count }, (_, k) => k + 1);
-    const now = performance.now();
     const moved = this.tileGrid.update(seats, now, display, safe);
     // While the grid moves, and once more when it settles: on a slow host a whole reflow can fall inside one frame, and
     // the DOM layers (per-tile HUD, frames, join chip) must end on the final rects, not the first frame's (G02).
@@ -520,6 +535,10 @@ export class World {
           cam.lookAt(this.target);
         } else {
           this.rig.update(t.seat, cam, { pos: this.v.clone(), rot: this.q.clone(), life: s.life[i]! }, dt);
+          if (this.cameraTrace && t.seat === 1) {
+            const p = cam.position;
+            this.cameraTrace.push({ now, vsync: this.lastRaf, tick: s.tick, mode, cam: [p.x, p.y, p.z], fov: cam.fov, car: [this.v.x, this.v.y, this.v.z], speed: this.rig.inspect()[1]?.speed ?? 0 });
+          }
           if (mode === 'tp') {
             // The off-screen arrow: the own car projected outside its tile (the chase aims at it; this is the backstop).
             const p = this.v.clone().setY(this.v.y + 0.6).project(cam);
