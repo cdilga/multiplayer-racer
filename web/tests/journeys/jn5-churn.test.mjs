@@ -182,7 +182,10 @@ async function dropIn(host, url, name) {
   return { p, ms };
 }
 
-test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
+// This is a rendered twelve-seat journey, including a three-second drop-in bound. CI's software renderer reached
+// 5 s per frame / 6.5 M triangles, starving real browser negotiation. Run the complete cohort and timing on the GPU
+// lane rather than lowering the cohort, hiding the world, or relaxing its GPU drop-in bound.
+test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000, skip: !gpu && 'rendered twelve-seat churn is qualified in the GPU lane' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   hostPage = host;
   if (process.env.JJ_HOST_PROFILE) {
