@@ -1,0 +1,24 @@
+{
+  "scenario": "boomerang-hit",
+  "what": "P1-W02a: a car holding a boomerang flicks it forward at a car parked 12 m ahead on the yard. The boomerang hits it on the way out (a push inside the 10 m/s envelope, damage to the struck part, the thrower credited) and comes back. Replayed natively and through WASM (items-wasm).",
+  "map": "scenarios/damage/yard.json",
+  "seed": 17,
+  "ticks": 600,
+  "cars": [
+    {"pose": {"x": -60, "y": 0.6, "z": -20}},
+    {"pose": {"x": -40, "y": 0.6, "z": -20}}
+  ],
+  "race": {"atTick": 0, "laps": 99},
+  "place": [
+    {"tick": 230, "car": 0, "pose": {"x": -30, "y": 0.6, "z": -25, "headingDeg": 90}},
+    {"tick": 230, "car": 1, "pose": {"x": -18, "y": 0.6, "z": -25, "headingDeg": 90}}
+  ],
+  "pickups": [{"tick": 251, "car": 0, "seat": 17, "item": "boomerang"}],
+  "inputs": [{"car": 0, "fromTick": 260, "toTick": 275, "stick": [0, 0], "action": [0, 1]}],
+  "observe": [300, 600],
+  "expect": [
+    {"car": 1, "metric": "maxSpeed", "min": 3, "max": 10},
+    {"car": 0, "metric": "recoveries", "min": 0, "max": 0},
+    {"car": 1, "metric": "recoveries", "min": 0, "max": 0}
+  ]
+}

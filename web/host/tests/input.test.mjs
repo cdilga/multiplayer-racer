@@ -95,12 +95,16 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   await page.keyboard.up('KeyK');
   await page.keyboard.up('KeyJ');
   // The grid puts a turning pad beside Keys A: their bodies can collide during this input-routing probe.
-  // Stage them on separate stretches of the actual straight, with reverse pointed away from the others.
+  // Stage them on separate stretches of the actual straight, with reverse pointed away from the others. The turning pad
+  // goes at the back: its circle (about 20 m across at fun-pass speed) can't reach a car that's driving away from it.
   const claimed = await observe();
-  for (const [endpoint, x] of [['local:100', 30], ['local:101', 80], ['local:1', 130], ['local:2', 10]]) {
+  for (const [endpoint, x] of [['local:100', 30], ['local:101', -40], ['local:1', 130], ['local:2', 10]]) {
     const car = claimed.host.seats.find((s) => s.endpoint === endpoint).car;
     await page.evaluate(({ car, x }) => window.__jjTest.command({ cmd: 'place', car, pose: { x, y: 0.0073, z: 0, headingDeg: 90 } }), { car, x });
   }
+  // Read the start before pressing anything: under CI load the presses and the first observe can be a second or more
+  // apart, and a car that's already driving in that gap reaches the slower turning car ahead (the fun-pass cars are fast).
+  const start = await observe();
   await page.evaluate(() => {
     window.__pads.axes(0, [0, -1, 0, 0]);
     window.__pads.axes(1, [0, -0.7, 0.8, 0]);
@@ -108,7 +112,6 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   await page.keyboard.down('KeyW');
   await page.keyboard.down('KeyK');
   await page.keyboard.down('KeyJ');
-  const start = await observe();
   const carOf = (state, endpoint) => {
     const seat = state.host.seats.find((s) => s.endpoint === endpoint);
     return seat && state.cars.find((c) => c.car === seat.car);
