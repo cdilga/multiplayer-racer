@@ -79,9 +79,11 @@ export class CarSheet {
         <div class="stats">${STATS.map((n, k) => `<div class="stat"><span>${n}</span><i style="--v:${Math.max(0, Math.min(10, c.stats[k] ?? 0)) * 10}%"></i></div>`).join('')}</div>
         <p class="blurb">${esc(c.blurb)}</p></div>
         <span class="bn carname" data-car-name>${esc(c.name)}</span>
+        ${many ? `<span class="carcount tnum" data-car-count aria-live="polite">Car ${this.i + 1} of ${roster.length}</span>` : ''}
         ${many ? '<button type="button" class="btn icon arrow prev" aria-label="Previous car"><i data-ico="chevron-left"></i></button><button type="button" class="btn icon arrow next" aria-label="Next car"><i data-ico="chevron-right"></i></button>' : ''}
       </div>
       <div class="side">
+        ${many ? `<p class="thumbs-label display" data-thumbs-label>All ${roster.length} cars: tap one or swipe</p>` : ''}
         ${many ? `<div class="thumbs" role="listbox" aria-label="Cars">${roster.map((r, k) => `<button type="button" class="thumb" role="option" data-i="${k}" aria-label="${esc(r.name)}" aria-selected="${k === this.i}">${art(r, colour, false)}</button>`).join('')}</div>` : ''}
         <p class="waiting" data-note="car-sent">The big screen shows your pick as you choose.</p>
         <button type="button" class="btn primary big" data-act="car-done">Use this vehicle</button>

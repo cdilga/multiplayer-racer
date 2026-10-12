@@ -59,7 +59,7 @@ async function phone(joinUrl, name) {
 
 /** Opens the car picker, looks at the car called `car`, and presses Done. */
 async function pick(page, car) {
-  await page.getByRole('button', { name: 'Choose vehicle' }).click();
+  await page.getByRole('button', { name: /^(Choose|Change) car$/ }).click();
   await page.locator('[data-overlay=cars]').waitFor();
   await page.locator(`.thumb[aria-label="${car}"]`).dispatchEvent('click');
   return page;

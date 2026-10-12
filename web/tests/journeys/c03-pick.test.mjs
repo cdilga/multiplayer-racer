@@ -76,7 +76,7 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
 
   // Open the picker: the seat is choosing, with the car being looked at.
-  await p.page.getByRole('button', { name: 'Choose vehicle' }).click();
+  await p.page.getByRole('button', { name: /^(Choose|Change) car$/ }).click();
   await p.page.locator('[data-overlay=cars]').waitFor();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === true);
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
@@ -109,7 +109,7 @@ test('Ready follows vehicle confirmation; changing the confirmed choice preserve
   await p.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.ready === true);
   assert.equal((await card(host, 'Shazza', 'ready')).state, 'ready', 'ready with no car picked');
-  await p.page.getByRole('button', { name: 'Choose vehicle' }).click();
+  await p.page.getByRole('button', { name: /^(Choose|Change) car$/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.choosing === true);
   assert.equal((await seatOf(host, 'Shazza')).ready, true, 'opening the picker un-readies nobody');
   await p.page.getByRole('button', { name: 'Use this vehicle' }).click();

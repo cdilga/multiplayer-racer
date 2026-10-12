@@ -317,6 +317,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .stage, .carpanel { min-width: 0; }
 .thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; }
+/* br-bwju.9: how many cars there are, and where you are among them. */
+.carcount { position: absolute; right: 10px; top: 4px; z-index: 3; padding: 2px 10px; border-radius: 6px; background: var(--c-saffron); color: var(--c-ink); font-size: 15px; font-weight: 700; }
+.thumbs-label { margin: 0 0 2px; font-size: 14px; color: var(--c-saffron); }
 .thumb { flex: none; width: 76px; height: 54px; padding: 4px; background: var(--c-ink-raised); border: 3px solid var(--c-ink-soft); border-radius: 4px; display: grid; place-items: center; }
 .thumb[aria-selected=true] { background: var(--c-paper); border-color: var(--seat); box-shadow: 0 0 0 3px var(--seat); }
 .thumb .carimg { max-width: 64px; }

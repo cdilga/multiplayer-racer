@@ -55,7 +55,7 @@ function dress(root: ParentNode): void {
 }
 
 /** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose vehicle" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:0%"></i></div></div></div>`;
@@ -368,7 +368,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (carBtn) {
       carBtn.hidden = session.roomPhase !== 'Lobby';
       carBtn.classList.remove('icon');
-      carBtn.textContent = chosenSeat === session.you?.number ? 'Vehicle' : 'Choose vehicle';
+      // br-bwju.9: say it's a choice you can change, not just a thing you have.
+      carBtn.textContent = chosenSeat === session.you?.number ? 'Change car' : 'Choose car';
+      carBtn.setAttribute('aria-label', carBtn.textContent);
     }
     if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
       const host = app.querySelector<HTMLElement>('.screen.play');
