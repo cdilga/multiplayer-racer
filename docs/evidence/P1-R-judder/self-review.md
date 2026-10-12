@@ -1,4 +1,4 @@
-# P1-R-judder (br-gw74.14): camera judder, measured on a real host
+# Self-review P1-R-judder (br-gw74.14): camera judder, measured on a real host
 
 **Hardware/browser:** MacBook Pro (Apple M1 Pro), Google Chrome 155.0.8059.39. 120 Hz: headed Chrome on the built-in
 ProMotion display. 60 Hz: headless Chrome with the GPU (`--gpu`, Metal ANGLE), which paces frames at 60 Hz. The
@@ -32,15 +32,31 @@ The rendered tick never ran backwards in any run. After the fix the camera's jer
 rigidly on a straight), and what's left is the car accelerating. The hood cam's FOV kick moves at most 0.14° per frame.
 Raw files: `before-*.json`, `after-*.json` here.
 
-## What I looked at
+## Looked at
 
-`tp-0..2.jpg` (chase) and `fp-0..2.jpg` (hood with the mirror strip), 1920×1080, taken while the trace ran. Both draw
-correctly: the car is centred in the chase view, the road runs straight ahead, and the mirror shows the road behind. No
-blank panels, overlaps or broken images. Stills can't show judder, so the per-frame trace above is the evidence for
-smoothness. The owner judges the feel at the couch test.
+- `tp-tv.jpg`: 1920×1080 (TV), chase camera at about 32 m/s on the main straight, taken while the trace ran. Checked:
+  the car is centred and fully in frame, the road runs straight ahead, shadows and outlines draw, no blank panel or
+  overlap with the Keys & Pads drawer or the join chip.
+- `fp-tv.jpg`: 1920×1080 (TV), hood camera with the rear-view mirror strip, same run. Checked: the bonnet and road
+  draw, the mirror shows the road behind and sits clear of the HUD, no blank panel.
 
-Observed, not changed here: the hood cam's view has the roof aerial standing in the left of frame (it's the car's own
-mesh, visible at all speeds).
+Stills can't show judder, so the per-frame trace (the numbers above, raw files `before-*.json` and `after-*.json`) is
+the evidence for smoothness.
 
-Not measured: generated tracks with relief. The chase rig's ground lift (`overGround`) raises the camera in 0.5 m
-steps and the pull-in snaps, so a dip or an obstacle could still pop the chase camera. Neither occurs on this straight.
+## Defects found and fixed
+
+- Uneven motion at 60 and 120 Hz on a real host (the numbers above): the world stepped by `performance.now()` at run
+  time, the rig by a second clock. Fixed: both step by rAF's vsync timestamp.
+
+## Remaining defects
+
+- The chase rig's ground lift rises in 0.5 m steps and the pull-in snaps, which can pop the camera on relief or past
+  dressing: br-gw74.14.1.
+- The hood camera's view has the roof aerial standing in the left of frame (the car's own mesh). It's a look question,
+  not judder; left for the owner's couch test.
+
+## Not covered
+
+- Generated tracks with relief (br-gw74.14.1 measures them).
+- 144 Hz on a real display (no such display here; the unit test covers 144 Hz with jittered arrivals).
+- The owner's TV and laptop: the couch test judges the feel.
