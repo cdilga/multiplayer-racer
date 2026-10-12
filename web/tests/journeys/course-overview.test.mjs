@@ -41,25 +41,25 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const rows = [], errors = [];
     try {
-      const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-      page.on('pageerror', e => errors.push(e.message));
+      let page;
       let mapJson;
-      await page.route('**/course-overview.json', r => r.fulfill({ contentType: 'application/json', body: mapJson }));
       const paint = async () => {
-        await page.waitForFunction(() => { window.__jjRender.frame(); return window.__jjRender.stats().tick >= 1; });
-        await page.evaluate(async () => {
-          for (let i=0; i<3; i++) {
-            window.__jjRender.frame();
-            await new Promise(r => setTimeout(r,16));
-          }
-          window.__jjRender.hold();
-        });
+        // The fixture is paused. Draw the requested viewport once its snapshot
+        // arrives, instead of rasterising duplicate full-course frames on CI.
+        await page.waitForFunction(() => { window.__jjRender.frame(); return window.__jjRender.stats().tick >= 1; }, undefined, {polling:100});
       };
       for (const preset of Object.keys(maps)) {
+        // Each course owns a page lifetime: navigating a live audio preload makes WebKit
+        // report aborted old-document requests as access-control errors on the new document.
+        if (page) { page.removeAllListeners('pageerror'); await page.context().close(); }
+        page = await browser.newPage({viewport:{width:1920,height:1080}});
+        page.on('pageerror', e => errors.push(e.message));
         mapJson = maps[preset];
+        await page.route('**/course-overview.json', r => r.fulfill({ contentType: 'application/json', body: mapJson }));
         await page.goto(`${server.origin}${BASE}host?test&look=on&res=1&autores=off&mapUrl=${encodeURIComponent(server.origin + '/course-overview.json')}`);
         await page.waitForFunction(() => window.__jjTest && window.__jjRender);
         await page.evaluate(async ({fixture,mapJson}) => {
+          window.__jjRender.hold();
           await window.__jjTest.load(fixture,mapJson);
           await window.__jjTest.step(1);
         }, {fixture,mapJson});
