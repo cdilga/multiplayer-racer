@@ -12,18 +12,18 @@ phone mock (`art/ui/accepted/2026-10-07/poc/phone`, captured beside the real one
   today's build. Strip tools 44 px tall in landscape (40/34 px wide on narrower phones), small body-face labels, Ready the
   smallest button in the strip, white "Identify" on light-blue seat colour (unreadable), a press barely visible, the
   launch bar *empty* when the launch is ready, portrait tools wrapping raggedly (2 + 4 + 3).
-- `after-{chromium,webkit}-{915x412,412x915}-race-idle.jpg`: strip tools 48x48+, labels in the display face, Identify ink
+- `after-chromium-915x412-race-idle.jpg`, `after-webkit-915x412-race-idle.jpg`, `after-chromium-412x915-race-idle.jpg`, `after-webkit-412x915-race-idle.jpg`: strip tools 48x48+, labels in the display face, Identify ink
   on seat blue, launch bar full saffron. Nothing over the sticks, the pod or the HUD.
-- `…-lobby-idle.jpg`: READY saffron slab first and loudest, Identify, Change car (car icon + words), six icon tools.
+- `after-webkit-915x412-lobby-idle.jpg`, `after-chromium-412x915-lobby-idle.jpg` (and the other engine/size pair): READY saffron slab first and loudest, Identify, Change car (car icon + words), six icon tools.
   Portrait: worded buttons on one row, the six icon tools on the next.
-- `…-race-pressed-identify.jpg`, `…-lobby-pressed-identify.jpg`, `…-lobby-pressed-ready.jpg`: a held finger darkens the
+- `after-webkit-915x412-race-pressed-identify.jpg`, `after-chromium-412x915-race-pressed-identify.jpg` (and the other engine/size pair), `after-webkit-915x412-lobby-pressed-identify.jpg`, `after-chromium-412x915-lobby-pressed-identify.jpg` (and the other engine/size pair), `after-webkit-915x412-lobby-pressed-ready.jpg`, `after-chromium-412x915-lobby-pressed-ready.jpg` (and the other engine/size pair): a held finger darkens the
   slab and pushes it 3 px down; readable while pressed. (Identify fires the Cooee flash after release, so it's captured
   last.)
-- `…-lobby-disabled-ready.jpg`: a disabled Ready is a grey ink slab with dim paper text, clearly different from a pressed
+- `after-webkit-915x412-lobby-disabled-ready.jpg`, `after-chromium-412x915-lobby-disabled-ready.jpg` (and the other engine/size pair): a disabled Ready is a grey ink slab with dim paper text, clearly different from a pressed
   (dark saffron) Ready.
-- `…-ready-on.jpg`: READY ✓ in green.
-- `…-cooling.jpg`: launch bar ~40 % paper refilling, label dimmed, the paper cooldown ring on the drive knob.
-- `after-webkit-{667x375,640x300}-{race,lobby}-idle.jpg`: small landscape phones: every tool 48x48 and on screen, no
+- `after-webkit-915x412-ready-on.jpg`, `after-chromium-412x915-ready-on.jpg` (and the other engine/size pair): READY ✓ in green.
+- `after-webkit-915x412-cooling.jpg`, `after-chromium-412x915-cooling.jpg` (and the other engine/size pair): launch bar ~40 % paper refilling, label dimmed, the paper cooldown ring on the drive knob.
+- `after-webkit-667x375-race-idle.jpg`, `after-webkit-667x375-lobby-idle.jpg`, `after-webkit-640x300-race-idle.jpg`, `after-webkit-640x300-lobby-idle.jpg`: small landscape phones: every tool 48x48 and on screen, no
   sideways scroll; at <= 800 px wide the car button goes icon-only (spoken name kept) and the Identify icon drops.
 
 ## Defects found and fixed
