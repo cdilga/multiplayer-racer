@@ -23,3 +23,40 @@
 .jj-tune footer button[data-tune-regenerate] { background: var(--c-saffron, #ffb400); }
 .jj-tune footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-top: 1px solid rgb(21 32 58 / .2); }
 .jj-tune footer button { min-height: 30px; padding: 0 12px; border: 2px solid var(--c-ink, #15203a); border-radius: 6px; background: var(--c-paper, #fff8e6); font: 800 13px/1 system-ui, sans-serif; cursor: pointer; }
+
+/* The Feel Lab tab (P1-FL03, R131). */
+.jj-tune .tabs { display: flex; gap: 4px; padding: 0 12px 6px; }
+.jj-tune .tabs button { flex: 1; min-height: 30px; border: 2px solid var(--c-ink, #15203a); border-radius: 6px; background: var(--c-paper, #fff8e6); font: 800 13px/1 system-ui, sans-serif; cursor: pointer; }
+.jj-tune .tabs button[aria-selected="true"] { background: var(--c-saffron, #ffb400); }
+.jj-tune .rows[hidden] { display: none; }
+.jj-tune .lab h4 { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 0 4px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.jj-tune .lab h4:first-child { margin-top: 2px; }
+.jj-tune .lab h4 small { font-size: 11px; font-weight: 500; text-transform: none; letter-spacing: 0; opacity: .7; }
+.jj-tune .lab-presets { display: grid; gap: 4px; }
+.jj-tune .lab-presets button { display: grid; gap: 2px; text-align: left; padding: 6px 8px; border: 2px solid rgb(21 32 58 / .35); border-radius: 6px; background: #fff; color: inherit; font: inherit; cursor: pointer; }
+.jj-tune .lab-presets button b { font-size: 14px; }
+.jj-tune .lab-presets button span { font-size: 11.5px; opacity: .8; }
+.jj-tune .lab-presets button[aria-checked="true"] { border-color: var(--c-ink, #15203a); background: var(--c-saffron, #ffb400); }
+.jj-tune .lab-presets button[aria-checked="true"] span { opacity: 1; }
+.jj-tune .lab-slider { padding: 4px 0 6px; border-top: 1px solid rgb(21 32 58 / .12); }
+.jj-tune .lab-slider.off { opacity: .55; }
+.jj-tune .lab-head { display: grid; grid-template-columns: 1fr auto 22px; align-items: center; gap: 6px; }
+.jj-tune .lab-head label { display: block; font-weight: 800; }
+.jj-tune .lab-head output { font: 800 13px/1 ui-monospace, monospace; }
+.jj-tune .lab-one { border: 0; background: none; cursor: pointer; font-size: 14px; padding: 0; }
+.jj-tune .lab-one:disabled { opacity: .3; cursor: default; }
+.jj-tune .lab-slider input[type=range] { width: 100%; margin: 4px 0 0; accent-color: var(--c-ink, #15203a); }
+.jj-tune .lab-eff { margin: 0; font: 500 11px/1.35 ui-monospace, monospace; color: #0b57d0; overflow-wrap: anywhere; }
+.jj-tune .lab-note { margin: 0; font-size: 11px; opacity: .65; }
+.jj-tune .lab-ab { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.jj-tune .lab-slot { padding: 6px; border: 2px solid rgb(21 32 58 / .25); border-radius: 6px; }
+.jj-tune .lab-slot.on { border-color: var(--c-ink, #15203a); background: rgb(255 180 0 / .25); }
+.jj-tune .lab-slot p { margin: 4px 0 0; font-size: 11px; overflow-wrap: anywhere; }
+.jj-tune .lab button:not(.lab-one):not([data-lab-preset]) { min-height: 30px; padding: 0 10px; border: 2px solid var(--c-ink, #15203a); border-radius: 6px; background: var(--c-paper, #fff8e6); font: 800 13px/1 system-ui, sans-serif; cursor: pointer; }
+.jj-tune .lab-slot button { width: 100%; }
+.jj-tune .lab-toggle { display: grid; grid-template-columns: 1fr 1fr; margin-top: 8px; }
+.jj-tune .lab-toggle button { min-height: 40px !important; font-size: 18px !important; }
+.jj-tune .lab-toggle button[aria-pressed="true"] { background: var(--c-saffron, #ffb400) !important; }
+.jj-tune .lab-toggle button:disabled { opacity: .4; cursor: default; }
+.jj-tune .lab-status { margin: 8px 0 0; font-size: 11.5px; min-height: 1.3em; }
+@media (min-width: 1700px) { .jj-tune { width: 420px; font-size: 14px; } }

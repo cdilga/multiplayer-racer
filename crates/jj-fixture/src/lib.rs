@@ -418,6 +418,7 @@ pub fn profile_from(
     set: &[(String, String)],
 ) -> Result<VehicleProfile, String> {
     let mut v = serde_json::to_value(base).map_err(|e| e.to_string())?;
+    let mut added = Vec::new();
     for (k, raw) in set {
         let mut at = v.get_mut("tuning").ok_or("the profile has no tuning")?;
         let path: Vec<&str> = k.split('.').collect();
@@ -425,11 +426,16 @@ pub fn profile_from(
             let obj = at
                 .as_object_mut()
                 .ok_or_else(|| format!("--set {k}: not an object above {part:?}"))?;
-            if !obj.contains_key(*part) {
+            // A missing last key may be an optional section left out of the profile (`handling`, P1-FL04): insert it and
+            // let the typed parse below refuse anything that isn't a real field (the tuning denies unknown fields).
+            if !obj.contains_key(*part) && i + 1 < path.len() {
                 let keys: Vec<&String> = obj.keys().collect();
                 return Err(format!("--set: no tuning field {k:?}; fields: {keys:?}"));
             }
             if i + 1 == path.len() {
+                if !obj.contains_key(*part) {
+                    added.push((k.clone(), obj.keys().cloned().collect::<Vec<_>>()));
+                }
                 let val: Value = serde_json::from_str(raw).unwrap_or(Value::String(raw.clone()));
                 obj.insert((*part).to_owned(), val);
                 break;
@@ -437,7 +443,12 @@ pub fn profile_from(
             at = obj.get_mut(*part).expect("checked above");
         }
     }
-    serde_json::from_value(v).map_err(|e| format!("--set: {e}"))
+    serde_json::from_value(v).map_err(|e| match added.first() {
+        Some((k, keys)) if e.to_string().contains("unknown field") => {
+            format!("--set: no tuning field {k:?}; fields: {keys:?}")
+        }
+        _ => format!("--set: {e}"),
+    })
 }
 
 pub fn signature_json(car: u32, t: &SignatureTracker) -> Value {

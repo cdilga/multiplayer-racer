@@ -12,6 +12,7 @@
 // Regenerate builds the current seed again with them, and each regenerate is journalled in `inspect().generatorJournal`
 // (and on the preparer's seeds, with the document used). The export carries them as `generator` + `generatorSet`.
 import './panel.css';
+import { mountFeelLab } from './lab';
 
 type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 
@@ -66,7 +67,7 @@ const step = (v: number) => {
   return a === 0 ? 0.01 : 10 ** (Math.floor(Math.log10(a)) - 1);
 };
 
-export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHooks): Promise<{ inspect: () => unknown }> {
+export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHooks): Promise<{ inspect: () => unknown; lab: ReturnType<typeof mountFeelLab> }> {
   const first = await client.tuning();
   const defaults = new Map(allLeaves(first));
   if (gen) {
@@ -117,7 +118,9 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     .join('');
   panel.innerHTML = `<header><h3>Owner tuning</h3><span class="note">vehicle + controls + generator</span></header>
     <p class="err" data-tune-error hidden></p>
-    <div class="rows">${rows}</div>
+    <nav class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-tune-tab="values">Values</button><button type="button" role="tab" aria-selected="false" data-tune-tab="lab">Feel Lab</button></nav>
+    <div class="rows" data-tune-pane="values">${rows}</div>
+    <div class="rows lab" data-tune-pane="lab" hidden></div>
     ${gen ? '<p class="built" data-tune-built></p>' : ''}
     <footer>${gen ? '<button type="button" data-tune-regenerate title="Build the current seed again with the generator values">Regenerate track</button>' : ''}<button type="button" data-tune-export>Export patch</button><span data-tune-count>No changes</span></footer>`;
 
@@ -128,6 +131,8 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
   const countEl = panel.querySelector<HTMLElement>('[data-tune-count]')!;
   const refresh = async () => {
     const t = await client.tuning();
+    // The optional `handling` section comes and goes (Feel Lab, Off removes it): its rows are not kept stale.
+    for (const k of [...current.keys()]) if (k.startsWith('handling.')) current.delete(k);
     for (const [path, v] of allLeaves(t)) current.set(path, v);
     if (!genError) {
       errEl.hidden = !t.error;
@@ -183,11 +188,31 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     if (path.startsWith(GEN)) return sendGenerator(path, value);
     const text = JSON.stringify(value);
     client.input({ type: 'ui', ui: `tune:${path}=${text}` });
-    if (JSON.stringify(defaults.get(path)) === text) changed.delete(path);
+    // A value the shipped profile has not got (the optional `handling` section) is at its default when it is `null`.
+    // The sim holds f32: a typed 0.4 is the shipped 0.4000000059604645.
+    const shipped = defaults.get(path);
+    const same = typeof value === 'number' && typeof shipped === 'number' ? Math.fround(value) === Math.fround(shipped) : JSON.stringify(shipped) === text;
+    if (defaults.has(path) ? same : text === 'null') changed.delete(path);
     else changed.set(path, text);
     setTimeout(() => void refresh(), 150);
   };
 
+  const labPane = panel.querySelector<HTMLElement>('[data-tune-pane="lab"]')!;
+  const lab = mountFeelLab(labPane, {
+    ids: first.vehicles ?? [],
+    selected: () => vsel.selected(),
+    choose: (id) => vsel.choose(id),
+    tuning: async () => (await client.tuning()).tuning,
+    set: (path, value) => send(path, value),
+    refresh,
+  });
+  panel.addEventListener('click', (e) => {
+    const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-tune-tab]')?.dataset.tuneTab;
+    if (!tab) return;
+    for (const b of panel.querySelectorAll<HTMLElement>('[data-tune-tab]')) b.setAttribute('aria-selected', String(b.dataset.tuneTab === tab));
+    for (const p of panel.querySelectorAll<HTMLElement>('[data-tune-pane]')) p.hidden = p.dataset.tunePane !== tab;
+    if (tab === 'lab') lab.open();
+  });
   panel.addEventListener('change', (e) => {
     const el = e.target as HTMLInputElement;
     const path = el.dataset.field;
@@ -267,7 +292,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
       ...(generator.length ? { generator: GENERATOR_FILE, generatorSet: generator } : {}),
     };
   };
-  return { inspect: () => ({ open: !panel.hidden, current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), error: errEl.hidden ? null : errEl.textContent }) };
+  return { lab, inspect: () => ({ open: !panel.hidden, current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), lab: lab.inspect(), error: errEl.hidden ? null : errEl.textContent }) };
 }
 
 type TuningState = Awaited<ReturnType<TuningClient['tuning']>>;
@@ -286,7 +311,7 @@ function vehicleSelector(o: {
   current: Map<string, Json>;
   changed: Map<string, string>;
   refresh: () => Promise<void>;
-}): { file(): string; others(): Array<{ profile: string; set: Array<[string, string]> }> } {
+}): { file(): string; selected(): string; choose(id: string): Promise<void>; others(): Array<{ profile: string; set: Array<[string, string]> }> } {
   let vehicle = o.first.vehicle ?? '';
   const isVehicleRow = (path: string) => !path.startsWith(INPUT) && !path.startsWith(GEN);
   const shippedBy = new Map<string, Map<string, Json>>([[vehicle, new Map(leaves(o.first.tuning as Record<string, Json>))]]);
@@ -312,6 +337,8 @@ function vehicleSelector(o: {
       t = await o.client.tuning();
     }
     vehicle = id;
+    const pick = o.panel.querySelector<HTMLSelectElement>('[data-tune-vehicle]');
+    if (pick) pick.value = id;
     if (!shippedBy.has(id)) shippedBy.set(id, new Map(leaves(t.tuning as Record<string, Json>)));
     for (const [path, v] of shippedBy.get(id)!) o.defaults.set(path, v);
     for (const [f, v] of aside.get(id) ?? []) o.changed.set(f, v);
@@ -325,6 +352,8 @@ function vehicleSelector(o: {
     await o.refresh();
   }
   return {
+    selected: () => vehicle,
+    choose,
     file: () => file(vehicle),
     others: () => [...aside].filter(([id, set]) => id !== vehicle && set.length).map(([id, set]) => ({ profile: file(id), set })),
   };
