@@ -1318,8 +1318,13 @@ impl Sim {
         if in_start && c.action.false_start {
             return false;
         }
-        let perfect = !c.action.false_start && since_go.is_some_and(|s| s <= ticks(t.start_perfect_s));
-        let gain = if perfect { 1.0 + t.start_perfect_bonus } else { 1.0 };
+        let perfect =
+            !c.action.false_start && since_go.is_some_and(|s| s <= ticks(t.start_perfect_s));
+        let gain = if perfect {
+            1.0 + t.start_perfect_bonus
+        } else {
+            1.0
+        };
         // The launch is on a cooldown, and fires only from a stop (R127): at speed either way a snap is just throttle.
         if self.tick < c.action.wheelie_ready
             || c.speed_history

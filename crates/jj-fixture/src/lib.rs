@@ -680,7 +680,10 @@ impl Harness {
                 let fired =
                     source.sample(drive, action, flags, t * 1000 / u64::from(jj_sim::TICK_HZ));
                 let s = source.semantics();
-                let grid_held = fx.race.as_ref().is_some_and(|r| r.countdown && t < r.at_tick);
+                let grid_held = fx
+                    .race
+                    .as_ref()
+                    .is_some_and(|r| r.countdown && t < r.at_tick);
                 sim.set_input(
                     CarId(car),
                     if grid_held {

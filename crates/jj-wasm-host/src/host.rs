@@ -728,7 +728,7 @@ impl Host {
         for seat in cues {
             self.events.push(SimEvent::IdleCue { seat });
             // The phone shows the cue too (a host pad's player sees the TV's).
-            self.to_seat_phone(
+            self.send_seat_phone(
                 seat,
                 HostCmd::IdleCue {
                     autopilot_in_ms: IDLE_CUE_MS as u32,
@@ -1536,7 +1536,7 @@ impl Host {
     }
 
     /// Sends `cmd` to the seat's phone, if it has one (a host pad's player reads the TV instead).
-    fn to_seat_phone(&mut self, seat: SeatId, cmd: HostCmd) {
+    fn send_seat_phone(&mut self, seat: SeatId, cmd: HostCmd) {
         let endpoint = self
             .seats
             .seat(seat)
@@ -1566,7 +1566,7 @@ impl Host {
                             jj_sim::race::StartLaunch::Launch => LaunchOutcome::Launch,
                         };
                         self.events.push(SimEvent::StartLaunch { seat, outcome });
-                        self.to_seat_phone(seat, HostCmd::StartLaunch { outcome });
+                        self.send_seat_phone(seat, HostCmd::StartLaunch { outcome });
                     }
                 }
                 Event::LapCompleted { car, laps } => {
