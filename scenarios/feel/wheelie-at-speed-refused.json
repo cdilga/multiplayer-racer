@@ -305,5 +305,24 @@
    "min": 0,
    "max": 0
   }
- ]
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 0,
+    "metric": "maxSpeed",
+    "by": 3.0,
+    "more": true
+   },
+   {
+    "car": 0,
+    "metric": "progressM",
+    "by": 5.0
+   }
+  ]
+ }
 }

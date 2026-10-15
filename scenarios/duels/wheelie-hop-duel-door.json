@@ -1,6 +1,6 @@
 {
  "scenario": "wheelie-hop-duel-door",
- "what": "\u00a77.3b wheelie-hop-duel with a detached door (P1-S09). Six Cruz Missiles, each in a lane of its own on the free ground south of the route, rolling at 10 m/s, time to 100 m. A flat door lies across the lane 50 m on in every lane but plain-clear and well-clear. plain: flat out. well: pulls and releases so the front is up as the car crosses the door (and the launch repays the pull). mash: two seeded random-stick scripts. Known gap: plain-clear is no faster than plain, because the door is no obstacle: well beats plain on the launch, not on the hop.",
+ "what": "R127: the launch fires only from a stop, so at 10 m/s the pull is just a brake and the front never lifts over the door: plain beats well (it was well beats plain under R116). §7.3b wheelie-hop-duel with a detached door (P1-S09). Six Cruz Missiles, each in a lane of its own on the free ground south of the route, rolling at 10 m/s, time to 100 m. A flat door lies across the lane 50 m on in every lane but plain-clear and well-clear. plain: flat out. well: pulls and releases so the front is up as the car crosses the door (and the launch repays the pull). mash: two seeded random-stick scripts. Known gap: plain-clear is no faster than plain, because the door is no obstacle: well beats plain on the launch, not on the hop.",
  "map": "scenarios/duels/yard/duel-yard.json",
  "seed": 61,
  "ticks": 960,

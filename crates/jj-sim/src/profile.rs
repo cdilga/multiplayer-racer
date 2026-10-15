@@ -165,6 +165,12 @@ pub struct Tuning {
     /// R127: the launch fires only from a stop. It is refused while the car moves faster than this either way (m/s);
     /// a pull at rest reverses at once, so the creep back during the charge must stay under it.
     pub wheelie_max_launch_mps: f32,
+    /// R127 gated start: a launch within `start_perfect_s` of GO is perfect and its repayment is multiplied by
+    /// `1 + start_perfect_bonus`; a snap during the countdown forfeits the launch until `start_forfeit_s`
+    /// after GO (the car just drives off).
+    pub start_perfect_s: f32,
+    pub start_perfect_bonus: f32,
+    pub start_forfeit_s: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,

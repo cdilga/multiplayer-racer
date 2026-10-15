@@ -1298,6 +1298,10 @@ impl Sim {
         let t = self.profiles[vehicle].tuning.clone();
         let front_z = self.profiles[vehicle].axle_front_z();
         let held = self.race.is_held(car.0, self.tick);
+        // R127 gated start: inside the start window a false start forfeits the launch; a snap soon after GO is perfect.
+        let ticks = |s: f32| libm::roundf(s * TICK_HZ as f32) as u64;
+        let since_go = self.race.started_at.map(|s| self.tick.saturating_sub(s));
+        let in_start = since_go.is_some_and(|s| s < ticks(t.start_forfeit_s));
         let Some(c) = self.cars.get_mut(car.0 as usize) else {
             return false;
         };
@@ -1311,6 +1315,11 @@ impl Sim {
         if grounded < required || held || preload_ms == 0 {
             return false;
         }
+        if in_start && c.action.false_start {
+            return false;
+        }
+        let perfect = !c.action.false_start && since_go.is_some_and(|s| s <= ticks(t.start_perfect_s));
+        let gain = if perfect { 1.0 + t.start_perfect_bonus } else { 1.0 };
         // The launch is on a cooldown, and fires only from a stop (R127): at speed either way a snap is just throttle.
         if self.tick < c.action.wheelie_ready
             || c.speed_history
@@ -1356,7 +1365,7 @@ impl Sim {
                     .unwrap_or(started);
                 let shed = (started - paid).max(0.0);
                 let engine = t.max_engine_force / t.mass * (paid_ticks as f32 / TICK_HZ as f32);
-                let dv = t.wheelie_launch_reward * (shed + engine);
+                let dv = t.wheelie_launch_reward * gain * (shed + engine);
                 let forward = iso.rotation * Vector::Z;
                 let flat = Vector::new(forward.x, 0.0, forward.z).normalize_or_zero();
                 let mass = b.mass();
@@ -1368,6 +1377,44 @@ impl Sim {
                 );
             }
         }
+        if in_start {
+            let outcome = if perfect {
+                crate::race::StartLaunch::Perfect
+            } else {
+                crate::race::StartLaunch::Launch
+            };
+            self.race.note(
+                self.tick,
+                crate::race::Event::StartLaunch {
+                    car: car.0,
+                    outcome,
+                },
+            );
+        }
+        true
+    }
+
+    /// R127: the car's launch snapped while the grid was held for the countdown (the host knows the phase; the sim
+    /// is built at the countdown and started at GO). Journaled. The launch is forfeited until `start_forfeit_s` after
+    /// GO, and an `Early` start event is recorded once. Returns whether this was the car's first false start.
+    pub fn false_start(&mut self, car: CarId) -> bool {
+        self.journal
+            .setup
+            .push((self.tick, Setup::FalseStart { car: car.0 }));
+        let Some(c) = self.cars.get_mut(car.0 as usize) else {
+            return false;
+        };
+        if c.action.false_start || self.race.started_at.is_some() {
+            return false;
+        }
+        c.action.false_start = true;
+        self.race.note(
+            self.tick,
+            crate::race::Event::StartLaunch {
+                car: car.0,
+                outcome: crate::race::StartLaunch::Early,
+            },
+        );
         true
     }
 
@@ -3298,6 +3345,7 @@ impl Sim {
                 h.update(c.action.load_shift.to_le_bytes());
             }
             h.update(c.action.wheelie_ready.to_le_bytes());
+            h.update([u8::from(c.action.false_start)]);
             for (r, n) in c.action.utility_ready.iter().zip(c.action.utility_fired) {
                 h.update(r.to_le_bytes());
                 h.update(n.to_le_bytes());
@@ -3373,6 +3421,9 @@ impl Sim {
                     Setup::Autopilot { car, on } => sim.set_autopilot(CarId(*car), *on),
                     Setup::Wheelie { car, preload_ms } => {
                         sim.wheelie(CarId(*car), *preload_ms);
+                    }
+                    Setup::FalseStart { car } => {
+                        sim.false_start(CarId(*car));
                     }
                     Setup::Utility { car, kind } => {
                         sim.utility(CarId(*car), *kind);

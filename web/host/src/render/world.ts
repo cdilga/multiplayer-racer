@@ -30,6 +30,7 @@ import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
+import { LaunchCallouts } from './launch-callout';
 
 export interface NameplatePoint {
   tile: number; car: number; id: number; x: number; y: number; font: number;
@@ -122,6 +123,7 @@ export class World {
   readonly scene = new Scene();
   /** Identify's number over the car, in every view (P1-R06). */
   readonly identifyMarks = new IdentifyMarks(this.scene);
+  readonly launchCallouts = new LaunchCallouts(this.scene);
   readonly camera = new PerspectiveCamera(50, 16 / 9, 0.5, 2000);
   readonly interp = new Interpolator();
   vehicles: VehicleRenderer | null = null;
@@ -455,6 +457,7 @@ export class World {
     }
     this.vehicles?.update(s);
     this.identifyMarks.update(s);
+    this.launchCallouts.update(s);
     const r = this.backend.renderer;
     const st = this.stats;
     r.shadowMap.needsUpdate = true;
@@ -467,6 +470,7 @@ export class World {
       useLod(this.camera, lod);
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
+      this.launchCallouts.fit(this.camera);
       this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
       this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0);
       st.lods = [lod];
@@ -555,6 +559,7 @@ export class World {
       r.setScissor(x, y, tw, th);
       r.setClearColor(SKY);
       r.clear();
+      this.launchCallouts.fit(cam);
       this.backend.render(this.scene, cam);
       this.nameplates(s, cam, t, t.seat, i);
       if (mode === 'fp' && i >= 0) {
@@ -569,6 +574,7 @@ export class World {
         r.setViewport(mx, my, mw, mh);
         r.setScissor(mx, my, mw, mh);
         r.clear();
+        this.launchCallouts.fit(this.mirrorCam);
         this.backend.render(this.scene, this.mirrorCam);
       }
     }

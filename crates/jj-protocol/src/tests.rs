@@ -297,6 +297,9 @@ fn host_samples() -> Vec<HostCmd> {
             item: ItemId::Boomerang,
             kind: ItemEventKind::Picked,
         }),
+        HostCmd::StartLaunch {
+            outcome: LaunchOutcome::Early,
+        },
     ]
 }
 
@@ -314,9 +317,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::InputProfile(_) => "input-profile",
         HostCmd::Inventory(_) => "inventory",
         HostCmd::ItemEvent(_) => "item-event",
+        HostCmd::StartLaunch { .. } => "start-launch",
     }
 }
-const HOST_VARIANTS: [&str; 12] = [
+const HOST_VARIANTS: [&str; 13] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -329,6 +333,7 @@ const HOST_VARIANTS: [&str; 12] = [
     "input-profile",
     "inventory",
     "item-event",
+    "start-launch",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.
@@ -625,6 +630,10 @@ fn event_samples() -> Vec<SimEvent> {
             preparation: PreparationId(5),
             seed: 77,
         },
+        SimEvent::StartLaunch {
+            seat: SeatId(2),
+            outcome: LaunchOutcome::Perfect,
+        },
     ]
 }
 
@@ -791,7 +800,7 @@ fn every_variant_has_a_golden() {
     assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
-        12,
+        13,
         "every SimEvent variant, plus extra episode shapes"
     );
 }
@@ -836,7 +845,7 @@ fn decoders_reject_wrong_versions_and_trailing_bytes() {
     assert_eq!(
         ControllerCmd::decode(&hello),
         Err(DecodeError::Version {
-            expected: 1,
+            expected: CMD_VERSION.into(),
             got: 9
         })
     );

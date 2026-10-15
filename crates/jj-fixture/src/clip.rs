@@ -389,6 +389,9 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::Wheelie { car, preload_ms } => {
             sim.wheelie(CarId(*car), *preload_ms);
         }
+        Setup::FalseStart { car } => {
+            sim.false_start(CarId(*car));
+        }
         Setup::Utility { car, kind } => {
             sim.utility(CarId(*car), *kind);
         }

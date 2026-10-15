@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 use crate::DecodeError;
 
 /// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
-pub const CMD_VERSION: u8 = 2;
+/// 3: `HostCmd::StartLaunch` (R127 gated start).
+pub const CMD_VERSION: u8 = 3;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -257,6 +258,20 @@ pub enum HostCmd {
     InputProfile(InputThresholds),
     Inventory(crate::items::Inventory),
     ItemEvent(crate::items::ItemEvent),
+    /// R127 gated start: how this seat's launch went (the phone shows it, as the TV does).
+    StartLaunch {
+        outcome: LaunchOutcome,
+    },
+}
+
+/// How a seat's start went (R127): `Early` snapped during the countdown and lost the launch for this start; `Perfect`
+/// launched just after GO, with the bonus; `Launch` launched later in the start window.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum LaunchOutcome {
+    Early,
+    Perfect,
+    Launch,
 }
 
 /// The input profile (`assets/profiles/input.json`) on the wire, in fixed point so the host and every controller resolve

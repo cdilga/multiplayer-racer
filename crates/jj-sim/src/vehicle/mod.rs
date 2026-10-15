@@ -56,6 +56,8 @@ pub struct ActionState {
     pub utility_fired: [u32; 2],
     /// The tick the wheelie launch can next fire (the cooldown, P1-C11).
     pub wheelie_ready: u64,
+    /// R127: the launch snapped during the countdown; it is forfeited until `start_forfeit_s` after GO.
+    pub false_start: bool,
     /// R120: seconds of real drift held so far (the handbrake on, rear sliding, at speed), and the drift-exit boost's
     /// ticks left once it's let go ("drop a gear and disappear"); how many exit boosts this car has fired.
     pub drift_held_s: f32,
@@ -79,6 +81,7 @@ impl ActionState {
             utility_ready: [0; 2],
             utility_fired: [0; 2],
             wheelie_ready: 0,
+            false_start: false,
             drift_held_s: 0.0,
             exit_boost_ticks: 0,
             exit_boosts: 0,

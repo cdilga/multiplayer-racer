@@ -147,6 +147,9 @@ async function boot(): Promise<void> {
     identifyMarks: () => world.identifyMarks.active(),
     /** Every Identify mark put up over a car (car, label), oldest first. */
     identifyMarksShown: () => world.identifyMarks.shown.slice(),
+    /** Cars showing a gated-start callout now, and every callout put up (car, outcome), oldest first (R127). */
+    launchCallouts: () => world.launchCallouts.active(),
+    launchCalloutsShown: () => world.launchCallouts.shown.slice(),
     /** Per tile: on-screen size of the other cars (the far car's N px). */
     farCars: () => world.farCars(),
     /** Per tile: which of the world points (x, y, z) its camera has in view (P1-G05: is the debris visible there). */
@@ -283,6 +286,12 @@ async function boot(): Promise<void> {
           world.identifyMarks.flash(st.car, `#${st.number}`, `rgb(${st.rgb.join(' ')})`, ink);
         }
         if (roundScreens?.hud.identify(id.seat)) identified.push({ seat: id.seat, at, shownAt: performance.now(), wall: Date.now() });
+      }
+      // Gated start (R127): how the seat's launch went, popped over its car.
+      const sl = (e as { StartLaunch?: { seat: number; outcome: 'Early' | 'Perfect' | 'Launch' } }).StartLaunch;
+      if (sl) {
+        const st = client.room?.seats.find((x) => x.seat === sl.seat);
+        if (st && st.car !== null) world.launchCallouts.pop(st.car, sl.outcome);
       }
       const dist = e.CameraDistanceSet;
       if (dist) {

@@ -200,6 +200,10 @@ export class AudioDirector {
         case 'Identify':
           this.sfx.trigger('identify-ping', 0.8, 'seat.identify', { seat }, String(seat));
           break;
+        case 'StartLaunch':
+          // R127 gated start: a good launch gets the existing ping; no audio files added.
+          if (v.outcome !== 'Early') this.sfx.trigger('identify-ping', 0.8, 'seat.start_launch', { seat, outcome: v.outcome }, String(seat));
+          break;
         case 'Lap': {
           const lap = Number(v.lap);
           const laps = this.room?.laps ?? 0;

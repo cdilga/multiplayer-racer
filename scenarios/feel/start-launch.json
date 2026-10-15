@@ -1,0 +1,220 @@
+{
+ "scenario": "start-launch",
+ "what": "R127 gated start, driven through the raw sticks as a host pad is. Four Cruz Missiles on the greybox grid; the countdown holds the grid for 3 s (GO at tick 360), when no car moves whatever its stick says and reverse is locked. early: pulls back from the start and snaps forward at tick 300, before GO: a false start, so its launch is forfeited for this start and it just drives off at GO. perfect: pulls back through the countdown and snaps at GO: the launch fires with the perfect-start bonus. late: keeps pulling (backing up a little after GO) and snaps half a second late: a normal launch. none: no stick until GO, then full throttle. Expect: nobody moves before GO; only perfect and late launch; perfect leads.",
+ "map": "maps/greybox-loop.json",
+ "seed": 7,
+ "ticks": 540,
+ "race": {
+  "laps": 1,
+  "atTick": 360,
+  "countdown": true
+ },
+ "cars": [
+  {
+   "routePoint": 4,
+   "lateral": -4.5
+  },
+  {
+   "routePoint": 4,
+   "lateral": -1.5
+  },
+  {
+   "routePoint": 4,
+   "lateral": 1.5
+  },
+  {
+   "routePoint": 4,
+   "lateral": 4.5
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ],
+   "toTick": 300
+  },
+  {
+   "car": 0,
+   "fromTick": 300,
+   "stick": [
+    0,
+    1
+   ]
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ],
+   "toTick": 360
+  },
+  {
+   "car": 1,
+   "fromTick": 360,
+   "stick": [
+    0,
+    1
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ],
+   "toTick": 420
+  },
+  {
+   "car": 2,
+   "fromTick": 420,
+   "stick": [
+    0,
+    1
+   ]
+  },
+  {
+   "car": 3,
+   "fromTick": 0,
+   "stick": [
+    0,
+    0
+   ],
+   "toTick": 360
+  },
+  {
+   "car": 3,
+   "fromTick": 360,
+   "stick": [
+    0,
+    1
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "atTick": 359,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.2
+  },
+  {
+   "car": 1,
+   "atTick": 359,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.2
+  },
+  {
+   "car": 2,
+   "atTick": 359,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.2
+  },
+  {
+   "car": 3,
+   "atTick": 359,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.2
+  },
+  {
+   "car": 0,
+   "metric": "wheelieDriveS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "wheelieDriveS",
+   "min": 0.7,
+   "max": 0.9
+  },
+  {
+   "car": 2,
+   "metric": "wheelieDriveS",
+   "min": 0.7,
+   "max": 0.9
+  },
+  {
+   "car": 3,
+   "metric": "wheelieDriveS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 0,
+   "atTick": 480,
+   "metric": "forwardSpeed",
+   "min": 9,
+   "max": 12
+  },
+  {
+   "car": 1,
+   "atTick": 480,
+   "metric": "forwardSpeed",
+   "min": 21,
+   "max": 27
+  },
+  {
+   "car": 2,
+   "atTick": 480,
+   "metric": "forwardSpeed",
+   "min": 12,
+   "max": 18
+  },
+  {
+   "car": 3,
+   "atTick": 480,
+   "metric": "forwardSpeed",
+   "min": 9,
+   "max": 12
+  },
+  {
+   "car": 0,
+   "metric": "progressM",
+   "min": 9,
+   "max": 14
+  },
+  {
+   "car": 1,
+   "metric": "progressM",
+   "min": 28,
+   "max": 38
+  },
+  {
+   "car": 2,
+   "metric": "progressM",
+   "min": 11,
+   "max": 18
+  },
+  {
+   "car": 3,
+   "metric": "progressM",
+   "min": 9,
+   "max": 14
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 1,
+    "metric": "progressM",
+    "by": 10.0,
+    "more": true
+   }
+  ]
+ }
+}

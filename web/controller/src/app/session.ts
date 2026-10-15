@@ -9,6 +9,7 @@ import { underBase } from '../../../shared/src/base';
 import type { ItemEvent, ItemInventory, ItemUseRefusal } from '../../../shared/src/items';
 import { ApiError, ControllerLink, type LinkState, type TransportOptions } from '../../../shared/transport';
 import init, * as wasm from '../pkg/jj_wasm_input.js';
+import { LAUNCH_SHOWN_MS, type LaunchOutcome } from '../../../shared/src/launch';
 
 export type Phase =
   | 'finding'
@@ -106,6 +107,8 @@ export class Session {
   /** G03's idle cue: when it arrived (null once the player steers) and the autopilot's delay after it. */
   idleCueAt: number | null = null;
   idleCueMs = 0;
+  /** R127 gated start: how this seat's launch went, shown for LAUNCH_SHOWN_MS (the TV pops the same over the car). */
+  launchOutcome: { outcome: LaunchOutcome; at: number } | null = null;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null = null;
   persisted = true;
   /** The hub's per-source identity (C08): a source is its own endpoint, so it has its own stored seat and tab fence. */
@@ -458,6 +461,11 @@ export class Session {
         }
       } else if (r === 'Ended') this.ended();
       else this.set('ready-to-join');
+    } else if ('StartLaunch' in cmd) {
+      this.launchOutcome = { outcome: (cmd.StartLaunch as { outcome: LaunchOutcome }).outcome, at: performance.now() };
+      this.onChange();
+      // Repaint when it expires so the banner returns to the round's own line.
+      setTimeout(() => this.onChange(), LAUNCH_SHOWN_MS + 50);
     } else if ('IdleCue' in cmd) {
       // G03: no deliberate input while racing; the autopilot takes over unless the player steers.
       this.idleCueAt = performance.now();
@@ -743,6 +751,7 @@ export class Session {
         ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown, driftHeld: this.srcIdx >= 0 ? this.endpoint.driftHeld(this.srcIdx) : false }
         : null,
       inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
+      launchOutcome: this.launchOutcome?.outcome ?? null,
       launch: { preloading: this.endpoint && this.srcIdx >= 0 ? this.endpoint.wheeliePreload(this.srcIdx) : false, cooldown: this.launchCooldown(), lastDetectedAction: this.lastDetectedAction },
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
     };

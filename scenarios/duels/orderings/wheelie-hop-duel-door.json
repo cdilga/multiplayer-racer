@@ -15,8 +15,8 @@
  ],
  "beats": [
   {
-   "faster": "well",
-   "slower": "plain",
+   "faster": "plain",
+   "slower": "well",
    "byS": 0.1
   },
   {

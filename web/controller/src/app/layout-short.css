@@ -59,3 +59,11 @@
 @media (orientation: portrait) and (max-width: 399px) {
   .tools .btn[data-act=car] .lbl { display: none; }
 }
+
+/* R127 gated start: the launch callout on the round banner (words only; colour tells early from good). It sits mid-screen
+   in the gap between the sticks, big enough to read at a glance and clear of the bottom device tray (which the countdown
+   line shares, in landscape). */
+.round-banner[data-launch] { top: 52%; bottom: auto; transform: translate(-50%, -50%) rotate(-3deg); z-index: 9; padding: 8px 16px; font-size: 26px; white-space: nowrap; }
+.round-banner[data-launch=early] { background: var(--c-danger); --bz-fill: var(--c-danger); color: var(--c-white); }
+.round-banner[data-launch=perfect], .round-banner[data-launch=launch] { background: var(--c-teal); --bz-fill: var(--c-teal); }
+.round-banner[data-launch=perfect] { background: var(--c-saffron); --bz-fill: var(--c-saffron); }

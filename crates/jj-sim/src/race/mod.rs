@@ -320,6 +320,21 @@ pub enum Event {
     RaceOver {
         why: RaceEnd,
     },
+    /// R127 gated start: how this car's launch went. `Early` when it snapped during the countdown (the launch is
+    /// forfeited for this start); `Perfect` or `Launch` when it fired inside the start window after GO.
+    StartLaunch {
+        car: u32,
+        outcome: StartLaunch,
+    },
+}
+
+/// How a car's start went (R127).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum StartLaunch {
+    Early,
+    Perfect,
+    Launch,
 }
 
 /// One car's race state.
@@ -478,6 +493,11 @@ impl Race {
 
     pub fn car(&self, car: u32) -> Option<&CarRace> {
         self.cars.get(car as usize)
+    }
+
+    /// Records an event the sim decided (the race rules record their own).
+    pub(crate) fn note(&mut self, tick: u64, event: Event) {
+        self.events.push((tick, event));
     }
 
     /// Everything that happened, with the tick it happened at.

@@ -11,7 +11,7 @@ use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
 /// `PartLoose` and the contact-episode records join (P1-S04a).
-pub const ABI_VERSION: u16 = 2;
+pub const ABI_VERSION: u16 = 3;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -283,6 +283,11 @@ pub enum SimEvent {
     CameraDistanceSet {
         seat: SeatId,
         distance: crate::cmd::CameraDistance,
+    },
+    /// R127 gated start: how the seat's launch went; the TV pops it over the car.
+    StartLaunch {
+        seat: SeatId,
+        outcome: crate::cmd::LaunchOutcome,
     },
 }
 

@@ -27,7 +27,7 @@ use jj_protocol::abi::{
     ABI_VERSION, Channel, DamageCause, EpisodeRecord, HitBody, MainToSim, SimEvent, SimToMain,
     UiCommand,
 };
-use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd};
+use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd, LaunchOutcome};
 use jj_protocol::state::{Hud, HudUpdate, PauseReason, StateFlags, StateMessage};
 use jj_session::seats::{self, ConnId, SeatConfig, Seats};
 use jj_sim::damage::{DamageEvent, OtherBody as DamageOther};
@@ -259,6 +259,16 @@ fn session_only(cmd: &ControllerCmd) -> bool {
         | ControllerCmd::SetAssist { .. }
         | ControllerCmd::Tutorial { .. } => true,
         _ => false,
+    }
+}
+
+/// A launch snap (R127): while the grid is held for the countdown it is a false start that forfeits this start's
+/// launch; otherwise the sim's launch (which decides perfect, normal or refused).
+fn launch(sim: &mut Sim, grid_held: bool, car: CarId, preload_ms: u16) {
+    if grid_held {
+        sim.false_start(car);
+    } else {
+        sim.wheelie(car, preload_ms);
     }
 }
 
@@ -718,25 +728,12 @@ impl Host {
         for seat in cues {
             self.events.push(SimEvent::IdleCue { seat });
             // The phone shows the cue too (a host pad's player sees the TV's).
-            let endpoint = self
-                .seats
-                .seat(seat)
-                .and_then(|s| s.conn)
-                .and_then(|c| self.endpoint_of(c))
-                .filter(|e| !e.0.starts_with("local:"));
-            if let Some(endpoint) = endpoint {
-                let bytes = self.seat_cmd(
-                    seat,
-                    HostCmd::IdleCue {
-                        autopilot_in_ms: IDLE_CUE_MS as u32,
-                    },
-                );
-                self.out.push(SimToMain::Outbound {
-                    endpoint,
-                    channel: Channel::Cmd,
-                    bytes,
-                });
-            }
+            self.to_seat_phone(
+                seat,
+                HostCmd::IdleCue {
+                    autopilot_in_ms: IDLE_CUE_MS as u32,
+                },
+            );
         }
         let held = self.driving() == jj_session::director::Driving::Held;
         // R125: each seat's assist level rides to its car. Catch-up is a round rule applied at GO, so a
@@ -751,7 +748,9 @@ impl Host {
                     .state
                     .age_ms(now_ms)
                     .is_some_and(|age| age <= STALE_MS);
-            let controls = if fresh {
+            let controls = if held {
+                DriveInput::grid_held()
+            } else if fresh {
                 controls(input.state.semantics())
             } else {
                 DriveInput::default()
@@ -784,6 +783,7 @@ impl Host {
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
+        let grid_held = self.driving() == jj_session::director::Driving::Held;
         let now_ms = tick_ms(tick);
         match msg {
             MainToSim::NetBytes {
@@ -921,7 +921,7 @@ impl Host {
                             input.prompt.action(a.kind);
                             match a.kind {
                                 ActionKind::Wheelie { preload_ms } => {
-                                    self.sim.wheelie(car, preload_ms);
+                                    launch(&mut self.sim, grid_held, car, preload_ms);
                                 }
                                 ActionKind::UtilityForward => {
                                     self.sim.utility(car, UtilityKind::Forward);
@@ -1027,6 +1027,7 @@ impl Host {
     }
 
     fn controller_cmd(&mut self, endpoint: EndpointId, cmd: ControllerCmd) {
+        let grid_held = self.driving() == jj_session::director::Driving::Held;
         // One level of `ForSource`: the command is for that source of the endpoint (a hub's pad or key cluster); the
         // wrapper never nests and never wraps a Hello (that is the connection's).
         let (via, cmd) = match cmd {
@@ -1199,7 +1200,7 @@ impl Host {
                     if let Some(car) = input.car {
                         match kind {
                             ActionKind::Wheelie { preload_ms } => {
-                                self.sim.wheelie(car, preload_ms);
+                                launch(&mut self.sim, grid_held, car, preload_ms);
                             }
                             ActionKind::UtilityForward => {
                                 outcome = Some(self.utility_outcome(car, UtilityKind::Forward));
@@ -1534,11 +1535,40 @@ impl Host {
         self.events.extend(out);
     }
 
+    /// Sends `cmd` to the seat's phone, if it has one (a host pad's player reads the TV instead).
+    fn to_seat_phone(&mut self, seat: SeatId, cmd: HostCmd) {
+        let endpoint = self
+            .seats
+            .seat(seat)
+            .and_then(|s| s.conn)
+            .and_then(|c| self.endpoint_of(c))
+            .filter(|e| !e.0.starts_with("local:"));
+        if let Some(endpoint) = endpoint {
+            let bytes = self.seat_cmd(seat, cmd);
+            self.out.push(SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes,
+            });
+        }
+    }
+
     fn collect_race_events(&mut self) {
         let race = self.sim.race().events().to_vec();
         let mut over = false;
         for (_, e) in &race[self.seen_race_events..] {
             match *e {
+                Event::StartLaunch { car, outcome } => {
+                    if let Some(seat) = self.seat_of_car(car) {
+                        let outcome = match outcome {
+                            jj_sim::race::StartLaunch::Early => LaunchOutcome::Early,
+                            jj_sim::race::StartLaunch::Perfect => LaunchOutcome::Perfect,
+                            jj_sim::race::StartLaunch::Launch => LaunchOutcome::Launch,
+                        };
+                        self.events.push(SimEvent::StartLaunch { seat, outcome });
+                        self.to_seat_phone(seat, HostCmd::StartLaunch { outcome });
+                    }
+                }
                 Event::LapCompleted { car, laps } => {
                     if let Some(seat) = self.seat_of_car(car) {
                         self.events.push(SimEvent::Lap {

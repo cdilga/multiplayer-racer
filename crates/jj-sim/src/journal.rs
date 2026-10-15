@@ -26,6 +26,15 @@ impl DriveInput {
         *self == Self::default()
     }
 
+    /// The grid held for the countdown (R127): full brakes that never become reverse, so no car rolls before GO.
+    pub fn grid_held() -> Self {
+        Self {
+            brake: i16::MAX,
+            no_reverse: true,
+            ..Self::default()
+        }
+    }
+
     /// From a source's interpreted sticks (jj-input's `SourceSemantics`): throttle and brake 0..1, steer −1 left ..
     /// +1 right. The sim's positive steer turns left, so steering flips here, in the one place the host and fixtures
     /// share.
@@ -165,6 +174,11 @@ pub enum Setup {
     /// A station's box was taken after a successful pickup (P1-W04). Appended: variant indices stay stable.
     TakeStation {
         station: u32,
+    },
+    /// R127: the car's launch snapped during the countdown (the host saw it while the grid was held), so its launch is
+    /// forfeited for this start. Appended: variant indices stay stable.
+    FalseStart {
+        car: u32,
     },
 }
 

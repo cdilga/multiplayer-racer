@@ -2,6 +2,7 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
+import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
 import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
@@ -517,7 +518,13 @@ function roundBanner(app: HTMLElement, session: Session): void {
     screen.append(b);
   }
   let text = '';
-  if (session.idleCueAt !== null && session.roomPhase === 'Racing') {
+  let tag = '';
+  const launch = session.launchOutcome;
+  if (launch && performance.now() - launch.at < LAUNCH_SHOWN_MS && ['Countdown', 'Racing'].includes(session.roomPhase ?? '')) {
+    // R127 gated start: how your launch went, over the countdown or the first seconds of the race.
+    text = LAUNCH_TEXT[launch.outcome];
+    tag = launch.outcome.toLowerCase();
+  } else if (session.idleCueAt !== null && session.roomPhase === 'Racing') {
     // G03: idle while racing. The countdown to the autopilot, then who's driving until the player steers.
     const left = session.idleCueMs - (performance.now() - session.idleCueAt);
     text = left > 0 ? `Still there? Steer to keep your car: ${Math.ceil(left / 1000)}` : 'The autopilot is driving: steer to take over';
@@ -530,6 +537,8 @@ function roundBanner(app: HTMLElement, session: Session): void {
   } else if (session.roomPhase === 'Lobby') {
     text = session.isReady ? 'Ready! Waiting for the others' : 'Tap Ready when you are';
   }
+  if (tag) b.dataset.launch = tag;
+  else delete b.dataset.launch;
   b.textContent = text;
   b.hidden = text === '';
 }

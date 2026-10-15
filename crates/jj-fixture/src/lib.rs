@@ -222,6 +222,10 @@ pub struct RaceSpec {
     pub laps: u32,
     #[serde(default)]
     pub at_tick: u64,
+    /// R127: before `at_tick` the grid is held for the countdown, as the host holds it: stick-driven cars get no drive
+    /// input and a launch snap is a false start.
+    #[serde(default)]
+    pub countdown: bool,
 }
 
 fn default_laps() -> u32 {
@@ -665,18 +669,26 @@ impl Harness {
                 let fired =
                     source.sample(drive, action, flags, t * 1000 / u64::from(jj_sim::TICK_HZ));
                 let s = source.semantics();
+                let grid_held = fx.race.as_ref().is_some_and(|r| r.countdown && t < r.at_tick);
                 sim.set_input(
                     CarId(car),
-                    DriveInput::from_semantics(
-                        s.drive.throttle,
-                        s.drive.steer,
-                        s.drive.brake,
-                        s.drift,
-                        s.boost,
-                    ),
+                    if grid_held {
+                        DriveInput::grid_held()
+                    } else {
+                        DriveInput::from_semantics(
+                            s.drive.throttle,
+                            s.drive.steer,
+                            s.drive.brake,
+                            s.drift,
+                            s.boost,
+                        )
+                    },
                 );
                 for a in fired {
                     match a.kind {
+                        jj_protocol::cmd::ActionKind::Wheelie { .. } if grid_held => {
+                            sim.false_start(CarId(car));
+                        }
                         jj_protocol::cmd::ActionKind::Wheelie { preload_ms } => {
                             sim.wheelie(CarId(car), preload_ms);
                         }
