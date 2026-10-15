@@ -55,6 +55,9 @@ export function summarise(rows, frames) {
   const gaps = frames.slice(1).map((fr, i) => fr.at - frames[i].at).sort((a, b) => a - b);
   out.renderLagTicks = { p50: round(quantile(lag, 0.5)), p99: round(quantile(lag, 0.99)) };
   out.frameMs = { p50: round(quantile(gaps, 0.5)), p99: round(quantile(gaps, 0.99)) };
+  // The five slowest touches, by their place in the run (a hitch at the start reads differently from one mid-run).
+  out.worst = rows.map((r, i) => ({ i, ...Object.fromEntries(STAGES.map(([name, from, to]) => [name, round(r[to] - r[from])])) }))
+    .sort((a, b) => b.total - a.total).slice(0, 5);
   return out;
 }
 

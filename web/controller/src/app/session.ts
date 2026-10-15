@@ -495,6 +495,12 @@ export class Session {
   setSticks(drive: Stick, action: Stick): void {
     this.drive = { ...drive };
     this.action = { ...action };
+    // Sample and send now rather than at the next poll (P1-FL17): the scheduler still paces sends, the poll still covers
+    // refreshes and gated changes.
+    if (this.endpoint && this.srcIdx >= 0) {
+      this.sample();
+      this.flush(this.endpoint, false);
+    }
     this.onSticks(drive, action);
     if (this.idleCueAt !== null && Math.max(Math.hypot(drive.x, drive.y), Math.hypot(action.x, action.y)) > 0.3) {
       // Deliberate input: the host hands the car back (if the autopilot had it), so the cue goes.
