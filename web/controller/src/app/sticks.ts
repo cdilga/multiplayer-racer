@@ -25,9 +25,10 @@ export interface StickHandle {
  *  ms): the first stage of the thumb-to-screen latency (P1-FL17). */
 export let stickEventAt = 0;
 const stamp = (e: Event) => { stickEventAt = performance.timeOrigin + e.timeStamp; };
-/** Moves arrive on `pointerrawupdate` where the browser has it (Chromium, secure contexts): `pointermove` is held for the
- *  next animation frame, up to ~17 ms after the touch (P1-FL17). Elsewhere (Safari) `pointermove`. */
-const MOVE = 'onpointerrawupdate' in globalThis ? 'pointerrawupdate' : 'pointermove';
+/** Moves are taken from `pointerrawupdate` too where the browser has it (Chromium, secure contexts): `pointermove` is held
+ *  for the next animation frame, up to ~17 ms after the touch (P1-FL17). `pointermove` still counts (Safari, synthetic
+ *  events); a move seen twice lands on the same point. */
+const MOVES = 'onpointerrawupdate' in globalThis ? ['pointerrawupdate', 'pointermove'] : ['pointermove'];
 
 export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed = false, vibrate: () => boolean = () => true): StickHandle {
   const base = z.querySelector<HTMLElement>('.base')!;
@@ -88,13 +89,14 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
     stamp(e);
     move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
   });
-  z.addEventListener(MOVE, (ev) => {
+  const onMove = (ev: Event) => {
     const e = ev as PointerEvent;
     if (e.pointerId !== pid) return;
     stamp(e);
     const r = z.getBoundingClientRect();
     move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
-  });
+  };
+  for (const type of MOVES) z.addEventListener(type, onMove);
   const end = (e: PointerEvent) => {
     if (e.pointerId !== pid) return;
     stamp(e);
