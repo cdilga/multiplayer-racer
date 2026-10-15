@@ -304,18 +304,19 @@ fn r116_a_throttle_roll_on_after_braking_never_launches() {
 }
 
 #[test]
-fn r116_a_full_pull_arms_first_and_reverses_only_past_the_delay() {
+fn r127_a_full_pull_is_reverse_at_once_and_still_charges_the_launch() {
     let mut s = SourceState::new(SourceHandle(1));
-    let t = pull(&mut s, 0, 500);
+    let t = pull(&mut s, 0, 20);
     let early = s.semantics().drive;
     assert!(
-        early.brake == 1.0 && !early.reverse,
-        "the brakes hold, no reverse yet"
+        early.brake == 1.0 && early.reverse,
+        "the first sample of a full pull already reads as reverse (the sim brakes first while moving)"
     );
-    pull(&mut s, t, 600);
-    assert!(
-        s.semantics().drive.reverse,
-        "held past the delay it is reverse"
+    let t = pull(&mut s, t, 480);
+    assert_eq!(
+        s.sample([0, TOP], [0, 0], DUAL, t + 40).len(),
+        1,
+        "the same pull still launches on a snap (the sim decides whether the car was stopped)"
     );
 }
 

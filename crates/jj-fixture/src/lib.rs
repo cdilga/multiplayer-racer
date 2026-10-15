@@ -673,7 +673,6 @@ impl Harness {
                         s.drive.brake,
                         s.drift,
                         s.boost,
-                        s.launch_armed,
                     ),
                 );
                 for a in fired {

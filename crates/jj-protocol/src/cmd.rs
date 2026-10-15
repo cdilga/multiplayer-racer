@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::DecodeError;
 
-/// The version byte in front of every command.
-pub const CMD_VERSION: u8 = 1;
+/// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
+pub const CMD_VERSION: u8 = 2;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -275,7 +275,6 @@ pub struct InputThresholds {
     pub launch_snap_to: u16,
     pub launch_snap_window_ms: u32,
     pub launch_cooldown_ms: u32,
-    pub launch_reverse_delay_ms: u32,
     pub flick_rim: u16,
     pub flick_arm_below: u16,
     pub flick_max_travel_ms: u32,

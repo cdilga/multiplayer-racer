@@ -63,9 +63,6 @@ pub struct LaunchProfile {
     pub snap_window_ms: u32,
     /// After a launch the next one is refused for this long (ms); the phone shows the wait as a ring on the stick.
     pub cooldown_ms: u32,
-    /// A full pull back arms the launch first; reverse engages only once the pull has been held this long (ms), so
-    /// pull-then-snap launches and pull-and-hold reverses. Must be longer than the sim's full-lift preload.
-    pub reverse_delay_ms: u32,
 }
 
 /// The right stick's forward/back flick: fast travel to the rim near vertical, then a cooldown and a re-arm.
@@ -164,10 +161,6 @@ impl InputProfile {
             "launch.snapWindowMs must be within 50..=1000",
         );
         need(
-            (500..=3000).contains(&self.launch.reverse_delay_ms),
-            "launch.reverseDelayMs must be within 500..=3000 (longer than the preload)",
-        );
-        need(
             self.launch.cooldown_ms <= 60_000,
             "launch.cooldownMs must be at most 60000",
         );
@@ -239,7 +232,6 @@ impl InputProfile {
             launch_snap_to: frac(self.launch.snap_to),
             launch_snap_window_ms: self.launch.snap_window_ms,
             launch_cooldown_ms: self.launch.cooldown_ms,
-            launch_reverse_delay_ms: self.launch.reverse_delay_ms,
             flick_rim: frac(self.flick.rim),
             flick_arm_below: frac(self.flick.arm_below),
             flick_max_travel_ms: self.flick.max_travel_ms,
@@ -270,7 +262,6 @@ impl InputProfile {
                 snap_to: frac(w.launch_snap_to),
                 snap_window_ms: w.launch_snap_window_ms,
                 cooldown_ms: w.launch_cooldown_ms,
-                reverse_delay_ms: w.launch_reverse_delay_ms,
             },
             flick: FlickProfile {
                 rim: frac(w.flick_rim),
@@ -298,7 +289,6 @@ impl InputProfile {
             launch_snap: quantise_axis(self.launch.snap_to),
             launch_window_ms: u64::from(self.launch.snap_window_ms),
             launch_cooldown_ms: u64::from(self.launch.cooldown_ms),
-            launch_reverse_delay_ms: u64::from(self.launch.reverse_delay_ms),
             flick_rim: AxisThreshold::new(self.flick.rim),
             flick_arm: AxisThreshold::new(self.flick.arm_below),
             flick_travel_ms: u64::from(self.flick.max_travel_ms),
@@ -322,8 +312,6 @@ pub struct Resolved {
     pub launch_snap: i16,
     pub launch_window_ms: u64,
     pub launch_cooldown_ms: u64,
-    /// A pull must be held this long (ms) before it reads as reverse.
-    pub launch_reverse_delay_ms: u64,
     pub flick_rim: AxisThreshold,
     pub flick_arm: AxisThreshold,
     pub flick_travel_ms: u64,

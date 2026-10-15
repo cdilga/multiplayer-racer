@@ -467,7 +467,7 @@
     "wheelie_drive_s": 0.8,
     "wheelie_launch_reward": 1.5,
     "wheelie_cooldown_s": 4,
-    "wheelie_max_reverse_mps": 0.5,
+    "wheelie_max_launch_mps": 2.0,
     "air_pitch_torque": 40,
     "air_roll_torque": 20,
     "drift_exit_min_s": 0.25,

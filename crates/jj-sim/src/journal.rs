@@ -15,8 +15,8 @@ pub struct DriveInput {
     pub drift: bool,
     #[serde(default)]
     pub boost: bool,
-    /// The brakes are held but never become reverse (the R116 launch pull before its reverse delay, P1-C11): a car at rest
-    /// stays at rest instead of backing up. Off for every other source.
+    /// The brakes are held but never become reverse: a car at rest stays at rest instead of backing up (scripted
+    /// fixtures; controllers reverse at once, R127).
     #[serde(default)]
     pub no_reverse: bool,
 }
@@ -35,7 +35,6 @@ impl DriveInput {
         brake: f32,
         drift: bool,
         boost: bool,
-        no_reverse: bool,
     ) -> Self {
         use jj_types::axis::quantise_axis;
         Self {
@@ -44,7 +43,7 @@ impl DriveInput {
             brake: quantise_axis(brake),
             drift,
             boost,
-            no_reverse,
+            no_reverse: false,
         }
     }
 }

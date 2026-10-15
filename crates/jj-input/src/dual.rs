@@ -130,7 +130,6 @@ pub fn semantics(
         boost: false,
         drift: held.drifting(),
         wheelie_preload,
-        launch_armed: false,
     }
 }
 

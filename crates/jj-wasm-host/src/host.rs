@@ -269,7 +269,6 @@ fn controls(s: SourceSemantics) -> DriveInput {
         s.drive.brake,
         s.drift,
         s.boost,
-        s.launch_armed,
     )
 }
 

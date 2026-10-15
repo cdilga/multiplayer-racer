@@ -162,10 +162,9 @@ pub struct Tuning {
     /// shows the same wait from `assets/profiles/input.json` (`launch.cooldownMs`, a test keeps the two equal).
     #[serde(default)]
     pub wheelie_cooldown_s: f32,
-    /// A launch is refused while the car is going backwards faster than this (m/s): pull-and-hold reversed, and a snap
-    /// forward then is just throttle. A pull at rest (or going forward) arms it, countdown included.
-    #[serde(default = "no_reverse_limit")]
-    pub wheelie_max_reverse_mps: f32,
+    /// R127: the launch fires only from a stop. It is refused while the car moves faster than this either way (m/s);
+    /// a pull at rest reverses at once, so the creep back during the charge must stay under it.
+    pub wheelie_max_launch_mps: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
@@ -540,10 +539,6 @@ fn one() -> f32 {
 
 fn body_friction() -> f32 {
     0.6
-}
-
-fn no_reverse_limit() -> f32 {
-    f32::MAX
 }
 
 fn support_level_tilt() -> f32 {

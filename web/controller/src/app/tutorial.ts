@@ -45,7 +45,7 @@ export const STEPS: Step[] = [
     // R120: a drift needs the stick fully (or nearly fully) sideways.
     if (k === 'drive' && Math.abs(v.x) > 0.9) g.drift = true;
   } },
-  { title: 'Launch', text: 'Pull the left stick all the way back, hold a moment, then snap it forward. It is your boost.', goals: [['launch', 'Launch']], action: (a, g) => {
+  { title: 'Launch', text: 'From a stop, pull the left stick all the way back, hold a moment, then snap it forward to launch. Nail it on GO for a flying start.', goals: [['launch', 'Launch']], action: (a, g) => {
     if (a === WHEELIE) g.launch = true;
   } },
   { title: 'OI!', text: 'Flick the right stick up: your headlights flash and everyone hears it.', goals: [['oi', 'OI!']], action: (a, g) => {

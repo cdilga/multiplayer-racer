@@ -279,7 +279,6 @@ fn host_samples() -> Vec<HostCmd> {
             launch_snap_to: 9000,
             launch_snap_window_ms: 250,
             launch_cooldown_ms: 4000,
-            launch_reverse_delay_ms: 900,
             flick_rim: 9000,
             flick_arm_below: 3500,
             flick_max_travel_ms: 180,

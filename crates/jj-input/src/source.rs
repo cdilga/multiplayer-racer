@@ -53,8 +53,6 @@ pub struct SourceSemantics {
     pub drift: bool,
     /// A wheelie preload is pending (the HUD can hint it).
     pub wheelie_preload: bool,
-    /// The R116 launch pull is armed and has not yet become reverse: the brakes hold, the car does not back up.
-    pub launch_armed: bool,
 }
 
 /// Touch/menu facts of one sample; the flags the wire carries (the UI knows these, the machines
@@ -204,7 +202,7 @@ impl SourceState {
                 now_ms,
                 self.profile.launch_snap,
                 self.profile.launch_window_ms,
-                // Held through a countdown the pull stays armed (nothing cancels it); the reverse delay decides reverse.
+                // Held through a countdown the pull stays armed (nothing cancels it).
                 u64::MAX,
             );
             snap.filter(|_| now_ms >= self.launch_ready_at_ms)
@@ -271,18 +269,14 @@ impl SourceState {
     /// What the sticks mean right now (neutral before the first sample).
     pub fn semantics(&self) -> SourceSemantics {
         if !self.flags.classic {
-            let mut s = crate::dual::semantics(
+            // R127: reverse is instant; a full pull also charges the launch, which the sim fires only from a stop.
+            return crate::dual::semantics(
                 self.drive,
                 self.action,
                 &self.left,
                 self.wheelie.is_preloading(),
                 &self.profile,
             );
-            // A full pull arms the launch first (the brakes hold); reverse engages only past the reverse delay.
-            let delayed = self.wheelie.zone_ms() >= self.profile.launch_reverse_delay_ms;
-            s.launch_armed = s.drive.reverse && !delayed;
-            s.drive.reverse = s.drive.reverse && delayed;
-            return s;
         }
         let held: HeldActions = self.sectors.held();
         SourceSemantics {
@@ -290,7 +284,6 @@ impl SourceState {
             boost: held.boost,
             drift: held.drift,
             wheelie_preload: self.wheelie.is_preloading(),
-            launch_armed: false,
         }
     }
 

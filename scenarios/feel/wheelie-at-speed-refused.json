@@ -1,6 +1,6 @@
 {
- "scenario": "wheelie-corner-exit",
- "what": "R116 corner-exit launch (P1-C11). Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 28 % steer. launch: the left stick pulled fully back for 0.45 s (the brakes hold and arm the launch) then snapped to full forward on the way out: a short front-light wheelie (about 7 degrees for 0.4 s, steering stops while the nose is up) and the launch burst, no wreck and no wall strike (it stays on the road). plain: brakes at 80 % (short of the preload zone), then full forward at the same moment: no wheelie, no burst. roll-on: the same pull, then eased to full forward over 0.8 s, which is not a snap: no launch. Expect: only launch lifts or bursts, and it ends the fastest and furthest.",
+ "scenario": "wheelie-at-speed-refused",
+ "what": "R127: the wheelie launch fires only from a stop. Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 28 % steer. snap: the left stick pulled fully back for 0.45 s (brakes, since the car is moving) then snapped to full forward on the way out: at speed the snap is just throttle, so no wheelie and no burst. plain: brakes at 80 % then full forward at the same moment. roll-on: the same pull, eased to full forward over 0.8 s. Expect: none of the three lifts or bursts. (Was the R116 corner-exit launch, P1-C11, superseded by R127.) The roll-on car pitches up to about 5 degrees as hard braking hands over to throttle; that is body pitch, not a wheelie (frontAirTimeS and wheelieDriveS stay 0).",
  "map": "scenarios/duels/yard/duel-yard.json",
  "seed": 7,
  "ticks": 720,
@@ -228,54 +228,6 @@
  ],
  "expect": [
   {
-   "car": 0,
-   "metric": "maxNoseUpDeg",
-   "min": 4,
-   "max": 12
-  },
-  {
-   "car": 0,
-   "metric": "frontAirTimeS",
-   "min": 0.2,
-   "max": 0.8
-  },
-  {
-   "car": 0,
-   "metric": "wheelieDriveS",
-   "min": 0.7,
-   "max": 0.85
-  },
-  {
-   "car": 0,
-   "metric": "maxSpeed",
-   "min": 29.0,
-   "max": 36.0
-  },
-  {
-   "car": 0,
-   "metric": "progressM",
-   "min": 40.0,
-   "max": 56.0
-  },
-  {
-   "car": 0,
-   "metric": "maxRouteOffsetM",
-   "min": 0,
-   "max": 8
-  },
-  {
-   "car": 0,
-   "metric": "wrecks",
-   "min": 0,
-   "max": 0
-  },
-  {
-   "car": 0,
-   "metric": "minUpY",
-   "min": 0.95,
-   "max": 1.001
-  },
-  {
    "car": 1,
    "metric": "maxNoseUpDeg",
    "min": 0,
@@ -303,7 +255,7 @@
    "car": 2,
    "metric": "maxNoseUpDeg",
    "min": 0,
-   "max": 3
+   "max": 6
   },
   {
    "car": 2,
@@ -322,27 +274,36 @@
    "metric": "maxSpeed",
    "min": 0.0,
    "max": 27.5
+  },
+  {
+   "car": 0,
+   "metric": "maxNoseUpDeg",
+   "min": 0,
+   "max": 3
+  },
+  {
+   "car": 0,
+   "metric": "frontAirTimeS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 0,
+   "metric": "wheelieDriveS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 0,
+   "metric": "maxSpeed",
+   "min": 0.0,
+   "max": 28.0
+  },
+  {
+   "car": 0,
+   "metric": "wrecks",
+   "min": 0,
+   "max": 0
   }
- ],
- "baselines": {
-  "kinds": [
-   "no-input",
-   "mash",
-   "hold"
-  ],
-  "differ": [
-   {
-    "car": 0,
-    "metric": "frontAirTimeS",
-    "by": 0.2,
-    "more": true
-   },
-   {
-    "car": 0,
-    "metric": "maxSpeed",
-    "by": 3.0,
-    "more": true
-   }
-  ]
- }
+ ]
 }

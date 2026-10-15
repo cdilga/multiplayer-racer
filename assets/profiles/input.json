@@ -15,8 +15,7 @@
   "launch": {
     "snapTo": 0.9,
     "snapWindowMs": 250,
-    "cooldownMs": 4000,
-    "reverseDelayMs": 900
+    "cooldownMs": 4000
   },
   "flick": {
     "rim": 0.9,

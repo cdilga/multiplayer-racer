@@ -155,15 +155,6 @@ impl WheelieDetector {
         };
     }
 
-    /// How long the stick has been held in the preload zone right now (0 outside it): what the R116 reverse delay reads.
-    pub fn zone_ms(&self) -> u64 {
-        if self.phase == Phase::Preloading {
-            self.preload_ms
-        } else {
-            0
-        }
-    }
-
     /// True while a preload is pending (the controller sets the `WHEELIE_PRELOAD` flag from this).
     pub fn is_preloading(&self) -> bool {
         matches!(self.phase, Phase::Preloading | Phase::Releasing { .. })

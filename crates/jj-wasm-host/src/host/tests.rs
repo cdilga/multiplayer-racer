@@ -3204,8 +3204,7 @@ fn a_controller_cannot_remove_a_seat() {
     );
 }
 
-/// P1-C11: the phone's cooldown ring (input profile) and the sim's refusal (vehicle profile) are the same wait, and the
-/// reverse delay is longer than the full-lift preload (pull-then-snap launches, pull-and-hold reverses).
+/// P1-C11: the phone's cooldown ring (input profile) and the sim's refusal (vehicle profile) are the same wait.
 #[test]
 fn the_input_and_vehicle_profiles_agree_on_the_launch() {
     let input = jj_input::InputProfile::standard();
@@ -3215,10 +3214,6 @@ fn the_input_and_vehicle_profiles_agree_on_the_launch() {
         f64::from(input.launch.cooldown_ms),
         f64::from(t.wheelie_cooldown_s) * 1000.0,
         "one cooldown, two files"
-    );
-    assert!(
-        input.launch.reverse_delay_ms as f32 > t.wheelie_full_preload_ms,
-        "the reverse delay must outlast the preload"
     );
     assert!(input.launch.snap_window_ms <= 500, "a snap, not a roll-on");
 }

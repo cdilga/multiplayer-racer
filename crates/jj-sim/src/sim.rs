@@ -1309,11 +1309,11 @@ impl Sim {
         if grounded < required || held || preload_ms == 0 {
             return false;
         }
-        // The launch is on a cooldown, and a car that pull-and-held into reverse is reversing, not launching.
+        // The launch is on a cooldown, and fires only from a stop (R127): at speed either way a snap is just throttle.
         if self.tick < c.action.wheelie_ready
             || c.speed_history
                 .back()
-                .is_some_and(|&v| v < -t.wheelie_max_reverse_mps)
+                .is_some_and(|&v| v.abs() > t.wheelie_max_launch_mps)
         {
             return false;
         }
