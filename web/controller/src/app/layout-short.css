@@ -12,16 +12,17 @@
 .round-banner { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; padding: 10px 18px; border-radius: 12px; background: var(--c-saffron); --bz-fill: var(--c-saffron); color: var(--c-ink); font-size: 26px; font-weight: 800; }
 
 @media (orientation: landscape) and (max-height: 440px) {
-  .strip { min-height: 52px; padding: 4px 10px; gap: 8px; }
+  .strip { min-height: 58px; padding: 4px 10px; gap: 8px; }
   .strip .who { flex: 1 1 110px; min-width: 110px; }
   .strip .seatno { font-size: 40px; }
   .strip .seatno.badge { font-size: 30px; padding: 3px 7px 4px; min-width: 1.6em; }
   .strip .pos { font-size: 24px; }
-  .strip .tools .btn.identify { font-size: 15px; }
+  .strip .tools .btn.identify { font-size: 16px; }
+  .strip .tools .btn[data-act=ready] { min-width: 88px; font-size: 18px; }
   .strip .nm { font-size: 17px; }
   .strip .tools { flex: 0 1 auto; flex-wrap: nowrap; gap: 5px; padding: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-  .strip .tools .btn { flex: none; min-height: 44px; padding: 0 8px; font-size: 13px; }
-  .strip .tools .btn.icon { width: 44px; padding: 0; }
+  .strip .tools .btn { flex: none; min-height: 48px; padding: 0 10px; font-size: 15px; }
+  .strip .tools .btn.icon { width: 48px; padding: 0; }
   .strip .race { margin-left: 0; }
   .zone { margin: 0 16px 12px; }
   .round-banner { top: auto; bottom: 10px; transform: translateX(-50%); padding: 4px 12px; font-size: 18px; white-space: nowrap; }
@@ -32,18 +33,20 @@
 /* Narrow and short (640x300 with a toolbar): everything tightens a notch so all seven tools stay in view without scrolling. */
 @media (orientation: landscape) and (max-height: 440px) and (max-width: 800px) {
   .strip { gap: 5px; padding: 4px 6px; }
-  .strip .who { flex: 1 1 110px; min-width: 110px; gap: 6px; }
+  .strip .who { flex: 1 1 84px; min-width: 84px; gap: 6px; }
   .strip .seatno { font-size: 30px; }
   .strip .seatno.badge { font-size: 26px; padding: 3px 6px 4px; }
   .strip .nm { font-size: 15px; }
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
-  .strip .tools { gap: 1px; }
-  .strip .tools .btn { padding: 0 5px; gap: 4px; font-size: 12px; min-width: 40px; }
+  .strip .tools { gap: 2px; }
+  .strip .tools .btn { padding: 0 6px; gap: 4px; font-size: 14px; min-width: 48px; }
   /* Keep the full Identify and Vehicle labels beside square tools. The redundant Locate icon gives way on the
      narrowest phones, leaving the labels clear of the brush edges without reducing the touch targets. */
-  .strip .tools .btn.icon { width: 40px; padding: 0; }
-  .strip .tools .btn.identify { font-size: 12px; padding: 0 3px; }
+  .strip .tools .btn.icon { width: 48px; padding: 0; }
+  .strip .tools .btn.identify { font-size: 14px; padding: 0 6px; }
+  .strip .tools .btn[data-act=ready] { min-width: 64px; font-size: 16px; }
   .strip .tools .btn.identify .ic { display: none; }
-  .strip .tools .btn[data-act=car] { padding-inline: 3px; }
+  .strip .tools .btn[data-act=car] { width: 48px; padding: 0; }
+  .strip .tools .btn[data-act=car] .lbl { display: none; }
   .strip .conn { font-size: 10px; padding-inline: 2px; }
 }

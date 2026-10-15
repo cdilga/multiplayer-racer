@@ -36,6 +36,8 @@ export function applyState(session: Session, p: URLSearchParams): void {
     const round = p.get('round') ?? 'lobby';
     session.roomPhase = ({ lobby: 'Lobby', countdown: 'Countdown', racing: 'Racing', results: 'Results' } as Record<string, string>)[round] ?? 'Lobby';
     session.isReady = p.get('ready') === '1';
+    // The launch's cooldown, 0 (ready) to 1 (just launched), so the pod's cooling look can be drawn (P1-FL14).
+    if (p.has('cool')) session.launchCooldownFixture = Math.min(1, Math.max(0, Number(p.get('cool')) || 0));
     session.hud = { position: round === 'racing' ? 3 : null, lap: round === 'racing' ? [2, 3] : null, boost: Number.parseInt(p.get('boost') ?? '0', 10), pause: phase === 'host-paused' ? 'HostHidden' : null };
   }
   session.onChange();

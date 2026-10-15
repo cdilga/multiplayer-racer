@@ -601,8 +601,12 @@ export class Session {
     if (this.endpoint && this.srcIdx >= 0) this.endpoint.setClassic(this.srcIdx, on);
   }
 
+  /** A state opener's fixed cooldown (#state=…&cool=0.6); null on a real connection. */
+  launchCooldownFixture: number | null = null;
+
   /** How much of the wheelie launch's cooldown is left, 0 (ready) to 1 (just launched): the ring on the left stick's knob. */
   launchCooldown(): number {
+    if (this.launchCooldownFixture !== null) return this.launchCooldownFixture;
     if (!this.endpoint || this.srcIdx < 0 || this.classicLayout) return 0;
     return this.endpoint.launchCooldown(this.srcIdx, performance.now());
   }

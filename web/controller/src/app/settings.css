@@ -51,7 +51,7 @@
 /* Landscape phone strip: seven tools and the badge share one row with the name, so they tighten up and the name keeps room. */
 @media (orientation: landscape) and (max-height: 480px) {
   .strip .tools { gap: 6px; padding: 4px; }
-  .strip .tools .btn { min-height: 44px; padding: 0 9px; font-size: 14px; }
+  .strip .tools .btn { min-height: 48px; padding: 0 9px; font-size: 15px; }
   .strip .who { flex: 1 1 96px; min-width: 96px; }
   .strip .conn { margin-right: 6px; padding: 1px 6px 3px; font-size: 12px; }
 }

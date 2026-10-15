@@ -58,7 +58,7 @@ function dress(root: ParentNode): void {
 const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
-const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:0%"></i></div></div></div>`;
+const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div></div>`;
 
 /** Text colour on a seat colour (the kit's table, by luminance). */
 const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
@@ -104,7 +104,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       ring.classList.toggle('cool', left > 0);
     }
     const bar = app.querySelector<HTMLElement>('[data-hud=launch]');
-    bar?.style.setProperty('--v', `${Math.round(left * 100)}%`); // the wait that is left, draining as the launch comes back
+    bar?.style.setProperty('--v', `${Math.round((1 - left) * 100)}%`); // readiness: full and lit when the launch is ready, refilling while it cools (P1-FL14)
     bar?.closest('.pod-boost')?.toggleAttribute('data-cooling', left > 0);
   };
   const prefsNow = () => {
@@ -182,7 +182,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     tutorial?.close(false, true);
     const you = session.you!;
     const colour = hex(you.rgb);
-    app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
+    app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour};--seat-on:${seatColor(you.number).on}">
       <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span><span class="item display" data-hud="item" role="status" hidden></span></div>
 </div>
     </section>`;
@@ -196,6 +196,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const toolsHolder = document.createElement('div');
     toolsHolder.innerHTML = TOOLS;
     dress(toolsHolder);
+    // P1-FL14: a press shows the moment a thumb lands, on every browser (iOS paints :active only with a touch listener).
+    toolsHolder.firstElementChild!.addEventListener('pointerdown', (e) => {
+      const btn = (e.target as Element).closest<HTMLButtonElement>('.btn');
+      if (!btn || btn.disabled) return;
+      btn.classList.add('pressed');
+      const up = () => btn.classList.remove('pressed');
+      addEventListener('pointerup', up, { once: true });
+      addEventListener('pointercancel', up, { once: true });
+    });
     if (land) screenEl.querySelector('.strip')!.append(toolsHolder.firstElementChild!);
     else screenEl.append(toolsHolder.firstElementChild!);
     const area = document.createElement('div');
@@ -369,8 +378,12 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       carBtn.hidden = session.roomPhase !== 'Lobby';
       carBtn.classList.remove('icon');
       // br-bwju.9: say it's a choice you can change, not just a thing you have.
-      carBtn.textContent = chosenSeat === session.you?.number ? 'Change car' : 'Choose car';
-      carBtn.setAttribute('aria-label', carBtn.textContent);
+      const words = chosenSeat === session.you?.number ? 'Change car' : 'Choose car';
+      // P1-FL14: the car icon and the words; the narrowest landscape strip keeps the icon and the spoken name only.
+      if (carBtn.getAttribute('aria-label') !== words || !carBtn.querySelector('.lbl')) {
+        carBtn.replaceChildren(icon('car'), Object.assign(document.createElement('span'), { className: 'lbl', textContent: words }));
+        carBtn.setAttribute('aria-label', words);
+      }
     }
     if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
       const host = app.querySelector<HTMLElement>('.screen.play');
