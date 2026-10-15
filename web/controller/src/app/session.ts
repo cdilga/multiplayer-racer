@@ -10,6 +10,7 @@ import type { ItemEvent, ItemInventory, ItemUseRefusal } from '../../../shared/s
 import { ApiError, ControllerLink, type LinkState, type TransportOptions } from '../../../shared/transport';
 import init, * as wasm from '../pkg/jj_wasm_input.js';
 import { LAUNCH_SHOWN_MS, type LaunchOutcome } from '../../../shared/src/launch';
+import { stickEventAt } from './sticks';
 
 export type Phase =
   | 'finding'
@@ -55,6 +56,8 @@ const WHY_DISCONNECTED = 2;
 
 /** The send loop's period: the scheduler decides what's due (60 Hz on change, 20 Hz refresh, prompt neutral). */
 const POLL_MS = 8;
+/** Sent batches kept for the latency stages (a diagnostic window, not a gameplay count). */
+const LATENCY_KEPT = 4096;
 /** Reconnecting for this long without the room answering `available` means the host has gone (§11). */
 const HOST_GONE_MS = 120_000;
 /** With the relay unavailable and the link still down this long, the card says the network can't reach the host. */
@@ -501,6 +504,10 @@ export class Session {
     this.sample();
   }
 
+  /** Sent state batches with the touch each carries (P1-FL17): the controller's stages of thumb-to-screen latency. */
+  latency: Array<{ seq: number; sentAt: number; touchAt: number | null }> = [];
+  private lastStampedTouch = 0;
+
   private lastDetectedAction: { kind: number; preloadMs: number; at: number; atSourceSeq: number } | null = null;
 
   private sample(): void {
@@ -542,6 +549,11 @@ export class Session {
     for (let i = 0; i < flush.batchCount; i++) {
       const b = flush.batch(i);
       this.send('state', b);
+      // P1-FL17: the batch's wrapping seq (header bytes 2-3), when it left, and the newest touch it carries.
+      const sentAt = performance.timeOrigin + performance.now();
+      this.latency.push({ seq: b[2]! | (b[3]! << 8), sentAt, touchAt: stickEventAt > this.lastStampedTouch ? stickEventAt : null });
+      this.lastStampedTouch = Math.max(this.lastStampedTouch, stickEventAt);
+      if (this.latency.length > LATENCY_KEPT) this.latency.splice(0, this.latency.length - LATENCY_KEPT);
       this.stats.batches += 1;
       this.stats.stateBytes += b.byteLength;
       if (!hub) continue;

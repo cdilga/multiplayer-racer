@@ -232,6 +232,8 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     /** Host pads and key clusters (P1-C05): the drawer's list and each source's host-applied input age. */
     localSources: () => ctx.input?.list() ?? [],
     inputStats: () => client.inputStats(),
+    /** Controller state batches through the host, and the frames drawn with the tick each showed (P1-FL17). */
+    netStamps: () => client.netStamps(),
 
     /** A fake controller joins through the real controller path (Hello + Claim as cmd-channel bytes) and gets a seat. */
     async join(name: string, opts: { lobby?: boolean } = {}) {

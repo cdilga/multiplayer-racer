@@ -137,6 +137,9 @@ export class World {
   private lastFrame = 0;
   /** Set to an array to record seat 1's camera every frame (br-gw74.14's judder probe); null records nothing. */
   cameraTrace: CameraTraceFrame[] | null = null;
+  /** Latency probe (P1-FL17): while recording, each drawn frame's vsync time (shared clock, ms), the tick it
+   *  showed and the newest snapshot it had. */
+  tickTrace: Array<{ at: number; tick: number; newest: number }> | null = null;
   /** Paused (any pause reason): frames are drawn only until `heldUntil` after the last change, then the loop idles. */
   private held = false;
   private heldUntil = 0;
@@ -442,6 +445,7 @@ export class World {
     this.nameplatePoints.length = 0;
     this.resize();
     const t = this.interp.renderTick(now);
+    this.tickTrace?.push({ at: performance.timeOrigin + now, tick: t, newest: this.interp.latest?.tick ?? t });
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
     if (this.replayCamera) {

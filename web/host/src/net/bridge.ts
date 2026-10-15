@@ -29,7 +29,7 @@ export class NetBridge {
         onMessage: (peer, channel, data) => {
           const bytes = new Uint8Array(data);
           this.bytesIn += bytes.byteLength;
-          client.input({ type: 'net', endpoint: peer.endpointId, channel, bytes });
+          client.input({ type: 'net', endpoint: peer.endpointId, channel, bytes, arrivedAt: performance.timeOrigin + performance.now() });
         },
       },
       opts,

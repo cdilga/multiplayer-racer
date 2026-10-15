@@ -39,6 +39,8 @@ async function boot(root: HTMLElement): Promise<void> {
     claim: (name: string) => session.claim(name),
     setSticks: (d: { x: number; y: number; touch: boolean }, a: { x: number; y: number; touch: boolean }) => session.setSticks(d, a),
     identify: () => session.identify(),
+    /** Sent state batches with the touch each carries (P1-FL17). */
+    latency: () => session.latency.slice(),
     wakeHeld,
   };
   // A state opener (#state=…): draw that §11 screen with no connection at all (R90's test surface).

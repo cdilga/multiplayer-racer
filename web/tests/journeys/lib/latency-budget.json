@@ -1,0 +1,46 @@
+{
+  "what": "Thumb-to-screen latency budget per stage (P1-FL17, R134), checked by web/tests/journeys/fl17-latency.test.mjs. hostSide holds on every CI host, software-rendered or not (ms): mainToWorker is a postMessage, workerToTick may wait for at most one 120 Hz tick boundary plus the worker's 2 ms loop, so p99 under two ticks. hostSideGpu adds the render stages and holds only with a real GPU (JJ_CHROMIUM_GPU=1, the CI GPU workflow on eris): renderLagTicks is how far the drawn tick trails the newest snapshot, in 120 Hz ticks (the interpolation delay plus at most a frame). wholePath is the target for a real run on the owner's LAN, recorded in docs/evidence/P1-FL17/.",
+  "version": 1,
+  "hostSide": {
+    "mainToWorker": {
+      "p99": 8
+    },
+    "workerToTick": {
+      "p99": 16.7
+    }
+  },
+  "wholePath": {
+    "touchToSend": {
+      "p50": 16,
+      "p99": 28
+    },
+    "network": {
+      "p50": 10,
+      "p99": 40
+    },
+    "mainToWorker": {
+      "p50": 2,
+      "p99": 8
+    },
+    "workerToTick": {
+      "p50": 7,
+      "p99": 14
+    },
+    "tickToDrawn": {
+      "p50": 40,
+      "p99": 60
+    },
+    "total": {
+      "p50": 75,
+      "p99": 120
+    }
+  },
+  "hostSideGpu": {
+    "renderLagTicks": {
+      "p99": 5
+    },
+    "tickToDrawn": {
+      "p99": 60
+    }
+  }
+}

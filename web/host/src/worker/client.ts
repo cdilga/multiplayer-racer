@@ -6,6 +6,7 @@ import {
   type FromWorker,
   type InitOptions,
   type InputStat,
+  type NetStamp,
   type PauseReason,
   type SimInput,
   type ToWorker,
@@ -21,7 +22,7 @@ export class SimClient {
   readonly worker: Worker;
   private fault: string | null = null;
   private mask = 0;
-  private statsWaiters = new Map<number, (s: InputStat[]) => void>();
+  private statsWaiters = new Map<number, (m: { sources: InputStat[]; net: NetStamp[] }) => void>();
   private tuningWaiters = new Map<number, (json: string) => void>();
   private nextStats = 1;
   /** Milliseconds left on the resume countdown when it last changed second (0: none). */
@@ -99,7 +100,7 @@ export class SimClient {
         this.onFault(m.message);
         return;
       case 'inputStats':
-        this.statsWaiters.get(m.id)?.(m.sources);
+        this.statsWaiters.get(m.id)?.(m);
         this.statsWaiters.delete(m.id);
         return;
       case 'tuning':
@@ -149,6 +150,15 @@ export class SimClient {
 
   /** Each local source's host-applied input age so far (P1-C05; the receipt row and the input drawer read it). */
   inputStats(): Promise<InputStat[]> {
+    return this.stats().then((m) => m.sources);
+  }
+
+  /** Each controller state batch's stamps through the host: off the channel, into the worker, applied (P1-FL17). */
+  netStamps(): Promise<NetStamp[]> {
+    return this.stats().then((m) => m.net);
+  }
+
+  private stats(): Promise<{ sources: InputStat[]; net: NetStamp[] }> {
     const id = this.nextStats++;
     return new Promise((resolve) => {
       this.statsWaiters.set(id, resolve);

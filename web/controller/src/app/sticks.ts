@@ -21,6 +21,11 @@ export interface StickHandle {
   release(): void;
 }
 
+/** When the last stick-moving touch happened, on the shared clock (`performance.timeOrigin` + the event's own timeStamp,
+ *  ms): the first stage of the thumb-to-screen latency (P1-FL17). */
+export let stickEventAt = 0;
+const stamp = (e: Event) => { stickEventAt = performance.timeOrigin + e.timeStamp; };
+
 export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed = false, vibrate: () => boolean = () => true): StickHandle {
   const base = z.querySelector<HTMLElement>('.base')!;
   const knob = z.querySelector<HTMLElement>('.knob')!;
@@ -77,15 +82,19 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
     place(origin.x, origin.y);
     z.classList.add('active');
     if (vibrate()) navigator.vibrate?.(8);
+    stamp(e);
     move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
   });
   z.addEventListener('pointermove', (e) => {
     if (e.pointerId !== pid) return;
+    stamp(e);
     const r = z.getBoundingClientRect();
     move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
   });
   const end = (e: PointerEvent) => {
-    if (e.pointerId === pid) release();
+    if (e.pointerId !== pid) return;
+    stamp(e);
+    release();
   };
   z.addEventListener('pointerup', end);
   z.addEventListener('pointercancel', end);

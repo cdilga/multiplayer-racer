@@ -7,10 +7,12 @@
 // - A panic or unrecoverable WASM error is the `fault` pause reason: the loop stops and main is told.
 // Worker-scope code, typechecked by ./tsconfig.json once scripts/build-host-wasm.sh has built the pkg.
 import { JournalTap, type TapSim } from '../clips/tap';
-import { PAUSE_BITS, type FromWorker, type InitOptions, type InputStat, type SimInput, type ToWorker } from './messages';
+import { PAUSE_BITS, type FromWorker, type InitOptions, type InputStat, type NetStamp, type SimInput, type ToWorker } from './messages';
 
 /** How many recent input ages a local source keeps. */
 const AGES_KEPT = 2048;
+/** The latest controller batch stamps kept for the latency stages (a diagnostic window, not a gameplay count). */
+const NET_STAMPS_KEPT = 4096;
 /** Now on the clock main and the worker share (their `performance.now()` origins differ). */
 const shared = () => performance.timeOrigin + performance.now();
 
@@ -85,6 +87,9 @@ export class SimWorker<S extends Sim> {
   /** Local sources' latest unapplied sample time, and their recent host-applied input ages (P1-C05). */
   private pending = new Map<number, number>();
   private ages = new Map<number, number[]>();
+  /** Controller state batches received since the last tick boundary, then their stamps once applied (P1-FL17). */
+  private netPending: Array<Omit<NetStamp, 'appliedAt' | 'tick'>> = [];
+  private net: NetStamp[] = [];
   /** Per local source: samples and encoded bytes (the `LocalSource` message each sample becomes, P1-C05.2). */
   private wire = new Map<number, { samples: number; bytes: number }>();
 
@@ -213,9 +218,12 @@ export class SimWorker<S extends Sim> {
   }
 
   /** The tick boundary just applied every pending local sample: record how old each was. */
-  private applied(): void {
-    if (this.pending.size === 0) return;
+  private applied(firstTick: number): void {
     const now = shared();
+    for (const n of this.netPending) this.net.push({ ...n, appliedAt: now, tick: firstTick });
+    this.netPending.length = 0;
+    if (this.net.length > NET_STAMPS_KEPT) this.net.splice(0, this.net.length - NET_STAMPS_KEPT);
+    if (this.pending.size === 0) return;
     for (const [source, at] of this.pending) {
       const list = this.ages.get(source) ?? [];
       list.push(now - at);
@@ -237,11 +245,12 @@ export class SimWorker<S extends Sim> {
   /** After the sim moved outside the clock (the test surface's step): drain and publish now, so main sees it. */
   flush(stepped: boolean): void {
     this.guard((s) => {
+      const before = this.lastTick;
       this.lastTick = s.tick();
       this.drain(s);
       this.pauseState(s);
       if (stepped) {
-        this.applied();
+        this.applied(before + 1);
         this.publish(s);
       }
     });
@@ -252,10 +261,11 @@ export class SimWorker<S extends Sim> {
     this.guard((s) => {
       const stepped = s.advance(performance.now());
       this.lastTick = s.tick();
+      const before = this.lastTick - stepped;
       this.drain(s);
       this.pauseState(s);
       if (stepped > 0) {
-        this.applied();
+        this.applied(before + 1);
         this.publish(s);
       }
     });
@@ -290,6 +300,10 @@ export class SimWorker<S extends Sim> {
       case 'input': {
         const { input } = msg as { input: SimInput };
         if (input.type === 'local' && input.sampledAt !== undefined) this.pending.set(input.source, input.sampledAt);
+        // A controller's state batch: its wrapping seq is bytes 2-3 of the batch header (jj-protocol state.rs).
+        if (input.type === 'net' && input.channel === 'state' && input.arrivedAt !== undefined && input.bytes.length >= 4) {
+          this.netPending.push({ endpoint: input.endpoint, seq: input.bytes[2]! | (input.bytes[3]! << 8), arrivedAt: input.arrivedAt, receivedAt: shared() });
+        }
         this.guard((s) => {
           const bytes = this.encode(input);
           if (input.type === 'local') {
@@ -303,7 +317,7 @@ export class SimWorker<S extends Sim> {
         return;
       }
       case 'inputStats':
-        this.post({ kind: 'inputStats', id: (msg as { id: number }).id, sources: this.inputStats() });
+        this.post({ kind: 'inputStats', id: (msg as { id: number }).id, sources: this.inputStats(), net: this.net.slice() });
         return;
       case 'tuning':
         this.post({ kind: 'tuning', id: (msg as { id: number }).id, json: this.sim?.tuning_json() ?? '{}' });

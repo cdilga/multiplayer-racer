@@ -123,6 +123,12 @@ async function boot(): Promise<void> {
       return frames;
     },
     setCamera: (seat: number, mode: 'fp' | 'tp') => world.rig.setMode(seat, mode),
+    /** Latency probe (P1-FL17): `true` starts recording each drawn frame's time and render tick, `false` stops and returns them. */
+    tickTrace: (on: boolean) => {
+      const frames = world.tickTrace ?? [];
+      world.tickTrace = on ? [] : null;
+      return frames;
+    },
     project: (x: number, y: number, z: number) => world.project(x, y, z),
     /** The host's Render resolution choice, as the setting does it (applied live, saved). */
     setResolution: (scale: number) => {

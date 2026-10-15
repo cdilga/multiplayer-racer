@@ -24,7 +24,8 @@ export type SimInput =
   /** A host pad or key cluster (P1-C05): axes and `LOCAL_*` button bits; `sampledAt` (ms, `performance.timeOrigin +
    *  performance.now()`) lets the worker measure host-applied input age. */
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
-  | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
+  /** `arrivedAt` (ms, shared clock): when main got the bytes off the data channel, for the latency stages (P1-FL17). */
+  | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array; arrivedAt?: number }
   | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'catch-up' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}` | `pick-local:${number}:${string}` | `ready-local:${number}` | `join-local:${number}` | `leave-local:${number}` | `sit-out-local:${number}` | `tune:${string}` | `tune-vehicle:${string}`; on?: boolean }
   /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
   | { type: 'map-ready'; preparation: number; bytes: Uint8Array };
@@ -45,6 +46,18 @@ export const LOCAL_LEAVE = 1 << 2;
 /** The input drawer's Sit out / Return (a toggle). */
 export const LOCAL_SIT_OUT = 1 << 3;
 export const LOCAL_UNAVAILABLE = 1 << 31;
+
+/** One controller state batch through the host (P1-FL17), on the shared clock (`performance.timeOrigin + now`, ms):
+ *  off the data channel on main, into the worker, applied at the tick boundary that stepped to `tick`. */
+export interface NetStamp {
+  endpoint: string;
+  seq: number;
+  arrivedAt: number;
+  receivedAt: number;
+  appliedAt: number;
+  /** The first tick the batch's samples drove: the snapshot of this tick is the first that can show them. */
+  tick: number;
+}
 
 /** One local source's host-applied input age: sampled on main to applied at a tick boundary in the worker (ms). */
 export interface InputStat {
@@ -81,5 +94,5 @@ export type FromWorker =
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
   | { kind: 'fault'; message: string }
-  | { kind: 'inputStats'; id: number; sources: InputStat[] }
+  | { kind: 'inputStats'; id: number; sources: InputStat[]; net: NetStamp[] }
   | { kind: 'tuning'; id: number; json: string };
