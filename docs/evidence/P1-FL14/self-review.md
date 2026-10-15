@@ -2,7 +2,7 @@
 
 Captured by `web/tests/journeys/fl14-buttons-look.test.mjs` (`JJ_CAPTURE_DIR=…`) on the Mac, 2026-10-16: the real
 controller through the R90 state opener (`/j/ABCD#state=playing…`, no host), Playwright **Chromium** (`isMobile`, touch)
-and Playwright **WebKit** (touch; WebKit, not Safari). Sizes 915x412, 412x915, 667x375, 640x300. Reference: the accepted
+and Playwright **WebKit** (touch; WebKit, not Safari). Sizes 915x412, 412x915, 375x667, 667x375, 640x300. Reference: the accepted
 phone mock (`art/ui/accepted/2026-10-07/poc/phone`, captured beside the real one by `c02-style-compare`) and the
 phone-controller style frame in `art/ui/accepted/2026-10-07/frames/` (chunky display-face labels, a READY slab).
 
@@ -25,6 +25,11 @@ phone-controller style frame in `art/ui/accepted/2026-10-07/frames/` (chunky dis
 - `after-webkit-915x412-cooling.jpg`, `after-chromium-412x915-cooling.jpg` (and the other engine/size pair): launch bar ~40 % paper refilling, label dimmed, the paper cooldown ring on the drive knob.
 - `after-webkit-667x375-race-idle.jpg`, `after-webkit-667x375-lobby-idle.jpg`, `after-webkit-640x300-race-idle.jpg`, `after-webkit-640x300-lobby-idle.jpg`: small landscape phones: every tool 48x48 and on screen, no
   sideways scroll; at <= 800 px wide the car button goes icon-only (spoken name kept) and the Identify icon drops.
+- `before-fix-webkit-375x667-lobby-idle.jpg` (reported by WhiteStream from the deployed preview): at 375x667 portrait
+  Change car wrapped to its own row and the round banner (40 % down) sat on the icon row.
+  `after-webkit-375x667-lobby-idle.jpg`, `after-chromium-375x667-lobby-pressed-ready.jpg`,
+  `after-chromium-375x667-race-idle.jpg`, `after-webkit-375x667-cooling.jpg`: one worded row (car icon-only under 400 px
+  wide), six icons on one row, the banner centred in the stick area clear of the tools.
 
 ## Defects found and fixed
 
@@ -42,6 +47,8 @@ phone-controller style frame in `art/ui/accepted/2026-10-07/frames/` (chunky dis
 7. At 640x300 Leave was pushed off the edge and labels jammed against the brush edge → narrow strip: car icon-only,
    seat badge column 84 px.
 8. Portrait ragged wrap → worded row + icon row.
+9. 375x667 portrait: Change car wrapped and the round banner covered the icon row → car icon-only under 400 px wide;
+   the round banner centres (50 %) in portrait.
 
 ## Remaining defects
 

@@ -50,3 +50,12 @@
   .strip .tools .btn[data-act=car] .lbl { display: none; }
   .strip .conn { font-size: 10px; padding-inline: 2px; }
 }
+
+/* Portrait phones: the round banner centres on the screen, in the stick area clear of the two tool rows (40% sat on the
+   icon row at 375x667); under 400 px wide the car button goes icon-only (spoken name kept) so the worded row stays one row. */
+@media (orientation: portrait) {
+  .round-banner { top: 50%; }
+}
+@media (orientation: portrait) and (max-width: 399px) {
+  .tools .btn[data-act=car] .lbl { display: none; }
+}

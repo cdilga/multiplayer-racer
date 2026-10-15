@@ -14,7 +14,7 @@ import { chromiumArgs } from './lib/chromium.mjs';
 
 const BASE = '/p/fl14/';
 const OUT = process.env.JJ_CAPTURE_DIR;
-const SIZES = [[915, 412], [412, 915], [667, 375], [640, 300]];
+const SIZES = [[915, 412], [412, 915], [375, 667], [667, 375], [640, 300]];
 let server;
 before(async () => { server = await serve(build('./', 'fl14'), BASE, { JJ_STUN_URLS: '' }); });
 after(async () => { await server?.close(); });
