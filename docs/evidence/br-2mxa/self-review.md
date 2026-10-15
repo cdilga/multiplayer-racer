@@ -5,15 +5,26 @@ Sim fixtures: `crates/jj-sim/tests/assist.rs` with `scenarios/assist/*.json` (se
 
 ## Looked at
 
-- `phone-settings-assist-off-844x390.png`, `-some-844x390.png`, `-lots-844x390.png`: the "Driving help" row in Settings, each level selected (the highlighted segment follows the choice), landscape phone.
+Local build, 2026-10-11 (CyanBridge; every image inspected):
+
+- `phone-settings-assist-off-844x390.png`, `phone-settings-assist-some-844x390.png`, `phone-settings-assist-lots-844x390.png`: the "Driving help" row in Settings, each level selected (the highlighted segment follows the choice), landscape phone.
 - `phone-settings-assist-some-390x844.png`: the same sheet in portrait.
 - `tv-lplate-some-1280x720.png`, `tv-lplate-some-1920x1080.png`, `tv-lplate-lots-1280x720.png`: the host tile in the race, a white "L" plate with a red L beside the name pill.
 - `tv-lplate-off-1280x720.png`: the same tile after the phone sets Off, no plate.
-- Fresh Chromium versions of all the above are in `frames/` as JPGs. Every image was inspected.
-- `frames/lobby-catchup-light-1280x720.jpg`: lobby Off/Light control, default Light, outside Start/QR.
+- Fresh Chromium JPGs of the above: `frames/phone-settings-assist-off-844x390.jpg`, `frames/phone-settings-assist-some-844x390.jpg`, `frames/phone-settings-assist-lots-844x390.jpg`, `frames/phone-settings-assist-some-390x844.jpg`, `frames/tv-lplate-some-1280x720.jpg`, `frames/tv-lplate-some-1920x1080.jpg`, `frames/tv-lplate-lots-1280x720.jpg`, `frames/tv-lplate-off-1280x720.jpg`.
+- `frames/lobby-catchup-light-1280x720.jpg`: the lobby Off/Light control as it was then (superseded: the owner moved it to Host menu → Race rules on 2026-10-12, below).
 - `frames/phone-tutorial-driving-help-844x390.jpg`: completion suggests Driving help; both actions fit above the device row.
-- `frames/webkit-tutorial-driving-help-667x375.jpg`, `-915x412.jpg`, `-375x667.jpg`: short landscape, large landscape and upright completion; both actions readable and reachable.
-- `frames/webkit-settings-assist-lots-375x667.jpg`: WebKit learner-help row, Lots selected. Final modal capture inspected: the full row stays above the device tray.
+- `frames/webkit-tutorial-driving-help-667x375.jpg`, `frames/webkit-tutorial-driving-help-915x412.jpg`, `frames/webkit-tutorial-driving-help-375x667.jpg`: short landscape, large landscape and upright completion; both actions readable and reachable.
+- `frames/webkit-settings-assist-lots-375x667.jpg`: WebKit learner-help row, Lots selected.
+
+Deployed preview `https://jammers-preview.dilger.dev/p/v02-a1f7bf4b/`, 2026-10-16 (WhiteStream): the same journey on eris
+with `JJ_BASE_URL` (Playwright Chromium for the race/L-plate journey, Playwright WebKit for completion), 2/2 pass.
+All fourteen opened in three contact sheets:
+
+- `deployed-frames/lobby-catchup-light-1280x720.jpg`: Catch-up now lives in Host menu → Race rules, with the owner's wording ("Give trailing racers a small speed and boost recharge advantage."), Off / Light, Light selected; no lobby button.
+- `deployed-frames/tv-lplate-lots-1280x720.jpg`, `deployed-frames/tv-lplate-some-1280x720.jpg`, `deployed-frames/tv-lplate-some-1920x1080.jpg`: the L plate beside "Nev" on the tile in the race; `deployed-frames/tv-lplate-off-1280x720.jpg`: no plate after Off.
+- `deployed-frames/phone-settings-assist-off-844x390.jpg`, `deployed-frames/phone-settings-assist-some-844x390.jpg`, `deployed-frames/phone-settings-assist-lots-844x390.jpg`, `deployed-frames/phone-settings-assist-some-390x844.jpg`, `deployed-frames/webkit-settings-assist-lots-375x667.jpg`: the highlighted level follows each choice; the hint stays inside its row.
+- `deployed-frames/phone-tutorial-driving-help-844x390.jpg`, `deployed-frames/webkit-tutorial-driving-help-667x375.jpg`, `deployed-frames/webkit-tutorial-driving-help-915x412.jpg`, `deployed-frames/webkit-tutorial-driving-help-375x667.jpg`: "You're ready" with Driving help and Let's race both visible and inside the card.
 
 ## Defects found and fixed
 
@@ -23,12 +34,17 @@ Sim fixtures: `crates/jj-sim/tests/assist.rs` with `scenarios/assist/*.json` (se
 - The fixed device tray appeared above Settings and obscured the lower row border. Settings now has a higher stacking level; its actions are checked with hit testing.
 - Applying catch-up every host tick overwrote fixture journals and broke native/WASM parity. The lobby choice now applies once at GO and remains stable while stepping.
 
-## Remaining / not covered
+## Remaining defects
 
-- Some and Lots show the same plate (the L); the level shows only in its tooltip. Looks fine at 1280x720 and 1920x1080; a tile in a dense 24-grid was not captured (the plate scales with the HUD unit like the name pill).
-- The tutorial now suggests Driving help and opens Settings; the lobby now offers Off / Light and defaults to Light. Both choices are exercised through the real UI.
-- Published-preview verification and real-device/iOS Safari were not run yet. WebKit completion and Settings checks pass separately from the Chromium race/L-plate journey.
+- Some and Lots show the same plate (the L); the level shows only in its tooltip.
+- Seen on the deployed build, outside this bead's rows, filed as br-0lua: the Settings sheet's bottom fade lets the "Tap Ready" banner (844x390) and the "#1 This device" tray (375x667) ghost through over its last rows; at 667x375 the toolbar squeezes Identify / Change car, and at 375 wide portrait the exit icon wraps onto its own row.
+
+## Not covered
+
+- A tile in a dense 24-grid (the plate scales with the HUD unit like the name pill).
+- Real devices and iOS Safari: Playwright WebKit is not Safari; these are emulated viewports.
 - Driving feel with assists on was measured by the sim fixtures, not played.
+- The handling presets of P1-FL04 (assists on the new handling are FL06).
 
 ## Current fixture numbers (2026-10-11, opt level 1, greybox loop 615 m, 2 laps, six seeds, scripted novice)
 
