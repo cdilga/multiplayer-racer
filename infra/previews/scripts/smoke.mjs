@@ -67,7 +67,12 @@ async function gameFlow() {
     phones.push(page);
   }
   await until(host, () => window.__jjRoom.view().seats.length === 2);
-  for (const page of phones) await page.getByRole('button', { name: /^Ready/ }).click();
+  for (const page of phones) {
+    // R123: a new player picks a car before Ready (the chooser opens on join); the default car is fine here.
+    const done = page.locator('[data-act=car-done]');
+    await done.waitFor({ state: 'visible', timeout: 15_000 }).then(() => done.click(), () => {});
+    await page.getByRole('button', { name: /^Ready/ }).click();
+  }
   await until(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
 
   const observe = () => host.evaluate(() => window.__jjTest.observe());
