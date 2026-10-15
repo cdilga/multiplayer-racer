@@ -4,7 +4,7 @@ Captured by `web/tests/journeys/fl14-buttons-look.test.mjs` (`JJ_CAPTURE_DIR=…
 controller through the R90 state opener (`/j/ABCD#state=playing…`, no host), Playwright **Chromium** (`isMobile`, touch)
 and Playwright **WebKit** (touch; WebKit, not Safari). Sizes 915x412, 412x915, 667x375, 640x300. Reference: the accepted
 phone mock (`art/ui/accepted/2026-10-07/poc/phone`, captured beside the real one by `c02-style-compare`) and the
-`frames/phone-controller.webp` style frame (chunky display-face labels, a READY slab).
+phone-controller style frame in `art/ui/accepted/2026-10-07/frames/` (chunky display-face labels, a READY slab).
 
 ## Looked at
 
