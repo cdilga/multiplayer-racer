@@ -72,7 +72,9 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await wait(host,source=>window.__jjRoom.view().seats.find(s=>s.localSource===source)?.ready===true,padSource);
     await host.evaluate(()=>window.__pad([0,0,0,0],false));
     const phone = await (await browser.newContext({viewport:{width:412,height:915},hasTouch:true})).newPage();
-    await phone.addInitScript(()=>{localStorage.setItem('jj.car.test','tradie-ute');localStorage.setItem('jj.tutorial','done');});
+    // The remembered car is per realm (`jj.car.<realm>`): `test` locally, `preview` on a deployed preview.
+    const {realm} = await (await fetch(`${server.origin}${BASE}version`)).json();
+    await phone.addInitScript(r=>{localStorage.setItem(`jj.car.${r}`,'tradie-ute');localStorage.setItem('jj.tutorial','done');},realm);
     phone.on('pageerror', e=>errors.push(e.message));
     await phone.goto(await host.evaluate(()=>window.__jjNet.joinUrl()));
     await wait(phone,()=>window.__jjController?.inspect().phase==='ready-to-join');
