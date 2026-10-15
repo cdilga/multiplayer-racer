@@ -1,0 +1,258 @@
+{
+  "browser": "chromium",
+  "source": "https://jammers-preview.dilger.dev/p/v02-a1f7bf4b/",
+  "seed": 0,
+  "recipe": "town",
+  "fixture": {
+    "scenario": "empty-course-overview",
+    "what": "The actual whole-course camera frames a generated long map.",
+    "map": "generated.json",
+    "seed": 0,
+    "ticks": 1,
+    "cars": [],
+    "seats": [],
+    "inputs": []
+  },
+  "rows": [
+    {
+      "file": "chromium-twisty-overview-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "overview",
+      "preset": "twisty",
+      "haze": {
+        "near": 2763.3196962514917,
+        "far": 3223.3196962514917
+      }
+    },
+    {
+      "file": "chromium-twisty-fullscreen-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "fullscreen",
+      "preset": "twisty",
+      "haze": {
+        "near": 2763.3196962514917,
+        "far": 3223.3196962514917
+      }
+    },
+    {
+      "file": "chromium-twisty-resized-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "resized",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-overview-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "overview",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-fullscreen-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "fullscreen",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-resized-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "resized",
+      "preset": "twisty",
+      "haze": {
+        "near": 2763.3196962514917,
+        "far": 3223.3196962514917
+      }
+    },
+    {
+      "file": "chromium-twisty-overview-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "overview",
+      "preset": "twisty",
+      "haze": {
+        "near": 2354.9403972388222,
+        "far": 2814.9403972388222
+      }
+    },
+    {
+      "file": "chromium-twisty-fullscreen-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "fullscreen",
+      "preset": "twisty",
+      "haze": {
+        "near": 2354.9403972388222,
+        "far": 2814.9403972388222
+      }
+    },
+    {
+      "file": "chromium-twisty-resized-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "resized",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-overview-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "overview",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-fullscreen-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "fullscreen",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-resized-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "resized",
+      "preset": "twisty",
+      "haze": {
+        "near": 2354.9403972388222,
+        "far": 2814.9403972388222
+      }
+    },
+    {
+      "file": "chromium-twisty-overview-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "overview",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-fullscreen-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "fullscreen",
+      "preset": "twisty",
+      "haze": {
+        "near": 1226.296340028545,
+        "far": 1686.296340028545
+      }
+    },
+    {
+      "file": "chromium-twisty-resized-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "preset": "twisty",
+      "haze": {
+        "near": 2354.9403972388222,
+        "far": 2814.9403972388222
+      }
+    },
+    {
+      "file": "chromium-flowing-overview-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "overview",
+      "preset": "flowing",
+      "haze": {
+        "near": 1322.1724285831933,
+        "far": 1782.1724285831933
+      }
+    },
+    {
+      "file": "chromium-flowing-fullscreen-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "fullscreen",
+      "preset": "flowing",
+      "haze": {
+        "near": 1322.1724285831933,
+        "far": 1782.1724285831933
+      }
+    },
+    {
+      "file": "chromium-flowing-resized-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "preset": "flowing",
+      "haze": {
+        "near": 2342.8918294656846,
+        "far": 2802.8918294656846
+      }
+    },
+    {
+      "file": "chromium-speedway-overview-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "overview",
+      "preset": "speedway",
+      "haze": {
+        "near": 1287.7909106300644,
+        "far": 1747.7909106300644
+      }
+    },
+    {
+      "file": "chromium-speedway-fullscreen-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "fullscreen",
+      "preset": "speedway",
+      "haze": {
+        "near": 1287.7909106300644,
+        "far": 1747.7909106300644
+      }
+    },
+    {
+      "file": "chromium-speedway-resized-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "preset": "speedway",
+      "haze": {
+        "near": 2345.0332215284775,
+        "far": 2805.0332215284775
+      }
+    }
+  ],
+  "chase": {
+    "near": 160,
+    "far": 620
+  },
+  "restoredOverview": {
+    "near": 2345.0332215284775,
+    "far": 2805.0332215284775
+  },
+  "errors": []
+}

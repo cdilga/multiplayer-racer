@@ -36,3 +36,9 @@ CI receipt: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/3596
 Each generated course now owns a separate browser page. Closing the prior page before opening the next avoids WebKit attributing intentionally aborted old-document audio preload requests to the next course. Error assertions remain active throughout each live page. The renderer stays held and paints a single snapshot-ready frame for each viewport.
 
 `JJ_SERVER_BIN=/tmp/jj-macos-server-w01 JJ_BIN=/tmp/jj-v15-presets-native node --test web/tests/journeys/course-overview.test.mjs`: Chromium (software GL) 36.84 s and Playwright WebKit 15.98 s, 2/2 pass. Full log: `isolated-pages.txt`. Includes all three original course families, five viewport sizes, transposed resize, and chase/overview haze restoration. Deployed recapture remains pending the containing green CI preview.
+
+### Deployed recapture, 2026-10-16
+
+Against the deployed preview `p/v02-a1f7bf4b` (Gitea CI-built, contains this fix), on eris: Chromium 67.3 s and
+Playwright WebKit 48.4 s, 2/2 pass; 42 frames in `deployed-frames/`, inspected (self-review.md). This closes the
+"deployed recapture pending" item above.
