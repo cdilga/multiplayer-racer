@@ -375,3 +375,22 @@ not feel targets.
   the old drive force when the row is about the manoeuvre or a surface; re-measure the envelope only when the row
   measures the car's own response. Safety rows never move. The duels' boost/drift windows are frozen search results:
   retime them with `scenarios/duels/search.py` (pass the duel's seed: `multi_opt` drops it).
+
+## 2026-10-16 · Arcade handling over Rapier's raycast vehicle (P1-FL04)
+
+- **Rapier's side friction is a damper, not a tyre.** `resolve_single_unilateral` returns 20 % (`contact_damping = 0.2`)
+  of the impulse that would stop the contact's sideways velocity, every tick, per wheel. The force grows with slip and
+  never peaks, so more lock always means more force and the car settles at a big slip angle well short of its grip
+  (the Cruz: 14° slip, 28 deg/s at 30 m/s with `friction_slip` 2 allowing ~2 g). The handling layer turns it off
+  (`side_friction_stiffness = 0`) and applies its own slip-curve force after `update_vehicle`.
+- **`effective_world_inv_inertia` is the inverse inertia tensor, not its square root,** whatever Rapier 0.36's field doc
+  says: parry's `world_inv_inertia` builds R·diag(1/I)·Rᵀ. Effective mass along `a` at `r` is
+  1 / (1/m + (r×a)·I⁻¹(r×a)); an angular impulse for Δω about `u` is Δω / (u·I⁻¹u). Treating it as a square root made
+  the yaw helper hundreds of times too strong and spun every car in place.
+- **With a peaked tyre, a fixed speed-scaled lock ploughs.** Any lock past the front tyres' peak slip loses force. Steer
+  relative to the front axle's actual travel (wheel angle = axle travel angle + stick × peak slip) keeps full stick at
+  the peak and gives a caster-like countersteer in an oversteer slide. Scaling the axle-travel term by the stick made
+  partial stick much weaker than before; don't.
+- **A grip multiplier on the lateral force alone hides the drivetrain.** Measure the friction circle on the share of
+  the wheel's *drive* grip in use (Rapier's `friction_slip` × load), not on newtons against the lateral peak, or a
+  high-grip preset never shows power oversteer.

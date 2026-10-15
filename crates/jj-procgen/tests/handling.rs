@@ -29,7 +29,14 @@ fn profiles() -> Vec<(String, VehicleProfile)> {
         .collect()
 }
 
-fn tuned(base: VehicleProfile) -> VehicleProfile {
+fn tuned(mut base: VehicleProfile) -> VehicleProfile {
+    // P1-FL04: `JJ_HANDLING=kart` (or rally, hooligan) runs the bank with that arcade handling preset on every vehicle.
+    if let Ok(id) = std::env::var("JJ_HANDLING")
+        && !id.is_empty()
+    {
+        base.tuning.handling =
+            Some(jj_sim::vehicle::handling::Handling::preset(&id).expect("a handling preset id"));
+    }
     let Ok(tune) = std::env::var("JJ_TUNE") else {
         return base;
     };
@@ -232,7 +239,7 @@ fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
     );
 }
 
-/// The flat half of the bank (R122 AC1): on the surface-strips test map (tarmac, packed dirt, gravel, rock, all flat),
+/// The flat half of the bank (R122 AC1): on the surface strips (tarmac, packed dirt, gravel, rock, all flat, no obstacles),
 /// every entry speed from 10 m/s to 35 m/s times 25, 50 and 100 % lock, held or ramped in over 0.5 s, on throttle or
 /// braking: the car leans at most 15 degrees (the worst is a car spinning under locked brakes at 35 m/s), and its
 /// chassis never touches the ground.
@@ -245,21 +252,13 @@ fn on_flat_ground_every_speed_and_lock_stays_flat_and_off_its_sills() {
 }
 
 fn flat_bank(vehicle: &str, profile: &VehicleProfile) {
-    // The bike's tighter arc crosses the building at x=140,z=-25 on the
-    // car strips. Its versioned flat fixture uses the identical four surfaces
-    // without collision obstacles: this bank measures turns, not building hits.
-    // Generated-road coverage below retains every obstacle and feature.
-    let path = if profile.tuning.bike_balance.is_some() {
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../scenarios/bikes/flat-strips.json"
-        )
-    } else {
-        concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../maps/test/surface-strips.json"
-        )
-    };
+    // The flat strips without their kerbs, barriers, props and buildings (the same four grounds, cell for cell): this bank
+    // measures turns, not obstacle hits. A tight arc crosses the building at x=140,z=-25 (first the bike's, then the
+    // arcade handling's, P1-FL04). Generated-road coverage below retains every obstacle and feature.
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../scenarios/bikes/flat-strips.json"
+    );
     let map =
         load_json(&std::fs::read(path).unwrap(), &Registry::generic()).expect("the test map loads");
     let hull = profile.geometry.hull.clone();

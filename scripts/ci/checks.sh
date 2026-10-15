@@ -16,6 +16,7 @@ t "Music is score-only with no voice: manifest provenance and the calibrated no-
 t "Engine synth bundle and profile copy are current (P1-A04)" node art/ui/poc/audio/engine/build.mjs --check
 t "jammers-look recipes match the rendered code (P1-F11)" node .claude/skills/jammers-look/example/check-recipes.mjs
 t "The surface-strips test map is what its generator writes (P1-S03a)" bash -c 'python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json'
+t "The skidpad test map is what its generator writes (P1-FL04)" bash -c 'python3 tools/maps/skidpad.py && git diff --exit-code maps/test/skidpad.json'
 t "Vehicle bake is reproducible and committed; loads in three.js (P1-V02)" bash -c 'node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/'
 t "Design site Vehicles pages: generated from the roster, every Vehicles-contract item present for every roster vehicle (P1-D03b, R126)" bash -c 'node tools/vehicles/review/check.mjs && node --test tools/vehicles/review/'
 t "The N08 qualification harness logic (tools/net)" node --test tools/net/qualify.test.mjs

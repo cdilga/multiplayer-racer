@@ -7,6 +7,8 @@
 //! - **Surfaces:** each wheel's grip is the profile's multiplier for the ground class under it.
 //! - **Air control:** with no wheel on the ground, DRIVE y pitches and DRIVE x rolls the body, gently.
 
+pub mod handling;
+
 use jj_map::model::{Surface, Terrain};
 use jj_types::axis::dequantise_axis;
 
@@ -62,6 +64,8 @@ pub struct ActionState {
     /// The exit boost is banked but waits for the rear tyres to bite again (the drift blend back under half and the rear slipping under `drift_exit_min_slip_deg`): drive
     /// while the rear is still sliding sideways is lost to the tyres, so the burst starts when the car straightens.
     pub exit_boost_wait: bool,
+    /// Arcade weight transfer (P1-FL04): +1 all the grip shifted to the front (braking), −1 to the rear (power).
+    pub load_shift: f32,
 }
 
 impl ActionState {
@@ -79,6 +83,7 @@ impl ActionState {
             exit_boost_ticks: 0,
             exit_boosts: 0,
             exit_boost_wait: false,
+            load_shift: 0.0,
         }
     }
 
@@ -151,6 +156,11 @@ impl ActionState {
             self.boost += t.drift_charge_per_s * dt;
         }
         self.boost = self.boost.clamp(0.0, 1.0);
+        if let Some(h) = &t.handling {
+            let (throttle, brake) = stick(input);
+            let throttle = if self.boosting { 1.0 } else { throttle };
+            self.load_shift = h.step_shift(self.load_shift, throttle, brake, dt);
+        }
     }
 }
 

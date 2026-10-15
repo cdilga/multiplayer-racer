@@ -208,6 +208,10 @@ pub struct Tuning {
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
     pub damage: DamageTuning,
+    /// Arcade handling (P1-FL04, R128): the per-axle lateral-grip layer that replaces Rapier's side friction. Absent,
+    /// Rapier's own side friction applies as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub handling: Option<crate::vehicle::handling::Handling>,
 }
 
 /// The damage model's numbers (plan §6.3, DEFAULT/TUNE; calibrated by `scenarios/damage/`, never by formula).

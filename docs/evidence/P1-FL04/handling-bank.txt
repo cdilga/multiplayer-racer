@@ -1,0 +1,10 @@
+before    Rear  steady  79.4  42.3  28.1 deg/s @ 10.4 20.0 29.7 m/s | lift + 17.8 | power slip   1.1/  1.1 yaw  38.4/ 55.8 beta  2.4/ 4.4 | recover Some(0.05) up 1.00
+kart      Rear  steady  99.0  75.3  61.4 deg/s @ 10.1 19.9 29.6 m/s | lift + 13.0 | power slip   5.0/  4.4 yaw  68.2/ 89.9 beta  1.8/ 4.7 | recover Some(0.15) up 1.00
+kart      Front steady 105.0  74.1  58.3 deg/s @ 10.2 19.9 29.6 m/s | lift + 14.9 | power slip   4.4/  4.4 yaw  68.5/ 93.0 beta  2.4/ 5.0 | recover Some(0.14166667) up 1.00
+kart      All   steady 102.2  76.3  60.9 deg/s @ 10.1 19.9 29.6 m/s | lift + 14.8 | power slip   4.5/  4.4 yaw  65.7/ 92.5 beta  2.0/ 5.0 | recover Some(0.15) up 1.00
+rally     Rear  steady  90.0  59.2  43.8 deg/s @ 10.1 19.9 29.6 m/s | lift + 16.7 | power slip   6.6/  5.3 yaw  53.2/ 74.9 beta  0.8/ 2.4 | recover Some(0.425) up 1.00
+rally     Front steady  96.7  56.7  39.3 deg/s @ 10.1 19.9 29.7 m/s | lift + 20.0 | power slip   5.2/  5.2 yaw  48.8/ 76.2 beta  0.8/ 2.7 | recover Some(0.41666666) up 1.00
+rally     All   steady  93.9  59.8  43.2 deg/s @ 10.1 19.9 29.6 m/s | lift + 19.8 | power slip   5.3/  5.3 yaw  47.3/ 77.1 beta  0.8/ 2.7 | recover Some(0.425) up 1.00
+hooligan  Rear  steady  91.7  62.5  45.6 deg/s @ 10.1 19.9 29.6 m/s | lift + 16.0 | power slip   8.0/  5.3 yaw  60.0/ 77.8 beta  1.4/ 2.7 | recover Some(0.425) up 1.00
+hooligan  Front steady  96.9  58.8  39.2 deg/s @ 10.2 20.0 29.7 m/s | lift + 22.3 | power slip   5.0/  5.0 yaw  47.5/ 77.2 beta  0.8/ 2.9 | recover Some(0.4) up 1.00
+hooligan  All   steady  95.0  62.4  44.4 deg/s @ 10.1 19.9 29.7 m/s | lift + 21.1 | power slip   5.3/  5.2 yaw  49.0/ 79.4 beta  0.9/ 3.0 | recover Some(0.41666666) up 1.00

@@ -1,0 +1,292 @@
+[
+  {
+    "preset": "before",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      79.37971,
+      42.336845,
+      28.148783
+    ],
+    "steady_speed_mps": [
+      10.372006,
+      19.965902,
+      29.740776
+    ],
+    "lift_off_gain_deg_s": 17.825905,
+    "power_rear_slip_deg": [
+      1.052913,
+      1.052793
+    ],
+    "power_yaw_deg_s": [
+      38.360027,
+      55.753025
+    ],
+    "power_sideslip_deg": [
+      2.4443896,
+      4.4057264
+    ],
+    "recovery_s": 0.05,
+    "min_up_y": 0.99968946
+  },
+  {
+    "preset": "kart",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      98.987656,
+      75.345604,
+      61.36174
+    ],
+    "steady_speed_mps": [
+      10.115125,
+      19.889135,
+      29.565844
+    ],
+    "lift_off_gain_deg_s": 13.046093,
+    "power_rear_slip_deg": [
+      4.962339,
+      4.363841
+    ],
+    "power_yaw_deg_s": [
+      68.21945,
+      89.896385
+    ],
+    "power_sideslip_deg": [
+      1.7816567,
+      4.7371335
+    ],
+    "recovery_s": 0.15,
+    "min_up_y": 0.9997978
+  },
+  {
+    "preset": "kart",
+    "drive": "Front",
+    "steady_yaw_deg_s": [
+      104.997,
+      74.14511,
+      58.33813
+    ],
+    "steady_speed_mps": [
+      10.153401,
+      19.920492,
+      29.632778
+    ],
+    "lift_off_gain_deg_s": 14.900057,
+    "power_rear_slip_deg": [
+      4.407228,
+      4.394856
+    ],
+    "power_yaw_deg_s": [
+      68.54585,
+      93.03994
+    ],
+    "power_sideslip_deg": [
+      2.3888652,
+      5.023297
+    ],
+    "recovery_s": 0.14166667,
+    "min_up_y": 0.99976504
+  },
+  {
+    "preset": "kart",
+    "drive": "All",
+    "steady_yaw_deg_s": [
+      102.19456,
+      76.33598,
+      60.89122
+    ],
+    "steady_speed_mps": [
+      10.133262,
+      19.89643,
+      29.594046
+    ],
+    "lift_off_gain_deg_s": 14.777662,
+    "power_rear_slip_deg": [
+      4.457184,
+      4.387767
+    ],
+    "power_yaw_deg_s": [
+      65.7095,
+      92.48602
+    ],
+    "power_sideslip_deg": [
+      2.0183024,
+      4.977379
+    ],
+    "recovery_s": 0.15,
+    "min_up_y": 0.9997915
+  },
+  {
+    "preset": "rally",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      89.955734,
+      59.22973,
+      43.841946
+    ],
+    "steady_speed_mps": [
+      10.1025505,
+      19.88728,
+      29.60569
+    ],
+    "lift_off_gain_deg_s": 16.655787,
+    "power_rear_slip_deg": [
+      6.6383004,
+      5.31763
+    ],
+    "power_yaw_deg_s": [
+      53.219307,
+      74.903824
+    ],
+    "power_sideslip_deg": [
+      0.7928338,
+      2.3887417
+    ],
+    "recovery_s": 0.425,
+    "min_up_y": 0.9997982
+  },
+  {
+    "preset": "rally",
+    "drive": "Front",
+    "steady_yaw_deg_s": [
+      96.719635,
+      56.69173,
+      39.264614
+    ],
+    "steady_speed_mps": [
+      10.13841,
+      19.931955,
+      29.696753
+    ],
+    "lift_off_gain_deg_s": 19.983055,
+    "power_rear_slip_deg": [
+      5.1535077,
+      5.153765
+    ],
+    "power_yaw_deg_s": [
+      48.75557,
+      76.24933
+    ],
+    "power_sideslip_deg": [
+      0.84644353,
+      2.6708903
+    ],
+    "recovery_s": 0.41666666,
+    "min_up_y": 0.99976724
+  },
+  {
+    "preset": "rally",
+    "drive": "All",
+    "steady_yaw_deg_s": [
+      93.93895,
+      59.846104,
+      43.22731
+    ],
+    "steady_speed_mps": [
+      10.117925,
+      19.89743,
+      29.63769
+    ],
+    "lift_off_gain_deg_s": 19.819725,
+    "power_rear_slip_deg": [
+      5.3323436,
+      5.2573633
+    ],
+    "power_yaw_deg_s": [
+      47.268177,
+      77.13124
+    ],
+    "power_sideslip_deg": [
+      0.80851096,
+      2.6722686
+    ],
+    "recovery_s": 0.425,
+    "min_up_y": 0.99979186
+  },
+  {
+    "preset": "hooligan",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      91.717026,
+      62.46425,
+      45.558617
+    ],
+    "steady_speed_mps": [
+      10.123494,
+      19.897533,
+      29.613697
+    ],
+    "lift_off_gain_deg_s": 16.023478,
+    "power_rear_slip_deg": [
+      7.9948177,
+      5.3099422
+    ],
+    "power_yaw_deg_s": [
+      59.9824,
+      77.79656
+    ],
+    "power_sideslip_deg": [
+      1.4475402,
+      2.6642835
+    ],
+    "recovery_s": 0.425,
+    "min_up_y": 0.9997996
+  },
+  {
+    "preset": "hooligan",
+    "drive": "Front",
+    "steady_yaw_deg_s": [
+      96.92921,
+      58.833195,
+      39.217083
+    ],
+    "steady_speed_mps": [
+      10.163708,
+      19.95571,
+      29.726978
+    ],
+    "lift_off_gain_deg_s": 22.301388,
+    "power_rear_slip_deg": [
+      4.9663925,
+      4.9659257
+    ],
+    "power_yaw_deg_s": [
+      47.53712,
+      77.23874
+    ],
+    "power_sideslip_deg": [
+      0.8236474,
+      2.9155033
+    ],
+    "recovery_s": 0.4,
+    "min_up_y": 0.9997729
+  },
+  {
+    "preset": "hooligan",
+    "drive": "All",
+    "steady_yaw_deg_s": [
+      95.02869,
+      62.352493,
+      44.441364
+    ],
+    "steady_speed_mps": [
+      10.140833,
+      19.915184,
+      29.656794
+    ],
+    "lift_off_gain_deg_s": 21.056408,
+    "power_rear_slip_deg": [
+      5.279517,
+      5.1578255
+    ],
+    "power_yaw_deg_s": [
+      48.99483,
+      79.388885
+    ],
+    "power_sideslip_deg": [
+      0.94012064,
+      2.9651864
+    ],
+    "recovery_s": 0.41666666,
+    "min_up_y": 0.99979347
+  }
+]

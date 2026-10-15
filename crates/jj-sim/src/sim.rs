@@ -160,6 +160,8 @@ struct Car {
     wheel_lost_at: Option<u64>,
     /// The player's learner assist (R125).
     assist: AssistState,
+    /// Each wheel's ground slip-curve factor this tick (R124), for the arcade handling layer (P1-FL04).
+    side_stiffness: Vec<f32>,
 }
 
 /// The catch plane's top, below the kill plane, and its half extent, m.
@@ -1499,6 +1501,7 @@ impl Sim {
             springs: vec![Spring::default(); p.part_count()],
             removed: vec![false; p.part_count()],
             speed_history: std::collections::VecDeque::new(),
+            side_stiffness: Vec::new(),
             last_linvel: Vector::ZERO,
             incarnation: 0,
             last_detach: None,
@@ -1734,6 +1737,13 @@ impl Sim {
                 }
                 let commands =
                     vehicle::wheel_commands(p, input, car.action, forward_speed, grip, DT);
+                // The front axle's travel off the nose (+ left), for the arcade handling's steer (P1-FL04).
+                let front_beta = {
+                    let v = b.velocity_at_point(iso * Vector::new(0.0, 0.0, p.axle_front_z()));
+                    let left = iso.rotation * Vector::X;
+                    libm::atan2f(v.dot(left), v.dot(fwd).abs().max(1.0))
+                };
+                car.side_stiffness.clone_from(&side_stiffness);
                 let dt_ = &p.tuning.damage;
                 let t_ = &p.tuning;
                 for (i, (w, c)) in car
@@ -1743,7 +1753,18 @@ impl Sim {
                     .zip(commands)
                     .enumerate()
                 {
-                    w.steering = c.steering;
+                    w.steering = match &t_.handling {
+                        // P1-FL04: steer to the front tyres' peak slip off the front axle's travel.
+                        Some(h) if i < p.front_wheels() => h.steer_angle(
+                            t_.friction_slip,
+                            wheelbase,
+                            t_.max_steer_rad,
+                            jj_types::axis::dequantise_axis(input.steer),
+                            forward_speed,
+                            front_beta,
+                        ),
+                        _ => c.steering,
+                    };
                     // Drive bites only on drivable ground (br-gw74.13): it fades out as the contact steepens past about
                     // 55 degrees and is gone on a wall. The arcade engine out-pulls the car's weight, and the suspension
                     // keeps the tyres pressed to whatever they touch, so without this a car could drive up a wall.
@@ -1758,7 +1779,12 @@ impl Sim {
                     w.engine_force = c.engine_force * catch_scale * climbable;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
-                    w.side_friction_stiffness = side_stiffness[i];
+                    // P1-FL04: with arcade handling the tyres' sideways force is `vehicle::handling`'s, not Rapier's.
+                    w.side_friction_stiffness = if t_.handling.is_some() {
+                        0.0
+                    } else {
+                        side_stiffness[i]
+                    };
                     match car.damage.state(p.wheel_part(i), dt_) {
                         PartState::Intact => w.max_suspension_force = t_.max_suspension_force,
                         // R121: a loose wheel retains its handling until it detaches.
@@ -1900,6 +1926,22 @@ impl Sim {
                 filter,
             );
             car.vehicle.update_vehicle(DT, queries);
+            // P1-FL04 arcade handling: each grounded tyre's sideways force and the yaw-rate feel.
+            if let Some(h) = &p.tuning.handling
+                && let Some(b) = self.world.bodies.get_mut(car.body)
+            {
+                self.ledger += vehicle::handling::apply(
+                    h,
+                    p.tuning.friction_slip,
+                    b,
+                    car.vehicle.wheels(),
+                    p.front_wheels(),
+                    &car.side_stiffness,
+                    car.action.load_shift,
+                    jj_types::axis::dequantise_axis(input.steer),
+                    DT,
+                );
+            }
             // R124 rolling drag: each wheel in contact drags against its ground velocity by the ground under it. One
             // impulse of force × dt per tick, never more than stops the wheel's share of the vehicle.
             if let Some(b) = self.world.bodies.get_mut(car.body) {
@@ -3252,6 +3294,9 @@ impl Sim {
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
             h.update(c.action.wheelie_ticks.to_le_bytes());
+            if self.profiles[c.model].tuning.handling.is_some() {
+                h.update(c.action.load_shift.to_le_bytes());
+            }
             h.update(c.action.wheelie_ready.to_le_bytes());
             for (r, n) in c.action.utility_ready.iter().zip(c.action.utility_fired) {
                 h.update(r.to_le_bytes());
