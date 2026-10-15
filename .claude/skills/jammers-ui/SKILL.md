@@ -50,3 +50,12 @@ it may print `RU_SYNC=skipped (runs in progress …)`, which is fine). The singl
 ## Traps
 
 `docs/learnings/ui.md`.
+
+## Controller buttons must look finished (owner, 2026-10-16, R130)
+
+The owner flagged the phone control buttons' visual look as needing a fix. Any bead that adds, moves or restyles a
+controller control (sticks, the R130 Buttons layout, its per-player button choice, the drawer) captures the controller at
+915x412 and 412x915 in `playing`, with every button state it can show (idle, pressed, disabled/cooldown), **looks at each
+still**, and compares against the accepted set (`art/ui/accepted/2026-10-07/`). Hit targets at least 48 CSS px, labels
+legible at arm's length, nothing overlapping the sticks or the HUD. Until the buttons-visual bead (P1-C-buttons-look)
+closes, no Buttons-layout work closes without that capture in its self-review.
