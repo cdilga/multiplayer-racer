@@ -323,7 +323,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   };
   // A room update that changes the open menu redraws it, which replaces the buttons. A press in flight (down, not yet up)
   // would lose its click when its button is replaced (WebKit drops it), so the redraw waits for the release (br-b2sv).
-  menuEl.addEventListener('pointerdown', () => { pressing = true; }, true);
+  // Each press and click on the menu goes in the history with the button it hit, so a lost click shows where it was lost.
+  const actOf = (e: Event) => (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-act]')?.dataset.act ?? '-';
+  menuEl.addEventListener('pointerdown', (e) => { pressing = true; note(`down:${actOf(e)}`); }, true);
   // The redraw runs once the click has been delivered (the window sees it after the menu's own handler), or after a short
   // wait when the press ends with no click (dragged off the button).
   const redrawNow = () => {
@@ -337,6 +339,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   window.addEventListener('pointerup', released, true);
   window.addEventListener('pointercancel', released, true);
   menuEl.addEventListener('click', (e) => {
+    note(`click:${actOf(e)}`);
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!b) {
       if (e.target === menuEl) closeMenu('backdrop');
