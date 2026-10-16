@@ -86,9 +86,10 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const ids = (await lab()).vehicles;
     assert.ok(ids.length >= 2, `the roster has several vehicles (${ids})`);
     const home = await host.evaluate(() => document.querySelector('[data-tune-vehicle]').value);
-    // The lab applies a change vehicle by vehicle at tick boundaries (~1 s each on a loaded CI host): the waits allow that
-    // ceiling per slider, and the asserts below judge the time against it (a 5 s wait timed out first with six vehicles).
-    const ceiling = 1000 * Math.max(4, ids.length);
+    // The lab applies a change vehicle by vehicle at tick boundaries: the header's second and a half per vehicle is the
+    // ceiling (a loaded 1080p CI host flipped A/B in 6.7 s for six vehicles, run 5343). The waits allow it per slider and
+    // the asserts below judge the time against it (a flat 5 s wait timed out first, run 5302).
+    const ceiling = 1500 * Math.max(4, ids.length);
     const idle = (host_) => wait(host_, () => !/Applying/.test(window.__jjTune.lab.inspect().status), undefined, 3 * ceiling);
 
     /** The sim's value for a vehicle: the panel reads it back from the worker once that vehicle is selected. */
@@ -188,7 +189,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
       flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? tm : 1));
       await moving(`after flipping to ${k}`);
     }
-    assert.ok(Math.max(...flips) < ceiling, `A/B flips applied in ${flips} ms`); // ~1 s per vehicle (each switch lands at a tick boundary)
+    assert.ok(Math.max(...flips) < ceiling, `A/B flips applied in ${flips} ms`); // each switch lands at a tick boundary, vehicle by vehicle
     await scaled('arcade.turn_g', turnBase, tm, 'slot A is live');
     await scaled('arcade.grip_g', gripBase, gm, 'slot A is live');
     await scaled('max_engine_force', base, tm, 'slot A power');
