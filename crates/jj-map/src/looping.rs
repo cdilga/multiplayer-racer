@@ -313,7 +313,10 @@ pub fn problems(map: &Map, p: &BTreeMap<String, i64>) -> Vec<String> {
         }
     }
     if p["minSpeedMms"] < limits::MIN_MIN_SPEED_MMS {
-        out.push(format!("minSpeedMms must be at least {}", limits::MIN_MIN_SPEED_MMS));
+        out.push(format!(
+            "minSpeedMms must be at least {}",
+            limits::MIN_MIN_SPEED_MMS
+        ));
     }
     let Some(fr) = frame(map, &d) else {
         out.push(

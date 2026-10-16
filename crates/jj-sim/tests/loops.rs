@@ -21,7 +21,11 @@ fn map() -> LoadedMap {
 }
 
 fn design(m: &LoadedMap) -> LoopDesign {
-    m.map.features.iter().find_map(LoopDesign::of).expect("the map has a loop")
+    m.map
+        .features
+        .iter()
+        .find_map(LoopDesign::of)
+        .expect("the map has a loop")
 }
 
 /// What a run through the loop did.
@@ -41,7 +45,14 @@ struct Run {
 
 /// Starts a car `back` m before the loop's entry, heading into it at `speed`, the throttle held (`throttle`) and the wheel
 /// straight, and runs it for up to 12 s.
-fn take(m: &LoadedMap, profile: VehicleProfile, seed: u64, speed: f32, throttle: bool, back: f32) -> (Run, Sim, CarId) {
+fn take(
+    m: &LoadedMap,
+    profile: VehicleProfile,
+    seed: u64,
+    speed: f32,
+    throttle: bool,
+    back: f32,
+) -> (Run, Sim, CarId) {
     let d = design(m);
     let e = &m.map.route.points[d.entry];
     let x_exit = m.map.route.points[d.exit].x as f32 / 1000.0;
@@ -55,7 +66,13 @@ fn take(m: &LoadedMap, profile: VehicleProfile, seed: u64, speed: f32, throttle:
         heading: core::f32::consts::FRAC_PI_2,
     };
     sim.place_car(car, pose, 0.0, [speed, 0.0, 0.0]);
-    sim.set_input(car, DriveInput { throttle: if throttle { i16::MAX } else { 0 }, ..Default::default() });
+    sim.set_input(
+        car,
+        DriveInput {
+            throttle: if throttle { i16::MAX } else { 0 },
+            ..Default::default()
+        },
+    );
     let life = sim.car_life(car);
     let mut run = Run {
         completed: false,
@@ -78,7 +95,11 @@ fn take(m: &LoadedMap, profile: VehicleProfile, seed: u64, speed: f32, throttle:
         }
         run.min_up_y = run.min_up_y.min(st.up_y);
         run.max_y = run.max_y.max(st.position[1]);
-        if st.position[0] > x_exit + 25.0 && (st.position[2] - z_exit).abs() < 4.0 && st.up_y > 0.9 && st.forward_speed > 3.0 {
+        if st.position[0] > x_exit + 25.0
+            && (st.position[2] - z_exit).abs() < 4.0
+            && st.up_y > 0.9
+            && st.forward_speed > 3.0
+        {
             run.completed = true;
             break;
         }
@@ -133,11 +154,21 @@ fn too_slow_falls_off_and_respawns_before_the_loop_facing_the_road() {
     for (seed, speed) in [(0, 13.0), (1, 15.0), (2, posted(&m) - 3.0)] {
         let (r, sim, car) = take(&m, VehicleProfile::cruz(), seed, speed, false, 2.0);
         assert!(!r.completed && r.respawned, "{speed:.1} m/s: {r:?}");
-        assert!(r.max_y > 2.0, "{speed:.1} m/s: it got onto the loop before falling: {r:?}");
+        assert!(
+            r.max_y > 2.0,
+            "{speed:.1} m/s: it got onto the loop before falling: {r:?}"
+        );
         let x = r.respawn_x.unwrap();
-        assert!(x < entry_x - 5.0, "respawned at x {x:.1}, the loop's entry is at {entry_x:.1}");
+        assert!(
+            x < entry_x - 5.0,
+            "respawned at x {x:.1}, the loop's entry is at {entry_x:.1}"
+        );
         let st = sim.car_state(car).unwrap();
-        assert!((st.heading - core::f32::consts::FRAC_PI_2).abs() < 0.3, "facing along the road: heading {}", st.heading);
+        assert!(
+            (st.heading - core::f32::consts::FRAC_PI_2).abs() < 0.3,
+            "facing along the road: heading {}",
+            st.heading
+        );
     }
 }
 
@@ -162,9 +193,20 @@ fn the_ride_gains_no_unbooked_energy() {
     let e = &m.map.route.points[d.entry];
     let mut sim = Sim::with_profiles(&m, &Registry::generic(), 2, vec![VehicleProfile::cruz()]);
     let car = sim.spawn_grid(1)[0];
-    let pose = SpawnPose { x: e.x as f32 / 1000.0 - 5.0, y: 0.3, z: 0.0, heading: core::f32::consts::FRAC_PI_2 };
+    let pose = SpawnPose {
+        x: e.x as f32 / 1000.0 - 5.0,
+        y: 0.3,
+        z: 0.0,
+        heading: core::f32::consts::FRAC_PI_2,
+    };
     sim.place_car(car, pose, 0.0, [posted(&m), 0.0, 0.0]);
-    sim.set_input(car, DriveInput { throttle: i16::MAX, ..Default::default() });
+    sim.set_input(
+        car,
+        DriveInput {
+            throttle: i16::MAX,
+            ..Default::default()
+        },
+    );
     let (e0, l0) = sim.energy_j();
     let mut worst = 0.0f64;
     for _ in 0..4 * S {
@@ -173,5 +215,8 @@ fn the_ride_gains_no_unbooked_energy() {
         worst = worst.max((e1 - e0) - (l1 - l0));
     }
     let scale = 0.5 * 1200.0 * f64::from(posted(&m)).powi(2);
-    assert!(worst < 0.05 * scale, "unbooked energy gain {worst:.0} J (the car's entry kinetic energy {scale:.0} J)");
+    assert!(
+        worst < 0.05 * scale,
+        "unbooked energy gain {worst:.0} J (the car's entry kinetic energy {scale:.0} J)"
+    );
 }

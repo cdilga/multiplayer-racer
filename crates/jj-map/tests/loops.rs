@@ -135,12 +135,19 @@ fn the_deck_leaves_and_rejoins_the_road_and_is_upside_down_at_the_top() {
     // The deck rolls only gently along the helix (the Frenet frame's twist), and a car with its wheel straight follows
     // the centre line: it is a geodesic of the deck (the curve's bend lies along the surface normal, never sideways).
     for (k, s) in secs.iter().enumerate() {
-        assert!(s.side[1].abs() < 0.6, "the deck rolls gently (under ~37 degrees): {:?}", s.side);
+        assert!(
+            s.side[1].abs() < 0.6,
+            "the deck rolls gently (under ~37 degrees): {:?}",
+            s.side
+        );
         if k > 0 && k < secs.len() - 1 {
             let bend = [0, 1, 2].map(|i| secs[k + 1].c[i] - 2.0 * s.c[i] + secs[k - 1].c[i]);
             let sideways = bend[0] * s.side[0] + bend[1] * s.side[1] + bend[2] * s.side[2];
             let len = bend.iter().map(|x| x * x).sum::<f64>().sqrt();
-            assert!(sideways.abs() < 0.05 * len.max(1e-9), "section {k}: the centre line bends sideways on the deck");
+            assert!(
+                sideways.abs() < 0.05 * len.max(1e-9),
+                "section {k}: the centre line bends sideways on the deck"
+            );
         }
     }
     assert_eq!(

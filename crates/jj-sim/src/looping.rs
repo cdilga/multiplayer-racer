@@ -54,14 +54,26 @@ fn v3(a: [f64; 3]) -> Vector {
 impl LoopRail {
     pub(crate) fn new(map: &jj_map::model::Map, design: LoopDesign) -> Option<Self> {
         let frame = looping::frame(map, &design)?;
-        let centres = looping::sections(&frame, &design).iter().map(|s| v3(s.c)).collect();
-        Some(Self { design, frame, centres })
+        let centres = looping::sections(&frame, &design)
+            .iter()
+            .map(|s| v3(s.c))
+            .collect();
+        Some(Self {
+            design,
+            frame,
+            centres,
+        })
     }
 
     /// The deck's centre, tangent, side and normal at t.
     fn at(&self, t: f64) -> (Vector, Vector, Vector, Vector) {
         let s = looping::section_at(&self.frame, &self.design, t);
-        (v3(s.c), v3(looping::tangent(&self.frame, self.design.radius_m, t)), v3(s.side), v3(s.normal))
+        (
+            v3(s.c),
+            v3(looping::tangent(&self.frame, self.design.radius_m, t)),
+            v3(s.side),
+            v3(s.normal),
+        )
     }
 
     /// A car at `pos` moving at `vel`, with a wheel on this loop's deck: the ride it starts, if it qualifies (near the
@@ -81,7 +93,9 @@ impl LoopRail {
         }
         let (c, tangent, side, normal) = self.at(t);
         let speed = vel.dot(tangent);
-        if f64::from(speed) < self.design.min_speed_mps || vel.normalize_or_zero().dot(tangent) < LOCK_HEADING {
+        if f64::from(speed) < self.design.min_speed_mps
+            || vel.normalize_or_zero().dot(tangent) < LOCK_HEADING
+        {
             return None;
         }
         let rel = pos - c;
@@ -100,24 +114,44 @@ impl LoopRail {
         let (c, tangent, side, normal) = self.at(ride.t);
         let rotation = frame_rotation(side, normal, tangent);
         // The angular velocity that turns this frame into the next tick's.
-        let ahead = (ride.t + f64::from(ride.speed * dt) / looping::metres_per_t(&self.frame, self.design.radius_m, ride.t)).min(1.0);
+        let ahead = (ride.t
+            + f64::from(ride.speed * dt)
+                / looping::metres_per_t(&self.frame, self.design.radius_m, ride.t))
+        .min(1.0);
         let (_, t2, s2, n2) = self.at(ahead);
         let turn = frame_rotation(s2, n2, t2) * rotation.inverse();
         let (axis, angle) = turn.to_axis_angle();
-        let angvel = if angle.is_finite() { axis * (angle / dt) } else { Vector::ZERO };
-        (c + side * ride.lateral + normal * ride.height, rotation, tangent * ride.speed, angvel)
+        let angvel = if angle.is_finite() {
+            axis * (angle / dt)
+        } else {
+            Vector::ZERO
+        };
+        (
+            c + side * ride.lateral + normal * ride.height,
+            rotation,
+            tangent * ride.speed,
+            angvel,
+        )
     }
 
     /// Advances a ride one tick: gravity along the curve, the engine (`drive_accel`, m/s², already capped by power) and
     /// the brake (`brake_accel`). Returns the ride carried on, or why it ended.
-    pub(crate) fn advance(&self, mut ride: LoopRide, gravity: Vector, drive_accel: f32, brake_accel: f32, dt: f32) -> RideStep {
+    pub(crate) fn advance(
+        &self,
+        mut ride: LoopRide,
+        gravity: Vector,
+        drive_accel: f32,
+        brake_accel: f32,
+        dt: f32,
+    ) -> RideStep {
         let (_, tangent, _, _) = self.at(ride.t);
         let accel = gravity.dot(tangent) + drive_accel - brake_accel.min(ride.speed.max(0.0) / dt);
         ride.speed += accel * dt;
         if f64::from(ride.speed) < self.design.min_speed_mps {
             return RideStep::TooSlow(ride);
         }
-        ride.t += f64::from(ride.speed * dt) / looping::metres_per_t(&self.frame, self.design.radius_m, ride.t);
+        ride.t += f64::from(ride.speed * dt)
+            / looping::metres_per_t(&self.frame, self.design.radius_m, ride.t);
         if ride.t >= 1.0 {
             ride.t = 1.0;
             return RideStep::Out(ride);
