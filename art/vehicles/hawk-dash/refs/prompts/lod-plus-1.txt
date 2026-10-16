@@ -1,0 +1,7 @@
+Low-poly game asset turnaround sheet, 16:9, light grey seamless background, in exactly the layout and rendering style of the attached sheet: large 3/4 front hero view top-left, top-down plan view in the right column (nose at the bottom), bottom row: front view, left side view (nose pointing left), rear view. Same car in every view, the same scale in the small views.
+
+The car: a bubbly, slightly caricatured Australian V8 muscle sedan in the spirit of a 2016 Ford Falcon XR8 Sprint (not a copy, no brand marks): long four-door sedan, long bonnet with a raised power bulge and two small bonnet vents, a huge gaping trapezoid lower grille with black mesh and a thin upper grille slot, swept-back narrow "hawk-eye" headlights, vertical fog-lamp slots in the bumper corners, a low front lip, short boot with a small ducktail lip spoiler, wide wraparound tail lights, quad exhaust tips under the rear, chunky five-spoke black rims with low-profile tyres, wide rear haunches.
+
+Livery: deep blue body paint with two bold black racing stripes running nose to tail over bonnet, roof and boot, a black side "C" stripe along the lower doors, black mirror caps.
+
+low-poly, chunky facets, simple 5-spoke rims. Flat-shaded facets, clean studio light, soft shadow. No text, no logos, no badges, no number plates, no brand names, no people.

@@ -1,0 +1,213 @@
+{
+ "id": "lion-president",
+ "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into lion-president.asset.json. Same hinge layout as the Cruz (plan §6.3): doors 0–70° about the front edge, front (bonnet, scoops and fascia) and back (boot, wing and diffuser) hang 0–25° about their top edge, wheels ±6° camber. +X is the car's left.",
+ "lods": [
+  {
+   "maxTris": 1300
+  },
+  {
+   "maxTris": 900
+  },
+  {
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "massFraction": 0.62,
+   "hinge": null,
+   "collider": "convex"
+  },
+  "front": {
+   "massFraction": 0.08,
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "collider": "convex"
+  },
+  "back": {
+   "massFraction": 0.07,
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "collider": "convex"
+  },
+  "door_FL": {
+   "massFraction": 0.04,
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "collider": "convex"
+  },
+  "door_RL": {
+   "massFraction": 0.04,
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "collider": "convex"
+  },
+  "door_FR": {
+   "massFraction": 0.04,
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "collider": "convex"
+  },
+  "door_RR": {
+   "massFraction": 0.04,
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "collider": "convex"
+  },
+  "wheel_FL": {
+   "massFraction": 0.0175,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  },
+  "wheel_FR": {
+   "massFraction": 0.0175,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  },
+  "wheel_RL": {
+   "massFraction": 0.0175,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  },
+  "wheel_RR": {
+   "massFraction": 0.0175,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  }
+ },
+ "interiors": {
+  "engine": {
+   "exposedBy": [
+    "front"
+   ]
+  },
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  },
+  "boot": {
+   "exposedBy": [
+    "back"
+   ]
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   -0.36,
+   1.2,
+   0.0
+  ],
+  "cam_tp_target": [
+   0,
+   1.05,
+   0.4
+  ],
+  "com": [
+   0,
+   0.55,
+   0
+  ],
+  "roof_number": [
+   0,
+   1.545,
+   -0.5
+  ],
+  "lplate_front": [
+   0,
+   0.375,
+   2.192
+  ],
+  "lplate_rear": [
+   0,
+   0.68,
+   -2.188
+  ]
+ },
+ "anchorNotes": {
+  "cam_fp": "Driver's eye: right-hand drive, so the car's right (-X).",
+  "roof_number": "On the black roof crown, midway along the painted roof (stations z -0.14 and -0.86).",
+  "lplate_front": "On the thick bar that splits the lower grille.",
+  "lplate_rear": "Between the diffuser and the full-width tail-lamp band."
+ },
+ "colliderExclude": {
+  "front": "The UHF whip and its mount: a thin aerial is not a collision surface."
+ }
+}

@@ -136,8 +136,8 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
         const part = parts[p], pv = pivots[p], pts = [];
         for (let i = 0; i < part.positions.length; i += 3) {
           const q = [part.positions[i] + pv[0], part.positions[i + 1] + pv[1], part.positions[i + 2] + pv[2]];
-          // The UHF whip and its mount (on the bull bar's +X post) aren't a collision surface.
-          if (p === 'front' && Math.abs(q[0] - P.bar.hw) < 0.08 && Math.abs(q[2] - P.bar.z) < 0.08 && q[1] > P.bar.y1 + 0.03) continue;
+          // The Cruz's UHF whip and its mount (on the bull bar's +X post) aren't a collision surface.
+          if (p === 'front' && P.bar && Math.abs(q[0] - P.bar.hw) < 0.08 && Math.abs(q[2] - P.bar.z) < 0.08 && q[1] > P.bar.y1 + 0.03) continue;
           pts.push(q);
         }
         const positions = hull(pts);

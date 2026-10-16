@@ -39,3 +39,22 @@
   tiers sample fewer rings, but the contract wants one pivot per part. Measure pivots once, on LOD0.
 - **Polygon wheels float.** An n-gon tyre whose bottom is a flat sits `R(1 − cos π/n)` above the ground (3 cm at n = 8).
   Make the inscribed radius the wheel radius.
+
+## 2026-10-16 · Two roster sedans from generated sheets (br-bwju.3)
+
+- **Reference sheets come from Muse Image.** Run `art/ui/frames/generate.mjs <name> --prompt <file> --out <dir> --ref <sheet>`, passing the
+  Cruz's `lod-plus-1.png` as the layout example. Three candidates cost $0.03. Feed the chosen sheet back as `--ref` for the 'lowest' sheet
+  and the car stays identical. The generator copies the Cruz's UHF whip and LED bar from the example in two of three candidates, so pick
+  one without them or say "no aerial" in the prompt.
+- **`tools/vehicles/fit` is Spike J's fit loop for any `art/vehicles/<id>`.** The commands are `extract.mjs <id>`, then
+  `capture.mjs <id> --out <dir>`, then `opt.mjs <id> lod1 5`. An optimiser pass takes about 2 min on the Mac.
+- **The fit narrows and flattens the nose.** After fitting, the Hawk's slope from `zNose` to `zNose − 0.16` was 7 cm tall. Lamps placed on
+  that slope at fixed heights stood up above the bonnet as horns. Put fascia details on the nose face, sized by
+  `hwN = lerpCurve(P.hw, P.zNose)`, never by absolute x.
+- **The optimiser buys IoU with shapes a car can't have:**
+  - a glass top wider than its base (an overhanging greenhouse);
+  - a crown below its shoulder (a sunken bonnet);
+  - for a sedan whose wing sets the reference's height, a lower body and wing (a coupe).
+  `opt.mjs` now penalises the first two. Judge the third by eye, and keep identity cues such as the Lion's tall wing even if they cost IoU.
+- **The paint key fringes every livery edge** (br-vhtm). The mask is `step(0.985, min(rgb))` on the filtered sample, so any texel blended
+  with paint, by linear filtering or by mipmapping, stays untinted grey. Dark stripes on paint read light grey at grid size.

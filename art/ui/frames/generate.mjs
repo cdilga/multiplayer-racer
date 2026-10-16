@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // P1-U01 style frames through Meta's Muse Image (Meta Model API, muse-image-1.0, flat $0.01 per image).
 // Usage: node art/ui/frames/generate.mjs <name> [--n 3] [--suffix -b] [--size 1536x1024]
+//        node art/ui/frames/generate.mjs <name> --prompt <file> --out <dir> --ref <png> [--ref <png> …]   (vehicle reference
+//        sheets, br-bwju.3: any prompt file, any references, output elsewhere; same ledger and budget)
 //   Prompt: prompts/<name>.txt, used verbatim (MASTER + UI block + H4 direction + subject + GUARDS).
 //   References go to /v1/images/edits: H4 (the house style, always first), plus Spike J's Cruz Missile render
 //   for TV frames, or M2's controls and the car render for the phone frame.
@@ -26,7 +28,10 @@ const name = args[0];
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const n = Number(opt('--n', '3'));
 const suffix = opt('--suffix', '');
-if (!name || !existsSync(join(here, 'prompts', `${name}.txt`)) || !(n >= 1 && n <= 4)) {
+const promptFile = opt('--prompt', null) ? join(process.cwd(), opt('--prompt')) : join(here, 'prompts', `${name}.txt`);
+const outDir = opt('--out', null) ? join(process.cwd(), opt('--out')) : here;
+const refArgs = args.flatMap((a, i) => (a === '--ref' ? [args[i + 1]] : []));
+if (!name || !existsSync(promptFile) || !(n >= 1 && n <= 4)) {
   console.error('usage: generate.mjs <name with prompts/<name>.txt> [--n 1..4] [--suffix -x]');
   process.exit(2);
 }
@@ -34,7 +39,7 @@ if (!name || !existsSync(join(here, 'prompts', `${name}.txt`)) || !(n >= 1 && n 
 const H4 = 'docs/plans/ux-study-2026-09-29/images/H4-host-round-results-v2.png';
 const CAR = 'spikes/art-pipeline/J-cruze-lowpoly/out/evidence/ladder_L0_hero.png';
 const M2 = 'docs/plans/ux-study-2026-09-29/images/M2-mobile-control-settings-v2.png';
-const refs = name.startsWith('phone') ? [H4, M2, CAR] : [H4, CAR];
+const refs = refArgs.length ? refArgs : name.startsWith('phone') ? [H4, M2, CAR] : [H4, CAR];
 const size = opt('--size', '1536x1024');
 
 const key = process.env.MUSE_API_KEY ?? (() => {
@@ -52,14 +57,14 @@ if (spent + n > BUDGET_IMAGES) {
   process.exit(3);
 }
 
-const prompt = readFileSync(join(here, 'prompts', `${name}.txt`), 'utf8').trim();
+const prompt = readFileSync(promptFile, 'utf8').trim();
 const form = new FormData();
 form.append('model', MODEL);
 form.append('prompt', prompt);
 form.append('size', size);
 form.append('n', String(n));
 form.append('response_format', 'b64_json');
-for (const r of refs) form.append('image', await openAsBlob(join(repo, r), { type: 'image/png' }), basename(r));
+for (const r of refs) form.append('image', await openAsBlob(join(repo, r), { type: r.endsWith('.webp') ? 'image/webp' : r.endsWith('.jpg') ? 'image/jpeg' : 'image/png' }), basename(r));
 
 const t0 = Date.now();
 const res = await fetch(`${BASE}/images/edits`, { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form });
@@ -73,12 +78,12 @@ const files = images.map((d, k) => {
   const tag = (a, b) => bytes.subarray(a, b).toString('latin1');
   const ext = tag(0, 4) === 'RIFF' && tag(8, 12) === 'WEBP' ? 'webp' : tag(1, 4) === 'PNG' ? 'png' : bytes[0] === 0xff && bytes[1] === 0xd8 ? 'jpg' : 'bin';
   const file = `${name}${suffix}-${k + 1}.${ext}`;
-  writeFileSync(join(here, file), bytes);
+  writeFileSync(join(outDir, file), bytes);
   return file;
 });
 const entry = {
   at: new Date().toISOString(), name, model: MODEL, endpoint: 'images/edits', size, n, refs,
-  prompt_file: `prompts/${name}.txt`, prompt_sha256: createHash('sha256').update(prompt).digest('hex').slice(0, 16),
+  prompt_file: promptFile.startsWith(repo) ? promptFile.slice(repo.length + 1) : promptFile, prompt_sha256: createHash('sha256').update(prompt).digest('hex').slice(0, 16),
   http: res.status, ms: Date.now() - t0, files, images_billed: images.length, usd: +(images.length * PRICE_USD).toFixed(2),
   ...(res.ok ? {} : { error: body.error?.message ?? body.error ?? body.raw ?? `HTTP ${res.status}` }),
 };

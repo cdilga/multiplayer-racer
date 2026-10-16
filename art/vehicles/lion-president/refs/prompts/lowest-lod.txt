@@ -1,0 +1,7 @@
+Low-poly game asset turnaround sheet, 16:9, light grey seamless background, the exact same car as the attached sheet, in the same layout: large 3/4 front hero view top-left, top-down plan view in the right column (nose at the bottom), bottom row: front view, left side view (nose pointing left), rear view. Same car in every view, the same scale in the small views.
+
+The car: a bubbly, slightly caricatured Australian V8 muscle sedan in the spirit of the last 2017 Holden Commodore SS-V Redline (not a copy, no brand marks): four-door sedan with a short, steeply raked rear window, a broad flat bonnet with two big forward-facing bonnet nostril vents, a slim upper grille over a very wide lower grille split by one thick horizontal bar, sharp angular headlights with LED fang daytime-running-light strips beneath them, big vertical air curtains in the bumper corners, side skirts, a tall boot-lid wing on two posts, slim full-width tail lights joined across the boot, a black rear diffuser with quad exhaust tips at the corners, chunky multi-spoke dark-grey rims with low-profile tyres and red brake calipers.
+
+Livery: bright red body paint, gloss black roof and black bonnet vents, one thin black-and-gold pinstripe along the shoulder line from headlight to tail light.
+
+very low poly, about 300 triangles, octagon wheels, lights as flat decals. Flat-shaded facets, clean studio light, soft shadow. No text, no logos, no badges, no number plates, no brand names, no people.

@@ -1,0 +1,38 @@
+{
+  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
+  "name": "Hawk Dash",
+  "status": "awaiting-review",
+  "date": "2026-10-16",
+  "beads": ["br-bwju.3", "br-bwju"],
+  "summary": "R123's Hawk Dash: a bubbly Aussie V8 sedan in the spirit of the Falcon XR8 Sprint. Long bonnet with a power bulge and two vents, a gaping hexagonal grille under swept narrow lamps, vertical lamp slots in the bumper corners, wide wrap-around tail lamps, quad exhausts, a ducktail lip, twin stripes nose to tail and a side 'C' stripe. Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Lion President's spec twin.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": { "id": "lion-president", "sharedSpec": "One spec, two bodies (R123): the Hawk Dash and the Lion President name spec 'aussie-v8' in web/shared/src/roster.json, and their profiles' handling (tuning) is identical, held by tools/vehicles/test/spec-twins.test.mjs. Rear drive, 1700 kg, Cruz-like launch, more power per kilo for a higher top speed; the bodies (hull, wheels, damage parts) are each car's own." },
+  "reference": {
+    "sheet": "art/vehicles/hawk-dash/refs/lod-plus-1.png",
+    "compare": [
+      { "lod": 0, "label": "LOD0 against the 'lod + 1' reference sheet", "dir": "docs/evidence/br-bwju.3/hawk-dash/reference-lod0" },
+      { "lod": 2, "label": "LOD2 against the 'lowest' reference sheet", "dir": "docs/evidence/br-bwju.3/hawk-dash/reference-lod2" }
+    ],
+    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/hawk-dash/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out)."
+  },
+  "turntable": { "sheet": "docs/evidence/br-bwju.3/hawk-dash/lods.png", "validation": "docs/evidence/br-bwju.3/hawk-dash/validation.md" },
+  "damage": {
+    "strip": "docs/evidence/br-bwju.3/hawk-dash/damage-strip.png",
+    "overview": "docs/evidence/br-bwju.3/hawk-dash/damage-strip-overview.png",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
+  },
+  "paints": {
+    "sheet": "docs/evidence/br-bwju.3/hawk-dash/paints-strip.png",
+    "identity": "art/ui/tokens.json",
+    "pattern": "Seat colour on the paint key (white texels tint; the black stripes, glass, lamps and tyres keep their colour), the number on the roof between the stripes (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. Known defect br-vhtm: filtered stripe edges are untinted grey, so at grid size the stripes read light grey."
+  },
+  "inWorld": [
+    { "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)", "size": "large", "path": "docs/evidence/br-bwju.3/hawk-dash/grid-1.png" },
+    { "label": "Four tiles", "size": "medium", "path": "docs/evidence/br-bwju.3/hawk-dash/grid-4.png" },
+    { "label": "24 tiles, small (each car about 100 px)", "size": "small", "path": "docs/evidence/br-bwju.3/hawk-dash/grid-24.png" },
+    { "label": "From the Derby overview camera (top-down damage row)", "size": "overview", "path": "docs/evidence/br-bwju.3/hawk-dash/damage-strip-overview.png" }
+  ],
+  "gate": { "report": "docs/evidence/br-bwju.3/hawk-dash/validation.md" },
+  "profile": "assets/profiles/hawk-dash.json",
+  "handling": { "topSpeedMps": null, "topSpeedNote": "Not measured yet: R123's balance bead (br-bwju.6) measures every car's top speed, launch and cornering on real maps." }
+}
