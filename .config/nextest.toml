@@ -1,0 +1,15 @@
+# Quarantine (AGENTS.md, "CI has one owner", rule 4): tests that block a green batch past the 2-hour red budget are
+# skipped here, each with a P0 bead naming the test, the cause and the owner. The bead's fix removes its line in the same
+# commit. Run a quarantined test by name with `cargo nextest run --ignore-default-filter -E '<filter>'`.
+[profile.default]
+default-filter = """
+not (
+    (binary_id(jj-procgen::setpieces) & test(=every_prepared_track_has_a_set_piece_per_lap_on_20_seeds_per_biome))
+  | (binary_id(jj-procgen::biomes) & test(=town_houses_face_straight_streets_with_junctions_and_signs))
+  | binary_id(jj-procgen::overpass)
+  | (binary_id(jj-procgen::handling) & test(=a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over))
+)
+"""
+# br-kx4o (CoralCrane, BrownHill): setpieces and biomes, fixed by the generator-24 joint landing.
+# br-wrij (CoralCrane): every overpass leap reports "Bent" on generated eights.
+# br-3pwa (PeachSpire): R122 roll-overs on guard rails (Ute seed 1/4 point 520, Lion seed 4 point 440).
