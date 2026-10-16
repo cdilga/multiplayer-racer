@@ -11,9 +11,9 @@ Numbers: `rhythm.txt` (AC1 table, 80 laps), `variety.txt` (AC2, 20 seeds), from 
 
 ## Looked at
 
-- `overview-8-seeds.jpg`: the eight overviews side by side (from `captures/mix-s{0..7}-overview.jpg`).
+- `overview-8-seeds.jpg`: the eight overviews side by side (from `captures/mix-s0-overview.jpg` to `captures/mix-s7-overview.jpg`).
 - `high-8-seeds.jpg`, `low-8-seeds.jpg`, `climb-8-seeds.jpg`, `cutting-8-seeds.jpg`: the chase stills of the same
-  eight seeds, one montage per camera state (each from `captures/mix-s{0..7}-<state>.jpg`).
+  eight seeds, one montage per camera state (each from the eight `captures/mix-s<seed>-<state>` stills, e.g. `captures/mix-s0-low.jpg`).
 - `captures/mix-s5-cutting.jpg` full size (the canyon cutting on Rocks).
 
 What they show:
