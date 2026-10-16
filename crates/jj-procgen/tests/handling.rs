@@ -512,3 +512,74 @@ fn cruz_generated_rough_verge_turns_do_not_roll() {
     }
     assert!(failures.is_empty(), "{failures:?}");
 }
+
+/// One run of the thrown-about bank, traced every 0.1 s, to see how a reported roll-over happens:
+/// `JJ_ONE="tradie-ute 4 520 35 flick" cargo test -p jj-procgen --release --test handling -- --ignored one_throw --nocapture`
+/// (vehicle, seed, route point, speed m/s, hold|flick|straight; `JJ_TUNE` applies).
+#[test]
+#[ignore = "a debugging aid: set JJ_ONE"]
+fn one_throw() {
+    let Ok(one) = std::env::var("JJ_ONE") else {
+        return;
+    };
+    let f: Vec<&str> = one.split_whitespace().collect();
+    let [vehicle, seed, at, speed, how] = f[..] else {
+        panic!("JJ_ONE is \"vehicle seed point speed throw\"");
+    };
+    let (_, profile) = profiles()
+        .into_iter()
+        .find(|(id, _)| id == vehicle)
+        .expect("a roster vehicle");
+    let map = loaded(seed.parse().unwrap());
+    let (at, speed): (usize, f32) = (at.parse().unwrap(), speed.parse().unwrap());
+    let how = match how {
+        "hold" => Throw::Hold,
+        "flick" => Throw::Flick,
+        _ => Throw::Straight,
+    };
+    let mut sim = Sim::new(&map, &jj_procgen::registry(), 7, profile.clone());
+    let car = sim.spawn_grid(1)[0];
+    let pose = route_spawn(&map, at, 0.0, 0.5);
+    let v = [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()];
+    sim.place_car(car, pose, 0.0, v);
+    eprintln!("tick upY speed wheels angvel(x,y,z) groundY");
+    for t in 0..2 * S {
+        let steer = match how {
+            Throw::Hold => FULL,
+            Throw::Flick if t < S * 6 / 10 => FULL,
+            Throw::Flick if t < S * 12 / 10 => -FULL,
+            Throw::Flick | Throw::Straight => 0,
+        };
+        sim.set_input(
+            car,
+            DriveInput {
+                throttle: FULL,
+                steer,
+                ..DriveInput::default()
+            },
+        );
+        sim.step();
+        let st = sim.car_state(car).unwrap();
+        if t % (S / 10) == 0 || st.up_y < 0.5 {
+            let g = ground_height_m(
+                &map.map.terrain,
+                f64::from(st.position[0]),
+                f64::from(st.position[2]),
+            );
+            eprintln!(
+                "{t:>4} {:>6.3} {:>6.2} {} ({:>6.2},{:>6.2},{:>6.2}) {:>6.2}/{:>6.2}",
+                st.up_y,
+                st.forward_speed,
+                st.wheels_in_contact,
+                st.angvel[0],
+                st.angvel[1],
+                st.angvel[2],
+                st.position[1],
+                g
+            );
+            if st.up_y < 0.3 {
+                break;
+            }
+        }
+    }
+}
