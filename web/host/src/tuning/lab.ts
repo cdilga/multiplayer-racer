@@ -14,8 +14,8 @@ export interface LabPanel {
   ids: string[];
   selected(): string;
   choose(id: string): Promise<void>;
-  /** The selected vehicle's tuning as the sim holds it. */
-  tuning(): Promise<Record<string, unknown>>;
+  /** The tuning the sim holds for the vehicle it is tuning now, and which vehicle that is. */
+  tuning(): Promise<{ vehicle?: string; tuning: Record<string, unknown> }>;
   /** One tuning change on the selected vehicle (the panel's own send: command, changed list, export). */
   set(path: string, value: Json): void;
   /** Reads the sim back into the panel's rows. */
@@ -142,15 +142,25 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
     q('[data-lab-status]').textContent = status;
   };
 
-  async function capture(): Promise<void> {
-    if (bases.size) return;
-    const ids = panel.ids.length > 1 ? panel.ids : [panel.selected()];
-    const home = panel.selected();
-    for (const id of ids) {
-      if (id !== panel.selected()) await panel.choose(id);
-      bases.set(id, leafMap(await panel.tuning()));
-    }
-    if (panel.selected() !== home) await panel.choose(home);
+  /** Captured once, by whichever call comes first (opening the tab, or a slider moved before that finished). */
+  let capturing: Promise<void> | null = null;
+  function capture(): Promise<void> {
+    capturing ??= (async () => {
+      const ids = panel.ids.length > 1 ? panel.ids : [panel.selected()];
+      const home = panel.selected();
+      for (const id of ids) {
+        // The panel's own vehicle selector can switch the sim in between: keep a base only when the sim says it is this
+        // vehicle's (with one vehicle there is nothing to switch, and the snapshot may not name it).
+        for (let tries = 0; tries < 10 && !bases.has(id); tries++) {
+          if (id !== panel.selected()) await panel.choose(id);
+          const t = await panel.tuning();
+          if (ids.length === 1 || t.vehicle === id) bases.set(id, leafMap(t.tuning));
+        }
+        if (!bases.has(id)) throw new Error(`could not read ${id}'s shipped tuning`);
+      }
+      if (panel.selected() !== home) await panel.choose(home);
+    })();
+    return capturing;
   }
 
   async function run(): Promise<void> {

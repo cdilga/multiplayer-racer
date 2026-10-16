@@ -43,7 +43,7 @@ export interface LocalSourceView {
   sittingOut: boolean;
   /** Its Identify button is down now (P1-C14: holding it shows the controls card on the seat's tile). */
   identifyHeld: boolean;
-  /** The controls this seat has used since it joined (P1-C14): the lobby's controls card folds away once all seven are. */
+  /** The controls this seat has used since it joined (P1-C14): the lobby's controls card folds away once all six are. */
   used: string[];
   /** A wheel's profile: its name, whether it's confirmed on a device, and the live mapping (−1..1 steer, 0..1 pedals). */
   wheel?: { profile: string; verified: boolean; steer: number; throttle: number; brake: number };

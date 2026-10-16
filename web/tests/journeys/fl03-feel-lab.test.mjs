@@ -80,7 +80,9 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     await host.locator('[data-lab-slider="turn"]').waitFor();
     assert.equal(await host.locator('[data-lab-preset]').count(), 0, 'no preset UI: the arcade controller is the only one');
     const lab = () => host.evaluate(() => window.__jjTune.lab.inspect());
-    await wait(host, () => Object.keys(window.__jjTune.lab.inspect().bases).length > 0, undefined, 10_000);
+    // Opening the tab captures every vehicle's shipped base (switching the sim vehicle by vehicle): wait for all of them
+    // before this journey switches vehicles itself.
+    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return i.vehicles.length > 0 && Object.keys(i.bases).length === Math.max(1, i.vehicles.length); }, undefined, 20_000);
     const ids = (await lab()).vehicles;
     assert.ok(ids.length >= 2, `the roster has several vehicles (${ids})`);
     const home = await host.evaluate(() => document.querySelector('[data-tune-vehicle]').value);
@@ -89,14 +91,15 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     /** The sim's value for a vehicle: the panel reads it back from the worker once that vehicle is selected. */
     const simValue = async (vehicle, path) => {
       await host.selectOption('[data-tune-vehicle]', vehicle);
-      await wait(host, (v) => document.querySelector('[data-tune-vehicle]').value === v, vehicle, 5000);
-      await host.waitForTimeout(300); // the panel's own read-back after a selection
+      // The panel's rows are that vehicle's once the host has confirmed the switch (a tick boundary; slow on a loaded host).
+      await wait(host, (v) => window.__jjTune.inspect().vehicle === v, vehicle, 10_000);
       return host.evaluate((p) => window.__jjTune.inspect().current[p], path);
     };
     const everyVehicle = async (path) => {
       const out = {};
       for (const id of ids) out[id] = await simValue(id, path);
       await host.selectOption('[data-tune-vehicle]', home);
+      await wait(host, (v) => window.__jjTune.inspect().vehicle === v, home, 10_000);
       return out;
     };
     const moving = async (what) => {

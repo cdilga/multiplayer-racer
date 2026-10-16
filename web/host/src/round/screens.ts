@@ -145,7 +145,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         const src = sourceOf(s.localSource);
         if (!src || s.presence === 'Left') return [];
         const held = localView(s.localSource)?.identifyHeld === true;
-        const used = (localView(s.localSource)?.used.length ?? 0) >= 7;
+        // The six controls (steer, go, brake, launch, OI!, cone: no drift since R128).
+        const used = (localView(s.localSource)?.used.length ?? 0) >= 6;
         // Where this pick sits in the roster, as the phone's picker says it (br-bwju.9): every option and how many there are.
         const at = roster.cars.findIndex((c) => c.id === s.vehicle);
         const count = `<span class="lb-local-count tnum" data-local-count>${at >= 0 ? `Car ${at + 1} of ${roster.cars.length}` : `${roster.cars.length} cars`}</span>`;

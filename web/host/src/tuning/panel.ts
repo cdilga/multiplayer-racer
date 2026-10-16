@@ -200,7 +200,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     ids: first.vehicles ?? [],
     selected: () => vsel.selected(),
     choose: (id) => vsel.choose(id),
-    tuning: async () => (await client.tuning()).tuning,
+    tuning: async () => { const t = await client.tuning(); return { vehicle: t.vehicle, tuning: t.tuning }; },
     set: (path, value) => send(path, value),
     refresh,
   });
@@ -290,7 +290,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
       ...(generator.length ? { generator: GENERATOR_FILE, generatorSet: generator } : {}),
     };
   };
-  return { lab, inspect: () => ({ open: !panel.hidden, current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), lab: lab.inspect(), error: errEl.hidden ? null : errEl.textContent }) };
+  return { lab, inspect: () => ({ open: !panel.hidden, vehicle: vsel.selected(), current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), lab: lab.inspect(), error: errEl.hidden ? null : errEl.textContent }) };
 }
 
 type TuningState = Awaited<ReturnType<TuningClient['tuning']>>;
@@ -326,14 +326,18 @@ function vehicleSelector(o: {
     select.addEventListener('change', () => void choose(select.value));
   }
   async function choose(id: string): Promise<void> {
-    aside.set(vehicle, [...o.changed].filter(([f]) => isVehicleRow(f)));
-    for (const [f] of o.changed) if (isVehicleRow(f)) o.changed.delete(f);
     o.client.input({ type: 'ui', ui: `tune-vehicle:${id}` });
     let t = await o.client.tuning();
-    for (let i = 0; i < 20 && t.vehicle !== id; i++) {
+    // The switch lands at a tick boundary; a loaded host takes a while. Never carry on with another vehicle's numbers
+    // (the Feel Lab would take them as this vehicle's shipped base).
+    for (let i = 0; i < 200 && t.vehicle !== id; i++) {
       await new Promise((r) => setTimeout(r, 50));
       t = await o.client.tuning();
     }
+    if (t.vehicle !== id) throw new Error(`the host did not switch the tuning to ${id} (still ${t.vehicle ?? 'none'})`);
+    // Only now set the old vehicle's pending changes aside: until the switch lands, an export is still the old vehicle's.
+    aside.set(vehicle, [...o.changed].filter(([f]) => isVehicleRow(f)));
+    for (const [f] of o.changed) if (isVehicleRow(f)) o.changed.delete(f);
     vehicle = id;
     const pick = o.panel.querySelector<HTMLSelectElement>('[data-tune-vehicle]');
     if (pick) pick.value = id;
