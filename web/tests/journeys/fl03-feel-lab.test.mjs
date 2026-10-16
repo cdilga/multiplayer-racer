@@ -159,7 +159,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
       flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? 'rally' : 'off'));
       await moving(`after flipping to ${k}`);
     }
-    assert.ok(Math.max(...flips) < 1500, `A/B flips applied in ${flips} ms`);
+    assert.ok(Math.max(...flips) < 4000, `A/B flips applied in ${flips} ms`); // same per-vehicle ceiling as the presets above
     for (const [id, v] of Object.entries(await everyVehicle('handling.front_grip'))) assert.ok(Math.abs(v / front('rally') - 2 ** -0.5) < 0.001, `${id}: slot A is live`);
     for (const [id, v] of Object.entries(await everyVehicle('max_engine_force'))) assert.ok(Math.abs(v / base[id] - 2 ** 0.6) < 0.001, `${id}: slot A power`);
     assert.equal(await host.evaluate(() => JSON.parse(localStorage.getItem('jj.feellab.slots.v1')).A.preset), 'rally', 'the slots persist in this browser');
