@@ -59,7 +59,7 @@ test('duels: WASM holds every ordering and matches the native hashes', { timeout
   for (const f of (await readdir(join(repo, 'scenarios/duels/orderings'))).filter((x) => x.endsWith('.json')).sort()) {
     orderings.push(JSON.parse(await readFile(join(repo, 'scenarios/duels/orderings', f), 'utf8')));
   }
-  assert.ok(orderings.length >= 7, 'every S09 duel has an ordering');
+  assert.ok(orderings.length >= 6, 'every S09 duel has an ordering'); // six since R128 removed the three drift duels
   const fixtureFiles = [...new Set(orderings.flatMap((o) => (o.fixture ? [o.fixture] : o.fixtures)))];
   const native = nativeHashes(fixtureFiles.map((f) => `scenarios/duels/${f}`));
   const failures = [];
