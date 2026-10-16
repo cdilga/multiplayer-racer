@@ -21,7 +21,8 @@ RUN_OUT = 32_000  # the loop's run-out along the road (A)
 SHIFT = 18_000  # the loop's sideways shift (S): the exit deck clears the entry deck
 AFTER = 120_000  # straight after the loop
 R1 = 45_000  # first hairpin radius
-LOOP = {"radiusMm": 8000, "thicknessMm": 400, "barrierHeightMm": 900, "barrierWidthMm": 400, "segments": 48}
+# The ride lets go of a car slower than 9 m/s: it falls off (crates/jj-map/src/looping.rs).
+LOOP = {"radiusMm": 8000, "thicknessMm": 400, "barrierHeightMm": 900, "barrierWidthMm": 400, "segments": 48, "minSpeedMms": 9000}
 
 pts = []
 

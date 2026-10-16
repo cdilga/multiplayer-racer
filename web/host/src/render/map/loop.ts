@@ -43,11 +43,12 @@ export function loopMesh(map: MapJson, p: Params): { vertices: number[][]; trian
   const fr = loopFrame(map, p);
   const r = p.radiusMm! / 1000, thick = p.thicknessMm! / 1000, bh = p.barrierHeightMm! / 1000, bw = p.barrierWidthMm! / 1000, segs = p.segments!;
   if (!fr || !(r > 0) || !(thick > 0) || !(bh > 0) || !(bw > 0) || !(segs >= 2)) return null;
-  const left: V3 = [fr.left[0], 0, fr.left[1]];
+  // jj-map::looping::sections: the Frenet frame (normal = principal normal, side = binormal).
+  const tangent = (t: number) => { const h = 1e-4; return unit(sub(centre(fr, r, t + h), centre(fr, r, t - h))); };
   const secs = Array.from({ length: segs + 1 }, (_, k) => {
-    const t = k / segs, h = 1e-4;
-    const tangent = unit(sub(centre(fr, r, t + h), centre(fr, r, t - h)));
-    return { c: centre(fr, r, t), side: left, normal: unit(cross(tangent, left)) };
+    const t = k / segs, h = 1e-3, tg = tangent(t);
+    const normal = unit(sub(tangent(t + h), tangent(t - h)));
+    return { c: centre(fr, r, t), side: cross(normal, tg), normal };
   });
   const vertices: number[][] = [], triangles: number[][] = [], beams: number[] = [];
   for (let beam = 0; beam < 3; beam++) {

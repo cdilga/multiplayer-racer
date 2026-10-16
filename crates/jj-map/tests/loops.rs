@@ -12,11 +12,18 @@ const MAP: &str = include_str!("../../../maps/test/loop.json");
 /// The loop feature's params, from the map (tools/maps/loop.py writes them).
 fn params() -> BTreeMap<String, i64> {
     let m = map();
-    m.features.iter().find(|f| f.kind == jj_map::FeatureKind::Loop).expect("the map has a loop").params.clone()
+    m.features
+        .iter()
+        .find(|f| f.kind == jj_map::FeatureKind::Loop)
+        .expect("the map has a loop")
+        .params
+        .clone()
 }
 
 fn map() -> jj_map::model::Map {
-    load_json(MAP.as_bytes(), &Registry::generic()).expect("the loop map validates").map
+    load_json(MAP.as_bytes(), &Registry::generic())
+        .expect("the loop map validates")
+        .map
 }
 
 fn near(a: [f64; 3], b: [f64; 3], tol: f64) -> bool {
@@ -27,7 +34,10 @@ fn near(a: [f64; 3], b: [f64; 3], tol: f64) -> bool {
 fn the_hand_made_loop_is_valid() {
     let m = map();
     assert_eq!(looping::problems(&m, &params()), Vec::<String>::new());
-    assert_eq!(LoopDesign::of(&m.features[0]), LoopDesign::of_params(&params()));
+    assert_eq!(
+        LoopDesign::of(&m.features[0]),
+        LoopDesign::of_params(&params())
+    );
 }
 
 /// The loop is part of the map's contract: jj validate names a broken one (Rule::Loop) and a gate inside its span, and
@@ -35,7 +45,12 @@ fn the_hand_made_loop_is_valid() {
 #[test]
 fn the_validator_and_the_gameplay_hash_cover_the_loop() {
     let json: serde_json::Value = serde_json::from_str(MAP).unwrap();
-    let load = |j: &serde_json::Value| load_json(serde_json::to_string(j).unwrap().as_bytes(), &Registry::generic());
+    let load = |j: &serde_json::Value| {
+        load_json(
+            serde_json::to_string(j).unwrap().as_bytes(),
+            &Registry::generic(),
+        )
+    };
     let hash = |j: &serde_json::Value| load(j).unwrap().hash;
     let base = hash(&json);
     let mut wider = json.clone();
@@ -44,12 +59,24 @@ fn the_validator_and_the_gameplay_hash_cover_the_loop() {
     let mut tight = json.clone();
     tight["features"][0]["params"]["radiusMm"] = serde_json::json!(3000);
     let report = load(&tight).unwrap_err();
-    assert!(report.violations.iter().any(|v| v.rule.name() == "loop"), "{report:?}");
+    assert!(
+        report.violations.iter().any(|v| v.rule.name() == "loop"),
+        "{report:?}"
+    );
     let mut gated = json.clone();
     let inside = json["features"][0]["params"]["entry"].as_i64().unwrap() + 3;
-    gated["route"]["gates"].as_array_mut().unwrap().push(serde_json::json!({"at": inside, "finish": false}));
+    gated["route"]["gates"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({"at": inside, "finish": false}));
     let report = load(&gated).unwrap_err();
-    assert!(report.violations.iter().any(|v| v.rule.name() == "loop" && v.detail.contains("inside the loop")), "{report:?}");
+    assert!(
+        report
+            .violations
+            .iter()
+            .any(|v| v.rule.name() == "loop" && v.detail.contains("inside the loop")),
+        "{report:?}"
+    );
 }
 
 #[test]
@@ -60,28 +87,66 @@ fn the_deck_leaves_and_rejoins_the_road_and_is_upside_down_at_the_top() {
     let secs = looping::sections(&fr, &d);
     let pt = |i: usize| {
         let q = &m.route.points[i];
-        [f64::from(q.x) / 1000.0, f64::from(q.y) / 1000.0, f64::from(q.z) / 1000.0]
+        [
+            f64::from(q.x) / 1000.0,
+            f64::from(q.y) / 1000.0,
+            f64::from(q.z) / 1000.0,
+        ]
     };
     // E and X, flat (normal straight up) where the deck meets the road.
     assert!(near(secs[0].c, pt(d.entry), 1e-9), "{:?}", secs[0].c);
-    assert!(near(secs[d.segments].c, pt(d.exit), 1e-6), "{:?}", secs[d.segments].c);
+    assert!(
+        near(secs[d.segments].c, pt(d.exit), 1e-6),
+        "{:?}",
+        secs[d.segments].c
+    );
     for s in [secs[0], secs[d.segments]] {
-        assert!(s.normal[1] > 0.999, "the deck meets the road flat: {:?}", s.normal);
+        assert!(
+            s.normal[1] > 0.999,
+            "the deck meets the road flat: {:?}",
+            s.normal
+        );
     }
     // The top, halfway round: 2R up, the surface facing down.
     let top = secs[d.segments / 2];
-    assert!((top.c[1] - 2.0 * d.radius_m).abs() < 1e-6, "top at {}", top.c[1]);
-    assert!(top.normal[1] < -0.999, "upside down at the top: {:?}", top.normal);
+    assert!(
+        (top.c[1] - 2.0 * d.radius_m).abs() < 1e-6,
+        "top at {}",
+        top.c[1]
+    );
+    assert!(
+        top.normal[1] < -0.999,
+        "upside down at the top: {:?}",
+        top.normal
+    );
     // Quarter and three-quarters round: a wall, the surface facing back and then forward along the road (the run-out
     // stretches the loop along the road, so the wall leans).
     let along = |v: [f64; 3]| v[0] * fr.forward[0] + v[2] * fr.forward[1];
-    assert!(along(secs[d.segments / 4].normal) < -0.7, "{:?}", secs[d.segments / 4].normal);
-    assert!(along(secs[3 * d.segments / 4].normal) > 0.7, "{:?}", secs[3 * d.segments / 4].normal);
-    // The deck is the road's full width, and the side stays level (no twist) all the way round.
-    for s in &secs {
-        assert!(s.side[1].abs() < 0.2, "the deck stays level across: {:?}", s.side);
+    assert!(
+        along(secs[d.segments / 4].normal) < -0.7,
+        "{:?}",
+        secs[d.segments / 4].normal
+    );
+    assert!(
+        along(secs[3 * d.segments / 4].normal) > 0.7,
+        "{:?}",
+        secs[3 * d.segments / 4].normal
+    );
+    // The deck rolls only gently along the helix (the Frenet frame's twist), and a car with its wheel straight follows
+    // the centre line: it is a geodesic of the deck (the curve's bend lies along the surface normal, never sideways).
+    for (k, s) in secs.iter().enumerate() {
+        assert!(s.side[1].abs() < 0.6, "the deck rolls gently (under ~37 degrees): {:?}", s.side);
+        if k > 0 && k < secs.len() - 1 {
+            let bend = [0, 1, 2].map(|i| secs[k + 1].c[i] - 2.0 * s.c[i] + secs[k - 1].c[i]);
+            let sideways = bend[0] * s.side[0] + bend[1] * s.side[1] + bend[2] * s.side[2];
+            let len = bend.iter().map(|x| x * x).sum::<f64>().sqrt();
+            assert!(sideways.abs() < 0.05 * len.max(1e-9), "section {k}: the centre line bends sideways on the deck");
+        }
     }
-    assert_eq!(fr.half_width, f64::from(m.route.points[d.entry].width) / 2000.0);
+    assert_eq!(
+        fr.half_width,
+        f64::from(m.route.points[d.entry].width) / 2000.0
+    );
 }
 
 #[test]
@@ -90,7 +155,10 @@ fn the_mesh_is_three_closed_prisms_with_a_surface_each() {
     let d = LoopDesign::of_params(&params()).unwrap();
     let (verts, tris) = looping::loop_mesh(&m, &d).unwrap();
     assert_eq!(tris.len(), 3 * (d.segments * 8 + 4));
-    assert_eq!(looping::triangle_surfaces(&m, &d).unwrap().len(), tris.len());
+    assert_eq!(
+        looping::triangle_surfaces(&m, &d).unwrap().len(),
+        tris.len()
+    );
     assert!(verts.iter().flatten().all(|v| v.is_finite()));
     // Closed: every undirected edge is shared by exactly two triangles, once in each direction (consistent winding).
     let mut edges: BTreeMap<(u32, u32), i32> = BTreeMap::new();
@@ -100,13 +168,26 @@ fn the_mesh_is_three_closed_prisms_with_a_surface_each() {
             *edges.entry((a.min(b), a.max(b))).or_default() += if a < b { 1 } else { -1 };
         }
     }
-    assert!(edges.values().all(|&n| n == 0), "every edge is walked once each way");
+    assert!(
+        edges.values().all(|&n| n == 0),
+        "every edge is walked once each way"
+    );
     // No zero-area triangles.
     for t in &tris {
         let [a, b, c] = t.map(|i| verts[i as usize]);
-        let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
-        let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-        assert!(n.iter().map(|x| x * x).sum::<f64>() > 1e-12, "a degenerate triangle");
+        let (u, v) = (
+            [b[0] - a[0], b[1] - a[1], b[2] - a[2]],
+            [c[0] - a[0], c[1] - a[1], c[2] - a[2]],
+        );
+        let n = [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        ];
+        assert!(
+            n.iter().map(|x| x * x).sum::<f64>() > 1e-12,
+            "a degenerate triangle"
+        );
     }
 }
 
@@ -118,12 +199,22 @@ fn broken_loops_are_named() {
         p.insert(k.to_owned(), v);
         looping::problems(&m, &p)
     };
-    assert!(with("radiusMm", 3000).iter().any(|p| p.contains("radiusMm")));
+    assert!(
+        with("radiusMm", 3000)
+            .iter()
+            .any(|p| p.contains("radiusMm"))
+    );
     assert!(with("segments", 8).iter().any(|p| p.contains("segments")));
     // An exit two points on: too little shift for the decks to clear, and a run-out shorter than the radius.
     let close = with("exit", 66);
-    assert!(close.iter().any(|p| p.contains("clear each other")), "{close:?}");
-    assert!(close.iter().any(|p| p.contains("on from the entry")), "{close:?}");
+    assert!(
+        close.iter().any(|p| p.contains("clear each other")),
+        "{close:?}"
+    );
+    assert!(
+        close.iter().any(|p| p.contains("on from the entry")),
+        "{close:?}"
+    );
     // Entry after exit.
     assert!(with("entry", 90).iter().any(|p| p.contains("in order")));
     // An entry where the road bends (the first hairpin) is off the loop's line.
@@ -133,19 +224,27 @@ fn broken_loops_are_named() {
         p.insert("exit".into(), 150);
         looping::problems(&m, &p)
     };
-    assert!(bent.iter().any(|p| p.contains("off the loop's line")), "{bent:?}");
-    assert!(looping::problems(&m, &BTreeMap::new()).iter().any(|p| p.contains("missing")));
+    assert!(
+        bent.iter().any(|p| p.contains("off the loop's line")),
+        "{bent:?}"
+    );
+    assert!(
+        looping::problems(&m, &BTreeMap::new())
+            .iter()
+            .any(|p| p.contains("missing"))
+    );
 }
 
 #[test]
-fn the_unassisted_entry_speed_is_root_5gr() {
+fn the_posted_speed_is_the_minimum_at_the_top_plus_the_climb() {
     let d = LoopDesign::of_params(&params()).unwrap();
-    assert!((looping::unassisted_entry_mps(&d, 9.81) - (5.0 * 9.81 * 8.0f64).sqrt()).abs() < 1e-12);
+    let want = (d.min_speed_mps.powi(2) + 4.0 * 9.81 * 8.0).sqrt();
+    assert!((looping::posted_entry_mps(&d, 9.81) - want).abs() < 1e-12);
 }
 
 /// The native mesh's render fingerprint (jj_map::jump::render_fingerprint), which the TS counterpart
 /// (web/host/src/render/map/loop.ts) must reproduce: web/host/tests/loop-parity.test.mjs holds it to the same value.
-pub const LOOP_FINGERPRINT: u64 = 0xd6db_13fa_c573_c8c8;
+pub const LOOP_FINGERPRINT: u64 = 0xa791_2684_1eaf_44ec;
 
 #[test]
 fn the_native_mesh_has_the_committed_fingerprint() {
@@ -153,5 +252,8 @@ fn the_native_mesh_has_the_committed_fingerprint() {
     let mesh = looping::loop_mesh(&map(), &d).unwrap();
     let fp = jj_map::jump::render_fingerprint(&mesh);
     eprintln!("loop fingerprint {fp:#018x}");
-    assert_eq!(fp, LOOP_FINGERPRINT, "the loop mesh changed: update LOOP_FINGERPRINT and the TS parity test together");
+    assert_eq!(
+        fp, LOOP_FINGERPRINT,
+        "the loop mesh changed: update LOOP_FINGERPRINT and the TS parity test together"
+    );
 }

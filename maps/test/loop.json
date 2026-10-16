@@ -5088,6 +5088,7 @@
     "barrierHeightMm": 900,
     "barrierWidthMm": 400,
     "segments": 48,
+    "minSpeedMms": 9000,
     "entry": 64,
     "exit": 79
    }

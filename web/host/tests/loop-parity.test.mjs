@@ -10,10 +10,10 @@ import { test } from 'node:test';
 const ROOT = resolve(import.meta.dirname, '../../..');
 const { loopMesh } = await import(join(ROOT, 'web/host/src/render/map/loop.ts'));
 const map = JSON.parse(readFileSync(join(ROOT, 'maps/test/loop.json'), 'utf8'));
-// tools/maps/loop.py's LOOP params (they move into the map as a Loop feature with FeatureKind::Loop).
-const params = { entry: 64, exit: 79, radiusMm: 8000, thicknessMm: 400, barrierHeightMm: 900, barrierWidthMm: 400, segments: 48 };
+// The map's Loop feature (tools/maps/loop.py writes it).
+const params = map.features.find((f) => f.kind === 'loop').params;
 // crates/jj-map/tests/loops.rs LOOP_FINGERPRINT.
-const NATIVE = 0xd6db13fac573c8c8n;
+const NATIVE = 0xa79126841eaf44ecn;
 
 function fingerprint(m) {
   let h = 0xcbf29ce484222325n;

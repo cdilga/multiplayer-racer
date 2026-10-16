@@ -15,7 +15,12 @@
 //! surface normal points into the loop (it is +Y at both ends). The sim and the renderer use the same triangles.
 //!
 //! Integer feature params: `entry`, `exit` (route indices of E and X; the loop span is entry..=exit, not wrapping),
-//! `radiusMm`, `thicknessMm`, `barrierHeightMm`, `barrierWidthMm`, `segments` (deck sections around the loop).
+//! `radiusMm`, `thicknessMm`, `barrierHeightMm`, `barrierWidthMm`, `segments` (deck sections around the loop) and
+//! `minSpeedMms` (mm/s). The loop is ridden like a coaster (R124/R138: driving feel authored, not simulated; a raycast
+//! car's suspension holds about 2 g and a loop at speed asks 6-11 g of the deck): a car that reaches the deck near the
+//! entry, heading along it and faster than `minSpeedMms`, is carried along the deck's centre line at its own lateral
+//! offset and ride height, gaining and losing speed with gravity along the curve and its own throttle and brake, and
+//! let go at the exit. If its speed drops below `minSpeedMms` on the way round, the loop lets go and it falls.
 //! The deck is the route's full width at E.
 
 use crate::jump::JumpMesh;
@@ -31,6 +36,8 @@ pub mod limits {
     pub const MIN_BARRIER_WIDTH_MM: i64 = 200;
     /// Deck sections around the loop: enough that a facet is under ~1.6 m at the smallest radius.
     pub const MIN_SEGMENTS: i64 = 24;
+    /// A loop never carries a crawling car round: below this it lets go (mm/s).
+    pub const MIN_MIN_SPEED_MMS: i64 = 5_000;
     /// Clear air between the entry and exit decks where they pass side by side, mm.
     pub const MIN_SIDE_CLEARANCE_MM: i64 = 1_000;
     /// The road at E and X must point the same way as the loop's frame (within this, milliradians).
@@ -46,6 +53,8 @@ pub struct LoopDesign {
     pub barrier_h: f64,
     pub barrier_w: f64,
     pub segments: usize,
+    /// The slowest a car may be and still be carried round, m/s.
+    pub min_speed_mps: f64,
 }
 
 impl LoopDesign {
@@ -69,6 +78,7 @@ impl LoopDesign {
             barrier_h: get("barrierHeightMm")? as f64 / 1000.0,
             barrier_w: get("barrierWidthMm")? as f64 / 1000.0,
             segments: index("segments")?,
+            min_speed_mps: get("minSpeedMms")? as f64 / 1000.0,
         })
     }
 }
@@ -88,7 +98,11 @@ pub struct LoopFrame {
 
 fn point(map: &Map, i: usize) -> [f64; 3] {
     let q = &map.route.points[i];
-    [f64::from(q.x) / 1000.0, f64::from(q.y) / 1000.0, f64::from(q.z) / 1000.0]
+    [
+        f64::from(q.x) / 1000.0,
+        f64::from(q.y) / 1000.0,
+        f64::from(q.z) / 1000.0,
+    ]
 }
 
 /// The road's plan direction along the route from point `a` to point `b`.
@@ -157,14 +171,18 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 fn unit(a: [f64; 3]) -> [f64; 3] {
     scale(a, 1.0 / libm::sqrt(dot(a, a)).max(1e-12))
 }
 
-/// One deck section: the centre, the unit side (the road's left, level: the deck never rolls) and the unit surface
-/// normal (into the loop; +Y at both ends).
+/// One deck section: the centre, the unit side (towards the driver's left) and the unit surface normal (into the loop;
+/// +Y at both ends).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Section {
     pub c: [f64; 3],
@@ -172,26 +190,53 @@ pub struct Section {
     pub normal: [f64; 3],
 }
 
-/// The deck's `segments + 1` sections, t = k / segments.
+/// The unit tangent of the centre line at t.
+pub fn tangent(fr: &LoopFrame, r: f64, t: f64) -> [f64; 3] {
+    let h = 1e-4;
+    unit(sub(centre(fr, r, t + h), centre(fr, r, t - h)))
+}
+
+/// The deck's `segments + 1` sections, t = k / segments. Each is oriented by the centre line's Frenet frame: the surface
+/// normal is the principal normal (towards the centre of curvature: up where the deck meets the road, down at the top)
+/// and the side is the binormal. The centre line is then a geodesic of the deck, so a car with its wheel straight
+/// follows the loop, sideways shift and all (with cross-sections held level, a straight-driven car runs off into the
+/// barrier as the helix moves sideways). The deck rolls a little along the helix.
 pub fn sections(fr: &LoopFrame, d: &LoopDesign) -> Vec<Section> {
-    let left = [fr.left[0], 0.0, fr.left[1]];
     (0..=d.segments)
-        .map(|k| {
-            let t = k as f64 / d.segments as f64;
-            let h = 1e-4;
-            let tangent = unit(sub(centre(fr, d.radius_m, t + h), centre(fr, d.radius_m, t - h)));
-            // Each cross-section runs straight across the road (along its left vector), so the deck never rolls as the
-            // helix moves sideways; the surface normal is perpendicular to both the direction of travel and that line.
-            Section { c: centre(fr, d.radius_m, t), side: left, normal: unit(cross(tangent, left)) }
-        })
+        .map(|k| section_at(fr, d, k as f64 / d.segments as f64))
         .collect()
+}
+
+/// The deck's section at any t in 0..=1 (the sections above are these at t = k / segments).
+pub fn section_at(fr: &LoopFrame, d: &LoopDesign, t: f64) -> Section {
+    let r = d.radius_m;
+    let h = 1e-3;
+    let tg = tangent(fr, r, t);
+    let normal = unit(sub(tangent(fr, r, t + h), tangent(fr, r, t - h)));
+    Section {
+        c: centre(fr, r, t),
+        side: cross(normal, tg),
+        normal,
+    }
+}
+
+/// How far along the centre line one unit of t goes at t, m (to advance a ride by speed × dt).
+pub fn metres_per_t(fr: &LoopFrame, r: f64, t: f64) -> f64 {
+    let h = 1e-4;
+    let d = sub(centre(fr, r, t + h), centre(fr, r, t - h));
+    libm::sqrt(dot(d, d)) / (2.0 * h)
 }
 
 /// Closed, shared-vertex prisms (the bridge's layout): the deck and the two barriers, each a ring of four vertices per
 /// section with end caps. Positions in metres; the sim collides with exactly these triangles and the renderer draws them.
 pub fn loop_mesh(map: &Map, d: &LoopDesign) -> Option<JumpMesh> {
     let fr = frame(map, d)?;
-    if d.radius_m <= 0.0 || d.thickness_m <= 0.0 || d.barrier_h <= 0.0 || d.barrier_w <= 0.0 || d.segments < 2 {
+    if d.radius_m <= 0.0
+        || d.thickness_m <= 0.0
+        || d.barrier_h <= 0.0
+        || d.barrier_w <= 0.0
+        || d.segments < 2
+    {
         return None;
     }
     let secs = sections(&fr, d);
@@ -210,7 +255,12 @@ pub fn loop_mesh(map: &Map, d: &LoopDesign) -> Option<JumpMesh> {
             // The top of a beam is its surface (the deck) or the barrier's crest, which stands up along the normal.
             let lift = if beam == 0 { 0.0 } else { d.barrier_h };
             let (lt, rt) = (add(l, scale(s.normal, lift)), add(r, scale(s.normal, lift)));
-            verts.extend([lt, rt, sub(lt, scale(s.normal, depth)), sub(rt, scale(s.normal, depth))]);
+            verts.extend([
+                lt,
+                rt,
+                sub(lt, scale(s.normal, depth)),
+                sub(rt, scale(s.normal, depth)),
+            ]);
         }
         let mut quad = |a, b, c, e| {
             tris.extend([[a, b, c], [a, c, e]]);
@@ -239,10 +289,10 @@ pub fn triangle_surfaces(map: &Map, d: &LoopDesign) -> Option<Vec<Surface>> {
     Some(out)
 }
 
-/// The least entry speed that keeps a car on the deck through the top without help, m/s (√(5gR): the speed at the top
-/// must be at least √(gR), and climbing 2R costs 4gR of v²). The sim's loop assist and the posted speed build on this.
-pub fn unassisted_entry_mps(d: &LoopDesign, g: f64) -> f64 {
-    libm::sqrt(5.0 * g * d.radius_m)
+/// The posted speed: the least entry speed at which a coasting car still has `minSpeedMms` at the top (climbing 2R
+/// costs 4gR of v²), m/s. A car on the throttle makes it from a little slower.
+pub fn posted_entry_mps(d: &LoopDesign, g: f64) -> f64 {
+    libm::sqrt(d.min_speed_mps * d.min_speed_mps + 4.0 * g * d.radius_m)
 }
 
 /// Everything wrong with a loop, in words (empty when it is valid).
@@ -262,8 +312,14 @@ pub fn problems(map: &Map, p: &BTreeMap<String, i64>) -> Vec<String> {
             out.push(format!("{name} must be at least {min}"));
         }
     }
+    if p["minSpeedMms"] < limits::MIN_MIN_SPEED_MMS {
+        out.push(format!("minSpeedMms must be at least {}", limits::MIN_MIN_SPEED_MMS));
+    }
     let Some(fr) = frame(map, &d) else {
-        out.push("entry and exit must be route points in order, with a road leading into the entry".into());
+        out.push(
+            "entry and exit must be route points in order, with a road leading into the entry"
+                .into(),
+        );
         return out;
     };
     // The road arriving at E (the stretch before it) and leaving X (the stretch after it) runs the frame's way, so the
@@ -273,11 +329,20 @@ pub fn problems(map: &Map, p: &BTreeMap<String, i64>) -> Vec<String> {
         out.push("the loop needs road before its entry and after its exit".into());
         return out;
     }
-    for (name, a, b) in [("entry", d.entry - 2, d.entry), ("exit", d.exit, d.exit + 2)] {
+    for (name, a, b) in [
+        ("entry", d.entry - 2, d.entry),
+        ("exit", d.exit, d.exit + 2),
+    ] {
         let h = heading(map, a, b);
-        let off = libm::atan2(h[0] * fr.forward[1] - h[1] * fr.forward[0], h[0] * fr.forward[0] + h[1] * fr.forward[1]);
+        let off = libm::atan2(
+            h[0] * fr.forward[1] - h[1] * fr.forward[0],
+            h[0] * fr.forward[0] + h[1] * fr.forward[1],
+        );
         if libm::fabs(off) * 1000.0 > limits::MAX_HEADING_MRAD as f64 {
-            out.push(format!("the road at the {name} turns {:.0} mrad off the loop's line", off * 1000.0));
+            out.push(format!(
+                "the road at the {name} turns {:.0} mrad off the loop's line",
+                off * 1000.0
+            ));
         }
     }
     // The exit deck passes beside the entry deck: they must clear each other by a full width and the barriers.
@@ -291,7 +356,10 @@ pub fn problems(map: &Map, p: &BTreeMap<String, i64>) -> Vec<String> {
     }
     // A loop that runs out backwards (or barely forwards) folds over its own entry.
     if fr.run_out < d.radius_m {
-        out.push(format!("the exit is {:.1} m on from the entry; at least the radius ({:.1} m)", fr.run_out, d.radius_m));
+        out.push(format!(
+            "the exit is {:.1} m on from the entry; at least the radius ({:.1} m)",
+            fr.run_out, d.radius_m
+        ));
     }
     // The route between E and X runs under the loop: no part of it may be a closed route's wrap.
     if map.route.closed && d.exit - d.entry >= map.route.points.len() / 2 {
