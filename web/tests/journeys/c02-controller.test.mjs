@@ -176,7 +176,8 @@ describe('the pod: indicators, not buttons', () => {
       const { ctx, page } = await open(eng, 'playing&round=racing&boost=140', size);
       const r = await page.evaluate(() => {
         const pod = document.querySelector('.pod');
-        const all = [pod, ...pod.querySelectorAll('*')];
+        // The Lobby's car pick (br-bwju.9) is the pod's one button; in a race its box is hidden, so it can't take focus.
+        const all = [pod, ...pod.querySelectorAll('*')].filter((e) => !e.closest('[hidden]'));
         const b = pod.getBoundingClientRect();
         const sticks = document.querySelector('.sticks').getBoundingClientRect();
         const zone = document.querySelector('.zone.drive').getBoundingClientRect();
