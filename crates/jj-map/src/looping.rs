@@ -394,5 +394,22 @@ pub fn problems(map: &Map, p: &BTreeMap<String, i64>) -> Vec<String> {
     if map.route.closed && d.exit - d.entry >= map.route.points.len() / 2 {
         out.push("the loop span must be a short stretch of the route".into());
     }
+    // A respawn never lands on the loop: the sim anchors respawns only in recovery spans, so none may cover E..X.
+    for sp in &map.route.recovery {
+        let (a, b) = (sp.from as usize, sp.to as usize);
+        let covers = |i: usize| {
+            if a <= b {
+                a <= i && i <= b
+            } else {
+                i >= a || i <= b
+            }
+        };
+        if (d.entry..=d.exit).any(covers) {
+            out.push(format!(
+                "recovery span {a}..{b} covers the loop's route points {}..{}",
+                d.entry, d.exit
+            ));
+        }
+    }
     out
 }

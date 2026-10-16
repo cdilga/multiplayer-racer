@@ -246,6 +246,14 @@ fn broken_loops_are_named() {
             .iter()
             .any(|p| p.contains("missing"))
     );
+    // A recovery span over the loop would let a respawn anchor land on it.
+    let mut covered = map();
+    covered.route.recovery[0].to = 70;
+    let anchored = looping::problems(&covered, &params());
+    assert!(
+        anchored.iter().any(|p| p.contains("recovery span")),
+        "{anchored:?}"
+    );
 }
 
 #[test]

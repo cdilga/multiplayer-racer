@@ -306,3 +306,34 @@ fn race_progress_never_runs_backwards_through_the_loop() {
         "progress ran backwards by {worst:.2} m through the loop"
     );
 }
+
+#[test]
+fn no_respawn_anchor_is_on_the_loop() {
+    // Anchors sit in recovery spans, which the loop's contract keeps off E..X; every gate's anchor is on the road before
+    // the entry or after the exit, never under or on the deck.
+    let m = map();
+    let d = design(&m);
+    let course = jj_sim::race::Course::new(&m);
+    let pts = &m.map.route.points;
+    for g in 0..course.gate_count() {
+        let a = course.anchor(g);
+        let nearest = (0..pts.len())
+            .min_by(|&i, &j| {
+                let q = |k: usize| {
+                    let (dx, dz) = (
+                        pts[k].x as f32 / 1000.0 - a.x,
+                        pts[k].z as f32 / 1000.0 - a.z,
+                    );
+                    dx * dx + dz * dz
+                };
+                q(i).total_cmp(&q(j))
+            })
+            .unwrap();
+        assert!(
+            !(d.entry..=d.exit).contains(&nearest),
+            "gate {g}'s anchor is at route point {nearest}, on the loop ({}..{})",
+            d.entry,
+            d.exit
+        );
+    }
+}
