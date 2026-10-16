@@ -180,6 +180,13 @@ class Index(unittest.TestCase):
         self.assertIn('content="https://jammers-preview.dilger.dev/p/v02-dddddddd/assets/og-card.png"', h)
         self.assertIn('src="/brand/wordmark.svg"', h)
 
+    def test_jump_in_lists_the_debug_features_and_cards_link_tune(self):
+        h = index_page.render(self.reg(), NOW)
+        panel = h[h.index('class="play"'):h.index("</section>")]
+        for href in ("host?tune", "host?drive&amp;tune", "host?tune&amp;seed=1", "host?bench"):
+            self.assertIn(f'href="/p/v02-dddddddd/{href}"', panel)
+        self.assertIn('href="/p/v02-dddddddd/host?tune">Tune</a>', h[h.index("</section>"):])
+
     def test_no_jump_in_without_a_playable_latest(self):
         r = self.reg()
         r["labels"]["Latest"] = "v02-cccccccc"  # the failed one

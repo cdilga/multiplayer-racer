@@ -94,6 +94,8 @@ def style(t: dict) -> str:
   details {{ margin-top:6px; }} summary {{ cursor:pointer; font-weight:700; color:var(--cobalt-deep); min-height:32px; }}
   ul.changed {{ margin:6px 0 0; padding-left:20px; }}
   a.ev {{ color:var(--cobalt-deep); font-weight:700; }}
+  details.debug {{ grid-column:1 / -1; }} details.debug a.ev {{ display:inline-flex; align-items:center; min-height:32px; margin-right:16px; }}
+  .play details.debug summary, .play details.debug a.ev {{ color:var(--saffron); }}
   details.gone > summary {{ color:var(--paper); font:900 italic 22px/1.4 var(--display); text-transform:uppercase; }}
   .foot {{ color:var(--paper); }} .rules {{ margin:0; max-width:52em; font-size:15px; }} .foot a {{ color:var(--saffron); font-weight:700; }}
   a:focus-visible, summary:focus-visible {{ outline:3px solid var(--cobalt); outline-offset:2px; }}
@@ -162,11 +164,30 @@ def changed_html(p: dict) -> str:
     return f'<details><summary>What changed ({len(items)} commit{"s" if len(items) != 1 else ""})</summary><ul class="changed">{lis}</ul></details>'
 
 
+# The host's dev features (owner 2026-10-17: "add a debug link to the kickoff region for the builds, otherwise I forget
+# the features"). Each is a host URL flag; the tuning panel (?tune) holds the Feel Lab, the generator and the seeds.
+DEBUG_LINKS = (
+    ("host?tune", "Tune + Feel Lab", "Owner tuning panel: handling values, the Feel Lab, the track generator, the session seed"),
+    ("host?drive&tune", "Free drive", "Claimed seats drive at once, no rounds, with the tuning panel open"),
+    ("host?tune&seed=1", "Seed 1", "A room on a fixed seed (change the number to replay any seed)"),
+    ("host?tune=off", "Tune off", "Hide the tuning panel again (it stays on once opened)"),
+    ("host?bench", "Render bench", "The renderer's many-car bench"),
+)
+
+
+def debug_html(base: str) -> str:
+    links = "".join(f'<a class="ev" href="{base}{html.escape(href)}" title="{html.escape(why)}">{html.escape(label)}</a>'
+                    for href, label, why in DEBUG_LINKS)
+    return f'<details class="debug"><summary>Debug</summary>{links}</details>'
+
+
 def open_html(p: dict) -> str:
     base = f"/p/{html.escape(p['id'])}/"
     links = []
     if p.get("status") == "playable" and not p.get("retired"):
         links.append(f'<a class="btn" href="{base}host">Host</a><a class="btn alt" href="{base}">Join</a>')
+        # The full debug list lives once, in Jump in (the 64 kB page limit); each card keeps the one most used.
+        links.append(f'<a class="ev" href="{base}host?tune">Tune</a>')
     elif not p.get("retired"):
         # Still deployed: open it anyway, but it failed its smoke, so the links say so and stay small.
         links.append(f'<span class="bad">Failed its smoke, probably not playable:</span>'
@@ -223,7 +244,7 @@ def jump_in(p: dict | None) -> str:
             f'<div><h2>Jump in</h2><p class="ttl">{html.escape(title_text(p.get("title", "")))}</p></div>'
             f'<div class="acts"><a class="btn" href="{base}host">Host a room</a><a class="btn alt" href="{base}">Join</a></div>'
             f'<ol class="steps"><li><b>1</b>Open Host on the TV or laptop</li><li><b>2</b>Scan its QR with your phones</li>'
-            f'<li><b>3</b>Race, wreck, repeat</li></ol></section>')
+            f'<li><b>3</b>Race, wreck, repeat</li></ol>{debug_html(base)}</section>')
 
 
 SCRIPT = """

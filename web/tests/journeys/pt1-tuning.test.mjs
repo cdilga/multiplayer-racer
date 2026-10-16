@@ -324,3 +324,19 @@ test('a production build contains no tuning panel code', { timeout: 300_000 }, (
     for (const marker of ['jj-tune', 'jj.tuning-patch', 'Owner tuning', 'generatorWith', 'data-tune-regenerate']) assert.ok(!text.includes(marker), `${f} contains ${marker}`);
   }
 });
+
+test('?tune shows the session seed and Play seed opens a room on another (owner 2026-10-17)', { timeout: 120_000 }, async () => {
+  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  const errors = [];
+  host.on('pageerror', (e) => errors.push(e.message));
+  await host.goto(`${server.origin}${BASE}host?room&test=live&tune&seed=4242`);
+  await wait(host, () => window.__jjRoom?.view()?.phase === 'Lobby' && !!window.__jjTune);
+  await host.locator('.jj-tune-toggle').click();
+  await wait(host, () => document.querySelector('[data-tune-seed]')?.textContent === '4242', undefined, 10_000);
+  if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-seed-1280x720.png` });
+  await host.locator('[data-tune-seed-input]').fill('77');
+  await Promise.all([host.waitForURL(/[?&]seed=77\b/), host.locator('[data-tune-seed-go]').click()]);
+  await wait(host, () => window.__jjSession?.seed === 77 && !!window.__jjTune);
+  assert.match(host.url(), /[?&]tune\b/, 'the replay keeps the other flags');
+  assert.deepEqual(errors, []);
+});

@@ -122,6 +122,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     <div class="rows" data-tune-pane="values">${rows}</div>
     <div class="rows lab" data-tune-pane="lab" hidden></div>
     ${gen ? '<p class="built" data-tune-built></p>' : ''}
+    <p class="built seed" data-tune-seed-row>session seed <b data-tune-seed>?</b> <input type="number" min="0" step="1" placeholder="seed" data-tune-seed-input aria-label="Seed to play"><button type="button" data-tune-seed-go title="Open a new room on this seed (tracks are this seed + preparation id)">Play seed</button></p>
     <footer>${gen ? '<button type="button" data-tune-regenerate title="Build the current seed again with the generator values">Regenerate track</button>' : ''}<button type="button" data-tune-export>Export patch</button><span data-tune-count>No changes</span></footer>`;
 
   let genError = false;
@@ -129,6 +130,17 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
   const builtEl = panel.querySelector<HTMLElement>('[data-tune-built]') ?? document.createElement('span');
   const errEl = panel.querySelector<HTMLElement>('[data-tune-error]')!;
   const countEl = panel.querySelector<HTMLElement>('[data-tune-count]')!;
+  // The session seed (owner 2026-10-17): shown for reasoning about a map, and any seed can be replayed in a new room.
+  const seedEl = panel.querySelector<HTMLElement>('[data-tune-seed]')!;
+  const seedInput = panel.querySelector<HTMLInputElement>('[data-tune-seed-input]')!;
+  const sessionSeed = () => (window as unknown as { __jjSession?: { seed: number } }).__jjSession?.seed;
+  panel.querySelector('[data-tune-seed-go]')!.addEventListener('click', () => {
+    const want = seedInput.value.trim() === '' ? sessionSeed() : Number(seedInput.value) >>> 0;
+    if (want === undefined) return;
+    const url = new URL(location.href);
+    url.searchParams.set('seed', String(want));
+    location.assign(url);
+  });
   const refresh = async () => {
     const t = await client.tuning();
     for (const [path, v] of allLeaves(t)) current.set(path, v);
@@ -136,6 +148,8 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
       errEl.hidden = !t.error;
       errEl.textContent = t.error ?? '';
     }
+    const seed = sessionSeed();
+    if (seed !== undefined) seedEl.textContent = String(seed);
     const built = gen?.built();
     if (built) builtEl.textContent = `built: seed ${built.seed}, ${built.lengthM} m long, ${built.reliefM} m relief`;
     // A refused input value never reaches the controllers: its row goes back to what the host holds, out of the export.
