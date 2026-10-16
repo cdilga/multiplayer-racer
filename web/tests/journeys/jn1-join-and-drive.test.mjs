@@ -195,10 +195,14 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   // between two wall-clock observations and then waited for a reversing car to stop.
   // Sample small fixed intervals while the real phone sends its brake/release frames.
   await host.evaluate(() => window.__jjTest.hold(true));
+  // Nobody else may push A while it stops: the key cluster has held W since its drive check and B is still driving
+  // (CI run 5064: A sat at 0.91 m/s under full reverse with the 14 kN key car behind it).
+  await host.keyboard.up('KeyW');
+  await hold(b, { x: 0, y: 0 });
   await hold(a, { x: 0, y: 1 });
   let braking = carOf(await observe(host), epA);
   for (const t0 = Date.now(); Math.abs(braking.forwardSpeed) > 0.5; braking = carOf(await observe(host), epA)) {
-    assert.ok(Date.now() - t0 < 30_000, `A never stopped: ${JSON.stringify(braking)}`);
+    if (Date.now() - t0 >= 30_000) assert.fail(`A never stopped: ${JSON.stringify(braking)}; cars ${JSON.stringify((await observe(host)).cars.map((c) => [c.car, c.position, c.forwardSpeed]))}`);
     await host.evaluate(() => window.__jjTest.step(3));
     await host.waitForTimeout(50);
   }

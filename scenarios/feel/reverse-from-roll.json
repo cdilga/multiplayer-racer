@@ -1,0 +1,93 @@
+{
+ "scenario": "reverse-from-roll",
+ "what": "Full pull while rolling forward at 0.5-1.5 m/s: the car stops and then reverses (no dead band between braking and reversing).",
+ "map": "maps/greybox-loop.json",
+ "seed": 7,
+ "ticks": 240,
+ "cars": [
+  {
+   "routePoint": 4,
+   "lateral": -3,
+   "linvel": [
+    0.5,
+    0,
+    0
+   ]
+  },
+  {
+   "routePoint": 30,
+   "lateral": 3,
+   "linvel": [
+    0.9,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "atTick": 20,
+   "metric": "forwardSpeed",
+   "min": -0.2,
+   "max": 0.6
+  },
+  {
+   "car": 0,
+   "atTick": 80,
+   "metric": "forwardSpeed",
+   "min": -2.0,
+   "max": -0.2
+  },
+  {
+   "car": 1,
+   "atTick": 20,
+   "metric": "forwardSpeed",
+   "min": -0.2,
+   "max": 0.6
+  },
+  {
+   "car": 1,
+   "atTick": 80,
+   "metric": "forwardSpeed",
+   "min": -2.0,
+   "max": -0.2
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 0,
+    "metric": "forwardSpeed",
+    "by": 1.0
+   },
+   {
+    "car": 1,
+    "metric": "forwardSpeed",
+    "by": 1.0
+   }
+  ]
+ }
+}
