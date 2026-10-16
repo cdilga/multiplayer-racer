@@ -62,16 +62,15 @@ pub const GROUP_WHEEL: Group = Group::GROUP_7;
 /// Drive fades between these contact-normal heights (cos of the slope): full on ground up to about 55 degrees, none at 70.
 const DRIVABLE_NORMAL_Y: f32 = 0.57;
 const WALL_NORMAL_Y: f32 = 0.34;
-/// The arcade controller (P1-FL04.2) has full authority on ground up to about 25 degrees of slope.
-const ARCADE_FULL_NORMAL_Y: f32 = 0.9;
 
 /// The arcade controller's share of a wheel's sideways grip (P1-FL04.2): all of it on road-steep ground, none from where
 /// drive starts to fade; Rapier's side friction has the rest.
-fn arcade_authority(in_contact: bool, normal_y: f32) -> f32 {
-    if !in_contact {
+/// `full` is the profile's `arcade.bank_normal_y`: at or below `DRIVABLE_NORMAL_Y` the controller never fades.
+fn arcade_authority(full: f32, in_contact: bool, normal_y: f32) -> f32 {
+    if !in_contact || full <= DRIVABLE_NORMAL_Y {
         return 1.0;
     }
-    ((normal_y - DRIVABLE_NORMAL_Y) / (ARCADE_FULL_NORMAL_Y - DRIVABLE_NORMAL_Y)).clamp(0.0, 1.0)
+    ((normal_y - DRIVABLE_NORMAL_Y) / (full - DRIVABLE_NORMAL_Y)).clamp(0.0, 1.0)
 }
 
 /// A part that just came off a car (P1-S04b): it touches only the world until it has cleared the chassis it left.
@@ -1995,7 +1994,13 @@ impl Sim {
                     // 55 degrees and is gone on a wall. The arcade engine out-pulls the car's weight, and the suspension
                     // keeps the tyres pressed to whatever they touch, so without this a car could drive up a wall.
                     let info = w.raycast_info();
-                    let bank = 1.0 - arcade_authority(info.is_in_contact, info.contact_normal_ws.y);
+                    let bank = t_.arcade.as_ref().map_or(0.0, |a| {
+                        1.0 - arcade_authority(
+                            a.bank_normal_y,
+                            info.is_in_contact,
+                            info.contact_normal_ws.y,
+                        )
+                    });
                     let climbable = if info.is_in_contact {
                         ((info.contact_normal_ws.y - WALL_NORMAL_Y)
                             / (DRIVABLE_NORMAL_Y - WALL_NORMAL_Y))
@@ -2185,13 +2190,13 @@ impl Sim {
                     steer: jj_types::axis::dequantise_axis(input.steer),
                 };
                 // On a bank (a bowl's wall, a barrier face) the controller fades out, from full on road-steep ground
-                // (`ARCADE_FULL_NORMAL_Y`) to none by where drive starts to fade (`DRIVABLE_NORMAL_Y`): gravity and the
+                // (`arcade.bank_normal_y`) to none by where drive starts to fade (`DRIVABLE_NORMAL_Y`): gravity and the
                 // collision decide there, so the grip never holds a car's line up a wall.
                 let climbable: f32 = loaded
                     .iter()
                     .map(|&i| {
                         let ri = wheels[i].raycast_info();
-                        arcade_authority(ri.is_in_contact, ri.contact_normal_ws.y)
+                        arcade_authority(a.bank_normal_y, ri.is_in_contact, ri.contact_normal_ws.y)
                     })
                     .sum();
                 let ground = vehicle::arcade::Ground {

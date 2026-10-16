@@ -79,6 +79,10 @@ pub struct Arcade {
     /// (throttle forward, a pull back in reverse): a car pushed against a wall, a car or debris with steer on scrubs
     /// round and drives off instead of sitting stuck.
     pub pivot_mps: f32,
+    /// On a bank the controller hands each wheel's sideways grip back to Rapier's tyres: full authority where the
+    /// contact normal's y is at least this (0.9: about 25 degrees of slope), none where drive starts to fade (55 degrees);
+    /// at or below 0.57 it never fades.
+    pub bank_normal_y: f32,
 }
 
 /// What the controller keeps per car between ticks (inside the car's `ActionState`, hashed with it).

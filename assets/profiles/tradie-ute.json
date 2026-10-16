@@ -2901,7 +2901,8 @@
       "let_go_deg": 35.0,
       "let_go_authority": 0.3,
       "roll_damping": 8.0,
-      "pivot_mps": 3.0
+      "pivot_mps": 3.0,
+      "bank_normal_y": 0.9
     }
   }
 }
