@@ -19,11 +19,17 @@
 name: CI
 
 on:
-  push:
-    branches: ["**"] # branches only: the preview record's tags (preview/, retired/, pin/) never start a run
+  # R139 (owner 2026-10-17): no CI per push. One big batch at a time and fix forward: an hourly run of everything pushed
+  # since the last green (selective by changed paths), the full matrix at 01:05 AEST, and a manual dispatch for a closer
+  # who can't wait (`tea api -X POST .../actions/workflows/ci.yml/dispatches`, input full=false for a selective run).
   schedule:
-    - cron: "17 15 * * *" # 01:17 AEST, the full matrix
+    - cron: "5 * * * *" # hourly batch
   workflow_dispatch:
+    inputs:
+      full:
+        description: "true: every suite (the nightly matrix); false: what changed since the last green"
+        required: false
+        default: "true"
 
 # One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
 # run still waiting; the next run diffs from the last green run, so nothing a replaced run held is lost.
@@ -37,7 +43,9 @@ env:
   CARGO_INCREMENTAL: "0"
   npm_config_cache: /cargo-cache/npm
   GITEA_TOKEN: ${{ github.token }}
-  JJ_FULL: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+  # Full: a dispatch that asks for it; plan.mjs makes the 15:xx UTC scheduled run (01:05 AEST) the nightly full matrix.
+  JJ_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.full != 'false' }}
+  JJ_EVENT: ${{ github.event_name }}
 
 jobs:
   checks:

@@ -162,7 +162,10 @@ const rules = [
 
 let base = opt('--base');
 const given = opt('--changed'); // a dry run: comma-separated paths instead of a diff
-const full = args.includes('--full') || process.env.JJ_FULL === 'true'; // schedule and dispatch runs
+// Full: --full, a dispatch asking for it (JJ_FULL), or the hourly schedule's 15:xx UTC run (01:xx AEST, the nightly
+// matrix); every other scheduled hour is a selective batch of what changed since the last green (R139).
+const nightly = process.env.JJ_EVENT === 'schedule' && new Date().getUTCHours() === 15;
+const full = args.includes('--full') || process.env.JJ_FULL === 'true' || nightly;
 if (full) everything('full run (schedule or dispatch)');
 else {
   if (!base && !given) base = await lastGreen();
