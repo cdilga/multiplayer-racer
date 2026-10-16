@@ -376,6 +376,7 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .lb-local-choice select { font: inherit; max-width: 100%; min-height: 36px; background: var(--c-paper); color: var(--c-ink); border: 2px solid var(--c-ink); border-radius: 4px; }
 .lb-local-choice .btn { min-height: 36px; font-size: inherit; padding: .2em .5em; }
 .lb-local-choice small { flex-basis: 100%; }
+.lb-local-choice .lb-local-count { flex-basis: 100%; font-weight: 700; }
 .lb-cc:has(.lb-local-choice) { flex-wrap: wrap; flex: 1 1 18em; }
 .lb-cc .lb-local-choice { flex: 1 1 100%; }
 .lb-cc .jj-cc { flex-basis: 100%; }

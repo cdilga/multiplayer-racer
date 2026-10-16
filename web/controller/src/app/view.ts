@@ -56,10 +56,10 @@ function dress(root: ParentNode): void {
 }
 
 /** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Choose car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
-const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div></div>`;
+const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div><div class="pod-car" data-box="car" hidden><span class="pod-car-name display" data-car-pick></span><button class="btn" data-act="car" aria-label="Choose car"></button><span class="pod-car-count tnum" data-car-at></span></div></div>`;
 
 /** Text colour on a seat colour (the kit's table, by luminance). */
 const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
@@ -317,17 +317,22 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     });
   };
 
+  /** The roster the picker offers (the state opener's `#roster=N` stands extra cars in). */
+  const lobbyRoster = () => rosterOf(Number(new URLSearchParams(location.hash.replace(/^#/, '')).get('roster') ?? 0) || 0);
+  const savedCar = () => {
+    try {
+      return localStorage.getItem(`jj.car.${session.realm}`) ?? '';
+    } catch {
+      return ''; // No storage: the pick lasts for this visit.
+    }
+  };
+
   /** The visible lobby vehicle step: remembered preselection, explicit confirmation, then Ready. */
   const openCars = (host: HTMLElement) => {
     if (cars?.open || sheet?.open || tutorial?.open || !session.you) return;
     const key = `jj.car.${session.realm}`;
-    const roster = rosterOf(Number(new URLSearchParams(location.hash.replace(/^#/, '')).get('roster') ?? 0) || 0);
-    let saved = '';
-    try {
-      saved = localStorage.getItem(key) ?? '';
-    } catch {
-      // No storage: the pick lasts for this visit.
-    }
+    const roster = lobbyRoster();
+    const saved = savedCar();
     const current = () => roster.find((r) => r.id === (session.carChoice || saved)) ?? roster[0]!;
     session.pick(current().id, true); // the picker is open: the TV says so
     cars = new CarSheet(host, {
@@ -374,17 +379,23 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     }
     if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
     if (cars?.open && session.roomPhase === 'Countdown') cars.close();
-    const carBtn = app.querySelector<HTMLButtonElement>('[data-act=car]');
-    if (carBtn) {
-      carBtn.hidden = session.roomPhase !== 'Lobby';
-      carBtn.classList.remove('icon');
-      // br-bwju.9: say it's a choice you can change, not just a thing you have.
+    // br-bwju.9: in the Lobby the car is a pick, shown by name with a worded Change car and where it sits in the roster
+    // ("Car 2 of 12"), in the pod between the sticks rather than as one more icon in the tool row.
+    const carBox = app.querySelector<HTMLElement>('[data-box=car]');
+    if (carBox) {
+      carBox.hidden = session.roomPhase !== 'Lobby';
+      const roster = lobbyRoster();
+      const at = Math.max(0, roster.findIndex((r) => r.id === (session.carChoice || savedCar())));
       const words = chosenSeat === session.you?.number ? 'Change car' : 'Choose car';
-      // P1-FL14: the car icon and the words; the narrowest landscape strip keeps the icon and the spoken name only.
+      const carBtn = carBox.querySelector<HTMLButtonElement>('[data-act=car]')!;
       if (carBtn.getAttribute('aria-label') !== words || !carBtn.querySelector('.lbl')) {
         carBtn.replaceChildren(icon('car'), Object.assign(document.createElement('span'), { className: 'lbl', textContent: words }));
         carBtn.setAttribute('aria-label', words);
       }
+      carBox.querySelector('[data-car-pick]')!.textContent = roster[at]!.name;
+      const count = carBox.querySelector<HTMLElement>('[data-car-at]')!;
+      count.textContent = `Car ${at + 1} of ${roster.length}`;
+      count.hidden = roster.length < 2;
     }
     if (!rehosting && session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number && !cars?.open && !sheet?.open) {
       const host = app.querySelector<HTMLElement>('.screen.play');

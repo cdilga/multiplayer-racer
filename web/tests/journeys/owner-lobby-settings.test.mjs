@@ -63,6 +63,10 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await wait(host,source=>window.__jjRoom.view().seats.find(s=>s.localSource===source)?.choosing===true,padSource);
     await host.evaluate(()=>window.__pad([0,0,1,0],false));
     await wait(host,source=>window.__jjRoom.view().seats.find(s=>s.localSource===source)?.vehicle==='tradie-ute',padSource);
+    // br-bwju.9: a pad player sees where its pick sits in the roster and how many cars there are, as a phone does.
+    const options = await host.locator(`[data-local-vehicle="${padSource}"] option`).evaluateAll(os=>os.map(o=>o.value));
+    await wait(host,([source,want])=>document.querySelector(`.lb-cc:has([data-local-vehicle="${source}"]) [data-local-count]`)?.textContent===want,[padSource,`Car ${options.indexOf('tradie-ute')+1} of ${options.length}`]);
+    assert.ok(await host.locator(`.lb-cc:has([data-local-vehicle="${padSource}"]) [data-local-count]`).isVisible(),'the count is on screen');
     await host.evaluate(()=>window.__pad([0,0,0,0],true));
     await wait(host,source=>window.__jjRoom.view().seats.find(s=>s.localSource===source)?.choosing===false,padSource);
     assert.equal(await host.evaluate(source=>window.__jjRoom.view().seats.find(s=>s.localSource===source).ready,padSource),false);

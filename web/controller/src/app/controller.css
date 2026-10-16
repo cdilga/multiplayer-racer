@@ -233,12 +233,19 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .pod-label { font-size: 15px; color: var(--c-saffron); }
 .pod .meter { position: relative; flex: 1; min-width: 90px; height: 18px; }
 .pod-items { display: flex; gap: 10px; }
+/* br-bwju.9: the Lobby's car pick, by name, with a worded Change car and its place in the roster. */
+.pod-car { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.pod-car[hidden], .pod-car-count[hidden] { display: none; }
+.pod-car-name { font-size: 17px; line-height: 1.1; color: var(--c-paper); }
+.pod-car .btn { min-height: 44px; padding: 0 14px; gap: 6px; font-size: 15px; }
+.pod-car-count { font-size: 13px; color: rgb(255 244 222 / .75); }
 .pod .utility { position: relative; margin: 0; width: 52px; height: 52px; }
 .pod .utility.item img { opacity: .5; }
 .pod-cd { font-size: 13px; color: rgb(255 244 222 / .75); white-space: nowrap; }
 /* dim.10: indicators, not buttons. Inset wells with no outline, sticker shadow, pressed or focus state, and taps fall
    through to whatever is under them (the sticks drive these). Each shows its action-stick direction. */
 .pod, .pod * { pointer-events: none; user-select: none; }
+.pod .pod-car .btn, .pod .pod-car .btn * { pointer-events: auto; }
 .pod .utility { border: 0; background: rgb(0 0 0 / .34); box-shadow: inset 0 2px 6px rgb(0 0 0 / .6), inset 0 0 0 1px rgb(255 244 222 / .12); }
 .pod .utility.cooldown { background: conic-gradient(rgb(255 244 222 / .28) var(--c, 40%), rgb(0 0 0 / .34) 0); }
 .pod .meter { border: 0; background: rgb(0 0 0 / .34); box-shadow: inset 0 2px 4px rgb(0 0 0 / .6), inset 0 0 0 1px rgb(255 244 222 / .14); }
@@ -255,6 +262,11 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
   .pod { flex-direction: row; justify-content: center; flex-wrap: wrap; padding: 4px 24px; }
   .pod-boost { width: auto; flex: 1; max-width: 220px; }
   .pod-cd { width: 100%; text-align: center; }
+  /* Upright the car pick is one row under the launch meter: name over count, Change car beside them. */
+  .pod-car:not([hidden]) { display: grid; grid-template: "name btn" auto "count btn" auto / auto auto; justify-content: center; align-items: center; column-gap: 12px; row-gap: 0; width: 100%; }
+  .pod-car-name { grid-area: name; justify-self: end; }
+  .pod-car-count { grid-area: count; justify-self: end; }
+  .pod-car .btn { grid-area: btn; }
 }
 
 /* POC1-21: the identify flash on the controller, the TV's tween in the player's colour. A see-through wash (owner playtest 1):

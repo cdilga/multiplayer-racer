@@ -103,6 +103,58 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   await ctx.close();
 });
 
+// br-bwju.9 (owner 2026-10-12: "it's kinda unclear you can change car ... you can't clearly see how many choices you
+// really have"): the lobby shows the car as a pick, by name, with a worded Change car and its place in the roster.
+test('the lobby shows the car by name with a worded Change car and "Car i of N", on screen and uncovered, at 390x844 and 844x390', { timeout: 90_000 }, async () => {
+  for (const size of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 375, height: 667 }, { width: 640, height: 300 }]) {
+    const label = `${size.width}x${size.height}`;
+    const { ctx, page, errors } = await open('playing&round=lobby&roster=12', size);
+    const upright = page.getByRole('button', { name: 'Play upright anyway' });
+    if (await upright.count()) {
+      await upright.click();
+      // Upright, the tutorial offers itself once the turn-sideways card goes.
+      const skip = page.getByRole('button', { name: 'Skip tutorial' });
+      await skip.waitFor({ timeout: 2_000 }).then(() => skip.click(), () => {});
+    }
+    const change = page.getByRole('button', { name: 'Change car' });
+    assert.equal(await change.isVisible(), true, `${label}: Change car shows`);
+    const seen = await page.evaluate(() => {
+      const on = (el) => {
+        const r = el.getBoundingClientRect();
+        // The pod's words take no touches, so the hit lands on the pod under them, unless something covers them.
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return r.width > 0 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && (hit === el || el.contains(hit) || hit?.contains(el));
+      };
+      const btn = document.querySelector('[data-act=car]');
+      const words = btn.querySelector('.lbl');
+      return {
+        words: getComputedStyle(words).display !== 'none' ? words.textContent : '',
+        btn: on(btn),
+        name: document.querySelector('[data-car-pick]').textContent,
+        nameOn: on(document.querySelector('[data-car-pick]')),
+        count: document.querySelector('[data-car-at]').textContent,
+        countOn: on(document.querySelector('[data-car-at]')),
+        scroll: document.scrollingElement.scrollHeight - innerHeight,
+      };
+    });
+    assert.deepEqual(seen, { words: 'Change car', btn: true, name: 'Cruz Missile', nameOn: true, count: 'Car 1 of 12', countOn: true, scroll: 0 }, label);
+    await shot(page, `c03-car-lobby-${label}`);
+    // The picker counts too, and the pod follows the pick.
+    await change.click();
+    await page.locator('[data-overlay=cars]').waitFor();
+    assert.equal(await page.locator('[data-car-count]').textContent(), 'Car 1 of 12');
+    assert.equal(await page.locator('[data-thumbs-label]').textContent(), 'All 12 cars: tap one or swipe');
+    assert.equal(await page.locator('.thumb').count(), 12, 'every car in the roster');
+    await page.getByRole('button', { name: 'Next car' }).click();
+    assert.equal(await page.locator('[data-car-count]').textContent(), 'Car 2 of 12');
+    await page.getByRole('button', { name: 'Use this vehicle' }).click();
+    assert.equal(await page.locator('[data-car-pick]').textContent(), 'Tradie Ute');
+    assert.equal(await page.locator('[data-car-at]').textContent(), 'Car 2 of 12');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  }
+});
+
 test('Ready follows the explicit vehicle confirmation and remains visible in the lobby', { timeout: 60_000 }, async () => {
   const { ctx, page } = await open('playing&round=lobby');
   const ready = page.getByRole('button', { name: /^Ready/ });

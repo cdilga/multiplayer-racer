@@ -48,13 +48,12 @@
   .strip .conn { font-size: 10px; padding-inline: 2px; }
 }
 
-/* Short landscape up to 960 px wide: a live room's strip also carries the connection badge, so the car button goes
-   icon-only (spoken name kept) and Identify drops its redundant Locate icon; the six icon tools and Ready stay on screen
-   (844x390 ran Ready off the left edge). */
+/* Short landscape up to 960 px wide: a live room's strip also carries the connection badge, so Identify drops its
+   redundant Locate icon; the six icon tools and Ready stay on screen (844x390 ran Ready off the left edge). */
 @media (orientation: landscape) and (max-height: 440px) and (max-width: 960px) {
   .strip .tools .btn.identify .ic { display: none; }
-  .strip .tools .btn[data-act=car] { width: 48px; padding: 0; }
-  .strip .tools .btn[data-act=car] .lbl { display: none; }
+  .pod-car { gap: 2px; }
+  .pod-car-name { font-size: 15px; }
 }
 
 /* The narrowest strips (640x300): the connection badge keeps its icon and colour (direct green, relay amber) and drops
@@ -68,12 +67,9 @@
 }
 
 /* Portrait phones: the round banner centres on the screen, in the stick area clear of the two tool rows (40% sat on the
-   icon row at 375x667); under 400 px wide the car button goes icon-only (spoken name kept) so the worded row stays one row. */
+   icon row at 375x667). */
 @media (orientation: portrait) {
   .round-banner { top: 50%; }
-}
-@media (orientation: portrait) and (max-width: 399px) {
-  .tools .btn[data-act=car] .lbl { display: none; }
 }
 
 /* R127 gated start: the launch callout on the round banner (words only; colour tells early from good). It sits mid-screen
