@@ -1,6 +1,7 @@
 //! P1-W02a: the boomerang's flight. A throw leaves the car at `SPEED_MPS` (forward or rear, plus the car's own velocity)
 //! with a little sideways spin, then a spring toward the thrower bends it out (about 21 m) and back over about 2.2 s,
-//! so it returns to wherever the thrower is now. It flies level at bonnet height. Walls, terrain and debris stop it;
+//! so it returns to wherever the thrower is now. It flies at bonnet height over the ground under it, so a slope
+//! carries it; walls, cliffs, props and debris stop it;
 //! each other car is hit at most once per leg (out and back); the thrower catches it on the way back. Plain data: the
 //! sim steps it, hashes it and reports it (R90).
 

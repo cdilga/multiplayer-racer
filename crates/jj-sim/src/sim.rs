@@ -2537,11 +2537,12 @@ impl Sim {
         let half_l = self.profiles[c.model].chassis_half()[2];
         let at = pose.translation + f * (sign * (half_l + 0.6));
         let rel = f * (sign * SPEED_MPS) + side * SIDE_MPS;
+        let y = self.boomerang_y(at.x, at.z, pose.translation.y + HEIGHT_M, half_l + 0.6);
         self.boomerangs.push(Flight {
             effect: effect.id,
             car: car.0,
             life: c.life,
-            position: [at.x, pose.translation.y + HEIGHT_M, at.z],
+            position: [at.x, y, at.z],
             relative_velocity: [rel.x, 0.0, rel.z],
             leg: Leg::Out,
             armed_at: effect.armed_at,
@@ -2554,8 +2555,8 @@ impl Sim {
     /// One tick of every flight: the spring toward the thrower, walls and debris, hits, the catch and expiry.
     fn step_boomerangs(&mut self) {
         use crate::items::boomerang::{
-            CATCH_RADIUS_M, End, HEIGHT_M, HIT_DAMAGE, HIT_DV_MPS, HIT_LIFT, HIT_RADIUS_M, Hit,
-            Leg, OMEGA, SANGA_SCALE,
+            CATCH_RADIUS_M, End, HIT_DAMAGE, HIT_DV_MPS, HIT_LIFT, HIT_RADIUS_M, Hit, Leg, OMEGA,
+            SANGA_SCALE,
         };
         let tick = self.tick;
         for k in 0..self.boomerangs.len() {
@@ -2579,7 +2580,12 @@ impl Sim {
             u -= r * (OMEGA * OMEGA * DT);
             let v = Vector::new(home_v.x, 0.0, home_v.z) + u;
             let mut next = p + v * DT;
-            next.y = home.y + HEIGHT_M;
+            next.y = self.boomerang_y(
+                next.x,
+                next.z,
+                p.y,
+                libm::hypotf(next.x - p.x, next.z - p.z),
+            );
             let leg = if f.leg == Leg::Out && r.dot(u) < 0.0 {
                 Leg::Back
             } else {
@@ -3331,6 +3337,18 @@ impl Sim {
         self.cars
             .get(car.0 as usize)
             .map(|c| c.damage.states(&self.profiles[c.model].tuning.damage))
+    }
+
+    /// A boomerang's height at (x, z), `run` metres on from where it is at `at_y`: `HEIGHT_M` over the ground under it,
+    /// so it rides a slope (flying level, it hit the next rise: 44 % of throws on generated tracks, CI 5309). A rise
+    /// steeper than 45° is a wall, not a slope: it keeps its height and the forward ray stops it, as it does at a cliff,
+    /// a prop or debris. With no ground under it, it keeps its height.
+    fn boomerang_y(&self, x: f32, z: f32, at_y: f32, run: f32) -> f32 {
+        use crate::items::boomerang::HEIGHT_M;
+        match self.ground_height(x, z, at_y + 3.0) {
+            Some(g) if g + HEIGHT_M - at_y <= run + 0.05 => g + HEIGHT_M,
+            _ => at_y,
+        }
     }
 
     /// A part's state by name (`front`, `door_FL`…).
