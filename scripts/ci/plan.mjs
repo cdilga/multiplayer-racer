@@ -117,7 +117,10 @@ const rules = [
   [/^\.agents\//, () => {}], // .agents/skills is a link to .claude/skills (P1-F09)
   [/^art\/(audio|references|style)\//, () => {}],
   [/^tools\/(maps|vehicles|turn-guard)\//, () => (sel.tools = true)], // the checks job's bake and validators (lane `tools`)
-  [/^scripts\/(beads|emulators|remote)\//, () => {}],
+  [/^tools\/licences\//, () => (sel.tools = true)], // the licence list's own check and generator (br-15gd: was unmapped, so everything)
+  [/^scripts\/(beads|emulators|remote|hooks)\//, () => {}], // hooks run on the Mac at commit time, never in CI
+  // The test runner's config (the quarantine's default-filter): every Rust test, not the browser matrix.
+  [/^\.config\/nextest\.toml$/, (p) => ((sel.rustAll = true), sel.reason.push(`nextest config ${p}`))],
   [/^scripts\/(beads-live|ci-status|doctor|plan-ref|poc-publish|prune-caches|push|reclaim-target|reconcile_[a-z_]+)\.(sh|py|txt)$/, () => {}],
   [/^scripts\/ci\/durations\.(json|mjs)$/, () => {}], // the slot packer's estimates: they move timing, not coverage
   // Deploy code and its workflows (R117): not inputs to the game; their tests and the secret guard are in checks.
