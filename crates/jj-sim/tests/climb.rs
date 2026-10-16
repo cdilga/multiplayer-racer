@@ -117,8 +117,9 @@ fn roster() -> Vec<(String, VehicleProfile)> {
 
 /// R133: the owner couldn't climb off the road's edge in the Ute. Generated verges rise at 40-65 degrees from a
 /// rounded foot; the Ute stalled at the foot of anything past 35 (its bull bar and winch hook, slung 0.29 m up and
-/// 1.33 m ahead of the front axle, met the bank before its front wheels did). Now it climbs a 50-degree bank from a
-/// standstill, faster than every road car, and no car drives up a 65-degree wall, even from a run-up.
+/// 1.33 m ahead of the front axle, met the bank before its front wheels did). Its nose now climbs at a crawl
+/// (`tuning.nose_climb`, `jj_sim::climb`): it climbs a 50-degree bank from a standstill, faster than every road car, and
+/// no car drives up a 65-degree wall, even from a run-up.
 #[test]
 fn the_ute_climbs_off_road_banks_from_rest_and_out_climbs_the_road_cars() {
     let cars = roster();

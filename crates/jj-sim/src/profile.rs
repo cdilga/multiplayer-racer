@@ -187,11 +187,9 @@ pub struct Tuning {
     /// at the tyres no longer squats the nose up on throttle, and the car rolls and dives less.
     #[serde(default)]
     pub com_lower_m: f32,
-    /// The chassis colliders' approach angle, degrees (P1-FL12, R133; 0 keeps the proxy as baked). The underside ahead
-    /// of the front axle is held above a line rising at this angle from the front tyres' contact patch, so a low bull
-    /// bar or bumper rides up a bank's foot instead of digging into it (`VehicleProfile::collider_points`).
-    #[serde(default, skip_serializing_if = "is_zero")]
-    pub approach_deg: f32,
+    /// The nose climbs a bank at a crawl (P1-FL12, R133; `crate::climb`): absent, contacts are Rapier's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nose_climb: Option<crate::climb::NoseClimb>,
     pub surfaces: SurfaceGrip,
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
@@ -414,35 +412,6 @@ impl VehicleProfile {
             .collect()
     }
 
-    /// Part `i`'s collider points in vehicle space: its proxy, with the underside ahead of the front axle lifted onto the
-    /// `approach_deg` line from the front tyres' contact patch (P1-FL12). A raycast wheel has no leading edge to climb
-    /// a bank with, so whatever hangs lower than that line ahead of it (a bull bar, a winch hook) meets the bank first
-    /// and stops the car at its foot. The wheels keep their proxies, and so does a detached part's debris.
-    pub fn collider_points(&self, i: usize) -> Vec<[f32; 3]> {
-        let Some(g) = self.geometry.parts.get(i) else {
-            return Vec::new();
-        };
-        if self.tuning.approach_deg <= 0.0 || self.is_wheel_part(i) {
-            return g.points.clone();
-        }
-        let z0 = self.axle_front_z();
-        let front = &self.geometry.wheels[..self.front_wheels()];
-        let ground = front.iter().map(|w| w[1]).sum::<f32>() / front.len() as f32
-            - self.geometry.wheel_radius;
-        let rise = libm::tanf(self.tuning.approach_deg.to_radians());
-        g.points
-            .iter()
-            .map(|&[x, y, z]| {
-                let floor = ground + (z - z0) * rise;
-                if z > z0 && y < floor {
-                    [x, floor, z]
-                } else {
-                    [x, y, z]
-                }
-            })
-            .collect()
-    }
-
     /// The hull's axis-aligned box: (min, max).
     pub fn hull_bounds(&self) -> ([f32; 3], [f32; 3]) {
         let mut lo = [f32::INFINITY; 3];
@@ -552,10 +521,6 @@ impl VehicleProfile {
             Surface::OffTrack => s.off_track,
         }
     }
-}
-
-fn is_zero(v: &f32) -> bool {
-    *v == 0.0
 }
 
 fn body_friction() -> f32 {

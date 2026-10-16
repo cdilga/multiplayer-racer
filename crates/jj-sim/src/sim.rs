@@ -1790,6 +1790,28 @@ impl Sim {
         self.air_profile = profile;
     }
 
+    /// The cars whose nose climbs this step (P1-FL12, `crate::climb`): a profile with `nose_climb`, the throttle on, below
+    /// its speed.
+    fn climbers(&self) -> Vec<crate::climb::Climber> {
+        self.cars
+            .iter()
+            .filter_map(|car| {
+                let p = &self.profiles[car.model];
+                let nc = p.tuning.nose_climb?;
+                let b = self.world.bodies.get(car.body)?;
+                let forward = b.linvel().dot(b.position().rotation * Vector::Z);
+                (vehicle::stick(car.applied).0 > 0.0 && forward < nc.below_mps).then(|| {
+                    crate::climb::Climber {
+                        body: car.body,
+                        front_axle_z: p.axle_front_z(),
+                        belt_mps: nc.belt_mps,
+                        grip: nc.grip,
+                    }
+                })
+            })
+            .collect()
+    }
+
     /// `car`'s air state: whether it's flying, its last landing and what that earned (R90 introspection).
     pub fn air_state(&self, car: CarId) -> Option<AirState> {
         self.cars.get(car.0 as usize).map(|c| c.air)
@@ -2564,7 +2586,33 @@ impl Sim {
             }
         }
         self.pre_step.capture(&self.world.bodies);
-        self.world.step();
+        // P1-FL12: cars whose nose climbs a bank this step (`crate::climb`); the belt's work is authorised below.
+        let climbers = self.climbers();
+        if climbers.is_empty() {
+            self.world.step();
+        } else {
+            let g = self.world.gravity;
+            let energy = |w: &PhysicsWorld, h: RigidBodyHandle| {
+                w.bodies.get(h).map_or(0.0, |b| {
+                    f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g))
+                })
+            };
+            let before: Vec<f64> = climbers
+                .iter()
+                .map(|c| energy(&self.world, c.body))
+                .collect();
+            self.world.step_with_events(
+                &crate::climb::Hooks {
+                    climbers: &climbers,
+                    wall_normal_y: WALL_NORMAL_Y,
+                    ground: GROUP_TERRAIN | GROUP_WORLD,
+                },
+                &(),
+            );
+            for (c, e0) in climbers.iter().zip(before) {
+                self.ledger += (energy(&self.world, c.body) - e0).max(0.0);
+            }
+        }
         self.tick += 1;
         self.step_damage();
         let views: Vec<crate::race::CarView> = self
@@ -4051,16 +4099,21 @@ fn chassis_mass_props(p: &VehicleProfile) -> MassProperties {
     MassProperties::new(Vector::new(cx, cy, cz), p.tuning.mass, inertia)
 }
 
-/// Part `i`'s collider on the chassis (P1-S04a): a convex hull of its sidecar proxy in vehicle space, its underside held
-/// to the profile's approach angle (`VehicleProfile::collider_points`). The core carries the whole car's mass properties
-/// (S04b recomputes them when parts detach); the other parts are massless, so the chassis feels as it did when it was
-/// one hull.
+/// Part `i`'s collider on the chassis (P1-S04a): a convex hull of its sidecar proxy, in vehicle space. The core carries the
+/// whole car's mass properties (S04b recomputes them when parts detach); the other parts are massless, so the chassis
+/// feels as it did when it was one hull.
 fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
     let points: Vec<Vector> = p
-        .collider_points(i)
-        .iter()
-        .map(|&[x, y, z]| Vector::new(x, y, z))
-        .collect();
+        .geometry
+        .parts
+        .get(i)
+        .map(|g| {
+            g.points
+                .iter()
+                .map(|&[x, y, z]| Vector::new(x, y, z))
+                .collect()
+        })
+        .unwrap_or_default();
     let builder = ColliderBuilder::convex_hull(&points).unwrap_or_else(|| {
         if i == damage::CORE {
             let hull: Vec<Vector> = p
@@ -4087,6 +4140,12 @@ fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
         builder.mass_properties(chassis_mass_props(p))
     } else {
         builder.density(0.0)
+    };
+    // P1-FL12: a climbing nose's contacts go through `crate::climb`'s hook.
+    let builder = if p.tuning.nose_climb.is_some() && !p.is_wheel_part(i) {
+        builder.active_hooks(ActiveHooks::MODIFY_SOLVER_CONTACTS)
+    } else {
+        builder
     };
     builder
         .friction(p.tuning.body_friction)

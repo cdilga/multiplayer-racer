@@ -10,10 +10,10 @@ the committed fixture (`scenarios/lab/off-road-*.json`) loaded into the real wor
 | File | View, state | What I checked |
 |---|---|---|
 | `chromium-off-road-climb-mid-chase-1920x1080.jpg` | chase, 3 s in | The Ute is drawn as the Ute (tray, canopy, roof rack), square off the road, on the bank's face and climbing; wheels on the ground. |
-| `chromium-off-road-climb-end-chase-1920x1080.jpg` | chase, 10 s | The Ute is over the bank's lip, on the plateau 7.7 m above the road, upright. |
+| `chromium-off-road-climb-end-chase-1920x1080.jpg` | chase, 10 s | The Ute is over the bank's lip, on the plateau 6.9 m above the road, upright. |
 | `chromium-off-road-climb-end-overview-1920x1080.jpg` | overview, 10 s | The whole oval is framed. The car and its "#0 Player 0" plate sit on the bank above the road's inner edge, off the road where the climb ends. |
 | `chromium-off-road-climb-cruz-end-chase-1920x1080.jpg` | chase, 10 s | The Cruz on the same bank, stalled low on the face (2.8 m above the road), upright, still pointing up it. |
-| `chromium-off-road-wall-end-chase-1920x1080.jpg` | chase, 8 s | The rock face (darker rock surface) fills the view ahead. The Ute stops at its foot, nose up against it, rear wheels down, no wreck. |
+| `chromium-off-road-wall-end-chase-1920x1080.jpg` | chase, 8 s | The rock face (darker rock surface) fills the view ahead. The Ute's nose is 0.8 m up the face and no further; rear wheels down, no wreck. |
 | `chromium-off-road-wall-end-overview-1920x1080.jpg` | overview, 8 s | The Ute is at the foot of the face on the inner bend's bank. |
 
 I also looked at the Cruz's overview and the wall's 3 s chase. Their content matches the frames above, so they aren't
@@ -31,6 +31,8 @@ committed.
    - **Cause:** the Ute's model was still loading; the test steps faster than a player joins.
    - **Fix:** the journey waits for the run's vehicle model to load before it drives, and takes the mid frame at 3 s,
      with the car on the face.
+3. **Re-captured after the climbing-nose change.** The approach trim was replaced by `crate::climb` (README). All six
+   frames were re-taken and re-checked: the climb, the Cruz's stall and the wall read as before.
 
 ## Remaining defects
 

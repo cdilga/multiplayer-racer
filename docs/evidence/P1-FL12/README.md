@@ -20,26 +20,35 @@ nose.
   - Lifting the nose's underside alone (in a probe) let it climb 45° from rest. 40 kN of force alone climbed a sharp 35°
     foot but still stuck at 45°. AWD is already in effect: on the arcade controller every wheel drives (R138).
 
-## The change (data, Ute only)
+## The change (Ute only)
 
-- **`tuning.approach_deg` 25** (new profile field; 0, the default, keeps a proxy as baked).
-  - When the sim builds the chassis colliders, each non-wheel part's points ahead of the front axle are held above a
-    line rising at this angle from the front tyres' contact patch (`VehicleProfile::collider_points`).
-  - The wheels and detached debris keep their proxies, and the rendered model is unchanged.
-- **`surfaces.off_track` 0.45 → 0.75**: the off-roader's all-terrain tyres; every other car keeps 0.45.
+### The first attempt rolled the Ute (f53c4026)
 
-Why 25°, not the real Triton's 31°: at 31° the whole bull bar became a 0.8 m wedge, and in the head-on test
-(`tradie_ute.rs`) the Ute rode up onto the Cruz instead of shoving it back (Cruz +0.08 m/s). At 25° the head-on is as
-before: the Ute rolls on at 1.25 m/s and the Cruz is shoved back at −1.30 m/s. The Ute's front loses 21% of its health,
-the Cruz's 66%.
+The first fix trimmed the chassis colliders' underside ahead of the front axle to a 25° approach angle (`approach_deg`).
+It climbed, but it turned the nose into a ramp at any speed.
+- **R122 failed:** on eris and CI 5450, the generated-road bank went from 0 to 8 roll-overs in turns, plus straight
+  runs off the road that ended on the roof (upY down to −0.877). A Ute running into a verge bank at 25–35 m/s rode up
+  it and rolled.
+- **Isolated with `JJ_TUNE` on eris:** with `approach_deg=0` every one of those throws stayed upright (min upY ≥ 0.937).
+  The off-track grip only worsened one.
+- **No angle served both:** ≤ 20° kept R122's failing throws upright but stalled on the real lab bank; ≥ 22° rolled.
 
-| Approach | Head-on: Cruz after 0.5 s | Ute's front lost / Cruz's | 50° from rest: 10 m up |
-|---|---|---|---|
-| 18° | −1.88 m/s | 32% / 100% | stalls |
-| 20° | −1.87 m/s | 32% / 100% | 5.1 s (Cruz 5.0 s) |
-| 22° | −1.77 m/s | 33% / 100% | 4.3 s |
-| **25°** | **−1.30 m/s** | **21% / 66%** | **3.8 s** |
-| 31° | +0.08 m/s (rides up) | 22% / 69% | 3.5 s |
+### What ships: the nose climbs at a crawl (`crate::climb`)
+
+The collider keeps its baked shape. A Rapier contact hook (`modify_solver_contacts`) acts only while all three hold:
+- the car is below `nose_climb.below_mps` (9 m/s);
+- the throttle is on;
+- a body contact with the ground sits ahead of the front axle on a bank face (normal y between the wall limit 0.34 and
+  0.95).
+
+Then that contact becomes a belt running up the face at `belt_mps` (8 m/s), the solver's conveyor tangent velocity, with
+a tyre's `grip` (2.0) instead of the body's 0.6. The bull bar rolls up the face the way a tyre's leading edge would,
+until the front wheels reach it and drive. At speed nothing changes, so R122's throws are as they were before FL12. The
+belt's work is authorised in the energy ledger: the car's energy gain that step, never negative.
+
+- `tuning.nose_climb` `{ below_mps 9, belt_mps 8, grip 2.0 }`; absent on every other car.
+- `surfaces.off_track` 0.45 → 0.75: the off-roader's all-terrain tyres. Every other car keeps 0.45.
+- The head-on test (`tradie_ute.rs`) is unchanged: the hook only acts on ground contacts.
 
 ## The climb bank (`crates/jj-sim/tests/climb.rs`)
 
@@ -48,9 +57,9 @@ holds full throttle; the figure is seconds to stand 10 m up the bank.
 
 | Grade | Cruz | Hawk | Lion | Ute before | **Ute now** |
 |---|---|---|---|---|---|
-| 40° | 3.09 s | 3.06 s | 3.07 s | stalls (0.7 m) | **2.91 s** |
-| 45° | 3.56 s | 3.75 s | 3.50 s | stalls (0.6 m) | **3.11 s** |
-| 50° | 5.00 s | stalls | 5.55 s | stalls (0.6 m) | **3.79 s** |
+| 40° | 3.09 s | 3.06 s | 3.07 s | stalls (0.7 m) | **2.88 s** |
+| 45° | 3.56 s | 3.75 s | 3.50 s | stalls (0.6 m) | **3.24 s** |
+| 50° | 5.00 s | stalls | 5.55 s | stalls (0.6 m) | **4.08 s** |
 
 Envelopes:
 - The Ute stands 10 m up 40°, 45° and 50° within 6 s, and stays on its wheels (up ≥ 0.5).
@@ -72,13 +81,14 @@ the host's test load spawns that roster index.
 
 | Run | Car | Verge | Envelope | Measured |
 |---|---|---|---|---|
-| `off-road-climb` | Ute | 40–50°, 6 m+ | 5 m or more above the road, up ≥ 0.5, no wreck | **7.7 m up**, on the plateau |
+| `off-road-climb` | Ute | 40–50°, 6 m+ | 5 m or more above the road, up ≥ 0.5, no wreck | **6.9 m up**, on the plateau |
 | `off-road-climb-cruz` | Cruz | the same bank | under 4 m above the road, no wreck | 2.8 m (stalls on the face) |
-| `off-road-wall` | Ute | 62°+, 4 m+ | at most 6 m above the road, no wreck | 0.0 m (stops at the face) |
+| `off-road-wall` | Ute | 62°+, 4 m+ | at most 6 m above the road, no wreck | 0.8 m (its nose against the face) |
 | `off-road-climb-lap` | Ute | autopilot from the start | a full lap (771 m), no wreck or recovery | 771 m in 97.4 s |
 
-The old Ute, with `--set approach_deg=0 --set surfaces.off_track=0.45`, fails `off-road-climb` at 0.9 m: it sits at the
-bank's foot. Hawk and Lion stall at 0.6 and 0.7 m. The scene's purpose is that the climb is the Ute's.
+The Ute without the climbing nose fails `off-road-climb` at 0.8 m, even on the 0.75 grip: it sits at the bank's foot.
+With a 6 m/s gate it reached the bank at 10.5 m/s across the shoulder with the hook off, and wedged 2.2 m up. The
+gate is 9 m/s. Hawk and Lion stall at 0.6 and 0.7 m. The scene's purpose is that the climb is the Ute's.
 
 **Which verges are climbable.** A bank of up to about 50° is climbable by the Ute. Past about 55°, no tyre holds: the
 Ute's off-track friction is 1.9 × 0.75 = 1.43, and tan 55° is 1.43. A first try at 38–55° picked a bank whose top step
@@ -95,12 +105,16 @@ scene into a running room is the scene picker, P1-FL03.1 (br-bbki.19, open).
 
 ## Fixtures re-baselined (one line each)
 
-- `scenarios/roster/mixed-host.json` hash `f83b8fc3…` → `39feddc7…`: the Ute's profile changed (approach, off-track
-  grip). The values reverted give the old hash.
+- `scenarios/roster/mixed-host.json` hash `f83b8fc3…` → `e8b9dd78…`: the Ute's off-track grip and its climbing nose
+  (no contact in that run climbs, so it's the grip).
 - `scenarios/assist/over-driven.json` `offMinOffRoadM` 7.0 → 6.5: the raw Ute's spin now stops at the road's edge
   (6.8 m, 180°) on its grippier off-track tyres (docs/evidence/P1-FL06/).
 
 ## Known gaps
+
+- **The fixture bike.** `bike_generated_road_speed_lock_bank` is red on a guard rail at seed 3 point 120 (upY 0.454).
+  That's the fixture bike, with a third of the roster bikes' balance torque; the roster bikes pass. It isn't this
+  bead's.
 
 - **Hanging on a wall.** Between about 55° and 70°, every car's drive fades out (`DRIVABLE_NORMAL_Y` 0.57 to
   `WALL_NORMAL_Y` 0.34, br-gw74.13). A car at full throttle can hang nose-up on a 60–65° face until the player backs off.

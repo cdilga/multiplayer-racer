@@ -10,6 +10,7 @@
 pub mod air;
 pub mod assist;
 pub mod autopilot;
+pub mod climb;
 pub mod damage;
 pub mod derby;
 pub mod items;
