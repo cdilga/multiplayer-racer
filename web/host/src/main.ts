@@ -302,12 +302,9 @@ async function boot(): Promise<void> {
         if (st && st.car !== null) world.launchCallouts.pop(st.car, sl.outcome);
       }
       // Landings (R129, P1-FL07): a clean landing's boost, a hard landing or a crash, popped over its car (OK says nothing).
-      const ld = (e as { Landed?: { seat: number; tier: LandingTier; long: boolean } }).Landed;
+      const ld = (e as { Landed?: { car: number; tier: LandingTier; long: boolean } }).Landed;
       const call = ld && landingCallout(ld.tier, ld.long);
-      if (ld && call) {
-        const st = client.room?.seats.find((x) => x.seat === ld.seat);
-        if (st && st.car !== null) world.launchCallouts.pop(st.car, call, LANDING_SHOWN_MS);
-      }
+      if (ld && call) world.launchCallouts.pop(ld.car, call, LANDING_SHOWN_MS);
       const dist = e.CameraDistanceSet;
       if (dist) {
         if (dist.distance === 'Near') distOfSeat.set(Number(dist.seat), 'near');

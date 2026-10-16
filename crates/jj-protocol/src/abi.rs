@@ -10,8 +10,8 @@ use crate::DecodeError;
 use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
-/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07).
-pub const ABI_VERSION: u16 = 4;
+/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows).
+pub const ABI_VERSION: u16 = 5;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -289,10 +289,12 @@ pub enum SimEvent {
         seat: SeatId,
         outcome: crate::cmd::LaunchOutcome,
     },
-    /// R129 (P1-FL07): how the seat's car came down from a jump; the TV pops it over the car. `long`: a clean landing
-    /// after a long flight (the higher boost tier).
+    /// R129 (P1-FL07): how a car came down from a jump; the TV pops it over the car. `car` is its index in the
+    /// snapshot (every car's landing shows, a bot's or a scenario's too); `seat` its player's, if it has one. `long`: a
+    /// clean landing after a long flight (the higher boost tier).
     Landed {
-        seat: SeatId,
+        car: u32,
+        seat: Option<SeatId>,
         tier: LandingTier,
         long: bool,
     },

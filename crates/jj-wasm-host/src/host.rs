@@ -1600,15 +1600,14 @@ impl Host {
                     }
                 }
                 Event::Landed { car, tier, long, .. } => {
-                    if let Some(seat) = self.seat_of_car(car) {
-                        let tier = match tier {
-                            jj_sim::air::LandingTier::Clean => jj_protocol::abi::LandingTier::Clean,
-                            jj_sim::air::LandingTier::Ok => jj_protocol::abi::LandingTier::Ok,
-                            jj_sim::air::LandingTier::Bad => jj_protocol::abi::LandingTier::Bad,
-                            jj_sim::air::LandingTier::Crash => jj_protocol::abi::LandingTier::Crash,
-                        };
-                        self.events.push(SimEvent::Landed { seat, tier, long });
-                    }
+                    let tier = match tier {
+                        jj_sim::air::LandingTier::Clean => jj_protocol::abi::LandingTier::Clean,
+                        jj_sim::air::LandingTier::Ok => jj_protocol::abi::LandingTier::Ok,
+                        jj_sim::air::LandingTier::Bad => jj_protocol::abi::LandingTier::Bad,
+                        jj_sim::air::LandingTier::Crash => jj_protocol::abi::LandingTier::Crash,
+                    };
+                    let seat = self.seat_of_car(car);
+                    self.events.push(SimEvent::Landed { car, seat, tier, long });
                 }
                 Event::LapCompleted { car, laps } => {
                     if let Some(seat) = self.seat_of_car(car) {

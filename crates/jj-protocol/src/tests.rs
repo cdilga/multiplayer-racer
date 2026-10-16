@@ -630,7 +630,8 @@ fn event_samples() -> Vec<SimEvent> {
             outcome: LaunchOutcome::Perfect,
         },
         SimEvent::Landed {
-            seat: SeatId(2),
+            car: 3,
+            seat: Some(SeatId(2)),
             tier: LandingTier::Clean,
             long: true,
         },
