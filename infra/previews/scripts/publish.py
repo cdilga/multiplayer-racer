@@ -435,8 +435,18 @@ async def main():
         secrets["JJ_BROKER_KEY"] = os.environ["JJ_BROKER_KEY"]
     reg = load_register()
     published = {p["sha"] for p in reg["previews"]}
-    todo = [(run, digest) for run, digest, why in candidates(secrets["SOURCE_READ_TOKEN"], published)
-            if why == "NEW" or (why == "already published" and "--republish" in sys.argv)]
+    if arg("--from-run"):
+        # Owner 2026-10-17: a preview from a CI run whose image is built even while its tests are red or still running,
+        # so work reaches the couch without waiting for green. The smoke still decides "playable".
+        _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/runs/{arg('--from-run')}", secrets["SOURCE_READ_TOKEN"])
+        run = json.loads(body)
+        digest = image_digest(secrets["SOURCE_READ_TOKEN"], run["head_sha"])
+        if not digest:
+            raise SystemExit(f"publish: run {run['id']} ({run['head_sha'][:8]}) has no image yet")
+        todo = [(run, digest)]
+    else:
+        todo = [(run, digest) for run, digest, why in candidates(secrets["SOURCE_READ_TOKEN"], published)
+                if why == "NEW" or (why == "already published" and "--republish" in sys.argv)]
     if not todo:
         if not edge_current(reg):
             # A run that died after recording a preview but before re-applying the edge (run 1714: the TrueNAS socket

@@ -58,4 +58,4 @@ jobs:
           JJ_BROKER_KEY: ${{ secrets.JJ_BROKER_KEY }}
           MODE: ${{ github.event.inputs.mode }}
         run: |
-          case "$MODE" in "") python3 infra/previews/scripts/publish.py ;; --republish) python3 infra/previews/scripts/publish.py --republish ;; "--resmoke v02-"*) python3 infra/previews/scripts/publish.py --resmoke "${MODE#--resmoke }" ;; *) echo "unknown mode $MODE"; exit 2 ;; esac
+          case "$MODE" in "") python3 infra/previews/scripts/publish.py ;; --republish) python3 infra/previews/scripts/publish.py --republish ;; "--resmoke v02-"*) python3 infra/previews/scripts/publish.py --resmoke "${MODE#--resmoke }" ;; "--from-run "[0-9]*) python3 infra/previews/scripts/publish.py --from-run "${MODE#--from-run }" ;; *) echo "unknown mode $MODE"; exit 2 ;; esac
