@@ -14,7 +14,7 @@
 //! rules' round-over, and acts on the outputs: prepare or cancel a map, warn not-ready phones, start the round.
 //!
 //! - **Start policy:** with the ready-based start armed, the round starts when every eligible seat is Ready (nonempty).
-//!   **Start now** starts anyway: not-ready seats get a warning (10 s, host-configurable 5–15 s), then everyone plays with
+//!   **Start now** starts anyway: not-ready seats get a warning (5 s, R137; host-configurable 3–15 s), then everyone plays with
 //!   their current car; pressing it again skips the countdown. Force overrides Ready only, never map readiness.
 //! - **Cohort freeze:** the start cohort freezes when a start begins. New seats join with their current selection and
 //!   don't restart it; an original seat un-readying cancels a ready-based start and returns where it came from.
@@ -38,7 +38,8 @@ mod tests;
 pub struct DirectorConfig {
     /// The 3-2-1 countdown (§10.6).
     pub countdown_ms: u32,
-    /// The "Starting soon" warning not-ready seats get on a host force-start (§10.6: 10 s, clamped to 5–15 s).
+    /// The "Starting soon" warning not-ready seats get on a host force-start (R137, owner 2026-10-16: 5 s, not §10.6's 10 s;
+    /// clamped to 3–15 s). The 3-2-1 countdown itself is `countdown_ms`.
     pub force_warning_ms: u32,
     /// Results and reel between rounds (§10.8: ~60 s, a host setting).
     pub intermission_ms: u32,
@@ -55,7 +56,7 @@ impl Default for DirectorConfig {
     fn default() -> Self {
         Self {
             countdown_ms: 3_000,
-            force_warning_ms: 10_000,
+            force_warning_ms: 5_000,
             intermission_ms: 60_000,
             finalise_timeout_ms: 5_000,
             ready_start_armed: true,
@@ -300,7 +301,7 @@ impl Default for Director {
 
 impl Director {
     pub fn new(mut cfg: DirectorConfig) -> Self {
-        cfg.force_warning_ms = cfg.force_warning_ms.clamp(5_000, 15_000);
+        cfg.force_warning_ms = cfg.force_warning_ms.clamp(3_000, 15_000);
         let armed = cfg.ready_start_armed;
         Self {
             cfg,

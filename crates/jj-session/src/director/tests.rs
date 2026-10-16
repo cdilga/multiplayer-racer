@@ -350,28 +350,28 @@ fn a_manual_pause_freezes_the_countdown_too() {
 // AC4: force-start gives not-ready seats a 10 s warning, then starts everyone with their current car.
 
 #[test]
-fn force_start_warns_not_ready_seats_for_ten_seconds_then_starts_everyone() {
+fn force_start_warns_not_ready_seats_for_five_seconds_then_starts_everyone() {
     let mut d = director();
     join(&mut d, &[A, B, C]);
     ready(&mut d, A, true);
     let out = d.apply(Input::StartNow);
     assert!(out.contains(&Output::ForceStartWarning {
         seats: vec![B, C],
-        ms: 10_000
+        ms: 5_000
     }));
     let id = requested(&out).unwrap();
-    // The map takes 4 s; the countdown then runs to the end of the warning, not just 3 s.
-    elapse(&mut d, 4_000);
+    // The map takes 1 s; the countdown then runs to the end of the 5 s warning (R137), not just 3 s.
+    elapse(&mut d, 1_000);
     let out = d.apply(Input::PrepareFinished { id, ok: true });
     assert!(out.contains(&Output::CountdownStarted {
         policy: StartPolicy::Forced,
-        ms: 6_000,
+        ms: 4_000,
         cohort: vec![A, B, C]
     }));
     // Force overrides Ready: un-readying doesn't cancel it.
     ready(&mut d, A, false);
-    assert!(started(&elapse(&mut d, 5_999)).is_none());
-    let (_, _, seats) = started(&elapse(&mut d, 1)).expect("starts at exactly 10 s");
+    assert!(started(&elapse(&mut d, 3_999)).is_none());
+    let (_, _, seats) = started(&elapse(&mut d, 1)).expect("starts at exactly 5 s");
     assert_eq!(seats, vec![A, B, C], "nobody is left behind");
 }
 
@@ -403,8 +403,8 @@ fn start_now_again_skips_the_countdown_but_never_the_map() {
 }
 
 #[test]
-fn the_warning_length_is_host_configurable_within_five_to_fifteen_seconds() {
-    for (asked, got) in [(1_000, 5_000), (7_000, 7_000), (60_000, 15_000)] {
+fn the_warning_length_is_host_configurable_within_three_to_fifteen_seconds() {
+    for (asked, got) in [(1_000, 3_000), (7_000, 7_000), (60_000, 15_000)] {
         let mut d = Director::new(DirectorConfig {
             force_warning_ms: asked,
             ..DirectorConfig::default()
