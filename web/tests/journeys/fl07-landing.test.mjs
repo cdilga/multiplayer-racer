@@ -55,6 +55,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
           assert.ok(landing, `${r.run}: the car landed`);
           assert.ok(r.tiers.includes(landing.tier), `${r.run}: ${JSON.stringify(landing)}`);
           await page.evaluate(async () => { await window.__jjTest.step(6); for (let i = 0; i < 6; i++) { window.__jjRender.frame(); await new Promise(q => setTimeout(q, 16)); } window.__jjRender.hold(); });
+          if (process.env.JJ_CAPTURE_DIR) await page.screenshot({ path: join(out, `${name}-${r.run}-${view}-1920x1080.jpg`), type: 'jpeg', quality: 85 });
           const shown = await page.evaluate(() => window.__jjRender.launchCalloutsShown());
           if (r.callout === null) assert.deepEqual(shown, [], `${r.run}: an OK landing says nothing`);
           else {
@@ -62,7 +63,6 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
             assert.ok(shown.some(s => s.car === 0 && want.includes(s.outcome)), `${r.run}: the TV calls it out: ${JSON.stringify(shown)}`);
             assert.ok((await page.evaluate(() => window.__jjRender.launchCallouts())).includes(0), `${r.run}: the callout is up over the car`);
           }
-          if (process.env.JJ_CAPTURE_DIR) await page.screenshot({ path: join(out, `${name}-${r.run}-${view}-1920x1080.jpg`), type: 'jpeg', quality: 85 });
           await page.close();
         }
       }
