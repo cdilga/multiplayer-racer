@@ -12,6 +12,7 @@
 pub mod arena;
 pub mod bridge;
 pub mod canon;
+pub mod fork;
 mod geom;
 pub mod jump;
 pub mod kit;

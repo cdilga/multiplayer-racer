@@ -233,8 +233,12 @@ pub fn place_in_tuned(
     ranges: &[(f64, f64, Density)],
     jumps: crate::tuning::JumpData,
 ) {
-    map.features
-        .retain(|f| matches!(f.kind, FeatureKind::Bridge | FeatureKind::SetPiece));
+    map.features.retain(|f| {
+        matches!(
+            f.kind,
+            FeatureKind::Bridge | FeatureKind::SetPiece | FeatureKind::Fork
+        )
+    });
     let line = Line::new(map);
     // Counts per range: whole expected number plus one more with the fractional probability.
     let mut kinds: Vec<(FeatureKind, f64, f64)> = Vec::new();
@@ -425,7 +429,11 @@ fn draw_params(
             p.insert("lengthMm".into(), whole(rng, 34.0, 50.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
-        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => {}
+        FeatureKind::Kerb
+        | FeatureKind::Bowl
+        | FeatureKind::Bridge
+        | FeatureKind::SetPiece
+        | FeatureKind::Fork => {}
     }
     p
 }
@@ -549,7 +557,11 @@ fn delta(
                 * libm::sin(core::f64::consts::TAU * u / pitch)
                 * road_wide()
         }
-        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => 0.0,
+        FeatureKind::Kerb
+        | FeatureKind::Bowl
+        | FeatureKind::Bridge
+        | FeatureKind::SetPiece
+        | FeatureKind::Fork => 0.0,
     }
 }
 
@@ -693,8 +705,8 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
-        if f.kind == FeatureKind::SetPiece {
-            // Checked against its own contract (crate::setpieces::check).
+        if matches!(f.kind, FeatureKind::SetPiece | FeatureKind::Fork) {
+            // Checked against its own contract (crate::setpieces::check, jj_map::fork::problems).
             continue;
         }
         if f.kind == FeatureKind::Bridge {
@@ -835,8 +847,11 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 // Whoops are rough by design: grade only.
                 shape_ok(&name, &line, &h, i0, i1, None, &mut bad);
             }
-            FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => {
-            }
+            FeatureKind::Kerb
+            | FeatureKind::Bowl
+            | FeatureKind::Bridge
+            | FeatureKind::SetPiece
+            | FeatureKind::Fork => {}
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

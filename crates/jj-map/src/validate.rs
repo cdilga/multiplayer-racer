@@ -95,6 +95,9 @@ pub enum Rule {
     ItemStation,
     /// A set piece breaks its contract: params, its pit, a straight core, the ballistic landing band, or a gate inside it.
     SetPiece,
+    /// A route fork breaks its contract (P1-FL16): params, split/merge angles, width, length, its branch's paving, grade
+    /// or radius, or a gate inside its span.
+    Fork,
 }
 
 impl Rule {
@@ -129,6 +132,7 @@ impl Rule {
             Self::Crossing => "crossing",
             Self::ItemStation => "item-station",
             Self::SetPiece => "set-piece",
+            Self::Fork => "fork",
         }
     }
 }
@@ -348,6 +352,14 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
             .filter_map(crate::setpiece::GapLeap::of)
             .filter(|d| idx_ok(d.from) && idx_ok(d.to))
             .map(|d| (geom.s_of(d.from as usize), geom.s_of(d.to as usize)))
+            // A fork's span likewise has no gate inside it: its branch leaves the road.
+            .chain(
+                map.features
+                    .iter()
+                    .filter_map(crate::fork::Fork::of)
+                    .filter(|d| idx_ok(d.from) && idx_ok(d.to))
+                    .map(|d| (geom.s_of(d.from as usize), geom.s_of(d.to as usize))),
+            )
             .collect();
         for (k, gap) in gaps {
             let a = s[k];
@@ -720,6 +732,32 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
             FeatureKind::Bridge => {
                 for detail in crate::bridge::problems(map, f) {
                     add(&mut v, Rule::Crossing, &at, detail);
+                }
+            }
+            FeatureKind::Fork => {
+                for detail in crate::fork::problems(map, f) {
+                    add(&mut v, Rule::Fork, &at, detail);
+                }
+                if let Some(d) = crate::fork::Fork::of(f)
+                    && idx_ok(d.from)
+                    && idx_ok(d.to)
+                {
+                    let s0 = geom.s_of(d.from as usize);
+                    let s1 = s0 + geom.span_len(s0, geom.s_of(d.to as usize));
+                    for g in r.gates.iter().filter(|g| idx_ok(g.at)) {
+                        let gs = geom.s_of(g.at as usize);
+                        if g.at != d.from && g.at != d.to && geom.in_range(gs, s0, s1) {
+                            add(
+                                &mut v,
+                                Rule::Fork,
+                                &at,
+                                format!(
+                                    "gate at route point {} is inside the fork (its branch would miss it)",
+                                    g.at
+                                ),
+                            );
+                        }
+                    }
                 }
             }
             FeatureKind::SetPiece => {

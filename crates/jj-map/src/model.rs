@@ -199,6 +199,9 @@ pub enum FeatureKind {
     /// A set piece that owns the terrain in its footprint (R132; appended so older maps keep their bytes). The gap
     /// leap family (canyon leap, mesa drop, creek washout): params and contract in [`crate::setpiece`].
     SetPiece,
+    /// A route fork (R134, P1-FL16; appended so older maps keep their bytes): a branch that leaves the road and rejoins
+    /// it. Params and the branch's line are in [`crate::fork`].
+    Fork,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
