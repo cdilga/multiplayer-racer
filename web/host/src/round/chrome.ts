@@ -429,8 +429,14 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     const hostLine = hs
       ? `<p class="dg-line" data-diag-host>Host frame <b>${ms(hs.frameMs)}</b>${hs.p95Ms !== null ? ` · p95 ${ms(hs.p95Ms)}` : ''}${hs.padAgeMs !== null ? ` · host pads' input age ${ms(hs.padAgeMs)}` : ''}</p>`
       : '';
+    // Track seeds (owner 2026-10-17): the session seed (`?seed=` on the host page replays it) and the built tracks' seeds.
+    const w = window as unknown as { __jjSession?: { seed: number }; __jjPrepare?: { seeds(): Array<{ seed: number; lengthM?: number }> } };
+    const built = (w.__jjPrepare?.seeds() ?? []).filter((s) => s.lengthM !== undefined);
+    const seedLine = w.__jjSession
+      ? `<p class="dg-line" data-diag-seed>Session seed <b>${w.__jjSession.seed}</b>${built.length ? ` · track seed <b>${built[built.length - 1]!.seed}</b>` : ''}${built.length > 1 ? ` · before: ${built.slice(-4, -1).map((s) => s.seed).join(', ')}` : ''}</p>`
+      : '';
     if (!state.diagnostics) return; // closed while the numbers were fetched
-    const html = `<h3 class="display">Diagnostics</h3><p class="dg-line">Room <b data-diag-code>${esc(opts.code)}</b> · ${esc(room.phase)}${room.round ? ` · round ${room.round}` : ''} · ${seats.length} in the room</p>${hostLine}
+    const html = `<h3 class="display">Diagnostics</h3><p class="dg-line">Room <b data-diag-code>${esc(opts.code)}</b> · ${esc(room.phase)}${room.round ? ` · round ${room.round}` : ''} · ${seats.length} in the room</p>${seedLine}${hostLine}
       <table><thead><tr><th></th><th>Player</th><th>Path</th><th>RTT</th></tr></thead><tbody>${rows.join('')}${loose.join('')}</tbody></table>
       <p class="dg-note">Addresses are never shown.</p>`;
     if (diagEl.dataset.last !== html) {

@@ -196,7 +196,12 @@ async function boot(): Promise<void> {
       testing = null;
     }
   }
-  const seed = 1;
+  // The session seed (owner 2026-10-17): random for every new room, so rooms don't all play the same tracks; a track's
+  // seed is this plus its preparation id. `?seed=N` replays a session's tracks; test pages keep 1 so journeys repeat.
+  const seed = params.has('seed')
+    ? Number(params.get('seed')) >>> 0
+    : testing ? 1 : crypto.getRandomValues(new Uint32Array(1))[0]! >>> 1;
+  (window as unknown as { __jjSession: { seed: number } }).__jjSession = { seed };
   const client = new SimClient(testing?.createWorker());
   await client.start({ mapJson: greybox, seed, vehicles: rosterProfiles() }, testing ? { live: params.get('test') === 'live', describe: true } : {});
   client.followVisibility();
