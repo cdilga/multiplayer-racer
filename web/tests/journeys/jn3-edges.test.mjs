@@ -77,6 +77,7 @@ test('force-start: Start race with one player not ready warns, counts down and r
   assert.equal((await view(host)).phase, 'Lobby', 'one of two ready does not start the race on its own');
   await shot(host, 'tv-force-lobby-one-ready');
 
+  const startedAt = Date.now();
   await host.locator('[data-act=start]').click();
   await wait(host, () => ['Preparing', 'Countdown'].includes(window.__jjRoom.view().phase));
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
@@ -86,10 +87,13 @@ test('force-start: Start race with one player not ready warns, counts down and r
   const v = await view(host);
   assert.deepEqual(v.seats.map((s) => s.car !== null), [true, true], 'both seats, ready or not, are on the grid');
   assert.equal(await cars(host), 2, 'the not-ready player races too');
-  // The not-ready player gets a longer warning than a normal 3-2-1.
-  assert.ok(shown > 3, `the force-start warning lengthens the countdown (${shown} on the TV as it began)`);
+  assert.ok(shown >= 1 && shown <= 5, `the TV shows a 3-2-1 style count (${shown} as it began)`);
 
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
+  // R137: the not-ready player gets a 5 s warning, not just a 3-2-1. Map prep eats into it, so the count can begin as low as 3;
+  // what is guaranteed is that the race does not start before the warning is over, measured from the Start click.
+  const warned = Date.now() - startedAt;
+  assert.ok(warned >= 4900, `the race did not start before the 5 s force-start warning ended (${warned} ms after Start)`);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 280_000);
   const results = (await view(host)).results;

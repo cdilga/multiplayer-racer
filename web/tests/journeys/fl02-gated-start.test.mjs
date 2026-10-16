@@ -37,9 +37,13 @@ const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { tim
 const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png`, timeout: 120_000 });
 
 // A launch gesture run entirely inside one phone's page, off the countdown the host sent it (RoomState: phase and ms left).
-//   'early'  pull back, hold 0.5 s, snap forward: still inside the countdown, so the host forfeits this start's launch.
+// The force-start warning is 5 s and map prep eats into it, so the phone can see as little as ~2.6 s of countdown: every
+// gesture is armed before Start, goes by the phone's own clock (GO = when it last heard "n ms left" + n), and fits in 2 s.
+//   'early'  pull back, hold up to 0.5 s, snap forward while at least 0.3 s of the countdown is left (the last 150 ms before
+//            GO the host holds a snap for GO instead): a false start, so the host forfeits this start's launch.
 //   'late'   wait for GO, charge 0.5 s later, hold 0.4 s, snap forward: a normal launch.
-//   'at-go'  pull back for the last 0.6 s of the countdown, snap forward when the phone is told the race is on.
+//   'at-go'  pull back for the last 0.5 s of the countdown, snap forward when the phone is told the race is on (never before
+//            holding 0.35 s, the least a good launch needs; never past the 1.2 s that cancels a preload).
 const phoneGesture = (page, kind) =>
   page.evaluate(
     (kind) =>
@@ -48,18 +52,35 @@ const phoneGesture = (page, kind) =>
         const sticks = (y) => c.setSticks({ x: 0, y, touch: y !== 0 }, { x: 0, y: 0, touch: false });
         const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         const deadline = performance.now() + 120_000;
+        // GO by this phone's clock, refreshed whenever the host sends a new "ms left".
+        let goAt = null;
+        let lastMs = null;
+        const look = () => {
+          const s = c.inspect();
+          if (s.roomPhase === 'Countdown' && s.countdownMs > 0 && s.countdownMs !== lastMs) {
+            lastMs = s.countdownMs;
+            goAt = performance.now() + s.countdownMs;
+          }
+          return s;
+        };
         const tick = async () => {
           try {
-            let s = c.inspect();
+            let s = look();
             while (!(s.roomPhase === 'Countdown' && s.countdownMs > 0)) {
               if (performance.now() > deadline) throw new Error('the phone never saw the countdown');
               await sleep(5);
-              s = c.inspect();
+              s = look();
             }
-            const goAt = performance.now() + s.countdownMs;
             if (kind === 'early') {
+              const left = goAt - performance.now();
+              if (left < 600) throw new Error(`the phone saw only ${Math.round(left)} ms of countdown: no room for an early snap`);
               sticks(1);
-              await sleep(500);
+              // Hold 0.5 s, less if the countdown is short, so the snap lands with at least 0.3 s to spare.
+              const hold = Math.max(150, Math.min(500, goAt - performance.now() - 450));
+              await sleep(hold);
+              look();
+              const spare = goAt - performance.now();
+              if (spare < 300 || c.inspect().roomPhase !== 'Countdown') throw new Error(`the early snap would land with ${Math.round(spare)} ms of countdown left`);
               sticks(-1);
               await sleep(100);
               sticks(0);
@@ -75,9 +96,18 @@ const phoneGesture = (page, kind) =>
               await sleep(100);
               sticks(0);
             } else {
-              while (goAt - performance.now() > 600) await sleep(5);
+              while (c.inspect().roomPhase === 'Countdown' && goAt - performance.now() > 500) {
+                look();
+                await sleep(5);
+              }
+              const pulledAt = performance.now();
               sticks(1);
-              while (c.inspect().roomPhase !== 'Racing') {
+              for (;;) {
+                look();
+                const racing = c.inspect().roomPhase === 'Racing';
+                const held = performance.now() - pulledAt;
+                if (racing && held >= 350) break;
+                if (held > 1100) throw new Error(`the phone held the pull ${Math.round(held)} ms and the race has not started`);
                 if (performance.now() > goAt + 10_000) throw new Error('the phone never saw GO');
                 await sleep(2);
               }

@@ -88,7 +88,9 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
   // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
-  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
+  // The 15 s are the host's sim clock, which a loaded software-WebGL runner runs well below real time (CI run 5196 saw 33 s of wall
+  // time pass with the cars ~31 sim s along), so the wait is for the cue, not for a wall-clock bound.
+  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 90_000).catch(async (e) => {
     const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
     const view = await host.evaluate(async () => ({ room: window.__jjRoom.view(), observed: await window.__jjTest.observe() }));
     const controller = await a.page.evaluate(() => ({ state: window.__jjController.inspect(), tutorial: window.__jjTutorial.inspect() }));
