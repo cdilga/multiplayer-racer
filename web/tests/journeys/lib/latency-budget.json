@@ -1,12 +1,12 @@
 {
-  "what": "Thumb-to-screen latency budget per stage (P1-FL17, R134), checked by web/tests/journeys/fl17-latency.test.mjs. hostSide holds on every CI host, software-rendered or not (ms): mainToWorker is a postMessage, workerToTick may wait for at most one 120 Hz tick boundary plus the worker's 2 ms loop, so p99 under two ticks. hostSideGpu adds the render stages and holds only with a real GPU (JJ_CHROMIUM_GPU=1, the CI GPU workflow on eris): renderLagTicks is how far the drawn tick trails the newest snapshot, in 120 Hz ticks (the interpolation delay plus at most a frame). wholePath is the target for a real run on the owner's LAN, recorded in docs/evidence/P1-FL17/.",
+  "what": "Thumb-to-screen latency budget per stage (P1-FL17, R134), checked by web/tests/journeys/fl17-latency.test.mjs (ms, except renderLagTicks in 120 Hz ticks). hostSideGpu is the budget: it holds with a real GPU (JJ_CHROMIUM_GPU=1, the CI GPU workflow on eris, every push): mainToWorker is a postMessage; workerToTick waits for at most one 120 Hz tick boundary plus the worker's 2 ms loop, so p99 under two ticks; renderLagTicks is how far the drawn tick trails the newest snapshot (the interpolation delay plus at most a frame); tickToDrawn is that delay plus a frame. hostSide is a regression bound for CI's software-rendered browser lanes, where a loaded runner draws at 7-30 fps and starves the main thread and the worker (run 5000: frame p99 133 ms, mainToWorker p99 8.6, workerToTick p99 18.1): about three times the budget, so it still catches an added queue or a lost tick boundary. wholePath is the target for a real run on the owner's LAN, recorded in docs/evidence/P1-FL17/.",
   "version": 1,
   "hostSide": {
     "mainToWorker": {
-      "p99": 8
+      "p99": 25
     },
     "workerToTick": {
-      "p99": 16.7
+      "p99": 35
     }
   },
   "wholePath": {
@@ -36,6 +36,12 @@
     }
   },
   "hostSideGpu": {
+    "mainToWorker": {
+      "p99": 8
+    },
+    "workerToTick": {
+      "p99": 16.7
+    },
     "renderLagTicks": {
       "p99": 5
     },

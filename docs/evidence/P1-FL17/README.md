@@ -22,11 +22,18 @@ slowest touches by their place in the run.
 
 ## Budget (committed: `web/tests/journeys/lib/latency-budget.json`)
 
-- **hostSide, gated on every CI host** (SwiftShader browser lanes included): mainToWorker p99 ≤ 8 ms, workerToTick
-  p99 ≤ 16.7 ms (two ticks: one boundary plus the worker's 2 ms loop, with margin for a loaded runner).
-- **hostSideGpu, gated only with a real GPU** (`JJ_CHROMIUM_GPU=1`; fl17 is on the CI GPU list, so it runs on eris on
-  every push): renderLagTicks p99 ≤ 5, tickToDrawn p99 ≤ 60 ms. On SwiftShader these numbers measure the software
-  rasteriser (24-30 fps on the Mac), not the game.
+- **hostSideGpu, the budget**, gated with a real GPU (`JJ_CHROMIUM_GPU=1`). fl17 is on the CI GPU list, so it runs on
+  eris on every push:
+  - mainToWorker p99 ≤ 8 ms.
+  - workerToTick p99 ≤ 16.7 ms: two ticks, one boundary plus the worker's 2 ms loop.
+  - renderLagTicks p99 ≤ 5.
+  - tickToDrawn p99 ≤ 60 ms.
+- **hostSide, a regression bound for CI's software-rendered browser lanes**: mainToWorker p99 ≤ 25, workerToTick
+  p99 ≤ 35.
+  - A loaded runner draws at 7-30 fps and starves the main thread and the worker. Run 5000: frame p99 133 ms,
+    mainToWorker p99 8.6, workerToTick p99 18.1, which failed a tight bound there.
+  - That measures the runner, not the game. The bound is about three times the budget, so it still catches an added
+    queue or a lost tick boundary.
 - **wholePath, the target for a real run on the owner's LAN, reported but not gated**: touchToSend 4/34, network 10/40,
   mainToWorker 2/8, workerToTick 7/14, tickToDrawn 40/60, total 75/120 (p50/p99 ms).
 

@@ -61,9 +61,10 @@ export function summarise(rows, frames) {
   return out;
 }
 
-/** The host-side stages over their committed budget (CI fails on any); `gpu` adds the render stages' budget. */
+/** The host-side stages over their committed budget (CI fails on any): the budget with a real GPU, the regression bound on
+ *  a software-rendered runner. */
 export function overBudget(summary, gpu = false) {
-  const budget = { ...BUDGET.hostSide, ...(gpu ? BUDGET.hostSideGpu : {}) };
+  const budget = gpu ? BUDGET.hostSideGpu : BUDGET.hostSide;
   const problems = [];
   for (const [stage, limits] of Object.entries(budget)) {
     for (const [q, limit] of Object.entries(limits)) {
