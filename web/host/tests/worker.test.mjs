@@ -210,7 +210,12 @@ test('AC4: starving the snapshot buffers never blocks physics or drops events', 
   assert.ok(starved.wallMs < 9000, `physics kept real time while starved: ${STOP} ticks in ${starved.wallMs} ms`);
   assert.equal(starved.hash, fed.hash);
   assert.ok(evidence.ac4.seatJoined >= 30 && evidence.ac4.outbound >= 30, JSON.stringify(evidence.ac4));
-  assert.deepEqual(starved.lines, fed.lines, 'the starved run lost or reordered events');
+  // Each stream keeps its order; how events interleave with outbound bytes is not a contract: a drain hands over the
+  // ticks' event batch before the outbound queue, so it depends on how many ticks one wake stepped (CI run 5414).
+  const stream = (r, p) => r.lines.filter((l) => l.startsWith(p));
+  assert.deepEqual(stream(starved, 'event '), stream(fed, 'event '), 'the starved run lost or reordered events');
+  assert.deepEqual(stream(starved, 'outbound '), stream(fed, 'outbound '), 'the starved run lost or reordered outbound bytes');
+  assert.equal(starved.lines.length, fed.lines.length, 'the starved run lost or added lines');
 });
 
 test('AC5: a worker panic surfaces as the fault pause reason', { timeout: 30_000 }, async () => {
