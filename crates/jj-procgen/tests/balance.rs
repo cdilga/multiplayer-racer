@@ -112,7 +112,7 @@ fn lap(
         if sim.race().car(car.0).is_some_and(|rc| rc.wrecks > 0) {
             break;
         }
-        if sim.tick() % (STUCK_S * S) == 0 {
+        if sim.tick().is_multiple_of(STUCK_S * S) {
             let at = sim.race().progress_m(car.0);
             if sim.tick() > 0 && at - last_progress < STUCK_M {
                 sim.recover(car);
