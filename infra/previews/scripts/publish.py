@@ -1,6 +1,6 @@
-"""Publishes green 0.2 builds as rainbow previews (P1-D03/D04, plan §12, R85).
+"""Publishes 0.2 builds as rainbow previews (P1-D03/D04, plan §12, R85): every CI run whose image built, red or green.
 
-Polled by .gitea/workflows/publish.yml. For each new green CI run on cdilga/multiplayer-racer's v0.2-revamp whose
+Polled by .gitea/workflows/deploy-previews.yml. For each new CI run (red, green or running; owner 2026-10-17) on cdilga/multiplayer-racer's v0.2-revamp whose
 `jj-server` image is in the registry:
 
 1. a fresh, never-reused deployment id `v02-<sha8>` (a suffix if that commit was published before);
@@ -80,14 +80,18 @@ def gitea(path: str, token: str, accept: str = "application/json"):
 
 
 def green_runs(token: str) -> list[dict]:
+    # Owner 2026-10-17 (AGENTS.md, "CI has one owner", rule 2): every CI run whose image built publishes, red, green or
+    # still running; the smoke decides "playable". So the poll takes the recent ci.yml runs whatever their conclusion,
+    # and the image in the registry (built or re-tagged by the run's image job) is what makes one publishable. A run
+    # replaced before its image job ran has no image and is skipped. (Name kept: callers and --plan print "green run".)
     # ci.yml's own runs: in the repo-wide listing the deploy workflows' 5-minute successes (R117, same repo now) and
-    # gpu.yml's pushed every green ci.yml run out of the 20-run window.
-    _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/workflows/ci.yml/runs?branch={BRANCH}&status=success&limit=20", token)
-    # Only the game's main CI (ci.yml) counts: Gitea leaves `name` empty, and gpu.yml's green runs must not publish a commit.
+    # gpu.yml's pushed every ci.yml run out of the 20-run window.
+    _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/workflows/ci.yml/runs?branch={BRANCH}&limit=50", token)
+    # Only the game's main CI (ci.yml) counts: Gitea leaves `name` empty, and gpu.yml's runs must not publish a commit.
     runs = [r for r in json.loads(body).get("workflow_runs", []) if r.get("path", "").split("@")[0].rsplit("/", 1)[-1] == "ci.yml"]
     seen, out = set(), []
     for r in sorted(runs, key=lambda r: r["id"], reverse=True):
-        if r["head_sha"] not in seen and r.get("conclusion") == "success":
+        if r["head_sha"] not in seen and r.get("conclusion") != "cancelled":
             seen.add(r["head_sha"])
             out.append(r)
     return out[:RECENT]
@@ -345,7 +349,7 @@ def redacted(preview_id: str, digest: str) -> dict:
 
 
 def candidates(token: str, published: set | None = None):
-    """(run, digest, verdict) for the recent green ci.yml runs, newest first, down to the newest one that has an image:
+    """(run, digest, verdict) for the recent ci.yml runs (red or green, rule 2), newest first, down to the newest one that has an image:
     that one is "NEW" or "already published"; newer ones without an image are "no image (CI didn't build one)"."""
     if published is None:
         published = {p["sha"] for p in load_register()["previews"]}
@@ -412,7 +416,7 @@ async def resmoke(preview_id: str):
 
 
 def needs_work() -> bool:
-    """True when a poll has something to do: a new green build with an image, or an edge index behind the register.
+    """True when a poll has something to do: a new build with an image (red or green, rule 2), or an edge index behind the register.
     Checked before the slow tool install (Playwright and its libraries took ~7 of every 8 minutes, so the 5-minute
     poll ran back to back and replaced every waiting dispatch)."""
     reg = load_register()

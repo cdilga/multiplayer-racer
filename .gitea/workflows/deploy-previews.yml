@@ -1,4 +1,4 @@
-# Publishes green 0.2 builds as rainbow previews (P1-D04, R117): every 5 minutes and on demand. Code: infra/previews/.
+# Publishes 0.2 builds as rainbow previews (P1-D04, R117): every CI run whose image built, red or green (owner 2026-10-17), every 5 minutes and on demand. Code: infra/previews/.
 # Deploy workflow: runs only on the `jammers-deploy` runner (TrueNAS); only deploy-*.yml may name the deploy secrets
 # (scripts/ci/check-deploy-secrets.sh). What is deployed is recorded in git as tags and commit statuses
 # (infra/previews/scripts/record.py), never as commits, so publishing never starts a CI run.

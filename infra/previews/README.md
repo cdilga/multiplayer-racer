@@ -10,7 +10,7 @@ in the checks job).
 |---|---|
 | `.gitea/workflows/deploy-previews.yml` | every 5 min + on demand: `scripts/publish.py` |
 | `.gitea/workflows/deploy-retention.yml` | hourly + on demand: `scripts/retention.py` (publish also reconciles) |
-| `scripts/publish.py` | green CI run + image digest → a TrueNAS app `jjp-<id>` per preview, health, smoke, the git record |
+| `scripts/publish.py` | CI run (red or green, owner 2026-10-17) + image digest → a TrueNAS app `jjp-<id>` per preview, health, smoke, the git record |
 | `scripts/record.py` | **git is the record of what is deployed**: tags and commit statuses (below) |
 | `scripts/smoke.mjs` | the fixed public smoke steps (`room`, `join-webrtc`, `input`, `resume`, `drive`, `hud`, `round`), all mandatory since P1-D07 |
 | `scripts/retention.py` | pins, Latest, the three newest (any age) and anything under 24 h stay; the rest are retired (R118) |
