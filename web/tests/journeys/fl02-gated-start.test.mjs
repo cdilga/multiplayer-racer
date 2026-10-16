@@ -228,9 +228,12 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   // C: charge a little after GO, snap 0.4 s later -> Launch.
   await gestureC;
 
-  await wait(B, () => ['Perfect', 'Launch'].includes(window.__jjController.inspect().launchOutcome), undefined, 30_000);
+  // B's and C's outcomes are read from the host's persistent callout log, not the phones' 2.2 s banner (on a loaded runner
+  // the banner can come and go between polls: CI runs 5253, 5343). The phone banner is checked for A above.
+  const carsBySeat = await host.evaluate(() => Object.fromEntries(window.__jjRoom.view().seats.map((s) => [s.seat, s.car])));
+  await wait(host, (cs) => cs.every((car) => window.__jjRender.launchCalloutsShown().some((s) => s.car === car)),
+    [carsBySeat[seatOf('Shazza')], carsBySeat[seatOf('Mick')]], 30_000);
   await shot(B, 'phone-b-outcome');
-  await wait(C, () => window.__jjController.inspect().launchOutcome === 'Launch', undefined, 30_000);
   await shot(C, 'phone-launch');
   await shot(host, 'tv-launch');
   await host.waitForTimeout(1500);
