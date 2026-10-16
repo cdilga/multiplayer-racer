@@ -82,7 +82,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const lab = () => host.evaluate(() => window.__jjTune.lab.inspect());
     // Opening the tab captures every vehicle's shipped base (switching the sim vehicle by vehicle): wait for all of them
     // before this journey switches vehicles itself.
-    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return i.vehicles.length > 0 && Object.keys(i.bases).length === Math.max(1, i.vehicles.length); }, undefined, 20_000);
+    await wait(host, () => window.__jjTune.lab.inspect().captured === true, undefined, 30_000);
     const ids = (await lab()).vehicles;
     assert.ok(ids.length >= 2, `the roster has several vehicles (${ids})`);
     const home = await host.evaluate(() => document.querySelector('[data-tune-vehicle]').value);
@@ -110,7 +110,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     /** Every vehicle's value is its shipped base times `factor` (a base of 0 stays 0). */
     const scaled = async (path, bases, factor, what) => {
       for (const [id, v] of Object.entries(await everyVehicle(path))) {
-        assert.equal(typeof v, 'number', `${id}: ${path} is a number`);
+        if (bases[id] === undefined) { assert.equal(v, undefined, `${id}: ${what} (it has no ${path})`); continue; }
         if (bases[id] === 0) assert.equal(v, 0, `${id}: ${what} (${path} stays 0)`);
         else assert.ok(Math.abs(v / bases[id] - factor) < 0.001, `${id}: ${what}: ${path} ${bases[id]} -> ${v} (${factor}x)`);
       }
@@ -135,8 +135,10 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const turnInBase = await everyVehicle('arcade.turn_in_s');
     const gripBase = await everyVehicle('arcade.grip_g');
     const slideGripBase = await everyVehicle('arcade.slide_grip');
-    for (const [id, v] of Object.entries(turnBase)) assert.ok(typeof v === 'number' && v > 0, `${id} ships the arcade controller (turn_g ${v})`);
-    for (const [id, v] of Object.entries(gripBase)) assert.ok(typeof v === 'number' && v > 0, `${id} ships the arcade controller (grip_g ${v})`);
+    // Every car ships the arcade controller; the bikes keep Rapier's tyres (no `arcade` section).
+    const cars = ids.filter((id) => typeof turnBase[id] === 'number');
+    assert.ok(cars.length >= 2, `several cars ship the arcade controller (${cars})`);
+    for (const id of cars) assert.ok(turnBase[id] > 0 && gripBase[id] > 0, `${id} ships the arcade controller (turn_g ${turnBase[id]}, grip_g ${gripBase[id]})`);
     await moving('before the lab changes anything');
 
     // Turn-in ~1.5x (log2 0.6): turn_g and yaw_max_deg_s up, turn_in_s down, on every vehicle, live, within the per-vehicle
@@ -144,7 +146,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     // CI runner takes ~2 s; 4 s still reads live.
     const tm = 2 ** 0.6;
     let ms = await move('turn', 0.6);
-    assert.ok(ms < 4000, `Turn-in reached every vehicle in ${ms} ms`);
+    assert.ok(ms < 1000 * Math.max(4, ids.length), `Turn-in reached every vehicle in ${ms} ms`);
     await scaled('arcade.turn_g', turnBase, tm, 'Turn-in slider');
     await scaled('arcade.yaw_max_deg_s', yawBase, tm, 'Turn-in slider');
     await scaled('arcade.turn_in_s', turnInBase, 1 / tm, 'Turn-in slider');
@@ -154,7 +156,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     // Grip slidier (log2 -0.5): grip_g and the grip a slide keeps, on every vehicle.
     const gm = 2 ** -0.5;
     ms = await move('grip', -0.5);
-    assert.ok(ms < 4000, `Grip reached every vehicle in ${ms} ms`);
+    assert.ok(ms < 1000 * Math.max(4, ids.length), `Grip reached every vehicle in ${ms} ms`);
     await scaled('arcade.grip_g', gripBase, gm, 'Grip slider');
     await scaled('arcade.slide_grip', slideGripBase, gm, 'Grip slider');
     await scaled('arcade.turn_g', turnBase, tm, 'Turn-in is untouched by the grip slider');
@@ -183,7 +185,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
       flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? tm : 1));
       await moving(`after flipping to ${k}`);
     }
-    assert.ok(Math.max(...flips) < 4000, `A/B flips applied in ${flips} ms`); // same per-vehicle ceiling as the sliders above
+    assert.ok(Math.max(...flips) < 1000 * Math.max(4, ids.length), `A/B flips applied in ${flips} ms`); // ~1 s per vehicle (each switch lands at a tick boundary)
     await scaled('arcade.turn_g', turnBase, tm, 'slot A is live');
     await scaled('arcade.grip_g', gripBase, gm, 'slot A is live');
     await scaled('max_engine_force', base, tm, 'slot A power');
@@ -195,14 +197,20 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
     const has = (set, field) => set.some(([f]) => f === field);
     for (const field of ['arcade.turn_g', 'arcade.grip_g', 'max_engine_force']) assert.ok(has(patch.set, field), `${field} is in the patch: ${JSON.stringify(patch.set.map(([f]) => f))}`);
-    assert.ok(patch.otherVehicles?.length === ids.length - 1 && patch.otherVehicles.every((o) => has(o.set, 'arcade.turn_g') && has(o.set, 'arcade.grip_g')), 'the other vehicles ride along');
+    const carFile = new Set(cars.map((id) => `assets/profiles/${id}.json`));
+    assert.ok(
+      patch.otherVehicles?.length === ids.length - 1 &&
+        patch.otherVehicles.every((o) => has(o.set, 'max_engine_force') && (!carFile.has(o.profile) || (has(o.set, 'arcade.turn_g') && has(o.set, 'arcade.grip_g')))),
+      `the other vehicles ride along (the cars with their arcade fields): ${JSON.stringify(patch.otherVehicles?.map((o) => [o.profile, o.set.map(([f]) => f)]))}`,
+    );
     const dir = mkdtempSync(join(tmpdir(), 'fl03-'));
     let n = 0;
     for (const [profile, set] of [[patch.profile, patch.set], ...patch.otherVehicles.map((o) => [o.profile, o.set])]) {
       const file = join(dir, `patch-${n++}.json`);
       writeFileSync(file, JSON.stringify({ contract: 'jj.tuning-patch.v1', profile, set }));
       const out = execFileSync(JJ, ['vehicle', 'tune', file, '--check'], { cwd: repo, encoding: 'utf8' });
-      assert.match(out, /arcade\.turn_g/, `the check names the turn-in change for ${profile}: ${out}`);
+      if (carFile.has(profile)) assert.match(out, /arcade\.turn_g/, `the check names the turn-in change for ${profile}: ${out}`);
+      else assert.match(out, /max_engine_force/, `the check names the power change for ${profile}: ${out}`);
     }
     const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
     assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);

@@ -150,7 +150,9 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     for (const [path] of defaults) {
       const dirty = JSON.stringify(current.get(path)) !== JSON.stringify(defaults.get(path));
       panel.querySelector(`[data-row="${path}"]`)?.classList.toggle('dirty', dirty);
-      panel.querySelector<HTMLElement>(`[data-reset="${path}"]`)!.hidden = !dirty;
+      // A vehicle can have fields the first one had no row for (a bike's `bike_balance`): nothing to mark then.
+      const reset = panel.querySelector<HTMLElement>(`[data-reset="${path}"]`);
+      if (reset) reset.hidden = !dirty;
     }
     countEl.textContent = changed.size ? `${changed.size} changed` : 'No changes';
   };
@@ -344,6 +346,11 @@ function vehicleSelector(o: {
     if (!shippedBy.has(id)) shippedBy.set(id, new Map(leaves(t.tuning as Record<string, Json>)));
     for (const [path, v] of shippedBy.get(id)!) o.defaults.set(path, v);
     for (const [f, v] of aside.get(id) ?? []) o.changed.set(f, v);
+    // Rows the new vehicle has not got (a bike has no `arcade`, a car no `bike_balance`) go, or they would read the last
+    // vehicle's numbers.
+    const fresh = new Set(leaves(t.tuning as Record<string, Json>).map(([path]) => path));
+    for (const path of [...o.current.keys()]) if (isVehicleRow(path) && !fresh.has(path)) o.current.delete(path);
+    for (const path of [...o.defaults.keys()]) if (isVehicleRow(path) && !fresh.has(path)) o.defaults.delete(path);
     for (const [path, v] of leaves(t.tuning as Record<string, Json>)) {
       o.current.set(path, v);
       const el = o.panel.querySelector<HTMLInputElement>(`[data-field="${path}"]`);

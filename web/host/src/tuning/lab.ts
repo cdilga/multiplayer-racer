@@ -144,6 +144,8 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
 
   /** Captured once, by whichever call comes first (opening the tab, or a slider moved before that finished). */
   let capturing: Promise<void> | null = null;
+  /** Every base is in and the sim is back on the vehicle it started on. */
+  let captured = false;
   function capture(): Promise<void> {
     capturing ??= (async () => {
       const ids = panel.ids.length > 1 ? panel.ids : [panel.selected()];
@@ -159,6 +161,7 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
         if (!bases.has(id)) throw new Error(`could not read ${id}'s shipped tuning`);
       }
       if (panel.selected() !== home) await panel.choose(home);
+      captured = true;
     })();
     return capturing;
   }
@@ -251,6 +254,6 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
   return {
     open: () => void capture().then(render),
     apply,
-    inspect: () => ({ setup, applied, appliedCount, active, slots, status, vehicles: panel.ids, bases: Object.fromEntries([...bases].map(([k, v]) => [k, Object.fromEntries(v)])) }),
+    inspect: () => ({ captured, setup, applied, appliedCount, active, slots, status, vehicles: panel.ids, bases: Object.fromEntries([...bases].map(([k, v]) => [k, Object.fromEntries(v)])) }),
   };
 }
