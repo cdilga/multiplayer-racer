@@ -21,6 +21,7 @@ pub mod biome;
 pub mod course;
 pub mod crossings;
 pub mod features;
+pub mod lab;
 pub mod lineside;
 pub mod playtest;
 pub mod roofs;
@@ -102,6 +103,18 @@ pub fn generate_tuned_from(
     data: &tuning::GeneratorData,
 ) -> Result<(Map, Report), biome::SelectError> {
     let course = course::design_with(&mut st.structure, &data.course);
+    generate_course(st, course, recipe, data, setpieces::shipped())
+}
+
+/// The generator from a designed course on: biomes, terrain, crossings, set pieces (from `pieces`), features, dressing.
+/// [`generate_tuned_from`] designs the course; a Feel Lab scene ([`lab`]) hands in its own.
+pub fn generate_course(
+    mut st: Streams,
+    course: Course,
+    recipe: &[Biome],
+    data: &tuning::GeneratorData,
+    pieces: &setpieces::Data,
+) -> Result<(Map, Report), biome::SelectError> {
     let centerline = centred(&resample(&course.points));
     let sel = if course.crossing.is_some() {
         biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
@@ -177,7 +190,7 @@ pub fn generate_tuned_from(
             &mut map,
             &mut seed::Rng::stream(piece_seed, "set-pieces"),
             &piece_ranges,
-            setpieces::shipped(),
+            pieces,
         )
     } else {
         Default::default()

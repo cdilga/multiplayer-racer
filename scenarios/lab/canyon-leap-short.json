@@ -1,0 +1,42 @@
+{
+  "cars": [
+    {
+      "linvel": [
+        -11.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": -90.0,
+        "x": -43.796,
+        "y": 20.42,
+        "z": 45.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 1,
+      "metric": "wrecks",
+      "min": 1
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "throttle": 0.35
+    }
+  ],
+  "map": "maps/lab/canyon-leap.json",
+  "scenario": "canyon-leap-short",
+  "seed": 1,
+  "ticks": 900,
+  "until": {
+    "car": 0,
+    "metric": "wrecks",
+    "min": 1
+  },
+  "what": "Too slow to clear the gap: a car holding a third of the throttle up the kicker leaves the lip far under the piece's lowest landing speed, falls into the pit and respawns (one wreck), never clipping through to the far rim."
+}

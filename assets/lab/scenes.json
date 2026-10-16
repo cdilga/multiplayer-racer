@@ -1,0 +1,45 @@
+{
+  "schema": "jj.lab-scenes.v1",
+  "note": "Feel Lab scenes (R131): small hand-made courses built by the real generator (jj_procgen::lab), so a scene shares its pieces' definitions with generated tracks (P1-FL15b). `jj lab <scene> --out <dir>` writes the map and each run's fixture; the committed copies are maps/lab/<scene>.json and scenarios/lab/<run>.json, re-made with JJ_BLESS=1 cargo test -p jj-procgen --test lab. A run starts a car `spawnBeforeM` before the first set piece's lip at `speedMps`, on the autopilot or holding `throttle`; `expect` is its outcome envelope.",
+  "scenes": {
+    "canyon-leap": {
+      "what": "P1-FL09: the Olgas reference (art/references/australia/generated/biome-rocks-olgas.png). A rock channel with walls both sides, a kicker the full road width, the pit, the far rim as the landing, domes seen from the far straight before the commitment point; the graded dirt detour round the pit is the safe line and costs time (R129).",
+      "biome": "rocks",
+      "seed": 1,
+      "straightM": 330,
+      "radiusM": 45,
+      "setPieces": ["canyon-leap"],
+      "runs": [
+        {
+          "run": "canyon-leap",
+          "what": "The leap at design speed: the autopilot takes the car from the far straight's end over the pit and lands it upright on the far rim, with no wreck or recovery, and drives on.",
+          "spawnBeforeM": 120,
+          "speedMps": 22,
+          "autopilot": true,
+          "ticks": 1800,
+          "expect": [
+            { "metric": "airtimeS", "min": 0.8, "max": 4.0 },
+            { "metric": "landings", "min": 1, "max": 3 },
+            { "metric": "landingUpY", "min": 0.9, "max": 1.001 },
+            { "metric": "minUpY", "min": 0.8, "max": 1.001 },
+            { "metric": "wrecks", "min": 0, "max": 0 },
+            { "metric": "recoveries", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "canyon-leap-short",
+          "what": "Too slow to clear the gap: a car holding a third of the throttle up the kicker leaves the lip far under the piece's lowest landing speed, falls into the pit and respawns (one wreck), never clipping through to the far rim.",
+          "spawnBeforeM": 40,
+          "speedMps": 11,
+          "autopilot": false,
+          "throttle": 0.35,
+          "ticks": 900,
+          "until": { "metric": "wrecks", "min": 1 },
+          "expect": [
+            { "metric": "wrecks", "min": 1, "max": 1 }
+          ]
+        }
+      ]
+    }
+  }
+}

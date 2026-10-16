@@ -498,6 +498,41 @@ fn oval(target_m: f64) -> (Vec<Corner>, Vec<Piece>) {
     )
 }
 
+/// A hand-made oval (Feel Lab scenes, R131): two straights of `straight_m` joined by half circles of `radius_m`, starting at
+/// the first straight's beginning.
+pub fn lab_oval(straight_m: f64, radius_m: f64) -> Course {
+    let half = Corner {
+        kind: CornerKind::Hairpin,
+        turn: deg(180.0),
+        radius: radius_m,
+    };
+    let pieces = vec![
+        Piece::Straight(straight_m),
+        Piece::Arc {
+            turn: half.turn,
+            radius: radius_m,
+        },
+        Piece::Straight(straight_m),
+        Piece::Arc {
+            turn: half.turn,
+            radius: radius_m,
+        },
+    ];
+    let points = sample(&pieces);
+    Course {
+        corners: vec![half, half],
+        straights: straights(&pieces),
+        length_m: length(&points),
+        points,
+        class: ClassName::Sprint,
+        preset: PresetName::Speedway,
+        attempts: 1,
+        fallback: false,
+        rejects: BTreeMap::new(),
+        crossing: None,
+    }
+}
+
 /// Designs a course from the structure stream with the shipped generator data.
 pub fn design(rng: &mut Rng) -> Course {
     design_with(rng, &crate::tuning::GeneratorData::shipped().course)

@@ -8,12 +8,13 @@ use std::process::Command;
 #[test]
 fn every_scenario_in_the_bank_passes() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    // The bank: its §7.3a affordance rows (`scenarios/affordances/`), the feel bank (`scenarios/feel/`, P1-S03a), the
+    // The bank: its §7.3a affordance rows (`scenarios/affordances/`), the feel bank (`scenarios/feel/`, P1-S03a), the Feel Lab scenes' runs (`scenarios/lab/`, P1-FL09), the
     // introspection fixtures (`scenarios/introspection/`, P1-F05b) the §7.3b duels (`scenarios/duels/`, P1-S08 on) and the derby bank (`scenarios/derby/`, P1-M10 and P1-S10).
     let mut files: Vec<String> = [
         "scenarios",
         "scenarios/affordances",
         "scenarios/feel",
+        "scenarios/lab",
         "scenarios/introspection",
         "scenarios/duels",
         "scenarios/derby",

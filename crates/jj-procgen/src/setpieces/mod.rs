@@ -186,7 +186,8 @@ pub fn validate_data(d: &Data) -> Vec<String> {
     out
 }
 
-fn kind_of(name: &str) -> Option<PieceKind> {
+/// The kind a data name (`canyon-leap`, `mesa-drop`, `creek-washout`) names.
+pub fn kind_of(name: &str) -> Option<PieceKind> {
     [
         PieceKind::CanyonLeap,
         PieceKind::MesaDrop,
