@@ -1,11 +1,13 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
-exclude = ["vendor/rapier3d"]
+exclude = ["vendor/rapier3d", "vendor/parry3d"]
 
 [patch.crates-io]
 # P1-W03: keep moving dominant bodies readable to the contact solver, without applying its impulses to them.
 rapier3d = { path = "vendor/rapier3d" }
+# A vertical ray down a heightfield exactly on a cell edge missed it (a level bike's wheels fell through flat ground).
+parry3d = { path = "vendor/parry3d" }
 
 [workspace.package]
 version = "0.2.0"

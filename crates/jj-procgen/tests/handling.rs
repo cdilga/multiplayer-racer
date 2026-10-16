@@ -519,7 +519,7 @@ fn cruz_generated_rough_verge_turns_do_not_roll() {
 
 /// One run of the thrown-about bank, traced every 0.1 s, to see how a reported roll-over happens:
 /// `JJ_ONE="tradie-ute 4 520 35 flick" cargo test -p jj-procgen --release --test handling -- --ignored one_throw --nocapture`
-/// (vehicle, seed, route point, speed m/s, hold|flick|straight; `JJ_TUNE` applies).
+/// (vehicle: a roster id or bike-sim-fixture, seed, route point, speed m/s, hold|flick|straight; `JJ_TUNE` applies).
 #[test]
 #[ignore = "a debugging aid: set JJ_ONE"]
 fn one_throw() {
@@ -530,10 +530,15 @@ fn one_throw() {
     let [vehicle, seed, at, speed, how] = f[..] else {
         panic!("JJ_ONE is \"vehicle seed point speed throw\"");
     };
-    let (_, profile) = profiles()
-        .into_iter()
-        .find(|(id, _)| id == vehicle)
-        .expect("a roster vehicle");
+    let profile = if vehicle == "bike-sim-fixture" {
+        bike()
+    } else {
+        profiles()
+            .into_iter()
+            .find(|(id, _)| id == vehicle)
+            .expect("a roster vehicle or bike-sim-fixture")
+            .1
+    };
     let map = loaded(seed.parse().unwrap());
     let (at, speed): (usize, f32) = (at.parse().unwrap(), speed.parse().unwrap());
     let how = match how {

@@ -13,7 +13,8 @@ while IFS= read -r f; do
     if ! git show ":$f" | rustfmt --edition 2024 --emit stdout 2>/dev/null | cmp -s - <(git show ":$f"); then
         bad+=("$f")
     fi
-done < <(git diff --cached --name-only --diff-filter=ACMR -- '*.rs')
+# vendor/ holds upstream crates copied byte for byte (their own style); CI's Format covers workspace members only.
+done < <(git diff --cached --name-only --diff-filter=ACMR -- '*.rs' ':!vendor/')
 if ((${#bad[@]})); then
     echo "pre-commit: not rustfmt-clean (CI rust-lint would fail):" >&2
     printf '  %s\n' "${bad[@]}" >&2
