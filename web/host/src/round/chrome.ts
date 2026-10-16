@@ -183,7 +183,15 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       : `<p class="mn-join-how">Room code <b>${esc(opts.code)}</b> at ${esc(opts.domain)}</p>`;
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
+  // What the open menu shows: when this is unchanged, update() leaves the buttons alone (br-b2sv).
+  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+  let pressing = false;
+  let redrawLater = false;
   const renderMenu = () => {
+    redrawLater = false;
+    // Every render records its key, so the next room update does not render the same menu a second time: that second
+    // render replaces the buttons under a click that is landing (WebKit then drops the click).
+    if (room) menuEl.dataset.key = menuKey(room);
     note(`render:${state.page || (state.controls ? 'controls' : state.confirm ? `confirm-${state.confirm}` : 'main')}`);
     if (!room) return;
     if (state.confirm === 'remove') {
@@ -276,6 +284,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   };
   const openMenu = (join = false, controls = false) => {
     note('open');
+    pressing = false;
     state.menu = true;
     state.controls = controls;
     state.page = controls ? 'controllers' : '';
@@ -312,6 +321,21 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     target = seat ?? null;
     renderMenu();
   };
+  // A room update that changes the open menu redraws it, which replaces the buttons. A press in flight (down, not yet up)
+  // would lose its click when its button is replaced (WebKit drops it), so the redraw waits for the release (br-b2sv).
+  menuEl.addEventListener('pointerdown', () => { pressing = true; }, true);
+  // The redraw runs once the click has been delivered (the window sees it after the menu's own handler), or after a short
+  // wait when the press ends with no click (dragged off the button).
+  const redrawNow = () => {
+    pressing = false;
+    if (redrawLater && state.menu) renderMenu();
+  };
+  const released = () => {
+    if (pressing) setTimeout(redrawNow, 250);
+  };
+  window.addEventListener('click', redrawNow);
+  window.addEventListener('pointerup', released, true);
+  window.addEventListener('pointercancel', released, true);
   menuEl.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!b) {
@@ -470,7 +494,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const n = r.seats.length;
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;
       footer.querySelector('[data-foot-count]')!.textContent = racing() ? `${n} racing${r.round ? ` · round ${r.round}` : ''}` : r.phase === 'Intermission' ? `${n} in the room${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
-      menuBtn.textContent = racing() ? 'Pause' : 'Host menu';
+      // Only when the word changes: rewriting it every update replaces the button's text node under a click.
+      const word = racing() ? 'Pause' : 'Host menu';
+      if (menuBtn.textContent !== word) menuBtn.textContent = word;
       renderPositions();
       // Whatever changed under an open menu or overlay is redrawn (a player left; the phase moved).
       if (state.menu) {
@@ -480,10 +506,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         if (paused && !racing()) {
           paused = false;
         }
-        const key = `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
-        if (menuEl.dataset.key !== key) {
-          menuEl.dataset.key = key;
-          renderMenu();
+        if (menuEl.dataset.key !== menuKey(r)) {
+          if (pressing) redrawLater = true;
+          else renderMenu();
         }
       }
       void renderDiag();
