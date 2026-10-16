@@ -98,6 +98,9 @@ pub enum Rule {
     /// A route fork breaks its contract (P1-FL16): params, split/merge angles, width, length, its branch's paving, grade
     /// or radius, or a gate inside its span.
     Fork,
+    /// A vertical loop breaks its contract (R124, br-xlvx.6): params, the road straight on at its ends, the exit deck
+    /// clearing the entry, its run-out, or a gate inside its span.
+    Loop,
 }
 
 impl Rule {
@@ -133,6 +136,7 @@ impl Rule {
             Self::ItemStation => "item-station",
             Self::SetPiece => "set-piece",
             Self::Fork => "fork",
+            Self::Loop => "loop",
         }
     }
 }
@@ -359,6 +363,14 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                     .filter_map(crate::fork::Fork::of)
                     .filter(|d| idx_ok(d.from) && idx_ok(d.to))
                     .map(|d| (geom.s_of(d.from as usize), geom.s_of(d.to as usize))),
+            )
+            // And a loop's: the car is on its deck, not the route between its ends.
+            .chain(
+                map.features
+                    .iter()
+                    .filter_map(crate::looping::LoopDesign::of)
+                    .filter(|d| d.entry < r.points.len() && d.exit < r.points.len())
+                    .map(|d| (geom.s_of(d.entry), geom.s_of(d.exit))),
             )
             .collect();
         for (k, gap) in gaps {
@@ -732,6 +744,27 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
             FeatureKind::Bridge => {
                 for detail in crate::bridge::problems(map, f) {
                     add(&mut v, Rule::Crossing, &at, detail);
+                }
+            }
+            FeatureKind::Loop => {
+                for detail in crate::looping::problems(map, &f.params) {
+                    add(&mut v, Rule::Loop, &at, detail);
+                }
+                if let Some(d) = crate::looping::LoopDesign::of(f)
+                    && d.entry < r.points.len()
+                    && d.exit < r.points.len()
+                {
+                    for g in r.gates.iter().filter(|g| idx_ok(g.at)) {
+                        let i = g.at as usize;
+                        if i > d.entry && i < d.exit {
+                            add(
+                                &mut v,
+                                Rule::Loop,
+                                &at,
+                                format!("gate at route point {} is inside the loop (the car is on the deck above it)", g.at),
+                            );
+                        }
+                    }
                 }
             }
             FeatureKind::Fork => {

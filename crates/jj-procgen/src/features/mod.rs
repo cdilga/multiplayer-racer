@@ -236,7 +236,7 @@ pub fn place_in_tuned(
     map.features.retain(|f| {
         matches!(
             f.kind,
-            FeatureKind::Bridge | FeatureKind::SetPiece | FeatureKind::Fork
+            FeatureKind::Bridge | FeatureKind::SetPiece | FeatureKind::Fork | FeatureKind::Loop
         )
     });
     let line = Line::new(map);
@@ -433,7 +433,8 @@ fn draw_params(
         | FeatureKind::Bowl
         | FeatureKind::Bridge
         | FeatureKind::SetPiece
-        | FeatureKind::Fork => {}
+        | FeatureKind::Fork
+        | FeatureKind::Loop => {}
     }
     p
 }
@@ -561,7 +562,8 @@ fn delta(
         | FeatureKind::Bowl
         | FeatureKind::Bridge
         | FeatureKind::SetPiece
-        | FeatureKind::Fork => 0.0,
+        | FeatureKind::Fork
+        | FeatureKind::Loop => 0.0,
     }
 }
 
@@ -705,8 +707,8 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
-        if matches!(f.kind, FeatureKind::SetPiece | FeatureKind::Fork) {
-            // Checked against its own contract (crate::setpieces::check, jj_map::fork::problems).
+        if matches!(f.kind, FeatureKind::SetPiece | FeatureKind::Fork | FeatureKind::Loop) {
+            // Checked against its own contract (crate::setpieces::check, jj_map::fork::problems, jj_map::looping::problems).
             continue;
         }
         if f.kind == FeatureKind::Bridge {
@@ -851,7 +853,8 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
             | FeatureKind::Bowl
             | FeatureKind::Bridge
             | FeatureKind::SetPiece
-            | FeatureKind::Fork => {}
+            | FeatureKind::Fork
+            | FeatureKind::Loop => {}
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

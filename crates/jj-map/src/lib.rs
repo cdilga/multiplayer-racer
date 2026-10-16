@@ -16,6 +16,7 @@ pub mod fork;
 mod geom;
 pub mod jump;
 pub mod kit;
+pub mod looping;
 pub mod model;
 pub mod roof;
 pub mod setpiece;

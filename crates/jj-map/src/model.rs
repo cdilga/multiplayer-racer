@@ -202,6 +202,10 @@ pub enum FeatureKind {
     /// A route fork (R134, P1-FL16; appended so older maps keep their bytes): a branch that leaves the road and rejoins
     /// it. Params and the branch's line are in [`crate::fork`].
     Fork,
+    /// A vertical loop (R124, br-xlvx.6; appended so older maps keep their bytes): a deck that leaves the road at one
+    /// route point and rejoins it at a later one, upside down at the top. Params and geometry are in
+    /// [`crate::looping`].
+    Loop,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
