@@ -38,7 +38,7 @@ pub fn piers(map: &Map, d: &BridgeDesign, ix: &[usize]) -> Vec<[f64; 4]> {
     };
     let mut out = Vec::new();
     for (k, &i) in ix.iter().enumerate() {
-        if k < PIER_END || k + PIER_END >= ix.len() || (k - PIER_END) % PIER_EVERY != 0 {
+        if k < PIER_END || k + PIER_END >= ix.len() || !(k - PIER_END).is_multiple_of(PIER_EVERY) {
             continue;
         }
         let [left, right] = edges(map, i);

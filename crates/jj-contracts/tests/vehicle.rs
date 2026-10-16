@@ -33,12 +33,20 @@ fn the_hand_made_bike_passes() {
     let dir = fixtures().join("valid-bike");
     let report = run(&dir);
     assert!(report.ok, "{report:#?}");
-    let sidecar = vehicle::parse_sidecar(&std::fs::read(dir.join("toy.asset.json")).unwrap()).unwrap();
+    let sidecar =
+        vehicle::parse_sidecar(&std::fs::read(dir.join("toy.asset.json")).unwrap()).unwrap();
     assert_eq!(vehicle::part_set(&sidecar), BIKE_PARTS.as_slice());
-    let g = vehicle::physics_geometry(&sidecar, &std::fs::read(dir.join("toy.lod0.glb")).unwrap()).unwrap();
+    let g = vehicle::physics_geometry(&sidecar, &std::fs::read(dir.join("toy.lod0.glb")).unwrap())
+        .unwrap();
     assert_eq!(g.wheels.len(), 2);
-    assert!(g.wheels[0][2] > 0.0 && g.wheels[1][2] < 0.0, "front wheel first");
-    assert!(g.wheels.iter().all(|w| w[0].abs() < 1e-9), "wheels on the centreline");
+    assert!(
+        g.wheels[0][2] > 0.0 && g.wheels[1][2] < 0.0,
+        "front wheel first"
+    );
+    assert!(
+        g.wheels.iter().all(|w| w[0].abs() < 1e-9),
+        "wheels on the centreline"
+    );
     let names: Vec<&str> = g.parts.iter().map(|p| p.name.as_str()).collect();
     assert_eq!(names, BIKE_PARTS.to_vec(), "the sim's part order");
 }
@@ -47,8 +55,10 @@ fn the_hand_made_bike_passes() {
 #[test]
 fn the_hand_made_car_has_four_wheels_in_sim_order() {
     let dir = fixtures().join("valid");
-    let sidecar = vehicle::parse_sidecar(&std::fs::read(dir.join("toy.asset.json")).unwrap()).unwrap();
-    let g = vehicle::physics_geometry(&sidecar, &std::fs::read(dir.join("toy.lod0.glb")).unwrap()).unwrap();
+    let sidecar =
+        vehicle::parse_sidecar(&std::fs::read(dir.join("toy.asset.json")).unwrap()).unwrap();
+    let g = vehicle::physics_geometry(&sidecar, &std::fs::read(dir.join("toy.lod0.glb")).unwrap())
+        .unwrap();
     assert_eq!(g.wheels.len(), 4);
     assert!(g.wheels[0][2] > 0.0 && g.wheels[2][2] < 0.0);
     assert_eq!(g.parts.len(), PARTS.len());
@@ -114,7 +124,10 @@ fn the_json_schema_names_the_same_parts_and_anchors() {
             .collect()
     };
     assert_eq!(list("/properties/parts/oneOf/0/required"), PARTS.to_vec());
-    assert_eq!(list("/properties/parts/oneOf/1/required"), BIKE_PARTS.to_vec());
+    assert_eq!(
+        list("/properties/parts/oneOf/1/required"),
+        BIKE_PARTS.to_vec()
+    );
     assert_eq!(list("/properties/anchors/required"), ANCHORS.to_vec());
     assert_eq!(
         schema.pointer("/properties/contract/const").unwrap(),

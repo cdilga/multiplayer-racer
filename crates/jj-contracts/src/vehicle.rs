@@ -777,8 +777,15 @@ pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometr
             .ok_or_else(|| format!("no part {p}"))
     };
     // The wheels in contract order are the sim's order (front axle first).
-    let wheel_names: Vec<&str> = set.iter().copied().filter(|p| p.starts_with("wheel_")).collect();
-    let wheels = wheel_names.iter().map(|w| pivot(w)).collect::<Result<Vec<_>, _>>()?;
+    let wheel_names: Vec<&str> = set
+        .iter()
+        .copied()
+        .filter(|p| p.starts_with("wheel_"))
+        .collect();
+    let wheels = wheel_names
+        .iter()
+        .map(|w| pivot(w))
+        .collect::<Result<Vec<_>, _>>()?;
     // The wheel's radius is half its proxy's height (a wheel stands on the ground at rest, so this is also its pivot y).
     let w = collider_points(&glb, wheel_names[0])?;
     let (lo, hi) = w
