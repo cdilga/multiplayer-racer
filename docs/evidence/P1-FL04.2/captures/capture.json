@@ -1,0 +1,105 @@
+{
+  "map": "maps/test/skidpad.json",
+  "browser": "Chromium (Playwright headless, software GL)",
+  "shots": [
+    {
+      "file": "ute-punch-t48.jpg",
+      "tick": 48,
+      "forwardSpeed": 5.513827800750732,
+      "yawDegS": 39.942331549209264,
+      "headingDeg": 11.947487831115723,
+      "slide": 0,
+      "upY": 0.9999825358390808
+    },
+    {
+      "file": "ute-punch-t72.jpg",
+      "tick": 72,
+      "forwardSpeed": 7.702579498291016,
+      "yawDegS": 134.61484597432565,
+      "headingDeg": 31.693300247192383,
+      "slide": 1,
+      "upY": 0.9996363520622253
+    },
+    {
+      "file": "ute-punch-t96.jpg",
+      "tick": 96,
+      "forwardSpeed": 9.667911529541016,
+      "yawDegS": 127.55282652350432,
+      "headingDeg": 58.7386589050293,
+      "slide": 1,
+      "upY": 0.9991041421890259
+    },
+    {
+      "file": "ute-punch-t120.jpg",
+      "tick": 120,
+      "forwardSpeed": 11.077757835388184,
+      "yawDegS": 106.82411080767524,
+      "headingDeg": 82.23992919921875,
+      "slide": 1,
+      "upY": 0.9988489151000977
+    },
+    {
+      "file": "ute-punch-t168.jpg",
+      "tick": 168,
+      "forwardSpeed": 13.133685111999512,
+      "yawDegS": 78.3995204256693,
+      "headingDeg": 118.77854919433594,
+      "slide": 1,
+      "upY": 0.9986732006072998
+    },
+    {
+      "file": "ute-punch-t230.jpg",
+      "tick": 230,
+      "forwardSpeed": 14.672075271606445,
+      "yawDegS": 9.344388633683614,
+      "headingDeg": 126.08899688720703,
+      "slide": 0.13888847827911377,
+      "upY": 0.9996852874755859
+    },
+    {
+      "file": "cruz-turn-in-t60.jpg",
+      "tick": 60,
+      "forwardSpeed": 21.313657760620117,
+      "yawDegS": -2.0499096097046824e-10,
+      "headingDeg": -1.3184638936181159e-9,
+      "slide": 0,
+      "upY": 0.9998205304145813
+    },
+    {
+      "file": "cruz-turn-in-t75.jpg",
+      "tick": 75,
+      "forwardSpeed": 21.603609085083008,
+      "yawDegS": 72.05460936599678,
+      "headingDeg": 5.934073448181152,
+      "slide": 0,
+      "upY": 0.9998085498809814
+    },
+    {
+      "file": "cruz-turn-in-t90.jpg",
+      "tick": 90,
+      "forwardSpeed": 21.93247413635254,
+      "yawDegS": 84.08003849420716,
+      "headingDeg": 16.044893264770508,
+      "slide": 0,
+      "upY": 0.9998083114624023
+    },
+    {
+      "file": "cruz-turn-in-t120.jpg",
+      "tick": 120,
+      "forwardSpeed": 22.615100860595703,
+      "yawDegS": 83.9038742551342,
+      "headingDeg": 37.343238830566406,
+      "slide": 0,
+      "upY": 0.9998139142990112
+    },
+    {
+      "file": "cruz-turn-in-t180.jpg",
+      "tick": 180,
+      "forwardSpeed": 23.903722763061523,
+      "yawDegS": 79.2197851638528,
+      "headingDeg": 78.34169006347656,
+      "slide": 0,
+      "upY": 0.9998160600662231
+    }
+  ]
+}
