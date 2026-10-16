@@ -125,9 +125,11 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     }
     await host.locator('[data-local-ready="1"]').click();
     await wait(host,()=>window.__jjRoom.view().seats.find(s=>s.localSource===1)?.ready===true);
+    // br-b2sv: the commands the phone had sent before Ready, to tell a lost click from a dropped command.
+    const cmdsBefore = await phone.evaluate(()=>window.__jjController.inspect().stats.cmds);
     await phone.locator('[data-act=ready]').click();
     await wait(host,()=>window.__jjRoom.view().phase==='Running').catch(async e=>{
-      console.log('PHONE', JSON.stringify(await phone.evaluate(()=>({inspect:window.__jjController?.inspect(), ready:document.querySelector('[data-act=ready]')?.outerHTML}))));
+      console.log('PHONE', JSON.stringify({cmdsBefore, ...await phone.evaluate(()=>({inspect:window.__jjController?.inspect(), ready:document.querySelector('[data-act=ready]')?.outerHTML}))}));
       throw e;
     });
     assert.equal(await host.locator('[data-jj-input-drawer]').count(),0);
