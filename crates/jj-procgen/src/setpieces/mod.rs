@@ -39,6 +39,18 @@ pub struct Data {
     pub note: String,
     /// Fewest pieces on a lap (a minimum, never a maximum).
     pub min_per_lap: u32,
+    /// A lap shorter than this (m) needs only `minPerShortLap`: two pieces, their approaches and run-outs and the start
+    /// corridor don't fit on the owner's sprint lengths (R125: 600-900 m).
+    pub short_lap_m: f64,
+    pub min_per_short_lap: u32,
+    /// A lap of only these biomes needs at most this many (Town: its rooftop lots are its showpieces and want the
+    /// straights a second set piece would take).
+    #[serde(default)]
+    pub min_per_lap_in: BTreeMap<String, u32>,
+    /// Fill a lap's minimum with pieces whose landmark isn't seen long enough from afar (a second placement round).
+    /// Off: every piece is seen (R132), and a lap that can't seat its minimum that way is redrawn by the ladder.
+    #[serde(default)]
+    pub fill_unseen: bool,
     /// Expected pieces per km beyond the minimum.
     pub per_km: f64,
     /// Clear road between two pieces, m.
@@ -97,6 +109,25 @@ pub struct PieceData {
     pub speed_band: [f64; 2],
     pub pit_surface: Surface,
     pub wall_surface: Surface,
+}
+
+/// The fewest set pieces a lap of `lap_m` metres through `biomes` carries: `minPerLap`, or `minPerShortLap` on a short
+/// lap, capped by `minPerLapIn` when every biome of the lap has a cap there (the largest of them).
+pub fn min_for(d: &Data, lap_m: f64, biomes: &[Biome]) -> u32 {
+    let base = if lap_m < d.short_lap_m {
+        d.min_per_short_lap
+    } else {
+        d.min_per_lap
+    };
+    let caps: Vec<u32> = biomes
+        .iter()
+        .filter_map(|b| d.min_per_lap_in.get(biome_name(*b)).copied())
+        .collect();
+    if !biomes.is_empty() && caps.len() == biomes.len() {
+        base.min(caps.into_iter().max().unwrap_or(base))
+    } else {
+        base
+    }
 }
 
 /// The shipped data, parsed once.
@@ -237,6 +268,9 @@ struct Draw {
     wall_h: f64,
     landmark_h: f64,
     side: f64,
+    /// The detour may run on a corner's outside (through a gap in its guard rail and chevrons): tried only once
+    /// neither inside works, e.g. a figure eight's lobe, whose inside the other half of the lobe fills (P1-FL15c).
+    outside_ok: bool,
     p: PieceData,
 }
 
@@ -271,6 +305,7 @@ impl Draw {
             wall_h,
             landmark_h,
             side,
+            outside_ok: false,
             p: p.clone(),
         };
         // By construction: the slowest car in the band clears the rim with margin (the gap shrinks to fit), and the
@@ -527,7 +562,10 @@ pub fn place_counted(
     let n = line.n();
     let km = line.total / 1000.0;
     let extra = data.per_km * km;
-    let want = (data.min_per_lap as usize)
+    let mut lap_biomes: Vec<Biome> = ranges.iter().map(|r| r.2).collect();
+    lap_biomes.sort_by_key(|b| biome_name(*b));
+    lap_biomes.dedup();
+    let want = (min_for(data, line.total, &lap_biomes) as usize)
         .max(libm::floor(extra) as usize + usize::from(rng.unit() < extra - libm::floor(extra)));
     let mut placed: Vec<Placed> = Vec::new();
     // Candidate kicker bases: every 4th route point in a range whose biome has pieces, in a seeded order.
@@ -584,19 +622,35 @@ pub fn place_counted(
         .collect();
     keyed.sort_by_key(|(band, _)| *band);
     let candidates: Vec<(usize, Biome)> = keyed.into_iter().map(|(_, c)| c).collect();
-    // Sight is preferred, not required by placement: a first pass takes only sites whose landmark is in view long
-    // enough before the commitment point, a second pass fills any minimum the first couldn't.
-    for round in 0..2 {
-        for &(base, biome) in &candidates {
-            if placed.len() >= want {
+    // A first pass takes only sites whose landmark is in view long enough before the commitment point; with
+    // `fillUnseen` a second pass fills any minimum the first couldn't.
+    let minimum = min_for(data, line.total, &lap_biomes) as usize;
+    let rounds = if data.fill_unseen { 2 } else { 1 };
+    for round in 0..rounds {
+        // The second round (sight not required) only fills the lap's minimum: extras must be seen from afar.
+        let limit = if round == 0 { want } else { want.min(minimum) };
+        let mut queue = candidates.clone();
+        let mut qi = 0;
+        while qi < queue.len() {
+            let (base, biome) = queue[qi];
+            qi += 1;
+            if placed.len() >= limit {
                 break;
             }
             // Every kind the biome offers, starting from a seeded one: a site the drawn kind can't use may suit another.
+            // Kinds the lap doesn't have yet go first, so a lap's pieces (and seeds) differ (R28).
             let kinds = &data.biomes[biome_name(biome)];
             let first = (rng.next_u64() % kinds.len() as u64) as usize;
+            let mut order: Vec<&String> = (0..kinds.len())
+                .map(|kk| &kinds[(first + kk) % kinds.len()])
+                .collect();
+            order.sort_by_key(|name| {
+                let kind = kind_of(name).expect("validated");
+                placed.iter().any(|p| p.kind == kind)
+            });
+            order.dedup();
             let mut found = None;
-            for kk in 0..kinds.len() {
-                let name = &kinds[(first + kk) % kinds.len()];
+            for name in order {
                 let kind = kind_of(name).expect("validated");
                 let d = Draw::new(kind, &data.pieces[name.as_str()], rng);
                 let mut d = d;
@@ -605,6 +659,17 @@ pub fn place_counted(
                     // The detour may fit on the other side.
                     d.side = -d.side;
                     site = site_ok(map, &line, base, &d, ranges, biome, &placed, data);
+                }
+                if site.is_err() {
+                    // Then either side, the outside of a corner allowed (its rail and chevrons part for the detour).
+                    d.outside_ok = true;
+                    for _ in 0..2 {
+                        d.side = -d.side;
+                        site = site_ok(map, &line, base, &d, ranges, biome, &placed, data);
+                        if site.is_ok() {
+                            break;
+                        }
+                    }
                 }
                 let (from, to) = match site {
                     Ok(span) => span,
@@ -657,6 +722,26 @@ pub fn place_counted(
                 from_s: line.s[from],
                 to_s: line.s[from] + line.du(from, to),
             });
+            // Spread the lap's pieces (fun-tracks R20, R27): the sites at least a share of the lap clear of every
+            // placed piece go first, each band in its order, so two pieces don't bunch and leave one long flow beat.
+            let clear = line.total / (2.0 * limit.max(1) as f64);
+            let gap = |s: f64| {
+                placed
+                    .iter()
+                    .map(|p| {
+                        let d = |a: f64| {
+                            let d = (s - a).rem_euclid(line.total);
+                            d.min(line.total - d)
+                        };
+                        if (s - p.from_s).rem_euclid(line.total) <= (p.to_s - p.from_s) {
+                            0.0
+                        } else {
+                            d(p.from_s).min(d(p.to_s))
+                        }
+                    })
+                    .fold(f64::INFINITY, f64::min)
+            };
+            queue[qi..].sort_by_key(|&(b, _)| gap(line.s[b]) < clear);
         }
     }
     if !placed.is_empty() {
@@ -749,9 +834,13 @@ fn site_ok(
     if !clear_of_start(s0) || !clear_of_start(s1) || s0 < 0.0 || s1 > line.total {
         return Err("near the start");
     }
+    // The core (the 40 m run-up, kicker, gap and landing) sits inside one biome's stretch; the approach and the
+    // run-out may cross a boundary (the road climbs into the rocks, R27), so a short lap of several biomes keeps its
+    // pieces (P1-FL15c).
+    let (c0, c1) = (line.s[base] - 40.0, line.s[base] + d.land_end_u());
     if !ranges
         .iter()
-        .any(|&(lo, hi, b)| b == biome && s0 >= lo && s1 <= hi)
+        .any(|&(lo, hi, b)| b == biome && c0 >= lo && c1 <= hi)
     {
         return Err("outside one biome");
     }
@@ -820,7 +909,8 @@ fn site_ok(
             }
         }
     }
-    // Corners in the span keep their guard rails and chevrons on the outside: the detour runs on their inside.
+    // Corners in the span keep their guard rails and chevrons on the outside: the detour runs on their inside (unless
+    // the draw allows the outside, where the furniture on the detour's track comes off, `clear_footprints`).
     for c in crate::biome::wayfinding::corners(&line.pts) {
         let mid = (c.from + c.to) / 2;
         if !(span_contains(line, from, to, c.from) || span_contains(line, from, to, c.to)) {
@@ -830,7 +920,7 @@ fn site_ok(
         let toward_left = t0.0 * t1.1 - t0.1 * t1.0 > 0.0;
         // Turning toward the left (lat > 0) puts the outside on the right.
         let outside = if toward_left { -1.0 } else { 1.0 };
-        if side == outside {
+        if side == outside && !d.outside_ok {
             return Err("detour on a corner's outside");
         }
     }
@@ -1377,10 +1467,19 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
         .iter()
         .filter(|f| GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s)
         .count();
-    if (seen as u32) < data.min_per_lap {
+    let lap_m = crate::assemble::arc_lengths(
+        &map.route
+            .points
+            .iter()
+            .map(|p| (f64::from(p.x) / 1000.0, f64::from(p.z) / 1000.0))
+            .collect::<Vec<_>>(),
+    )
+    .1;
+    let min = min_for(data, lap_m, &map.header.biomes);
+    if (seen as u32) < min {
         vec![format!(
             "set pieces: {seen} on the lap seen {} s before their commitment point, at least {}",
-            data.min_sight_s, data.min_per_lap
+            data.min_sight_s, min
         )]
     } else {
         Vec::new()
@@ -1718,7 +1817,11 @@ pub fn clear_footprints(map: &mut Map, registry: &jj_map::Registry) {
         .dressing
         .iter()
         .map(|d| {
-            d.kit_piece.starts_with("wayfinding/")
+            // Signs and the finish gantry stay; rails and chevron posts on the detour's track come off (a detour on a
+            // corner's outside passes through a gap in them).
+            (d.kit_piece.starts_with("wayfinding/")
+                && d.kit_piece != crate::biome::wayfinding::GUARD_RAIL
+                && d.kit_piece != crate::biome::wayfinding::CHEVRON)
                 || d.kit_piece == jj_map::kit::ITEM_STATION
                 || d.kit_piece == "town/power-line"
                 || !touches_track(d)

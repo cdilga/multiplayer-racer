@@ -353,10 +353,17 @@ fn rocks_domes_vary_by_seed_only_and_reuse_the_cores_features() {
         };
         assert_eq!(key(&map), key(&again), "seed {seed}");
         heights_by_seed.push(domes.iter().map(|d| d.params["heightCm"]).collect());
+        // The set pieces (canyon leaps, mesa drops, washouts) are jumps too: since a lap carries two (P1-FL15c) they take
+        // most of the straights the core's small jumps would use.
         jumps += map
             .features
             .iter()
-            .filter(|f| f.kind == jj_map::FeatureKind::Jump)
+            .filter(|f| {
+                matches!(
+                    f.kind,
+                    jj_map::FeatureKind::Jump | jj_map::FeatureKind::SetPiece
+                )
+            })
             .count();
         crests += map
             .features

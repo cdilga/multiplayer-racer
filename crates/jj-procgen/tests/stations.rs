@@ -29,14 +29,18 @@ fn a_hundred_race_seeds_get_stations_that_validate() {
     assert!(with >= 95, "only {with} of 100 tracks got stations");
 }
 
+/// A jump on the road (a rooftop lot's kicker stands off it, where a station isn't on the racing line).
+fn on_road_jump(f: &jj_map::Feature) -> bool {
+    f.kind == FeatureKind::Jump && !f.params.contains_key("roofTarget")
+}
+
 #[test]
 fn the_validator_rejects_a_station_in_the_start_corridor_or_on_a_jump() {
     let registry = jj_procgen::registry();
     let seed = (0..200)
         .find(|&s| {
             let p = jj_procgen::playtest::prepare(s);
-            !stations(&p.map).is_empty()
-                && p.map.features.iter().any(|f| f.kind == FeatureKind::Jump)
+            !stations(&p.map).is_empty() && p.map.features.iter().any(on_road_jump)
         })
         .expect("a seed with stations and a jump");
     let p = jj_procgen::playtest::prepare(seed);
@@ -60,7 +64,7 @@ fn the_validator_rejects_a_station_in_the_start_corridor_or_on_a_jump() {
     let jump = on_jump
         .features
         .iter()
-        .find(|f| f.kind == FeatureKind::Jump)
+        .find(|f| on_road_jump(f))
         .unwrap()
         .pose;
     on_jump.dressing[i].pose.x = jump.x;

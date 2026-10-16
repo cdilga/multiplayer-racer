@@ -35,6 +35,12 @@
     "bendSpacingM": 350.0,
     "setPieceStraightM": [140.0, 180.0],
     "setPieceStraightsPerKm": 0.35,
+    "setPieceStraightsMin": 2,
+    "technicalSpacingM": 450,
+    "technicalCluster": 2,
+    "technicalLinkM": [15.0, 30.0],
+    "technicalSpacingIn": { "town": 0 },
+    "familiesOffIn": { "town": ["speedway"] },
     "presets": {
       "twisty": {
         "weight": 1,
@@ -45,7 +51,8 @@
         "bendSpacingScale": 0.85,
         "chicanesPerKm": 2,
         "chicaneAngleScale": 1.4,
-        "radiusScale": 0.9
+        "radiusScale": 0.9,
+        "technicalSpacingScale": 0.45
       },
       "flowing": {
         "weight": 1,
@@ -56,22 +63,24 @@
         "bendSpacingScale": 1.2,
         "chicanesPerKm": 0.6,
         "chicaneAngleScale": 1.1,
-        "radiusScale": 1.05
+        "radiusScale": 1.05,
+        "technicalSpacingScale": 1.0
       },
       "speedway": {
         "weight": 1,
         "hairpinProbability": 0,
         "secondHairpinProbability": 0,
         "sweeperProbability": 1,
-        "oppositeCornerProbability": 0,
+        "oppositeCornerProbability": 0.4,
         "bendSpacingScale": 3,
         "chicanesPerKm": 0,
         "chicaneAngleScale": 1,
-        "radiusScale": 1.05
+        "radiusScale": 1.05,
+        "technicalSpacingScale": 0.8
       },
       "figureEight": {
         "weight": 1.2,
-        "minLengthM": 850
+        "minLengthM": 1800
       }
     },
     "crossing": {
@@ -394,7 +403,7 @@
     "takeoffSpeedMps": 36.0,
     "landingSlope": 0.09,
     "roadWide": {
-      "share": 0.5,
+      "share": 1.0,
       "minRampSlope": 0.24,
       "maxRampSlope": 0.28
     }
@@ -424,5 +433,22 @@
     "blendM": 6.0,
     "lipToHouseM": 16.0,
     "designSpeedMps": 15.0
+  },
+  "forks": {
+    "perKm": 2.0,
+    "skipM": [220.0, 800.0],
+    "gainS": [-0.5, 3.0],
+    "topSpeedMps": 26.0,
+    "gripG": 0.35,
+    "accelMps2": 3.5,
+    "brakeMps2": 6.0,
+    "branchPace": 1.0,
+    "waveM": [80.0, 140.0],
+    "widthM": [10.0, 12.0],
+    "splitDeg": [20.0, 30.0],
+    "mergeDeg": [14.0, 22.0],
+    "tension": [0.45, 0.7],
+    "shoulderM": 3.0,
+    "fadeM": 8.0
   }
 }

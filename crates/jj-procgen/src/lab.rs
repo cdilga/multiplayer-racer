@@ -150,6 +150,8 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
     pieces.biomes = BTreeMap::from([(biome_name, scene.set_pieces.clone())]);
     pieces.min_per_lap = scene.set_pieces.len() as u32;
     pieces.per_km = 0.0;
+    // The scene asks for its pieces by name: they're placed whether or not a short lab oval shows them from afar.
+    pieces.fill_unseen = true;
     let course = course::lab_oval(scene.straight_m, scene.radius_m);
     let (map, report) = crate::generate_course(
         Streams::new(scene.seed),

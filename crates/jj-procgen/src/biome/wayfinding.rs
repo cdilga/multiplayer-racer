@@ -229,6 +229,62 @@ pub fn place(map: &mut Map) {
     map.dressing.sort();
 }
 
+/// A chevron pair on the gore of each route fork (P1-FL16, R4: the split reads before the commitment): where the
+/// branch's inner edge has pulled [`GORE_GAP_M`] clear of the road's, one post pointing down each way, facing approaching
+/// traffic. Run after the fork corridors are cleared.
+pub fn fork_gores(map: &mut Map) {
+    let pts: Vec<(f64, f64)> = map
+        .route
+        .points
+        .iter()
+        .map(|q| (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0))
+        .collect();
+    let half = f64::from(map.route.points[0].width) / 2000.0;
+    let mut placed = Vec::new();
+    for d in map.features.iter().filter_map(jj_map::fork::Fork::of) {
+        let line = jj_map::fork::path_of(map, &d);
+        let n = pts.len();
+        // The first branch point that far off the road, and the route point beside it.
+        let nearest = |p: [f64; 2]| {
+            (0..=60)
+                .map(|k| (d.from as usize + k) % n)
+                .min_by(|&a, &b| {
+                    let da = libm::hypot(pts[a].0 - p[0], pts[a].1 - p[1]);
+                    let db = libm::hypot(pts[b].0 - p[0], pts[b].1 - p[1]);
+                    da.total_cmp(&db)
+                })
+                .unwrap_or(d.from as usize)
+        };
+        let Some(i) = line.iter().find_map(|&p| {
+            let i = nearest(p);
+            (libm::hypot(pts[i].0 - p[0], pts[i].1 - p[1]) >= half + d.width_m / 2.0 + GORE_GAP_M)
+                .then_some(i)
+        }) else {
+            continue;
+        };
+        // The pair points apart, "<  >" (lateral + is left; rightArrow 1 prints ">").
+        for (lateral, outer) in [(half + 2.2, false), (half + GORE_GAP_M - 1.5, true)] {
+            let (mut pose, _) = pose_at(map, &pts, i, d.side * lateral);
+            pose.yaw = (pose.yaw + 9_000).rem_euclid(36_000);
+            placed.push(Dressing {
+                kit_piece: CHEVRON.into(),
+                pose,
+                params: BTreeMap::from([
+                    ("heightCm".into(), 240),
+                    ("radiusMm".into(), 60),
+                    ("rightArrow".into(), i64::from((d.side < 0.0) != outer)),
+                ]),
+                collides: false,
+            });
+        }
+    }
+    map.dressing.extend(placed);
+    map.dressing.sort();
+}
+
+/// The gap between the road's edge and a fork branch's inner edge where the gore chevrons stand, m.
+const GORE_GAP_M: f64 = 5.5;
+
 /// What the seed bank checks: every corner has a chevron row and a rail, the finish has both legs, nothing is a
 /// checkpoint. Empty means fine.
 pub fn check(map: &Map) -> Vec<String> {
@@ -249,9 +305,40 @@ pub fn check(map: &Map) -> Vec<String> {
                 ) <= half + reach + 2.0
         })
     };
+    // A route fork's mouth is a junction: no chevron or rail stands across it (P1-FL16).
+    let mouth = |i: usize| {
+        crate::forks::in_mouth(
+            map,
+            [pts[i].0, pts[i].1],
+            half + RAIL_OFFSET_M + RAIL_SECTION_M,
+        )
+    };
+    // So is a set piece's detour where it leaves a corner by its outside (P1-FL15c): the rail and chevrons on its track
+    // come off (`setpieces::clear_footprints`), so the outside edge there is open by design.
+    let detours: Vec<(Vec<[f64; 2]>, f64)> = map
+        .features
+        .iter()
+        .filter_map(|f| {
+            let d = jj_map::setpiece::GapLeap::of(f)?;
+            Some((
+                jj_map::setpiece::detour_path(map, f),
+                d.detour_width_m / 2.0,
+            ))
+        })
+        .collect();
+    let on_detour = |i: usize, outside: f64| {
+        let (p, _) = pose_at(map, &pts, i, outside * (half + RAIL_OFFSET_M));
+        let (x, z) = (f64::from(p.x) / 1000.0, f64::from(p.z) / 1000.0);
+        detours.iter().any(|(line, w)| {
+            line.iter()
+                .any(|q| libm::hypot(q[0] - x, q[1] - z) < w + RAIL_SECTION_M)
+        })
+    };
     for (k, c) in corners(&pts).iter().enumerate() {
         let (mid, first, last) = ((c.from + c.to) / 2, c.from, c.to);
-        for &i in &[first, mid, last] {
+        let side = if c.left { 1.0 } else { -1.0 };
+        let open = |i: usize| mouth(i) || on_detour(i, side);
+        for &i in [first, mid, last].iter().filter(|&&i| !open(i)) {
             if !near(CHEVRON, i, CHEVRON_OFFSET_M + CHEVRON_SPACING_M) {
                 bad.push(format!(
                     "corner {k} ({:?}): no chevron post near point {i}",
@@ -266,7 +353,7 @@ pub fn check(map: &Map) -> Vec<String> {
             }
         }
         let outside = if c.left { 1.0 } else { -1.0 } * (half + RAIL_OFFSET_M);
-        for i in c.from..c.to.min(pts.len() - 1) {
+        for i in (c.from..c.to.min(pts.len() - 1)).filter(|&i| !open(i) && !open(i + 1)) {
             let (a, _) = pose_at(map, &pts, i, outside);
             let (b, _) = pose_at(map, &pts, i + 1, outside);
             let gap = uncovered_rail_m(map, (a.x, a.z), (b.x, b.z));

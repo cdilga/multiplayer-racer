@@ -139,6 +139,18 @@ pub fn select(
     recipe: &[Biome],
     rng: &mut Rng,
 ) -> Result<Selection, SelectError> {
+    select_avoiding(pts, recipe, rng, &[])
+}
+
+/// [`select`], keeping each boundary (and its transition) off the `avoid` arc-length spans (the course's set-piece
+/// beat straights, P1-FL15c) where the lap has another straight for it; where it doesn't, the boundary goes where it
+/// would have anyway.
+pub fn select_avoiding(
+    pts: &[(f64, f64)],
+    recipe: &[Biome],
+    rng: &mut Rng,
+    avoid: &[(f64, f64)],
+) -> Result<Selection, SelectError> {
     let mut lap: Vec<Biome> = Vec::new();
     for &b in recipe {
         if lap.last() != Some(&b) {
@@ -165,23 +177,36 @@ pub fn select(
     for j in 0..boundaries {
         let target = lo + spacing * (j + 1) as f64 + rng.range(-0.1, 0.1) * spacing;
         let mut chosen = None;
-        let mut d = 0.0;
-        while d <= spacing * 0.9 && chosen.is_none() {
-            for sign in [1.0, -1.0] {
-                let c = target + sign * d;
-                let prev = cut_s.last().copied().unwrap_or(f64::NEG_INFINITY);
-                if c < lo || c > hi || c - prev < MIN_BOUNDARY_GAP_M {
-                    continue;
+        // First keeping off the avoided spans, then (no straight elsewhere) anywhere.
+        for keep_off in [true, false] {
+            let mut d = 0.0;
+            while d <= spacing * 0.9 && chosen.is_none() {
+                for sign in [1.0, -1.0] {
+                    let c = target + sign * d;
+                    let prev = cut_s.last().copied().unwrap_or(f64::NEG_INFINITY);
+                    if c < lo || c > hi || c - prev < MIN_BOUNDARY_GAP_M {
+                        continue;
+                    }
+                    // Judged at the point the boundary snaps to, with margin for the map's millimetre rounding.
+                    let c = s[index_at(c)];
+                    if keep_off
+                        && avoid
+                            .iter()
+                            .any(|&(a, b)| c > a - TRANSITION_M / 2.0 && c < b + TRANSITION_M / 2.0)
+                    {
+                        continue;
+                    }
+                    let (i0, i1) = (index_at(c - STRAIGHT_M), index_at(c + STRAIGHT_M));
+                    if turn(pts, i0.saturating_sub(1), i1 + 1) <= MAX_TURN {
+                        chosen = Some(c);
+                        break;
+                    }
                 }
-                // Judged at the point the boundary snaps to, with margin for the map's millimetre rounding.
-                let c = s[index_at(c)];
-                let (i0, i1) = (index_at(c - STRAIGHT_M), index_at(c + STRAIGHT_M));
-                if turn(pts, i0.saturating_sub(1), i1 + 1) <= MAX_TURN {
-                    chosen = Some(c);
-                    break;
-                }
+                d += 2.5;
             }
-            d += 2.5;
+            if chosen.is_some() || avoid.is_empty() {
+                break;
+            }
         }
         let c = chosen.ok_or(SelectError::NoStraight(j))?;
         cuts.push(index_at(c));

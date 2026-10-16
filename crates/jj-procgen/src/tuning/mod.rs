@@ -68,12 +68,24 @@ impl LengthClasses {
     }
 }
 
+fn one() -> u32 {
+    1
+}
+
+fn two() -> usize {
+    2
+}
+
+fn default_link_m() -> [f64; 2] {
+    [15.0, 30.0]
+}
+
 fn default_set_piece_straight_m() -> [f64; 2] {
     [0.0, 0.0]
 }
 
 /// The course designer's numbers (metres).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CourseData {
     /// The length classes: one is drawn per seed by weight, and the course is built to its band.
@@ -92,6 +104,26 @@ pub struct CourseData {
     pub set_piece_straight_m: [f64; 2],
     #[serde(default)]
     pub set_piece_straights_per_km: f64,
+    /// The rhythm (P1-FL15c, R20): at least one technical corner (hairpin, medium, chicane) per this much lap, m, spread
+    /// evenly between the flowing ones; 0 leaves the corner order as drawn.
+    #[serde(default)]
+    pub technical_spacing_m: f64,
+    /// Technical corners per cluster (a technical beat), joined by links `technicalLinkM` long (m, drawn).
+    #[serde(default = "two")]
+    pub technical_cluster: usize,
+    #[serde(default = "default_link_m")]
+    pub technical_link_m: [f64; 2],
+    /// A lap of only these biomes spaces its technical top-up this far apart instead (m, the largest of the lap's; 0 for
+    /// none): Town's street corners are its technical beat, and the straights between them hold its rooftop lots.
+    #[serde(default)]
+    pub technical_spacing_in: std::collections::BTreeMap<String, f64>,
+    /// A lap of only these biomes never draws these families (Town is streets: a speedway's 800 m straights through it
+    /// are one long flow beat with no corner to break it). With no family left the lap is twisty.
+    #[serde(default)]
+    pub families_off_in: std::collections::BTreeMap<String, Vec<PresetName>>,
+    /// The fewest set-piece beats a lap gets (P1-FL15c: two set pieces a lap), a minimum, never a maximum.
+    #[serde(default = "one")]
+    pub set_piece_straights_min: u32,
     pub presets: CoursePresets,
     pub crossing: CrossingData,
 }
@@ -134,6 +166,13 @@ pub struct CoursePreset {
     pub chicanes_per_km: f64,
     pub chicane_angle_scale: f64,
     pub radius_scale: f64,
+    /// Scales `technicalSpacingM` for this family (P1-FL15c): under 1 a twistier lap, over 1 longer flowing stretches.
+    #[serde(default = "unit")]
+    pub technical_spacing_scale: f64,
+}
+
+fn unit() -> f64 {
+    1.0
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -292,6 +331,8 @@ pub struct GeneratorData {
     pub item_stations: StationData,
     pub biomes: Biomes,
     pub roof_stunts: crate::roofs::RoofStunts,
+    /// Route forks (R134, P1-FL16).
+    pub forks: crate::forks::ForkData,
     /// Set pieces (R132, P1-FL15b) on or off; their own data is `assets/profiles/set-pieces.json`. Banks that study
     /// one stage of the pipeline alone (terrain, crossings) turn them off.
     #[serde(default = "set_pieces_on")]
@@ -364,6 +405,7 @@ impl GeneratorData {
     pub fn validate(&self) -> Result<(), GeneratorError> {
         let mut bad = Vec::new();
         bad.extend(self.roof_stunts.problems());
+        bad.extend(self.forks.problems());
         let jump = &self.jumps;
         if !jump.min_ramp_slope.is_finite()
             || !jump.max_ramp_slope.is_finite()
@@ -694,7 +736,7 @@ impl Biomes {
 
 impl Default for CourseData {
     fn default() -> Self {
-        GeneratorData::shipped().course
+        GeneratorData::shipped().course.clone()
     }
 }
 

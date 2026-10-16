@@ -29,9 +29,20 @@ fn preset_seed_bank_reports_geometry() {
             assert!(course::self_clear(&c.points));
             let band = data.course.classes.get(c.class);
             assert!((band.length_min_m..=band.length_max_m).contains(&c.length_m));
+            // On Town, unless Town never draws the family (`familiesOffIn`, P1-FL15c): then on Greybox.
+            let biome = if data
+                .course
+                .families_off_in
+                .get("town")
+                .is_some_and(|fs| fs.contains(&name))
+            {
+                jj_map::Biome::Greybox
+            } else {
+                jj_map::Biome::Town
+            };
             let (map, report) = jj_procgen::generate_tuned_from(
                 jj_procgen::seed::Streams::new(seed),
-                &[jj_map::Biome::Town],
+                &[biome],
                 &data,
             )
             .unwrap();

@@ -10,7 +10,11 @@ use jj_sim::{DriveInput, Sim, TICK_HZ, VehicleProfile, route_spawn};
 
 const S: u64 = TICK_HZ as u64;
 
-/// Every biome that places jumps, using the same ten route seeds as the original landability bank.
+/// Seeds per biome in the jump sample: enough for at least ten core jumps now that a lap's two set pieces (P1-FL15c)
+/// take most of its straights.
+const JUMP_SEEDS: u64 = 40;
+
+/// Every biome that places jumps, over `JUMP_SEEDS` route seeds (the original landability bank's ten and more).
 fn jump_maps() -> impl Iterator<Item = (Biome, u64, LoadedMap)> {
     [
         Biome::Greybox,
@@ -20,7 +24,7 @@ fn jump_maps() -> impl Iterator<Item = (Biome, u64, LoadedMap)> {
     ]
     .into_iter()
     .flat_map(|biome| {
-        (0..10).map(move |seed| {
+        (0..JUMP_SEEDS).map(move |seed| {
             let map = generate_recipe(seed, &[biome])
                 .expect("one biome needs no boundary")
                 .0;
@@ -151,8 +155,18 @@ fn take_jump_as(
         was_air = air;
         // A player's straight-wheel run is judged on the jump itself and 10 m past it: beyond that the reserved
         // landing is plain road that may bend gently, which a fixed wheel can't follow (the autopilot runs steer it).
+        // Likewise once a fixed wheel has carried it off the jump's side after landing (a long landing on a gently
+        // bending road): the rest of that run is the verge, not the jump.
+        let lateral = {
+            let yaw = (f64::from(f.pose.yaw) / 100.0).to_radians();
+            let (ux, uz) = (yaw.cos() as f32, yaw.sin() as f32);
+            ((st.position[2] - bz) * ux - (st.position[0] - bx) * uz).abs()
+        };
+        let off_side = landing_up_y.is_some()
+            && lateral > (f64::from(pts[base].width) / 2000.0 + jj_map::jump::EDGE_SLOPE_M) as f32;
         let on_jump = pilot
-            || (st.position[0] - bx).hypot(st.position[2] - bz) <= (d.length_m() + 10.0) as f32;
+            || (st.position[0] - bx).hypot(st.position[2] - bz) <= (d.length_m() + 10.0) as f32
+                && !off_side;
         if landing_up_y.is_some() && on_jump && st.up_y < min_up_y {
             min_up_y = st.up_y;
             let [qx, qy, qz, qw] = st.rotation;
@@ -179,7 +193,8 @@ fn take_jump_as(
                 airborne_s: airborne as f64 / S as f64,
                 landing_up_y: landing_up_y.unwrap_or(st.up_y),
                 min_up_y,
-                end_up_y: if past_jump { min_up_y } else { st.up_y },
+                // How the car leaves the jump window (the worst moment inside it is `min_up_y`'s floor).
+                end_up_y: st.up_y,
                 recovered: sim.car_life(car) != life,
                 lateral_at_ramp,
                 speed_at_lip,
@@ -262,7 +277,10 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
         }
     }
     println!("{rows}");
-    assert!(jumps >= 10, "ten seeds place at least ten jumps: {jumps}");
+    assert!(
+        jumps >= 10,
+        "the seed sample places at least ten jumps: {jumps}"
+    );
     let mean = racing_air.iter().sum::<f64>() / racing_air.len().max(1) as f64;
     println!("mean continuous flight at racing speed {mean:.2} s");
     assert!(bad.is_empty(), "{bad:#?}");
@@ -273,7 +291,7 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
 }
 
 /// br-gw74.10: the ACTION boost goes through the actual autopilot/vehicle path, rather than labelling a placed
-/// speed as "full boost". The same ten seeds as the landability bank must release every lip and land upright.
+/// speed as "full boost". The same seeds as the landability bank must release every lip and land upright.
 #[test]
 fn every_generated_jump_releases_a_car_actually_boosting_at_the_lip() {
     let mut rows = String::from(
@@ -323,13 +341,13 @@ fn every_generated_jump_releases_a_car_actually_boosting_at_the_lip() {
     }
     assert!(
         count >= 10,
-        "every generated jump in the ten-seed sample: {count}"
+        "every generated jump in the seed sample: {count}"
     );
     assert!(failures.is_empty(), "{failures:#?}");
 }
 
 /// The ramp's lip is where it was designed to be: the ground a car meets (the sim's own ray against the colliders) at
-/// the lip is within 5 cm of the ground plus the designed lip height, on every jump of ten seeds.
+/// the lip is within 5 cm of the ground plus the designed lip height, on every jump of the seed sample.
 #[test]
 fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
     use jj_map::jump::{JumpDesign, ground_height_m, surface_point};
@@ -414,7 +432,12 @@ fn a_corner_inside_the_jump_approach_is_rejected() {
         .position(|q| q.x == f.pose.x && q.z == f.pose.z)
         .unwrap();
     // A kink immediately before the ramp must not qualify as a straight entry, even when the landing is clear.
-    map.route.points[base - 1].x += 300;
+    // (Sideways to the road, so the kink bends it whatever its heading.)
+    let (a, b) = (&map.route.points[base - 2], &map.route.points[base]);
+    let (tx, tz) = (f64::from(b.x - a.x), f64::from(b.z - a.z));
+    let len = tx.hypot(tz).max(1.0);
+    map.route.points[base - 1].x += (-tz / len * 300.0) as i32;
+    map.route.points[base - 1].z += (tx / len * 300.0) as i32;
     assert!(
         jj_procgen::features::check_envelope(&map)
             .iter()

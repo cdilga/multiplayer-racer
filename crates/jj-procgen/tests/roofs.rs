@@ -142,8 +142,14 @@ fn town_seed_lots_are_reachable_clear_and_land_a_real_car() {
         }
         println!("town seed {seed}: {count} rooftop lots");
     }
+    // 9 over this 10-seed sample (was 10): since route forks (P1-FL16a) a fork's branch takes the roadside one lot used
+    // (Town seed 1: its 620 m fork, 3 lots -> 2; every other seed unchanged). More candidates (closer spacing, a farther
+    // offset) find more lots, but some new ones stop on the roof with a wheel off its edge: that landing is br-amv3,
+    // not this floor. 7 since P1-FL15c: Town laps draw no speedway (`familiesOffIn`: 49 s of one flow beat), and the
+    // twisty streets seeds 4 and 7 draw instead have no straight long enough for their speedway's lots (1 + 3 -> 0;
+    // seed 0 gains 2).
     assert!(
-        lots >= 10,
+        lots >= 7,
         "ten town seeds must offer actual rooftop stunt access, got {lots}"
     );
     if let Ok(path) = std::env::var("JJ_ROOF_SEEDS") {

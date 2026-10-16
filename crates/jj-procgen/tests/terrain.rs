@@ -17,6 +17,8 @@ fn generate(seed: u64) -> Map {
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
     // Set pieces own their footprint's terrain (P1-FL15b); re-applying ground terrain alone would wipe their pits.
     data.set_pieces = false;
+    // So do route forks (P1-FL16a): their branch's bed and paint are stamped into the terrain, off the route's band.
+    data.forks.per_km = 0.0;
     jj_procgen::generate_tuned_from(
         jj_procgen::seed::Streams::new(seed),
         &[Biome::Greybox],
@@ -175,8 +177,10 @@ fn grade_curvature_and_bank_stay_inside_each_biomes_limits_along_the_route_band(
             w.bank_deg
         );
         // The heightfield's cross slope is the route's bank (to a few percent of grade) and the route sits on the ground.
+        // 0.025: the bilinear 2.5 m grid under a fully banked tight corner (FL15c's technical clusters: Rocks seed 10,
+        // point 384, radius 30 m at 6 deg) reads the bank 0.020 off; gentler bends stay under 0.02.
         assert!(
-            w.cross_err < 0.02,
+            w.cross_err < 0.025,
             "seed {seed} {biome:?}: cross slope off the bank by {}",
             w.cross_err
         );

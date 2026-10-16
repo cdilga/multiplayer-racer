@@ -22,6 +22,8 @@ fn generate(seed: u64) -> Map {
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
     // Set pieces are placed between the terrain and the features this scaffold re-runs (R132).
     data.set_pieces = false;
+    // So are route forks (P1-FL16a): their branches are painted road the full pipeline clears around.
+    data.forks.per_km = 0.0;
     jj_procgen::generate_tuned_from(
         jj_procgen::seed::Streams::new(seed),
         &[Biome::Greybox],

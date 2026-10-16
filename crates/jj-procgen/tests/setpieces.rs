@@ -524,8 +524,34 @@ fn diag_jumps() {
 #[ignore]
 fn diag_road_cells() {
     use jj_map::Surface;
-    for (biome, seed) in [(Biome::Rocks, 1u64), (Biome::Town, 6)] {
+    let cases: Vec<(Biome, u64)> = std::env::var("JJ_CASES").map_or_else(
+        |_| vec![(Biome::Rocks, 1u64), (Biome::Town, 6)],
+        |v| {
+            v.split(',')
+                .map(|c| {
+                    let (b, s) = c.split_once(':').unwrap();
+                    (
+                        serde_json::from_value(serde_json::Value::String(b.into())).unwrap(),
+                        s.parse().unwrap(),
+                    )
+                })
+                .collect()
+        },
+    );
+    for (biome, seed) in cases {
         let map = prepare(seed, &[biome]).map;
+        let forks = map
+            .features
+            .iter()
+            .filter(|f| f.kind == jj_map::FeatureKind::Fork)
+            .count();
+        eprintln!(
+            "CASE {biome:?} {seed}: {forks} forks, {} set pieces",
+            map.features
+                .iter()
+                .filter(|f| GapLeap::of(f).is_some())
+                .count()
+        );
         let t = &map.terrain;
         let sp = f64::from(t.spacing) / 1000.0;
         let cell = |x: f64, z: f64| {
@@ -573,10 +599,26 @@ fn diag_road_cells() {
             for (px, pz) in pts {
                 let s = cell(px, pz);
                 if !matches!(s, Surface::OffTrack | Surface::Rock)
-                    && !d.kit_piece.starts_with("wayfinding/")
+                    && (!d.kit_piece.starts_with("wayfinding/")
+                        || d.kit_piece.ends_with("guard-rail"))
                     && !d.kit_piece.contains("item-station")
                     && d.kit_piece != "outback_bitumen/centre-line"
                 {
+                    let forks: Vec<String> = map
+                        .features
+                        .iter()
+                        .filter(|f| f.kind == jj_map::FeatureKind::Fork)
+                        .map(|f| {
+                            format!(
+                                "fork at ({:.0},{:.0}) d {:.0}",
+                                f64::from(f.pose.x) / 1000.0,
+                                f64::from(f.pose.z) / 1000.0,
+                                (f64::from(f.pose.x) / 1000.0 - px)
+                                    .hypot(f64::from(f.pose.z) / 1000.0 - pz)
+                            )
+                        })
+                        .collect();
+                    eprintln!("   forks {forks:?}");
                     let near: Vec<String> = map
                         .features
                         .iter()

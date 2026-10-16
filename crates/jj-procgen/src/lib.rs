@@ -21,11 +21,13 @@ pub mod biome;
 pub mod course;
 pub mod crossings;
 pub mod features;
+pub mod forks;
 pub mod lab;
 pub mod lineside;
 pub mod loops;
 pub mod overpass;
 pub mod playtest;
+pub mod rhythm;
 pub mod roofs;
 pub mod scatter;
 pub mod seed;
@@ -35,6 +37,7 @@ pub mod stations;
 pub mod terrain;
 pub mod tuning;
 pub mod validate;
+pub mod variety;
 
 pub use validate::{Plan, Prepared, prepare, prepare_tuned, prepare_with};
 
@@ -48,8 +51,10 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "23";
+pub const GENERATOR_VERSION: &str = "24";
 const STEP_M: f64 = 2.5;
+/// Rooftop lots keep this far (m along the road) from a set piece's span.
+const ROOF_PIECE_MARGIN_M: f64 = 10.0;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
 #[derive(Clone, Debug)]
@@ -66,6 +71,11 @@ pub struct Report {
     /// The set pieces placed on the lap, in route order, and why candidate sites were turned down (R90).
     pub set_pieces: Vec<&'static str>,
     pub set_piece_rejects: BTreeMap<String, u32>,
+    /// The route forks placed, and why candidate splits were turned down (R90).
+    pub forks: u32,
+    pub fork_rejects: BTreeMap<String, u32>,
+    /// The course's set-piece beat straights (m along the lap, P1-FL15c).
+    pub beat_spans: Vec<(f64, f64)>,
 }
 
 /// The map for `seed`.
@@ -104,7 +114,41 @@ pub fn generate_tuned_from(
     recipe: &[Biome],
     data: &tuning::GeneratorData,
 ) -> Result<(Map, Report), biome::SelectError> {
-    let course = course::design_with(&mut st.structure, &data.course);
+    // A lap of only biomes whose own corners are the technical beat (Town) gets its own technical spacing, and a lap of
+    // only biomes that rule a family out never draws it.
+    let name = |b: &Biome| {
+        serde_json::to_value(b)
+            .ok()
+            .and_then(|v| v.as_str().map(str::to_owned))
+            .unwrap_or_default()
+    };
+    let spacing_in: Vec<f64> = recipe
+        .iter()
+        .filter_map(|b| data.course.technical_spacing_in.get(&name(b)).copied())
+        .collect();
+    let mut c = data.course.clone();
+    if !recipe.is_empty() && spacing_in.len() == recipe.len() {
+        c.technical_spacing_m = spacing_in.into_iter().fold(0.0, f64::max);
+    }
+    for f in tuning::PresetName::ALL {
+        let off = !recipe.is_empty()
+            && recipe.iter().all(|b| {
+                data.course
+                    .families_off_in
+                    .get(&name(b))
+                    .is_some_and(|fs| fs.contains(&f))
+            });
+        if off {
+            c.presets.set_weight(f, 0.0);
+        }
+    }
+    if tuning::PresetName::ALL
+        .iter()
+        .all(|&f| c.presets.weight(f) <= 0.0)
+    {
+        c.presets.set_weight(tuning::PresetName::Twisty, 1.0);
+    }
+    let course = course::design_with(&mut st.structure, &c);
     generate_course(st, course, recipe, data, setpieces::shipped())
 }
 
@@ -121,7 +165,7 @@ pub fn generate_course(
     let sel = if course.crossing.is_some() {
         biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
     } else {
-        biome::select(&centerline, recipe, &mut st.structure)?
+        biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &course.beat_spans)?
     };
     let props = placeholder_props(&mut st, &centerline);
     let n = centerline.len();
@@ -198,6 +242,15 @@ pub fn generate_course(
         Default::default()
     };
     let ranges = setpieces::clear_of(&ranges, &pieces);
+    // Route forks (R134, P1-FL16) on the sweepers left, from their own stream; the small features keep clear of them.
+    let fork_seed = st.structure.clone().next_u64() ^ 0xF0_4C;
+    let (fork_spans, fork_rejects) = forks::place(
+        &mut map,
+        &mut seed::Rng::stream(fork_seed, "forks"),
+        &ranges,
+        &data.forks,
+    );
+    let ranges = forks::clear_of(&ranges, &fork_spans);
     features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
     let registry = biome::registry();
     stations::place(&mut map, &data.item_stations, &registry);
@@ -246,6 +299,8 @@ pub fn generate_course(
     // their dressing references; no earlier placement pass may fill the approach afterwards.
     crossings::clear_corridors(&mut map, &registry);
     setpieces::clear_footprints(&mut map, &registry);
+    forks::clear_corridors(&mut map, &registry);
+    biome::wayfinding::fork_gores(&mut map);
     // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
     // out of the same crossing envelopes as ordinary features.
     let eligible: Vec<bool> = sel
@@ -253,8 +308,20 @@ pub fn generate_course(
         .iter()
         .map(|s| ranges.iter().any(|(a, b, _)| s >= a && s <= b))
         .collect();
+    // Roof stunts reshape a lot beside the road after the corridors are cleared; `roofs::place` refuses a lot on any
+    // painted track or within a fork branch's graded verge (`forks::in_mouth`).
+    let reserved = |i: usize| {
+        // A set piece's span and `ROOF_PIECE_MARGIN_M` either side: its approach and run-out are graded ground a
+        // lot's kicker would launch off (a lot just past a run-out overshot its roof, Town seed 0). Its detour's
+        // painted track is `roofs::place`'s own surface check.
+        pieces.iter().any(|p| {
+            sel.s[i] + ROOF_PIECE_MARGIN_M > p.from_s && sel.s[i] < p.to_s + ROOF_PIECE_MARGIN_M
+        })
+    };
     roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
-        if course.crossing.is_none() || eligible[i] {
+        if reserved(i) {
+            0.0
+        } else if course.crossing.is_none() || eligible[i] {
             sel.weight(Biome::Town, i)
         } else {
             0.0
@@ -263,6 +330,8 @@ pub fn generate_course(
     let mut rep = report(&course);
     rep.set_pieces = pieces.iter().map(|p| p.kind.name()).collect();
     rep.set_piece_rejects = piece_rejects;
+    rep.forks = fork_spans.len() as u32;
+    rep.fork_rejects = fork_rejects;
     Ok((map, rep))
 }
 
@@ -288,6 +357,9 @@ fn report(course: &Course) -> Report {
         rejects: course.rejects.clone(),
         set_pieces: Vec::new(),
         set_piece_rejects: BTreeMap::new(),
+        forks: 0,
+        fork_rejects: BTreeMap::new(),
+        beat_spans: course.beat_spans.clone(),
     }
 }
 

@@ -45,6 +45,11 @@ impl CornerKind {
         CornerKind::Chicane,
     ];
 
+    /// A corner that holds the car well under the flowing speed: a technical beat (R20).
+    pub fn technical(self) -> bool {
+        self != CornerKind::Sweeper
+    }
+
     pub fn name(self) -> &'static str {
         match self {
             CornerKind::Hairpin => "hairpin",
@@ -78,6 +83,7 @@ pub struct Corner {
 #[derive(Clone, Debug)]
 pub struct Course {
     pub corners: Vec<Corner>,
+    /// The family's own straights, m (not a technical cluster's links, nor the set-piece beats: `beat_spans`).
     pub straights: Vec<f64>,
     /// The centerline every ~2.5 m, starting at the start straight's beginning; closed (the last point leads back to
     /// the first).
@@ -91,6 +97,9 @@ pub struct Course {
     pub fallback: bool,
     /// Why earlier draws were rejected (introspection for the seed bank).
     pub rejects: BTreeMap<&'static str, u32>,
+    /// The set-piece beat straights, as arc-length spans (m from the start, before resampling): where the lap's set
+    /// pieces go, so biome boundaries keep off them (P1-FL15c).
+    pub beat_spans: Vec<(f64, f64)>,
     /// Upper and lower straight spans in metres along the route, before resampling.
     pub crossing: Option<[(f64, f64); 2]>,
 }
@@ -169,6 +178,23 @@ fn sample(pieces: &[Piece]) -> Vec<(f64, f64)> {
     out
 }
 
+/// Arc-length spans (m from the start) of the pieces at `ix`.
+fn spans_of(pieces: &[Piece], ix: &[usize]) -> Vec<(f64, f64)> {
+    let mut at = 0.0;
+    let mut out = Vec::new();
+    for (i, p) in pieces.iter().enumerate() {
+        let len = match *p {
+            Piece::Straight(l) => l,
+            Piece::Arc { turn, radius } => turn.abs() * radius,
+        };
+        if ix.contains(&i) {
+            out.push((at, at + len));
+        }
+        at += len;
+    }
+    out
+}
+
 fn length(points: &[(f64, f64)]) -> f64 {
     (0..points.len())
         .map(|i| {
@@ -211,8 +237,17 @@ enum Beat {
     None,
 }
 
+/// A figure eight's lobes get set-piece beat straights only if they stay at least this round, m.
+const EIGHT_BEAT_MIN_RADIUS_M: f64 = 45.0;
+/// A figure eight's beat may be shortened to fit its lobes, to this share of the data's shortest beat (a set piece's
+/// core still fits).
+const EIGHT_BEAT_MIN_SHARE: f64 = 0.75;
+
 /// Largest share of the lap one set-piece beat straight may take.
 const BEAT_SHARE: f64 = 0.22;
+
+/// A draw's corners, pieces and the two lists of piece indices it returns alongside them.
+type Drawn = (Vec<Corner>, Vec<Piece>, Vec<usize>, Vec<usize>);
 
 /// One draw: a corner list and straights, closed exactly, or why it couldn't be.
 fn draw(
@@ -221,7 +256,8 @@ fn draw(
     preset: &crate::tuning::CoursePreset,
     target_m: f64,
     beat: Beat,
-) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
+    technical: f64,
+) -> Result<Drawn, &'static str> {
     // The turn budget: 360° of left-hand turning net, plus whatever an optional right-hander takes back.
     let right = (rng.unit() < preset.opposite_corner_probability).then(|| range(rng, (40.0, 75.0)));
     let total = 360.0 + right.unwrap_or(0.0);
@@ -320,6 +356,46 @@ fn draw(
             radius: range(rng, r),
         });
     }
+    // The rhythm (R20, P1-FL15c): at least one technical corner (hairpin, medium, chicane) every `technicalSpacingM`,
+    // topped up with chicanes (they turn net zero, so the turn budget holds).
+    let clusters = if data.technical_spacing_m > 0.0 && technical > 0.0 {
+        libm::ceil(
+            technical * target_m
+                / (data.technical_spacing_m * preset.technical_spacing_scale.max(0.1)),
+        ) as usize
+    } else {
+        0
+    };
+    if clusters > 0 {
+        let corners_technical = |c: &Corner| c.kind.technical();
+        let already = corners.iter().filter(|c| c.kind.technical()).count();
+        let mut tightened = 0usize;
+        let want = clusters * data.technical_cluster.max(1);
+        // Tighten sweepers into medium corners first (same turn, a medium radius: the straights keep their count and
+        // length, so a speedway stays a speedway), then add chicanes.
+        for c in corners.iter_mut() {
+            if corners_technical(c) {
+                continue;
+            }
+            if c.kind == CornerKind::Sweeper && tightened < want.saturating_sub(already) {
+                let (_, r) = CornerKind::Medium.ranges();
+                c.kind = CornerKind::Medium;
+                c.radius = range(rng, r);
+                tightened += 1;
+            }
+        }
+        // (A family without chicanes, a speedway, only tightens its sweepers.)
+        while preset.chicanes_per_km > 0.0
+            && corners.iter().filter(|c| c.kind.technical()).count() < want
+        {
+            let (a, r) = CornerKind::Chicane.ranges();
+            corners.push(Corner {
+                kind: CornerKind::Chicane,
+                turn: range(rng, a) * preset.chicane_angle_scale,
+                radius: range(rng, r),
+            });
+        }
+    }
     for c in &mut corners {
         c.turn = deg(c.turn);
         c.radius *= preset.radius_scale;
@@ -328,6 +404,46 @@ fn draw(
     for i in (1..corners.len()).rev() {
         let j = (rng.next_u64() % (i as u64 + 1)) as usize;
         corners.swap(i, j);
+    }
+    // Then the technical corners grouped into clusters (a technical beat: corners joined by short links, dealt round
+    // robin so the hairpins land in different clusters) spread evenly round the lap between the flowing corners, so
+    // the lap alternates flow and technical beats and no flowing stretch runs on (R20).
+    let mut link_after = vec![false; corners.len()];
+    if clusters > 0 {
+        let (tech, flow): (Vec<Corner>, Vec<Corner>) =
+            corners.iter().partition(|c| c.kind.technical());
+        // As many clusters as the spacing asks for, or as the lap's own technical corners fill at the cluster size
+        // (a twisty lap's corners stay spread: clustering them all into a few would leave a few long straights).
+        let size = data.technical_cluster.max(1);
+        let k = clusters
+            .max(tech.len().div_ceil(size))
+            .min(tech.len())
+            .max(1);
+        let groups: Vec<Vec<Corner>> = (0..k)
+            .map(|j| tech.iter().skip(j).step_by(k).copied().collect())
+            .filter(|g: &Vec<Corner>| !g.is_empty())
+            .collect();
+        let at: Vec<usize> = (0..groups.len())
+            .map(|j| ((2 * j + 1) * flow.len()) / (2 * groups.len()))
+            .collect();
+        let mut ordered = Vec::with_capacity(corners.len());
+        let mut links = Vec::with_capacity(corners.len());
+        for i in 0..=flow.len() {
+            for (j, g) in groups.iter().enumerate() {
+                if at[j] == i {
+                    for (m, c) in g.iter().enumerate() {
+                        ordered.push(*c);
+                        links.push(m + 1 < g.len());
+                    }
+                }
+            }
+            if let Some(c) = flow.get(i) {
+                ordered.push(*c);
+                links.push(false);
+            }
+        }
+        corners = ordered;
+        link_after = links;
     }
     if corners
         .windows(2)
@@ -340,7 +456,11 @@ fn draw(
         rng,
         (data.start_straight_min_m, data.start_straight_max_m),
     ))];
-    for c in &corners {
+    let mut fixed_links: Vec<usize> = Vec::new();
+    // The straights that follow a technical corner (by piece index): a set-piece beat there starts its approach out of
+    // a tight corner, the chase camera swinging, so its landmark is seen late.
+    let mut after_technical: Vec<usize> = Vec::new();
+    for (ci, c) in corners.iter().enumerate() {
         if c.kind == CornerKind::Chicane {
             let side = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
             pieces.push(Piece::Arc {
@@ -357,20 +477,38 @@ fn draw(
                 radius: c.radius,
             });
         }
-        // A share of the lap; the scale that brings the lap to the target comes after.
-        pieces.push(Piece::Straight(range(
-            rng,
-            (1.0 - data.straight_spread, 1.0 + data.straight_spread),
-        )));
+        if c.kind.technical() {
+            after_technical.push(pieces.len());
+        }
+        // A share of the lap; the scale that brings the lap to the target comes after. Inside a technical cluster it's
+        // a short link of fixed length instead.
+        if link_after[ci] {
+            fixed_links.push(pieces.len());
+            pieces.push(Piece::Straight(range(
+                rng,
+                (data.technical_link_m[0], data.technical_link_m[1]),
+            )));
+        } else {
+            pieces.push(Piece::Straight(range(
+                rng,
+                (1.0 - data.straight_spread, 1.0 + data.straight_spread),
+            )));
+        }
     }
     // Set-piece beats (R132): some of the straights after a corner get a fixed set-piece length, kept out of the
     // scaling and the loop closing below, so every lap has the run a set piece needs (P1-FL15b).
     let mut beats: Vec<usize> = Vec::new();
     let [b0, b1] = data.set_piece_straight_m;
     if beat != Beat::None && b1 > 0.0 {
-        let want = 1.max(libm::round(data.set_piece_straights_per_km * target_m / 1000.0) as usize);
+        // As many beats as the lap's set-piece minimum, which a short lap halves (`setpieces::min_for`).
+        let floor = data
+            .set_piece_straights_min
+            .max(1)
+            .min(crate::setpieces::min_for(crate::setpieces::shipped(), target_m, &[]).max(1));
+        let want = (floor as usize)
+            .max(libm::round(data.set_piece_straights_per_km * target_m / 1000.0) as usize);
         let mut slots: Vec<usize> = (1..pieces.len())
-            .filter(|&i| matches!(pieces[i], Piece::Straight(_)))
+            .filter(|&i| matches!(pieces[i], Piece::Straight(_)) && !fixed_links.contains(&i))
             .collect();
         // The straights either side of the start (into the corridor, and right after the first corner) stay free: a
         // piece there would crowd the grid.
@@ -378,9 +516,23 @@ fn draw(
         if slots.len() > 1 {
             slots.remove(0);
         }
-        for _ in 0..want.min(slots.len()) {
-            let k = (rng.next_u64() % slots.len() as u64) as usize;
-            let i = slots.remove(k);
+        // Out of a flowing corner where the lap has enough such straights (the landmark is seen from afar, R132).
+        let flowing: Vec<usize> = slots
+            .iter()
+            .copied()
+            .filter(|i| !after_technical.contains(i))
+            .collect();
+        if flowing.len() >= want {
+            slots = flowing;
+        }
+        // Spread round the lap (set pieces >= 15 s apart, R20): every (slots / want)-th straight from a drawn offset.
+        let take = want.min(slots.len());
+        let stride = slots.len() as f64 / take.max(1) as f64;
+        let offset = rng.unit() * stride;
+        let picked: Vec<usize> = (0..take)
+            .map(|k| slots[(libm::floor(offset + k as f64 * stride) as usize).min(slots.len() - 1)])
+            .collect();
+        for i in picked {
             // A short lap can't spare a long beat: at most a fifth of the lap.
             let cap = target_m * BEAT_SHARE;
             let l = range(rng, (b0.min(cap), b1.min(cap)));
@@ -403,6 +555,9 @@ fn draw(
         Piece::Straight(l) => l,
         Piece::Arc { .. } => 0.0,
     };
+    // The beats and the cluster links keep their lengths: out of the scaling and the loop closing.
+    let set_piece_beats = beats.clone();
+    beats.extend(fixed_links.iter().copied());
     let fixed: f64 = beats
         .iter()
         .map(|&i| {
@@ -469,7 +624,7 @@ fn draw(
             *l += add;
         }
     }
-    Ok((corners, pieces))
+    Ok((corners, pieces, set_piece_beats, fixed_links))
 }
 
 /// The conservative fallback: a plain oval of the target length.
@@ -530,6 +685,7 @@ pub fn lab_oval(straight_m: f64, radius_m: f64) -> Course {
         fallback: false,
         rejects: BTreeMap::new(),
         crossing: None,
+        beat_spans: Vec::new(),
     }
 }
 
@@ -559,25 +715,65 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         })
         .unwrap_or(PresetName::Speedway);
     let band = *data.classes.get(class);
+    // A figure eight needs its minimum length (lobes round enough for set-piece beats, P1-FL15c): a class too short for
+    // one draws among the other families instead, by their weights.
+    let others = [
+        PresetName::Twisty,
+        PresetName::Flowing,
+        PresetName::Speedway,
+    ];
+    let total: f64 = others.iter().map(|n| data.presets.weight(*n)).sum();
+    // (Data that draws only figure eights keeps them: a plain eight, without its lobe beats, on a short class.)
+    let preset = if preset == PresetName::FigureEight
+        && band.length_max_m < data.presets.figure_eight.min_length_m
+        && total > 0.0
+    {
+        let mut pick = rng.unit() * total;
+        others
+            .into_iter()
+            .find(|n| {
+                let w = data.presets.weight(*n);
+                if pick < w {
+                    true
+                } else {
+                    pick -= w;
+                    false
+                }
+            })
+            .unwrap_or(PresetName::Speedway)
+    } else {
+        preset
+    };
     if preset == PresetName::FigureEight {
         return figure_eight(rng, data, class, band);
     }
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
         let target = range(rng, (band.length_min_m, band.length_max_m));
-        // Each attempt first tries with the set-piece beat (drawn, then its shortest); if neither course works out, the
-        // same attempt runs again without it from the same stream state, so the beat never costs a course the plain
-        // designer would find.
+        // Each attempt first tries with the set-piece beat (drawn, then its shortest) and the technical clusters; if no
+        // course works out, the same attempt runs again with fewer clusters and then without the beat, from the same
+        // stream state, so neither costs a course the plain designer would find.
         let saved = rng.clone();
         let mut found = None;
-        for beat in [Beat::Drawn, Beat::Shortest, Beat::None] {
+        // The set-piece beats matter more than the technical clusters: a lap that can't fit both keeps its beats with
+        // half the clusters, then none, before it gives up the beats.
+        for (beat, technical) in [
+            (Beat::Drawn, 1.0),
+            (Beat::Shortest, 1.0),
+            (Beat::Drawn, 0.5),
+            (Beat::Shortest, 0.5),
+            (Beat::Shortest, 0.0),
+            (Beat::None, 1.0),
+            (Beat::None, 0.0),
+        ] {
             *rng = saved.clone();
-            let (corners, pieces) = match draw(
+            let (corners, pieces, beat_ix, link_ix) = match draw(
                 rng,
                 data,
                 data.presets.get(preset).expect("ordinary course preset"),
                 target,
                 beat,
+                technical,
             ) {
                 Ok(d) => d,
                 Err(why) => {
@@ -600,15 +796,25 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
                 *rejects.entry(why).or_default() += 1;
                 continue;
             }
-            found = Some((corners, pieces, points, len));
+            found = Some((corners, pieces, points, len, beat_ix, link_ix));
             break;
         }
-        let Some((corners, pieces, points, len)) = found else {
+        let Some((corners, pieces, points, len, beat_ix, link_ix)) = found else {
             continue;
         };
+        // The family's own straights: a technical cluster's links are part of the cluster, and the set-piece beats
+        // (the same in every family) are reported apart, as `beat_spans`.
+        let straights_m = straights(
+            &pieces
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !link_ix.contains(i) && !beat_ix.contains(i))
+                .map(|(_, p)| *p)
+                .collect::<Vec<_>>(),
+        );
         return Course {
             corners,
-            straights: straights(&pieces),
+            straights: straights_m,
             points,
             length_m: len,
             class,
@@ -617,6 +823,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
             fallback: false,
             rejects,
             crossing: None,
+            beat_spans: spans_of(&pieces, &beat_ix),
         };
     }
     let (corners, pieces) = oval((band.length_min_m + band.length_max_m) / 2.0);
@@ -632,6 +839,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         fallback: true,
         rejects,
         crossing: None,
+        beat_spans: Vec::new(),
     }
 }
 
@@ -649,21 +857,84 @@ fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: Length
         data.crossing.lobe_turn_max_deg,
     ));
     let ratio = -libm::tan(angle / 2.0);
-    let mut radius = target / (4.0 * ratio + 2.0 * angle);
-    let mut straight = 2.0 * ratio * radius;
     let sign = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
-    let pieces = [
-        Piece::Straight(straight),
-        Piece::Arc {
-            turn: sign * angle,
-            radius,
-        },
-        Piece::Straight(straight),
-        Piece::Arc {
-            turn: -sign * angle,
-            radius,
-        },
-    ];
+    // Set-piece beats (P1-FL15c): `k` straights of `beat` m in each lobe, splitting it into k + 1 equal arcs, where the
+    // crossing's keep-outs don't reach. A lobe's beats head along angle·j/(k+1); summed, each lobe's lie along angle/2
+    // (both lobes' do), so they join the closing equation along it:
+    // S = (2r·sin(angle/2) + beat·Σ cos(angle·(j/(k+1) − 1/2))) / -cos(angle/2), and the lap 2S + 2k·beat + 2·angle·r is
+    // linear in r. Two beats a lobe on a long eight, one on a shorter one (the beat shortened to fit, never below the
+    // data's minimum), none if the lobes would get tighter than `EIGHT_BEAT_MIN_RADIUS_M`.
+    let [b0, b1] = data.set_piece_straight_m;
+    let drawn_beat = if b1 > 0.0 { range(rng, (b0, b1)) } else { 0.0 };
+    let c = -libm::cos(angle / 2.0);
+    let layout = |k: usize, beat: f64| {
+        let along: f64 = (1..=k)
+            .map(|j| libm::cos(angle * (j as f64 / (k + 1) as f64 - 0.5)))
+            .sum();
+        // target = 2S + 2k·beat + 2·angle·r, S = (2r·sin(angle/2) + beat·along) / c
+        let per_r = 2.0 * angle + 4.0 * libm::sin(angle / 2.0) / c;
+        let fixed = 2.0 * k as f64 * beat + 2.0 * beat * along / c;
+        let r = (target - fixed) / per_r;
+        (
+            r,
+            (2.0 * r * libm::sin(angle / 2.0) + beat * along) / c,
+            fixed,
+            per_r,
+        )
+    };
+    let mut chosen: Option<(usize, f64)> = None;
+    if drawn_beat > 0.0 {
+        for k in [2usize, 1] {
+            let (r, _, _, per_r) = layout(k, drawn_beat);
+            let beat = if r >= EIGHT_BEAT_MIN_RADIUS_M {
+                drawn_beat
+            } else {
+                // The longest beat that keeps the lobes round enough.
+                let unit = layout(k, 1.0).2;
+                (target - EIGHT_BEAT_MIN_RADIUS_M * per_r) / unit
+            };
+            if beat >= b0 * EIGHT_BEAT_MIN_SHARE {
+                chosen = Some((k, beat.min(drawn_beat)));
+                break;
+            }
+        }
+    }
+    let (k, beat_m) = chosen.unwrap_or((0, 0.0));
+    let beat = k > 0;
+    let (mut radius, mut straight) = if beat {
+        let (r, sl, _, _) = layout(k, beat_m);
+        (r, sl)
+    } else {
+        let r = target / (4.0 * ratio + 2.0 * angle);
+        (r, 2.0 * ratio * r)
+    };
+    let part = |turn: f64| Piece::Arc {
+        turn: turn / (k + 1) as f64,
+        radius,
+    };
+    let mut pieces: Vec<Piece> = Vec::new();
+    let mut beat_ix: Vec<usize> = Vec::new();
+    for lobe in [sign, -sign] {
+        pieces.push(Piece::Straight(straight));
+        if beat {
+            pieces.push(part(lobe * angle));
+            for _ in 0..k {
+                beat_ix.push(pieces.len());
+                pieces.push(Piece::Straight(beat_m));
+                pieces.push(part(lobe * angle));
+            }
+        } else {
+            pieces.push(Piece::Arc {
+                turn: lobe * angle,
+                radius,
+            });
+        }
+    }
+    debug_assert!({
+        let (end, _) = trace(&pieces);
+        libm::hypot(end.0, end.1) < 1e-6 * target
+    });
+
     let mut points = sample(&pieces);
     // Arc chords are shorter than analytical arcs. Fit the sampled route to the
     // requested length, rather than letting the shortest band undershoot.
@@ -674,6 +945,12 @@ fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: Length
     }
     radius *= scale;
     straight *= scale;
+    let beat_m = beat_m * scale;
+    let lobe = angle * radius;
+    let beat_spans: Vec<(f64, f64)> = spans_of(&pieces, &beat_ix)
+        .into_iter()
+        .map(|(a, b)| (a * scale, b * scale))
+        .collect();
     Course {
         corners: vec![
             Corner {
@@ -696,9 +973,13 @@ fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: Length
         fallback: false,
         rejects: BTreeMap::new(),
         crossing: Some([
-            (straight + angle * radius, 2.0 * straight + angle * radius),
+            (
+                straight + lobe + k as f64 * beat_m,
+                2.0 * straight + lobe + k as f64 * beat_m,
+            ),
             (0.0, straight),
         ]),
+        beat_spans,
     }
 }
 

@@ -338,11 +338,13 @@ pub fn place(
                 Side::Left => &[-1.0],
                 Side::Right => &[1.0],
                 Side::Both => &[-1.0, 1.0],
+                // The drawn side, then the other if the drawn one is refused (a fork's branch or a set piece's detour
+                // may take one roadside, P1-FL15c); one placement either way.
                 Side::Either => {
                     if side_draw < 0.5 {
-                        &[-1.0]
+                        &[-1.0, 1.0]
                     } else {
-                        &[1.0]
+                        &[1.0, -1.0]
                     }
                 }
             };
@@ -508,6 +510,9 @@ pub fn place(
                         ));
                     }
                 }
+                if rule.side == Side::Either {
+                    break;
+                }
             }
         }
         // Strung between neighbours on one side (power lines): a piece centred between each close pair, along their line.
@@ -581,6 +586,33 @@ pub fn place(
         }
         let (near, _) = road.nearest((cx, cz));
         if near - walk.half - reach < CLEAR_M || obstacles.clash(cx, cz, reach) {
+            return false;
+        }
+        // Not on painted ground: a set piece's detour or a fork's branch is a road too (P1-FL15c).
+        let t = &map.terrain;
+        let sp = f64::from(t.spacing) / 1000.0;
+        let painted = |x: f64, z: f64| {
+            let c = libm::round((x - f64::from(t.origin_x) / 1000.0) / sp) as i64;
+            let r = libm::round((z - f64::from(t.origin_z) / 1000.0) / sp) as i64;
+            c >= 0
+                && r >= 0
+                && c < i64::from(t.cols)
+                && r < i64::from(t.rows)
+                && !matches!(
+                    t.surfaces[(r * i64::from(t.cols) + c) as usize],
+                    jj_map::Surface::OffTrack | jj_map::Surface::Rock
+                )
+        };
+        if [
+            (0.0, 0.0),
+            (reach, 0.0),
+            (-reach, 0.0),
+            (0.0, reach),
+            (0.0, -reach),
+        ]
+        .iter()
+        .any(|(dx, dz)| painted(cx + dx, cz + dz))
+        {
             return false;
         }
         obstacles.add(cx, cz, reach);

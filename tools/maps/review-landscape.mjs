@@ -1,6 +1,6 @@
 // br-bbki.15.1: terrain-first landscape review. Renders generated maps in the real host renderer: a whole-course overview
 // plus chase stills at the highest, lowest, steepest-climb and deepest-cutting route points.
-// Env: JJ_BIN, JJ_CAPTURE_DIR (required); JJ_ALLOW_INVALID=1; JJ_SEEDS=0,1,2,3; JJ_RECIPES=rocks,outback-dirt,town; JJ_ENGINE=chromium|webkit|both; JJ_SIZE=1920x1080.
+// Env: JJ_BIN, JJ_CAPTURE_DIR (required); JJ_ALLOW_INVALID=1; JJ_SEEDS=0,1,2,3; JJ_RECIPES=rocks,outback-dirt,town (or mix: the race's own biome mix); JJ_ENGINE=chromium|webkit|both; JJ_SIZE=1920x1080.
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
@@ -47,7 +47,9 @@ for(const recipe of recipes) for(const seed of seeds) {
   const dir=join(scratch,`${recipe}-s${seed}`);
   // JJ_ALLOW_INVALID=1 reviews the map procgen wrote even when it failed validation (recorded as valid:false).
   let valid=true;
-  try {execFileSync(process.env.JJ_BIN,['procgen','--seed',String(seed),'--recipe',recipe,'--out',dir,'--json'],{stdio:['ignore','ignore','ignore']});}
+  // A recipe of `mix` prepares the seed as a race does (its own biome mix, P1-FL15c).
+  const which=recipe==='mix'?['--mix']:['--recipe',recipe];
+  try {execFileSync(process.env.JJ_BIN,['procgen','--seed',String(seed),...which,'--out',dir,'--json'],{stdio:['ignore','ignore','ignore']});}
   catch(e){if(process.env.JJ_ALLOW_INVALID!=='1') throw e; valid=false;}
   const map=JSON.parse(readFileSync(join(dir,'map.json'),'utf8'));
   const pts=map.route.points,n=pts.length,ys=pts.map(p=>p.y);

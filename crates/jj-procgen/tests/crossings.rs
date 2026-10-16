@@ -145,6 +145,10 @@ fn check_bridge_gate(height: f64) {
     for g in &mut raw.route.gates {
         g.finish = false;
     }
+    // Only this test's gate within the 2 s the car drives (a neighbouring gate would count too).
+    raw.route
+        .gates
+        .retain(|g| g.at == at as u32 || (g.at as usize).abs_diff(at) > 16);
     if let Some(g) = raw.route.gates.iter_mut().find(|g| g.at == at as u32) {
         g.finish = true;
     } else {
@@ -210,9 +214,11 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
                 prepared.attempts
             );
             assert_eq!(prepared.course.preset, PresetName::FigureEight);
-            assert_eq!(
-                prepared.map.header.biomes.len(),
-                recipe.len(),
+            // A short (plain) eight has no room for its set pieces, and the ladder drops a biome before it gives up the
+            // set-piece minimum (R132 over R125's random biome count, P1-FL15c): that keeps the family, so it's allowed.
+            assert!(
+                prepared.map.header.biomes.len() == recipe.len()
+                    || matches!(prepared.plan, jj_procgen::validate::Plan::Shorter(_)),
                 "seed {seed} lost a biome: {:?}",
                 prepared.attempts
             );

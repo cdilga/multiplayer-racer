@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--recipe <biome,biome,..> | --mix] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first\n  --mix prepares the seed as a race does: its own biome mix and draws";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
@@ -126,6 +126,7 @@ pub fn command(args: &[String]) -> ExitCode {
     let mut seeds: Option<(u64, u64)> = None;
     let mut out: Option<PathBuf> = None;
     let mut recipe = vec![jj_map::Biome::Greybox];
+    let mut mix = false;
     let mut data = jj_procgen::tuning::GeneratorData::shipped().clone();
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -156,6 +157,7 @@ pub fn command(args: &[String]) -> ExitCode {
                     data.course.presets.set_weight(n, f64::from(n == name));
                 }
             }
+            "--mix" => mix = true,
             "--recipe" => match it.next().and_then(|l| parse_recipe(l)) {
                 Some(r) => recipe = r,
                 None => {
@@ -190,7 +192,12 @@ pub fn command(args: &[String]) -> ExitCode {
         return ExitCode::from(2);
     };
 
-    let prepared = jj_procgen::prepare_tuned(seed, &recipe, jj_procgen::validate::MAX_DRAWS, &data);
+    // `--mix`: the seed's own biome mix and draws, as a race prepares it (`playtest::prepare_data`).
+    let prepared = if mix {
+        jj_procgen::playtest::prepare_data(seed, &data)
+    } else {
+        jj_procgen::prepare_tuned(seed, &recipe, jj_procgen::validate::MAX_DRAWS, &data)
+    };
     let (map, course) = (prepared.map, prepared.course);
     let report = jj_map::validate(&map, &registry);
     let ok = report.ok && prepared.valid;

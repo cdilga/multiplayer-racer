@@ -342,3 +342,19 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
   be a ghost a car drives through.
 - **Figure-eights need room.** On a 650 m sprint the deck's span is a third of the lap and its grade is capped for the
   deck's cosine; the lobes can't climb 25 m. The family has a minimum length (`figureEight.minLengthM`, 850 m).
+- **Time a fork the way the autopilot drives it (br-bbki.16.1).** The autopilot plans corners at
+  `0.7 × √(7 / κ)` (≈ 0.35 g) and ignores the surface, so a gain estimate at 0.8 g on a dirt pace made every chord cut
+  3–11 s faster in the pack. `forks.gripG` / `branchPace` match the bot; `tests/forks.rs` measures the real split.
+- **Wayfinding across a junction is a wall.** The road's guard rails and chevrons on a corner's outside stood across a
+  fork's mouth and wedged cars at the merge. Clear wayfinding at fork mouths only (`forks::in_mouth`; the corner lint
+  skips them), never along the whole branch, or rails vanish from roads the branch merely passes near.
+- **Bot branch choices must be balanced, not rolled.** A per-car coin flip gave 3 of 16 on one fork; choose by car index
+  plus forks met (offset by a per-seed bit) so a pack splits evenly and R29 holds without luck.
+- **Rhythm is spacing as much as count (P1-FL15c).** Two set pieces placed 13 s apart leave one unbroken flow beat over
+  half the lap even though the lap "has" its pieces. Place each further piece a quarter-lap clear of the others first.
+- **Biome × family is a design choice, not noise.** A Town speedway (800 m straights through streets) can't pass the
+  40% one-beat rule without technical clusters, and those clusters take the straights Town's rooftop lots need. Ruling
+  the family out for Town (`familiesOffIn`) fixed the rhythm at the cost of 2 lots; check roofs whenever course
+  families or straights change.
+- **Shared enums break exhaustive matches across agents.** A new `jj_map::PieceKind` variant in the tree stops
+  procgen compiling mid-run; match the kinds you mean and give the rest a `_` arm.

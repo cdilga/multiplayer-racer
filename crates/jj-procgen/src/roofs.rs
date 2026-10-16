@@ -144,6 +144,9 @@ const TERRACE_ROAD_M: f64 = 1.0;
 /// A terraced lot's ground fades back to the landscape over this distance outside its rectangle, m (past one cell
 /// held flat, so the bilinear ground at the rectangle's edge is the terrace's).
 const TERRACE_BLEND_M: f64 = 4.0;
+/// A lot's ground may climb or fall along its axis at most this much untouched (the kicker is designed level); steeper is
+/// terraced.
+const LOT_AXIAL_GRADE: f64 = 0.03;
 /// The deepest cut or fill a terrace may make inside its lot, m: deeper, the hill around it stands at roof height.
 const TERRACE_MAX_M: f64 = 1.5;
 
@@ -395,14 +398,45 @@ pub fn place(map: &mut Map, d: &RoofStunts, registry: &Registry, town: &dyn Fn(u
                                 <= d.max_ground_grade
                                 && (h - ground_height_m(&map.terrain, lx, lz)).abs() / 0.5
                                     <= d.max_ground_grade;
-                            bounds && road_clear && grade
+                            // Unpainted ground: not a set piece's detour, a fork's branch or a side street.
+                            let unpainted = bounds && {
+                                let t = &map.terrain;
+                                let sp = f64::from(t.spacing) / 1000.0;
+                                let c =
+                                    libm::round((x - f64::from(t.origin_x) / 1000.0) / sp) as i64;
+                                let r =
+                                    libm::round((z - f64::from(t.origin_z) / 1000.0) / sp) as i64;
+                                c >= 0
+                                    && r >= 0
+                                    && c < i64::from(t.cols)
+                                    && r < i64::from(t.rows)
+                                    && matches!(
+                                        t.surfaces[(r * i64::from(t.cols) + c) as usize],
+                                        jj_map::Surface::OffTrack | jj_map::Surface::Rock
+                                    )
+                            };
+                            // Off a fork branch's graded verge too: a lot's terrace would bend the branch's ground.
+                            bounds
+                                && road_clear
+                                && grade
+                                && unpainted
+                                && !crate::forks::in_verge(map, [x, z])
                         })
                     })
                 };
                 // Ground too steep for a lot is terraced (and the terrace undone if the lot fails anyway).
                 let mut terraced = Vec::new();
                 let before = map.terrain.clone();
-                if !clear_ground(map) {
+                // The kicker is designed for level ground: a lot that climbs or falls along its axis (still under the
+                // grade limit) slows or speeds the car off the lip and it misses the roof, so it's terraced too.
+                let axial = |map: &Map| {
+                    let (x0, z0) = at(from, 0.0);
+                    let (x1, z1) = at(to, 0.0);
+                    (ground_height_m(&map.terrain, x1, z1) - ground_height_m(&map.terrain, x0, z0))
+                        .abs()
+                        / (to - from).max(1.0)
+                };
+                if !clear_ground(map) || axial(map) > LOT_AXIAL_GRADE {
                     terraced = terrace(map, &road, &f, (from, to, half));
                     if terraced.is_empty() || !clear_ground(map) {
                         untrace(map, &terraced);

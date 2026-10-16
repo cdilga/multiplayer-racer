@@ -86,6 +86,9 @@ fn streams(seed: u64, draw: u32) -> Streams {
     st
 }
 
+/// Draws tried for each shorter recipe while the ladder still asks for the set pieces.
+const SHORTER_DRAWS: u32 = 3;
+
 /// The seed's track for `recipe`, validated, with the ladder's log. Deterministic native and WASM.
 pub fn prepare(seed: u64, recipe: &[Biome]) -> Prepared {
     prepare_with(seed, recipe, MAX_DRAWS)
@@ -117,6 +120,17 @@ pub fn prepare_tuned(
     let mut attempts: Vec<Attempt> = Vec::new();
     // R132: a lap carries its set pieces. Every draw but the last asks for them, so a course with no room for one is
     // redrawn, and the last draw (and the fallbacks after it) still always yields a valid track.
+    struct Best {
+        score: (usize, usize),
+        recipe: Vec<Biome>,
+        draw: u32,
+        map: Map,
+        course: Report,
+        plan: Plan,
+    }
+    // The best valid draw that missed only the set pieces or the rhythm (interior mutability: the ladder reads it
+    // between steps while the draw closure keeps it).
+    let best: std::cell::RefCell<Option<Best>> = std::cell::RefCell::new(None);
     let mut try_one = |rec: &[Biome], draw: u32, need_pieces: bool| -> Option<(Map, Report)> {
         let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
             Ok(m) => m,
@@ -133,8 +147,48 @@ pub fn prepare_tuned(
             }
         };
         let mut rejected = check(&map, &registry);
+        let valid = rejected.is_empty();
         if need_pieces && data.set_pieces {
             rejected.extend(crate::setpieces::check_minimum(&map));
+            // The lap's rhythm (P1-FL15c): enough distinct beats, no one beat running on.
+            let rhythm = crate::rhythm::of(&map);
+            let mut problems = crate::rhythm::problems(&rhythm, crate::rhythm::shipped());
+            // Town reads as a town by its junctions: a Town lap whose forks and set pieces took every straight a side
+            // street could join is redrawn (kept as a fallback like the rhythm). Town-only laps: a short Town stretch in a
+            // mixed lap may fairly have none.
+            if map.header.biomes.iter().all(|b| *b == Biome::Town)
+                && !map
+                    .dressing
+                    .iter()
+                    .any(|d| d.kit_piece == "town/side-street")
+            {
+                problems.push("town: no side street on the lap".into());
+            }
+            // A valid map short only of its set pieces or its rhythm is kept as the best fallback: the most set pieces,
+            // then the fewest rhythm problems.
+            if valid && !rejected.is_empty() || valid && !problems.is_empty() {
+                let score = (rhythm.set_pieces, usize::MAX - problems.len());
+                let mut kept = best.borrow_mut();
+                if kept.as_ref().is_none_or(|b: &Best| score > b.score) {
+                    *kept = Some(Best {
+                        score,
+                        recipe: rec.to_vec(),
+                        draw,
+                        map: map.clone(),
+                        course: course.clone(),
+                        plan: if rec.len() == lap.len() {
+                            if draw == 0 {
+                                Plan::Requested
+                            } else {
+                                Plan::Redrawn(draw)
+                            }
+                        } else {
+                            Plan::Shorter(rec.len())
+                        },
+                    });
+                }
+            }
+            rejected.extend(problems);
         }
         let ok = rejected.is_empty();
         attempts.push(Attempt {
@@ -145,9 +199,10 @@ pub fn prepare_tuned(
         ok.then_some((map, course))
     };
 
-    // 1. The full recipe on the seed's own course, then derived draws.
+    // 1. The full recipe on the seed's own course, then derived draws: each must carry its set pieces and keep the
+    //    rhythm (P1-FL15c).
     for draw in 0..draws {
-        if let Some((map, course)) = try_one(&lap, draw, draw + 1 < draws) {
+        if let Some((map, course)) = try_one(&lap, draw, true) {
             let plan = if draw == 0 {
                 Plan::Requested
             } else {
@@ -163,9 +218,79 @@ pub fn prepare_tuned(
         }
         // A single-biome recipe has no boundary to fail on: another draw only helps a rejected map.
     }
-    // 2. Fewer biomes on the seed's own course.
+    // The requested biomes come first (a dropped biome is a broken request): the best full-recipe draw that missed
+    // only the set pieces or the rhythm, before any shorter recipe.
+    let kept = best.borrow_mut().take();
+    if let Some(b) = kept {
+        drop(try_one);
+        // The log ends on the accepted map (it missed only the set-piece minimum or the rhythm, which its draw's row
+        // above says).
+        attempts.push(Attempt {
+            recipe: b.recipe,
+            draw: b.draw,
+            rejected: Vec::new(),
+        });
+        return Prepared {
+            map: b.map,
+            course: b.course,
+            plan: b.plan,
+            attempts,
+            valid: true,
+        };
+    }
+    // 2. Fewer biomes, still with the set pieces, when no full-recipe draw was valid at all.
+    for keep in (1..lap.len()).rev() {
+        for draw in 0..SHORTER_DRAWS.min(draws) {
+            if let Some((map, course)) = try_one(&lap[..keep], draw, true) {
+                return Prepared {
+                    map,
+                    course,
+                    plan: Plan::Shorter(keep),
+                    attempts,
+                    valid: true,
+                };
+            }
+        }
+    }
+    // 3. Without the set-piece minimum: the best valid draw so far (the most set pieces, the fewest rhythm problems),
+    //    else the full recipe's last draw, then fewer biomes on the seed's own course.
+    drop(try_one);
+    if let Some(b) = best.into_inner() {
+        attempts.push(Attempt {
+            recipe: b.recipe,
+            draw: b.draw,
+            rejected: Vec::new(),
+        });
+        return Prepared {
+            map: b.map,
+            course: b.course,
+            plan: b.plan,
+            attempts,
+            valid: true,
+        };
+    }
+    let mut try_one = |rec: &[Biome], draw: u32| -> Option<(Map, Report)> {
+        let (map, course) = crate::generate_tuned_from(streams(seed, draw), rec, data).ok()?;
+        let rejected = check(&map, &registry);
+        let ok = rejected.is_empty();
+        attempts.push(Attempt {
+            recipe: rec.to_vec(),
+            draw,
+            rejected,
+        });
+        ok.then_some((map, course))
+    };
+    if let Some((map, course)) = try_one(&lap, draws.saturating_sub(1)) {
+        return Prepared {
+            map,
+            course,
+            plan: Plan::Redrawn(draws.saturating_sub(1)),
+            attempts,
+            valid: true,
+        };
+    }
     for keep in (2..lap.len()).rev() {
-        if let Some((map, course)) = try_one(&lap[..keep], 0, false) {
+        if let Some((map, course)) = try_one(&lap[..keep], 0) {
             return Prepared {
                 map,
                 course,
@@ -177,7 +302,7 @@ pub fn prepare_tuned(
     }
     // 3. The conservative recipe, on the seed's own course (and, if that is somehow rejected, the next draws).
     for draw in 0..if lap.len() > 1 { draws } else { 0 } {
-        if let Some((map, course)) = try_one(&lap[..1], draw, false) {
+        if let Some((map, course)) = try_one(&lap[..1], draw) {
             return Prepared {
                 map,
                 course,

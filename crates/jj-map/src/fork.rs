@@ -29,6 +29,8 @@ pub mod limits {
     pub const ROAD_GAP_M: f64 = 4.0;
     /// "Its ends": this far along the branch from the split and from the merge, m.
     pub const END_M: f64 = 40.0;
+    /// A branch keeps this far clear of a set piece's pit rectangle (plan view), m.
+    pub const PIT_CLEAR_M: f64 = 3.0;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -339,6 +341,31 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
             bad.push(format!("branch radius {radius:.1} m at point {k}"));
             break;
         }
+    }
+    // No part of the branch's roadway crosses a set piece's pit (in plan view, with room to spare): a car there would
+    // count as fallen in (the race's out-of-bounds pit test), wherever its wheels are.
+    let pits = crate::setpiece::pits(map);
+    let in_pit = |x: f64, z: f64| {
+        pits.iter().any(|pit| {
+            let (dx, dz) = (x - pit.origin[0], z - pit.origin[2]);
+            let u = dx * pit.dir[0] + dz * pit.dir[1];
+            let lat = -dx * pit.dir[1] + dz * pit.dir[0];
+            u >= -limits::PIT_CLEAR_M
+                && u <= pit.length_m + limits::PIT_CLEAR_M
+                && lat <= pit.left_m + limits::PIT_CLEAR_M
+                && lat >= -pit.right_m - limits::PIT_CLEAR_M
+        })
+    };
+    if let Some(k) = (0..line.len()).find(|&k| {
+        let (a, b) = (line[k.saturating_sub(1)], line[(k + 1).min(line.len() - 1)]);
+        let l = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
+        let left = [-(b[1] - a[1]) / l, (b[0] - a[0]) / l];
+        [-1.0, 0.0, 1.0].iter().any(|s| {
+            let lat = s * d.width_m / 2.0;
+            in_pit(line[k][0] + left[0] * lat, line[k][1] + left[1] * lat)
+        })
+    }) {
+        bad.push(format!("branch point {k} crosses a set piece's pit"));
     }
     // Away from its ends, the branch keeps clear of every other part of the road (the route it skips included).
     let pts = &map.route.points;

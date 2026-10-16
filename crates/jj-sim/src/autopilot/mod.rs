@@ -6,6 +6,10 @@
 //!   forward from the last point, so a crossing or a nearby stretch of the loop can't pull it across.
 //! - **Speed** comes from the sharpest curvature ahead: `0.7 × √(a_lat / κ)` (low skill), clamped. A cool-down lap
 //!   (finished cars) goes at 0.6 of that.
+//! - **Forks** (P1-FL16). A route fork's branch is a line of its own. Approaching a split, a car takes the branch when
+//!   its index plus the forks it has met, plus a bit drawn from the sim seed and the fork, is odd: half of any pack
+//!   takes each way, and each car alternates from one pass to the next (R29). It pursues the branch from the split and
+//!   rejoins the route at the merge. A car that recovers forgets its branch.
 //! - **Noise.** Small and seeded (its own RNG stream per car), drifting slowly so it reads as a driver, not jitter.
 //! - **Self-recovery.** Under 1 m/s for 3 s, it presses Recover. That's a consequence of the state, so it isn't journaled.
 //! - **Handback.** When the player takes over, the controls blend from the autopilot's last output to the player's
@@ -53,6 +57,48 @@ pub struct Path {
     s: Vec<f32>,
     curvature: Vec<f32>,
     total: f32,
+    branches: Vec<Branch>,
+}
+
+/// A route fork's branch (jj-map `fork::path`): it leaves the route at point `from` and rejoins it at `to`.
+#[derive(Clone, Debug)]
+struct Branch {
+    from: usize,
+    to: usize,
+    pts: Vec<(f32, f32)>,
+    curvature: Vec<f32>,
+}
+
+/// The circle through each point and its neighbours two away: curvature (1/m), as the route's (clamped at an open line's ends).
+fn curvatures(pts: &[(f32, f32)], closed: bool) -> Vec<f32> {
+    let n = pts.len();
+    let at = |i: isize| {
+        if closed {
+            pts[i.rem_euclid(n as isize) as usize]
+        } else {
+            pts[i.clamp(0, n as isize - 1) as usize]
+        }
+    };
+    (0..n as isize)
+        .map(|i| {
+            let (a, b, c) = (at(i - 2), at(i), at(i + 2));
+            let (ab, bc, ca) = (
+                libm::hypotf(b.0 - a.0, b.1 - a.1),
+                libm::hypotf(c.0 - b.0, c.1 - b.1),
+                libm::hypotf(a.0 - c.0, a.1 - c.1),
+            );
+            let cross = ((b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)).abs();
+            let d = ab * bc * ca;
+            if d > 1e-6 { 2.0 * cross / d } else { 0.0 }
+        })
+        .collect()
+}
+
+/// Where a walk along the autopilot's line is: on the route at a point, or on a branch at one of its points.
+#[derive(Clone, Copy, Debug)]
+enum Cursor {
+    Route(usize),
+    Branch(usize, usize),
 }
 
 impl Path {
@@ -90,17 +136,23 @@ impl Path {
             total += libm::hypotf(b.0 - a.0, b.1 - a.1);
         }
         // Curvature from the circle through each point and its neighbours two away (smooths the 2.5 m resampling).
-        let curvature = (0..n)
-            .map(|i| {
-                let (a, b, c) = (pts[(i + n - 2) % n], pts[i], pts[(i + 2) % n]);
-                let (ab, bc, ca) = (
-                    libm::hypotf(b.0 - a.0, b.1 - a.1),
-                    libm::hypotf(c.0 - b.0, c.1 - b.1),
-                    libm::hypotf(a.0 - c.0, a.1 - c.1),
-                );
-                let cross = ((b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)).abs();
-                let d = ab * bc * ca;
-                if d > 1e-6 { 2.0 * cross / d } else { 0.0 }
+        let curvature = curvatures(&pts, true);
+        let branches = map
+            .map
+            .features
+            .iter()
+            .filter_map(|f| {
+                let d = jj_map::fork::Fork::of(f)?;
+                let pts: Vec<(f32, f32)> = jj_map::fork::path_of(&map.map, &d)
+                    .iter()
+                    .map(|p| (p[0] as f32, p[1] as f32))
+                    .collect();
+                (pts.len() >= 3).then(|| Branch {
+                    from: d.from as usize,
+                    to: d.to as usize,
+                    curvature: curvatures(&pts, false),
+                    pts,
+                })
             })
             .collect();
         Self {
@@ -120,7 +172,41 @@ impl Path {
             s,
             curvature,
             total,
+            branches,
         }
+    }
+
+    /// The point and curvature under a cursor.
+    fn at(&self, c: Cursor) -> ((f32, f32), f32) {
+        match c {
+            Cursor::Route(i) => (self.pts[i], self.curvature[i]),
+            Cursor::Branch(b, j) => (self.branches[b].pts[j], self.branches[b].curvature[j]),
+        }
+    }
+
+    /// One point on along the line a car drives: a route that meets the split of the branch it `takes` turns onto it,
+    /// and a branch's last point leads back onto the route at its merge.
+    fn next(&self, c: Cursor, takes: Option<usize>) -> Cursor {
+        match c {
+            Cursor::Route(i) => match takes {
+                Some(b) if self.branches[b].from == i => Cursor::Branch(b, 1),
+                _ => Cursor::Route((i + 1) % self.n()),
+            },
+            Cursor::Branch(b, j) if j + 1 < self.branches[b].pts.len() => Cursor::Branch(b, j + 1),
+            Cursor::Branch(b, _) => Cursor::Route((self.branches[b].to + 1) % self.n()),
+        }
+    }
+
+    /// The nearest point of branch `b` at or ahead of point `from` within the next `window` points.
+    fn track_branch(&self, b: usize, from: usize, x: f32, z: f32, window: usize) -> usize {
+        let pts = &self.branches[b].pts;
+        (from..=(from + window).min(pts.len() - 1))
+            .min_by(|&a, &c| {
+                let da = libm::hypotf(pts[a].0 - x, pts[a].1 - z);
+                let dc = libm::hypotf(pts[c].0 - x, pts[c].1 - z);
+                da.total_cmp(&dc)
+            })
+            .unwrap_or(from)
     }
 
     fn n(&self) -> usize {
@@ -297,6 +383,26 @@ pub struct Autopilot {
     last_out: DriveInput,
     handback_at: u64,
     state: Option<AutopilotState>,
+    /// The fork this car is on (branch index, point), the fork it has decided about ahead and whether it takes it, and
+    /// how many forks it has decided about (so each lap's choice is its own).
+    on: Option<(usize, usize)>,
+    plan: Option<(usize, bool)>,
+    forks_met: u32,
+    car: u32,
+    choice_seed: u64,
+}
+
+/// A split this close ahead (m) is decided about.
+const DECIDE_M: f32 = 80.0;
+/// A car this far past a split it didn't take forgets the decision.
+const PASSED_M: f32 = 20.0;
+
+/// splitmix64: the bit that offsets every car's branch choices at one fork, from the sim seed.
+fn mix(mut z: u64) -> u64 {
+    z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
 }
 
 impl Autopilot {
@@ -311,6 +417,11 @@ impl Autopilot {
             last_out: DriveInput::default(),
             handback_at: 0,
             state: None,
+            on: None,
+            plan: None,
+            forks_met: 0,
+            car,
+            choice_seed: mix(seed ^ 0xF04C),
         }
     }
 
@@ -367,18 +478,73 @@ impl Autopilot {
         speed_scale: f32,
     ) -> (DriveInput, bool) {
         let n = path.n();
-        let idx = match self.idx {
-            Some(i) => path.track(i, car.x, car.z, 24),
-            None => path.nearest(car.x, car.y, car.z),
+        // On a branch: follow it to its last point, then the route from its merge.
+        if let Some((b, j)) = self.on {
+            let j = path.track_branch(b, j, car.x, car.z, 24);
+            if j + 2 >= path.branches[b].pts.len() {
+                self.on = None;
+                self.plan = None;
+                self.idx = Some(path.branches[b].to);
+            } else {
+                self.on = Some((b, j));
+                self.idx = Some(path.branches[b].from);
+            }
+        }
+        let idx = match (self.on, self.idx) {
+            (Some(_), Some(i)) => i,
+            (None, Some(i)) => path.track(i, car.x, car.z, 24),
+            (_, None) => path.nearest(car.x, car.y, car.z),
         };
         self.idx = Some(idx);
+        if self.on.is_none() {
+            // Decide about the next split ahead; forget a split passed without taking it.
+            if let Some((b, take)) = self.plan {
+                let from = path.branches[b].from;
+                if path.ahead(from, idx) < PASSED_M && path.ahead(from, idx) < path.ahead(idx, from)
+                {
+                    if take {
+                        self.on = Some((b, path.track_branch(b, 0, car.x, car.z, 24)));
+                    } else if path.ahead(from, idx) > PASSED_M / 2.0 {
+                        self.plan = None;
+                    }
+                }
+            } else if let Some(b) = (0..path.branches.len())
+                .filter(|&b| path.ahead(idx, path.branches[b].from) <= DECIDE_M)
+                .min_by(|&a, &c| {
+                    path.ahead(idx, path.branches[a].from)
+                        .total_cmp(&path.ahead(idx, path.branches[c].from))
+                })
+            {
+                let offset = mix(self.choice_seed ^ b as u64) & 1;
+                let take = (u64::from(self.car) + u64::from(self.forks_met) + offset) & 1 == 1;
+                self.plan = Some((b, take));
+                self.forks_met = self.forks_met.wrapping_add(1);
+            }
+        }
+        let takes = self.plan.and_then(|(b, take)| take.then_some(b));
+        let start = match self.on {
+            Some((b, j)) => Cursor::Branch(b, j),
+            None => Cursor::Route(idx),
+        };
+        // Walks the line the car drives from `start` until `until` metres, calling `each` with every point's curvature.
+        let walk = |until: f32, each: &mut dyn FnMut(f32)| {
+            let (mut c, mut gone) = (start, 0.0f32);
+            for _ in 0..n * 2 {
+                let next = path.next(c, takes);
+                let (p, q) = (path.at(c).0, path.at(next).0);
+                let step = libm::hypotf(q.0 - p.0, q.1 - p.1);
+                if gone + step > until {
+                    break;
+                }
+                gone += step;
+                c = next;
+                each(path.at(c).1);
+            }
+            c
+        };
         let speed = car.forward_speed.max(0.0);
         let look = (LOOK_AHEAD_S * speed).max(MIN_LOOK_AHEAD_M);
-        let mut t = idx;
-        while path.ahead(idx, t) < look && path.ahead(idx, (t + 1) % n) > path.ahead(idx, t) {
-            t = (t + 1) % n;
-        }
-        let target = path.pts[t];
+        let target = path.at(walk(look, &mut |_| {})).0;
         // Pure pursuit: the angle to the target in the car's frame (+ = to its left, +x when facing +z).
         let (sh, ch) = (libm::sinf(car.heading), libm::cosf(car.heading));
         let (dx, dz) = (target.0 - car.x, target.1 - car.z);
@@ -393,15 +559,8 @@ impl Autopilot {
         let steer = (wheel / max_steer + self.noise_now).clamp(-1.0, 1.0);
         // The speed plan: the sharpest bend within stopping distance plus the look-ahead.
         let horizon = speed * speed / (2.0 * PLAN_BRAKE) + look;
-        let mut k_max = 0.0f32;
-        let mut p = idx;
-        while path.ahead(idx, p) <= horizon {
-            k_max = k_max.max(path.curvature[p]);
-            p = (p + 1) % n;
-            if p == idx {
-                break;
-            }
-        }
+        let mut k_max = path.at(start).1;
+        walk(horizon, &mut |k| k_max = k_max.max(k));
         let mut target_speed = if k_max > 1e-4 {
             SKILL * libm::sqrtf(LATERAL_GRIP / k_max)
         } else {
@@ -429,6 +588,8 @@ impl Autopilot {
         if recover {
             self.stuck = 0;
             self.idx = None;
+            self.on = None;
+            self.plan = None;
         }
         let out = DriveInput {
             throttle: quantise_axis(throttle),
@@ -462,6 +623,13 @@ impl Autopilot {
         out.extend(self.noise_target.to_bits().to_le_bytes());
         out.extend(self.stuck.to_le_bytes());
         out.extend(self.handback_at.to_le_bytes());
+        let (b, j) = self.on.unwrap_or((usize::MAX, usize::MAX));
+        out.extend((b as u64).to_le_bytes());
+        out.extend((j as u64).to_le_bytes());
+        let (pb, take) = self.plan.unwrap_or((usize::MAX, false));
+        out.extend((pb as u64).to_le_bytes());
+        out.push(u8::from(take));
+        out.extend(self.forks_met.to_le_bytes());
     }
 }
 
