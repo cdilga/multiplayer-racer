@@ -124,7 +124,7 @@ fn lap_time(map: &jj_map::LoadedMap, profile: &VehicleProfile, level: AssistLeve
         };
         sim.set_input(car, input);
         sim.step();
-        if trace && sim.tick() % S == 0 {
+        if trace && sim.tick().is_multiple_of(S) {
             let s = sim.car_state(car).unwrap();
             eprintln!(
                 "  {level:?} t {:>4} idx {:>3} v {:>5.1} target {:>5.1} y {:>5.1} upY {:.2} steer {:>5.2} progress {:.0}",
