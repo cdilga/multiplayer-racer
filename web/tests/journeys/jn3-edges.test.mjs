@@ -81,8 +81,11 @@ test('force-start: Start race with one player not ready warns, counts down and r
   await host.locator('[data-act=start]').click();
   await wait(host, () => ['Preparing', 'Countdown'].includes(window.__jjRoom.view().phase));
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
-  await wait(host, () => Number(document.querySelector('[data-screen=countdown]')?.dataset.count) > 0);
-  const shown = Number(await host.evaluate(() => document.querySelector('[data-screen=countdown]')?.dataset.count));
+  // Read the count in the same poll that sees it: on a slow runner the countdown can be over by a second read (CI run 5233).
+  const shown = await (await host.waitForFunction(() => {
+    const c = Number(document.querySelector('[data-screen=countdown]')?.dataset.count);
+    return c > 0 ? c : false;
+  }, undefined, { timeout: 60_000, polling: 50 })).jsonValue();
   await shot(host, 'tv-force-countdown');
   const v = await view(host);
   assert.deepEqual(v.seats.map((s) => s.car !== null), [true, true], 'both seats, ready or not, are on the grid');
