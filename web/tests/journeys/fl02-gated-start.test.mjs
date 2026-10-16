@@ -2,7 +2,7 @@
 // grid the cars are held through the countdown, and each phone does something different with its launch:
 //   A snaps the launch DURING the countdown  -> Early (the launch is forfeited for this start)
 //   B charges through the countdown, snaps at GO -> Perfect (inside 0.25 s) or, if loopback jitter costs it the window, Launch
-//   C charges after GO and snaps ~0.7 s later -> Launch
+//   C charges after GO and snaps ~0.4 s later -> Launch
 //   D touches nothing                         -> no outcome at all
 // Asserts the host got each StartLaunch event and put the callout over the right car, each phone got its own outcome (and
 // shows its words on the round banner), and no car moves before GO. B's perfect-versus-launch split rests on Playwright's
@@ -35,10 +35,63 @@ closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png`, timeout: 120_000 });
-const STILL = { x: 0, y: 0, touch: false };
-const stick = (page, drive) => page.evaluate((d) => window.__jjController.setSticks({ ...d, touch: d.x !== 0 || d.y !== 0 }, { x: 0, y: 0, touch: false }), drive);
-const pull = (page) => stick(page, { x: 0, y: 1 });
-const snap = (page) => stick(page, { x: 0, y: -1 });
+
+// A launch gesture run entirely inside one phone's page, off the countdown the host sent it (RoomState: phase and ms left).
+//   'early'  pull back, hold 0.5 s, snap forward: still inside the countdown, so the host forfeits this start's launch.
+//   'late'   wait for GO, charge 0.5 s later, hold 0.4 s, snap forward: a normal launch.
+//   'at-go'  pull back for the last 0.6 s of the countdown, snap forward when the phone is told the race is on.
+const phoneGesture = (page, kind) =>
+  page.evaluate(
+    (kind) =>
+      new Promise((resolve, reject) => {
+        const c = window.__jjController;
+        const sticks = (y) => c.setSticks({ x: 0, y, touch: y !== 0 }, { x: 0, y: 0, touch: false });
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+        const deadline = performance.now() + 120_000;
+        const tick = async () => {
+          try {
+            let s = c.inspect();
+            while (!(s.roomPhase === 'Countdown' && s.countdownMs > 0)) {
+              if (performance.now() > deadline) throw new Error('the phone never saw the countdown');
+              await sleep(5);
+              s = c.inspect();
+            }
+            const goAt = performance.now() + s.countdownMs;
+            if (kind === 'early') {
+              sticks(1);
+              await sleep(500);
+              sticks(-1);
+              await sleep(100);
+              sticks(0);
+            } else if (kind === 'late') {
+              while (c.inspect().roomPhase !== 'Racing') {
+                if (performance.now() > goAt + 10_000) throw new Error('the phone never saw GO');
+                await sleep(5);
+              }
+              await sleep(500);
+              sticks(1);
+              await sleep(400);
+              sticks(-1);
+              await sleep(100);
+              sticks(0);
+            } else {
+              while (goAt - performance.now() > 600) await sleep(5);
+              sticks(1);
+              while (c.inspect().roomPhase !== 'Racing') {
+                if (performance.now() > goAt + 10_000) throw new Error('the phone never saw GO');
+                await sleep(2);
+              }
+              sticks(-1);
+            }
+            resolve(kind);
+          } catch (e) {
+            reject(e);
+          }
+        };
+        tick();
+      }),
+    kind,
+  );
 
 async function phone(joinUrl, name) {
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 915, height: 412 } });
@@ -73,51 +126,60 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   // D never taps Ready, so the host's Start race force-starts with the longer warning countdown: room for stills.
   for (const p of [A, B, C]) await p.getByRole('button', { name: /^Ready/ }).click();
   await host.waitForTimeout(1000);
+  // A and B's gestures are timed on their own phones from the countdown the host sent them, never from the host page: on a
+  // loaded runner one host round trip takes a second, the detector cancels a preload held past 1.2 s, and a gesture timed
+  // from the host's clock landed after GO (a normal launch, not an Early; CI run 4970).
+  // The banner shows an outcome for 2.2 s, and a loaded runner can take longer than that to ask the page: record what it said.
+  await A.evaluate(() => {
+    window.__banners = [];
+    const note = () => {
+      const t = document.querySelector('[data-round-banner]')?.textContent;
+      if (t && window.__banners.at(-1) !== t) window.__banners.push(t);
+    };
+    new MutationObserver(note).observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
+  const gestureA = phoneGesture(A, 'early');
+  const gestureB = phoneGesture(B, 'at-go');
+  const gestureC = phoneGesture(C, 'late');
+  for (const g of [gestureA, gestureB, gestureC]) g.catch(() => {}); // awaited below; a failure must not go unhandled first
   await host.locator('[data-act=start]').click();
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown', undefined, 60_000);
-  await wait(host, () => (window.__jjRoom.view().remainingMs ?? 0) > 0);
   console.log('FL02 countdown remainingMs at start', await host.evaluate(() => window.__jjRoom.view().remainingMs));
   const t0 = Date.now();
   await shot(host, 'tv-countdown');
   await shot(A, 'phone-countdown');
   console.log('FL02 stills took ms', Date.now() - t0, 'remaining', await host.evaluate(() => window.__jjRoom.view().remainingMs));
 
-  // Nobody moves before GO: sample every car through the countdown.
+  // Nobody moves before GO: sample every car through the countdown. Each sample carries the phase it was read in, and only
+  // samples read inside the countdown count (a loaded runner can take a second to come back after GO).
   const before = await host.evaluate(async () => (await window.__jjTest.observe()).cars.map((c) => c.position));
+  let after = before;
   let preGoSpeed = 0;
   const watch = (async () => {
-    while ((await host.evaluate(() => window.__jjRoom.view().phase)) === 'Countdown') {
-      const speeds = await host.evaluate(async () => (await window.__jjTest.observe()).cars.map((c) => Math.abs(c.forwardSpeed ?? 0)));
-      preGoSpeed = Math.max(preGoSpeed, ...speeds);
+    for (;;) {
+      const s = await host.evaluate(async () => {
+        const o = await window.__jjTest.observe();
+        return { phase: window.__jjRoom.view().phase, cars: o.cars.map((c) => ({ p: c.position, v: Math.abs(c.forwardSpeed ?? 0) })) };
+      });
+      if (s.phase !== 'Countdown') return;
+      after = s.cars.map((c) => c.p);
+      preGoSpeed = Math.max(preGoSpeed, ...s.cars.map((c) => c.v));
       await host.waitForTimeout(120);
     }
   })();
 
-  // A: pull back, then snap during the countdown -> Early.
-  await wait(host, () => (window.__jjRoom.view().remainingMs ?? 9e9) < 2600, undefined, 10_000);
-  await pull(A);
-  await host.waitForTimeout(700);
-  await snap(A);
-  await wait(A, () => window.__jjController.inspect().launchOutcome === 'Early', undefined, 10_000);
-  assert.match(await A.locator('[data-round-banner]').innerText(), /EARLY! NO LAUNCH/);
+  // A: pulled back and snapped during the countdown -> Early.
+  await gestureA;
+  await wait(A, () => window.__jjController.inspect().launchOutcome === 'Early', undefined, 30_000);
+  const banners = await A.evaluate(() => window.__banners);
+  assert.ok(banners.includes('EARLY! NO LAUNCH'), `A's banner said EARLY! NO LAUNCH: ${JSON.stringify(banners)}`);
   await shot(A, 'phone-early');
-  console.log('FL02 phone banner', JSON.stringify(await A.evaluate(() => {
-    const b = document.querySelector('[data-round-banner]');
-    const chain = (e) => { const o = []; for (; e && e !== document.body; e = e.parentElement) { const c = getComputedStyle(e); o.push(`${e.tagName}.${e.className}|${c.position}|z${c.zIndex}|op${c.opacity}|ov${c.overflow}|${c.contain}`); } return o; };
-    const pod = document.querySelector('.pod');
-    return { banner: chain(b), pod: chain(pod), bannerRect: b.getBoundingClientRect().toJSON(), podRect: pod.getBoundingClientRect().toJSON(), text: b.textContent, bg: getComputedStyle(b).backgroundColor };
-  })));
-  await wait(host, () => window.__jjRender.launchCallouts().length > 0, undefined, 5_000);
-  await shot(host, 'tv-early');
-  await stick(A, { x: 0, y: 0 });
+  await wait(host, () => window.__jjRender.launchCalloutsShown().length > 0, undefined, 30_000);
+  if (CAPTURE) await shot(host, 'tv-early'); // best effort: the callout is up for 2.2 s
 
-  // B: charge for the last second of the countdown, snap on the first poll that sees GO.
-  await wait(host, () => (window.__jjRoom.view().remainingMs ?? 9e9) < 1000, undefined, 10_000);
-  await pull(B);
-  await host.waitForFunction(() => window.__jjRoom.view().phase === 'Running', undefined, { timeout: 10_000, polling: 'raf' });
-  await snap(B);
+  // B: charged for the last 0.6 s of the countdown and snapped on the first state that says GO.
+  await gestureB;
   await watch;
-  const after = await host.evaluate(async () => (await window.__jjTest.observe()).cars.map((c) => c.position));
   // The held grid: the early snapper did not launch (no lifted front, no more travel than the car that did nothing), and
   // nobody is driving off. A held car takes zero input, so a slope or the suspension settling can still creep it a little:
   // that creep is the same for every car, is reported here, and is not the launch.
@@ -128,15 +190,12 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   assert.ok(Math.abs(travel('Davo') - travel('Bazza')) < 1, 'the early snapper travelled no further than the car that did nothing');
   assert.ok(preGoSpeed < 1.5, `no car drove off before GO (fastest ${preGoSpeed.toFixed(3)} m/s)`);
 
-  // C: charge a little after GO, snap 0.7 s later -> Launch.
-  await host.waitForTimeout(500);
-  await pull(C);
-  await host.waitForTimeout(700);
-  await snap(C);
+  // C: charge a little after GO, snap 0.4 s later -> Launch.
+  await gestureC;
 
-  await wait(B, () => ['Perfect', 'Launch'].includes(window.__jjController.inspect().launchOutcome), undefined, 10_000);
+  await wait(B, () => ['Perfect', 'Launch'].includes(window.__jjController.inspect().launchOutcome), undefined, 30_000);
   await shot(B, 'phone-b-outcome');
-  await wait(C, () => window.__jjController.inspect().launchOutcome === 'Launch', undefined, 10_000);
+  await wait(C, () => window.__jjController.inspect().launchOutcome === 'Launch', undefined, 30_000);
   await shot(C, 'phone-launch');
   await shot(host, 'tv-launch');
   await host.waitForTimeout(1500);
