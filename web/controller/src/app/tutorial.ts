@@ -5,6 +5,7 @@
 import { controlsPage } from '../../../shared/ui';
 import clusterMap from '../../../host/src/input/clusters.json';
 import wheelMap from '../../../host/src/input/wheels.json';
+import type { ButtonInput, Controls } from './prefs-data';
 import type { Stick } from './session';
 
 /** What the Controls page reads (P1-C14): the host's key clusters and wheel profiles, so the page never drifts from the mapping. */
@@ -22,6 +23,8 @@ interface Step {
   title: string;
   text: string;
   goals: Array<[string, string]>;
+  /** Buttons layout: the inputs the step needs a button for. */
+  input?: ButtonInput[];
   stick?: (kind: 'drive' | 'action', v: Stick, g: Goals) => void;
   action?: (kind: number, g: Goals) => void;
 }
@@ -76,6 +79,31 @@ export const STEPS_CLASSIC: Step[] = [
   } },
 ];
 
+/** The Buttons layout (R130): the steer stick steers, the buttons drive, boost and fire (the one-stick layout's inputs, so
+ *  the same goals). A step for an input the player gave no button is left out. */
+export const STEPS_BUTTONS: Step[] = [
+  { title: 'Steer', text: 'Push the steer stick right, then left.', goals: [['right', 'Right'], ['left', 'Left']], stick: (k, v, g) => {
+    if (k === 'drive' && v.x > 0.7) g.right = true;
+    if (k === 'drive' && v.x < -0.7) g.left = true;
+  } },
+  { title: 'Go and stop', text: 'Hold Gas to drive, then hold Brake to stop and reverse.', input: ['gas', 'brake'], goals: [['go', 'Go'], ['stop', 'Brake']], stick: (k, v, g) => {
+    if (k === 'drive' && v.y < -0.7) g.go = true;
+    if (k === 'drive' && g.go && v.y > 0.7) g.stop = true;
+  } },
+  { title: 'Boost', text: 'Hold Boost.', input: ['boost'], goals: [['boost', 'Boost']], stick: (k, v, g) => {
+    if (k === 'action' && v.x > 0.7) g.boost = true;
+  } },
+  { title: 'OI!', text: 'Tap Fire: your headlights flash and everyone hears it.', input: ['fire'], goals: [['oi', 'OI!']], action: (a, g) => {
+    if (a === OI) g.oi = true;
+  } },
+  { title: 'Cone', text: 'Tap Drop to leave a cone behind you.', input: ['drop'], goals: [['cone', 'Cone']], action: (a, g) => {
+    if (a === CONE) g.cone = true;
+  } },
+  { title: 'Launch', text: 'From a stop, hold Brake until the ring fills, then let go.', input: ['brake'], goals: [['wheelie', 'Launch']], action: (a, g) => {
+    if (a === WHEELIE) g.wheelie = true;
+  } },
+];
+
 const KEY = 'jj.tutorial';
 
 function remembered(): boolean {
@@ -114,14 +142,22 @@ export class Tutorial {
     private readonly onIdentify: () => void = () => {},
     /** Prompts are wanted (`true`: the card opened or repeats) or over (`false`: skipped or finished): the host's tile follows. */
     private readonly onWanted: (on: boolean) => void = () => {},
-    /** The player chose the old one-stick layout: the card teaches that one. */
-    private readonly classic: () => boolean = () => false,
+    /** The player's layout (two sticks, the old one-stick or Buttons): the card teaches that one. */
+    private readonly layout: () => Controls = () => 'dual',
     /** R125: offer learner help after teaching the controls; the player chooses their level in Settings. */
     private readonly onDrivingHelp: () => void = () => {},
   ) {}
 
+  /** The Buttons layout's inputs that have a button: a step needing one the player left off isn't shown. */
+  buttons: () => readonly ButtonInput[] = () => [];
+
   private get steps(): Step[] {
-    return this.classic() ? STEPS_CLASSIC : STEPS;
+    const c = this.layout();
+    if (c === 'buttons') {
+      const have = this.buttons();
+      return STEPS_BUTTONS.filter((s) => !s.input || s.input.every((k) => have.includes(k)));
+    }
+    return c === 'classic' ? STEPS_CLASSIC : STEPS;
   }
 
   show(from = 0): void {

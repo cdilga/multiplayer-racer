@@ -499,3 +499,29 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
   .tools:not(.inline) .btn:not(.icon) { padding-inline: 10px; }
   .tools:not(.inline) .btn[data-act=ready] { min-width: 96px; }
 }
+
+/* ---- P1-FL13: the Buttons layout (R130): a steer stick and a six-slot pad, per player ---- */
+.sticks.buttons .zone.steer { flex: 1; }
+/* The pad sits low, where the thumb rests; its rows stop growing at a comfortable size. */
+.pad { flex: 1.15; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, minmax(64px, 128px)); align-content: end; gap: 14px; margin: 0 24px 24px; min-height: 0; touch-action: none; }
+.sticks.buttons .zone.steer + .pad, .sticks.buttons .pad + .zone.steer, .sticks.buttons .pod + .pad, .sticks.buttons .pod + .zone.steer { margin-left: 0; }
+/* Slot 0 is the top spot nearest the stick: with the stick on the right the pad reads right to left. */
+.pad.mirrored { direction: rtl; }
+.pad .slot { display: grid; min-width: 0; min-height: 0; }
+.padbtn { width: 100%; height: 100%; min-height: 64px; --bb-pad: 4px; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; direction: ltr; }
+.padbtn .display { font-weight: 900; font-style: italic; }
+/* Gas and Boost, the two held most, read at a glance: saffron, and the player's own colour. */
+.btn.brush.padbtn[data-input=gas] { --bb-base: var(--c-saffron); --bb-hov: var(--c-saffron); }
+.btn.brush.padbtn[data-input=boost] { --bb-base: var(--seat); --bb-hov: var(--seat); color: var(--seat-on); }
+.btn.brush.padbtn:is([data-input=fire], [data-input=drop]) { --bb-base: var(--c-ink-raised); --bb-hov: var(--c-ink-raised); --bb-ink: var(--c-paper); color: var(--c-paper); }
+.sticks.autopilot .pad { opacity: .55; }
+@media (orientation: portrait) {
+  .sticks.buttons .zone.steer { flex: .8; margin: 0 10px 16px; }
+  .sticks.buttons .zone.steer .base { width: 108px; height: 108px; margin: -54px 0 0 -54px; }
+  .sticks.buttons .zone.steer .knob { width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+  .pad { flex: 1.55; gap: 10px; margin: 0 18px 16px 0; grid-template-rows: repeat(2, minmax(64px, 104px)); }
+  .padbtn { font-size: 15px; letter-spacing: 0; --bb-pad: 2px; }
+}
+@media (orientation: landscape) and (max-width: 720px) {
+  .padbtn { font-size: 17px; letter-spacing: 0; --bb-pad: 2px; }
+}

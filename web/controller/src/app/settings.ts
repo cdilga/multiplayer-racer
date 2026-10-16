@@ -10,7 +10,8 @@
 import { apply_curve } from '../pkg/jj_wasm_input.js';
 import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
-import { DEFAULTS, PRESETS, sanitise, type Assist, type CameraDistance, type Controls, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
+import { BUTTON_LABELS, SLOT_NAMES } from './buttons';
+import { BUTTON_INPUTS, DEFAULTS, PRESETS, sanitise, type Assist, type ButtonInput, type CameraDistance, type Controls, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
 import type { Tilt } from './tilt';
 import type { FullscreenControl } from './fullscreen';
 
@@ -198,7 +199,8 @@ export class SettingsSheet {
       <div class="banner settings-auto" data-box="banner" role="status"><span>Autopilot is driving your car<small>Everyone else keeps racing.</small></span></div>
       <div class="panel" data-box="controls"><h1 class="display italic">Your controls</h1>
         ${seg('layout', 'Stick placement', [['floating', 'Floating sticks'], ['fixed', 'Fixed sticks']], p.layout)}
-        <div class="row">Controls${seg('controls', 'Stick layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)']], p.controls)}</div>
+        <div class="row stack" data-row="controls">Controls${seg('controls', 'Controls layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)'], ['buttons', 'Buttons']], p.controls)}</div>
+        ${p.controls === 'buttons' ? this.buttonsRows() : ''}
         <div class="row">Steering${seg('steering', 'Steering response', [['gentle', 'Gentle'], ['direct', 'Direct']], p.steering)}</div>
         <div class="row">Camera distance${seg('cameraDistance', 'Camera distance', [['near', 'Near'], ['host', "Host's"], ['far', 'Far']], p.cameraDistance)}</div>
         <div class="row assist-row" data-row="assist"><span>Driving help<small>New to this? Some steers and brakes for bends; Lots drives the throttle too.</small></span>${seg('assist', 'Driving help', [['off', 'Off'], ['some', 'Some'], ['lots', 'Lots']], p.assist)}</div>
@@ -219,6 +221,36 @@ export class SettingsSheet {
         <button type="button" class="btn quiet" data-act="back">Back</button>
       </div></div>`;
     this.wire();
+  }
+
+  /** The Buttons layout's arrangement (R130): which side the steer stick is on, and the pad's six slots. Tapping a slot
+   *  gives it the next input not on the pad yet (then nothing), so any input can go anywhere in a few taps. */
+  private buttonsRows(): string {
+    const b = this.d.prefs.value.buttons;
+    const at = new Map<number, ButtonInput>();
+    for (const k of BUTTON_INPUTS) if (b.slots[k] !== null) at.set(b.slots[k]!, k);
+    const cells = SLOT_NAMES.map((name, slot) => {
+      const k = at.get(slot);
+      return `<button type="button" class="slotpick${k ? ' set' : ''}" data-slot="${slot}" aria-label="${name}: ${k ? BUTTON_LABELS[k] : 'empty'}">${k ? BUTTON_LABELS[k] : '+'}</button>`;
+    }).join('');
+    const off = BUTTON_INPUTS.filter((k) => b.slots[k] === null).map((k) => BUTTON_LABELS[k]);
+    return `<div class="row buttons-row" data-row="buttons-steer">Steer stick${seg('buttonsSteer', 'Steer stick side', [['left', 'Left'], ['right', 'Right']], b.steer)}</div>
+        <div class="buttons-arrange" data-box="arrange"><span>Your buttons<small>Tap a spot to put the next button there. The pad sits on the ${b.steer === 'left' ? 'right' : 'left'}.</small></span>
+          <div class="slotgrid${b.steer === 'right' ? ' mirrored' : ''}" role="group" aria-label="Button spots">${cells}</div>
+          ${off.length ? `<p class="note" data-note="buttons-off">Not on the pad: ${off.join(', ')}.</p>` : ''}</div>`;
+  }
+
+  /** Taps a slot of the arrangement: its input gives way to the next one not yet on the pad, after the last, to nothing. */
+  private cycleSlot(slot: number): void {
+    const b = this.d.prefs.value.buttons;
+    const current = BUTTON_INPUTS.find((k) => b.slots[k] === slot) ?? null;
+    const candidates = BUTTON_INPUTS.filter((k) => b.slots[k] === null || k === current);
+    const order: Array<ButtonInput | null> = [...candidates, null];
+    const next = order[(order.indexOf(current) + 1) % order.length] ?? null;
+    const slots = { ...b.slots };
+    if (current) slots[current] = null;
+    if (next) slots[next] = slot;
+    this.d.prefs.update({ buttons: { ...b, slots } });
   }
 
   /** Full screen now (P1-C02b): the live state, not a preference; the keep-awake toggle says whether joining asks for it. */
@@ -283,7 +315,16 @@ export class SettingsSheet {
 
   private wire(): void {
     const q = (s: string) => this.el.querySelectorAll<HTMLElement>(s);
-    q('[data-set]').forEach((b) => b.addEventListener('click', () => this.d.prefs.update({ [b.dataset.set!]: b.dataset.v } as Partial<ControllerPreferences>)));
+    q('[data-set]').forEach((b) =>
+      b.addEventListener('click', () => {
+        if (b.dataset.set === 'buttonsSteer') {
+          const steer = b.dataset.v === 'right' ? 'right' : 'left';
+          return this.d.prefs.update({ buttons: { ...this.d.prefs.value.buttons, steer } });
+        }
+        this.d.prefs.update({ [b.dataset.set!]: b.dataset.v } as Partial<ControllerPreferences>);
+      }),
+    );
+    q('[data-slot]').forEach((b) => b.addEventListener('click', () => this.cycleSlot(Number(b.dataset.slot))));
     q('[data-toggle]').forEach((b) =>
       b.addEventListener('click', () => {
         const k = b.dataset.toggle as 'vibration' | 'reducedMotion' | 'keepAwake' | 'remember' | 'tilt' | 'fullscreen';

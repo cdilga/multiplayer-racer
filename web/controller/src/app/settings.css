@@ -92,3 +92,15 @@
 .stage .carname .acc { color: var(--c-saffron); }
 /* A card taller than the screen (a phone sideways with its browser bars showing) scrolls instead of losing its buttons. */
 .card-screen { overflow-y: auto; touch-action: pan-y; align-content: safe center; }
+
+/* P1-FL13: arranging the Buttons layout's pad (R130) */
+.buttons-arrange { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+.buttons-arrange small { display: block; }
+.slotgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 360px; }
+.slotgrid.mirrored { direction: rtl; }
+.slotpick { min-height: 52px; border: 3px dashed var(--c-ink-soft); border-radius: 5px; background: transparent; color: var(--c-ink-soft); font: 900 italic 18px/1 var(--font-display); text-transform: uppercase; direction: ltr; cursor: pointer; }
+.slotpick.set { border-style: solid; border-color: var(--c-ink); background: var(--c-paper); color: var(--c-ink); box-shadow: 0 3px 0 rgb(0 0 0 / .55); }
+/* P1-FL13: three layouts (two sticks, one stick, buttons) need the row's full width on a small phone: the label sits above them. */
+.row.stack { flex-wrap: wrap; }
+.row.stack .seg { flex: 1 1 100%; }
+.row.stack .seg button { flex: 1; }

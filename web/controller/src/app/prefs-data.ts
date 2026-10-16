@@ -3,8 +3,23 @@
 // tests import this directly.
 export type Layout = 'floating' | 'fixed';
 export type Steering = 'gentle' | 'direct';
-/** The stick layout: R116 two sticks (default) or the old one-stick layout (steer on the left stick, the right stick's sectors). */
-export type Controls = 'dual' | 'classic';
+/** The stick layout: R116 two sticks (default), the old one-stick layout (steer on the left stick, the right stick's
+ *  sectors) or R130's Buttons (a steer stick and on-screen buttons, [`ButtonsLayout`]). */
+export type Controls = 'dual' | 'classic' | 'buttons';
+/** The inputs the Buttons layout can give a button (R130): Gas, Brake/Reverse, Boost, Fire (forward) and Drop (back). */
+export type ButtonInput = 'gas' | 'brake' | 'boost' | 'fire' | 'drop';
+export const BUTTON_INPUTS: readonly ButtonInput[] = ['gas', 'brake', 'boost', 'fire', 'drop'];
+/** A slot on the six-slot pad (0..5, row-major from the top, inside to outside), or no button for that input. */
+export type ButtonSlot = number | null;
+/** A player's Buttons layout: the steer stick's side and where each input's button sits. */
+export interface ButtonsLayout {
+  steer: 'left' | 'right';
+  slots: Record<ButtonInput, ButtonSlot>;
+}
+export const DEFAULT_BUTTONS: ButtonsLayout = {
+  steer: 'left',
+  slots: { gas: 5, brake: 4, boost: 2, fire: 1, drop: 0 },
+};
 /** Learner assist (R125): Off, Some (steering and brake help) or Lots (auto-throttle too). */
 export type Assist = 'off' | 'some' | 'lots';
 export type CameraDistance = 'near' | 'host' | 'far';
@@ -15,6 +30,8 @@ export interface ControllerPreferences {
   v: 1;
   layout: Layout;
   controls: Controls;
+  /** The Buttons layout's arrangement (used when `controls` is `buttons`). */
+  buttons: ButtonsLayout;
   steering: Steering;
   cameraDistance: CameraDistance;
   assist: Assist;
@@ -35,6 +52,7 @@ export const DEFAULTS: ControllerPreferences = {
   v: 1,
   layout: 'floating',
   controls: 'dual',
+  buttons: DEFAULT_BUTTONS,
   steering: 'gentle',
   cameraDistance: 'host',
   assist: 'off',
@@ -63,7 +81,8 @@ export function sanitise(raw: unknown): ControllerPreferences {
   return {
     v: 1,
     layout: oneOf(r.layout, ['floating', 'fixed'], DEFAULTS.layout),
-    controls: oneOf(r.controls, ['dual', 'classic'], DEFAULTS.controls),
+    controls: oneOf(r.controls, ['dual', 'classic', 'buttons'], DEFAULTS.controls),
+    buttons: sanitiseButtons(r.buttons),
     steering: oneOf(r.steering, ['gentle', 'direct'], DEFAULTS.steering),
     cameraDistance: oneOf(r.cameraDistance, ['near', 'host', 'far'], DEFAULTS.cameraDistance),
     assist: oneOf(r.assist, ['off', 'some', 'lots'], DEFAULTS.assist),
@@ -78,3 +97,20 @@ export function sanitise(raw: unknown): ControllerPreferences {
   };
 }
 
+
+/** A stored Buttons layout read back: the side, and each input's slot (0..5, each slot used once; a clash keeps the first
+ *  input in `BUTTON_INPUTS` order and leaves the other without a button). No stored slots: the default. */
+export function sanitiseButtons(raw: unknown): ButtonsLayout {
+  const r = raw && typeof raw === 'object' ? (raw as { steer?: unknown; slots?: unknown }) : null;
+  if (!r || !r.slots || typeof r.slots !== 'object') return structuredClone(DEFAULT_BUTTONS);
+  const stored = r.slots as Record<string, unknown>;
+  const used = new Set<number>();
+  const slots = {} as Record<ButtonInput, ButtonSlot>;
+  for (const k of BUTTON_INPUTS) {
+    const v = stored[k];
+    const ok = typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 6 && !used.has(v);
+    slots[k] = ok ? v : null;
+    if (ok) used.add(v);
+  }
+  return { steer: r.steer === 'right' ? 'right' : 'left', slots };
+}

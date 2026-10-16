@@ -6,6 +6,8 @@ import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
 import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
+import { buttonsArea } from './buttons';
+import { BUTTON_INPUTS, type ControllerPreferences } from './prefs-data';
 import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
 import './settings.css';
@@ -112,9 +114,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     prefs ??= new Preferences(session.realm);
     session.cameraDistance = prefs.value.cameraDistance;
     session.assist = prefs.value.assist;
-    session.classic = prefs.value.controls === 'classic';
+    // The Buttons layout (R130) sends the one-stick layout's sticks, so the host reads it with those semantics.
+    session.classic = prefs.value.controls !== 'dual';
     return prefs;
   };
+  /** What the driving screen was built for: the controls, the Buttons arrangement and the stick placement (a change in
+   *  Settings rebuilds it when the sheet closes). */
+  const layoutKey = (v: ControllerPreferences) => JSON.stringify([v.controls, v.controls === 'buttons' ? v.buttons : null, v.layout]);
+  let builtLayout = '';
 
   const render = () => {
     const key = session.phase === 'playing' ? `play:${session.you?.number}` : `${session.phase}:${session.code}`;
@@ -208,18 +215,20 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     });
     if (land) screenEl.querySelector('.strip')!.append(toolsHolder.firstElementChild!);
     else screenEl.append(toolsHolder.firstElementChild!);
+    const p = prefsNow();
+    builtLayout = layoutKey(p.value);
+    const buttonsLayout = p.value.controls === 'buttons';
     const area = document.createElement('div');
-    area.className = `sticks${land ? ' with-pod' : ''}`;
-    const dz = stickZone('drive');
-    const az = stickZone('action');
-    dz.querySelector('.knob')?.append(icon('zap'));
+    area.className = `sticks${land ? ' with-pod' : ''}${buttonsLayout ? ' buttons' : ''}`;
     const pod = document.createElement('div');
     pod.innerHTML = POD;
-    if (land) area.append(dz, pod.firstElementChild!, az);
-    else {
-      screenEl.append(pod.firstElementChild!);
-      area.append(dz, az);
-    }
+    // R130's Buttons layout: a steer stick and the pad (built and wired below, once `push` exists).
+    const dz = buttonsLayout ? null : stickZone('drive');
+    const az = buttonsLayout ? null : stickZone('action');
+    dz?.querySelector('.knob')?.append(icon('zap'));
+    if (!land) screenEl.append(pod.firstElementChild!);
+    else if (dz && az) area.append(dz, pod.firstElementChild!, az);
+    if (dz && az && !land) area.append(dz, az);
     screenEl.append(area);
     // R101: landscape first. Upright, the controller asks once a visit to turn sideways; it still works upright.
     if (!land && !uprightOk) {
@@ -234,7 +243,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic, () => openSettings(screenEl));
+    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => prefsNow().value.controls, () => openSettings(screenEl));
+    tutorial.buttons = () => BUTTON_INPUTS.filter((k) => prefsNow().value.buttons.slots[k] !== null);
     if (session.roomPhase === 'Lobby' && chosenSeat === session.you?.number) {
       tutorialOffered = !app.querySelector('[data-overlay=rotate]');
       if (tutorialOffered && Tutorial.wanted()) tutorial.show();
@@ -244,12 +254,12 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       tutorial?.stick('drive', d);
       tutorial?.stick('action', a);
     };
-    const p = prefsNow();
     const steering = () => prefsNow().value.steering;
-    // Tilt (C07.2, opt-in) replaces only the DRIVE steer axis; everything else is the sticks'.
+    // Tilt (C07.2, opt-in) replaces only the DRIVE steer axis; everything else is the sticks'. The Buttons layout's composed
+    // sticks are the one-stick layout's, shaped and tilted as those are.
     const push = () => {
       if (!sticks) return;
-      const controls = prefsNow().value.controls;
+      const controls = prefsNow().value.controls === 'dual' ? 'dual' : 'classic';
       const [sd, sa] = shapeSticks(sticks.drive.value, sticks.action.value, steering(), controls);
       const [d, a] = applyTilt(sd, sa, sheet?.open ? null : tilt.steer, controls === 'classic');
       session.setSticks(d, a);
@@ -259,13 +269,23 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     // An Android phone (or a returning visit) turns the sensor on again without a tap; iOS needs the tap in Settings.
     if (p.value.tilt && tilt.state === 'off') void tilt.enable();
     const buzz = () => prefsNow().value.vibration;
-    sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed', buzz), action: attachStick(az, push, p.value.layout === 'fixed', buzz) };
+    if (dz && az) {
+      sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed', buzz), action: attachStick(az, push, p.value.layout === 'fixed', buzz) };
+    } else {
+      const b = buttonsArea(area, p.value.buttons, push, p.value.layout === 'fixed', buzz);
+      sticks = { drive: b.drive, action: b.action };
+      // FL14's brushed look on the pad's buttons (the kit paints each slab and keeps it painted through resizes).
+      paintKit(area);
+      // In landscape the pod sits between the stick and the pad, whichever side each is on.
+      const second = [...area.children].filter((e) => e.matches('[data-box=pad], [data-box=zone-steer]'))[1];
+      if (land && second) area.insertBefore(pod.firstElementChild!, second);
+    }
     sheet = null;
     cars = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;
       session.assist = v.assist;
-      session.classic = v.controls === 'classic';
+      session.classic = v.controls !== 'dual';
       syncTilt();
     });
     app.querySelector('[data-act=fullscreen]')!.addEventListener('click', () => {
@@ -308,6 +328,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
         sticks?.action.release();
         session.menu(false);
         sheet = null;
+        // A new layout (Sticks or Buttons, the Buttons arrangement, the stick placement) rebuilds the driving screen.
+        if (layoutKey(prefsNow().value) !== builtLayout && session.phase === 'playing') {
+          shown = '';
+          render();
+        }
       },
       tilt,
       onSitOut: () => session.sitOut(),
