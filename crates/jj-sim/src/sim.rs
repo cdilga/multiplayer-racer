@@ -1884,6 +1884,20 @@ impl Sim {
                         boost: car.input.boost,
                         ..out
                     };
+                    // The loop approach (br-xlvx.6): on a loop's run-in a bot holds the entry line at full throttle
+                    // (crate::looping::LoopRail::approach), and on the loop itself it keeps the throttle down (the route
+                    // under the loop means nothing to the pursuit there; the ride carries the car).
+                    let on_loop = car.loop_ride.is_some().then_some(0.0);
+                    if let Some(steer) = on_loop
+                        .or_else(|| self.loops.iter().find_map(|r| r.approach(t, pose.heading)))
+                    {
+                        input = DriveInput {
+                            throttle: i16::MAX,
+                            brake: 0,
+                            steer: jj_types::axis::quantise_axis(steer),
+                            ..input
+                        };
+                    }
                     if recover {
                         stuck.push(id);
                     }
@@ -2360,6 +2374,12 @@ impl Sim {
                 let b = &self.world.bodies[c.body];
                 let (v, up) = (b.linvel(), b.position().rotation * Vector::Y);
                 let t = b.position().translation;
+                // On a loop (br-xlvx.6) the race sees the car where it is along the route under the deck, so its
+                // progress keeps moving forward while the deck doubles back over it in plan view.
+                let t = c
+                    .loop_ride
+                    .and_then(|r| self.loops.get(r.rail).map(|rail| rail.plan_point(&r, t.y)))
+                    .unwrap_or(t);
                 crate::race::CarView {
                     position: [t.x, t.y, t.z],
                     up_y: up.y,

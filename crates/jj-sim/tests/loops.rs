@@ -220,3 +220,89 @@ fn the_ride_gains_no_unbooked_energy() {
         "unbooked energy gain {worst:.0} J (the car's entry kinetic energy {scale:.0} J)"
     );
 }
+
+/// A bot lapping the loop map: (finished, recoveries, wrecks, its lowest up·Y, the final state hash).
+fn bot_laps(profile: VehicleProfile, seed: u64, laps: u32) -> (bool, u32, u32, f32, [u8; 32]) {
+    let m = map();
+    let mut sim = Sim::with_profiles(&m, &Registry::generic(), seed, vec![profile]);
+    let car = sim.spawn_grid(1)[0];
+    sim.start_race(laps);
+    sim.set_autopilot(car, true);
+    let mut min_up = 1.0f32;
+    while !sim.race().is_finished(car.0) && sim.tick() < 150 * u64::from(laps) * S {
+        sim.step();
+        min_up = min_up.min(sim.car_state(car).unwrap().up_y);
+    }
+    let rc = sim.race().car(car.0).unwrap();
+    (
+        rc.finished_at.is_some(),
+        rc.recoveries,
+        rc.wrecks,
+        min_up,
+        sim.state_hash(),
+    )
+}
+
+/// br-xlvx.6.3 AC1: bots of every roster vehicle lap the loop map through the loop (upside down at its top) without a
+/// recovery or a wreck, across seeds.
+#[test]
+fn bots_of_every_roster_vehicle_lap_through_the_loop_without_recovery() {
+    let mut bad = Vec::new();
+    for (name, profile) in VehicleProfile::roster(&root()).unwrap() {
+        for seed in 0..2 {
+            let (finished, recoveries, wrecks, min_up, _) = bot_laps(profile.clone(), seed, 2);
+            eprintln!(
+                "{name} seed {seed}: finished {finished}, recoveries {recoveries}, wrecks {wrecks}, min up {min_up:.2}"
+            );
+            if !(finished && recoveries == 0 && wrecks == 0 && min_up < -0.9) {
+                bad.push(format!("{name} seed {seed}: finished {finished}, recoveries {recoveries}, wrecks {wrecks}, min up {min_up:.2}"));
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
+}
+
+/// br-xlvx.6.3 AC1: a bot's laps through the loop replay bit for bit.
+#[test]
+fn a_bot_through_the_loop_replays_bit_for_bit() {
+    let a = bot_laps(VehicleProfile::cruz(), 3, 1);
+    let b = bot_laps(VehicleProfile::cruz(), 3, 1);
+    assert!(a.0);
+    assert_eq!(a.4, b.4);
+}
+
+/// br-xlvx.6.3 AC2: race progress never runs backwards through the loop, though the deck doubles back over the route in
+/// plan view (the race sees a riding car along the route under the deck).
+#[test]
+fn race_progress_never_runs_backwards_through_the_loop() {
+    let m = map();
+    let mut sim = Sim::with_profiles(&m, &Registry::generic(), 1, vec![VehicleProfile::cruz()]);
+    let car = sim.spawn_grid(1)[0];
+    sim.start_race(1);
+    sim.set_autopilot(car, true);
+    let d = design(&m);
+    let (ex, xx) = (
+        m.map.route.points[d.entry].x as f32 / 1000.0,
+        m.map.route.points[d.exit].x as f32 / 1000.0,
+    );
+    let (mut last, mut through, mut worst) = (0.0f32, 0u32, 0.0f32);
+    while !sim.race().is_finished(car.0) && sim.tick() < 120 * S {
+        sim.step();
+        let st = sim.car_state(car).unwrap();
+        let p = sim.race().progress_m(car.0);
+        // From just before the entry to past the exit (the loop span and its ends).
+        if st.position[0] > ex - 10.0 && st.position[0] < xx + 10.0 && st.position[2] > -25.0 {
+            through += 1;
+            worst = worst.max(last - p);
+        }
+        last = p;
+    }
+    assert!(
+        through > S as u32 / 2,
+        "the car went through the loop ({through} ticks)"
+    );
+    assert!(
+        worst < 0.05,
+        "progress ran backwards by {worst:.2} m through the loop"
+    );
+}

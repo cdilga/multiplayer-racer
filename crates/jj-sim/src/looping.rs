@@ -44,6 +44,11 @@ impl LoopRide {
 const LOCK_T: f64 = 0.1;
 /// The car must head along the deck (cosine between its velocity and the deck's tangent).
 const LOCK_HEADING: f32 = 0.8;
+/// A bot's loop approach: the run-in it covers, how far ahead on the entry line it aims, m, and its steering gain per
+/// radian of heading error.
+const APPROACH_M: f32 = 60.0;
+const APPROACH_AIM_M: f32 = 15.0;
+const APPROACH_GAIN: f32 = 2.0;
 /// Lateral offset is kept inside the deck by this margin, m.
 const EDGE_MARGIN_M: f32 = 1.0;
 
@@ -107,6 +112,50 @@ impl LoopRail {
             lateral: rel.dot(side).clamp(-half, half),
             height: rel.dot(normal).max(0.0),
         })
+    }
+
+    /// The loop approach for a bot (crate::autopilot follows the route in plan view, and the route under a loop runs
+    /// diagonally from entry to exit, so the pursuit would steer under the deck): on the loop's run-in, inside the road,
+    /// the steer (−1..1, positive left) that holds the entry line, aiming `APPROACH_AIM_M` ahead on it. None elsewhere.
+    pub(crate) fn approach(&self, pos: Vector, heading: f32) -> Option<f32> {
+        let (e, f) = (self.frame.e, self.frame.forward);
+        let (dx, dz) = (pos.x - e[0] as f32, pos.z - e[2] as f32);
+        let along = dx * f[0] as f32 + dz * f[1] as f32;
+        let lateral = dx * self.frame.left[0] as f32 + dz * self.frame.left[1] as f32;
+        if !(-APPROACH_M..=1.0).contains(&along)
+            || lateral.abs() > self.frame.half_width as f32 + 2.0
+        {
+            return None;
+        }
+        let aim = along + APPROACH_AIM_M;
+        let (ax, az) = (
+            e[0] as f32 + f[0] as f32 * aim - pos.x,
+            e[2] as f32 + f[1] as f32 * aim - pos.z,
+        );
+        let want = libm::atan2f(ax, az);
+        let mut err = want - heading;
+        while err > core::f32::consts::PI {
+            err -= core::f32::consts::TAU;
+        }
+        while err < -core::f32::consts::PI {
+            err += core::f32::consts::TAU;
+        }
+        Some((APPROACH_GAIN * err).clamp(-1.0, 1.0))
+    }
+
+    /// Where a riding car is along the route under the loop: the plan point between entry and exit at its ride fraction
+    /// (at height `y`), so race progress moves forward all the way round.
+    pub(crate) fn plan_point(&self, ride: &LoopRide, y: f32) -> Vector {
+        let (e, a, s) = (
+            self.frame.e,
+            self.frame.run_out * ride.t,
+            self.frame.shift * ride.t,
+        );
+        Vector::new(
+            (e[0] + self.frame.forward[0] * a + self.frame.left[0] * s) as f32,
+            y,
+            (e[2] + self.frame.forward[1] * a + self.frame.left[1] * s) as f32,
+        )
     }
 
     /// The pose and velocities for a ride at its current t: (position, rotation, linear velocity, angular velocity).
