@@ -1954,12 +1954,24 @@ impl Sim {
                     heading: libm::atan2f(fwd.x, fwd.z),
                     forward_speed: b.linvel().dot(fwd),
                 };
+                // P1-FL06: the slide catch reads the arcade controller's drift angle while the car is on its wheels.
+                let grounded = car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .any(|w| w.raycast_info().is_in_contact);
+                let drift_deg = if grounded && p.tuning.arcade.is_some() {
+                    car.action.arcade.angle_deg
+                } else {
+                    0.0
+                };
                 input = car.assist.apply(
                     &self.assist_profile,
                     &self.path,
                     pose,
                     p.steer_lock(pose.forward_speed),
                     wheelbase,
+                    drift_deg,
                     input,
                 );
             }
