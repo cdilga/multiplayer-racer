@@ -1,0 +1,67 @@
+{
+  "browser": "chromium",
+  "source": "local real jj-server, committed lab scenes, frame-stepped WASM fixtures; no connected phone",
+  "runs": [
+    {
+      "scene": "canyon-leap",
+      "run": "canyon-leap",
+      "native": "ed3b8561870f0beaa909e4662481bc284218ba93eca0d9c3a80b4e9b10304d6b"
+    },
+    {
+      "scene": "canyon-leap",
+      "run": "canyon-leap-short",
+      "native": "a84f56d4301c978e6120f67b58079c0552a37ef8b4de74cd316d48ffad7ec914"
+    }
+  ],
+  "rows": [
+    {
+      "file": "chromium-canyon-leap-approach-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap",
+      "state": "approach"
+    },
+    {
+      "file": "chromium-canyon-leap-air-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap",
+      "state": "air"
+    },
+    {
+      "file": "chromium-canyon-leap-side-air-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap",
+      "state": "side-air"
+    },
+    {
+      "file": "chromium-canyon-leap-overview-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap",
+      "state": "overview"
+    },
+    {
+      "file": "chromium-canyon-leap-short-approach-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap-short",
+      "state": "approach"
+    },
+    {
+      "file": "chromium-canyon-leap-short-air-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap-short",
+      "state": "air"
+    },
+    {
+      "file": "chromium-canyon-leap-short-side-air-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap-short",
+      "state": "side-air"
+    },
+    {
+      "file": "chromium-canyon-leap-short-overview-1920x1080.jpg",
+      "scene": "canyon-leap",
+      "run": "canyon-leap-short",
+      "state": "overview"
+    }
+  ],
+  "errors": []
+}
