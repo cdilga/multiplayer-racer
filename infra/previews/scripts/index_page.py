@@ -80,6 +80,7 @@ def style(t: dict) -> str:
   .card {{ position:relative; border:var(--line) solid var(--ink); border-radius:14px; background:var(--paper); padding:16px 18px; margin:18px 0; box-shadow:var(--sh); display:grid; gap:8px 22px; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); }}
   .card.pinned {{ box-shadow:0 0 0 5px var(--saffron), 0 calc(var(--lift) + 5px) 0 rgba(21,32,58,.85); }}
   .card.retired {{ opacity:.72; background:var(--paper-shade); box-shadow:none; }}
+  .gone-list {{ margin:.5rem 0 0; padding-left:1.1rem; font-size:.85rem; line-height:1.5; }}
   .card h3 {{ margin:0 0 2px; font:800 13px/1.2 var(--display); text-transform:uppercase; letter-spacing:.8px; color:var(--ink-soft); }}
   .wide {{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; }}
   .id {{ font:900 italic 26px/1 var(--display); }}
@@ -192,6 +193,13 @@ def stamp(p: dict) -> str:
     return '<span class="stamp bad">Not playable</span>'
 
 
+def gone_row(p: dict) -> str:
+    """A retired build as one line: id, commit title, when and why."""
+    title = html.escape(title_text(p.get("title", ""))[:90])
+    why = html.escape(p.get("retiredReason", "Retired by the retention policy."))
+    return f'<li id="{html.escape(p["id"])}"><code>{html.escape(p["id"])}</code> {title} <span class="muted">· {why}</span></li>'
+
+
 def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], newest: set[str], now: datetime) -> str:
     tags = "".join(f'<span class="tag{" r" if label != "Latest" else ""}">{html.escape(label)}</span>'
                    for label in pinned_by + (["Latest"] if is_latest else []))
@@ -254,8 +262,10 @@ def render(reg: dict, now: datetime | None = None) -> str:
     if not body:
         body = '<article class="card"><div class="wide"><strong>No previews yet.</strong> Every 0.2 build that passes CI lands here.</div></article>'
     if gone:
-        body += (f'<details class="gone"><summary>Retired ({len(gone)})</summary>'
-                 + "".join(card(p, [], False, keep, newest, now) for p in gone) + "</details>")
+        # One line per retired build, not a full card: the whole page rides in the edge app's config, and TrueNAS's
+        # middleware refuses messages over 64 kB (the publish failed from 28 retired cards, runs 5087-5091).
+        body += (f'<details class="gone"><summary>Retired ({len(gone)})</summary><ul class="gone-list">'
+                 + "".join(gone_row(p) for p in gone) + "</ul></details>")
     hero_p = next((p for p in live if p["id"] == latest), None)
     desc = "Every Joystick Jammers 0.2 build that passes CI, live and playable: host on the big screen, steer from your phone."
     share = ""
