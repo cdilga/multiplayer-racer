@@ -38,12 +38,16 @@ fn tuned(base: VehicleProfile) -> VehicleProfile {
     let mut v = serde_json::to_value(base).unwrap();
     for kv in tune.split(',').filter(|s| !s.is_empty()) {
         let (k, val) = kv.split_once('=').expect("JJ_TUNE is field=value,…");
-        // A dotted key reaches into a section (`arcade.bank_normal_y=0.5`).
+        // A dotted key reaches into a section (`arcade.bank_normal_y=0.5`); a vehicle without that section (the bikes
+        // have no `arcade`) keeps its profile.
+        let (path, last) = k.rsplit_once('.').map_or(("", k), |(p, l)| (p, l));
         let mut at = &mut v["tuning"];
-        for part in k.split('.') {
+        for part in path.split('.').filter(|p| !p.is_empty()) {
             at = &mut at[part];
         }
-        *at = serde_json::from_str(val).expect("a JSON value");
+        if at.is_object() {
+            at[last] = serde_json::from_str(val).expect("a JSON value");
+        }
     }
     serde_json::from_value(v).expect("a valid profile")
 }
