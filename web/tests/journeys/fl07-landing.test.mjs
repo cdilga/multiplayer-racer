@@ -54,7 +54,9 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
           }
           assert.ok(landing, `${r.run}: the car landed`);
           assert.ok(r.tiers.includes(landing.tier), `${r.run}: ${JSON.stringify(landing)}`);
-          await page.evaluate(async () => { await window.__jjTest.step(6); for (let i = 0; i < 6; i++) { window.__jjRender.frame(); await new Promise(q => setTimeout(q, 16)); } window.__jjRender.hold(); });
+          // One frame at once: the callout lasts LANDING_SHOWN_MS of wall time, and a 1080p frame on software GL takes a
+          // good part of that.
+          await page.evaluate(() => { window.__jjRender.frame(); window.__jjRender.hold(); });
           if (process.env.JJ_CAPTURE_DIR) await page.screenshot({ path: join(out, `${name}-${r.run}-${view}-1920x1080.jpg`), type: 'jpeg', quality: 85 });
           const shown = await page.evaluate(() => window.__jjRender.launchCalloutsShown());
           if (r.callout === null) assert.deepEqual(shown, [], `${r.run}: an OK landing says nothing`);
