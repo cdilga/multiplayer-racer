@@ -3541,6 +3541,11 @@ impl Sim {
         }
     }
 
+    /// Sets a car's race progress to `gates` gates passed (fixtures start a car mid-lap, R90).
+    pub fn set_gates_passed(&mut self, car: CarId, gates: u32) {
+        self.race.set_gates_passed(car.0, gates);
+    }
+
     /// Sets a car's boost meter (0..1): fixtures and the Feel Lab start a car empty or full (R90).
     pub fn set_boost_meter(&mut self, car: CarId, meter: f32) {
         if let Some(c) = self.cars.get_mut(car.0 as usize) {

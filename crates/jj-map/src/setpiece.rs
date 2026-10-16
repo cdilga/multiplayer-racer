@@ -15,6 +15,14 @@
 //! (lip to far rim), `pitDepthCm` (pit floor below the take-off ground), `pitLeftMm`/`pitRightMm` (the pit's extent
 //! either side of the centerline), `landingLengthMm` (rim to the end of the landing), `minSpeedCmps`/`maxSpeedCmps`
 //! (the band a car leaving the lip lands in), `detourSide` (+1 left, -1 right), `detourOffsetMm` and `detourWidthMm`.
+//!
+//! The **overpass leap** (`piece` 4, R124 br-xlvx.5) is a gap leap over another part of the track: at a figure-eight's
+//! crossing the upper road leaves a kicker, flies over the lower road (which runs through the gap, in its cutting) and
+//! lands past it. It carries `lowerFrom`/`lowerTo` (the lower road's route span under it) and no detour
+//! (`detourWidthMm` 0). Its contract adds: the lower road passes through the gap, never under the kicker or the
+//! landing; the slowest car's flight keeps [`limits::OVERPASS_CLEARANCE_M`] over it; and its pit belongs to the upper
+//! road only ([`Pit::span`]), so a car that misses falls and respawns, while cars driving the lower road under it never
+//! count as fallen in.
 //! `f64` and `libm` only, so native and WASM agree to the bit.
 
 use crate::jump::{JumpDesign, ground_height_m};
@@ -37,6 +45,13 @@ pub mod limits {
     pub const MIN_BAND_SPEED_CMPS: i64 = 1_200;
     /// Height of a car's centre above the ground on its wheels, m: the flight is the centre's.
     pub const RIDE_HEIGHT_M: f64 = 0.5;
+    /// An overpass leap's slowest flight keeps the underside of a car (its centre less the ride height) this far above
+    /// the lower road, m: a car on it (about 1.6 m tall) and room to spare.
+    pub const OVERPASS_CLEARANCE_M: f64 = 4.0;
+    /// The cars' body damping in the air, per second (the roster's largest `linear_damping`: Rapier slows a flying
+    /// body by it each step). An overpass leap's flight (2 s and more) is flown with it; over that long it costs a
+    /// quarter of the distance.
+    pub const FLIGHT_DAMPING_PER_S: f64 = 0.19;
 }
 
 /// The piece families, as stored in `piece`.
@@ -45,6 +60,7 @@ pub enum PieceKind {
     CanyonLeap,
     MesaDrop,
     CreekWashout,
+    OverpassLeap,
 }
 
 impl PieceKind {
@@ -53,6 +69,7 @@ impl PieceKind {
             Self::CanyonLeap => 1,
             Self::MesaDrop => 2,
             Self::CreekWashout => 3,
+            Self::OverpassLeap => 4,
         }
     }
 
@@ -61,6 +78,7 @@ impl PieceKind {
             1 => Some(Self::CanyonLeap),
             2 => Some(Self::MesaDrop),
             3 => Some(Self::CreekWashout),
+            4 => Some(Self::OverpassLeap),
             _ => None,
         }
     }
@@ -70,6 +88,7 @@ impl PieceKind {
             Self::CanyonLeap => "canyon-leap",
             Self::MesaDrop => "mesa-drop",
             Self::CreekWashout => "creek-washout",
+            Self::OverpassLeap => "overpass-leap",
         }
     }
 }
@@ -91,6 +110,8 @@ pub struct GapLeap {
     pub detour_side: i64,
     pub detour_offset_m: f64,
     pub detour_width_m: f64,
+    /// An overpass leap's lower road: its route span under the gap (`lowerFrom`, `lowerTo`).
+    pub lower: Option<(u32, u32)>,
 }
 
 /// The params a gap leap must carry.
@@ -146,6 +167,10 @@ impl GapLeap {
             detour_side: get("detourSide")?,
             detour_offset_m: m("detourOffsetMm")?,
             detour_width_m: m("detourWidthMm")?,
+            lower: match (get("lowerFrom"), get("lowerTo")) {
+                (Some(a), Some(b)) => Some((u32::try_from(a).ok()?, u32::try_from(b).ok()?)),
+                _ => None,
+            },
         })
     }
 
@@ -210,12 +235,15 @@ pub fn take_off(map: &Map, f: &Feature, d: &GapLeap) -> ([f64; 3], [f64; 2], f64
 pub fn touchdown(map: &Map, f: &Feature, d: &GapLeap, speed: f64) -> Option<(f64, f64)> {
     let (lip, t, _) = take_off(map, f, d);
     let a = d.launch_angle();
-    let (vh, mut vy) = (speed * libm::cos(a), speed * libm::sin(a));
+    let (mut vh, mut vy) = (speed * libm::cos(a), speed * libm::sin(a));
     let (mut x, mut y) = (0.0, lip[1] + limits::RIDE_HEIGHT_M);
     let dt = 1.0 / 240.0;
+    let damp = 1.0 / (1.0 + dt * flight_damping(d));
     for _ in 0..(8 * 240) {
-        x += vh * dt;
         vy -= 9.81 * dt;
+        vh *= damp;
+        vy *= damp;
+        x += vh * dt;
         y += vy * dt;
         let g = ground_height_m(&map.terrain, lip[0] + t[0] * x, lip[2] + t[1] * x)
             + landing_lift(d, d.lip_u() + x, 0.0);
@@ -328,6 +356,120 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
             d.gap_m + d.landing_m - limits::END_MARGIN_M
         )),
     }
+    if d.kind == PieceKind::OverpassLeap {
+        out.extend(overpass_problems(map, f, &d));
+    } else if d.lower.is_some() {
+        out.push("only an overpass leap (piece 4) has a lower road".into());
+    }
+    out
+}
+
+/// The damping a piece's flight is flown with, per second: an overpass leap's long flight with the cars' own
+/// ([`limits::FLIGHT_DAMPING_PER_S`]); the shorter gap leaps without (their contract as it stands).
+pub fn flight_damping(d: &GapLeap) -> f64 {
+    if d.kind == PieceKind::OverpassLeap {
+        limits::FLIGHT_DAMPING_PER_S
+    } else {
+        0.0
+    }
+}
+
+/// The height (m) of a car's centre `x` m past the lip, leaving it at `speed` m/s (the flight [`touchdown`] marches;
+/// `None` once it has come down to the take-off's height without reaching `x`).
+pub fn flight_y(map: &Map, f: &Feature, d: &GapLeap, speed: f64, x: f64) -> Option<f64> {
+    let (lip, _, _) = take_off(map, f, d);
+    let a = d.launch_angle();
+    let (mut vh, mut vy) = (speed * libm::cos(a), speed * libm::sin(a));
+    let (mut u, mut y) = (0.0, lip[1] + limits::RIDE_HEIGHT_M);
+    let dt = 1.0 / 240.0;
+    let damp = 1.0 / (1.0 + dt * flight_damping(d));
+    for _ in 0..(8 * 240) {
+        if u >= x {
+            return Some(y);
+        }
+        vy -= 9.81 * dt;
+        vh *= damp;
+        vy *= damp;
+        u += vh * dt;
+        y += vy * dt;
+    }
+    None
+}
+
+/// An overpass leap's own contract: a lower road that runs through the gap (never under the kicker or the landing) with
+/// the slowest flight [`limits::OVERPASS_CLEARANCE_M`] clear above it, and no detour.
+fn overpass_problems(map: &Map, f: &Feature, d: &GapLeap) -> Vec<String> {
+    let mut out = Vec::new();
+    let pts = &map.route.points;
+    let n = pts.len();
+    let Some((a, b)) = d.lower else {
+        return vec!["an overpass leap needs lowerFrom and lowerTo".into()];
+    };
+    if a as usize >= n || b as usize >= n {
+        return vec![format!("lowerFrom {a} / lowerTo {b} outside the route")];
+    }
+    let upper = |i: usize| {
+        let (from, to) = (d.from as usize, d.to as usize);
+        if from <= to {
+            from <= i && i <= to
+        } else {
+            i >= from || i <= to
+        }
+    };
+    if d.detour_width_m != 0.0 {
+        out.push("an overpass leap has no detour (detourWidthMm 0)".into());
+    }
+    let (lip, t, _) = take_off(map, f, d);
+    let half = d.kicker.ramp_w / 2.0;
+    let count = (b as usize + n - a as usize) % n + 1;
+    let mut through = 0;
+    for k in 0..count {
+        let i = (a as usize + k) % n;
+        if upper(i) {
+            out.push(format!(
+                "the lower road (point {i}) is part of the leap's own span"
+            ));
+            break;
+        }
+        let q = &pts[i];
+        let (x, y, z) = (
+            f64::from(q.x) / 1000.0,
+            f64::from(q.y) / 1000.0,
+            f64::from(q.z) / 1000.0,
+        );
+        let lower_half = f64::from(q.width) / 2000.0;
+        let (u, lat) = (
+            (x - lip[0]) * t[0] + (z - lip[2]) * t[1],
+            -(x - lip[0]) * t[1] + (z - lip[2]) * t[0],
+        );
+        // Points of the lower road whose roadway reaches into the flight's lane (the kicker's width).
+        if lat.abs() > half + lower_half {
+            continue;
+        }
+        if u < -d.kicker.ramp_m - lower_half || u > d.gap_m + d.landing_m + lower_half {
+            continue;
+        }
+        if u < lower_half || u > d.gap_m - lower_half {
+            out.push(format!(
+                "the lower road (point {i}) runs under the kicker or the landing ({u:.1} m from the lip; the gap is {:.1} m)",
+                d.gap_m
+            ));
+            continue;
+        }
+        through += 1;
+        let clear = flight_y(map, f, d, d.min_speed, u)
+            .map_or(f64::NEG_INFINITY, |fy| fy - limits::RIDE_HEIGHT_M - y);
+        if clear < limits::OVERPASS_CLEARANCE_M {
+            out.push(format!(
+                "at {:.1} m/s the flight clears the lower road (point {i}) by {clear:.1} m (min {})",
+                d.min_speed,
+                limits::OVERPASS_CLEARANCE_M
+            ));
+        }
+    }
+    if through == 0 {
+        out.push("the lower road never passes through the gap: not an overpass".into());
+    }
     out
 }
 
@@ -342,6 +484,9 @@ pub struct Pit {
     pub right_m: f64,
     /// Height below which a car inside the rectangle is in the pit, m.
     pub trigger_y: f64,
+    /// The route span the pit belongs to (an overpass leap's upper road): only a car racing that stretch has missed;
+    /// cars on the lower road under it pass through. `None`: every car inside it has fallen in.
+    pub span: Option<(u32, u32)>,
 }
 
 impl Pit {
@@ -363,13 +508,24 @@ pub fn pits(map: &Map) -> Vec<Pit> {
         .filter_map(|f| {
             let d = GapLeap::of(f)?;
             let (lip, t, ground) = take_off(map, f, &d);
+            // An overpass leap lands lower than it takes off: a car coming down onto its rim isn't in the pit.
+            let floor = if d.kind == PieceKind::OverpassLeap {
+                ground.min(ground_height_m(
+                    &map.terrain,
+                    lip[0] + t[0] * d.gap_m,
+                    lip[2] + t[1] * d.gap_m,
+                ))
+            } else {
+                ground
+            };
             Some(Pit {
                 origin: [lip[0], ground, lip[2]],
                 dir: t,
                 length_m: d.gap_m,
                 left_m: d.pit_left_m,
                 right_m: d.pit_right_m,
-                trigger_y: ground - limits::PIT_TRIGGER_M,
+                trigger_y: floor - limits::PIT_TRIGGER_M,
+                span: (d.kind == PieceKind::OverpassLeap).then_some((d.from, d.to)),
             })
         })
         .collect()

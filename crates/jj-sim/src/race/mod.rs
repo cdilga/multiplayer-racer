@@ -215,18 +215,43 @@ impl Course {
         self.gates[i].anchor
     }
 
-    /// Below the kill plane, outside the bounds, or down a set piece's pit (a missed gap leap, R132).
+    /// Below the kill plane, outside the bounds, or down a set piece's pit (a missed gap leap, R132). An overpass leap's
+    /// pit (br-xlvx.5) belongs to its upper road, so it isn't counted here; see [`Course::out_of_bounds_for`].
     pub fn out_of_bounds(&self, p: [f32; 3]) -> bool {
+        self.out_of_bounds_for(p, None)
+    }
+
+    /// [`Course::out_of_bounds`] for a car racing between race-order gates `window` (the gate it last passed, the next):
+    /// an overpass leap's pit counts only while that stretch takes in the leap's span, so a car that misses the leap
+    /// falls and respawns while the cars on the road beneath drive through.
+    pub fn out_of_bounds_for(&self, p: [f32; 3], window: Option<(usize, usize)>) -> bool {
         let [x0, z0, x1, z1] = self.bounds;
         p[1] < self.kill_y
             || p[0] < x0
             || p[0] > x1
             || p[2] < z0
             || p[2] > z1
-            || self
-                .pits
-                .iter()
-                .any(|pit| pit.contains(f64::from(p[0]), f64::from(p[1]), f64::from(p[2])))
+            || self.pits.iter().any(|pit| {
+                let racing = match (pit.span, window) {
+                    (None, _) => true,
+                    (Some(span), Some((a, b))) => self.window_takes_in(a, b, span),
+                    (Some(_), None) => false,
+                };
+                racing && pit.contains(f64::from(p[0]), f64::from(p[1]), f64::from(p[2]))
+            })
+    }
+
+    /// Whether the route between race-order gates `a` and `b` (going forward) takes in route span `span`.
+    fn window_takes_in(&self, a: usize, b: usize, span: (u32, u32)) -> bool {
+        let n = self.pts.len();
+        if n == 0 || a >= self.gates.len() || b >= self.gates.len() {
+            return false;
+        }
+        let (from, to) = (self.gates[a].at, self.gates[b].at);
+        let along = |i: usize| (i + n - from) % n;
+        let len = along(to);
+        let len = if len == 0 { n } else { len };
+        along(span.0 as usize % n) <= len && along(span.1 as usize % n) <= len
     }
 
     /// Distance along the route from gate `from`'s route point, projecting only onto the route between gates `from`
@@ -442,6 +467,27 @@ impl Race {
         });
     }
 
+    /// Sets a car's gate count (fixtures and the Feel Lab start a car mid-lap with the race state of that point, R90):
+    /// it has passed `gates` gates, so the next is `gates % n` in race order.
+    pub fn set_gates_passed(&mut self, car: u32, gates: u32) {
+        let n = self.course.gates.len();
+        if let Some(c) = self.cars.get_mut(car as usize) {
+            c.gates_passed = gates;
+            c.last_gate = (gates > 0 && n > 0).then(|| (gates as usize - 1) % n);
+            c.last = None;
+        }
+    }
+
+    /// The race-order index of the first gate at or after route point `at` (going forward), for a fixture that starts a
+    /// car before a given stretch.
+    pub fn next_gate_after(&self, at: usize) -> usize {
+        let n = self.course.pts.len();
+        let g = self.course.gates.len();
+        (0..g)
+            .min_by_key(|&k| (self.course.gates[k].at + n - at % n) % n)
+            .unwrap_or(0)
+    }
+
     /// A drop-in (P1-S06): a car joining at legal progress `progress_m` with the gate state there, marked late.
     pub fn add_late_car(&mut self, spawn: SpawnPose, progress_m: f32, tick: u64) {
         self.add_car(spawn);
@@ -616,7 +662,14 @@ impl Race {
                 self.cars[i].last = Some(v);
                 continue;
             }
-            if self.course.out_of_bounds(v.position) {
+            let window = {
+                let g = self.course.gates.len();
+                (g > 0).then(|| {
+                    let next = (self.cars[i].gates_passed as usize) % g;
+                    ((next + g - 1) % g, next)
+                })
+            };
+            if self.course.out_of_bounds_for(v.position, window) {
                 effects.push(self.respawn(tick, car, Respawned::OutOfBounds));
                 continue;
             }

@@ -406,8 +406,14 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                 / 2.0;
             // Grade-separated figure-8 lobes turn in opposite directions and can cancel their signed area. Their
             // ordered gates still enclose two real lobes. Keep the old winding check for undeclared crossings;
-            // a bridge additionally earns its geometry/clearance through the Crossing rule below.
-            let enclosed = if map.features.iter().any(|f| f.kind == FeatureKind::Bridge) {
+            // a bridge additionally earns its geometry/clearance through the Crossing rule below, and an overpass leap
+            // (br-xlvx.5) its clearance through the SetPiece rule.
+            let grade_separated = map.features.iter().any(|f| {
+                f.kind == FeatureKind::Bridge
+                    || crate::setpiece::GapLeap::of(f)
+                        .is_some_and(|d| d.kind == crate::setpiece::PieceKind::OverpassLeap)
+            });
+            let enclosed = if grade_separated {
                 let centre = pts.iter().fold((0.0, 0.0), |s, p| (s.0 + p.0, s.1 + p.1));
                 let centre = (centre.0 / pts.len() as f64, centre.1 / pts.len() as f64);
                 pts.iter()
