@@ -149,6 +149,34 @@ Most important rules:
 - Don't sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim
   it, reserve files, announce, and start.
 
+## CI has one owner, a budget, and never stands between the owner and the game (owner, 2026-10-17)
+
+**What went wrong (2026-10-16/17).** About 20 hours and half a week's usage went by with no new playable preview. Previews
+published only from a fully green run; with 8-9 agents pushing, each run took 35-60 min and every batch carried fresh
+failures (old tests asserting old behaviour, flaky journeys, data committed against another agent's uncommitted code), so
+it never went green. Every agent chased red lanes with diagnostic pushes that restarted the queue, and nobody owned the
+whole. The owner saw yesterday's build and concluded nothing had happened.
+
+**The rules that stop it happening again:**
+1. **One CI owner.** A single agent (the CI owner; today the "CI medic" session) is responsible for CI and the preview
+   flow end to end, and does whatever it takes to make them work for us. Every other agent stays on game work: it runs the
+   focused tests for what it touched before pushing, and fixes a red only when the CI owner hands it one with the cause.
+2. **The owner sees every build.** Previews publish from every CI run whose image built, red or not
+   (`publish.py --from-run <run>`, dispatched by the CI owner); the smoke marks it playable or not. Green is a quality
+   signal, never a gate on the owner seeing work. A day without a new playable preview is a P0 the CI owner fixes first.
+3. **Batches, fixed forward (R139).** A push starts a run; a run in progress finishes; everything since folds into one
+   batch. A red batch is fixed forward by reasoning (which change could cause it, reproduce, fix).
+4. **A red-time budget.** If CI has been red for 2 hours or 2 consecutive batches, the CI owner stops patching and
+   triages: quarantine the failing tests that block (skip with a P0 bead naming the test, the cause and the owner), revert
+   a breaking commit, or relax a timing assertion with a stated reason, until the batch is green. Never more than 2 hours
+   red.
+5. **No diagnostic pushes.** Reproduce on eris or locally (`scripts/remote/eris.sh`, focused journeys) and push only the
+   fix. Never commit data or code that only works with someone else's uncommitted changes.
+6. **Speed is part of the job.** The CI owner keeps a typical batch under 15 min (selective suites, caches, partitioning,
+   GPU runner for GL-heavy journeys), and records per-lane timings in `docs/evidence/P1-CI-speed/`.
+7. **Watch the spend.** The coordinator scales workers down when CI churn outweighs feature work, and reports usage to the
+   owner rather than letting it run silently.
+
 ## Beads (Physical Soccer's model)
 
 `docs/process/bead-workflow.md` is the loop; `.beads/policy.yaml` enforces the close rules.
