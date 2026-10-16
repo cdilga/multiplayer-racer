@@ -139,7 +139,12 @@ async function phone(joinUrl, name) {
   return page;
 }
 
-test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000 }, async () => {
+// Hardware fact (R93, like R06 and FL17): the gated start judges snaps against GO to a fraction of a second, which needs a
+// host whose page keeps up. On SwiftShader the 1080p host page starves and every seat's input reaches the sim 1.5 s or
+// more old (CI 5364, eris 3 of 4, the Mac at 2x CPU throttle), so snaps miss the start window; with JJ_CHROMIUM_GPU=1 on
+// eris it passed 3 of 3 in 15 s. It runs on the `gpu` runner (scripts/ci/plan.mjs) and skips on the SwiftShader lanes until br-bcuy.
+const gpu = Boolean(process.env.JJ_CHROMIUM_GPU);
+test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000, skip: !gpu && 'the gated start needs a GPU host (JJ_CHROMIUM_GPU=1); on software WebGL input reaches the sim too late' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
@@ -234,8 +239,9 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   await wait(host, (cs) => cs.every((car) => window.__jjRender.launchCalloutsShown().some((s) => s.car === car)),
     [carsBySeat[seatOf('Shazza')], carsBySeat[seatOf('Mick')]], 30_000).catch(async (e) => {
     const shown = await host.evaluate(() => window.__jjRender.launchCalloutsShown());
-    const outs = await Promise.all([A, B, C, D].map((p) => p.evaluate(() => window.__jjController.inspect().launchOutcome)));
-    throw new Error(`MEDIC cars ${JSON.stringify(carsBySeat)} seats ${JSON.stringify(seats)} shown ${JSON.stringify(shown)} phones ${JSON.stringify(outs)}: ${e.message}`);
+    const phones = await Promise.all([A, B, C, D].map((p) => p.evaluate(() => { const i = window.__jjController.inspect(); return { outcome: i.launchOutcome, actions: i.stats.actions }; })));
+    const ages = await host.evaluate(async () => (await window.__jjTest.observe()).host.seats.map((s) => ({ seat: s.seat, inputAgeMs: s.inputAgeMs, dropped: s.inputDropped })));
+    throw new Error(`B's and C's callouts: cars ${JSON.stringify(carsBySeat)}, shown ${JSON.stringify(shown)}, phones ${JSON.stringify(phones)}, host input ${JSON.stringify(ages)}: ${e.message}`);
   });
   await shot(B, 'phone-b-outcome');
   await shot(C, 'phone-launch');
