@@ -20,8 +20,8 @@ Outback Dirt 3. Reference: `art/references/australia/generated/biome-rocks-olgas
 | `captures/chromium-creek-washout-air-1920x1080.jpg` | Over the gully, landing ahead; the dirt detour (the safe line) is visible on the right, curving round and fording the creek. Good. |
 | `captures/chromium-creek-washout-side-air-1920x1080.jpg` | Car airborne over the creek bank. Good. |
 | `captures/chromium-mesa-drop-air-1920x1080.jpg` | Just off the lip on a raised plateau road: the ground falls away both sides, the run-out climbs a cutting ahead, a flat-topped mesa on the horizon. Reads as a drop off a mesa, but the plateau is low (2.5–4 m) on the flattest biome (Bitumen); a taller breakaway would read stronger. Known gap, below. |
-| `captures/chromium-*-overview-1920x1080.jpg` | Whole course framed from above (fixed: the zero-car overview now follows no car, as `tools/maps/review-landscape.mjs` does). Canyon leap (Rocks 0): the leap on the left straight between domes with its detour alongside. Mesa drop and creek washout: the detour loops off the road beside each piece are visible from the overview. |
-| `captures/webkit-*` | Same views in WebKit (Mac); the overview frames there predate the fix and show the camera inside a dome. |
+| `captures/chromium-canyon-leap-overview-1920x1080.jpg`, `captures/chromium-mesa-drop-overview-1920x1080.jpg`, `captures/chromium-creek-washout-overview-1920x1080.jpg` | Whole course framed from above (fixed: the zero-car overview now follows no car, as `tools/maps/review-landscape.mjs` does). Canyon leap (Rocks 0): the leap on the left straight between domes with its detour alongside. Mesa drop and creek washout: the detour loops off the road beside each piece are visible from the overview. |
+| `captures/webkit-canyon-leap-air-1920x1080.jpg` and the other `webkit-` captures | Same views in WebKit (Mac); the overview frames there predate the fix and show the camera inside a dome. |
 
 ## Behaviour behind the pictures (fixtures, not eyeballing)
 
