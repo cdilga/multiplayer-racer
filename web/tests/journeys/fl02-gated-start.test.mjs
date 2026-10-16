@@ -232,7 +232,11 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   // the banner can come and go between polls: CI runs 5253, 5343). The phone banner is checked for A above.
   const carsBySeat = await host.evaluate(() => Object.fromEntries(window.__jjRoom.view().seats.map((s) => [s.seat, s.car])));
   await wait(host, (cs) => cs.every((car) => window.__jjRender.launchCalloutsShown().some((s) => s.car === car)),
-    [carsBySeat[seatOf('Shazza')], carsBySeat[seatOf('Mick')]], 30_000);
+    [carsBySeat[seatOf('Shazza')], carsBySeat[seatOf('Mick')]], 30_000).catch(async (e) => {
+    const shown = await host.evaluate(() => window.__jjRender.launchCalloutsShown());
+    const outs = await Promise.all([A, B, C, D].map((p) => p.evaluate(() => window.__jjController.inspect().launchOutcome)));
+    throw new Error(`MEDIC cars ${JSON.stringify(carsBySeat)} seats ${JSON.stringify(seats)} shown ${JSON.stringify(shown)} phones ${JSON.stringify(outs)}: ${e.message}`);
+  });
   await shot(B, 'phone-b-outcome');
   await shot(C, 'phone-launch');
   await shot(host, 'tv-launch');
