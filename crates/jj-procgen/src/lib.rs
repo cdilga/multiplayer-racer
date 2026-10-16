@@ -23,6 +23,7 @@ pub mod crossings;
 pub mod features;
 pub mod lab;
 pub mod lineside;
+pub mod loops;
 pub mod playtest;
 pub mod roofs;
 pub mod scatter;

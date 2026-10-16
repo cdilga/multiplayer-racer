@@ -1,0 +1,15 @@
+{
+  "//": "Loops in generated maps (br-xlvx.6.4, R124), read by jj-procgen loops.rs. A loop takes a beat straight: `runInM` of straight road before its entry (the bots' approach and the player's run-up), the loop itself (its exit `runOutRadii` radii on along the road and `shiftM` to one side, the decks clearing each other), then `backM` over which the road eases back onto its line. `perLap` is how many a lap gets where its straights allow (not a cap on anything: a lap with more long straights could take more if this rises). `maxReliefM` is the deepest the ground may be cut to clear the deck (never below the ramp from its entry to its exit; dips are left, the loop stands over them). The deck's own sizes (`thicknessM`, `barrierHeightM`, `barrierWidthM`, `segments`) and `minSpeedMps` (carried round only above it) are the loop contract's params (jj-map looping). Nothing here caps anything.",
+  "perLap": 1,
+  "radiusM": [7.5, 9],
+  "runOutRadii": [3.6, 4.4],
+  "shiftM": [15, 18],
+  "runInM": 45,
+  "backM": 70,
+  "maxReliefM": 15,
+  "thicknessM": 0.4,
+  "barrierHeightM": 0.9,
+  "barrierWidthM": 0.4,
+  "segments": 48,
+  "minSpeedMps": 9
+}

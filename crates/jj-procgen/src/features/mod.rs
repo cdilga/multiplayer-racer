@@ -658,6 +658,16 @@ fn carve_recovery(map: &mut Map, line: &Line) {
             *flag = false;
         }
     }
+    // A loop's span (br-xlvx.6): the car is on the deck above it, and the loop's contract refuses recovery there.
+    for d in map
+        .features
+        .iter()
+        .filter_map(jj_map::looping::LoopDesign::of)
+    {
+        for flag in &mut open[d.entry.min(n - 1)..=d.exit.min(n - 1)] {
+            *flag = false;
+        }
+    }
     // A set piece's kicker, gap and landing (R132): a respawn never goes where a car is meant to fly.
     for f in &map.features {
         let Some(d) = jj_map::setpiece::GapLeap::of(f) else {
