@@ -609,10 +609,30 @@ fn one_throw() {
         "hardest hit: {dv:.2} m/s in one tick at {:.1},{:.1}",
         at[0], at[2]
     );
-    for f in &map.map.features {
-        let d = (f.pose.x as f32 / 1000.0 - at[0]).hypot(f.pose.z as f32 / 1000.0 - at[2]);
-        if d < 25.0 {
-            eprintln!("  {:?} at {d:.1} m: {:?}", f.kind, f.params);
-        }
+    let near =
+        |x: i32, z: i32, r: f32| (x as f32 / 1000.0 - at[0]).hypot(z as f32 / 1000.0 - at[2]) < r;
+    for f in map
+        .map
+        .features
+        .iter()
+        .filter(|f| near(f.pose.x, f.pose.z, 25.0))
+    {
+        eprintln!("  feature {:?}: {:?}", f.kind, f.params);
+    }
+    for d in map
+        .map
+        .dressing
+        .iter()
+        .filter(|d| d.collides && near(d.pose.x, d.pose.z, 12.0))
+    {
+        eprintln!("  dressing {} at {},{}", d.kit_piece, d.pose.x, d.pose.z);
+    }
+    for p in map
+        .map
+        .props
+        .iter()
+        .filter(|p| near(p.pose.x, p.pose.z, 12.0))
+    {
+        eprintln!("  prop {} at {},{}", p.kit_piece, p.pose.x, p.pose.z);
     }
 }
