@@ -8,6 +8,10 @@ import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
+import roster from '../../shared/src/roster.json' with { type: 'json' };
+
+// The real cars come first (the roster grows, R123); stand-ins `test-0`… follow them.
+const REAL = roster.cars.length;
 
 const BASE = '/p/c03car/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
@@ -62,7 +66,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
     thumbs: document.querySelectorAll('.thumb').length,
     img: document.querySelector('.carimg.big').complete && document.querySelector('.carimg.big').naturalWidth > 0,
   }));
-  assert.deepEqual([r.name, r.tag, r.stats, r.arrows, r.thumbs, r.img], ['Cruz Missile', 'Aussie classic', 4, 2, 2, true]);
+  assert.deepEqual([r.name, r.tag, r.stats, r.arrows, r.thumbs, r.img], ['Cruz Missile', 'Aussie classic', 4, 2, REAL, true]);
   await shot(page, 'c03-car-one-844x390');
   await page.getByRole('button', { name: 'Use this vehicle' }).click();
   assert.equal(await picker(page), null);
@@ -97,7 +101,7 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   await shot(page, 'c03-car-many-844x390');
   await page.getByRole('button', { name: 'Use this vehicle' }).click();
   // Kept: the next visit to the picker starts on it, and the session carries it.
-  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-6');
+  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, `test-${8 - REAL}`);
   await page.getByRole('button', { name: /^(Choose|Change) car$/ }).click();
   assert.equal(await page.locator('.thumb[aria-selected=true]').getAttribute('data-i'), '8');
   await ctx.close();

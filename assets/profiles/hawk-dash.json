@@ -2918,7 +2918,7 @@
     "air_level_damping": 3120.0,
     "support_level_tilt_rad": 0.17453292,
     "body_friction": 0.6,
-    "com_lower_m": 0.18,
+    "com_lower_m": 0.24,
     "surfaces": {
       "tarmac": 1.0,
       "packed_dirt": 0.7,

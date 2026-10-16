@@ -9,6 +9,7 @@ import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
+import roster from '../../shared/src/roster.json' with { type: 'json' };
 
 const BASE = '/p/c03pick/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
@@ -84,8 +85,8 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   await shot(host, 'c03-pick-tv-choosing-1280x720');
   // Walk to a car far down a 200-car roster: each look reaches the host.
   assert.equal(await p.page.locator('.thumb').count(), 200, 'two hundred cars, no cap');
-  // (Two real cars come first (the roster grows, R123), then the stand-ins `test-0`...: index 151 is `test-149`.)
-  await p.page.locator('.thumb[data-i="151"]').dispatchEvent('click');
+  // (The real cars come first (the roster grows, R123), then the stand-ins `test-0`...: `test-149` sits after them.)
+  await p.page.locator(`.thumb[data-i="${149 + roster.cars.length}"]`).dispatchEvent('click');
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.vehicle === 'test-149');
   assert.equal((await card(host, 'Marlene', 'choosing')).state, 'choosing', 'still choosing while the picker is open');
   await shot(p.page, 'c03-pick-phone-open-844x390');

@@ -61,14 +61,16 @@ fn every_roster_vehicle_has_a_profile_and_an_art_folder() {
 fn each_car_is_built_from_and_driven_by_its_own_profile() {
     let r = roster();
     let (sim, cars) = mixed(2 * r.len(), 4 * S);
+    let (spawned, spawned_cars) = mixed(2 * r.len(), 0);
     for (i, &c) in cars.iter().enumerate() {
         let (_, want) = &r[i % r.len()];
         assert_eq!(sim.vehicle_of(c), Some(i % r.len()));
         let got = sim.profile_of(c).unwrap();
         assert_eq!(got.tuning.mass, want.tuning.mass);
         assert_eq!(got.tuning.max_engine_force, want.tuning.max_engine_force);
-        // The body Rapier built has the profile's mass (a car's body takes it when it spawns).
-        let mass = sim.car_mass(c).unwrap();
+        // The body Rapier built has the profile's mass (a car's body takes it when it spawns). Measured on the grid at
+        // spawn: after a few seconds a crowded mixed grid collides, and a lost door rightly makes a body lighter.
+        let mass = spawned.car_mass(spawned_cars[i]).unwrap();
         assert!(
             (mass - want.tuning.mass).abs() < want.tuning.mass * 0.02,
             "car {i}: mass {mass} vs profile {}",

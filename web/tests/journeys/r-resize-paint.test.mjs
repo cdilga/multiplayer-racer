@@ -27,7 +27,9 @@ after(async () => { await server?.close(); });
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 /** Two animation frames after layout: what the next screenshot can be expected to show. */
-const settle = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+// Two frames, or a second at most: a page that isn't painting (under load, around full screen) may never run rAF, and an
+// unbounded wait hung the whole test until its 10-minute timeout (CI run 5233).
+const settle = (page) => page.evaluate(() => new Promise((r) => { requestAnimationFrame(() => requestAnimationFrame(r)); setTimeout(r, 1000); }));
 
 /** Synthetic seats join and ready until the race runs and the QR has no grid cell (it docks in the footer). */
 async function raceWithDockedQr(host) {
@@ -147,7 +149,7 @@ async function check(host, joinUrl, at) {
   for (let tries = 0; ; tries++) {
     await settle(host);
     s = await scene(host);
-    buf = await host.screenshot();
+    buf = await host.screenshot({ timeout: 30_000 });
     if (JSON.stringify(await scene(host)) === JSON.stringify(s)) break;
     assert.ok(tries < 10, `${at}: the screen never held still for a capture`);
   }
@@ -181,6 +183,10 @@ for (const [engine, type] of [['chromium', chromium], ['webkit', webkit]]) {
       await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
       const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
       await raceWithDockedQr(host);
+      // The world stops drawing (__jjRender.hold): the defects under test are DOM paint (HUD badges, the QR), and a software-GL
+      // grid of racing tiles starved the page so badly that each check took a minute (Chromium, CI run 5233 hit the 10-minute
+      // timeout). The DOM still lays out and paints through every resize and full screen.
+      await host.evaluate(() => window.__jjRender.hold());
       const cars = await host.evaluate(() => document.querySelectorAll('.hud-badge').length);
       assert.ok(cars >= 4, `only ${cars} player tiles in the race`);
       let fullscreenSeen = false;

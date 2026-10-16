@@ -10,6 +10,7 @@ import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
+import roster from '../../shared/src/roster.json' with { type: 'json' };
 
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/vroster/';
@@ -78,7 +79,7 @@ test('two phones pick a Cruz Missile and a Tradie Ute; each car has its own prof
 
   // The picker offers every roster vehicle, from the roster data.
   await pick(a, 'Cruz Missile');
-  assert.deepEqual(await a.locator('.thumb').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label'))), ['Cruz Missile', 'Tradie Ute']);
+  assert.deepEqual(await a.locator('.thumb').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label'))), roster.cars.map((c) => c.name));
   await shot(a, 'phone-picker-cruz-844x390');
   await a.getByRole('button', { name: 'Use this vehicle' }).click();
   await pick(b, 'Tradie Ute');
@@ -107,11 +108,13 @@ test('two phones pick a Cruz Missile and a Tradie Ute; each car has its own prof
   assert.ok(byVehicle[1].massKg > byVehicle[0].massKg * 1.3, 'the ute is the heavier car');
   assert.notEqual(byVehicle[1].maxEngineForce, byVehicle[0].maxEngineForce);
 
-  // The TV draws each car's own model: both bakes are loaded and each has its car.
-  await wait(host, () => window.__jjRender.vehicles()?.vehicles.every((v) => v.loaded && v.cars === 1), undefined, 30_000);
+  // The TV draws each car's own model: the two picked bakes are loaded with their car each; the rest of the roster is listed
+  // with no cars (a bake loads only when a car needs it).
+  const picked = { 'cruz-missile': 1, 'tradie-ute': 1 };
+  await wait(host, (want) => window.__jjRender.vehicles()?.vehicles.every((v) => (want[v.id] ? v.loaded : true) && v.cars === (want[v.id] ?? 0)), picked, 30_000);
   const drawn = await host.evaluate(() => window.__jjRender.vehicles());
   console.log(`# renderer: ${JSON.stringify(drawn.vehicles)} draws/tile ${drawn.drawsPerTile}`);
-  assert.deepEqual(drawn.vehicles.map((v) => v.id), ['cruz-missile', 'tradie-ute']);
+  assert.deepEqual(drawn.vehicles.map((v) => v.id), roster.cars.map((c) => c.id));
   await host.waitForTimeout(800);
   await shot(host, 'tv-mixed-two-cars-1280x720');
 
@@ -152,7 +155,8 @@ test('a mixed grid: every roster vehicle drawn from its own bake (synthetic sour
   await host.goto(`${server.origin}${BASE}host?synthetic=12&vehicles=mixed&freeze=240`);
   await wait(host, () => window.__jjRender?.vehicles()?.vehicles.every((v) => v.loaded && v.cars > 0), undefined, 60_000);
   const v = await host.evaluate(() => window.__jjRender.vehicles());
-  assert.deepEqual(v.vehicles.map((x) => x.cars), [6, 6], 'twelve cars alternate the two vehicles');
+  const k = roster.cars.length, share = Array.from({ length: k }, (_, i) => Math.floor(12 / k) + (i < 12 % k ? 1 : 0));
+  assert.deepEqual(v.vehicles.map((x) => x.cars), share, 'twelve cars take the roster vehicles in turn');
   await host.waitForTimeout(1000);
   await shot(host, 'tv-mixed-grid-12-1920x1080');
   assert.deepEqual(errors, []);
