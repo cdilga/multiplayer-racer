@@ -1,9 +1,11 @@
 # P1-FL15b (br-bbki.15.2) visual self-review: set pieces stamped into the landscape
 
-Reviewer: BrownHill, 2026-10-16. Build: shared tree on `v0.2-revamp` (P1-FL15a terrain + P1-FL15b set pieces, uncommitted at
-capture time), host WASM rebuilt with `scripts/build-host-wasm.sh`, local real jj-server, frame-stepped WASM fixtures from
-`web/tests/journeys/set-piece.test.mjs` (`JJ_CAPTURE_DIR` set). TV size 1920×1080, mid chase camera. Browsers: Playwright
-Chromium (captures below) and Playwright WebKit (the journey also passed there; WebKit is not Safari). No phone connected.
+Reviewer: BrownHill, 2026-10-16. Build: `f48de9bf` on `v0.2-revamp` (P1-FL15a terrain + P1-FL15b set pieces, joint commit
+`82cb97f9`), run on eris through `scripts/remote/eris.sh --run fl15b-captures` (host WASM rebuilt with
+`scripts/build-host-wasm.sh`, local real jj-server, frame-stepped WASM fixtures from `web/tests/journeys/set-piece.test.mjs`
+with `JJ_CAPTURE_DIR` set). TV size 1920×1080, mid chase camera. Browsers: Playwright Chromium on eris (all assertions and the
+`chromium-*` captures below); Playwright WebKit on the Mac at `82cb97f9` plus the uncommitted journey (all assertions passed,
+`webkit-*` captures, overview before its fix; WebKit is not Safari; eris has no WebKit installed). No phone connected.
 
 Seeds (first seed of each recipe that places the kind): canyon leap Rocks 0, mesa drop Outback Bitumen 3, creek washout
 Outback Dirt 3. Reference: `art/references/australia/generated/biome-rocks-olgas.png`.
@@ -17,8 +19,9 @@ Outback Dirt 3. Reference: `art/references/australia/generated/biome-rocks-olgas
 | `captures/chromium-canyon-leap-afar-1920x1080.jpg` | 200 m before the commitment point this seed's approach is the start straight (gantry in frame) inside a gorge; the domes are visible over it. |
 | `captures/chromium-creek-washout-air-1920x1080.jpg` | Over the gully, landing ahead; the dirt detour (the safe line) is visible on the right, curving round and fording the creek. Good. |
 | `captures/chromium-creek-washout-side-air-1920x1080.jpg` | Car airborne over the creek bank. Good. |
-| `captures/chromium-mesa-drop-air-1920x1080.jpg` | **Weak.** The frame shows the car on a raised road with a cutting ahead; the mesa's drop (2.5–4 m) is not legible from the chase camera in this frame. The mesa needs a stronger silhouette (taller plateau, steeper breakaway) to read as a mesa drop. Known gap, below. |
-| `captures/*-overview-1920x1080.jpg` | **Broken, not set pieces:** the zero-car overview camera frames the field at y = 0 and ends up inside the raised P1-FL15a landforms (dome underside, flat plain). Reported to CoralCrane (their `world.ts` fix). |
+| `captures/chromium-mesa-drop-air-1920x1080.jpg` | Just off the lip on a raised plateau road: the ground falls away both sides, the run-out climbs a cutting ahead, a flat-topped mesa on the horizon. Reads as a drop off a mesa, but the plateau is low (2.5–4 m) on the flattest biome (Bitumen); a taller breakaway would read stronger. Known gap, below. |
+| `captures/chromium-*-overview-1920x1080.jpg` | Whole course framed from above (fixed: the zero-car overview now follows no car, as `tools/maps/review-landscape.mjs` does). Canyon leap (Rocks 0): the leap on the left straight between domes with its detour alongside. Mesa drop and creek washout: the detour loops off the road beside each piece are visible from the overview. |
+| `captures/webkit-*` | Same views in WebKit (Mac); the overview frames there predate the fix and show the camera inside a dome. |
 
 ## Behaviour behind the pictures (fixtures, not eyeballing)
 
@@ -31,7 +34,6 @@ drawn kicker/landing triangles against the native collision mesh (R90 `jumpShape
 ## Known gaps (stated, not hidden)
 
 - Mesa drop reads weakly on screen (above).
-- Overview camera inside the landforms (P1-FL15a/R10, not this bead).
 - Bots always take the leap; choosing the detour is P1-FL16 (route choices).
 - The landing is aligned by geometry (far rim about level with the lip, down-slope landing); R129's landing-aligned boost
   is not part of this bead.

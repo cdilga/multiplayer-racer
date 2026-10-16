@@ -1,0 +1,111 @@
+{
+  "browser": "webkit",
+  "source": "local real jj-server, generated seeds, frame-stepped WASM fixtures; no connected phone",
+  "cases": [
+    {
+      "kind": "canyon-leap",
+      "recipe": "rocks",
+      "seed": 0,
+      "native": "2f018bc11e9188edb671ecb0fb18d96fe888c55e58e87084e424330e44dc0756"
+    },
+    {
+      "kind": "mesa-drop",
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "native": "4606c2f324225b63cd9736e5e869ccf18ee807e51014e60431868ab3173a9449"
+    },
+    {
+      "kind": "creek-washout",
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "native": "20535ee863a4e4f0385e11dfedbd958daea06092d2172f7bc5169afdffb849a1"
+    }
+  ],
+  "rows": [
+    {
+      "file": "webkit-canyon-leap-air-1920x1080.jpg",
+      "kind": "canyon-leap",
+      "seed": 0,
+      "recipe": "rocks",
+      "state": "air"
+    },
+    {
+      "file": "webkit-canyon-leap-side-air-1920x1080.jpg",
+      "kind": "canyon-leap",
+      "seed": 0,
+      "recipe": "rocks",
+      "state": "side-air"
+    },
+    {
+      "file": "webkit-canyon-leap-afar-1920x1080.jpg",
+      "kind": "canyon-leap",
+      "seed": 0,
+      "recipe": "rocks",
+      "state": "afar"
+    },
+    {
+      "file": "webkit-canyon-leap-overview-1920x1080.jpg",
+      "kind": "canyon-leap",
+      "seed": 0,
+      "recipe": "rocks",
+      "state": "overview"
+    },
+    {
+      "file": "webkit-mesa-drop-air-1920x1080.jpg",
+      "kind": "mesa-drop",
+      "seed": 3,
+      "recipe": "outback-bitumen",
+      "state": "air"
+    },
+    {
+      "file": "webkit-mesa-drop-side-air-1920x1080.jpg",
+      "kind": "mesa-drop",
+      "seed": 3,
+      "recipe": "outback-bitumen",
+      "state": "side-air"
+    },
+    {
+      "file": "webkit-mesa-drop-afar-1920x1080.jpg",
+      "kind": "mesa-drop",
+      "seed": 3,
+      "recipe": "outback-bitumen",
+      "state": "afar"
+    },
+    {
+      "file": "webkit-mesa-drop-overview-1920x1080.jpg",
+      "kind": "mesa-drop",
+      "seed": 3,
+      "recipe": "outback-bitumen",
+      "state": "overview"
+    },
+    {
+      "file": "webkit-creek-washout-air-1920x1080.jpg",
+      "kind": "creek-washout",
+      "seed": 3,
+      "recipe": "outback-dirt",
+      "state": "air"
+    },
+    {
+      "file": "webkit-creek-washout-side-air-1920x1080.jpg",
+      "kind": "creek-washout",
+      "seed": 3,
+      "recipe": "outback-dirt",
+      "state": "side-air"
+    },
+    {
+      "file": "webkit-creek-washout-afar-1920x1080.jpg",
+      "kind": "creek-washout",
+      "seed": 3,
+      "recipe": "outback-dirt",
+      "state": "afar"
+    },
+    {
+      "file": "webkit-creek-washout-overview-1920x1080.jpg",
+      "kind": "creek-washout",
+      "seed": 3,
+      "recipe": "outback-dirt",
+      "state": "overview"
+    }
+  ],
+  "errors": []
+}
