@@ -63,6 +63,9 @@ async function open(options = {}) {
   return { page, errors, api };
 }
 
+// A map delivery waits on a whole WASM prepare: generator 24's worst seeds take ~27 s on a loaded CI runner (CI run 5495
+// timed out at 20 s; the 1.5 s laptop target is br-cxqk), so delivery waits allow 60 s.
+const PREPARE_MS = 60_000;
 async function waitFor(page, predicate, what, timeoutMs = 20_000) {
   const t0 = Date.now();
   for (;;) {
@@ -74,10 +77,10 @@ async function waitFor(page, predicate, what, timeoutMs = 20_000) {
 
 const phase = (page) => page.evaluate(() => window.__prep.room()?.phase);
 
-test('a round races the map the procgen worker prepared, and its track names its seed', { timeout: 60_000 }, async () => {
+test('a round races the map the procgen worker prepared, and its track names its seed', { timeout: 180_000 }, async () => {
   const { page, errors, api } = await open();
   await api('reroll');
-  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map to be delivered');
+  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map to be delivered', PREPARE_MS);
   assert.equal(await api('stagedFor'), 1);
   assert.equal((await api('presented')).committed, 0, 'nothing is shown before the Countdown');
   await api('startRound');
@@ -95,12 +98,12 @@ test('a round races the map the procgen worker prepared, and its track names its
   await page.close();
 });
 
-test('a reroll replaces a prepared map: the old one is dropped and the new seed races', { timeout: 60_000 }, async () => {
+test('a reroll replaces a prepared map: the old one is dropped and the new seed races', { timeout: 180_000 }, async () => {
   const { page, errors, api } = await open();
   await api('reroll');
-  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map');
+  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map', PREPARE_MS);
   await api('reroll');
-  await waitFor(page, () => window.__prep.stats().delivered === 2, 'the second map');
+  await waitFor(page, () => window.__prep.stats().delivered === 2, 'the second map', PREPARE_MS);
   assert.equal(await api('stagedFor'), 2, 'only the newest preparation is staged');
   const p = await api('presented');
   assert.equal(p.staged, 2);

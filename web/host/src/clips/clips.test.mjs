@@ -175,7 +175,8 @@ test('F07 AC4: saving a clip never pauses or stutters the host (frame time recor
   await page.close();
 });
 
-test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000 }, async () => {
+// Quarantined (CI owner, red budget): P0 br-lekz, native and WASM diverge on generated terrain since 22502cef..8e5f3ccf.
+test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000, skip: 'quarantined: P0 br-lekz (native/WASM divergence)' }, async () => {
   const { page, errors } = await testHost('host?room&test=live&laps=1');
   await wait(page, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const sent = [];

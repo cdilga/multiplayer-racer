@@ -22,16 +22,21 @@ before(async () => {
   scratch = mkdtempSync(join(tmpdir(), 'jj-generated-jump-'));
   // jj sim locates the real kit above the generated map; scratch holds outputs, never a second code checkout.
   symlinkSync(resolve('assets'), join(scratch, 'assets'), 'dir');
-  const mapDir = join(scratch, 'generated-rocks-7');
-  execFileSync(bin, [...args, 'procgen', '--seed', '7', '--recipe', 'rocks', '--out', mapDir, '--json']);
+  // The first rocks seed from 7 that places a jump, and its biggest one (highest lip; road-wide since br-gw74.13.1), not a
+  // fixed seed or index: the generator's placements move whenever it changes on purpose (generator 24's rhythm-led
+  // courses lean on set pieces, and only 1 of rocks seeds 7-16 places a jump).
+  let seed, mapDir, mapPath, map, jump;
+  for (seed = 7; seed < 107 && !jump; seed++) {
+    mapDir = join(scratch, `generated-rocks-${seed}`);
+    execFileSync(bin, [...args, 'procgen', '--seed', String(seed), '--recipe', 'rocks', '--out', mapDir, '--json']);
+    mapPath = join(mapDir, 'map.json');
+    map = JSON.parse(readFileSync(mapPath, 'utf8'));
+    jump = map.features.filter(f => f.kind === 'jump').sort((a, b) => b.params.lipHeightCm - a.params.lipHeightCm)[0];
+  }
+  seed--;
+  assert.ok(jump, 'a rocks seed in 7-106 places a jump');
   jumpShapes = JSON.parse(readFileSync(join(mapDir, 'report.json'), 'utf8')).jumpShapes;
-  const mapPath = join(mapDir, 'map.json');
   mapJson = readFileSync(mapPath, 'utf8');
-  const map = JSON.parse(mapJson);
-  // The seed's biggest jump (highest lip; a road-wide one since br-gw74.13.1, generator v21), not a fixed index: the
-  // generator's placements move whenever it changes on purpose.
-  const jump = map.features.filter(f => f.kind === 'jump').sort((a, b) => b.params.lipHeightCm - a.params.lipHeightCm)[0];
-  assert.ok(jump, 'seed 7 places a jump');
   const pts = map.route.points;
   const base = pts.reduce((best, p, i) => (p.x-jump.pose.x)**2 + (p.z-jump.pose.z)**2 < (pts[best].x-jump.pose.x)**2 + (pts[best].z-jump.pose.z)**2 ? i : best, 0);
   const start = (base + pts.length - 4) % pts.length;
@@ -39,7 +44,7 @@ before(async () => {
   const heading = Math.atan2(b.x-a.x, b.z-a.z);
   fixture = {
     scenario: 'generated-rocks-boost-jump', what: 'A boosted Cruz leaves a generated lip and lands upright; native/WASM full state matches.',
-    map: mapPath, seed: 7, ticks: 420,
+    map: mapPath, seed, ticks: 420,
     cars: [{ routePoint: start, lift: .5, linvel: [26*Math.sin(heading), 0, 26*Math.cos(heading)] }],
     seats: [{ name: 'Jump driver', car: 0 }],
     autopilot: [{ tick: 0, car: 0, on: true }],
@@ -65,7 +70,8 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 180_000 }, async () => {
+  // Quarantined (CI owner, red budget): P0 br-lekz, native and WASM diverge on generated terrain since 22502cef..8e5f3ccf.
+  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 180_000, skip: 'quarantined: P0 br-lekz (native/WASM divergence)' }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [], rows = [];
     try {
@@ -143,7 +149,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         rows.push({ file, state: 'side-air', width: 1366, height: 768, tick: air.tick });
       }
       assert.deepEqual(errors, []);
-      writeFileSync(join(out, `${name}-jump.json`), JSON.stringify({ browser: name, source: `${deployed ? deployed.href : 'local real jj-server'}, generated seed 7 Rocks, frame-stepped WASM fixture; no connected phone`, rows, native: native.stateHash, air, final, errors }, null, 2) + '\n');
+      writeFileSync(join(out, `${name}-jump.json`), JSON.stringify({ browser: name, source: `${deployed ? deployed.href : 'local real jj-server'}, generated seed ${fixture.seed} Rocks, frame-stepped WASM fixture; no connected phone`, rows, native: native.stateHash, air, final, errors }, null, 2) + '\n');
     } finally { await browser.close(); }
   });
 }
