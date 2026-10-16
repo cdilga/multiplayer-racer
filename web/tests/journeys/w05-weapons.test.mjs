@@ -67,6 +67,7 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
     const r = await host.evaluate((car) => window.__jjTest.command({ cmd: 'utility', car, forward: true }), car);
     await host.evaluate(() => window.__jjTest.untilFact(() => false, { maxTicks: 36, every: 6 }));
     await host.waitForTimeout(300);
+    console.log(`# flick: ${JSON.stringify(r)}`);
     return r;
   };
   const queueOf = async (car) => (await items(host)).queues.find((q) => q.car === car).queue;
@@ -75,9 +76,16 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   const viaStation = holder !== null;
   if (!viaStation) {
     holder = picked.queues[0].car;
-    if ((await queueOf(holder)).back) await flickCar(holder);
+    // The clock is held first: the cars are driving through the stations, and a flick followed by stepped ticks let the
+    // holder take another box and fill its queue again before the hand-over (CI run 5233: pickupItem refused "full").
+    await host.evaluate(() => window.__jjTest.hold(true));
+    if ((await queueOf(holder)).back) {
+      const eat = await host.evaluate((car) => window.__jjTest.command({ cmd: 'utility', car, forward: true }), holder);
+      console.log(`# made room with a flick: ${JSON.stringify(eat)}`);
+    }
     const r = await host.evaluate((car) => window.__jjTest.command({ cmd: 'pickupItem', car, item: 'boomerang' }), holder);
     console.log(`# no boomerang drawn in the run; pickupItem ${JSON.stringify(r)}`);
+    assert.ok(r.accepted, `the boomerang is handed over: ${JSON.stringify(r)}`);
   }
   await host.screenshot({ path: join(CAPTURE, 'picked-up.png') });
   // From here the room's clock is held and stepped, so the TV shows exactly the ticks the journey asks for (an unheld
