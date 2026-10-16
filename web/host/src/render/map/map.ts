@@ -30,6 +30,7 @@ import { InkHull, toon } from '../look';
 import { finishBanner } from './banner';
 import { bowlDesign, bowlQuads } from './bowl';
 import { bridgeIndices, bridgeMesh } from './bridge';
+import { forkPath, forkSurface } from './fork';
 
 export interface Pose {
   x: number;
@@ -425,6 +426,30 @@ export class MapRenderer {
     }
   }
 
+  /** A route fork's branch (jj-map `fork::path_of`): its loose-surface road on the ground the generator stamped for it,
+   *  drawn from where its centre is a metre inside the road's edge, over the road's paint, so its mouth breaks the edge
+   *  line and reads as a junction. */
+  private fork(s: Soup, params: Params): void {
+    const line = forkPath(this.map, params);
+    const half = mm(params.widthMm ?? 10000) / 2;
+    const colour = SURFACE_COLOURS[forkSurface(params)] ?? '#b5793f';
+    const frames = line.map((q, k) => {
+      const [a, b] = [line[Math.max(k - 1, 0)]!, line[Math.min(k + 1, line.length - 1)]!];
+      const l = Math.hypot(b[0]! - a[0]!, b[1]! - a[1]!) || 1;
+      return { x: q[0]!, z: q[1]!, tx: (b[0]! - a[0]!) / l, tz: (b[1]! - a[1]!) / l };
+    });
+    const pt = (c: { x: number; z: number; tx: number; tz: number }, lat: number) => {
+      const [x, z] = [c.x - c.tz * lat, c.z + c.tx * lat];
+      return [x, this.groundAt(x, z) + 0.08, z];
+    };
+    for (let k = 0; k + 1 < frames.length; k++) {
+      const [a, b] = [frames[k]!, frames[k + 1]!];
+      const road = this.nearest(a.x * 1000, a.z * 1000).point;
+      if (Math.hypot(a.x - mm(road.x), a.z - mm(road.z)) < mm(road.width) / 2 - 1) continue;
+      s.quad(pt(a, half), pt(b, half), pt(b, -half), pt(a, -half), colour);
+    }
+  }
+
   /** The route point nearest (x, z) mm, with its forward and left directions. */
   private nearest(x: number, z: number) {
     const p = this.map.route.points;
@@ -583,6 +608,10 @@ export class MapRenderer {
           }
           this.bridgeRanges.push({feature,from,to:s.pos.length});
         }
+        continue;
+      }
+      if (f.kind === 'fork') {
+        this.fork(s, f.params);
         continue;
       }
       // The derby bowl (P1-M10) is its own revolved mesh, the sim's triangles: no route to follow.
