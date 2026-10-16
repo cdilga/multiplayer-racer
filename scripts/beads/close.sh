@@ -104,6 +104,9 @@ if [[ -n $receipt ]]; then
 else
     # Green = any completed, successful ci.yml run on a commit that contains $sha (scripts/ci/green-for.py): waiting
     # runs are replaced by newer pushes, so the bead's own commit often never gets a run of its own.
+    # R139: CI runs only on dispatch. If no run containing the commit is green or under way, start the selective batch.
+    set +e; scripts/ci/green-for.py "$sha" --branch "$branch" >/dev/null 2>&1; now=$?; set -e
+    if [[ $now -ne 0 && $now -ne 2 ]]; then scripts/ci/run.sh; fi
     echo "close: waiting for a green CI run containing $short"
     set +e; out=$(scripts/ci/green-for.py "$sha" --wait --branch "$branch"); rc=$?; set -e
     case $rc in

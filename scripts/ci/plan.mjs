@@ -2,7 +2,7 @@
 // CI test selection (docs/infra/ci.md): which suites a push must run, from the paths it changed since the last commit
 // CI passed on. Conservative by construction: a path no rule knows selects everything, and a change to a shared
 // input (the Cargo workspace, a crate other crates depend on, web/shared, the build config, maps and assets) widens
-// to everything that depends on it. The full matrix (every suite, the 5-minute soak) runs on the nightly schedule and
+// to everything that depends on it. The full matrix (every suite, the 5-minute soak) runs on a dispatch with full=true and
 // on a manual dispatch, so the coverage is the same; only the timing moves.
 //
 // Usage: node scripts/ci/plan.mjs [--full] [--base <sha>] [--head <sha>] [--github-output <file>]
@@ -162,11 +162,8 @@ const rules = [
 
 let base = opt('--base');
 const given = opt('--changed'); // a dry run: comma-separated paths instead of a diff
-// Full: --full, a dispatch asking for it (JJ_FULL), or the hourly schedule's 15:xx UTC run (01:xx AEST, the nightly
-// matrix); every other scheduled hour is a selective batch of what changed since the last green (R139).
-const nightly = process.env.JJ_EVENT === 'schedule' && new Date().getUTCHours() === 15;
-const full = args.includes('--full') || process.env.JJ_FULL === 'true' || nightly;
-if (full) everything('full run (schedule or dispatch)');
+const full = args.includes('--full') || process.env.JJ_FULL === 'true'; // a dispatch asking for every suite (R139)
+if (full) everything('full run (dispatch full=true)');
 else {
   if (!base && !given) base = await lastGreen();
   if (!base && !given) everything('no green run of this workflow found');

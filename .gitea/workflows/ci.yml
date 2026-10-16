@@ -12,24 +12,25 @@
 #     host's cache or the store, waiting for the build job only when the build is new. The SSE soak is 20 s on a
 #     push and 300 s in the full run.
 #   - checks always; image when its inputs changed.
-# The full matrix (every suite, the 300 s soak) runs nightly and on a manual dispatch: same coverage, different timing.
+# The full matrix (every suite, the 300 s soak) runs on a dispatch with full=true: same coverage, different timing.
 # Jobs run in the jj-ci image (scripts/ci/ci-image.Dockerfile, built on each runner host by scripts/ci/ci-image.sh):
 # node, Playwright's Chromium, WebKit and their libraries, coturn, git-lfs, wasm-bindgen and nextest are baked in.
 # No actions/cache: truenas-shared's cache server times out from job containers (run 996).
 name: CI
 
 on:
-  # R139 (owner 2026-10-17): no CI per push. One big batch at a time and fix forward: an hourly run of everything pushed
-  # since the last green (selective by changed paths), the full matrix at 01:05 AEST, and a manual dispatch for a closer
-  # who can't wait (`tea api -X POST .../actions/workflows/ci.yml/dispatches`, input full=false for a selective run).
-  schedule:
-    - cron: "5 * * * *" # hourly batch
+  # R139 (owner 2026-10-17): no CI per push, no schedule, no nightly (they waste compute); fast feedback on demand. Whoever
+  # has work ready dispatches a selective run (what changed since the last green); one runs at a time and later
+  # dispatches fold into the next batch, so a burst of agents costs one run. Red is fixed forward.
+  #   tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/ci.yml/dispatches \
+  #     -d '{"ref":"v0.2-revamp","inputs":{"full":"false"}}'     (scripts/ci/run.sh wraps it)
+  # full=true runs every suite (before a release or after a toolchain change).
   workflow_dispatch:
     inputs:
       full:
-        description: "true: every suite (the nightly matrix); false: what changed since the last green"
+        description: "false: what changed since the last green (the usual batch); true: every suite"
         required: false
-        default: "true"
+        default: "false"
 
 # One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
 # run still waiting; the next run diffs from the last green run, so nothing a replaced run held is lost.
@@ -43,7 +44,7 @@ env:
   CARGO_INCREMENTAL: "0"
   npm_config_cache: /cargo-cache/npm
   GITEA_TOKEN: ${{ github.token }}
-  # Full: a dispatch that asks for it; plan.mjs makes the 15:xx UTC scheduled run (01:05 AEST) the nightly full matrix.
+  # Full only when a dispatch asks for it; the usual dispatch is the selective batch.
   JJ_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.full != 'false' }}
   JJ_EVENT: ${{ github.event_name }}
 
