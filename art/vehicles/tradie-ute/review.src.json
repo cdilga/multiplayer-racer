@@ -2,36 +2,68 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Tradie Ute",
   "status": "awaiting-review",
-  "date": "2026-10-10",
-  "beads": ["br-bwju.2", "br-bwju"],
-  "summary": "The owner's dual-cab Mitsubishi Triton as a roster car (R123): tray, TJM-style bull bar, snorkel on the driver's A-pillar, roof rack, hi-vis tradie livery. Code-built from the Triton build script's proportions. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed.",
+  "date": "2026-10-16",
+  "beads": [
+    "br-bwju.8",
+    "br-bwju.2",
+    "br-bwju"
+  ],
+  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray with checker-plate under-tray boxes, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, black wheels with a silver lip, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
-    "sheet": "docs/evidence/br-bwju.2/reference-lod0/sheet.png",
+    "sheet": "docs/evidence/br-bwju.8/reference-photo/sheet.png",
     "compare": [
-      { "lod": 0, "label": "LOD0 against the owner's Triton mesh (the reference is that mesh's own silhouettes, not photographs)", "dir": "docs/evidence/br-bwju.2/reference-lod0" }
+      {
+        "lod": 0,
+        "label": "LOD0 against the owner's Triton mesh (that mesh's own silhouettes, not photographs)",
+        "dir": "docs/evidence/br-bwju.8/reference-lod0"
+      }
     ],
-    "note": "Left to right per view: the Triton mesh's silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses). Both are bounding-box normalised. The Triton carries a canopy and a roof bag the model leaves out, and the model is a wider, caricatured stance, so the IoU is a recognisability check, not a fit target."
+    "note": "The compare below is LOD0 against the owner's Triton mesh in four views. \"The reference sheet itself\" opens LOD0's side against the owner's side photo: a hand-traced outline of Screenshot_20240415_085850, IoU 0.717 (docs/evidence/br-bwju.8/reference-photo/score.json; the photo itself stays private: number plate and house). Left to right per view: the reference silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses), bounding-box normalised. The model is a caricature, wider and lower than the real car, and the photo has perspective, so these IoUs measure a likeness, not a scan. Front and rear three-quarter views are in the turntable."
   },
-  "turntable": { "sheet": "docs/evidence/br-bwju.2/lods.png", "validation": "docs/evidence/br-bwju.2/validation.md" },
+  "turntable": {
+    "sheet": "docs/evidence/br-bwju.8/views.png",
+    "validation": "docs/evidence/br-bwju.8/validation.md"
+  },
   "damage": {
-    "strip": "docs/evidence/br-bwju.2/damage-strip.png",
-    "overview": "docs/evidence/br-bwju.2/damage-strip-overview.png",
-    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet."
+    "strip": "docs/evidence/br-bwju.8/damage-strip.png",
+    "overview": "docs/evidence/br-bwju.8/damage-strip-overview.png",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray and canopy) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet."
   },
   "paints": {
-    "sheet": "docs/evidence/br-bwju.2/paints.png",
+    "sheet": "docs/evidence/br-bwju.8/paints.png",
     "identity": "art/ui/tokens.json",
-    "pattern": "Seat colour on the paint key (white texels tint; the hi-vis livery, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, between the rack rails) and in the HUD badge. docs/evidence/br-bwju.2/paints-strip.png shows white plus five player colours."
+    "pattern": "Seat colour on the paint key (white texels tint; the black canopy, tray, bull bar, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. docs/evidence/br-bwju.8/paints-strip.png shows white plus five player colours."
   },
   "inWorld": [
-    { "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)", "size": "large", "path": "docs/evidence/br-bwju.2/grid-1.png" },
-    { "label": "Four tiles", "size": "medium", "path": "docs/evidence/br-bwju.2/grid-4.png" },
-    { "label": "24 tiles, small (each car about 100 px)", "size": "small", "path": "docs/evidence/br-bwju.2/grid-24.png" },
-    { "label": "From the Derby overview camera (top-down damage row)", "size": "overview", "path": "docs/evidence/br-bwju.2/damage-strip-overview.png" }
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+      "size": "large",
+      "path": "docs/evidence/br-bwju.8/grid-1.png"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "path": "docs/evidence/br-bwju.8/grid-4.png"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "path": "docs/evidence/br-bwju.8/grid-24.png"
+    },
+    {
+      "label": "From the Derby overview camera (top-down damage row)",
+      "size": "overview",
+      "path": "docs/evidence/br-bwju.8/damage-strip-overview.png"
+    }
   ],
-  "gate": { "report": "docs/evidence/br-bwju.2/validation.md" },
+  "gate": {
+    "report": "docs/evidence/br-bwju.8/validation.md"
+  },
   "profile": "assets/profiles/tradie-ute.json",
-  "handling": { "topSpeedMps": null, "topSpeedNote": "Not measured yet: the R122 handling bank and the autopilot test assert envelopes. Three greybox laps under autopilot take 155 s against the Cruz's 151 s. R123's balance bead records the measured top speed." }
+  "handling": {
+    "topSpeedMps": null,
+    "topSpeedNote": "Not measured yet: the R122 handling bank and the autopilot test assert envelopes. Three greybox laps under autopilot take 155 s against the Cruz's 151 s. R123's balance bead records the measured top speed."
+  }
 }

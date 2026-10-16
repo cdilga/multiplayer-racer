@@ -1,0 +1,37 @@
+{
+ "lod": 0,
+ "reference": "the owner's Triton mesh (home-digital-twin triton.glb), bounding-box normalised silhouettes",
+ "views": {
+  "side": {
+   "iou": 0.7375,
+   "aspect": 0.98,
+   "miss": 0.0916,
+   "extra": 0.1709
+  },
+  "top": {
+   "iou": 0.8036,
+   "aspect": 1.157,
+   "miss": 0.0168,
+   "extra": 0.1796
+  },
+  "front": {
+   "iou": 0.7422,
+   "aspect": 1.141,
+   "miss": 0.0265,
+   "extra": 0.2313
+  },
+  "rear": {
+   "iou": 0.7422,
+   "aspect": 1.141,
+   "miss": 0.0265,
+   "extra": 0.2313
+  }
+ },
+ "score": 0.7587,
+ "weights": {
+  "side": 0.4,
+  "top": 0.3,
+  "front": 0.15,
+  "rear": 0.15
+ }
+}

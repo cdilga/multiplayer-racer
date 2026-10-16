@@ -2,29 +2,30 @@
   "id": "tradie-ute",
   "name": "Tradie Ute",
   "status": "awaiting-review",
-  "date": "2026-10-10",
+  "date": "2026-10-16",
   "beads": [
+    "br-bwju.8",
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "The owner's dual-cab Mitsubishi Triton as a roster car (R123): tray, TJM-style bull bar, snorkel on the driver's A-pillar, roof rack, hi-vis tradie livery. Code-built from the Triton build script's proportions. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed.",
+  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray with checker-plate under-tray boxes, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, black wheels with a silver lip, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/sheet.png",
-    "note": "Left to right per view: the Triton mesh's silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses). Both are bounding-box normalised. The Triton carries a canopy and a roof bag the model leaves out, and the model is a wider, caricatured stance, so the IoU is a recognisability check, not a fit target.",
+    "note": "The compare below is LOD0 against the owner's Triton mesh in four views. \"The reference sheet itself\" opens LOD0's side against the owner's side photo: a hand-traced outline of Screenshot_20240415_085850, IoU 0.717 (docs/evidence/br-bwju.8/reference-photo/score.json; the photo itself stays private: number plate and house). Left to right per view: the reference silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses), bounding-box normalised. The model is a caricature, wider and lower than the real car, and the photo has perspective, so these IoUs measure a likeness, not a scan. Front and rear three-quarter views are in the turntable.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the owner's Triton mesh (the reference is that mesh's own silhouettes, not photographs)",
+        "label": "LOD0 against the owner's Triton mesh (that mesh's own silhouettes, not photographs)",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.757,
-          "top": 0.7978,
-          "front": 0.7158,
-          "rear": 0.7159
+          "side": 0.7375,
+          "top": 0.8036,
+          "front": 0.7422,
+          "rear": 0.7422
         },
-        "weightedIou": 0.7569
+        "weightedIou": 0.7587
       }
     ]
   },
@@ -32,12 +33,12 @@
     "assetJson": "media/model/tradie-ute.asset.json",
     "atlas": "media/model/tradie-ute.atlas.png",
     "emissive": "media/model/tradie-ute.emissive.png",
-    "sheet": "media/turntable/lods.png",
+    "sheet": "media/turntable/views.png",
     "lods": [
       {
         "lod": 0,
         "glb": "media/model/tradie-ute.lod0.glb",
-        "tris": 1216,
+        "tris": 1250,
         "draws": 11,
         "maxTris": 1300,
         "withinBudget": true
@@ -45,7 +46,7 @@
       {
         "lod": 1,
         "glb": "media/model/tradie-ute.lod1.glb",
-        "tris": 870,
+        "tris": 828,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -53,7 +54,7 @@
       {
         "lod": 2,
         "glb": "media/model/tradie-ute.lod2.glb",
-        "tris": 594,
+        "tris": 592,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -63,7 +64,7 @@
   "damage": {
     "strip": "media/damage/damage-strip.png",
     "overview": "media/damage/damage-strip-overview.png",
-    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet.",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray and canopy) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet.",
     "parts": [
       {
         "name": "core",
@@ -87,7 +88,7 @@
         },
         "pivot": [
           0,
-          1.24,
+          1.2897222222222222,
           0.8899999999999999
         ]
       },
@@ -104,7 +105,7 @@
         },
         "pivot": [
           0,
-          1.24,
+          1.2402777777777778,
           -0.8899999999999999
         ]
       },
@@ -121,7 +122,7 @@
         },
         "pivot": [
           1,
-          0.75,
+          0.8148611111111111,
           0.8899999999999999
         ]
       },
@@ -138,7 +139,7 @@
         },
         "pivot": [
           -1,
-          0.75,
+          0.8148611111111111,
           0.8899999999999999
         ]
       },
@@ -155,7 +156,7 @@
         },
         "pivot": [
           1,
-          0.75,
+          0.8025000000000001,
           0
         ]
       },
@@ -172,7 +173,7 @@
         },
         "pivot": [
           -1,
-          0.75,
+          0.8025000000000001,
           0
         ]
       },
@@ -312,7 +313,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (white texels tint; the hi-vis livery, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, between the rack rails) and in the HUD badge. docs/evidence/br-bwju.2/paints-strip.png shows white plus five player colours."
+    "pattern": "Seat colour on the paint key (white texels tint; the black canopy, tray, bull bar, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. docs/evidence/br-bwju.8/paints-strip.png shows white plus five player colours."
   },
   "inWorld": [
     {
@@ -341,31 +342,27 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean, mass fractions sum 1.00, origin between the axles, anchors present, no badges or real names)"
+        "text": "contract + reproducibility: the validator is clean, the bake is byte-reproducible, the part set is unchanged and identical at every LOD,"
       },
       {
         "result": "PASS",
-        "text": "budget; silhouette: weighted IoU 0.757 against the owner's Triton mesh (side 0.757, top 0.798, front 0.716, rear 0.716). The model omits the canopy and the roof bag the Triton carries and is a wider, caricatured stance, so this is a recognisability check, not a fit target"
+        "text": "budget + silhouette, with the by-eye cue pass below."
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (the Cruz's atlas layout and material; draw cost per tile is the Cruz's 11 parts)"
+        "text": "paint key / one material / draws per tile: there is still one atlas material, and two swatches were added (canopy, awning)."
       },
       {
         "result": "PASS",
-        "text": "damage states (each part rotates about its hinge line to its limit; detached parts lie as separate bodies; dark bays and interior blocks behind missing panels)"
+        "text": "damage states: front, back (now tray and canopy), the doors and the wheels each loosen and detach about their hinges, and"
       },
       {
         "result": "PASS",
-        "text": "physics fit (convex colliders per part from the bake, profile geometry synced from the sidecar, settles with no NaN)"
+        "text": "physics fit: `jj vehicle sync assets/profiles/tradie-ute.json` after PeachSpire's FL04.2 schema commit (27859cc5)."
       },
       {
-        "result": "WARN",
-        "text": "identity/readability at the smallest tile: legible in grid-24.png (roof stripes, tray, bull bar); the roof number is not drawn by this viewer, so number legibility is untested"
-      },
-      {
-        "result": "WARN",
-        "text": "engine sound: assets/audio/engine/tradie-ute.json derived from the Cruz profile (diesel-ish retune); `art/ui/poc/audio/engine/check.mjs` result is in the self-review"
+        "result": "PASS",
+        "text": "identity at the smallest tile:"
       }
     ],
     "report": "media/gate/validation.md"

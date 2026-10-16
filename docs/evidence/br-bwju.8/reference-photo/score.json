@@ -1,0 +1,16 @@
+{
+ "lod": 0,
+ "reference": "the owner's side photo (Screenshot_20240415_085850_Brave.jpg), hand-traced silhouette, mirrored; bounding-box normalised; the photo has perspective and the car is lifted",
+ "views": {
+  "side": {
+   "iou": 0.7165,
+   "aspect": 0.973,
+   "miss": 0.1697,
+   "extra": 0.1138
+  }
+ },
+ "score": 0.7165,
+ "weights": {
+  "side": 1
+ }
+}

@@ -9,15 +9,21 @@
 // R123 allowed importing the owner's mesh; porting the geometry to code kept R81's method and gives clean part splits.
 //
 // Frame: metres, +Z = nose, +Y up, origin on the ground between the axles (jj.vehicle.v1); +X is the vehicle's LEFT.
-// Damage parts: front (bonnet, grille, bull bar), back (tray, tailgate, tow bar), door_FL/FR/RL/RR, wheel_FL/FR/RL/RR;
+// br-bwju.8 (owner 2026-10-11: "keep the rear canopy and the actual roof rack, and dual cab ... a little too generic"):
+// rebuilt against the owner's photos (eris morayfield-house-3d twin/site/sources/owner-inbox-2026-10-10/triton-reference.zip):
+// the black flat-top canopy on a flat tray, the platform rack with its wind deflector and rolled awning on the left, the MQ
+// Triton's chrome "dynamic shield" grille, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the right
+// (driver's) A-pillar, black wheels with a silver lip, the paint plain (no hi-vis: the owner's car is plain).
+//
+// Damage parts: front (bonnet, grille, bull bar), back (tray, canopy, tray lamps, tow bar), door_FL/FR/RL/RR, wheel_*;
 // everything else (cab, roof rack, snorkel, mirrors, steps) is core.
 import * as THREE from 'three';
 import { swatchUV, REGION } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 6, nose: 2, curvePts: true, merge: 0.10, doorMid: true, wheelSeg: 12, rim: 5, mirrors: 'shaped', bar: 'full', snorkel: 3, rack: true, steps: true, seams: true, tow: true, tailLamps: true, flares: true, load: true },
-  1: { arch: 5, nose: 1, curvePts: true, merge: 0.2, doorMid: true, wheelSeg: 8, rim: 5, mirrors: 'box', bar: 'simple', snorkel: 1, rack: false, steps: false, seams: false, tow: false, tailLamps: true, flares: false, load: false },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 8, rim: 0, mirrors: 'box', bar: 'simple', snorkel: 0, rack: false, steps: false, seams: false, tow: false, tailLamps: false, flares: false, load: false },
+  0: { arch: 6, nose: 2, curvePts: true, merge: 0.10, doorMid: true, wheelSeg: 12, rim: 5, mirrors: 'shaped', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
+  1: { arch: 5, nose: 1, curvePts: true, merge: 0.2, doorMid: true, wheelSeg: 8, rim: 5, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 8, rim: 0, mirrors: 'box', bar: 'simple', grille: false, snorkel: 0, rack: 'simple', steps: false, seams: false, tow: false, tailLamps: false },
 };
 
 
@@ -66,6 +72,11 @@ class Soup {
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.quad(A[i], A[j], B[j], B[i], swSide); }
     for (let i = 1; i < n - 1; i++) { this.tri(B[0], B[i], B[i + 1], swFace); this.tri(A[0], A[i + 1], A[i], swFace2); }
   }
+  // flat n-gon facing ±X (s), centred at c: one-sided, for wheel faces
+  disc(c, s, r, n, sw, phase = 0) {
+    const P = Array.from({ length: n }, (_, i) => { const t = phase + (i / n) * Math.PI * 2; return [c[0], c[1] + Math.cos(t) * r, c[2] + Math.sin(t) * r]; });
+    for (let i = 1; i < n - 1; i++) if (s > 0) this.tri(P[0], P[i], P[i + 1], sw); else this.tri(P[0], P[i + 1], P[i], sw);
+  }
   get tris() { return this.p.length / 9; }
 }
 
@@ -73,7 +84,8 @@ class Soup {
 const LEN = 5.3; // matches atlas.js: the side livery spans 5.3 m from the nose
 function sideUV(P) { const [u0, v0, u1, v1] = REGION.side; return (v) => [u0 + (u1 - u0) * ((P.zNose - v[2]) / LEN), v0 + (v1 - v0) * (v[1] / 1.7)]; }
 function topUV(P) { const [u0, v0, u1, v1] = REGION.top; return (v) => [u0 + (u1 - u0) * (v[0] / 1.9 + 0.5), v1 - (v1 - v0) * ((P.zNose - v[2]) / 1.7)]; }
-function deckUV(P) { const [u0, v0, u1, v1] = REGION.deck; return (v) => [u0 + (u1 - u0) * (v[0] / 1.9 + 0.5), v1 - (v1 - v0) * ((v[2] - P.zTail) / 1.7)]; }
+// the canopy's sides: planar (z, y) over its own box, front edge at u0 (atlas.js draws the doors, seam and locks there)
+function canopyUV(P, y0) { const [u0, v0, u1, v1] = REGION.canopy, C = P.canopy; return (v) => [u0 + (u1 - u0) * ((C.z0 - v[2]) / (C.z0 - C.z1)), v0 + (v1 - v0) * ((v[1] - y0) / (C.y1 - y0))]; }
 
 // ───────────────────────── build ─────────────────────────
 function makeSoups(P, lod) {
@@ -108,11 +120,11 @@ function makeSoups(P, lod) {
     if (seg >= 1 && seg <= 3) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the vehicle's left
     return 'core';
   };
-  const sUV = sideUV(P), tUV = topUV(P), dUV = deckUV(P);
+  const sUV = sideUV(P), tUV = topUV(P);
   const segSwatch = (seg, zm) => {
     if (seg === 0) return 'under';
     if (seg === 1) return 'trim';
-    if (seg === 4) return zm > zA ? tUV : zm < P.cabin.at(-1).z ? dUV : 'paint';
+    if (seg === 4) return zm > zA ? tUV : zm < P.cabin.at(-1).z ? 'under' : 'paint'; // behind the cab it is under the tray deck
     return sUV;
   };
   for (const s of [1, -1]) {
@@ -130,7 +142,7 @@ function makeSoups(P, lod) {
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
-  cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'paint');
+  cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'under'); // the tray's black rear frame
 
   // greenhouse (the dual cab): ring per cabin station, one side: base(belt) → glass top → roof edge → crown
   const cring = (c, s) => { const yb = lerpCurve(P.ySh, c.z) - 0.005, collapsed = c.yr == null, yr = collapsed ? lerpCurve(P.yCr, c.z) - 0.005 : c.yr, ch = collapsed ? 0 : P.roofCh;
@@ -155,42 +167,47 @@ function makeSoups(P, lod) {
   const fq = (x0, y0, x1, y1, sw, dz = 0) => F.quad([x0, y0, zn + dz], [x1, y0, zn + dz], [x1, y1, zn + dz], [x0, y1, zn + dz], sw);
   const yAt = (z, x) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), xi = lerpCurve(P.hw, z) - P.shoulderIn; return Math.abs(x) >= xi ? ysh : ycr + (ysh - ycr) * Math.abs(x) / xi; };
   const onSlope = (x, y) => { const y0 = yAt(P.zNose, x), y1 = yAt(z1, x), t = Math.min(1, Math.max(0, (y - y0) / (y1 - y0))); return [x, y + 0.012, P.zNose - t * (P.zNose - z1) + 0.026]; };
-  const slopeQuad = (pts, sw, s = 1) => { const q = pts.map(([x, y]) => onSlope(s * x, y)); if (s > 0) F.quad(q[0], q[1], q[2], q[3], sw); else F.quad(q[0], q[3], q[2], q[1], sw); };
-  slopeQuad([[-0.50, 0.84], [0.50, 0.84], [0.54, 0.98], [-0.54, 0.98]], 'trim'); // grille
+  // the fascia's details are laid out with the grille's chrome header at 0.98 m; fy puts that header at the top of the nose face,
+  // so the grille and headlights sit on the Triton's tall blunt front (br-bwju.8), below the bonnet's edge
+  const fy = lerpCurve(P.ySh, P.zNose) - 1.0;
+  const slopeQuad = (pts, sw, s = 1) => { const q = pts.map(([x, y]) => onSlope(s * x, y + fy)); if (s > 0) F.quad(q[0], q[1], q[2], q[3], sw); else F.quad(q[0], q[3], q[2], q[1], sw); };
+  slopeQuad([[-0.46, 0.72], [0.46, 0.72], [0.54, 0.98], [-0.54, 0.98]], 'trim'); // grille: the MQ's tall trapezoid
   slopeQuad([[-0.54, 0.98], [0.54, 0.98], [0.55, 1.01], [-0.55, 1.01]], 'chrome'); // chrome grille header
+  if (T.grille) for (let i = 0; i < 6; i++) { const x = -0.40 + i * 0.16; slopeQuad([[x - 0.025, 0.75], [x + 0.025, 0.75], [x + 0.025, 0.96], [x - 0.025, 0.96]], 'chrome'); } // the vertical slats
   for (const s of [1, -1]) slopeQuad([[0.58, 0.84], [0.88, 0.88], [0.89, 1.0], [0.58, 0.98]], 'head', s); // swept headlights
+  // the "dynamic shield": a chrome sweep from the grille's lower corner out under each headlight
+  if (T.grille) for (const s of [1, -1]) slopeQuad([[0.46, 0.72], [0.86, 0.82], [0.87, 0.86], [0.50, 0.77]], 'chrome', s);
   const ybN = lerpCurve(P.yBot, P.zNose);
-  fq(-0.66, ybN + 0.07, 0.66, 0.62, 'trim'); // lower intake behind the bull bar
-  for (const s of [1, -1]) { const a = s * 0.70, b = s * 0.86; fq(Math.min(a, b), ybN + 0.03, Math.max(a, b), ybN + 0.13, 'pink'); } // hi-vis bumper corners
-  const B = P.bar;
-  F.box(0, ybN + 0.01, P.zNose - 0.06, hwN * 2 + 0.06, 0.04, 0.22, { all: 'trim', pz: 'pink' }); // splitter / bash plate
-  for (const s of [1, -1]) F.box(s * B.hw, (B.y0 + B.y1) / 2, B.z, 0.08, B.y1 - B.y0, 0.08, 'trim'); // hoop uprights
+  fq(-0.66, ybN + 0.07, 0.66, 0.62 + fy, 'trim'); // lower intake behind the bull bar
+  const B = P.bar, bumpT = B.y0 + 0.20, bz = B.z + 0.05; // the bar's solid bumper: B.y0 - 0.06 up to bumpT, face at bz
+  F.box(0, ybN + 0.01, P.zNose - 0.06, hwN * 2 + 0.06, 0.04, 0.22, 'trim'); // bash plate
+  F.box(0, (B.y0 - 0.06 + bumpT) / 2, B.z - 0.02, B.hw * 2 + 0.30, bumpT - B.y0 + 0.06, 0.14, 'trim'); // the solid black bumper
+  for (const s of [1, -1]) F.box(s * B.hw, (bumpT + B.y1) / 2, B.z, 0.08, B.y1 - bumpT, 0.08, 'trim'); // hoop uprights
   F.box(0, B.y1, B.z, B.hw * 2 + 0.08, 0.08, 0.08, 'trim'); // hoop top rail
-  F.box(0, B.y0, B.z - 0.02, B.hw * 2 + 0.30, 0.08, 0.10, 'trim'); // bash rail
+  const bq0 = (x0, y0, x1, y1, sw) => F.quad([x0, y0, bz + 0.002], [x1, y0, bz + 0.002], [x1, y1, bz + 0.002], [x0, y1, bz + 0.002], sw);
+  bq0(-0.22, B.y0 - 0.02, 0.22, B.y0 + 0.10, 'white'); // number plate
   if (T.bar === 'full') {
-    F.box(0, B.y1 + 0.09, B.z - 0.03, 0.80, 0.09, 0.07, { all: 'trim', pz: 'led' }); // light bar
-    for (const s of [1, -1]) F.box(s * (B.hw + 0.18), B.y0 + 0.10, B.z - 0.08, 0.08, 0.20, 0.08, 'trim', [0, 0, s * 0.5]); // wing tips
-    F.box(0, (B.y0 + B.y1) / 2, B.z, 0.05, B.y1 - B.y0 - 0.08, 0.05, 'trim'); // centre hoop
+    F.box(0, bumpT + 0.06, B.z + 0.01, 0.84, 0.08, 0.07, { all: 'trim', pz: 'led' }); // light bar on the bumper, inside the hoop
+    for (const s of [1, -1]) { bq0(s > 0 ? 0.52 : -0.62, B.y0 + 0.02, s > 0 ? 0.62 : -0.52, B.y0 + 0.12, 'fog'); // fog lamps
+      F.box(s * (B.hw + 0.18), B.y0 + 0.08, B.z - 0.08, 0.08, 0.24, 0.10, 'trim', [0, 0, s * 0.5]); } // wing tips
+    F.box(0.12, B.y0 - 0.10, bz + 0.04, 0.06, 0.07, 0.06, 'lime'); // the yellow winch hook
   } else {
-    F.quad([-0.4, B.y1 + 0.04, B.z + 0.06], [0.4, B.y1 + 0.04, B.z + 0.06], [0.4, B.y1 + 0.13, B.z + 0.06], [-0.4, B.y1 + 0.13, B.z + 0.06], 'led');
+    F.quad([-0.4, bumpT + 0.03, bz + 0.002], [0.4, bumpT + 0.03, bz + 0.002], [0.4, bumpT + 0.10, bz + 0.002], [-0.4, bumpT + 0.10, bz + 0.002], 'led');
   }
 
-  // ── back (part: back): tray, tailgate, tow bar ──
-  const Bk = S('back'), zt = P.zTail - 0.004, hwT = lerpCurve(P.hw, P.zTail), deckY = lerpCurve(P.yCr, P.zTail), TR = P.tray, wH = TR.wallH, wT = TR.wallT;
-  const trayLen = TR.z0 - TR.z1, trayMid = (TR.z0 + TR.z1) / 2, hwTr = lerpCurve(P.hw, trayMid);
-  for (const s of [1, -1]) Bk.box(s * (hwTr - wT / 2), deckY + wH / 2, trayMid, wT, wH, trayLen, { all: 'paint', py: 'chrome', px: sUV, nx: sUV }); // side walls
-  Bk.box(0, deckY + wH / 2, TR.z1, (hwTr - wT) * 2, wH, wT, { all: 'paint', py: 'chrome', pz: 'paint', nz: 'paint' }); // tailgate
-  Bk.box(0, deckY + (wH + 0.16) / 2, TR.z0, (hwTr - wT) * 2, wH + 0.16, wT, { all: 'paint', pz: 'trim', nz: 'trim' }); // headboard (the cab's rear)
+  // ── back (part: back): the flat tray, the owner's canopy on it, the tray's lamps and plate, tow bar ──
+  // The tub under the deck is the tray's black frame and under-tray boxes (atlas.js draws them black behind the cab).
+  const Bk = S('back'), zt = P.zTail - 0.004, hwT = lerpCurve(P.hw, P.zTail), deckY = lerpCurve(P.yCr, P.zTail), TR = P.tray, C = P.canopy;
+  const trayLen = TR.z0 - TR.z1, trayMid = (TR.z0 + TR.z1) / 2, deckTop = deckY + 0.06;
+  Bk.box(0, deckY + 0.03, trayMid, C.hw * 2 + 0.04, 0.06, trayLen + 0.08, 'under'); // the tray deck, wider than the cab
+  const cUV = canopyUV(P, deckTop);
+  Bk.box(0, (deckTop + C.y1) / 2, (C.z0 + C.z1) / 2, C.hw * 2, C.y1 - deckTop, C.z0 - C.z1, { all: 'canopy', px: cUV, nx: cUV, py: 'paint' }); // the canopy: black like the owner's, its lid in the seat colour so the chase cam sees whose it is
   const bq = (x0, y0, x1, y1, sw) => Bk.quad([x1, y0, zt], [x0, y0, zt], [x0, y1, zt], [x1, y1, zt], sw);
-  if (T.tailLamps) for (const s of [1, -1]) { const xa = s * hwT * 0.55, xb = s * hwT * 0.97; bq(Math.min(xa, xb), 0.74, Math.max(xa, xb), 1.02, 'tail'); }
-  bq(-0.30, 0.50, 0.30, 0.60, 'trim'); // plate recess below the tailgate
-  if (T.tow) { Bk.box(0, 0.42, zt - 0.06, 0.55, 0.10, 0.14, 'trim'); Bk.prism([0, 0.46, zt - 0.14], [0, 0.56, zt - 0.14], 0.04, 5, 'chrome', 'chrome'); }
-  if (T.load) {
-    Bk.box(0, deckY + 0.15, TR.z0 - 0.42, 1.55, 0.26, 0.46, { all: 'chrome', py: 'trim' }); // alloy toolbox behind the headboard
-    Bk.prism([-0.55, deckY + 0.20, TR.z1 + 0.55], [0.55, deckY + 0.20, TR.z1 + 0.55], 0.20, 6, 'bay', 'bay'); // rolled swag
+  if (T.tailLamps) for (const s of [1, -1]) { // the tray's combination lamps: amber, white, red from the middle out
+    for (const [a, b, sw] of [[0.52, 0.62, 'indicator'], [0.62, 0.70, 'head'], [0.70, 0.94, 'tail']]) { const xa = s * hwT * a, xb = s * hwT * b; bq(Math.min(xa, xb), 0.96, Math.max(xa, xb), 1.08, sw); }
   }
-  // bumper step corner (hi-vis) on the tail
-  for (const s of [1, -1]) { const a = s * hwT * 0.60, b = s * hwT * 0.96; bq(Math.min(a, b), 0.40, Math.max(a, b), 0.50, 'pink'); }
+  bq(-0.22, 0.74, 0.22, 0.86, 'white'); // number plate
+  if (T.tow) { Bk.box(0, 0.42, zt - 0.06, 0.55, 0.10, 0.14, 'trim'); Bk.prism([0, 0.46, zt - 0.14], [0, 0.56, zt - 0.14], 0.04, 5, 'chrome', 'chrome'); }
 
   // ── core details: mirrors, steps, snorkel, roof rack ──
   const M = P.mirror;
@@ -202,26 +219,37 @@ function makeSoups(P, lod) {
     const x = s * (lerpCurve(P.hw, z) + 0.003), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.02, y1 = lerpCurve(P.ySh, z) - 0.05;
     S('core').quad(...(s > 0 ? [[x, y0, z + 0.008], [x, y0, z - 0.008], [x, y1, z - 0.008], [x, y1, z + 0.008]] : [[x, y0, z - 0.008], [x, y0, z + 0.008], [x, y1, z + 0.008], [x, y1, z - 0.008]]), 'trim');
   }
-  if (T.steps) for (const s of [1, -1]) S('core').box(s * (lerpCurve(P.hw, 0) + 0.07), 0.30, (zA + zC) / 2, 0.16, 0.05, zA - zC - 0.1, { all: 'trim', py: 'chrome' }); // side steps
+  if (T.steps) for (const s of [1, -1]) S('core').box(s * (lerpCurve(P.hw, 0) + 0.07), lerpCurve(P.yBot, 0) + 0.02, (zA + zC) / 2, 0.16, 0.05, zA - zC - 0.1, { all: 'trim', py: 'chrome' }); // side steps
   if (T.snorkel) {
     const K = P.snorkel, ro = 0.045, x = K.x, pts = [[x, 1.18, K.zBase], [x, 1.50, K.zBase - 0.08], [x, K.yTop - 0.08, K.zTop + 0.04]];
     if (T.snorkel >= 3) { S('core').prism(pts[0], pts[1], ro, 4, 'trim', 'trim', Math.PI / 4); S('core').prism(pts[1], pts[2], ro, 4, 'trim', 'trim', Math.PI / 4); }
     else S('core').prism(pts[0], pts[2], ro, 4, 'trim', 'trim', Math.PI / 4);
     S('core').box(x, K.yTop, K.zTop + 0.04, 0.10, 0.14, 0.14, 'trim'); // the ram head
   }
+  // The platform rack: rails, slats, a wind deflector over the windscreen and the rolled awning on the left (+X). The slats
+  // bunch at the ends so the seat number painted on the roof (anchor roof_number) shows through the middle.
   if (T.rack) {
-    const R = P.rack, zm = (R.z0 + R.z1) / 2, len = R.z0 - R.z1;
-    for (const s of [1, -1]) S('core').box(s * R.hw, R.y, zm, 0.05, 0.05, len, 'trim');
-    S('core').box(0, R.y, R.z0 - 0.04, R.hw * 2, 0.04, 0.05, 'trim');
-    S('core').box(0, R.y, R.z1 + 0.04, R.hw * 2, 0.04, 0.05, 'trim');
+    const R = P.rack, zm = (R.z0 + R.z1) / 2, len = R.z0 - R.z1, Co = S('core');
+    if (T.rack === 'full') {
+      for (const s of [1, -1]) Co.box(s * R.hw, R.y, zm, 0.06, 0.06, len, 'trim'); // side rails
+      for (const z of [R.z0 - 0.05, R.z0 - 0.20, R.z1 + 0.20, R.z1 + 0.05]) Co.box(0, R.y + 0.01, z, R.hw * 2, 0.03, 0.08, 'trim'); // slats
+      for (const s of [1, -1]) for (const z of [R.z0 - 0.12, R.z1 + 0.12]) Co.box(s * (R.hw - 0.03), R.y - 0.06, z, 0.05, 0.10, 0.05, 'trim'); // feet
+      Co.box(0, R.y + 0.03, R.z0 + 0.05, R.hw * 2, 0.12, 0.03, 'trim', [-0.6, 0, 0]); // wind deflector
+      Co.prism([R.hw + 0.07, R.y + 0.03, R.z0 - 0.02], [R.hw + 0.07, R.y + 0.03, R.z1 + 0.02], 0.10, 6, 'awning', 'awning'); // the rolled awning
+    } else {
+      Co.box(0, R.y, zm, R.hw * 2, 0.05, len, 'trim'); // the rack as one flat platform
+      if (T.rack === 'platform') Co.prism([R.hw + 0.07, R.y + 0.03, R.z0 - 0.02], [R.hw + 0.07, R.y + 0.03, R.z1 + 0.02], 0.10, 6, 'awning', 'awning');
+    }
   }
 
   // ── wheels: tyre prism + rim disc (5-spoke at low res) ──
   const tyreR = P.wheelR / Math.cos(Math.PI / T.wheelSeg);
   for (const [id, z, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
     const W = S(id), x = s * P.track, hw = P.wheelW / 2;
-    W.prism([x - s * hw, P.wheelR, z], [x + s * hw, P.wheelR, z], tyreR, T.wheelSeg, 'tyre', 'rim', Math.PI / T.wheelSeg);
-    if (T.rim) { W.prism([x + s * hw, P.wheelR, z], [x + s * (hw + 0.012), P.wheelR, z], P.wheelR * 0.68, T.rim, 'trim', 'trim', Math.PI / 2, P.wheelR * 0.6); W.prism([x + s * (hw + 0.012), P.wheelR, z], [x + s * (hw + 0.03), P.wheelR, z], 0.08, 5, 'rim', 'rim'); }
+    W.prism([x - s * hw, P.wheelR, z], [x + s * hw, P.wheelR, z], tyreR, T.wheelSeg, 'tyre', 'tyre', Math.PI / T.wheelSeg);
+    // black wheels with a machined silver lip: a silver ring (disc) under a black centre, and a silver hub cap
+    if (T.rim) { const n = T.wheelSeg; W.disc([x + s * (hw + 0.006), P.wheelR, z], s, P.wheelR * 0.70, n, 'chrome', Math.PI / n); W.disc([x + s * (hw + 0.012), P.wheelR, z], s, P.wheelR * 0.60, n, 'rim', Math.PI / n); W.disc([x + s * (hw + 0.018), P.wheelR, z], s, P.wheelR * 0.16, T.rim, 'chrome'); }
+    else W.disc([x + s * (hw + 0.006), P.wheelR, z], s, P.wheelR * 0.62, 6, 'chrome', Math.PI / 6); // LOD2: the wheel as one silver hexagon
   }
 
   // ── interior blocks (what a missing panel shows, vehicle space, the same at every LOD) ──
