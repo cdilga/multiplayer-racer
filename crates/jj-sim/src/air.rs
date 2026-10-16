@@ -146,10 +146,17 @@ impl AirProfile {
             return Err("air profile rollLevelPerS must not be negative".into());
         }
         let b = &self.bands;
-        if !(0.0 < b.clean_deg && b.clean_deg < b.bad_deg && b.bad_deg < b.crash_deg && b.crash_deg <= 180.0) {
+        if !(0.0 < b.clean_deg
+            && b.clean_deg < b.bad_deg
+            && b.bad_deg < b.crash_deg
+            && b.crash_deg <= 180.0)
+        {
             return Err("air profile bands need 0 < cleanDeg < badDeg < crashDeg <= 180".into());
         }
-        for (name, g) in [("clean.gain", self.clean.gain), ("cleanLong.gain", self.clean_long.gain)] {
+        for (name, g) in [
+            ("clean.gain", self.clean.gain),
+            ("cleanLong.gain", self.clean_long.gain),
+        ] {
             if !(0.0..=2.0).contains(&g) {
                 return Err(format!("air profile {name} must be 0..2"));
             }
@@ -175,7 +182,14 @@ pub fn sticks(input: DriveInput) -> (f32, f32) {
 /// The body rate change (rad/s, body frame) the air controller wants this tick for sticks `(stick_y, steer)` (after the
 /// takeoff latch, [`AirState::air_sticks`]), a car with body rate `w_body` and roll `roll_rad` (positive lifts the left
 /// side). A bike's roll is its own balance's, so it gets no roll term.
-pub fn rate_change(p: &AirProfile, (stick_y, steer): (f32, f32), w_body: [f32; 3], roll_rad: f32, bike: bool, dt: f32) -> [f32; 3] {
+pub fn rate_change(
+    p: &AirProfile,
+    (stick_y, steer): (f32, f32),
+    w_body: [f32; 3],
+    roll_rad: f32,
+    bike: bool,
+    dt: f32,
+) -> [f32; 3] {
     // A positive turn about +x (the car's left) lowers the nose; one about +y turns the nose toward the left.
     let want = [
         stick_y * p.pitch_rate_dps.to_radians(),
@@ -200,7 +214,11 @@ pub fn righting_change(p: &AirProfile, up: [f32; 3], w: [f32; 3], dt: f32) -> [f
     let angle = libm::atan2f(s, uy);
     let max = p.crash.right_rate_dps.to_radians();
     // Upside down the axis is undefined: roll over the car's side (its up's horizontal part is ~0, so pick +z's).
-    let (nx, nz) = if s > 1e-3 { (ax / s, az / s) } else { (0.0, 1.0) };
+    let (nx, nz) = if s > 1e-3 {
+        (ax / s, az / s)
+    } else {
+        (0.0, 1.0)
+    };
     let rate = (angle * 4.0).min(max);
     let want = [nx * rate, w[1], nz * rate];
     let k = (dt / p.response_s).min(1.0);
@@ -284,18 +302,27 @@ pub struct AirState {
 impl AirState {
     /// A car just put down somewhere: its first touchdown is a settle, not a landing (no respawn boosts).
     pub fn placed() -> Self {
-        Self { placed: true, ..Self::default() }
+        Self {
+            placed: true,
+            ..Self::default()
+        }
     }
 
     /// Ticks in the air so far this flight (0 on the ground or while a landing is judged).
     pub fn flight_ticks(&self) -> u32 {
-        if self.pending.is_some() { 0 } else { self.air_ticks }
+        if self.pending.is_some() {
+            0
+        } else {
+            self.air_ticks
+        }
     }
 
     /// Air control has the car: it has been in the air past `controlAfterS`, on a jump (not knocked there, and not
     /// settling after being put down).
     pub fn flying(&self, p: &AirProfile, hz: u32) -> bool {
-        !self.knocked && !self.placed && self.flight_ticks() >= AirProfile::ticks(p.control_after_s, hz)
+        !self.knocked
+            && !self.placed
+            && self.flight_ticks() >= AirProfile::ticks(p.control_after_s, hz)
     }
 
     /// The sticks this tick (`sticks`), on the ground or in the air: the ground's are latched at takeoff.
@@ -317,7 +344,10 @@ impl AirState {
         let (ly, lx) = self.latched.unwrap_or((0.0, 0.0));
         self.armed.0 |= (y - ly).abs() > p.latch_release_stick;
         self.armed.1 |= (x - lx).abs() > p.latch_release_stick;
-        (if self.armed.0 { y } else { 0.0 }, if self.armed.1 { x } else { 0.0 })
+        (
+            if self.armed.0 { y } else { 0.0 },
+            if self.armed.1 { x } else { 0.0 },
+        )
     }
 
     /// The chassis' horizontal velocity changed by `dv` (m/s) this tick: past `knockDvMps` it was hit, not launched.
@@ -365,7 +395,16 @@ impl AirState {
             // The body came down first (a bumper, the roof, a side): judged on its angle to the ground where it touched,
             // never clean. Roof or side first is past `crashDeg` by its angle.
             let angle_deg = libm::acosf(t.cos_angle.clamp(-1.0, 1.0)).to_degrees();
-            return Some(self.decide(p, hz, Pending { angle_deg, air_ticks: flight, since: 0 }, false));
+            return Some(self.decide(
+                p,
+                hz,
+                Pending {
+                    angle_deg,
+                    air_ticks: flight,
+                    since: 0,
+                },
+                false,
+            ));
         }
         let pend = Pending {
             angle_deg: libm::acosf(t.cos_angle.clamp(-1.0, 1.0)).to_degrees(),
@@ -470,7 +509,12 @@ mod tests {
     }
 
     fn touch(supported: usize, deg: f32) -> Touch {
-        Touch { supported, wheels: 4, cos_angle: libm::cosf(deg.to_radians()), body_hit: false }
+        Touch {
+            supported,
+            wheels: 4,
+            cos_angle: libm::cosf(deg.to_radians()),
+            body_hit: false,
+        }
     }
 
     /// Flies for `air` ticks, then lands with `first` wheels at `deg`, then all four.
@@ -503,7 +547,10 @@ mod tests {
         p.bands.bad_deg = 5.0;
         assert!(p.validate().is_err());
         let text = AIR_JSON.replacen("\"minAirS\"", "\"perJump\": 1, \"minAirS\"", 1);
-        assert!(AirProfile::from_json(&text).is_err(), "R15: no per-jump overrides sneak in");
+        assert!(
+            AirProfile::from_json(&text).is_err(),
+            "R15: no per-jump overrides sneak in"
+        );
     }
 
     #[test]
@@ -513,11 +560,18 @@ mod tests {
         let gas = rate_change(&p, sticks(input(1.0, 0.0, 0.0)), [0.0; 3], 0.0, false, dt);
         let brake = rate_change(&p, sticks(input(0.0, 0.0, 1.0)), [0.0; 3], 0.0, false, dt);
         let left = rate_change(&p, sticks(input(0.0, 1.0, 0.0)), [0.0; 3], 0.0, false, dt);
-        assert!(gas[0] > 0.0 && brake[0] < 0.0, "gas lowers the nose, brake lifts it");
+        assert!(
+            gas[0] > 0.0 && brake[0] < 0.0,
+            "gas lowers the nose, brake lifts it"
+        );
         assert!(left[1] > 0.0 && left[0] == 0.0, "steer yaws only");
         let tipped = rate_change(&p, (0.0, 0.0), [0.0; 3], 0.4, false, dt);
         assert!(tipped[2] < 0.0, "a raised left side is rolled back down");
-        assert_eq!(rate_change(&p, (0.0, 0.0), [0.0; 3], 0.4, true, dt)[2], 0.0, "a bike balances itself");
+        assert_eq!(
+            rate_change(&p, (0.0, 0.0), [0.0; 3], 0.4, true, dt)[2],
+            0.0,
+            "a bike balances itself"
+        );
         // Neutral holds the attitude: a spinning car is brought to rest, not levelled.
         let spinning = rate_change(&p, (0.0, 0.0), [1.0, 0.0, 0.0], 0.0, false, dt);
         assert!(spinning[0] < 0.0);
@@ -532,7 +586,9 @@ mod tests {
             let d = rate_change(&p, (1.0, 0.0), w, 0.0, false, dt);
             w[0] += d[0];
         }
-        assert!((w[0] - p.pitch_rate_dps.to_radians()).abs() < 0.05 * p.pitch_rate_dps.to_radians());
+        assert!(
+            (w[0] - p.pitch_rate_dps.to_radians()).abs() < 0.05 * p.pitch_rate_dps.to_radians()
+        );
     }
 
     #[test]
@@ -540,7 +596,11 @@ mod tests {
         let p = AirProfile::standard();
         let air = 120;
         assert_eq!(land(&p, air, 4, 3.0).1.unwrap().tier, LandingTier::Clean);
-        assert_eq!(land(&p, air, 2, 3.0).1.unwrap().tier, LandingTier::Clean, "the rest follow within 0.15 s");
+        assert_eq!(
+            land(&p, air, 2, 3.0).1.unwrap().tier,
+            LandingTier::Clean,
+            "the rest follow within 0.15 s"
+        );
         assert_eq!(land(&p, air, 4, 14.0).1.unwrap().tier, LandingTier::Ok);
         assert_eq!(land(&p, air, 2, 30.0).1.unwrap().tier, LandingTier::Bad);
         assert_eq!(land(&p, air, 1, 60.0).1.unwrap().tier, LandingTier::Crash);
@@ -573,21 +633,58 @@ mod tests {
         for _ in 0..120 {
             s.tick(&p, HZ, touch(0, 0.0));
         }
-        let l = s.tick(&p, HZ, Touch { supported: 0, wheels: 4, cos_angle: 0.5, body_hit: true }).unwrap();
+        let l = s
+            .tick(
+                &p,
+                HZ,
+                Touch {
+                    supported: 0,
+                    wheels: 4,
+                    cos_angle: 0.5,
+                    body_hit: true,
+                },
+            )
+            .unwrap();
         assert_eq!(l.tier, LandingTier::Crash, "nose first at 60°");
         assert!((l.angle_deg - 60.0).abs() < 0.01);
         let mut tail = AirState::default();
         for _ in 0..120 {
             tail.tick(&p, HZ, touch(0, 0.0));
         }
-        let scrape = tail.tick(&p, HZ, Touch { supported: 0, wheels: 4, cos_angle: libm::cosf(30f32.to_radians()), body_hit: true });
-        assert_eq!(scrape.unwrap().tier, LandingTier::Bad, "a tail scrape at 30° is bad, not a crash");
+        let scrape = tail.tick(
+            &p,
+            HZ,
+            Touch {
+                supported: 0,
+                wheels: 4,
+                cos_angle: libm::cosf(30f32.to_radians()),
+                body_hit: true,
+            },
+        );
+        assert_eq!(
+            scrape.unwrap().tier,
+            LandingTier::Bad,
+            "a tail scrape at 30° is bad, not a crash"
+        );
         let mut flat = AirState::default();
         for _ in 0..120 {
             flat.tick(&p, HZ, touch(0, 0.0));
         }
-        let bumper = flat.tick(&p, HZ, Touch { supported: 0, wheels: 4, cos_angle: 1.0, body_hit: true });
-        assert_eq!(bumper.unwrap().tier, LandingTier::Ok, "body first is never clean");
+        let bumper = flat.tick(
+            &p,
+            HZ,
+            Touch {
+                supported: 0,
+                wheels: 4,
+                cos_angle: 1.0,
+                body_hit: true,
+            },
+        );
+        assert_eq!(
+            bumper.unwrap().tier,
+            LandingTier::Ok,
+            "body first is never clean"
+        );
         assert_eq!(s.reward(&p, HZ, l, 20.0), 1.0);
         assert!(s.righting(false));
         assert!(!s.righting(true), "upright ends it");
@@ -597,7 +694,12 @@ mod tests {
     fn righting_turns_a_tipped_car_toward_upright_from_any_side() {
         let p = AirProfile::standard();
         let dt = 1.0 / HZ as f32;
-        for up in [[1.0f32, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0], [0.6, -0.8, 0.0]] {
+        for up in [
+            [1.0f32, 0.0, 0.0],
+            [0.0, 0.0, -1.0],
+            [0.0, -1.0, 0.0],
+            [0.6, -0.8, 0.0],
+        ] {
             // Integrate the rate change on a unit-inertia body until upright.
             let (mut u, mut w) = (up, [0.0f32; 3]);
             let mut t = 0.0;
@@ -605,7 +707,11 @@ mod tests {
                 let d = righting_change(&p, u, w, dt);
                 w = [w[0] + d[0], w[1] + d[1], w[2] + d[2]];
                 // u' = w × u
-                let du = [w[1] * u[2] - w[2] * u[1], w[2] * u[0] - w[0] * u[2], w[0] * u[1] - w[1] * u[0]];
+                let du = [
+                    w[1] * u[2] - w[2] * u[1],
+                    w[2] * u[0] - w[0] * u[2],
+                    w[0] * u[1] - w[1] * u[0],
+                ];
                 u = [u[0] + du[0] * dt, u[1] + du[1] * dt, u[2] + du[2] * dt];
                 let n = libm::sqrtf(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
                 u = [u[0] / n, u[1] / n, u[2] / n];
@@ -654,7 +760,11 @@ mod tests {
         // Full throttle and a little steer held through the lip.
         s.feed((1.0, 0.2), false);
         s.feed((1.0, 0.2), true);
-        assert_eq!(s.air_sticks(&p, (1.0, 0.2)), (0.0, 0.0), "a held throttle isn't an air input");
+        assert_eq!(
+            s.air_sticks(&p, (1.0, 0.2)),
+            (0.0, 0.0),
+            "a held throttle isn't an air input"
+        );
         assert_eq!(s.air_sticks(&p, (0.9, 0.3)), (0.0, 0.0), "nor is a wobble");
         // Let go, then press again: deliberate.
         assert_eq!(s.air_sticks(&p, (0.0, 0.2)), (0.0, 0.0));
@@ -664,7 +774,11 @@ mod tests {
         // Down again: the latch resets for the next jump.
         s.feed((0.0, 0.0), false);
         s.feed((0.0, 0.0), true);
-        assert_eq!(s.air_sticks(&p, (-1.0, 0.0)), (-1.0, 0.0), "the brake from neutral pitches at once");
+        assert_eq!(
+            s.air_sticks(&p, (-1.0, 0.0)),
+            (-1.0, 0.0),
+            "the brake from neutral pitches at once"
+        );
     }
 
     #[test]
@@ -679,7 +793,11 @@ mod tests {
             s.tick(&p, HZ, touch(0, 0.0));
         }
         assert!(!s.flying(&p, HZ), "a rail threw it up: no air control");
-        assert_eq!(s.tick(&p, HZ, touch(4, 40.0)), None, "and no landing to judge");
+        assert_eq!(
+            s.tick(&p, HZ, touch(4, 40.0)),
+            None,
+            "and no landing to judge"
+        );
         for _ in 0..60 {
             s.tick(&p, HZ, touch(4, 0.0));
         }
@@ -698,17 +816,27 @@ mod tests {
         for _ in 0..60 {
             s.tick(&p, HZ, touch(0, 0.0));
         }
-        assert!(!s.flying(&p, HZ), "settling after being put down isn't a flight to steer");
+        assert!(
+            !s.flying(&p, HZ),
+            "settling after being put down isn't a flight to steer"
+        );
         let mut s = AirState::placed();
         // The wheels brush the ground as it's put down, then it settles from a little higher.
         s.tick(&p, HZ, touch(4, 0.0));
         for _ in 0..60 {
             s.tick(&p, HZ, touch(0, 0.0));
         }
-        assert_eq!(s.tick(&p, HZ, touch(4, 0.0)), None, "a respawn drop earns nothing");
+        assert_eq!(
+            s.tick(&p, HZ, touch(4, 0.0)),
+            None,
+            "a respawn drop earns nothing"
+        );
         for _ in 0..120 {
             s.tick(&p, HZ, touch(0, 0.0));
         }
-        assert!(s.tick(&p, HZ, touch(4, 0.0)).is_some(), "the next jump does");
+        assert!(
+            s.tick(&p, HZ, touch(4, 0.0)).is_some(),
+            "the next jump does"
+        );
     }
 }
