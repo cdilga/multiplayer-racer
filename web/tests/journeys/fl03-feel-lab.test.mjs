@@ -1,12 +1,12 @@
-// The Feel Lab tab of the owner tuning menu (P1-FL03, R131). Without the owner flag the host has none of it. With `?tune`, two
-// controllers drive mid-race on a fixed course while the lab switches the handling preset Off -> Kart -> Rally, moves the
-// Power and Grip sliders and flips A/B: every roster vehicle's tuning in the sim shows each change within a second and a half
-// (a ceiling for CI; the Mac is far inside it), the cars keep moving, and an exported patch carries the lab's setup and is
-// accepted by `jj vehicle tune --check`. Captures go to $JJ_CAPTURE_DIR when set.
+// The Feel Lab tab of the owner tuning menu (P1-FL03, R131; P1-FL04.2 removed the handling presets). Without the owner flag the
+// host has none of it. With `?tune`, two controllers drive mid-race on a fixed course while the lab moves the Turn-in, Grip and
+// Power sliders over the shipped arcade car controller and flips A/B: every roster vehicle's tuning in the sim shows each change
+// within a second and a half (a ceiling for CI; the Mac is far inside it), the cars keep moving, and an exported patch carries
+// the lab's setup and is accepted by `jj vehicle tune --check`. Captures go to $JJ_CAPTURE_DIR when set.
 //   node --test web/tests/journeys/fl03-feel-lab.test.mjs
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,6 @@ after(async () => {
 });
 closeContextsAfterEach(() => browser);
 
-const near = (a, b) => Math.abs(a - b) <= Math.abs(b) * 1e-5;
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 const meanSpeed = (host) => host.evaluate(async () => { const o = await window.__jjTest.observe(); return o.cars.reduce((a, c) => a + Math.abs(c.speed), 0) / Math.max(1, o.cars.length); });
@@ -68,7 +67,7 @@ const slide = (host, id, log2) => host.locator(`[data-lab-slider="${id}"]`).eval
 }, log2);
 
 for (const [w, h] of [[1280, 720], [1920, 1080]]) {
-  test(`?tune ${w}x${h}: presets, sliders and A/B switch live mid-race for every vehicle; the patch validates`, { timeout: 300_000 }, async () => {
+  test(`?tune ${w}x${h}: sliders and A/B switch live mid-race for every vehicle; the patch validates`, { timeout: 300_000 }, async () => {
     const host = await (await browser.newContext({ viewport: { width: w, height: h } })).newPage();
     const errors = [];
     host.on('pageerror', (e) => errors.push(e.message));
@@ -78,7 +77,8 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     await wait(host, () => !!window.__jjTune);
     await host.locator('.jj-tune-toggle').click();
     await host.locator('[data-tune-tab="lab"]').click();
-    await host.locator('[data-lab-preset="kart"]').waitFor();
+    await host.locator('[data-lab-slider="turn"]').waitFor();
+    assert.equal(await host.locator('[data-lab-preset]').count(), 0, 'no preset UI: the arcade controller is the only one');
     const lab = () => host.evaluate(() => window.__jjTune.lab.inspect());
     await wait(host, () => Object.keys(window.__jjTune.lab.inspect().bases).length > 0, undefined, 10_000);
     const ids = (await lab()).vehicles;
@@ -104,88 +104,109 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
       const v = await meanSpeed(host);
       assert.ok(v > 2, `the cars keep moving ${what} (${v.toFixed(1)} m/s)`);
     };
-
-    const base = await everyVehicle('max_engine_force');
-    assert.ok(Object.values(await everyVehicle('handling.front_grip')).every((v) => v === undefined), 'Off: no handling section on any vehicle');
-    await moving('before the lab changes anything');
-
-    const presets = JSON.parse(readFileSync(join(repo, 'assets/profiles/handling-presets.json'), 'utf8')).presets;
-    const front = (id) => presets.find((p) => p.id === id).handling.front_grip;
-    const flip = async (button, want) => {
+    /** Every vehicle's value is its shipped base times `factor` (a base of 0 stays 0). */
+    const scaled = async (path, bases, factor, what) => {
+      for (const [id, v] of Object.entries(await everyVehicle(path))) {
+        assert.equal(typeof v, 'number', `${id}: ${path} is a number`);
+        if (bases[id] === 0) assert.equal(v, 0, `${id}: ${what} (${path} stays 0)`);
+        else assert.ok(Math.abs(v / bases[id] - factor) < 0.001, `${id}: ${what}: ${path} ${bases[id]} -> ${v} (${factor}x)`);
+      }
+    };
+    /** Moves a slider and waits until the lab has applied it to every vehicle; returns how long that took. */
+    const move = async (id, log2) => {
+      const t0 = Date.now();
+      await slide(host, id, log2);
+      await wait(host, ([sid, want]) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m[sid] - 2 ** want) < 1e-6 && !/Applying/.test(i.status); }, [id, log2], 5000);
+      return Date.now() - t0;
+    };
+    const flip = async (button, turn) => {
       const t0 = Date.now();
       await host.locator(button).click();
-      await wait(host, (w) => { const i = window.__jjTune.lab.inspect(); return i.applied && i.applied.preset === w && !/Applying/.test(i.status); }, want, 5000);
+      await wait(host, (w) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m.turn - w) < 1e-6 && !/Applying/.test(i.status); }, turn, 5000);
       return Date.now() - t0;
     };
 
-    // Off -> Kart -> Rally: every vehicle gets the preset, within the ceiling. The lab applies vehicle by vehicle (a
-    // TuneVehicle + SetTuning per car, each at a tick boundary), so a loaded CI runner takes ~2 s; 4 s still reads live.
-    let ms = await flip('[data-lab-preset="kart"]', 'kart');
-    assert.ok(ms < 4000, `Kart reached every vehicle in ${ms} ms`);
-    for (const [id, v] of Object.entries(await everyVehicle('handling.front_grip'))) assert.ok(near(v, front('kart')), `${id}: Kart front grip`);
-    await moving('on Kart');
-    if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/lab-kart-${w}x${h}.png` });
-    ms = await flip('[data-lab-preset="rally"]', 'rally');
-    assert.ok(ms < 4000, `Rally reached every vehicle in ${ms} ms`);
-    for (const [id, v] of Object.entries(await everyVehicle('handling.front_grip'))) assert.ok(near(v, front('rally')), `${id}: Rally front grip`);
-    await moving('on Rally');
+    const base = await everyVehicle('max_engine_force');
+    const turnBase = await everyVehicle('arcade.turn_g');
+    const yawBase = await everyVehicle('arcade.yaw_max_deg_s');
+    const turnInBase = await everyVehicle('arcade.turn_in_s');
+    const gripBase = await everyVehicle('arcade.grip_g');
+    const slideGripBase = await everyVehicle('arcade.slide_grip');
+    for (const [id, v] of Object.entries(turnBase)) assert.ok(typeof v === 'number' && v > 0, `${id} ships the arcade controller (turn_g ${v})`);
+    for (const [id, v] of Object.entries(gripBase)) assert.ok(typeof v === 'number' && v > 0, `${id} ships the arcade controller (grip_g ${v})`);
+    await moving('before the lab changes anything');
+
+    // Turn-in ~1.5x (log2 0.6): turn_g and yaw_max_deg_s up, turn_in_s down, on every vehicle, live, within the per-vehicle
+    // ceiling. The lab applies vehicle by vehicle (a TuneVehicle + SetTuning per car, each at a tick boundary), so a loaded
+    // CI runner takes ~2 s; 4 s still reads live.
+    const tm = 2 ** 0.6;
+    let ms = await move('turn', 0.6);
+    assert.ok(ms < 4000, `Turn-in reached every vehicle in ${ms} ms`);
+    await scaled('arcade.turn_g', turnBase, tm, 'Turn-in slider');
+    await scaled('arcade.yaw_max_deg_s', yawBase, tm, 'Turn-in slider');
+    await scaled('arcade.turn_in_s', turnInBase, 1 / tm, 'Turn-in slider');
+    await moving('with 1.5x turn-in');
+    if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/lab-turn-${w}x${h}.png` });
+
+    // Grip slidier (log2 -0.5): grip_g and the grip a slide keeps, on every vehicle.
+    const gm = 2 ** -0.5;
+    ms = await move('grip', -0.5);
+    assert.ok(ms < 4000, `Grip reached every vehicle in ${ms} ms`);
+    await scaled('arcade.grip_g', gripBase, gm, 'Grip slider');
+    await scaled('arcade.slide_grip', slideGripBase, gm, 'Grip slider');
+    await scaled('arcade.turn_g', turnBase, tm, 'Turn-in is untouched by the grip slider');
+    await moving('with slidier grip');
 
     // Power ~1.5x (log2 0.6, a step of the slider): engine force on every vehicle.
     await slide(host, 'power', 0.6);
     await idle(host);
     const m = (await lab()).applied.m.power;
     assert.ok(Math.abs(m - 2 ** 0.6) < 0.001);
-    for (const [id, v] of Object.entries(await everyVehicle('max_engine_force'))) assert.ok(Math.abs(v / base[id] - m) < 0.001, `${id}: engine force ${base[id]} -> ${v} (${m}x)`);
+    await scaled('max_engine_force', base, m, 'Power slider');
     await moving('with 1.5x power');
-    // Grip slider (slidier): live on a preset.
-    assert.equal(await host.locator('[data-lab-slider="grip"]').isDisabled(), false);
-    await slide(host, 'grip', -0.5);
-    await idle(host);
-    for (const [id, v] of Object.entries(await everyVehicle('handling.front_grip'))) assert.ok(Math.abs(v / front('rally') - 2 ** -0.5) < 0.001, `${id}: grip slider ${v}`);
     if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/lab-sliders-${w}x${h}.png` });
 
-    // A = Rally, slidier, 1.5x power; B = Off at 1x. Flip live.
+    // A = turn 1.5x, slidier grip, 1.5x power; B = every slider at 1x. Flip live.
     await host.locator('[data-lab-save="A"]').click();
-    await host.locator('[data-lab-preset="off"]').click();
-    await slide(host, 'power', 0);
-    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return i.applied.preset === 'off' && i.applied.m.power === 1 && !/Applying/.test(i.status); }, undefined, 5000);
-    assert.equal(await host.locator('[data-lab-slider="grip"]').isDisabled(), true, 'Off: the grip slider is disabled');
+    for (const id of ['turn', 'grip', 'power']) await slide(host, id, 0);
+    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return Object.values(i.applied.m).every((v) => v === 1) && !/Applying/.test(i.status); }, undefined, 5000);
     await host.locator('[data-lab-save="B"]').click();
-    assert.ok(Object.values(await everyVehicle('handling.front_grip')).every((v) => v === undefined), 'Off again: no handling on any vehicle');
-    for (const [id, v] of Object.entries(await everyVehicle('max_engine_force'))) assert.ok(near(v, base[id]), `${id}: engine force back to the shipped value`);
+    await scaled('arcade.turn_g', turnBase, 1, 'back to 1x');
+    await scaled('arcade.grip_g', gripBase, 1, 'back to 1x');
+    await scaled('max_engine_force', base, 1, 'back to 1x');
     if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/lab-ab-${w}x${h}.png` });
     const flips = [];
     for (const k of ['A', 'B', 'A']) {
-      flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? 'rally' : 'off'));
+      flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? tm : 1));
       await moving(`after flipping to ${k}`);
     }
-    assert.ok(Math.max(...flips) < 4000, `A/B flips applied in ${flips} ms`); // same per-vehicle ceiling as the presets above
-    for (const [id, v] of Object.entries(await everyVehicle('handling.front_grip'))) assert.ok(Math.abs(v / front('rally') - 2 ** -0.5) < 0.001, `${id}: slot A is live`);
-    for (const [id, v] of Object.entries(await everyVehicle('max_engine_force'))) assert.ok(Math.abs(v / base[id] - 2 ** 0.6) < 0.001, `${id}: slot A power`);
-    assert.equal(await host.evaluate(() => JSON.parse(localStorage.getItem('jj.feellab.slots.v1')).A.preset), 'rally', 'the slots persist in this browser');
+    assert.ok(Math.max(...flips) < 4000, `A/B flips applied in ${flips} ms`); // same per-vehicle ceiling as the sliders above
+    await scaled('arcade.turn_g', turnBase, tm, 'slot A is live');
+    await scaled('arcade.grip_g', gripBase, gm, 'slot A is live');
+    await scaled('max_engine_force', base, tm, 'slot A power');
+    const saved = await host.evaluate(() => JSON.parse(localStorage.getItem('jj.feellab.slots.v1')));
+    assert.ok(Math.abs(saved.A.m.turn - tm) < 1e-6 && saved.B.m.turn === 1, 'the slots persist in this browser');
     if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/lab-flipped-${w}x${h}.png` });
 
     // Export: the lab's setup is in the patch (selected vehicle and the others), and `jj vehicle tune --check` accepts it.
     const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
-    assert.ok(patch.set.some(([f]) => f === 'handling'), `the handling section is in the patch: ${JSON.stringify(patch.set.map(([f]) => f))}`);
-    assert.ok(patch.set.some(([f]) => f === 'max_engine_force'));
-    assert.ok(patch.otherVehicles?.length === ids.length - 1 && patch.otherVehicles.every((o) => o.set.some(([f]) => f === 'handling')), 'the other vehicles ride along');
+    const has = (set, field) => set.some(([f]) => f === field);
+    for (const field of ['arcade.turn_g', 'arcade.grip_g', 'max_engine_force']) assert.ok(has(patch.set, field), `${field} is in the patch: ${JSON.stringify(patch.set.map(([f]) => f))}`);
+    assert.ok(patch.otherVehicles?.length === ids.length - 1 && patch.otherVehicles.every((o) => has(o.set, 'arcade.turn_g') && has(o.set, 'arcade.grip_g')), 'the other vehicles ride along');
     const dir = mkdtempSync(join(tmpdir(), 'fl03-'));
     let n = 0;
     for (const [profile, set] of [[patch.profile, patch.set], ...patch.otherVehicles.map((o) => [o.profile, o.set])]) {
       const file = join(dir, `patch-${n++}.json`);
       writeFileSync(file, JSON.stringify({ contract: 'jj.tuning-patch.v1', profile, set }));
       const out = execFileSync(JJ, ['vehicle', 'tune', file, '--check'], { cwd: repo, encoding: 'utf8' });
-      assert.match(out, /handling/, `the check names the handling change for ${profile}: ${out}`);
+      assert.match(out, /arcade\.turn_g/, `the check names the turn-in change for ${profile}: ${out}`);
     }
     const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
     assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);
 
-    // Back to Off with every slider at 1x leaves nothing of the lab in the patch.
-    await host.locator('[data-lab-preset="rally"]').click(); // the grip slider only moves on a preset
-    for (const id of ['grip', 'power', 'air', 'launch', 'boost']) await slide(host, id, 0);
-    await host.locator('[data-lab-preset="off"]').click();
-    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return i.applied.preset === 'off' && Object.values(i.applied.m).every((v) => v === 1) && !/Applying/.test(i.status); }, undefined, 8000);
+    // Back to 1x on every slider leaves nothing of the lab in the patch.
+    for (const id of ['turn', 'grip', 'power', 'air', 'launch', 'boost']) await slide(host, id, 0);
+    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return Object.values(i.applied.m).every((v) => v === 1) && !/Applying/.test(i.status); }, undefined, 8000);
     await host.waitForTimeout(400);
     const clean = (await host.evaluate(() => window.__jjTune.inspect())).patch;
     assert.deepEqual(clean.set, [], `everything back to the shipped car: ${JSON.stringify(clean.set)}`);

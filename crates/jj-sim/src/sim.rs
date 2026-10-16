@@ -1804,12 +1804,6 @@ impl Sim {
                 wheel_grip.clone_from(&grip);
                 let commands =
                     vehicle::wheel_commands(p, input, car.action, forward_speed, grip, DT);
-                // The front axle's travel off the nose (+ left), for the arcade handling's steer (P1-FL04).
-                let front_beta = {
-                    let v = b.velocity_at_point(iso * Vector::new(0.0, 0.0, p.axle_front_z()));
-                    let left = iso.rotation * Vector::X;
-                    libm::atan2f(v.dot(left), v.dot(fwd).abs().max(1.0))
-                };
                 car.side_stiffness.clone_from(&side_stiffness);
                 let dt_ = &p.tuning.damage;
                 let t_ = &p.tuning;
@@ -1820,21 +1814,9 @@ impl Sim {
                     .zip(commands)
                     .enumerate()
                 {
-                    w.steering = match &t_.handling {
-                        // P1-FL04: steer to the front tyres' peak slip off the front axle's travel.
-                        Some(h) if i < p.front_wheels() => h.steer_angle(
-                            t_.friction_slip,
-                            wheelbase,
-                            t_.max_steer_rad,
-                            jj_types::axis::dequantise_axis(input.steer),
-                            forward_speed,
-                            front_beta,
-                        ),
+                    w.steering = match &t_.arcade {
                         // P1-FL04.2: the arcade controller turns the body; the wheels show the angle its ask needs.
-                        _ if i < p.front_wheels()
-                            && t_.handling.is_none()
-                            && let Some(a) = &t_.arcade =>
-                        {
+                        Some(a) if i < p.front_wheels() => {
                             let v = forward_speed.abs().max(1.0);
                             let lateral = libm::atanf(wheelbase * a.turn_g * 9.81 / (v * v));
                             (jj_types::axis::dequantise_axis(input.steer)
@@ -1857,8 +1839,8 @@ impl Sim {
                     w.engine_force = c.engine_force * catch_scale * climbable;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
-                    // P1-FL04: with arcade handling the tyres' sideways force is `vehicle::handling`'s, not Rapier's.
-                    w.side_friction_stiffness = if t_.handling.is_some() || t_.arcade.is_some() {
+                    // P1-FL04.2: on the arcade controller the sideways grip is `vehicle::arcade`'s, not Rapier's.
+                    w.side_friction_stiffness = if t_.arcade.is_some() {
                         0.0
                     } else {
                         side_stiffness[i]
@@ -2005,21 +1987,7 @@ impl Sim {
             );
             car.vehicle.update_vehicle(DT, queries);
             // P1-FL04 arcade handling: each grounded tyre's sideways force and the yaw-rate feel.
-            if let Some(h) = &p.tuning.handling
-                && let Some(b) = self.world.bodies.get_mut(car.body)
-            {
-                self.ledger += vehicle::handling::apply(
-                    h,
-                    p.tuning.friction_slip,
-                    b,
-                    car.vehicle.wheels(),
-                    p.front_wheels(),
-                    &car.side_stiffness,
-                    car.action.load_shift,
-                    jj_types::axis::dequantise_axis(input.steer),
-                    DT,
-                );
-            } else if let Some(a) = &p.tuning.arcade
+            if let Some(a) = &p.tuning.arcade
                 && let Some(b) = self.world.bodies.get_mut(car.body)
             {
                 // P1-FL04.2: the arcade controller turns the body, holds it on its line and lets the grip go on purpose.
@@ -3418,9 +3386,6 @@ impl Sim {
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
             h.update(c.action.wheelie_ticks.to_le_bytes());
-            if self.profiles[c.model].tuning.handling.is_some() {
-                h.update(c.action.load_shift.to_le_bytes());
-            }
             // The arcade controller's own state (P1-FL04.2); the angle and ask are observations, not state.
             let arc = &c.action.arcade;
             for f in [arc.slide, arc.load_shift] {

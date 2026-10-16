@@ -423,7 +423,7 @@ pub fn profile_from(
             let obj = at
                 .as_object_mut()
                 .ok_or_else(|| format!("--set {k}: not an object above {part:?}"))?;
-            // A missing last key may be an optional section left out of the profile (`handling`, P1-FL04): insert it and
+            // A missing last key may be an optional section left out of the profile (`arcade` on a bike, `bike_balance` on a car): insert it and
             // let the typed parse below refuse anything that isn't a real field (the tuning denies unknown fields).
             if !obj.contains_key(*part) && i + 1 < path.len() {
                 let keys: Vec<&String> = obj.keys().collect();

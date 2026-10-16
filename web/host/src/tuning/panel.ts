@@ -131,8 +131,6 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
   const countEl = panel.querySelector<HTMLElement>('[data-tune-count]')!;
   const refresh = async () => {
     const t = await client.tuning();
-    // The optional `handling` section comes and goes (Feel Lab, Off removes it): its rows are not kept stale.
-    for (const k of [...current.keys()]) if (k.startsWith('handling.')) current.delete(k);
     for (const [path, v] of allLeaves(t)) current.set(path, v);
     if (!genError) {
       errEl.hidden = !t.error;
@@ -188,7 +186,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     if (path.startsWith(GEN)) return sendGenerator(path, value);
     const text = JSON.stringify(value);
     client.input({ type: 'ui', ui: `tune:${path}=${text}` });
-    // A value the shipped profile has not got (the optional `handling` section) is at its default when it is `null`.
+    // A value the shipped profile has not got is at its default when it is `null`.
     // The sim holds f32: a typed 0.4 is the shipped 0.4000000059604645.
     const shipped = defaults.get(path);
     const same = typeof value === 'number' && typeof shipped === 'number' ? Math.fround(value) === Math.fround(shipped) : JSON.stringify(shipped) === text;

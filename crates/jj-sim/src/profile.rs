@@ -195,10 +195,6 @@ pub struct Tuning {
     /// friction. Absent (the bikes), Rapier's own side friction applies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub arcade: Option<crate::vehicle::arcade::Arcade>,
-    /// FL04's per-axle lateral-grip layer, for the Feel Lab's presets only (P1-FL04, R128). While set it replaces the
-    /// arcade controller.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub handling: Option<crate::vehicle::handling::Handling>,
 }
 
 /// The damage model's numbers (plan §6.3, DEFAULT/TUNE; calibrated by `scenarios/damage/`, never by formula).

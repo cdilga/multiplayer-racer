@@ -8,7 +8,6 @@
 //! - **Air control:** with no wheel on the ground, DRIVE y pitches and DRIVE x rolls the body, gently.
 
 pub mod arcade;
-pub mod handling;
 
 use jj_map::model::{Surface, Terrain};
 use jj_types::axis::dequantise_axis;
@@ -58,8 +57,6 @@ pub struct ActionState {
     pub wheelie_ready: u64,
     /// R127: the launch snapped during the countdown; it is forfeited until `start_forfeit_s` after GO.
     pub false_start: bool,
-    /// Arcade weight transfer (P1-FL04's handling layer): +1 all the grip shifted to the front (braking), −1 to the rear.
-    pub load_shift: f32,
     /// The arcade controller's state (P1-FL04.2): its slide, load shift and punch timer.
     pub arcade: arcade::ArcadeState,
 }
@@ -82,7 +79,6 @@ impl ActionState {
             utility_fired: [0; 2],
             wheelie_ready: 0,
             false_start: false,
-            load_shift: 0.0,
             arcade: arcade::ArcadeState::default(),
         }
     }
@@ -114,11 +110,6 @@ impl ActionState {
             self.boost += t.slide_charge_per_s * dt;
         }
         self.boost = self.boost.clamp(0.0, 1.0);
-        if let Some(h) = &t.handling {
-            let (throttle, brake) = stick(input);
-            let throttle = if self.boosting { 1.0 } else { throttle };
-            self.load_shift = h.step_shift(self.load_shift, throttle, brake, dt);
-        }
     }
 }
 
@@ -156,7 +147,7 @@ pub fn wheel_commands(
     // On the arcade controller the drivetrain is character, not traction (R138): every wheel drives, so a front-driven
     // car launches as hard as a rear-driven one, and the drive type shows in how the car slides (`arcade`).
     let driven = |i: usize| match t.drive {
-        _ if t.arcade.is_some() && t.handling.is_none() => true,
+        _ if t.arcade.is_some() => true,
         Drive::Front => i < p.front_wheels(),
         Drive::Rear => i >= p.front_wheels(),
         Drive::All => true,

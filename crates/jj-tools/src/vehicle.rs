@@ -245,12 +245,37 @@ fn changed_fields(old: &Tuning, new: &Tuning) -> Result<Vec<String>, String> {
         Ok(_) => Err("tuning is not an object".to_owned()),
         Err(e) => Err(e.to_string()),
     };
+    // One line per changed leaf, nested sections by dotted path (`arcade.turn_g: 3.8 -> 5.7`).
+    fn leaves(prefix: &str, m: &serde_json::Map<String, Value>, out: &mut Vec<(String, Value)>) {
+        for (k, v) in m {
+            let path = if prefix.is_empty() {
+                k.clone()
+            } else {
+                format!("{prefix}.{k}")
+            };
+            match v {
+                Value::Object(inner) => leaves(&path, inner, out),
+                _ => out.push((path, v.clone())),
+            }
+        }
+    }
     let (old, new) = (to_map(old)?, to_map(new)?);
-    Ok(new
+    let (mut a, mut b) = (Vec::new(), Vec::new());
+    leaves("", &old, &mut a);
+    leaves("", &new, &mut b);
+    let old: std::collections::BTreeMap<String, Value> = a.into_iter().collect();
+    let new: std::collections::BTreeMap<String, Value> = b.into_iter().collect();
+    let mut lines: Vec<String> = new
         .iter()
-        .filter(|(k, v)| old.get(*k) != Some(v))
+        .filter(|(k, v)| old.get(*k) != Some(*v))
         .map(|(k, v)| format!("{k}: {} -> {v}", old.get(k).unwrap_or(&Value::Null)))
-        .collect())
+        .collect();
+    lines.extend(
+        old.iter()
+            .filter(|(k, _)| !new.contains_key(*k))
+            .map(|(k, v)| format!("{k}: {v} -> null")),
+    );
+    Ok(lines)
 }
 
 /// Applies a tuning patch to its profile. Returns one line per changed field; writes the profile unless `check`.

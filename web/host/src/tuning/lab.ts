@@ -1,10 +1,10 @@
-// The Feel Lab tab of the owner tuning menu (P1-FL03, R131). Choose a handling preset (assets/profiles/handling-presets.json:
-// Off is the shipped arcade controller, P1-FL04.2), move a few trade-off sliders that each scale several underlying tuning values at once, and flip the
-// whole setup between two saved slots (A/B) while the cars keep driving. Everything is applied to EVERY roster vehicle, so the
-// grid drives one setup, by the panel's own path: `tune-vehicle:` + `tune:` UI commands, journalled in the sim, and counted
-// in the panel's changes, so Export patch carries the lab's setup as ordinary `set` rows (the handling section as one
-// `handling` row). Multipliers are against each vehicle's SHIPPED values, so a slot is the same setup whenever it is applied.
-import presets from '../../../../assets/profiles/handling-presets.json';
+// The Feel Lab tab of the owner tuning menu (P1-FL03, R131). Move a few trade-off sliders that each scale several underlying
+// tuning values of the shipped arcade car controller at once (turn-in, grip, power, air control, launch, boost; P1-FL04.2,
+// R136), and flip the whole setup between two saved slots (A/B) while the cars keep driving. Everything is applied to EVERY
+// roster vehicle, so the grid drives one setup, by the panel's own path: `tune-vehicle:` + `tune:` UI commands, journalled in
+// the sim, and counted in the panel's changes, so Export patch carries the lab's setup as ordinary `set` rows. Multipliers
+// are against each vehicle's SHIPPED values, so a slot is the same setup whenever it is applied. (FL04's handling presets
+// were removed by FL04.2: the arcade controller is the only one.)
 
 type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 
@@ -23,7 +23,6 @@ export interface LabPanel {
 }
 
 export interface Setup {
-  preset: string;
   /** Slider multipliers (1 = the shipped value). */
   m: Record<string, number>;
 }
@@ -34,22 +33,20 @@ interface Slider {
   hint: string;
   /** Tuning paths and which way the multiplier moves each (1 = with it, -1 = against it). */
   fields: Array<[string, 1 | -1]>;
-  needsPreset?: boolean;
 }
 
 const SLIDERS: Slider[] = [
   { id: 'power', label: 'Power', hint: 'engine force and engine power', fields: [['max_engine_force', 1], ['max_engine_power_w', 1]] },
-  { id: 'grip', label: 'Grip ↔ slide', hint: 'front, rear and sliding grip of the preset (left: slidier, right: grippier)', fields: [['handling.front_grip', 1], ['handling.rear_grip', 1], ['handling.slide_grip', 1]], needsPreset: true },
+  { id: 'turn', label: 'Turn-in', hint: 'how hard full stick turns and how fast the nose answers (right: sharper)', fields: [['arcade.turn_g', 1], ['arcade.yaw_max_deg_s', 1], ['arcade.turn_in_s', -1]] },
+  { id: 'grip', label: 'Grip ↔ slide', hint: "line-holding grip and the grip a slide keeps; a rear-drive car's slide angle (left: slidier, right: grippier)", fields: [['arcade.grip_g', 1], ['arcade.slide_grip', 1], ['arcade.slide_angle_deg', -1]] },
   { id: 'air', label: 'Air control', hint: 'pitch and roll torque in the air', fields: [['air_pitch_torque', 1], ['air_roll_torque', 1]] },
   { id: 'launch', label: 'Launch', hint: 'wheelie launch reward and drive gain', fields: [['wheelie_launch_reward', 1], ['wheelie_drive_gain', 1]] },
   { id: 'boost', label: 'Boost economy', hint: 'recharge faster, drain slower (right: more boost)', fields: [['boost_recharge_per_s', 1], ['boost_drain_per_s', -1]] },
 ];
-const OFF = 'off';
 const STORE = 'jj.feellab.slots.v1';
 const MIN = -1; // sliders run 0.5x..2x on a log scale, so the middle is exactly 1x
 const MAX = 1;
 
-const PRESETS = presets.presets as Array<{ id: string; what: string; handling: Record<string, number> }>;
 const flat = (): Record<string, number> => Object.fromEntries(SLIDERS.map((s) => [s.id, 1]));
 /** 6 significant figures: the sim reads f32, and a patch stays readable. */
 const round = (v: number) => Number(v.toPrecision(6));
@@ -60,7 +57,7 @@ const times = (m: number) => `${round(m).toFixed(2)}x`;
 function summary(s: Setup | null): string {
   if (!s) return 'empty';
   const moved = SLIDERS.filter((x) => Math.abs((s.m[x.id] ?? 1) - 1) > 0.005).map((x) => `${(x.label.split(' ')[0] ?? '').toLowerCase()} ${times(s.m[x.id] ?? 1)}`);
-  return `${s.preset === OFF ? 'Shipped' : s.preset}${moved.length ? `, ${moved.join(', ')}` : ', sliders at 1x'}`;
+  return moved.length ? moved.join(', ') : 'sliders at 1x';
 }
 
 function leafMap(obj: Record<string, unknown>, prefix = ''): Map<string, number> {
@@ -76,15 +73,16 @@ function leafMap(obj: Record<string, unknown>, prefix = ''): Map<string, number>
 function loadSlots(): { A: Setup | null; B: Setup | null } {
   try {
     const raw = JSON.parse(localStorage.getItem(STORE) ?? 'null') as { A?: Setup | null; B?: Setup | null } | null;
-    const ok = (s: unknown): s is Setup => !!s && typeof (s as Setup).preset === 'string' && typeof (s as Setup).m === 'object';
-    return { A: ok(raw?.A) ? raw!.A! : null, B: ok(raw?.B) ? raw!.B! : null };
+    // Slots saved while FL04's presets existed still carry a `preset` key: it is ignored.
+    const keep = (s: unknown): Setup | null => (!!s && typeof (s as Setup).m === 'object' && (s as Setup).m !== null ? { m: { ...(s as Setup).m } } : null);
+    return { A: keep(raw?.A), B: keep(raw?.B) };
   } catch {
     return { A: null, B: null };
   }
 }
 
 export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () => unknown; open: () => void; apply: (s: Setup) => Promise<void> } {
-  let setup: Setup = { preset: OFF, m: flat() };
+  let setup: Setup = { m: flat() };
   let slots = loadSlots();
   let active: 'A' | 'B' | null = null;
   /** Each vehicle's shipped numbers, captured the first time the lab opens (before the lab has changed anything). */
@@ -96,12 +94,7 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
   let appliedCount = 0;
 
   pane.innerHTML = `
-    <h4>Handling preset <small>every vehicle</small></h4>
-    <div class="lab-presets" role="radiogroup" aria-label="Handling preset">
-      ${[{ id: OFF, name: 'Shipped', what: 'The arcade car controller every car ships with (FL04.2): turn-in, grip and slides authored, not a tyre model.' }, ...PRESETS.map((p) => ({ id: p.id, name: p.id.charAt(0).toUpperCase() + p.id.slice(1), what: p.what }))]
-        .map((p) => `<button type="button" role="radio" aria-checked="false" data-lab-preset="${p.id}"><b>${p.name}</b><span>${p.what}</span></button>`)
-        .join('')}
-    </div>
+    <p class="lab-note">Trade-off sliders over the arcade car controller every car ships with, applied to every vehicle at once.</p>
     <h4>Trade-offs <small>1x is the shipped value</small></h4>
     <div class="lab-sliders">
       ${SLIDERS.map(
@@ -125,25 +118,20 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
   const mOf = (id: string) => setup.m[id] ?? 1;
 
   const render = async () => {
-    for (const b of pane.querySelectorAll<HTMLElement>('[data-lab-preset]')) b.setAttribute('aria-checked', String(b.dataset.labPreset === setup.preset));
     const sel = bases.get(panel.selected());
     for (const s of SLIDERS) {
       const m = mOf(s.id);
       const input = q<HTMLInputElement>(`[data-lab-slider="${s.id}"]`);
       input.value = String(Math.round(Math.log2(m) * 20) / 20);
       q(`[data-lab-x="${s.id}"]`).textContent = times(m);
-      const off = !!s.needsPreset && setup.preset === OFF;
-      input.disabled = off;
-      q<HTMLButtonElement>(`[data-lab-one="${s.id}"]`).disabled = off || m === 1;
-      pane.querySelector(`[data-lab-row="${s.id}"]`)!.classList.toggle('off', off);
-      q(`[data-lab-note="${s.id}"]`).textContent = off ? 'Pick Kart, Rally or Hooligan first: this slider tunes their tyre layer, not the shipped controller.' : s.hint;
+      q<HTMLButtonElement>(`[data-lab-one="${s.id}"]`).disabled = m === 1;
       const eff = s.fields
         .map(([path, dir]) => {
-          const base = effectiveBase(path, sel);
-          return base === undefined ? null : `${path.replace('handling.', '').replace(/_/g, ' ')} ${fmt(base * (dir === 1 ? m : 1 / m))}`;
+          const base = sel?.get(path);
+          return base === undefined ? null : `${path.replace('arcade.', '').replace(/_/g, ' ')} ${fmt(base * (dir === 1 ? m : 1 / m))}`;
         })
         .filter(Boolean);
-      q(`[data-lab-eff="${s.id}"]`).textContent = off ? '' : eff.length ? `${panel.selected() || 'car'}: ${eff.join(' · ')}` : '';
+      q(`[data-lab-eff="${s.id}"]`).textContent = eff.length ? `${panel.selected() || 'car'}: ${eff.join(' · ')}` : '';
     }
     for (const k of ['A', 'B'] as const) {
       q(`[data-lab-sum="${k}"]`).textContent = summary(slots[k]);
@@ -153,15 +141,6 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
     }
     q('[data-lab-status]').textContent = status;
   };
-
-  /** A field's base for the readout: the shipped number, or the preset's for the handling fields. */
-  function effectiveBase(path: string, base: Map<string, number> | undefined): number | undefined {
-    if (path.startsWith('handling.')) {
-      if (setup.preset === OFF) return undefined;
-      return PRESETS.find((p) => p.id === setup.preset)?.handling[path.slice(9)];
-    }
-    return base?.get(path);
-  }
 
   async function capture(): Promise<void> {
     if (bases.size) return;
@@ -179,24 +158,10 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
     const target = structuredClone(setup);
     const home = panel.selected();
     const ids = panel.ids.length > 1 ? panel.ids : [home];
-    const preset = PRESETS.find((p) => p.id === target.preset);
     for (const id of ids) {
       if (id !== panel.selected()) await panel.choose(id);
       const base = bases.get(id) ?? new Map<string, number>();
-      // The handling section goes as one value: the preset with the grip slider on its three grips; Off removes it.
-      if (preset) {
-        const h: Record<string, number> = { ...preset.handling };
-        for (const [path, dir] of SLIDERS.find((s) => s.id === 'grip')!.fields) {
-          const f = path.slice(9);
-          const cur = h[f];
-          if (cur !== undefined) h[f] = round(cur * (dir === 1 ? target.m.grip ?? 1 : 1 / (target.m.grip ?? 1)));
-        }
-        panel.set('handling', h);
-      } else {
-        panel.set('handling', null);
-      }
       for (const s of SLIDERS) {
-        if (s.needsPreset) continue;
         for (const [path, dir] of s.fields) {
           const b = base.get(path);
           if (b === undefined) continue;
@@ -234,11 +199,6 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
 
   pane.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
-    const preset = t.closest<HTMLElement>('[data-lab-preset]')?.dataset.labPreset;
-    if (preset) {
-      active = null;
-      void apply({ ...setup, preset });
-    }
     const one = t.closest<HTMLElement>('[data-lab-one]')?.dataset.labOne;
     if (one) {
       active = null;

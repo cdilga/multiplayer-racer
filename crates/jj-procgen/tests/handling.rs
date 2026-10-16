@@ -31,14 +31,7 @@ fn profiles() -> Vec<(String, VehicleProfile)> {
         .collect()
 }
 
-fn tuned(mut base: VehicleProfile) -> VehicleProfile {
-    // P1-FL04: `JJ_HANDLING=kart` (or rally, hooligan) runs the bank with that arcade handling preset on every vehicle.
-    if let Ok(id) = std::env::var("JJ_HANDLING")
-        && !id.is_empty()
-    {
-        base.tuning.handling =
-            Some(jj_sim::vehicle::handling::Handling::preset(&id).expect("a handling preset id"));
-    }
+fn tuned(base: VehicleProfile) -> VehicleProfile {
     let Ok(tune) = std::env::var("JJ_TUNE") else {
         return base;
     };

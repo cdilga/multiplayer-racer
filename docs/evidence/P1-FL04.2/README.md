@@ -34,8 +34,11 @@ wheels, collisions, jumps, carnage and debris (R138). Each tick after `update_ve
   (the V8 twins share one identical block). Body friction is unchanged. The perfect-start bonus went 0.5 → 1.0 (R127:
   "hits harder"; every-wheel drive also helped a mashed start, which took away the perfect start's margin).
 
-FL04's handling layer and presets (`vehicle/handling.rs`, `handling-presets.json`) stay for the Feel Lab's A/B until
-FL04 closes. While a lab preset is set it replaces the controller. The lab's "Off" is now "Shipped".
+FL04's handling layer and its Kart/Rally/Hooligan presets (`vehicle/handling.rs`, `handling-presets.json`,
+`tuning.handling`, FL04's bank `tests/handling.rs`) are deleted (R136 rejected them; no legacy, after FL04 closed). The
+Feel Lab keeps its trade-off sliders and A/B slots, now over the shipped controller: Turn-in (`arcade.turn_g`,
+`yaw_max_deg_s`, `turn_in_s`), Grip ↔ slide (`arcade.grip_g`, `slide_grip`, `slide_angle_deg`), Power, Air, Launch,
+Boost.
 
 ## AC2 · the feel bank (`crates/jj-sim/tests/arcade.rs`, `arcade-bank.json`)
 
@@ -102,14 +105,11 @@ Fixtures moved, each with its reason (also in the fixture's own `what`):
   car alongside the prop, so the hit was the car's.
 - `scenarios/duels/orderings/air-control-duel.json`: two beats carry a stated `gap`. A forgiving landing no longer makes
   an over-corrected tipped landing slower. R129's landing tiers are P1-FL07 (br-bbki.7), which closes the gap.
-- `crates/jj-sim/tests/handling.rs` (FL04's bank) compares its presets against Rapier's side friction (`arcade: None`),
-  as before.
 
 ## Known gaps
 
 - Not yet felt by a player. The punch, slide angle, turn rate and caps are profile data, tunable in `?tune`.
 - The bikes keep Rapier's side friction (no `arcade` block): they are their own thing.
-- FL04's presets are still compiled in for the lab; they go when FL04 closes (no-legacy rule).
 
 ## Owner verdict
 
