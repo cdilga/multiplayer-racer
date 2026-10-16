@@ -128,8 +128,12 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
 
   at('QR shows');
   await wait(host, () => document.querySelector('.jj-drive-qr .qr'), undefined, 30_000);
-  const png = PNG.sync.read(await host.locator('.jj-drive-qr .qr').first().screenshot());
-  const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+  // The QR can be caught mid-paint or under the welcome caption's fade on a loaded runner: read it until it decodes (10 s).
+  let decoded = null;
+  for (const until = Date.now() + 10_000; !decoded && Date.now() < until; await host.waitForTimeout(250)) {
+    const png = PNG.sync.read(await host.locator('.jj-drive-qr .qr').first().screenshot());
+    decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+  }
   assert.equal(decoded?.data, joinUrl, 'the QR carries the join URL');
   at('phone A joins by QR');
   const a = await phone();
