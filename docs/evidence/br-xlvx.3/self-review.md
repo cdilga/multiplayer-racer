@@ -1,5 +1,9 @@
 # Crossings self-review — br-xlvx.3
 
+> **2026-10-16 (current):** the bridges now stand on piers, figure-eights are twice as common and at least 850 m long,
+> and the crossings sit in the terrain-first landscapes. The current self-review and captures are in
+> [`docs/evidence/P1-M-crossings/self-review.md`](../P1-M-crossings/self-review.md); this file is the 2026-10-12 round.
+
 Local real jj-server build, 2026-10-12, Mac Chromium with native GPU and Playwright WebKit. These are browser viewports, not physical phone/TV hardware. Compared with the accepted 0.2 world and Cruz look. Deployed confirmation is pending the containing green preview.
 
 ## Looked at
