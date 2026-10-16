@@ -12,6 +12,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { carryForward } from './carry.mjs';
 import { fileOf, splitTargets } from './targets.mjs';
 
 const args = process.argv.slice(2);
@@ -91,6 +92,7 @@ const sel = {
   sse: false,
   image: false,
   tools: false,
+  lint: false, // rust-lint without crate tests: the last run's lint failed (carry.mjs)
 };
 const everything = (why) => {
   sel.reason.push(why);
@@ -163,8 +165,22 @@ const rules = [
 let base = opt('--base');
 const given = opt('--changed'); // a dry run: comma-separated paths instead of a diff
 const full = args.includes('--full') || process.env.JJ_FULL === 'true'; // a dispatch asking for every suite (R139)
+let carry;
 if (full) everything('full run (dispatch full=true)');
 else {
+  // The newest completed run and what it left unproven (scripts/ci/carry.mjs); the last green run if none is readable.
+  if (!base && !given && !args.includes('--no-carry')) {
+    try {
+      carry = await carryForward({
+        repo: process.env.GITHUB_REPOSITORY ?? 'cdilga/multiplayer-racer',
+        branch: process.env.GITHUB_REF_NAME ?? git('rev-parse', '--abbrev-ref', 'HEAD'),
+        runId: process.env.GITHUB_RUN_ID,
+      });
+    } catch (e) {
+      sel.reason.push(`no carry (${e.message})`);
+    }
+    base = carry?.base;
+  }
   if (!base && !given) base = await lastGreen();
   if (!base && !given) everything('no green run of this workflow found');
   else {
@@ -182,10 +198,26 @@ else {
       changed = git('diff', '--name-only', base, head).split('\n').filter(Boolean);
     }
     sel.reason.push(`diff ${base.slice(0, 10)}..${head.slice(0, 10)}: ${changed.length} paths`);
+    if (carry) sel.reason.push(carry.reason);
     for (const p of changed) {
       const rule = rules.find(([re]) => re.test(p));
       if (!rule) everything(`unmapped path ${p}`);
       else rule[1](p, p.match(rule[0]));
+    }
+    if (carry) {
+      if (carry.crates === 'all') sel.rustAll = true;
+      else carry.crates.forEach((c) => sel.crates.add(c)); // only the crates that failed: their dependents passed
+      if (carry.lint) sel.lint = true;
+      if (carry.image) sel.image = true;
+      for (const f of carry.files) {
+        if (HOST.includes(f)) sel.host.add(f);
+        else if (TRANSPORT.includes(f)) sel.transport.add(f);
+        else if (JOURNEYS.includes(f)) sel.journeys.add(f);
+        else if (f === KIT) sel.kit = true;
+        else if (f === LANDING) sel.landing = true;
+        else if (f === SSE) sel.sse = true;
+        // else: the file is gone since (a rename is a changed path, selected by the diff)
+      }
     }
   }
 }
@@ -252,7 +284,7 @@ const slots = Object.fromEntries(used.map((x, i) => [String(i + 1), x.t]));
 //   image       the jj-server image
 const inCrates = (list) => sel.rustAll || list.some((c) => sel.crates.has(c));
 const lanes = [
-  crates !== '' && 'rust',
+  (crates !== '' || sel.lint) && 'rust',
   inCrates(['jj-sim', 'jj-map', 'jj-procgen']) && 'scenarios',
   inCrates(['jj-map', 'jj-procgen', 'jj-wasm-host', 'jj-wasm-input', 'jj-wasm-procgen']) && 'wasm-parity',
   (hostFiles.length > 0 || sel.kit || sel.landing) && 'web',
@@ -263,6 +295,7 @@ const lanes = [
 const out = {
   lanes: lanes.join(','),
   rust: crates !== '' ? 'true' : 'false',
+  lint: crates !== '' || sel.lint ? 'true' : 'false',
   crates,
   build: browser.length + gpu.length > 0 ? 'true' : 'false',
   slots: JSON.stringify(slots),
@@ -272,8 +305,9 @@ const out = {
   image: sel.image ? 'true' : 'false',
   soak: full ? '300' : '20',
   full: full ? 'true' : 'false',
-  // The last green commit this selection diffs from (empty for a full run): the image job re-tags its image for HEAD
-  // when nothing the image is built from changed since it.
+  // The commit this selection diffs from (empty for a full run): the last completed run's (carry.mjs) or the last
+  // green one's. The image job re-tags its image for HEAD when nothing the image is built from changed since it (that
+  // run built or re-tagged one; a failed image job is carried, so it builds again).
   base: base && /^[0-9a-f]{7,40}$/.test(base) ? base : '',
 };
 const short = (f) => (f === KIT ? 'ui-kit' : f === LANDING ? 'landing' : f.replace(/^.*\//, '').replace(/\.test\.mjs$/, ''));
@@ -283,6 +317,7 @@ const summary =
   `[${((r) => (r.length > 12 ? [...r.slice(0, 12), `… ${r.length - 12} more`] : r))([...new Set(sel.reason)]).join('; ')}]`;
 console.log(summary);
 console.log(JSON.stringify(out, null, 2));
+console.log(`plan-json: ${JSON.stringify(out)}`); // one line for the next run's carry.mjs
 const gh = opt('--github-output');
 if (gh) appendFileSync(gh, Object.entries({ ...out, summary }).map(([k, v]) => `${k}=${v}\n`).join(''));
 

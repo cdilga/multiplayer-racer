@@ -1,7 +1,8 @@
 # CI (docs/infra/ci.md). A push runs only what its changes can affect, and every job starts at once:
-#   - Each job's first step is scripts/ci/plan.mjs: the paths changed since the last green run of this workflow pick
-#     the suites (a shared contract, the Cargo workspace, a crate others depend on, web/shared, maps, assets, the build
-#     config or this file widen it to everything that depends on it), and the job's other steps run only if it's
+#   - Each job's first step is scripts/ci/plan.mjs: the paths changed since the last completed run of this workflow,
+#     plus whatever that run selected and didn't pass (scripts/ci/carry.mjs), pick the suites (a shared contract,
+#     the Cargo workspace, a crate others depend on, web/shared, maps, assets, the build config or this file widen it
+#     to everything that depends on it), and the job's other steps run only if it's
 #     selected. The plan is deterministic, so every job agrees; the log of each prints the one-line selection.
 #   - rust-lint (fmt, check, clippy, deny, jj validate) and rust-test (nextest at opt-level 1, the selected crates and
 #     their dependents) on the `rust` runners' persistent /cargo-cache.
@@ -33,7 +34,8 @@ on:
         default: "false"
 
 # One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
-# run still waiting; the next run diffs from the last green run, so nothing a replaced run held is lost.
+# run still waiting; the next run diffs from the last completed run and carries what it didn't pass, so nothing a
+# replaced run held is lost.
 concurrency:
   group: ci-${{ gitea.ref }}
   cancel-in-progress: false
@@ -62,7 +64,7 @@ jobs:
         run: scripts/ci/checks.sh
 
   # Format, check, clippy, the supply-chain and Tokio bans and the committed data validating: always the whole
-  # workspace (cheap on the warm cache), whenever any Rust is selected.
+  # workspace (cheap on the warm cache), whenever any Rust is selected or the last run's lint failed.
   rust-lint:
     runs-on: rust
     container:
@@ -76,11 +78,11 @@ jobs:
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
       - name: Toolchain (rust-toolchain.toml) on the persistent cache
-        if: steps.plan.outputs.rust == 'true'
+        if: steps.plan.outputs.lint == 'true'
         run: scripts/ci/toolchain.sh
       # fmt, check (native and WASM), clippy, jj validate x3, no Tokio, cargo deny: one script with the local runner.
       - name: Lint (scripts/ci/rust-lint.sh)
-        if: steps.plan.outputs.rust == 'true'
+        if: steps.plan.outputs.lint == 'true'
         run: scripts/ci/rust-lint.sh
 
   # The tests of the selected crates and everything that depends on them, at opt-level 1 (debug assertions and overflow
