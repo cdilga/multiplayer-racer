@@ -58,3 +58,22 @@
   `opt.mjs` now penalises the first two. Judge the third by eye, and keep identity cues such as the Lion's tall wing even if they cost IoU.
 - **The paint key fringes every livery edge** (br-vhtm). The mask is `step(0.985, min(rgb))` on the filtered sample, so any texel blended
   with paint, by linear filtering or by mipmapping, stays untinted grey. Dark stripes on paint read light grey at grid size.
+
+## 2026-10-16 · Code-built motorbikes (br-bwju.5)
+
+- **A vehicle with `wheel_F` is a bike.** The contract (`jj_contracts::vehicle::part_set`), the bake (`partSet`), the pivot test
+  and the review check pick the bike part set from that: core, front, back, rider, wheel_F, wheel_R, the two-wheel sim's order.
+  Shared bike code lives in `art/vehicles/_kit/`; that folder has no vehicle.json, so nothing treats it as a vehicle.
+- **Bike masks need their own rules,** set in `refs/sheets.json` and read by both the extractor and the fit page:
+  - `segment.bright`, because helmets, racks and parcels are paler than the grey background;
+  - a 2 px `open`, because a 5 px one cuts the forks;
+  - `keep` 0.03, because the front assembly joins the body through a few pixels;
+  - per-sheet view windows, because the generator lays bike sheets out differently.
+- **Expect about 0.8 to 0.85 weighted IoU for a bike,** not a car's 0.95. Spokes, forks and limbs make the reference masks
+  ambiguous. A 'lowest' sheet's spoked wheels may not even fill.
+- **A tyre's side count must be a multiple of 4,** or no flat faces the ground and the tyre dips below it. A 10-gon sank 2 cm;
+  `jj validate` origin-ground caught it, and the kit now refuses such counts.
+- **A part's top edge must survive every LOD.** Front and back pivot on their LOD0 top edge, so dropping the top detail at LOD2
+  (the Postie's parcels) breaks the hinge line.
+- **The renderer shares one wheel type only across a car's left/right pairs.** A bike's wheel_R isn't a right wheel to mirror,
+  and its wheels may differ in size.

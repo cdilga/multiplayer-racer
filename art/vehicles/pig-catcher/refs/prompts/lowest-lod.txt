@@ -1,0 +1,9 @@
+Low-poly game asset turnaround sheet, 16:9, light grey seamless background, the exact same vehicle and rider as the attached sheet, in the same layout: large 3/4 front hero view top-left, top-down plan view in the right column (nose at the bottom), bottom row: front view, left side view (nose pointing left), rear view. Same vehicle and rider in every view, the same scale in the small views.
+
+The vehicle: a bubbly, slightly caricatured Australian outback dirt bike, the "pig catcher", in the spirit of a 400cc enduro trail bike (generic, not a copy): tall long-travel forks, a high beaked front mudguard, a small number-plate headlight shroud with a round headlight, a slim fuel tank with wide side plastics, a long flat seat, a high rear mudguard with a small tail light, a silver exhaust tucked up on the right, big knobbly tyres on spoked wheels (larger front wheel), hand guards on wide handlebars. Outback extras: a black bull-bar style light bar across the front with two round spotlights, and a rear rack carrying a coiled rope and a hessian sack.
+
+The rider is part of the model: standing slightly on the pegs, hands on the bars, wearing a full-face motocross helmet with goggles and a peak, a khaki work shirt, jeans and big boots.
+
+Colours: bright yellow plastics and tank, black seat and frame, silver forks and exhaust, black tyres, dark green helmet.
+
+very low poly, about 300 triangles for the vehicle and rider, octagon wheels, lights as flat decals. Flat-shaded facets, clean studio light, soft shadow. No text, no logos, no badges, no number plates, no brand names, no aerial.

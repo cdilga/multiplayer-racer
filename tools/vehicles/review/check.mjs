@@ -27,9 +27,10 @@ export function checkReview(r, has, byId = {}) {
   need(2, lods.length > 0 && has(r.turntable?.assetJson) && has(r.turntable?.atlas) && lods.every((l) => has(l.glb) && Number.isInteger(l.tris) && Number.isInteger(l.draws) && l.maxTris > 0 && l.withinBudget),
     'every LOD with its GLB, triangles and draw calls within maxTris');
   const parts = (r.damage?.parts ?? []).map((p) => p.name);
-  const groups = ['front', 'back', 'door_', 'wheel_'];
+  // A car's damage groups, or a bike's (br-bwju.5, the bike part set: the rider comes off instead of doors).
+  const bike = parts.includes('wheel_F'), groups = bike ? ['front', 'back', 'rider', 'wheel_'] : ['front', 'back', 'door_', 'wheel_'];
   need(3, has(r.damage?.strip) && has(r.damage?.overview) && groups.every((g) => parts.some((p) => p === g || p.startsWith(g))) && (r.damage?.parts ?? []).some((p) => p.hinge),
-    'damage strip and overview images, and the door/wheel/front/back parts with their hinges');
+    `damage strip and overview images, and the ${bike ? 'rider' : 'door'}/wheel/front/back parts with their hinges`);
   need(4, has(r.paints?.sheet) && (r.paints?.colours?.length ?? 0) > 0 && !!r.paints?.pattern, 'paints sheet, the seat colours and the identity pattern');
   const sizes = (r.inWorld ?? []).filter((w) => has(w.image)).map((w) => w.size);
   need(5, SIZES.every((s) => sizes.includes(s)), `in-world captures at ${SIZES.join(', ')} (existing images)`);

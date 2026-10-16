@@ -13,8 +13,10 @@ const base = `/art/vehicles/${car}/`;
 const { build, LODS } = await import(`${base}model.js`);
 const { drawAtlas, DEFAULT_COLOURS } = await import(`${base}atlas.js`);
 const P0 = await (await fetch(`${base}params.json`, { cache: 'no-store' })).json();
+const SHEETS = await (await fetch(`${base}refs/sheets.json`, { cache: 'no-store' })).json();
 
-const OPEN = 5, GROUND_BAND = 0.125;
+// The same opening radius as extract.mjs used on the reference (sheets.json `open`), so thin parts count alike.
+const OPEN = SHEETS.open ?? 5, KEEP = SHEETS.keep ?? 0, GROUND_BAND = 0.125;
 // The sheets are perspective renders; CAM_D is the camera distance from the car centre (Spike J calibrated 10 m).
 let CAM_D = 10;
 export const VIEWS = {
@@ -135,7 +137,7 @@ async function evaluate(sheet = 'lod1', { images = false } = {}) {
     const ref = await refMask(`${sheet}_${view}`);
     const e = extent(ortho, view), ppm = ref.h / (e.y1 - e.y0);
     const { w, h } = renderSilhouette(view, ppm);
-    const m = largest(openMask(fillHoles(readMask(w, h), w, h), w, h, OPEN), w, h), b = bbox(m, w, h), ours = cropMask(m, w, b);
+    const m = largest(openMask(fillHoles(readMask(w, h), w, h), w, h, OPEN), w, h, KEEP), b = bbox(m, w, h), ours = cropMask(m, w, b);
     const r = compare(ref.m, ref.w, ref.h, ours, b.w, b.h, { ignoreBottom: view === 'top' ? 0 : GROUND_BAND });
     out.views[view] = { iou: +r.iou.toFixed(4), aspect: +r.aspect.toFixed(3), miss: +r.miss.toFixed(4), extra: +r.extra.toFixed(4) };
     if (images) out.views[view].diff = diffImage(r);

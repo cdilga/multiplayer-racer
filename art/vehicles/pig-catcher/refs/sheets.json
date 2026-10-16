@@ -1,0 +1,44 @@
+{
+ "what": "Reference sheets for tools/vehicles/fit (br-bwju.5): Muse Image turnarounds (art/ui/frames/generate.mjs --prompt refs/prompts/<sheet>.txt; ledger art/ui/frames/ledger.jsonl). Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets, one view each. A bike's sheets need `segment.bright` (white helmet, silver racks), a small `open` (thin forks) and `keep` (parts joined by a few pixels).",
+ "sheets": {
+  "lod1": "lod-plus-1.png",
+  "lowest": "lowest-lod.png"
+ },
+ "views": {
+  "hero": [
+   150,
+   0,
+   1000,
+   770
+  ],
+  "top": [
+   1240,
+   0,
+   1600,
+   810
+  ],
+  "front": [
+   180,
+   760,
+   500,
+   1280
+  ],
+  "side": [
+   580,
+   760,
+   1320,
+   1280
+  ],
+  "rear": [
+   1400,
+   820,
+   1740,
+   1280
+  ]
+ },
+ "segment": {
+  "bright": 0.06
+ },
+ "open": 2,
+ "keep": 0.03
+}

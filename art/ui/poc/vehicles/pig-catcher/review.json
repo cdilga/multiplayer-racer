@@ -1,0 +1,322 @@
+{
+  "id": "pig-catcher",
+  "name": "Pig Catcher",
+  "status": "awaiting-review",
+  "date": "2026-10-16",
+  "beads": [
+    "br-bwju.5",
+    "br-bwju"
+  ],
+  "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R).",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": null,
+  "reference": {
+    "sheet": "media/reference/lod-plus-1.png",
+    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/pig-catcher/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). Bikes are thin: the masks keep pale parts (segment.bright), use a small opening and keep detached components (refs/sheets.json), the same rules on both sides.",
+    "compare": [
+      {
+        "lod": 0,
+        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "sheet": "media/reference-lod0/sheet.png",
+        "iou": {
+          "side": 0.9058,
+          "top": 0.8312,
+          "front": 0.8049,
+          "rear": 0.7388
+        },
+        "weightedIou": 0.8432
+      },
+      {
+        "lod": 2,
+        "label": "LOD2 against the 'lowest' reference sheet",
+        "sheet": "media/reference-lod2/sheet.png",
+        "iou": {
+          "side": 0.8939,
+          "top": 0.8348,
+          "front": 0.7625,
+          "rear": 0.6975
+        },
+        "weightedIou": 0.827
+      }
+    ]
+  },
+  "turntable": {
+    "assetJson": "media/model/pig-catcher.asset.json",
+    "atlas": "media/model/pig-catcher.atlas.png",
+    "emissive": "media/model/pig-catcher.emissive.png",
+    "sheet": "media/turntable/lods.png",
+    "lods": [
+      {
+        "lod": 0,
+        "glb": "media/model/pig-catcher.lod0.glb",
+        "tris": 1056,
+        "draws": 6,
+        "maxTris": 1300,
+        "withinBudget": true
+      },
+      {
+        "lod": 1,
+        "glb": "media/model/pig-catcher.lod1.glb",
+        "tris": 900,
+        "draws": 6,
+        "maxTris": 900,
+        "withinBudget": true
+      },
+      {
+        "lod": 2,
+        "glb": "media/model/pig-catcher.lod2.glb",
+        "tris": 592,
+        "draws": 6,
+        "maxTris": 600,
+        "withinBudget": true
+      }
+    ]
+  },
+  "damage": {
+    "strip": "media/damage/damage-strip.png",
+    "overview": "media/damage/damage-strip-overview.png",
+    "note": "Left to right: intact; front and back loose; the rider loose; wheel_F cambered; front detached; the rider thrown (detached, R121); back detached; wheel_F detached; rider and front detached; a stripped frame. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence).",
+    "parts": [
+      {
+        "name": "core",
+        "hinge": null,
+        "pivot": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "front",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": 0,
+          "max": 25
+        },
+        "pivot": [
+          0,
+          1.4944944617605682,
+          0.4309468922324112
+        ]
+      },
+      {
+        "name": "back",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": -25,
+          "max": 0
+        },
+        "pivot": [
+          0,
+          1.5355,
+          -0.5834543112796193
+        ]
+      },
+      {
+        "name": "rider",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": -15,
+          "max": 15
+        },
+        "pivot": [
+          0,
+          1.14,
+          -0.23
+        ]
+      },
+      {
+        "name": "wheel_F",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0,
+          0.4,
+          0.98
+        ]
+      },
+      {
+        "name": "wheel_R",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0,
+          0.385,
+          -0.94
+        ]
+      }
+    ],
+    "interiors": {}
+  },
+  "paints": {
+    "sheet": "media/paints/paints-strip.png",
+    "colours": [
+      {
+        "name": "red",
+        "hex": "#E5322D"
+      },
+      {
+        "name": "blue",
+        "hex": "#2563EB"
+      },
+      {
+        "name": "orange",
+        "hex": "#FF7A1A"
+      },
+      {
+        "name": "teal",
+        "hex": "#00B5B8"
+      },
+      {
+        "name": "yellow",
+        "hex": "#FFD23F"
+      },
+      {
+        "name": "pink",
+        "hex": "#FF4FA3"
+      },
+      {
+        "name": "charcoal",
+        "hex": "#2A2D34"
+      },
+      {
+        "name": "green",
+        "hex": "#22A447"
+      },
+      {
+        "name": "white",
+        "hex": "#F4F1EA"
+      },
+      {
+        "name": "purple",
+        "hex": "#8B3FD9"
+      },
+      {
+        "name": "maroon",
+        "hex": "#8E1B3F"
+      },
+      {
+        "name": "sky",
+        "hex": "#5EC8FF"
+      }
+    ],
+    "pattern": "Seat colour on the paint key (the plastics, tank and mudguards tint); the black light bar, the rope, the sack and the rider keep their colours. The number sits on the rider's back (anchor roof_number) and in the HUD badge."
+  },
+  "inWorld": [
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+      "size": "large",
+      "image": "media/in-world/grid-1.png"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "image": "media/in-world/grid-4.png"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "image": "media/in-world/grid-24.png"
+    },
+    {
+      "label": "From the Derby overview camera (top-down damage row)",
+      "size": "overview",
+      "image": "media/in-world/damage-strip-overview.png"
+    }
+  ],
+  "gate": {
+    "result": "PASS",
+    "findings": [
+      {
+        "result": "PASS",
+        "text": "contract + reproducibility (validator clean on the bike part set, origin on the ground between the axles, wheels on the centreline, anchors cam_fp, cam_tp_target, com, roof_number (the rider's back), lplate_front, lplate_rear; no badges, logos or real names)"
+      },
+      {
+        "result": "PASS",
+        "text": "budget"
+      },
+      {
+        "result": "WARN",
+        "text": "silhouette: weighted IoU 0.843 for LOD0 against 'lod + 1' (side 0.906, top 0.831, front 0.805, rear 0.739) and 0.827 for LOD2 against 'lowest'. The rear is weakest: the reference's torso, rope coil and boots are wider"
+      },
+      {
+        "result": "PASS",
+        "text": "by-eye cues: tall stance on long silver forks, the beaked front mudguard, yellow plastics (the paint key), the black light bar with two spots, the sack and rope on the rack, the rider standing on the pegs; legible at grid-24"
+      },
+      {
+        "result": "PASS",
+        "text": "paint key / one material (a flat swatch atlas; draws per tile are the bike's 6 parts, one InstancedMesh per part type; the renderer now keeps a bike's two wheels as their own types)"
+      },
+      {
+        "result": "PASS",
+        "text": "damage states (front and back hang about their hinge lines, the rider pitches off about the hip and is thrown when detached, a wheel comes off; no interior bays: a bike has no panels to open)"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (a convex proxy per part from the bake, colliders.png; the profile's geometry synced from the sidecar)"
+      },
+      {
+        "result": "WARN",
+        "text": "detail: the engine is a plain dark box; from the side the raked shroud plates cross the fork line as an 'X'; the beak mudguard is a single slab; the rope coil hides behind the sack in most 3/4 views; LOD2's spots are 4-gons and its tail lamp goes"
+      }
+    ],
+    "report": "media/gate/validation.md"
+  },
+  "handling": {
+    "source": "assets/profiles/pig-catcher.json",
+    "massKg": 230,
+    "drive": "Rear",
+    "accel": {
+      "value": 11,
+      "unit": "m/s2",
+      "note": "engine force over mass at launch: an upper bound, drag and traction not included"
+    },
+    "topSpeed": {
+      "value": null,
+      "note": "Not measured yet: the bike profiles join the roster (and the R122 handling bank and fun tests) once the R136 handling schema lands; R123's balance bead (br-bwju.6) measures every vehicle's speed, launch and cornering on real maps."
+    },
+    "cornering": {
+      "maxSteerRad": 0.5,
+      "turnG": null,
+      "gripG": null,
+      "punchSlide": null,
+      "slideAngleDeg": null,
+      "rollInfluence": 0
+    },
+    "braking": {
+      "maxBrakeForceN": 3659
+    },
+    "boost": {
+      "engineGain": 0.6,
+      "drainPerS": 0.35,
+      "rechargePerS": 0.12
+    },
+    "wheelRadiusM": 0.4
+  }
+}

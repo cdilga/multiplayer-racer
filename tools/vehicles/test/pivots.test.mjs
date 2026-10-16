@@ -58,8 +58,13 @@ for (const id of roster) {
   for (const lod of V.lods.keys()) {
     test(`${id} LOD${lod}: doors, front and back pivot on their hinge lines`, () => {
       const { parts } = model.soups(P, lod);
-      assert.ok(hinged.length >= 6, `${id} has doors and front/back parts (${hinged})`);
+      // a car has four doors, front and back; a bike (br-bwju.5) front and back, and its rider pitches off about the hip
+      assert.ok(hinged.length >= (V.parts.wheel_F ? 2 : 6), `${id} has its doors and front/back parts (${hinged})`);
       for (const p of hinged) assert.deepEqual(pivotProblems(p, parts[p].pivot, bounds(parts[p])), []);
+      if (parts.rider) {
+        const b = bounds(parts.rider), [x, y] = parts.rider.pivot;
+        assert.ok(Math.abs(x) < TOL && y >= b.lo[1] - TOL && y <= b.lo[1] + 0.5 * (b.hi[1] - b.lo[1]), `${id}: the rider pivots at the hip (y ${y.toFixed(3)} in ${b.lo[1].toFixed(3)}..${b.hi[1].toFixed(3)})`);
+      }
     });
   }
 

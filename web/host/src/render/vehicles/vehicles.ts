@@ -2,8 +2,9 @@
 // part type and LOD class, so draws per tile stay constant in the number of cars (plan §6.1; Spike J's reference row:
 // 24 cars × 24 tiles, 9 draws a tile with the ground).
 //
-// - Part types come from the baked vehicle (P1-V02, jj.vehicle.v1): one per part node, except that the four wheels
-//   share one type (the right wheels are the left geometry turned half a turn about +y, as in Spike J).
+// - Part types come from the baked vehicle (P1-V02, jj.vehicle.v1): one per part node, except that a car's four wheels
+//   share one type (the right wheels are the left geometry turned half a turn about +y, as in Spike J). A bike's wheels
+//   (wheel_F, wheel_R; br-bwju.5) are on the centreline and may differ in size, so each keeps its own type.
 // - Every roster vehicle is its own `VehicleModel` with its own instanced meshes, built from roster data (registry.ts,
 //   R123) the first time a car of that vehicle appears in a snapshot (the car's vehicle is its flags' top 16 bits);
 //   draws per tile are constant in the number of cars and grow with the number of vehicle kinds on the field.
@@ -177,13 +178,13 @@ export class VehicleModel {
     const byType = new Map<string, Slot[]>();
     this.partIds.forEach((id, part) => {
       const spec = sidecar.parts[id]!;
-      const wheel = id.startsWith('wheel_');
-      const type = wheel ? 'wheel' : id;
+      const wheel = id.startsWith('wheel_'), paired = /^wheel_[FR][LR]$/.test(id);
+      const type = paired ? 'wheel' : id;
       const slot: Slot = {
         part,
         pivot: new Vector3().fromArray(spec.pivot),
         hinge: spec.hinge ? new Vector3().fromArray(spec.hinge.axis).normalize() : null,
-        mirror: wheel && id.endsWith('R'),
+        mirror: paired && id.endsWith('R'),
         wheel,
         front: wheel && id.includes('_F'),
       };
@@ -208,7 +209,7 @@ export class VehicleModel {
         scene.add(hull.mesh);
         return im;
       });
-      if (id === 'wheel') {
+      if (slots[0]!.wheel) { // the tyres roll at the driven (last listed) wheel's radius
         const g = meshes[0]!.geometry;
         g.computeBoundingBox();
         if (g.boundingBox) wheelRadius = (g.boundingBox.max.y - g.boundingBox.min.y) / 2;

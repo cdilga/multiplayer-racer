@@ -1,0 +1,171 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "postie-bike",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "postie-bike.lod0.glb",
+   "maxTris": 1300
+  },
+  {
+   "file": "postie-bike.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "postie-bike.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.5,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    1.1631491579260158,
+    0.6782494453537846
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    1.11,
+    -0.6153678986920943
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "rider": {
+   "pivot": [
+    0,
+    0.92,
+    -0.22
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -15,
+    "max": 15
+   },
+   "massFraction": 0.25,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_F": {
+   "pivot": [
+    0,
+    0.4,
+    1.04
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_R": {
+   "pivot": [
+    0,
+    0.36,
+    -1.04
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "convex"
+   }
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   0,
+   1.55,
+   -0.12
+  ],
+  "cam_tp_target": [
+   0,
+   1.1,
+   0.2
+  ],
+  "com": [
+   0,
+   0.72,
+   -0.05
+  ],
+  "roof_number": [
+   0,
+   1.33,
+   -0.345
+  ],
+  "lplate_front": [
+   0,
+   0.62,
+   1.34
+  ],
+  "lplate_rear": [
+   0,
+   0.6,
+   -1.63
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "postie-bike.atlas.png"
+ }
+}

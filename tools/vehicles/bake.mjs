@@ -25,6 +25,10 @@ import { GlbBuilder } from './glb.mjs';
 import { encodePNG } from './png.mjs';
 
 export const PARTS = ['core', 'front', 'back', 'door_FL', 'door_FR', 'door_RL', 'door_RR', 'wheel_FL', 'wheel_FR', 'wheel_RL', 'wheel_RR'];
+/** A motorbike's parts (br-bwju.5; jj-contracts BIKE_PARTS): a vehicle.json with a wheel_F is a bike. */
+export const BIKE_PARTS = ['core', 'front', 'back', 'rider', 'wheel_F', 'wheel_R'];
+/** The contract part set a vehicle.json is baked to, in contract order (the sim's and the renderer's part indices). */
+export const partSet = (V) => (V.parts?.wheel_F ? BIKE_PARTS : PARTS);
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -66,7 +70,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
   const { drawAtlas } = await import(url('atlas.js'));
   const P = JSON.parse(fs.readFileSync(path.join(vehicleDir, 'params.json'), 'utf8'));
   const V = JSON.parse(fs.readFileSync(path.join(vehicleDir, 'vehicle.json'), 'utf8'));
-  const id = V.id, pivots = model.pivots(P), files = new Map(), report = { id, lods: [] };
+  const id = V.id, pivots = model.pivots(P), files = new Map(), report = { id, lods: [] }, SET = partSet(V);
 
   const atlas = drawAtlas();
   const atlasPng = encodePNG(atlas.width, atlas.height, atlas.base);
@@ -76,7 +80,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
 
   V.lods.forEach((lodSpec, lod) => {
     const { parts } = model.soups(P, lod);
-    const missing = PARTS.filter((p) => !parts[p]);
+    const missing = SET.filter((p) => !parts[p]);
     if (missing.length) throw new Error(`LOD${lod} has no ${missing.join(', ')}`);
     const g = new GlbBuilder(), j = g.json;
     j.images = [
@@ -97,7 +101,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     const child = (node) => { j.nodes.push(node); j.nodes[0].children.push(j.nodes.length - 1); };
     const breakdown = {};
     let tris = 0;
-    for (const p of PARTS) {
+    for (const p of SET) {
       const part = parts[p];
       // glTF puts the texture origin at the top-left; the model's UVs have v up.
       const uvs = part.uvs.map((v, i) => (i % 2 ? 1 - v : v));
@@ -132,7 +136,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     }
     for (const [a, at] of Object.entries(V.anchors)) child({ name: a, translation: at });
     if (lod === 0) {
-      for (const p of PARTS) {
+      for (const p of SET) {
         const part = parts[p], pv = pivots[p], pts = [];
         for (let i = 0; i < part.positions.length; i += 3) {
           const q = [part.positions[i] + pv[0], part.positions[i + 1] + pv[1], part.positions[i + 2] + pv[2]];
@@ -159,7 +163,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     forward: '+z',
     up: '+y',
     lods: report.lods.map((l) => ({ file: l.file, maxTris: l.maxTris })),
-    parts: Object.fromEntries(PARTS.map((p) => [p, {
+    parts: Object.fromEntries(SET.map((p) => [p, {
       pivot: pivots[p],
       hinge: V.parts[p].hinge,
       massFraction: V.parts[p].massFraction,

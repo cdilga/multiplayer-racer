@@ -16,10 +16,23 @@ use serde::{Deserialize, Serialize};
 use crate::glb::{Glb, apply};
 
 pub const CONTRACT: &str = "jj.vehicle.v1";
+/// A car's parts (four wheels, four doors).
 pub const PARTS: [&str; 11] = [
     "core", "front", "back", "door_FL", "door_FR", "door_RL", "door_RR", "wheel_FL", "wheel_FR",
     "wheel_RL", "wheel_RR",
 ];
+/// A motorbike's parts (br-bwju.5, the bike variant; the two-wheel sim's part layout from br-bwju.4): the rider is a part
+/// that comes loose and detaches like a panel (R121), and the two wheels sit on the centreline.
+pub const BIKE_PARTS: [&str; 6] = ["core", "front", "back", "rider", "wheel_F", "wheel_R"];
+
+/// The part set a sidecar is held to: a vehicle with a `wheel_F` is a bike, anything else a car.
+pub fn part_set(sidecar: &Sidecar) -> &'static [&'static str] {
+    if sidecar.parts.contains_key("wheel_F") {
+        &BIKE_PARTS
+    } else {
+        &PARTS
+    }
+}
 pub const ANCHORS: [&str; 6] = [
     "cam_fp",
     "cam_tp_target",
@@ -254,7 +267,8 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
             format!("{}, {}, {}: expected m, +z, +y", s.units, s.forward, s.up),
         );
     }
-    for p in PARTS {
+    let parts = part_set(s);
+    for &p in parts {
         if !s.parts.contains_key(p) {
             add(
                 &mut v,
@@ -264,7 +278,7 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
             );
         }
     }
-    for p in s.parts.keys().filter(|p| !PARTS.contains(&p.as_str())) {
+    for p in s.parts.keys().filter(|p| !parts.contains(&p.as_str())) {
         add(
             &mut v,
             Rule::PartUnknown,
@@ -320,7 +334,7 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
         let bad: Vec<&String> = b
             .exposed_by
             .iter()
-            .filter(|p| p.as_str() == "core" || !PARTS.contains(&p.as_str()))
+            .filter(|p| p.as_str() == "core" || !parts.contains(&p.as_str()))
             .collect();
         if b.exposed_by.is_empty() || !bad.is_empty() {
             add(
@@ -409,7 +423,7 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
         // Parts: present, pivots as declared and identical across LODs; triangles, draws, materials, ground contact.
         let (mut lod_tris, mut draws, mut min_y) = (0usize, 0usize, f64::INFINITY);
         let mut pivots = BTreeMap::new();
-        for p in PARTS {
+        for &p in parts {
             let Some(&ni) = children.get(p) else {
                 add(&mut v, Rule::PartMissingAtLod, &at, format!("no {p} node"));
                 continue;
@@ -518,12 +532,12 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
                 format!("{} materials; exactly one", glb.material_count()),
             );
         }
-        if draws > PARTS.len() {
+        if draws > parts.len() {
             add(
                 &mut v,
                 Rule::Draws,
                 &at,
-                format!("{draws} draws; at most one per part ({})", PARTS.len()),
+                format!("{draws} draws; at most one per part ({})", parts.len()),
             );
         }
         let budget = lod.max_tris.min(TRI_BUDGETS[li]);
@@ -567,6 +581,23 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
                 );
             }
         }
+        // A bike: the front wheel ahead, the rear behind, the origin centred between them, both on the centreline.
+        if let (Some(f), Some(r)) = (pivots.get("wheel_F"), pivots.get("wheel_R"))
+            && (!(f[2] > 0.0 && r[2] < 0.0)
+                || (f[2] + r[2]).abs() > AXLE_CENTRE_TOLERANCE_M
+                || f[0].abs() > 0.02
+                || r[0].abs() > 0.02)
+        {
+            add(
+                &mut v,
+                Rule::OriginAxles,
+                &at,
+                format!(
+                    "wheels at z = {:.3} / {:.3}, x = {:.3} / {:.3}: the origin must be centred between them, +z forward, both on the centreline",
+                    f[2], r[2], f[0], r[0]
+                ),
+            );
+        }
         // Anchors: present at every LOD, where the sidecar says.
         for a in ANCHORS {
             match children.get(a) {
@@ -607,7 +638,7 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
         }
         // Collider proxies (LOD0): one per part, typed as declared; the cabin is genuinely rounded.
         if li == 0 {
-            for p in PARTS {
+            for &p in parts {
                 let name = format!("collider_{p}");
                 let Some(&ni) = children.get(&name) else {
                     add(&mut v, Rule::ColliderMissing, &at, format!("no {name}"));
@@ -668,17 +699,17 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
 
 /// What the sim builds a car from (P1-S03a), derived from the baked sidecar and its LOD0 GLB: the chassis proxy's hull
 /// points, the wheels' pivots and radius, and the centre of mass. Vehicle space: metres, +y up, +z forward, origin on
-/// the ground between the axles. Wheels in the sim's order: FL, FR, RL, RR.
+/// the ground between the axles. Wheels in the sim's order, front axle first: FL, FR, RL, RR for a car; F, R for a bike.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PhysicsGeometry {
     /// The intact body's proxy vertices (core, front, back and doors; not the wheels), deduplicated and sorted. The
     /// sim takes their convex hull; S04 splits it when parts come loose.
     pub hull: Vec<[f64; 3]>,
-    pub wheels: [[f64; 3]; 4],
+    pub wheels: Vec<[f64; 3]>,
     pub wheel_radius: f64,
     pub com: [f64; 3],
-    /// Every part's own collider proxy (P1-S04a), in the contract's part order (`PARTS`): the sim builds one convex
+    /// Every part's own collider proxy (P1-S04a), in the contract's part order ([`part_set`]): the sim builds one convex
     /// collider per part on the chassis body, so a contact's collider names the part.
     pub parts: Vec<PartGeometry>,
 }
@@ -727,8 +758,9 @@ fn mm10(v: f64) -> f64 {
 /// Derives the sim's [`PhysicsGeometry`] from a sidecar and its LOD0 GLB bytes.
 pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometry, String> {
     let glb = Glb::parse(lod0)?;
+    let set = part_set(sidecar);
     let mut hull: Vec<[f64; 3]> = Vec::new();
-    for part in PARTS.iter().filter(|p| !p.starts_with("wheel_")) {
+    for part in set.iter().filter(|p| !p.starts_with("wheel_")) {
         hull.extend(
             collider_points(&glb, part)?
                 .into_iter()
@@ -744,21 +776,18 @@ pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometr
             .map(|x| x.pivot.map(mm10))
             .ok_or_else(|| format!("no part {p}"))
     };
-    let wheels = [
-        pivot("wheel_FL")?,
-        pivot("wheel_FR")?,
-        pivot("wheel_RL")?,
-        pivot("wheel_RR")?,
-    ];
+    // The wheels in contract order are the sim's order (front axle first).
+    let wheel_names: Vec<&str> = set.iter().copied().filter(|p| p.starts_with("wheel_")).collect();
+    let wheels = wheel_names.iter().map(|w| pivot(w)).collect::<Result<Vec<_>, _>>()?;
     // The wheel's radius is half its proxy's height (a wheel stands on the ground at rest, so this is also its pivot y).
-    let w = collider_points(&glb, "wheel_FL")?;
+    let w = collider_points(&glb, wheel_names[0])?;
     let (lo, hi) = w
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
             (lo.min(p[1]), hi.max(p[1]))
         });
     if !lo.is_finite() {
-        return Err("collider_wheel_FL has no points".into());
+        return Err(format!("collider_{} has no points", wheel_names[0]));
     }
     let com = sidecar
         .anchors
@@ -766,7 +795,7 @@ pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometr
         .map(|c| c.map(mm10))
         .ok_or("no com anchor")?;
     let mut parts = Vec::new();
-    for name in PARTS {
+    for &name in set {
         let part = sidecar
             .parts
             .get(name)

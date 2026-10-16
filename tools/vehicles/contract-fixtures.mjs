@@ -58,6 +58,26 @@ const proxy = (id) => {
 // An interior block (P1-V03): seats inside the core, exposed by the doors; in vehicle space.
 const INTERIORS = { cabin: { exposedBy: ['door_FL', 'door_FR', 'door_RL', 'door_RR'], geom: () => box(1.2, 0.5, 1.0, 0, 0.7, 0) } };
 
+// ---- the toy bike (br-bwju.5: the bike part set; wheels on the centreline, the rider a part)
+const BIKE = {
+  core: { pivot: [0, 0.3, 0], geom: () => box(0.36, 0.5, 1.1, 0, 0.3, 0), hinge: null, mass: 0.5, collider: 'convex' },
+  front: { pivot: [0, 0.6, 0.65], geom: () => box(0.3, 0.4, 0.3), hinge: { axis: [1, 0, 0], min: 0, max: 25 }, mass: 0.08, collider: 'cuboid' },
+  back: { pivot: [0, 0.7, -0.6], geom: () => box(0.34, 0.3, 0.3), hinge: { axis: [1, 0, 0], min: -25, max: 0 }, mass: 0.08, collider: 'cuboid' },
+  rider: { pivot: [0, 0.9, -0.1], geom: () => box(0.4, 0.7, 0.4, 0, 0.35, 0), hinge: { axis: [1, 0, 0], min: -15, max: 15 }, mass: 0.25, collider: 'convex' },
+  wheel_F: { pivot: [0, 0.32, 0.8], geom: () => prism(0.32, 0.12, 8), hinge: { axis: [0, 0, 1], min: -6, max: 6 }, mass: 0.045, collider: 'capsule' },
+  wheel_R: { pivot: [0, 0.32, -0.8], geom: () => prism(0.32, 0.12, 8), hinge: { axis: [0, 0, 1], min: -6, max: 6 }, mass: 0.045, collider: 'capsule' },
+};
+const BIKE_ANCHORS = { cam_fp: [0, 1.4, 0.05], cam_tp_target: [0, 1.0, 0.3], com: [0, 0.7, 0], roof_number: [0, 1.3, -0.32], lplate_front: [0, 0.6, 0.82], lplate_rear: [0, 0.6, -0.78] };
+const bikeProxy = (id, pivot = BIKE[id].pivot) => {
+  if (id === 'core') return prism(0.55, 0.36, 12, 0, 0.6, 0, 0.3); // rounded, not a box
+  const g = BIKE[id].geom();
+  return { pos: g.pos.map((v, i) => v + pivot[i % 3]), idx: g.idx };
+};
+function bikeModel(mut = {}) {
+  const parts = Object.fromEntries(Object.entries(BIKE).map(([id, p]) => [id, { ...p, pivot: [...p.pivot] }]));
+  return { defs: BIKE, parts, interiors: {}, anchors: structuredClone(BIKE_ANCHORS), lodGeom: [null, null, null], skip: [{}, {}, {}], colliders: Object.fromEntries(Object.keys(BIKE).map((id) => [id, bikeProxy(id)])), materials: 1, ...mut };
+}
+
 function model(mut = {}) {
   const parts = Object.fromEntries(Object.entries(PARTS).map(([id, p]) => [id, { ...p, pivot: [...p.pivot] }]));
   return { parts, interiors: INTERIORS, anchors: structuredClone(ANCHORS), lodGeom: [null, null, null], skip: [{}, {}, {}], colliders: Object.fromEntries(Object.keys(PARTS).map((id) => [id, proxy(id)])), materials: 1, ...mut };
@@ -121,7 +141,7 @@ function write(name, expect, m, sidecarMut = (s) => s) {
   const sidecar = sidecarMut({
     contract: 'jj.vehicle.v1', id: 'toy', units: 'm', forward: '+z', up: '+y',
     lods: [{ file: 'toy.lod0.glb', maxTris: 1300 }, { file: 'toy.lod1.glb', maxTris: 900 }, { file: 'toy.lod2.glb', maxTris: 600 }],
-    parts: Object.fromEntries(Object.entries(PARTS).map(([id, p]) => [id, { pivot: (m.sidecarPivot && m.sidecarPivot[id]) || m.parts[id].pivot, hinge: p.hinge, massFraction: p.mass, collider: { type: p.collider } }])),
+    parts: Object.fromEntries(Object.entries(m.defs ?? PARTS).map(([id, p]) => [id, { pivot: (m.sidecarPivot && m.sidecarPivot[id]) || m.parts[id].pivot, hinge: p.hinge, massFraction: p.mass, collider: { type: p.collider } }])),
     interiors: Object.fromEntries(Object.entries(m.interiors).map(([id, b]) => [id, { exposedBy: b.exposedBy }])),
     anchors: m.anchors,
     material: { count: 1, atlas: 'toy.atlas.png' },
@@ -152,4 +172,8 @@ write('draws', 'draws', model({ extraPrim: true }));
 write('cabin-declared-cuboid', 'cabin-proxy-cuboid', model(), (s) => { s.parts.core.collider.type = 'cuboid'; return s; });
 write('interior-missing-at-lod', 'interior', model({ dropInterior: 'cabin' }));
 write('interior-exposed-by', 'interior', model(), (s) => { s.interiors.cabin.exposedBy = ['core']; return s; });
+write('valid-bike', 'ok', bikeModel());
+{ const m = bikeModel(); for (const id of ['wheel_F', 'wheel_R']) m.parts[id].pivot[2] += 0.3; for (const id of ['wheel_F', 'wheel_R']) m.colliders[id] = bikeProxy(id, m.parts[id].pivot);
+  write('bike-origin-axles', 'origin-axles', m); }
+write('bike-mixed-parts', 'part-unknown', bikeModel(), (s) => { s.parts.door_FL = { pivot: [-0.2, 0.6, 0], hinge: { axis: [0, 1, 0], min: -70, max: 0 }, massFraction: 0.0001, collider: { type: 'cuboid' } }; return s; });
 console.log(`vehicle fixtures in ${root}`);

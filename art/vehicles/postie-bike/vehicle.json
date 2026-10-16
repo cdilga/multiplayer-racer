@@ -1,0 +1,125 @@
+{
+ "id": "postie-bike",
+ "what": "Contract data the geometry doesn't carry (br-bwju.5, the bike part set of jj.vehicle.v1): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots(), the bike kit's hinge lines); the bake joins the two into postie-bike.asset.json. front (fork, basket, lamp, mudguard) hangs about its rear top edge 0-25 degrees, back (rack and panniers) about its front top edge, the rider pitches about the hip (R121: a crash throws the rider), wheels +-6 degrees camber. +X is the bike's left. No interior blocks: a bike has no bays behind its panels.",
+ "lods": [
+  {
+   "maxTris": 1300
+  },
+  {
+   "maxTris": 900
+  },
+  {
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "massFraction": 0.5,
+   "hinge": null,
+   "collider": "convex"
+  },
+  "front": {
+   "massFraction": 0.08,
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "collider": "convex"
+  },
+  "back": {
+   "massFraction": 0.08,
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "collider": "convex"
+  },
+  "rider": {
+   "massFraction": 0.25,
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -15,
+    "max": 15
+   },
+   "collider": "convex"
+  },
+  "wheel_F": {
+   "massFraction": 0.045,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  },
+  "wheel_R": {
+   "massFraction": 0.045,
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "collider": "convex"
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   0,
+   1.55,
+   -0.12
+  ],
+  "cam_tp_target": [
+   0,
+   1.1,
+   0.2
+  ],
+  "com": [
+   0,
+   0.72,
+   -0.05
+  ],
+  "roof_number": [
+   0,
+   1.33,
+   -0.345
+  ],
+  "lplate_front": [
+   0,
+   0.62,
+   1.34
+  ],
+  "lplate_rear": [
+   0,
+   0.6,
+   -1.63
+  ]
+ },
+ "anchorNotes": {
+  "cam_fp": "The rider's eyes, under the helmet.",
+  "roof_number": "On the rider's back (the vest), where the number reads from the chase camera and from above.",
+  "lplate_front": "On the front of the mail tub.",
+  "lplate_rear": "On the rear rack's tail, between the panniers."
+ }
+}

@@ -1,0 +1,9 @@
+Low-poly game asset turnaround sheet, 16:9, light grey seamless background, the exact same vehicle and rider as the attached sheet, in the same layout: large 3/4 front hero view top-left, top-down plan view in the right column (nose at the bottom), bottom row: front view, left side view (nose pointing left), rear view. Same vehicle and rider in every view, the same scale in the small views.
+
+The vehicle: a bubbly, slightly caricatured Australian postie bike in the spirit of a 110cc step-through delivery motorbike (generic, not a copy): small step-through frame with a low open middle, a plastic leg shield, upright handlebars with round mirrors, a round headlight, a big front carrier rack holding a mail tub, a large rear carrier rack with two boxy red panniers stuffed with letters and parcels, a long flat seat, chunky spoked wheels with fat knobbly little tyres, a mudguard over each wheel, an exhaust along the right side.
+
+The rider is part of the model: sitting upright on the bike, hands on the bars, feet on the pegs, wearing an open-face white helmet with a visor, a hi-vis yellow-orange vest over a blue work shirt, dark shorts and boots.
+
+Colours: bright red bike body and panniers, black frame, seat and tyres, silver racks and exhaust, white helmet, hi-vis vest.
+
+very low poly, about 300 triangles for the vehicle and rider, octagon wheels, lights as flat decals. Flat-shaded facets, clean studio light, soft shadow. No text, no logos, no badges, no number plates, no brand names, no aerial.

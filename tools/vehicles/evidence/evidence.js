@@ -50,7 +50,11 @@ function finish(canvas) { out.width = canvas.width; out.height = canvas.height; 
 // ───────── damage strip: ten cars, one state each (the P1-V03 layout) ─────────
 async function runDamage(overview) {
   const asset = await (await fetch(ASSET)).json();
-  const states = [
+  const states = asset.parts.wheel_F ? [ // a bike (br-bwju.5): the rider is thrown, wheels come off
+    ['intact', {}], ['front + back loose 25', { front: [25], back: [25] }], ['rider loose 15', { rider: [15] }], ['wheel_F cambered 6', { wheel_F: [6] }],
+    ['front detached', { front: 'x' }], ['rider thrown', { rider: 'x' }], ['back detached', { back: 'x' }], ['wheel_F detached', { wheel_F: 'x' }],
+    ['rider + front detached', { rider: 'x', front: 'x' }], ['stripped frame', { front: 'x', back: 'x', rider: 'x', wheel_F: 'x' }],
+  ] : [
     ['intact', {}], ['door_FL 60, door_RL 45 loose', { door_FL: [60], door_RL: [45] }], ['front + back loose 25', { front: [25], back: [25] }],
     ['wheel_FL cambered 6', { wheel_FL: [6] }], ['front detached', { front: 'x' }], ['door_FL detached', { door_FL: 'x' }], ['back detached', { back: 'x' }],
     ['wheel_FL detached', { wheel_FL: 'x' }], ['both front doors + back detached', { door_FL: 'x', door_FR: 'x', back: 'x' }],

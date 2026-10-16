@@ -1,0 +1,172 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "toy",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "toy.lod0.glb",
+   "maxTris": 1300
+  },
+  {
+   "file": "toy.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "toy.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0.3,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.5,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    0.6,
+    0.65
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "cuboid"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    0.7,
+    -0.6
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "cuboid"
+   }
+  },
+  "rider": {
+   "pivot": [
+    0,
+    0.9,
+    -0.1
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -15,
+    "max": 15
+   },
+   "massFraction": 0.25,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_F": {
+   "pivot": [
+    0,
+    0.32,
+    0.8
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "capsule"
+   }
+  },
+  "wheel_R": {
+   "pivot": [
+    0,
+    0.32,
+    -0.8
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "capsule"
+   }
+  }
+ },
+ "interiors": {},
+ "anchors": {
+  "cam_fp": [
+   0,
+   1.4,
+   0.05
+  ],
+  "cam_tp_target": [
+   0,
+   1,
+   0.3
+  ],
+  "com": [
+   0,
+   0.7,
+   0
+  ],
+  "roof_number": [
+   0,
+   1.3,
+   -0.32
+  ],
+  "lplate_front": [
+   0,
+   0.6,
+   0.82
+  ],
+  "lplate_rear": [
+   0,
+   0.6,
+   -0.78
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "toy.atlas.png"
+ }
+}

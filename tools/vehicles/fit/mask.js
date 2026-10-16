@@ -1,13 +1,22 @@
 // mask.js (from Spike J): binary silhouette masks shared by the reference extractor (node) and the evaluator (browser). Pure functions, no imports.
 // A mask is a Uint8Array of 0/1, row-major, top row first.
 
-// car = saturated or dark; then fill holes by flooding the background in from the border.
-export function segment(rgba, w, h, { sat = 0.2, dark = 0.3 } = {}) {
-  const car = new Uint8Array(w * h);
+// car = saturated or dark; then fill holes by flooding the background in from the border. `bright` (br-bwju.5) also counts
+// pixels brighter than the background by that much (white helmets, silver racks and pale parcels on the bikes' grey
+// sheets); the background brightness is the median of the window's border, and contact shadows are darker, so stay out.
+export function segment(rgba, w, h, { sat = 0.2, dark = 0.3, bright = null } = {}) {
+  const car = new Uint8Array(w * h), lum = (i) => Math.max(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]) / 255;
+  let bg = Infinity;
+  if (bright != null) {
+    const border = [];
+    for (let x = 0; x < w; x++) border.push(lum(x), lum((h - 1) * w + x));
+    for (let y = 0; y < h; y++) border.push(lum(y * w), lum(y * w + w - 1));
+    bg = border.sort((a, b) => a - b)[border.length >> 1];
+  }
   for (let i = 0; i < w * h; i++) {
     const r = rgba[i * 4] / 255, g = rgba[i * 4 + 1] / 255, b = rgba[i * 4 + 2] / 255;
     const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-    car[i] = (mx > 0 && (mx - mn) / mx > sat) || mx < dark ? 1 : 0;
+    car[i] = (mx > 0 && (mx - mn) / mx > sat) || mx < dark || (bright != null && mx > bg + bright) ? 1 : 0;
   }
   return fillHoles(car, w, h);
 }
@@ -43,8 +52,10 @@ export const erode = (m, w, h, r) => pass(pass(m, w, h, r, true, false), w, h, r
 export const dilate = (m, w, h, r) => pass(pass(m, w, h, r, true, true), w, h, r, false, true);
 export const openMask = (m, w, h, r) => (r > 0 ? dilate(erode(m, w, h, r), w, h, r) : m);
 
-export function largest(m, w, h) {
-  const lab = new Int32Array(w * h); let best = 0, bestN = 0, id = 0;
+// The largest component; with `keep` > 0 (br-bwju.5), every component at least that fraction of the largest's area too: a
+// bike's front wheel, fork and basket can join the body through a few pixels only.
+export function largest(m, w, h, keep = 0) {
+  const lab = new Int32Array(w * h), sizes = [0]; let id = 0;
   for (let s = 0; s < w * h; s++) {
     if (!m[s] || lab[s]) continue;
     id++; let n = 0; const st = [s]; lab[s] = id;
@@ -53,10 +64,10 @@ export function largest(m, w, h) {
       for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
         if (j >= 0 && m[j] && !lab[j]) { lab[j] = id; st.push(j); }
     }
-    if (n > bestN) { bestN = n; best = id; }
+    sizes.push(n);
   }
-  const out = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) out[i] = lab[i] === best ? 1 : 0;
+  const most = Math.max(...sizes), best = sizes.indexOf(most), out = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) out[i] = lab[i] && (lab[i] === best || (keep > 0 && sizes[lab[i]] >= keep * most)) ? 1 : 0;
   return out;
 }
 

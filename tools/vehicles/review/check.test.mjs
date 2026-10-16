@@ -26,6 +26,12 @@ for (const [item, f] of Object.entries(drop)) {
     assert.ok(checkReview(r, all).some((b) => b.startsWith(`item ${item}`)), `item ${item} not flagged`);
   });
 }
+test('a bike (br-bwju.5) has every item, and fails item 3 without its rider', () => {
+  const bike = JSON.parse(fs.readFileSync(path.join(SITE, 'postie-bike/review.json'), 'utf8'));
+  assert.deepEqual(checkReview(bike, all), []);
+  const r = structuredClone(bike); r.damage.parts = r.damage.parts.filter((p) => p.name !== 'rider');
+  assert.ok(checkReview(r, all).some((b) => b.startsWith('item 3')));
+});
 test('a missing image fails', () => assert.ok(checkReview(cruz, (f) => !f.endsWith('grid-1.jpg')).length > 0));
 test('missing handling fails', () => { const r = structuredClone(cruz); r.handling = null; assert.ok(checkReview(r, all).length > 0); });
 test('a spec twin without its partner fails', () => {
