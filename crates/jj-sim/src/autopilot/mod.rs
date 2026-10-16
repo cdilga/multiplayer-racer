@@ -623,11 +623,15 @@ impl Autopilot {
         out.extend(self.noise_target.to_bits().to_le_bytes());
         out.extend(self.stuck.to_le_bytes());
         out.extend(self.handback_at.to_le_bytes());
-        let (b, j) = self.on.unwrap_or((usize::MAX, usize::MAX));
-        out.extend((b as u64).to_le_bytes());
-        out.extend((j as u64).to_le_bytes());
-        let (pb, take) = self.plan.unwrap_or((usize::MAX, false));
-        out.extend((pb as u64).to_le_bytes());
+        // u64 sentinels, never `usize::MAX as u64`: usize is 32-bit in WASM, so that hashed differently from native
+        // (every autopilot car off a fork: CI 5495, br-lekz).
+        let (b, j) = self
+            .on
+            .map_or((u64::MAX, u64::MAX), |(b, j)| (b as u64, j as u64));
+        out.extend(b.to_le_bytes());
+        out.extend(j.to_le_bytes());
+        let (pb, take) = self.plan.map_or((u64::MAX, false), |(b, t)| (b as u64, t));
+        out.extend(pb.to_le_bytes());
         out.push(u8::from(take));
         out.extend(self.forks_met.to_le_bytes());
     }

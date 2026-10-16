@@ -70,8 +70,7 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  // Quarantined (CI owner, red budget): P0 br-lekz, native and WASM diverge on generated terrain since 22502cef..8e5f3ccf.
-  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 180_000, skip: 'quarantined: P0 br-lekz (native/WASM divergence)' }, async () => {
+  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 180_000 }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [], rows = [];
     try {
