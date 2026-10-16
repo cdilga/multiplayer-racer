@@ -1,6 +1,6 @@
 {
   "schema": "jj.lab-scenes.v1",
-  "note": "Feel Lab scenes (R131): small hand-made courses built by the real generator (jj_procgen::lab), so a scene shares its pieces' definitions with generated tracks (P1-FL15b). `jj lab <scene> --out <dir>` writes the map and each run's fixture; the committed copies are maps/lab/<scene>.json and scenarios/lab/<run>.json, re-made with JJ_BLESS=1 cargo test -p jj-procgen --test lab. A run starts a car `spawnBeforeM` before the first set piece's lip at `speedMps`, on the autopilot or holding `throttle`; `expect` is its outcome envelope.",
+  "note": "Feel Lab scenes (R131): small hand-made courses built by the real generator (jj_procgen::lab), so a scene shares its pieces' definitions with generated tracks (P1-FL15b). `jj lab <scene> --out <dir>` writes the map and each run's fixture; the committed copies are maps/lab/<scene>.json and scenarios/lab/<run>.json, re-made with JJ_BLESS=1 cargo test -p jj-procgen --test lab. A run starts a car `spawnBeforeM` before the first set piece's lip (from the route's start on a scene without one) at `speedMps`, or with a `verge` at rest on the road facing off it toward the first verge that rises like that; it drives on the autopilot or holding `throttle`, in its `vehicle` (the Cruz without one); `expect` is its outcome envelope, and a verge run's `riseM` bounds the height it ends at over the road.",
   "scenes": {
     "canyon-leap": {
       "what": "P1-FL09: the Olgas reference (art/references/australia/generated/biome-rocks-olgas.png). A rock channel with walls both sides, a kicker the full road width, the pit, the far rim as the landing, domes seen from the far straight before the commitment point; the graded dirt detour round the pit is the safe line and costs time (R129).",
@@ -37,6 +37,70 @@
           "until": { "metric": "wrecks", "min": 1 },
           "expect": [
             { "metric": "wrecks", "min": 1, "max": 1 }
+          ]
+        }
+      ]
+    },
+    "off-road-climb": {
+      "what": "P1-FL12 (R133): the off-road climb. An outback oval whose verges rise off the road into banks and rock walls. The Tradie Ute drives off the road's edge from rest and up a bank (generated verges rise at 40-65 degrees); a steeper face reads as a wall, and the Ute can't drive up it.",
+      "biome": "outback-dirt",
+      "seed": 1,
+      "straightM": 260,
+      "radiusM": 40,
+      "setPieces": [],
+      "runs": [
+        {
+          "run": "off-road-climb",
+          "what": "From rest on the road beside the first bank of 40-50 degrees that rises 6 m or more, the Tradie Ute turns square off the road and holds full throttle: it crosses the shoulder and climbs the bank, ending at least 5 m above the road, on its wheels, with no wreck.",
+          "verge": { "minDeg": 40, "maxDeg": 50, "minRiseM": 6, "riseM": [5, 80] },
+          "vehicle": "tradie-ute",
+          "speedMps": 0,
+          "autopilot": false,
+          "throttle": 1.0,
+          "ticks": 600,
+          "expect": [
+            { "metric": "minUpY", "min": 0.5, "max": 1.001 },
+            { "metric": "wrecks", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "off-road-climb-cruz",
+          "what": "The same bank, the same start, in the Cruz Missile: a road car's nose and road tyres stall it near the foot, under 4 m above the road. The climb is the Ute's.",
+          "verge": { "minDeg": 40, "maxDeg": 50, "minRiseM": 6, "riseM": [-1, 4] },
+          "vehicle": "cruz-missile",
+          "speedMps": 0,
+          "autopilot": false,
+          "throttle": 1.0,
+          "ticks": 600,
+          "expect": [
+            { "metric": "wrecks", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "off-road-wall",
+          "what": "From rest beside the first face steeper than 62 degrees that rises 4 m or more, the Ute holds full throttle into it: the face is a wall. The Ute ends no more than 6 m above the road and doesn't wreck.",
+          "verge": { "minDeg": 62, "maxDeg": 89, "minRiseM": 4, "riseM": [-1, 6] },
+          "vehicle": "tradie-ute",
+          "speedMps": 0,
+          "autopilot": false,
+          "throttle": 1.0,
+          "ticks": 480,
+          "expect": [
+            { "metric": "wrecks", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "off-road-climb-lap",
+          "what": "The autopilot drives the Ute a full lap of the scene (771 m) from the route's start, with no wreck or recovery.",
+          "vehicle": "tradie-ute",
+          "speedMps": 15,
+          "autopilot": true,
+          "ticks": 6600,
+          "until": { "metric": "progressM", "min": 771 },
+          "expect": [
+            { "metric": "progressM", "min": 771, "max": 100000 },
+            { "metric": "wrecks", "min": 0, "max": 0 },
+            { "metric": "recoveries", "min": 0, "max": 0 }
           ]
         }
       ]

@@ -1,0 +1,44 @@
+{
+  "cars": [
+    {
+      "linvel": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": 0.0,
+        "x": 21.421,
+        "y": 36.208,
+        "z": 44.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wrecks",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 39.908,
+      "metric": "height",
+      "min": 34.908
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "throttle": 1.0
+    }
+  ],
+  "map": "maps/lab/off-road-climb.json",
+  "scenario": "off-road-climb-cruz",
+  "seed": 1,
+  "ticks": 600,
+  "vehicle": "cruz-missile",
+  "what": "The same bank, the same start, in the Cruz Missile: a road car's nose and road tyres stall it near the foot, under 4 m above the road. The climb is the Ute's."
+}

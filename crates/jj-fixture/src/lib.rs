@@ -37,6 +37,10 @@ pub struct Fixture {
     pub map: String,
     pub seed: u64,
     pub ticks: u64,
+    /// The roster vehicle the fixture's cars are built from (`assets/profiles/<vehicle>.json`); the Cruz without one.
+    /// `jj sim --profile` overrides it.
+    #[serde(default)]
+    pub vehicle: Option<String>,
     #[serde(default)]
     pub cars: Vec<CarSpec>,
     #[serde(default)]
@@ -517,14 +521,20 @@ pub struct Harness {
     start_lock: std::collections::BTreeSet<u32>,
 }
 
-/// Spawns a car the way a fixture's `cars` entry does (journaled); returns it and its spawn pose.
-fn spawn(sim: &mut Sim, map: &LoadedMap, c: &CarSpec) -> Result<(CarId, SpawnPose), String> {
+/// Spawns a car the way a fixture's `cars` entry does (journaled), as the sim's profile `vehicle`; returns it and its
+/// spawn pose.
+fn spawn(
+    sim: &mut Sim,
+    map: &LoadedMap,
+    c: &CarSpec,
+    vehicle: usize,
+) -> Result<(CarId, SpawnPose), String> {
     let pose = match (c.pose, c.route_point) {
         (Some(p), _) => p.spawn(),
         (None, Some(rp)) => route_spawn(map, rp, c.lateral, c.lift),
         (None, None) => return Err("needs routePoint or pose".into()),
     };
-    let id = sim.spawn_car(pose);
+    let id = sim.spawn_car_as(pose, vehicle);
     let roll = c.pose.map_or(0.0, |p| p.roll_deg.to_radians());
     if c.linvel.is_some() || roll != 0.0 {
         sim.place_car(id, pose, roll, c.linvel.unwrap_or([0.0; 3]));
@@ -536,9 +546,25 @@ impl Harness {
     /// Sets the fixture up on a fresh `sim`: its cars and grid (journaled), then its seats (through the seat reducer)
     /// and round phase (through the director's own inputs).
     pub fn new(fx: Fixture, map: &LoadedMap, sim: &mut Sim, trace: bool) -> Result<Self, String> {
+        Self::new_as(fx, map, sim, trace, 0)
+    }
+
+    /// As `new`, with the fixture's `cars` built from the sim's profile `vehicle` (a host's roster index for the
+    /// fixture's `vehicle`, so the TV draws that model).
+    pub fn new_as(
+        fx: Fixture,
+        map: &LoadedMap,
+        sim: &mut Sim,
+        trace: bool,
+        vehicle: usize,
+    ) -> Result<Self, String> {
         let mut spawns = Vec::new();
         for (i, c) in fx.cars.iter().enumerate() {
-            spawns.push(spawn(sim, map, c).map_err(|e| format!("cars[{i}] {e}"))?.1);
+            spawns.push(
+                spawn(sim, map, c, vehicle)
+                    .map_err(|e| format!("cars[{i}] {e}"))?
+                    .1,
+            );
         }
         if let Some(n) = fx.grid {
             for id in sim.spawn_grid(n) {
@@ -594,7 +620,7 @@ impl Harness {
 
     /// Spawns one more car as a `cars` entry would (journaled), tracked from its spawn pose.
     pub fn spawn(&mut self, map: &LoadedMap, sim: &mut Sim, c: &CarSpec) -> Result<CarId, String> {
-        let (id, pose) = spawn(sim, map, c)?;
+        let (id, pose) = spawn(sim, map, c, 0)?;
         self.trackers.push(SignatureTracker::new(pose, &self.route));
         Ok(id)
     }

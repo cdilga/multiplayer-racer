@@ -1,0 +1,44 @@
+{
+  "cars": [
+    {
+      "linvel": [
+        -0.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": 0.0,
+        "x": 12.276,
+        "y": 37.085,
+        "z": -36.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wrecks",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 42.785,
+      "metric": "height",
+      "min": 35.785
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "throttle": 1.0
+    }
+  ],
+  "map": "maps/lab/off-road-climb.json",
+  "scenario": "off-road-wall",
+  "seed": 1,
+  "ticks": 480,
+  "vehicle": "tradie-ute",
+  "what": "From rest beside the first face steeper than 62 degrees that rises 4 m or more, the Ute holds full throttle into it: the face is a wall. The Ute ends no more than 6 m above the road and doesn't wreck."
+}

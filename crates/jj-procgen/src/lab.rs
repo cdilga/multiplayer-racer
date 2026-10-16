@@ -1,6 +1,7 @@
 //! Feel Lab scenes (R131, P1-FL09 on): small hand-made courses built by the real generator, so a scene's set pieces are
 //! the same definitions generated tracks stamp (P1-FL15b). The data is `assets/lab/scenes.json`: each scene is an oval of
-//! the given straights and radius in one biome, carrying the listed set pieces, and the runs that drive it headless.
+//! the given straights and radius in one biome, carrying the listed set pieces (or none), and the runs that drive it
+//! headless: from before the first set piece, from the route's start, or from the road's edge beside a verge (P1-FL12).
 //! `jj lab <scene>` writes the map and each run's fixture; the committed copies (maps/lab/, scenarios/lab/) are checked
 //! against a fresh build by `tests/lab.rs`.
 
@@ -44,7 +45,15 @@ pub struct Scene {
 pub struct Run {
     pub run: String,
     pub what: String,
+    /// Before the first set piece's lip; on a scene without one, from the route's start.
+    #[serde(default)]
     pub spawn_before_m: f64,
+    /// Or: at rest on the road, facing off it toward the first verge that rises like this (P1-FL12).
+    #[serde(default)]
+    pub verge: Option<Verge>,
+    /// The roster vehicle that drives the run (the fixture's `vehicle`); the Cruz without one.
+    #[serde(default)]
+    pub vehicle: Option<String>,
     pub speed_mps: f64,
     pub autopilot: bool,
     /// A steady throttle (0..1) for a run without the autopilot.
@@ -57,6 +66,23 @@ pub struct Run {
     /// Outcome envelope rows for car 0 (`jj-fixture` metrics).
     pub expect: Vec<Value>,
 }
+
+/// A verge to start a run at: within `REACH_M` of the road's edge the ground rises at least `min_rise_m`, and its steepest
+/// 2 m step is between `min_deg` and `max_deg`. The run's car starts at rest `INSIDE_M` inside the road's edge, facing
+/// square off the road toward it; `rise_m` bounds the height the car ends at over its start (an outcome envelope row,
+/// `height`).
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Verge {
+    pub min_deg: f64,
+    pub max_deg: f64,
+    pub min_rise_m: f64,
+    pub rise_m: [f64; 2],
+}
+
+/// How far past the road's edge a verge is looked at (m), and how far inside the edge a verge run starts.
+const REACH_M: f64 = 16.0;
+const INSIDE_M: f64 = 2.0;
 
 /// A built scene: its map and each run's fixture (`jj sim` JSON), the fixture's `map` naming `map_path`.
 pub struct Built {
@@ -86,6 +112,14 @@ pub fn validate_data(d: &Scenes) -> Vec<String> {
             }
         }
         for r in &s.runs {
+            if let Some(v) = &r.verge
+                && !(v.min_deg < v.max_deg && v.min_rise_m > 0.0 && v.rise_m[0] < v.rise_m[1])
+            {
+                out.push(format!(
+                    "{id} run {}: verge degrees, minRiseM and riseM",
+                    r.run
+                ));
+            }
             if !(r.spawn_before_m >= 0.0
                 && r.speed_mps >= 0.0
                 && (0.0..=1.0).contains(&r.throttle)
@@ -137,50 +171,110 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
     if !bad.is_empty() {
         return Err(bad);
     }
-    let first = map
-        .features
-        .iter()
-        .find(|f| setpieces_of(f))
-        .ok_or_else(|| vec![format!("{id}: no set piece on the map")])?;
-    let fixtures = scene
-        .runs
-        .iter()
-        .map(|r| {
-            let lip = jj_map::setpiece::GapLeap::of(first).map_or(0.0, |d| d.lip_u());
-            let ([x, z], [tx, tz]) =
-                jj_map::jump::route_along(&map, first, lip - r.spawn_before_m);
-            let y = jj_map::jump::ground_height_m(&map.terrain, x, z) + 0.3;
-            let heading = 90.0 - libm::atan2(tz, tx).to_degrees();
-            let mut fx = json!({
-                "scenario": r.run,
-                "what": r.what,
-                "map": map_path,
-                "seed": scene.seed,
-                "ticks": r.ticks,
-                "cars": [{
-                    "pose": { "x": round3(x), "y": round3(y), "z": round3(z), "headingDeg": round3(heading) },
-                    "linvel": [round3(r.speed_mps * tx), 0.0, round3(r.speed_mps * tz)],
-                }],
-                "expect": r.expect.iter().map(|e| {
-                    let mut e = e.clone();
-                    e["car"] = json!(0);
-                    e
-                }).collect::<Vec<_>>(),
-            });
-            if r.autopilot {
-                fx["autopilot"] = json!([{ "tick": 0, "car": 0, "on": true }]);
-            } else if r.throttle > 0.0 {
-                fx["inputs"] = json!([{ "car": 0, "fromTick": 0, "throttle": r.throttle }]);
-            }
-            if let Some(u) = &r.until {
-                let mut u = u.clone();
-                u["car"] = json!(0);
-                fx["until"] = u;
-            }
-            (r.run.clone(), fx)
-        })
-        .collect();
+    let first = map.features.iter().find(|f| setpieces_of(f));
+    if first.is_none() && !scene.set_pieces.is_empty() {
+        return Err(vec![format!("{id}: no set piece on the map")]);
+    }
+    let mut fixtures = Vec::new();
+    for r in &scene.runs {
+        let mut expect: Vec<Value> = r.expect.clone();
+        let ([x, z], [tx, tz], y) = if let Some(v) = &r.verge {
+            let (at, [nx, nz], y) = verge_spawn(&map, v)
+                .ok_or_else(|| vec![format!("{id} run {}: no verge like {v:?}", r.run)])?;
+            expect.push(json!({ "metric": "height", "min": round3(y + v.rise_m[0]), "max": round3(y + v.rise_m[1]) }));
+            (at, [nx, nz], y + 0.3)
+        } else {
+            let (at, t) = match first {
+                Some(f) => {
+                    let lip = jj_map::setpiece::GapLeap::of(f).map_or(0.0, |d| d.lip_u());
+                    jj_map::jump::route_along(&map, f, lip - r.spawn_before_m)
+                }
+                None => route_start(&map),
+            };
+            let y = jj_map::jump::ground_height_m(&map.terrain, at[0], at[1]) + 0.3;
+            (at, t, y)
+        };
+        let heading = 90.0 - libm::atan2(tz, tx).to_degrees();
+        let mut fx = json!({
+            "scenario": r.run,
+            "what": r.what,
+            "map": map_path,
+            "seed": scene.seed,
+            "ticks": r.ticks,
+            "cars": [{
+                "pose": { "x": round3(x), "y": round3(y), "z": round3(z), "headingDeg": round3(heading) },
+                "linvel": [round3(r.speed_mps * tx), 0.0, round3(r.speed_mps * tz)],
+            }],
+            "expect": expect.iter().map(|e| {
+                let mut e = e.clone();
+                e["car"] = json!(0);
+                e
+            }).collect::<Vec<_>>(),
+        });
+        if let Some(v) = &r.vehicle {
+            fx["vehicle"] = json!(v);
+        }
+        if r.autopilot {
+            fx["autopilot"] = json!([{ "tick": 0, "car": 0, "on": true }]);
+        } else if r.throttle > 0.0 {
+            fx["inputs"] = json!([{ "car": 0, "fromTick": 0, "throttle": r.throttle }]);
+        }
+        if let Some(u) = &r.until {
+            let mut u = u.clone();
+            u["car"] = json!(0);
+            fx["until"] = u;
+        }
+        fixtures.push((r.run.clone(), fx));
+    }
     Ok(Built { map, fixtures })
+}
+
+/// The route's first point and its direction.
+fn route_start(map: &Map) -> ([f64; 2], [f64; 2]) {
+    let p = |i: usize| {
+        let q = &map.route.points[i];
+        [f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0]
+    };
+    let (a, b) = (p(0), p(1));
+    let len = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
+    (a, [(b[0] - a[0]) / len, (b[1] - a[1]) / len])
+}
+
+/// The first route point (from the start, left side before right) beside a verge like `v`: the spawn point `INSIDE_M`
+/// inside the road's edge, the unit direction square off the road toward the verge, and the road's height there (m).
+fn verge_spawn(map: &Map, v: &Verge) -> Option<([f64; 2], [f64; 2], f64)> {
+    let pts = &map.route.points;
+    let n = pts.len();
+    let p = |i: usize| {
+        let q = &pts[i % n];
+        [f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0]
+    };
+    for (i, q) in pts.iter().enumerate() {
+        let (a, b) = (p(i), p(i + 1));
+        let len = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
+        let t = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+        let half = f64::from(q.width) / 2000.0;
+        let road_y = f64::from(q.y) / 1000.0;
+        // Left of the direction of travel first (+x is left of +z), then right.
+        for side in [1.0, -1.0] {
+            let nrm = [t[1] * side, -t[0] * side];
+            let h = |d: f64| {
+                jj_map::jump::ground_height_m(&map.terrain, a[0] + nrm[0] * d, a[1] + nrm[1] * d)
+            };
+            // Every metre out from the edge; the slope over each 2 m.
+            let samples: Vec<f64> = (0..=REACH_M as usize).map(|k| h(half + k as f64)).collect();
+            let rise = samples.iter().fold(f64::NEG_INFINITY, |m, &y| m.max(y)) - road_y;
+            let steepest = samples
+                .windows(3)
+                .map(|w| libm::atan((w[2] - w[0]) / 2.0).to_degrees())
+                .fold(f64::NEG_INFINITY, f64::max);
+            if rise >= v.min_rise_m && (v.min_deg..=v.max_deg).contains(&steepest) {
+                let d = half - INSIDE_M;
+                return Some(([a[0] + nrm[0] * d, a[1] + nrm[1] * d], nrm, road_y));
+            }
+        }
+    }
+    None
 }
 
 fn setpieces_of(f: &jj_map::Feature) -> bool {

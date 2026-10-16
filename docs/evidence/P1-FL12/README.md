@@ -60,6 +60,39 @@ Envelopes:
 
 Measured on the Mac (aarch64, native release build, `cargo test`), shared tree on 2026-10-17.
 
+## The off-road climb lab scene (AC1, AC2)
+
+`assets/lab/scenes.json` `off-road-climb` (R131) is an outback-dirt oval, seed 1, with 260 m straights and 40 m bends,
+and no set pieces. Its verges rise off the road into banks and rock faces. `jj_procgen::lab` builds it through the
+real generator. The map is `maps/lab/off-road-climb.json`, and each run's fixture is `scenarios/lab/<run>.json`, run by
+the scenario bank. A verge run picks the first route point beside a verge that matches (sampled every metre, the slope
+over each 2 m), and starts the car at rest 2 m inside the road's edge, facing square off the road. Its `riseM` becomes
+a height envelope row. A fixture's new `vehicle` names the roster car that drives it: `jj sim` loads that profile, and
+the host's test load spawns that roster index.
+
+| Run | Car | Verge | Envelope | Measured |
+|---|---|---|---|---|
+| `off-road-climb` | Ute | 40–50°, 6 m+ | 5 m or more above the road, up ≥ 0.5, no wreck | **7.7 m up**, on the plateau |
+| `off-road-climb-cruz` | Cruz | the same bank | under 4 m above the road, no wreck | 2.8 m (stalls on the face) |
+| `off-road-wall` | Ute | 62°+, 4 m+ | at most 6 m above the road, no wreck | 0.0 m (stops at the face) |
+| `off-road-climb-lap` | Ute | autopilot from the start | a full lap (771 m), no wreck or recovery | 771 m in 97.4 s |
+
+The old Ute, with `--set approach_deg=0 --set surfaces.off_track=0.45`, fails `off-road-climb` at 0.9 m: it sits at the
+bank's foot. Hawk and Lion stall at 0.6 and 0.7 m. The scene's purpose is that the climb is the Ute's.
+
+**Which verges are climbable.** A bank of up to about 50° is climbable by the Ute. Past about 55°, no tyre holds: the
+Ute's off-track friction is 1.9 × 0.75 = 1.43, and tan 55° is 1.43. A first try at 38–55° picked a bank whose top step
+was 58°, and no car climbed it. The climbable class is 40–50°. Steeper faces read as walls, and the wall run stays below
+6 m.
+
+**In the browser** (AC3): `web/tests/journeys/fl12-climb.test.mjs` passes 2/2 locally, in Playwright Chromium and
+WebKit, on a rebuilt host worker. It runs the climb, the Cruz and the wall fixtures in the real worker and renderer, and
+each ends inside its height envelope with the run's vehicle drawn. The TV captures and their review are in
+`self-review.md`.
+
+**From the Feel Lab:** the scene is in the Feel Lab's scene data, so it loads like the canyon leap (FL09). Loading a
+scene into a running room is the scene picker, P1-FL03.1 (br-bbki.19, open).
+
 ## Fixtures re-baselined (one line each)
 
 - `scenarios/roster/mixed-host.json` hash `f83b8fc3…` → `39feddc7…`: the Ute's profile changed (approach, off-track

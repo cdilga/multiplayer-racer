@@ -1,0 +1,55 @@
+{
+  "autopilot": [
+    {
+      "car": 0,
+      "on": true,
+      "tick": 0
+    }
+  ],
+  "cars": [
+    {
+      "linvel": [
+        15.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": 90.0,
+        "x": -130.0,
+        "y": 18.98,
+        "z": -40.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 100000,
+      "metric": "progressM",
+      "min": 771
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wrecks",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "recoveries",
+      "min": 0
+    }
+  ],
+  "map": "maps/lab/off-road-climb.json",
+  "scenario": "off-road-climb-lap",
+  "seed": 1,
+  "ticks": 6600,
+  "until": {
+    "car": 0,
+    "metric": "progressM",
+    "min": 771
+  },
+  "vehicle": "tradie-ute",
+  "what": "The autopilot drives the Ute a full lap of the scene (771 m) from the route's start, with no wreck or recovery."
+}

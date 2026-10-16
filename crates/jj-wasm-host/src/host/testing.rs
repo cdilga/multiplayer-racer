@@ -226,7 +226,24 @@ impl Host {
                     None => self.map.clone(),
                 };
                 let held = self.test.held;
+                let roster = std::mem::take(&mut self.vehicles);
                 *self = Host::from_map(map, fixture.seed);
+                // A fixture's `vehicle` is a roster pick (R123): keep the roster, so its cars are that roster index and
+                // the TV draws that model.
+                let vehicle = fixture
+                    .vehicle
+                    .as_ref()
+                    .and_then(|v| roster.iter().position(|(id, _)| id == v));
+                if vehicle.is_some() && profile_json.is_none() {
+                    self.sim = jj_sim::Sim::with_profiles(
+                        &self.map,
+                        &jj_procgen::registry(),
+                        fixture.seed,
+                        roster.iter().map(|(_, p)| p.clone()).collect(),
+                    );
+                    self.vehicles = roster;
+                }
+                let vehicle = vehicle.filter(|_| profile_json.is_none()).unwrap_or(0);
                 if let Some(json) = profile_json {
                     let profile = jj_sim::VehicleProfile::from_json(&json)?;
                     self.sim = jj_sim::Sim::new(
@@ -238,7 +255,7 @@ impl Host {
                     self.vehicles = vec![("simulation-fixture".into(), profile)];
                 }
                 self.test.held = held;
-                let mut h = Harness::new(*fixture, &self.map, &mut self.sim, false)?;
+                let mut h = Harness::new_as(*fixture, &self.map, &mut self.sim, false, vehicle)?;
                 h.record(&self.sim, false);
                 self.test.harness = Some(h);
                 json!({ "tick": self.sim.tick(), "cars": self.sim.cars().count() })

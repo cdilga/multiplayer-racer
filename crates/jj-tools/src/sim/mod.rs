@@ -124,7 +124,16 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         Some(path) => jj_sim::VehicleProfile::from_json(
             &std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?,
         )?,
-        None => jj_sim::VehicleProfile::cruz(),
+        None => match &fx.vehicle {
+            Some(v) => {
+                let path = PathBuf::from(format!("assets/profiles/{v}.json"));
+                jj_sim::VehicleProfile::from_json(
+                    &std::fs::read_to_string(&path)
+                        .map_err(|e| format!("{}: {e}", path.display()))?,
+                )?
+            }
+            None => jj_sim::VehicleProfile::cruz(),
+        },
     };
     let profile = profile_from(base, &opts.set)?;
     profile.validate_geometry()?;
