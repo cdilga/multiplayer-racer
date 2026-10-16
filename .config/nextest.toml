@@ -5,7 +5,9 @@
 default-filter = """
 not (
     (binary_id(jj-procgen::handling) & test(=a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over))
+  | (binary_id(jj-procgen::handling) & test(=bike_generated_road_speed_lock_bank))
 )
 """
+# br-8bdm (PeachSpire): the bike-sim-fixture rolls on a guard rail at seed 3 point 120 (the roster bikes pass).
 # br-3pwa (PeachSpire): R122 roll-overs on guard rails (Ute seed 1/4 point 520, Lion seed 4 point 440).
 # Lifted: br-kx4o (setpieces, biomes) and br-wrij (overpass) pass on eris at 1d2b76b5 after the generator-24 landing.

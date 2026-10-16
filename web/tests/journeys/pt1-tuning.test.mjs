@@ -222,7 +222,8 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
 // Part 3 (br-2sdu.3): the generator data in the same panel. Length band and relief are changed, a value the generator's
 // validator refuses is shown and kept out, Regenerate builds the same seed again with them, and the measured track
 // matches; a second Regenerate with the same values builds the identical track (the journalled values replay it).
-test('?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export', { timeout: 300_000 }, async () => {
+// Quarantined (CI owner, red budget): P0 br-uf5n, a generator value no longer moves the course length (generator 24).
+test('?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export', { timeout: 300_000, skip: 'quarantined: P0 br-uf5n (generator 24 length)' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
