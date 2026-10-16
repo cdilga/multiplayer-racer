@@ -42,7 +42,13 @@ pub(super) struct RoundState {
     pub stale_dropped: u32,
     /// The last map verdict ("ok" or the validator's rules).
     pub verdict: String,
+    /// R127: launch snaps that reached the host in the last `START_GRACE_MS` of the countdown fire at GO instead of
+    /// counting as false starts (the phone's own countdown can run a few frames ahead of the host's).
+    pub start_launches: Vec<(jj_sim::CarId, u16)>,
 }
+
+/// How long before GO a launch snap still counts as "on GO" (ms).
+pub(super) const START_GRACE_MS: u64 = 150;
 
 impl RoundState {
     pub fn new(seed: u64) -> Self {
@@ -58,6 +64,7 @@ impl RoundState {
             results: None,
             seed,
             prepare_maps: false,
+            start_launches: Vec::new(),
             pending: None,
             prepared: None,
             stale_dropped: 0,
@@ -146,6 +153,10 @@ impl Host {
                 let laps = self.effective_laps();
                 self.sim.set_catch_up(self.round.catch_up);
                 self.sim.start_race(laps);
+                // Snaps that arrived just before GO launch now, the first tick of the race (R127).
+                for (car, preload_ms) in std::mem::take(&mut self.round.start_launches) {
+                    self.sim.wheelie(car, preload_ms);
+                }
                 self.room_state_all();
                 vec![]
             }
@@ -193,6 +204,7 @@ impl Host {
     /// A fresh world on the prepared map, the cohort on the start grid in seat order (held until the start), and no
     /// debris from before the round (R58 is per round).
     fn start_grid(&mut self, cohort: &[SeatId]) {
+        self.round.start_launches.clear();
         if let Some(map) = self.round.prepared.take() {
             self.map = map;
         }

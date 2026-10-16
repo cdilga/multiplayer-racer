@@ -263,12 +263,22 @@ fn session_only(cmd: &ControllerCmd) -> bool {
 }
 
 /// A launch snap (R127): while the grid is held for the countdown it is a false start that forfeits this start's
-/// launch; otherwise the sim's launch (which decides perfect, normal or refused).
-fn launch(sim: &mut Sim, grid_held: bool, car: CarId, preload_ms: u16) {
-    if grid_held {
-        sim.false_start(car);
-    } else {
+/// launch, unless it arrives in the last `START_GRACE_MS` before GO, when it waits for GO; otherwise the sim's launch
+/// (which decides perfect, normal or refused).
+fn launch(
+    sim: &mut Sim,
+    at_go: &mut Vec<(CarId, u16)>,
+    grid_held: bool,
+    go_in_ms: u64,
+    car: CarId,
+    preload_ms: u16,
+) {
+    if !grid_held {
         sim.wheelie(car, preload_ms);
+    } else if go_in_ms <= round::START_GRACE_MS {
+        at_go.push((car, preload_ms));
+    } else {
+        sim.false_start(car);
     }
 }
 
@@ -784,6 +794,7 @@ impl Host {
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
         let grid_held = self.driving() == jj_session::director::Driving::Held;
+        let go_in_ms = self.round.director.remaining_ms().unwrap_or(u64::MAX);
         let now_ms = tick_ms(tick);
         match msg {
             MainToSim::NetBytes {
@@ -921,7 +932,14 @@ impl Host {
                             input.prompt.action(a.kind);
                             match a.kind {
                                 ActionKind::Wheelie { preload_ms } => {
-                                    launch(&mut self.sim, grid_held, car, preload_ms);
+                                    launch(
+                                        &mut self.sim,
+                                        &mut self.round.start_launches,
+                                        grid_held,
+                                        go_in_ms,
+                                        car,
+                                        preload_ms,
+                                    );
                                 }
                                 ActionKind::UtilityForward => {
                                     self.sim.utility(car, UtilityKind::Forward);
@@ -1028,6 +1046,7 @@ impl Host {
 
     fn controller_cmd(&mut self, endpoint: EndpointId, cmd: ControllerCmd) {
         let grid_held = self.driving() == jj_session::director::Driving::Held;
+        let go_in_ms = self.round.director.remaining_ms().unwrap_or(u64::MAX);
         // One level of `ForSource`: the command is for that source of the endpoint (a hub's pad or key cluster); the
         // wrapper never nests and never wraps a Hello (that is the connection's).
         let (via, cmd) = match cmd {
@@ -1200,7 +1219,14 @@ impl Host {
                     if let Some(car) = input.car {
                         match kind {
                             ActionKind::Wheelie { preload_ms } => {
-                                launch(&mut self.sim, grid_held, car, preload_ms);
+                                launch(
+                                    &mut self.sim,
+                                    &mut self.round.start_launches,
+                                    grid_held,
+                                    go_in_ms,
+                                    car,
+                                    preload_ms,
+                                );
                             }
                             ActionKind::UtilityForward => {
                                 outcome = Some(self.utility_outcome(car, UtilityKind::Forward));
