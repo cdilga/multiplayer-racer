@@ -11,8 +11,8 @@
   },
   "wholePath": {
     "touchToSend": {
-      "p50": 16,
-      "p99": 28
+      "p50": 4,
+      "p99": 34
     },
     "network": {
       "p50": 10,

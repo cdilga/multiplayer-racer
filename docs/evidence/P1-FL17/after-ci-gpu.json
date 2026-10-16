@@ -1,0 +1,379 @@
+{
+  "bead": "br-bbki.17",
+  "p1": "P1-FL17",
+  "what": "After: pointerrawupdate + sample/flush on stick input (286a650a, 24a3e37f). The CI GPU workflow on eris runs fl17-latency on every push; these are its lan-loopback lines (Playwright Chromium, JJ_CHROMIUM_GPU=1, ANGLE/Vulkan, host and phone pages in one browser on one machine, loopback WebRTC). TURN is not run in CI (no coturn there).",
+  "runs": {
+    "ci-gpu-run-4972": {
+      "commit": "611000ac",
+      "job": "http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/4972/jobs/10268",
+      "gpu": "NVIDIA GeForce RTX 2080 SUPER, 610.57.04, 2560 MiB, 0 %",
+      "lan-loopback": {
+        "samples": 302,
+        "touchToSend": {
+          "p50": 0.9,
+          "p99": 31.6,
+          "max": 32.6
+        },
+        "network": {
+          "p50": 0.5,
+          "p99": 2.5,
+          "max": 4
+        },
+        "mainToWorker": {
+          "p50": 0.1,
+          "p99": 1.2,
+          "max": 2.2
+        },
+        "workerToTick": {
+          "p50": 3.7,
+          "p99": 8.8,
+          "max": 10.7
+        },
+        "tickToDrawn": {
+          "p50": 35.7,
+          "p99": 39.8,
+          "max": 40
+        },
+        "total": {
+          "p50": 43.8,
+          "p99": 65.3,
+          "max": 66.1
+        },
+        "renderLagTicks": {
+          "p50": 2.5,
+          "p99": 2.7
+        },
+        "frameMs": {
+          "p50": 16.7,
+          "p99": 16.8
+        },
+        "worst": [
+          {
+            "i": 84,
+            "touchToSend": 32.6,
+            "network": 0.3,
+            "mainToWorker": 0,
+            "workerToTick": 5.6,
+            "tickToDrawn": 27.6,
+            "total": 66.1
+          },
+          {
+            "i": 32,
+            "touchToSend": 32.4,
+            "network": 0.3,
+            "mainToWorker": 0,
+            "workerToTick": 5.3,
+            "tickToDrawn": 28,
+            "total": 66
+          },
+          {
+            "i": 48,
+            "touchToSend": 16.5,
+            "network": 1.8,
+            "mainToWorker": 0.5,
+            "workerToTick": 8.3,
+            "tickToDrawn": 38.5,
+            "total": 65.6
+          },
+          {
+            "i": 188,
+            "touchToSend": 32,
+            "network": 1.8,
+            "mainToWorker": 0.1,
+            "workerToTick": 1.3,
+            "tickToDrawn": 30.1,
+            "total": 65.3
+          },
+          {
+            "i": 87,
+            "touchToSend": 15.3,
+            "network": 1.4,
+            "mainToWorker": 0.2,
+            "workerToTick": 8.6,
+            "tickToDrawn": 39.1,
+            "total": 64.6
+          }
+        ]
+      }
+    },
+    "ci-gpu-run-4981": {
+      "commit": "6cb685db",
+      "job": "http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/4981/jobs/10288",
+      "gpu": "NVIDIA GeForce RTX 2080 SUPER, 610.57.04, 2560 MiB, 0 %",
+      "lan-loopback": {
+        "samples": 302,
+        "touchToSend": {
+          "p50": 0.9,
+          "p99": 29.4,
+          "max": 33.3
+        },
+        "network": {
+          "p50": 0.4,
+          "p99": 2.2,
+          "max": 16.2
+        },
+        "mainToWorker": {
+          "p50": 0.1,
+          "p99": 1.1,
+          "max": 1.5
+        },
+        "workerToTick": {
+          "p50": 4,
+          "p99": 8.6,
+          "max": 9.2
+        },
+        "tickToDrawn": {
+          "p50": 26.4,
+          "p99": 43.3,
+          "max": 44.4
+        },
+        "total": {
+          "p50": 37.3,
+          "p99": 65.2,
+          "max": 74.9
+        },
+        "renderLagTicks": {
+          "p50": 2.9,
+          "p99": 3.4
+        },
+        "frameMs": {
+          "p50": 16.7,
+          "p99": 16.8
+        },
+        "worst": [
+          {
+            "i": 5,
+            "touchToSend": 13.1,
+            "network": 16.2,
+            "mainToWorker": 0.2,
+            "workerToTick": 3.8,
+            "tickToDrawn": 41.6,
+            "total": 74.9
+          },
+          {
+            "i": 1,
+            "touchToSend": 17.4,
+            "network": 0.3,
+            "mainToWorker": 0.1,
+            "workerToTick": 3.9,
+            "tickToDrawn": 44.4,
+            "total": 66.1
+          },
+          {
+            "i": 0,
+            "touchToSend": 29.4,
+            "network": 0.7,
+            "mainToWorker": 0.1,
+            "workerToTick": 1.7,
+            "tickToDrawn": 33.4,
+            "total": 65.3
+          },
+          {
+            "i": 7,
+            "touchToSend": 17.6,
+            "network": 2.2,
+            "mainToWorker": 0.1,
+            "workerToTick": 3.4,
+            "tickToDrawn": 41.9,
+            "total": 65.2
+          },
+          {
+            "i": 150,
+            "touchToSend": 33.3,
+            "network": 0.7,
+            "mainToWorker": 0,
+            "workerToTick": 4.1,
+            "tickToDrawn": 26.9,
+            "total": 65
+          }
+        ]
+      }
+    },
+    "ci-gpu-run-4987": {
+      "commit": "10fc5268",
+      "job": "http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/4987/jobs/10305",
+      "gpu": "NVIDIA GeForce RTX 2080 SUPER, 610.57.04, 2562 MiB, 0 %",
+      "lan-loopback": {
+        "samples": 302,
+        "touchToSend": {
+          "p50": 1.6,
+          "p99": 19.1,
+          "max": 47.4
+        },
+        "network": {
+          "p50": 0.7,
+          "p99": 8.3,
+          "max": 45.9
+        },
+        "mainToWorker": {
+          "p50": 0.1,
+          "p99": 1.7,
+          "max": 4.7
+        },
+        "workerToTick": {
+          "p50": 4.1,
+          "p99": 9.5,
+          "max": 11
+        },
+        "tickToDrawn": {
+          "p50": 34.8,
+          "p99": 38.7,
+          "max": 42.2
+        },
+        "total": {
+          "p50": 42.8,
+          "p99": 66.6,
+          "max": 85.4
+        },
+        "renderLagTicks": {
+          "p50": 2.7,
+          "p99": 3.1
+        },
+        "frameMs": {
+          "p50": 16.7,
+          "p99": 16.8
+        },
+        "worst": [
+          {
+            "i": 10,
+            "touchToSend": 3.6,
+            "network": 45.9,
+            "mainToWorker": 1.3,
+            "workerToTick": 0.2,
+            "tickToDrawn": 34.4,
+            "total": 85.4
+          },
+          {
+            "i": 175,
+            "touchToSend": 47.4,
+            "network": 4.2,
+            "mainToWorker": 0,
+            "workerToTick": 3.9,
+            "tickToDrawn": 29.3,
+            "total": 84.8
+          },
+          {
+            "i": 87,
+            "touchToSend": 33.4,
+            "network": 4.1,
+            "mainToWorker": 0.2,
+            "workerToTick": 4.8,
+            "tickToDrawn": 38.3,
+            "total": 80.8
+          },
+          {
+            "i": 1,
+            "touchToSend": 20.8,
+            "network": 1.6,
+            "mainToWorker": 0.4,
+            "workerToTick": 7.9,
+            "tickToDrawn": 35.9,
+            "total": 66.6
+          },
+          {
+            "i": 81,
+            "touchToSend": 17.4,
+            "network": 1.1,
+            "mainToWorker": 0.3,
+            "workerToTick": 8.2,
+            "tickToDrawn": 37.9,
+            "total": 64.9
+          }
+        ]
+      }
+    },
+    "ci-gpu-run-4989": {
+      "commit": "2401e3c9",
+      "job": "http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/4989/jobs/10318",
+      "gpu": "NVIDIA GeForce RTX 2080 SUPER, 610.57.04, 2561 MiB, 0 %",
+      "lan-loopback": {
+        "samples": 301,
+        "touchToSend": {
+          "p50": 1.7,
+          "p99": 32.3,
+          "max": 38.3
+        },
+        "network": {
+          "p50": 0.9,
+          "p99": 8,
+          "max": 18.4
+        },
+        "mainToWorker": {
+          "p50": 0.3,
+          "p99": 2.4,
+          "max": 3.3
+        },
+        "workerToTick": {
+          "p50": 4.6,
+          "p99": 10,
+          "max": 10.8
+        },
+        "tickToDrawn": {
+          "p50": 37.2,
+          "p99": 41,
+          "max": 47.7
+        },
+        "total": {
+          "p50": 44.2,
+          "p99": 77.7,
+          "max": 80.8
+        },
+        "renderLagTicks": {
+          "p50": 2.4,
+          "p99": 3.4
+        },
+        "frameMs": {
+          "p50": 16.7,
+          "p99": 16.8
+        },
+        "worst": [
+          {
+            "i": 231,
+            "touchToSend": 32.2,
+            "network": 4.7,
+            "mainToWorker": 0.3,
+            "workerToTick": 7,
+            "tickToDrawn": 36.6,
+            "total": 80.8
+          },
+          {
+            "i": 154,
+            "touchToSend": 38.3,
+            "network": 0.3,
+            "mainToWorker": 0.4,
+            "workerToTick": 2.5,
+            "tickToDrawn": 37.8,
+            "total": 79.3
+          },
+          {
+            "i": 159,
+            "touchToSend": 36.2,
+            "network": 7.4,
+            "mainToWorker": 0.7,
+            "workerToTick": 5.7,
+            "tickToDrawn": 29.3,
+            "total": 79.3
+          },
+          {
+            "i": 128,
+            "touchToSend": 36.6,
+            "network": 0.9,
+            "mainToWorker": 0.8,
+            "workerToTick": 10,
+            "tickToDrawn": 29.4,
+            "total": 77.7
+          },
+          {
+            "i": 32,
+            "touchToSend": 32.3,
+            "network": 5.3,
+            "mainToWorker": 0.3,
+            "workerToTick": 0.6,
+            "tickToDrawn": 38.6,
+            "total": 77.1
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "bead": "br-bbki.17",
+  "p1": "P1-FL17",
+  "browser": "Playwright Chromium (one machine, two contexts)",
+  "renderer": "GPU",
+  "budget": {
+    "what": "Thumb-to-screen latency budget per stage (P1-FL17, R134), checked by web/tests/journeys/fl17-latency.test.mjs. hostSide holds on every CI host, software-rendered or not (ms): mainToWorker is a postMessage, workerToTick may wait for at most one 120 Hz tick boundary plus the worker's 2 ms loop, so p99 under two ticks. hostSideGpu adds the render stages and holds only with a real GPU (JJ_CHROMIUM_GPU=1, the CI GPU workflow on eris): renderLagTicks is how far the drawn tick trails the newest snapshot, in 120 Hz ticks (the interpolation delay plus at most a frame). wholePath is the target for a real run on the owner's LAN, recorded in docs/evidence/P1-FL17/.",
+    "version": 1,
+    "hostSide": {
+      "mainToWorker": {
+        "p99": 8
+      },
+      "workerToTick": {
+        "p99": 16.7
+      }
+    },
+    "wholePath": {
+      "touchToSend": {
+        "p50": 16,
+        "p99": 28
+      },
+      "network": {
+        "p50": 10,
+        "p99": 40
+      },
+      "mainToWorker": {
+        "p50": 2,
+        "p99": 8
+      },
+      "workerToTick": {
+        "p50": 7,
+        "p99": 14
+      },
+      "tickToDrawn": {
+        "p50": 40,
+        "p99": 60
+      },
+      "total": {
+        "p50": 75,
+        "p99": 120
+      }
+    },
+    "hostSideGpu": {
+      "renderLagTicks": {
+        "p99": 5
+      },
+      "tickToDrawn": {
+        "p99": 60
+      }
+    }
+  },
+  "runs": {
+    "lan-loopback": {
+      "samples": 301,
+      "touchToSend": {
+        "p50": 18.5,
+        "p99": 37.7,
+        "max": 41.8
+      },
+      "network": {
+        "p50": 0.6,
+        "p99": 3.4,
+        "max": 11.5
+      },
+      "mainToWorker": {
+        "p50": 0,
+        "p99": 1.4,
+        "max": 2.8
+      },
+      "workerToTick": {
+        "p50": 3.9,
+        "p99": 9.3,
+        "max": 10.9
+      },
+      "tickToDrawn": {
+        "p50": 26.9,
+        "p99": 67.8,
+        "max": 75.5
+      },
+      "total": {
+        "p50": 56.5,
+        "p99": 104.5,
+        "max": 122.5
+      },
+      "renderLagTicks": {
+        "p50": 3,
+        "p99": 7.5
+      },
+      "frameMs": {
+        "p50": 16.7,
+        "p99": 16.8
+      }
+    },
+    "turn-relay": {
+      "samples": 301,
+      "touchToSend": {
+        "p50": 19.3,
+        "p99": 38.3,
+        "max": 40.2
+      },
+      "network": {
+        "p50": 0.5,
+        "p99": 5.3,
+        "max": 36.6
+      },
+      "mainToWorker": {
+        "p50": 0.1,
+        "p99": 1.2,
+        "max": 2.8
+      },
+      "workerToTick": {
+        "p50": 4.2,
+        "p99": 9.4,
+        "max": 9.9
+      },
+      "tickToDrawn": {
+        "p50": 35.1,
+        "p99": 38.4,
+        "max": 54
+      },
+      "total": {
+        "p50": 60.7,
+        "p99": 80.8,
+        "max": 86.7
+      },
+      "renderLagTicks": {
+        "p50": 2.7,
+        "p99": 3
+      },
+      "frameMs": {
+        "p50": 16.7,
+        "p99": 16.8
+      }
+    }
+  },
+  "build": "46a0668f (before: pointermove + 8 ms poll)",
+  "machine": "eris: NVIDIA GeForce RTX 2080 SUPER, driver 610.57.04, headless Chromium with JJ_CHROMIUM_GPU=1 (ANGLE/Vulkan); host and phone pages in one browser, loopback WebRTC; TURN = local coturn 4.7.0 container on 127.0.0.1 (ice=relay forced)"
+}
