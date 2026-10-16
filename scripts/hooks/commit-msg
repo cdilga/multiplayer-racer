@@ -2,7 +2,8 @@
 # Evidence commit-msg hook (P1-F02, plan §13b.5; docs/evidence/README.md): a commit that changes a bead's evidence
 # directory, docs/evidence/<ID>/, must name <ID> in its message (or the ID's base: P1-C05 for P1-C05.2), or carry a
 # line starting `Recapture:` that says why someone else's evidence is being re-captured. Installed by
-# scripts/hooks/install.sh; runs any other commit-msg hooks in .git/hooks/hooks.d/commit-msg/ after it.
+# scripts/hooks/install.sh; runs any other commit-msg hooks in .git/hooks/hooks.d/commit-msg/ after it. It also adds an
+# `Agent: <AGENT_NAME>` trailer (br-an0o).
 #
 #   scripts/hooks/commit-msg <message-file> [--staged-from <file>]   (the canary passes a fixed path list)
 set -uo pipefail
@@ -29,6 +30,12 @@ if [[ ${#refused[@]} -gt 0 ]]; then
     echo "  Name the bead (its P1-ID) in the message, or add a line 'Recapture: <why>' if you are re-capturing" >&2
     echo "  another bead's evidence on purpose (docs/evidence/README.md)." >&2
     exit 1
+fi
+
+# br-an0o: the commit names the agent that made it (`Agent: <AGENT_NAME>`), so a red CI run's culprit finder can bounce
+# the failure to its author. Every agent commits as the same git user; AGENT_NAME is set by the start commands.
+if [[ ${2:-} != --staged-from && -n ${AGENT_NAME:-} ]] && ! grep -q '^Agent: ' "$msgfile"; then
+    git interpret-trailers --in-place --if-exists doNothing --trailer "Agent: $AGENT_NAME" "$msgfile"
 fi
 
 # Chain: anything else installed for commit-msg.
