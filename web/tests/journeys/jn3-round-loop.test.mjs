@@ -109,7 +109,8 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
       document.querySelector('[data-act=identify]').click();
       return t;
     });
-    await wait(host, (n) => window.__jjRoom.identified().length > n, before, 5000);
+    // On software WebGL the wait outlasts the loose bound below, so a slow pulse fails on its time, not on a timeout.
+    await wait(host, (n) => window.__jjRoom.identified().length > n, before, gpu ? 5000 : 15_000);
     const shown = (await host.evaluate(() => window.__jjRoom.identified())).at(-1);
     assert.equal(shown.seat, seatA, "the pulse is on Davo's tile");
     const carA = (await host.evaluate(() => window.__jjRoom.view().seats)).find((s) => s.name === 'Davo').car;
@@ -118,7 +119,9 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
     assert.equal(mark?.car, carA, "Davo's number floats over his car in every view");
     identify.push(shown.wall - pressed);
     if (k === 0) await shot(host, 'tv-identify');
-    await host.waitForTimeout(3300); // Identify is one per 3 s per seat (master §5.2)
+    // Identify is one per 3 s per seat (master §5.2) of host time, which a loaded software-WebGL host runs below real time
+    // (CI run 5196), so a 3.3 s wall gap could land inside the cooldown there (CI run 5422).
+    await host.waitForTimeout(gpu ? 3300 : 4500);
   }
   console.log(`# identify press → TV pulse (ms): ${identify.join(', ')}`);
   const renderer = gpu ? 'host on a GPU (ANGLE Vulkan)' : 'host on SwiftShader (software WebGL)';
@@ -127,7 +130,7 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   // The 150 ms target holds for a host drawing on a GPU. On software WebGL each host frame takes ~150 ms and both the
   // press and the event wait behind one (CI's busy runner: 0.7-1 s), so there the samples get a loose bound only.
   // The 150 ms bound is the GPU lane's (gpu.yml); on a shared software-WebGL runner this only proves the pulse shows.
-  const limit = gpu ? 150 : 4000;
+  const limit = gpu ? 150 : 8000;
   assert.ok(Math.max(...identify) <= limit, `press-to-visible ${identify} ms (≤ ${limit} ms, ${renderer})`);
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
   const results = await host.evaluate(() => window.__jjRoom.view().results);
