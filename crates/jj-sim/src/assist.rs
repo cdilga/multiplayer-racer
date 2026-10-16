@@ -382,7 +382,8 @@ impl AssistState {
         // The slide catch: past `startDeg` of drift, a share of the steering goes against the slide, and the throttle
         // eases off below the power slide's hold.
         let sl = &prof.slide;
-        let excess = ((drift_deg.abs() - sl.start_deg) / (sl.full_deg - sl.start_deg)).clamp(0.0, 1.0);
+        let excess =
+            ((drift_deg.abs() - sl.start_deg) / (sl.full_deg - sl.start_deg)).clamp(0.0, 1.0);
         let catch = lv.slide_catch * excess;
         if catch > 0.0 {
             let counter = -(drift_deg / sl.full_deg).clamp(-1.0, 1.0);
