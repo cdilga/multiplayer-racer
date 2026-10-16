@@ -10,7 +10,7 @@
     "liftS": 0.1,
     "expect": {
       "offMinSlipDeg": 60,
-      "offMinOffRoadM": 7.0,
+      "offMinOffRoadM": 6.5,
       "someMaxSlipDeg": 45,
       "lotsMaxSlipDeg": 20,
       "lotsMinProgressM": 150

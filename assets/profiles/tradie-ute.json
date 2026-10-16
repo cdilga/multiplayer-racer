@@ -2849,12 +2849,13 @@
     "support_level_tilt_rad": 0.17453292,
     "body_friction": 0.6,
     "com_lower_m": 0.2,
+    "approach_deg": 25.0,
     "surfaces": {
       "tarmac": 1.0,
       "packed_dirt": 0.7,
       "gravel": 0.62,
       "rock": 0.9,
-      "off_track": 0.45
+      "off_track": 0.75
     },
     "damage": {
       "health_front": 200.0,

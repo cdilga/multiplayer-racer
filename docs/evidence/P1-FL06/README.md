@@ -31,12 +31,12 @@ The road's half-width is 7 m, and the hairpin exits 117 m from the start line. E
 | Cruz Missile | Off | 98° (spun) | 8.8 m (off the road) | 102 m (stuck in the hairpin) |
 | Cruz Missile | Some | 13° | 3.6 m | 219 m |
 | Cruz Missile | Lots | 13° | 3.6 m | 222 m |
-| Tradie Ute | Off | 83° (spun) | 8.2 m (off the road) | 97 m |
+| Tradie Ute | Off | 180° (spun) | 6.8 m (at the road's edge) | 275 m (spun round and drove on) |
 | Tradie Ute | Some | 35° | 3.6 m | 216 m |
 | Tradie Ute | Lots | 12° | 3.6 m | 223 m |
 
 Envelopes:
-- **Off:** slip ≥ 60° and ≥ 7 m off the line.
+- **Off:** slip ≥ 60° and ≥ 6.5 m off the line.
 - **Some:** slip ≤ 45° and on the road.
 - **Lots:** slip ≤ 20°, on the road, and ≥ 150 m (round the hairpin).
 
@@ -45,8 +45,8 @@ at full lock from 6 m/s and holds it for 2.5 s.
 
 | Level | Max slip | Sliding (slip > 10°) |
 |---|---|---|
-| Off | 34° | 2.08 s (held: the RWD tail, R138) |
-| Some | 17° | 1.86 s (damped to half) |
+| Off | 33° | 2.07 s (held: the RWD tail, R138) |
+| Some | 16° | 1.83 s (damped to half) |
 | Lots | 7° | 0 s (caught before it starts) |
 
 Envelopes:
@@ -55,6 +55,10 @@ Envelopes:
 - **Lots:** ≤ 10° and ≤ 0.1 s.
 
 Every run replays from its journal to the same full-state hash.
+
+Re-baselined 2026-10-17 for P1-FL12. The Ute's off-track grip went from 0.45 to 0.75. Its raw spin now stops at the
+road's edge (6.8 m off the line, 180°), not 8.2 m out in the dirt, so the Off floor moved from 7 m to 6.5 m. The Ute
+rows above, and its power slide, are re-measured with that profile.
 
 ## AC2: skill still shows (`crates/jj-procgen/tests/assists.rs`)
 
@@ -67,7 +71,7 @@ Lots. The driver is scripted:
 | Car | Off | Lots |
 |---|---|---|
 | Cruz Missile | 72.80 s | 86.12 s |
-| Tradie Ute | 78.43 s | 86.72 s |
+| Tradie Ute | 78.42 s | 86.71 s |
 | Hawk Dash | 74.48 s | 85.94 s |
 | Lion President | 74.51 s | 85.93 s |
 

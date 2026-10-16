@@ -4051,21 +4051,16 @@ fn chassis_mass_props(p: &VehicleProfile) -> MassProperties {
     MassProperties::new(Vector::new(cx, cy, cz), p.tuning.mass, inertia)
 }
 
-/// Part `i`'s collider on the chassis (P1-S04a): a convex hull of its sidecar proxy, in vehicle space. The core carries the
-/// whole car's mass properties (S04b recomputes them when parts detach); the other parts are massless, so the chassis
-/// feels as it did when it was one hull.
+/// Part `i`'s collider on the chassis (P1-S04a): a convex hull of its sidecar proxy in vehicle space, its underside held
+/// to the profile's approach angle (`VehicleProfile::collider_points`). The core carries the whole car's mass properties
+/// (S04b recomputes them when parts detach); the other parts are massless, so the chassis feels as it did when it was
+/// one hull.
 fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
     let points: Vec<Vector> = p
-        .geometry
-        .parts
-        .get(i)
-        .map(|g| {
-            g.points
-                .iter()
-                .map(|&[x, y, z]| Vector::new(x, y, z))
-                .collect()
-        })
-        .unwrap_or_default();
+        .collider_points(i)
+        .iter()
+        .map(|&[x, y, z]| Vector::new(x, y, z))
+        .collect();
     let builder = ColliderBuilder::convex_hull(&points).unwrap_or_else(|| {
         if i == damage::CORE {
             let hull: Vec<Vector> = p
