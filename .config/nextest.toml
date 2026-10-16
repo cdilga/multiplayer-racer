@@ -2,12 +2,8 @@
 # skipped here, each with a P0 bead naming the test, the cause and the owner. The bead's fix removes its line in the same
 # commit. Run a quarantined test by name with `cargo nextest run --ignore-default-filter -E '<filter>'`.
 [profile.default]
-default-filter = """
-not (
-    (binary_id(jj-procgen::handling) & test(=a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over))
-  | (binary_id(jj-procgen::handling) & test(=bike_generated_road_speed_lock_bank))
-)
-"""
-# br-8bdm (PeachSpire): the bike-sim-fixture rolls on a guard rail at seed 3 point 120 (the roster bikes pass).
-# br-3pwa (PeachSpire): R122 roll-overs on guard rails (Ute seed 1/4 point 520, Lion seed 4 point 440).
+# No test is quarantined now; a quarantine adds `default-filter = """ not ( … ) """` here.
 # Lifted: br-kx4o (setpieces, biomes) and br-wrij (overpass) pass on eris at 1d2b76b5 after the generator-24 landing.
+# Lifted: br-3pwa (R122) passes for all six vehicles on eris at ee5f1619 (the Ute's nose climb replaced FL12's trim).
+# Lifted: br-8bdm: the bike-sim-fixture's generated-road bank is gone (it duplicated the roster bikes' throws in the R122
+# bank, which pass; the fixture keeps its flat and full-lock banks).

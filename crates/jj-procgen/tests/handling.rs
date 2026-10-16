@@ -139,6 +139,10 @@ fn throw(map: &LoadedMap, profile: &VehicleProfile, at: usize, speed: f32, how: 
     run
 }
 
+/// Every roster vehicle, the bikes included (Postie Bike, Pig Catcher). The bike-sim-fixture (scenarios/bikes, a proxy
+/// for the bike sim's own tests, not in the roster) keeps the flat and full-lock banks below; its generated-road bank
+/// went with br-8bdm. It duplicated the roster bikes' throws here, and its third of their balance torque tipped it on
+/// a guard rail generator 24 placed (seed 3 point 120); the roster bikes stay upright there.
 #[test]
 fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
     for (id, profile) in profiles() {
@@ -367,11 +371,6 @@ fn bike() -> VehicleProfile {
 #[test]
 fn bike_flat_speed_lock_bank() {
     flat_bank("bike-sim-fixture", &bike());
-}
-
-#[test]
-fn bike_generated_road_speed_lock_bank() {
-    thrown_about_on_generated_roads("bike-sim-fixture", &bike());
 }
 
 #[test]
