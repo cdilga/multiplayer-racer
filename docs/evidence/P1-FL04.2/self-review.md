@@ -7,7 +7,7 @@ skidpad fixture with the vehicle profile and steps it). The lab captures come fr
 
 ## Looked at
 
-- `captures/ute-punch-t72.jpg`, `ute-punch-t120.jpg`, `ute-punch-t230.jpg` (1920x1080, chase camera). The Ute's 6 m/s
+- `captures/ute-punch-t72.jpg`, `captures/ute-punch-t120.jpg`, `captures/ute-punch-t230.jpg` (1920x1080, chase camera). The Ute's 6 m/s
   throttle punch at full lock: tick 72 yaw 135 deg/s with the slide at 1; tick 120 yaw 107 deg/s; tick 230 caught (yaw
   9 deg/s, slide 0.14). Each frame shows the body level and upright (up-y 0.999), wheels on the ground, nothing
   clipped. The numbers are in `captures/capture.json`.
@@ -15,7 +15,7 @@ skidpad fixture with the vehicle profile and steps it). The lab captures come fr
 - `captures/lab-turn-1280x720.jpg`: the Feel Lab tab. An intro line, then the Power, Turn-in and Grip ↔ slide
   sliders, each with the selected vehicle's live numbers. Turn-in 1.52x reads `turn g 5.00` for the Lion President,
   its own 3.3 × 1.52. There is no preset picker.
-- `captures/lab-ab-1280x720.jpg`, `lab-flipped-1280x720.jpg`: the A/B slots ("power 1.52x, turn-in 1.52x, grip 0.71x"
+- `captures/lab-ab-1280x720.jpg`, `captures/lab-flipped-1280x720.jpg`: the A/B slots ("power 1.52x, turn-in 1.52x, grip 0.71x"
   / "sliders at 1x") flipped live mid-race, with the car mid-corner on the greybox. The footer reads "8 changed".
 
 ## Defects found and fixed
@@ -33,7 +33,7 @@ skidpad fixture with the vehicle profile and steps it). The lab captures come fr
 - On a scrolled Feel Lab pane, the status line ("Applied to 4 vehicles…") sits half under the sticky footer. That is
   the panel's existing scroll layout, and the line is readable when scrolled to the end.
 - The stills can't show the slide itself: the chase camera turns with the car, and the skidpad has no landmarks. The
-  yaw, heading and slide beside each file in `capture.json` carry that. The feel is the owner's to judge in the preview
+  yaw, heading and slide beside each file in `captures/capture.json` carry that. The feel is the owner's to judge in the preview
   (R136).
 - A fixture-loaded profile is drawn with the Cruz body (the test surface names it `simulation-fixture`), so the Ute
   run shows a Cruz.

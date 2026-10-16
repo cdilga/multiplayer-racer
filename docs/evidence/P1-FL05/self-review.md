@@ -11,11 +11,11 @@ Chromium emulation of a phone, not a device.
 - `captures/phone-tutorial-step2.png`: "Step 2 of 5 · Go and stop", left stick up/back, no sideways.
 - `captures/phone-tutorial-step3-launch.png`: "Step 3 of 5 · Launch", R127's copy. The pager dots touch the
   "#1 This device" chip below the card (see Remaining).
-- `captures/phone-tutorial-oi.png`, `phone-tutorial-step5-cone.png`: steps 4 and 5 of 5. The right stick's flicks.
+- `captures/phone-tutorial-oi.png`, `captures/phone-tutorial-step5-cone.png`: steps 4 and 5 of 5. The right stick's flicks.
 - `captures/phone-tutorial-done.png`: "You're ready". The help copy mentions driving help, not drift.
-- `captures/tv-prompt-go-and-stop-1280x720.jpg`, `tv-prompt-launch-1280x720.jpg`: the TV's first-drive prompt
+- `captures/tv-prompt-go-and-stop-1280x720.jpg`, `captures/tv-prompt-launch-1280x720.jpg`: the TV's first-drive prompt
   reads "2/5" and "3/5" with the left stick up/back and pull-then-snap. There is no drift prompt.
-- The host's keyboard controls card, as drawn in `docs/evidence/P1-FL04.2/captures/ute-punch-t72.jpg` (1920x1080):
+- The host's keyboard controls card, as drawn in P1-FL04.2's driving captures (1920x1080, its `captures/` folder):
   Keys A/B/C list Steer, Go · brake, Launch, OI! · cone, Identify and READY. The ACTION left and right keys (drift) are
   gone.
 
