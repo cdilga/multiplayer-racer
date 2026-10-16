@@ -1,0 +1,33 @@
+{
+  "what": "P1-FL06 (R128): the assists carry the stability on the arcade handling. The same over-driven driving at each level: Lots stays on the road, Some damps the slide, Off spins. (1) The greybox loop's first bend, the hairpin, taken flat out: a lift and a stab with full lock toward the line at the bend; the hairpin exits 117 m from the start line. (2) The Tradie Ute's power slide: a throttle punch at full lock from 6 m/s, held. Envelopes are what crates/jj-sim/tests/assist.rs asserts; the measured numbers are in docs/evidence/P1-FL06/.",
+  "map": "maps/greybox-loop.json",
+  "roadHalfWidthM": 7.0,
+  "corner": {
+    "vehicles": ["cruz-missile", "tradie-ute"],
+    "seconds": 15,
+    "bendAbove": 0.25,
+    "bendBelow": 0.1,
+    "liftS": 0.1,
+    "expect": {
+      "offMinSlipDeg": 60,
+      "offMinOffRoadM": 7.0,
+      "someMaxSlipDeg": 45,
+      "lotsMaxSlipDeg": 20,
+      "lotsMinProgressM": 150
+    }
+  },
+  "powerSlide": {
+    "vehicle": "tradie-ute",
+    "entryMps": 6.0,
+    "steer": 1.0,
+    "seconds": 2.5,
+    "slidingAboveDeg": 10,
+    "expect": {
+      "offMinSlipDeg": 25,
+      "offMinSlidingS": 1.5,
+      "someMaxSlipShareOfOff": 0.7,
+      "lotsMaxSlipDeg": 10,
+      "lotsMaxSlidingS": 0.1
+    }
+  }
+}

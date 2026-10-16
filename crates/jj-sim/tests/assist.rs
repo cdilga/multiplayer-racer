@@ -205,6 +205,8 @@ fn a_scripted_novice_laps_with_lots_and_some_and_crashes_more_with_off() {
     assert!(off.1 > lots.1, "Off crashes more than Lots: {rows:?}");
 }
 
+/// The line pull never fights a full-lock input. The slide catch (P1-FL06, R128) is the stated exception: while the car
+/// is sliding past `slide.startDeg` it takes its share of the steering, always against the slide.
 #[test]
 fn assists_never_fight_a_full_lock_input() {
     let fx = fixture("novice-laps.json");
@@ -233,11 +235,18 @@ fn assists_never_fight_a_full_lock_input() {
                 if sim.race().is_held(car.0, sim.tick() - 1) {
                     continue;
                 }
-                assert_eq!(
-                    sim.applied_input(car).unwrap().steer,
-                    want,
-                    "{level:?} lock {lock}"
-                );
+                let got = sim.applied_input(car).unwrap().steer;
+                let report = sim.assist_report(car).unwrap();
+                if report.slide_catch > 0.0 {
+                    // Caught: the steer moved from the player's toward the counter-steer, never further into the slide.
+                    let (got, drift) = (dequantise_axis(got), report.drift_deg);
+                    assert!(
+                        got * drift.signum() < lock * drift.signum() + 1e-3,
+                        "{level:?} lock {lock}: steer {got} against drift {drift}"
+                    );
+                    continue;
+                }
+                assert_eq!(got, want, "{level:?} lock {lock}");
             }
         }
     }
@@ -533,4 +542,196 @@ fn catch_up_closes_a_10_s_gap_by_a_stated_amount_and_never_touches_the_leader() 
     // And it gains ground: at least 0.3 s of the gap, the stated amount from the fixture's measured numbers.
     assert!(closed_m / reference >= 0.3, "closed {closed_m} m");
     assert!(on.follower_lap_s < off.follower_lap_s);
+}
+
+fn roster_profile(id: &str) -> VehicleProfile {
+    let json = std::fs::read_to_string(repo().join(format!("assets/profiles/{id}.json"))).unwrap();
+    VehicleProfile::from_json(&json).unwrap()
+}
+
+/// The car's slip: the angle between its nose and its travel (deg, 0..180), or `None` at a crawl.
+fn slip_deg(sim: &Sim, car: CarId, crawl: f32) -> Option<f32> {
+    let s = sim.car_state(car).unwrap();
+    let (sh, ch) = (s.heading.sin(), s.heading.cos());
+    let (vf, vs) = (
+        s.linvel[0] * sh + s.linvel[2] * ch,
+        s.linvel[0] * ch - s.linvel[2] * sh,
+    );
+    (vf.hypot(vs) > crawl).then(|| vs.abs().atan2(vf).to_degrees())
+}
+
+fn replays(map: &LoadedMap, profile: VehicleProfile, sim: &Sim, what: &str) {
+    let replay = Sim::replay(
+        map,
+        &Registry::generic(),
+        profile,
+        sim.journal(),
+        sim.tick(),
+    );
+    assert_eq!(
+        replay.state_hash(),
+        sim.state_hash(),
+        "{what} replays bit for bit"
+    );
+}
+
+const LEVELS: [AssistLevel; 3] = [AssistLevel::Off, AssistLevel::Some, AssistLevel::Lots];
+
+/// P1-FL06 AC1 (R128): the same over-driven hairpin at each level. Flat out, a lift and a stab with full lock toward the
+/// line at the bend: Off spins off the road, Some and Lots get round it on the road (the brake assist and the slide
+/// catch), Lots with the least slip.
+#[test]
+fn an_over_driven_corner_spins_off_and_stays_on_the_road_with_lots() {
+    let fx = fixture("over-driven.json");
+    let map = map_of(&fx);
+    let route = Route::new(&map);
+    let c = &fx["corner"];
+    let e = &c["expect"];
+    let f = |v: &Value| v.as_f64().unwrap() as f32;
+    let half = f(&fx["roadHalfWidthM"]);
+    let pts: Vec<(f32, f32)> = map
+        .map
+        .route
+        .points
+        .iter()
+        .map(|q| (q.x as f32 / 1000.0, q.z as f32 / 1000.0))
+        .collect();
+    for id in c["vehicles"].as_array().unwrap() {
+        let id = id.as_str().unwrap();
+        let prof = roster_profile(id);
+        for level in LEVELS {
+            let mut sim = Sim::new(&map, &Registry::generic(), 3, prof.clone());
+            let car = sim.spawn_grid(1)[0];
+            sim.set_assist(car, level);
+            sim.start_race(3);
+            let (mut slip_max, mut off_max, mut lift, mut in_bend) = (0.0f32, 0.0f32, 0u64, false);
+            for _ in 0..(c["seconds"].as_u64().unwrap() * S) {
+                let p = pose(&sim, car);
+                let lock = prof.steer_lock(p.forward_speed);
+                let line = route
+                    .probe(None, p, lock, prof.wheelbase(), [0.8, 6.0, 6.0])
+                    .steer;
+                if line.abs() > f(&c["bendAbove"]) && !in_bend {
+                    in_bend = true;
+                    lift = (f(&c["liftS"]) * TICK_HZ as f32) as u64;
+                } else if line.abs() < f(&c["bendBelow"]) {
+                    in_bend = false;
+                }
+                let throttle = if lift > 0 {
+                    lift -= 1;
+                    0.0
+                } else {
+                    1.0
+                };
+                sim.set_input(
+                    car,
+                    DriveInput {
+                        throttle: quantise_axis(throttle),
+                        steer: quantise_axis(if in_bend { line.signum() } else { line }),
+                        ..Default::default()
+                    },
+                );
+                sim.step();
+                slip_max = slip_max.max(slip_deg(&sim, car, 3.0).unwrap_or(0.0));
+                let at = sim.car_state(car).unwrap().position;
+                off_max = off_max.max(
+                    pts.iter()
+                        .map(|(x, z)| (x - at[0]).hypot(z - at[2]))
+                        .fold(f32::MAX, f32::min),
+                );
+            }
+            let progress = sim.race().progress_m(car.0);
+            eprintln!(
+                "{id} {level:?}: slip max {slip_max:.0} deg, off the line by up to {off_max:.1} m, progress {progress:.0} m"
+            );
+            let what = format!("{id} {level:?}");
+            match level {
+                AssistLevel::Off => assert!(
+                    slip_max >= f(&e["offMinSlipDeg"]) && off_max >= f(&e["offMinOffRoadM"]),
+                    "{what}: the raw car spins off ({slip_max:.0} deg, {off_max:.1} m)"
+                ),
+                AssistLevel::Some => assert!(
+                    slip_max <= f(&e["someMaxSlipDeg"]) && off_max < half,
+                    "{what}: on the road ({slip_max:.0} deg, {off_max:.1} m)"
+                ),
+                AssistLevel::Lots => assert!(
+                    slip_max <= f(&e["lotsMaxSlipDeg"])
+                        && off_max < half
+                        && progress >= f(&e["lotsMinProgressM"]),
+                    "{what}: caught, on the road and round the bend ({slip_max:.0} deg, {off_max:.1} m, {progress:.0} m)"
+                ),
+            }
+            replays(&map, prof.clone(), &sim, &what);
+        }
+    }
+}
+
+/// P1-FL06 AC1 (R128): the Ute's power slide, a throttle punch at full lock from a crawl, held. Off holds the slide
+/// (the arcade car's RWD tail, R138), Some damps it, Lots catches it before it starts.
+#[test]
+fn a_power_slide_is_held_off_damped_with_some_and_caught_with_lots() {
+    let fx = fixture("over-driven.json");
+    let map = map_of(&fx);
+    let ps = &fx["powerSlide"];
+    let e = &ps["expect"];
+    let f = |v: &Value| v.as_f64().unwrap() as f32;
+    let prof = roster_profile(ps["vehicle"].as_str().unwrap());
+    let mut off_slip = 0.0f32;
+    for level in LEVELS {
+        let mut sim = Sim::new(&map, &Registry::generic(), 3, prof.clone());
+        let car = sim.spawn_grid(1)[0];
+        sim.set_assist(car, level);
+        sim.start_race(3);
+        while sim.car_state(car).unwrap().forward_speed < f(&ps["entryMps"]) {
+            sim.set_input(
+                car,
+                DriveInput {
+                    throttle: quantise_axis(0.5),
+                    ..Default::default()
+                },
+            );
+            sim.step();
+            assert!(sim.tick() < 10 * S, "reaches the entry speed");
+        }
+        // Off the throttle, then the punch.
+        for _ in 0..3 {
+            sim.set_input(car, DriveInput::default());
+            sim.step();
+        }
+        let (mut slip_max, mut sliding) = (0.0f32, 0u64);
+        for _ in 0..((f(&ps["seconds"]) * TICK_HZ as f32) as u64) {
+            sim.set_input(
+                car,
+                DriveInput {
+                    throttle: quantise_axis(1.0),
+                    steer: quantise_axis(f(&ps["steer"])),
+                    ..Default::default()
+                },
+            );
+            sim.step();
+            let slip = slip_deg(&sim, car, 2.0).unwrap_or(0.0);
+            slip_max = slip_max.max(slip);
+            sliding += u64::from(slip > f(&ps["slidingAboveDeg"]));
+        }
+        let sliding_s = sliding as f32 / TICK_HZ as f32;
+        eprintln!("power slide {level:?}: slip max {slip_max:.0} deg, sliding {sliding_s:.2} s");
+        match level {
+            AssistLevel::Off => {
+                off_slip = slip_max;
+                assert!(
+                    slip_max >= f(&e["offMinSlipDeg"]) && sliding_s >= f(&e["offMinSlidingS"]),
+                    "Off holds the slide ({slip_max:.0} deg, {sliding_s:.2} s)"
+                );
+            }
+            AssistLevel::Some => assert!(
+                slip_max <= f(&e["someMaxSlipShareOfOff"]) * off_slip,
+                "Some damps it ({slip_max:.0} deg against Off's {off_slip:.0})"
+            ),
+            AssistLevel::Lots => assert!(
+                slip_max <= f(&e["lotsMaxSlipDeg"]) && sliding_s <= f(&e["lotsMaxSlidingS"]),
+                "Lots catches it ({slip_max:.0} deg, {sliding_s:.2} s)"
+            ),
+        }
+        replays(&map, prof.clone(), &sim, &format!("power slide {level:?}"));
+    }
 }

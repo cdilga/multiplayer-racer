@@ -5,14 +5,22 @@
 //! input. Nothing here applies a force of its own except the flip assist's self-righting torque (the same one the race
 //! rules use, integrated once per tick). The levels, from data (`assets/profiles/assist.json`):
 //!
-//! - **Some**: steering pulled 30 % toward the line when the stick is near centre, brake assist before bends, and no
-//!   accidents.
-//! - **Lots**: auto-throttle (the player steers; the brake still works), 60 % steer-to-line, brake assist, the
-//!   wheelie launch off, and the flip assist acts at once.
+//! - **Some**: steering pulled toward the line when the stick is near centre, brake assist before bends, and slides
+//!   damped (half a slide catch).
+//! - **Lots**: auto-throttle (the player steers; the brake still works), a stronger steer-to-line, brake assist, slides
+//!   caught, the wheelie launch off, and the flip assist acts at once.
+//! - **Off**: the raw car (R128: the assists carry the stability; the arcade handling itself lets go on purpose).
 //!
-//! **Never fights the player.** The steer-to-line weight is full while the stick is within `nearCentre` of centre and
-//! falls to zero at `zeroAt`, so a full-lock input passes through exactly; a stick pushed the other way from the line
-//! also gets no help. The brake assist and auto-throttle only ever add brake or throttle the player isn't giving.
+//! **Never fights the player's line.** The steer-to-line weight is full while the stick is within `nearCentre` of
+//! centre and falls to zero at `zeroAt`, so a full-lock input passes through exactly; a stick pushed the other way from
+//! the line also gets no help. The brake assist and auto-throttle only ever add brake or throttle the player isn't
+//! giving.
+//!
+//! **The slide catch** (P1-FL06, R128) is the one help that acts under any stick: once the arcade controller's drift
+//! angle passes `slide.startDeg` the level's `slideCatch` share of the steering goes to a counter-steer (the drift angle
+//! over `slide.fullDeg`, against the slide), and the throttle eases toward `slide.liftTo`, below the power slide's hold.
+//! Steering against a slide is what catches one in the arcade controller, so this is a learner's own catch, done for
+//! them: Lots catches a slide, Some damps one (half the steering, so a slide held at full lock lets go), Off leaves it.
 //!
 //! **Catch-up** (for every car, lobby Off / Light) scales a trailing car's engine force: a car more than `startS` behind
 //! the leader (gap metres over a reference speed) gets up to `topSpeedGain` more drive, linearly to full at `fullS`, and
@@ -95,12 +103,25 @@ pub struct SpeedPlanTuning {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LevelTuning {
     pub steer_to_line: f32,
+    /// Share of the steering given to the slide catch at full drift angle (0 none, 1 a full catch).
+    pub slide_catch: f32,
     /// Scales the planned speed this level brakes for and cruises at.
     pub speed_skill: f32,
     pub brake_assist: bool,
     pub auto_throttle: bool,
     pub wheelie: bool,
     pub flip_instant: bool,
+}
+
+/// When the slide catch starts and how hard it counter-steers (P1-FL06).
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SlideTuning {
+    /// The drift angle (deg) where the catch starts, rising linearly to its full share at `fullDeg`.
+    pub start_deg: f32,
+    pub full_deg: f32,
+    /// The throttle the catch eases toward (0..1), below the arcade power slide's hold.
+    pub lift_to: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -140,6 +161,7 @@ struct AssistFile {
     line: LineTuning,
     speed_plan: SpeedPlanTuning,
     levels: Levels,
+    slide: SlideTuning,
     flip: FlipTuning,
     catch_up: CatchUpTuning,
 }
@@ -151,6 +173,7 @@ pub struct AssistProfile {
     pub speed_plan: SpeedPlanTuning,
     pub some: LevelTuning,
     pub lots: LevelTuning,
+    pub slide: SlideTuning,
     pub flip: FlipTuning,
     pub catch_up: CatchUpTuning,
 }
@@ -170,6 +193,7 @@ impl AssistProfile {
             speed_plan: f.speed_plan,
             some: f.levels.some,
             lots: f.levels.lots,
+            slide: f.slide,
             flip: f.flip,
             catch_up: f.catch_up,
         };
@@ -208,9 +232,15 @@ impl AssistProfile {
         }
         for (name, lv) in [("some", &self.some), ("lots", &self.lots)] {
             unit(&format!("levels.{name}.steerToLine"), lv.steer_to_line)?;
+            unit(&format!("levels.{name}.slideCatch"), lv.slide_catch)?;
             if lv.speed_skill <= 0.0 || lv.speed_skill > 2.0 {
                 return Err(format!("assist levels.{name}: speedSkill 0..2"));
             }
+        }
+        let sl = &self.slide;
+        unit("slide.liftTo", sl.lift_to)?;
+        if sl.start_deg < 0.0 || sl.full_deg <= sl.start_deg {
+            return Err("assist slide needs 0 <= startDeg < fullDeg".into());
         }
         let f = &self.flip;
         if f.up_below >= f.done_above || f.speed_below_mps < 0.0 {
@@ -264,6 +294,9 @@ pub struct AssistReport {
     pub target_speed: f32,
     pub brake_assist: f32,
     pub auto_throttle: f32,
+    /// The slide catch's share of the steering this tick (0 when not sliding), and the drift angle it read.
+    pub slide_catch: f32,
+    pub drift_deg: f32,
     pub flip_active: bool,
     /// Catch-up share (0..1) and the engine-force scale it gave.
     pub catch_share: f32,
@@ -289,8 +322,10 @@ impl AssistState {
         }
     }
 
-    /// The input after the assist: `car` is where the car is and how fast, `max_steer`/`wheelbase` its geometry. A car
-    /// with no assist returns `input` untouched.
+    /// The input after the assist: `car` is where the car is and how fast, `max_steer`/`wheelbase` its geometry, and
+    /// `drift_deg` the arcade controller's drift angle (+ a left-hand slide; 0 off its wheels or without the controller).
+    /// A car with no assist returns `input` untouched.
+    #[allow(clippy::too_many_arguments)]
     pub fn apply(
         &mut self,
         prof: &AssistProfile,
@@ -298,6 +333,7 @@ impl AssistState {
         car: Pose2,
         max_steer: f32,
         wheelbase: f32,
+        drift_deg: f32,
         input: DriveInput,
     ) -> DriveInput {
         let Some(lv) = prof.level(self.level) else {
@@ -340,8 +376,25 @@ impl AssistState {
         } else {
             lv.steer_to_line * fade
         };
-        out.steer = quantise_axis(s + w * (probe.steer - s));
+        let mut steer = s + w * (probe.steer - s);
         rep.line_weight = w;
+
+        // The slide catch: past `startDeg` of drift, a share of the steering goes against the slide, and the throttle
+        // eases off below the power slide's hold.
+        let sl = &prof.slide;
+        let excess = ((drift_deg.abs() - sl.start_deg) / (sl.full_deg - sl.start_deg)).clamp(0.0, 1.0);
+        let catch = lv.slide_catch * excess;
+        if catch > 0.0 {
+            let counter = -(drift_deg / sl.full_deg).clamp(-1.0, 1.0);
+            steer += catch * (counter - steer);
+            let t = dequantise_axis(out.throttle);
+            if t > sl.lift_to {
+                out.throttle = quantise_axis(t + catch * (sl.lift_to - t));
+            }
+        }
+        rep.slide_catch = catch;
+        rep.drift_deg = drift_deg;
+        out.steer = quantise_axis(steer);
 
         // Speed: brake before a bend the car is too fast for, and (Lots) hold the throttle to the plan. A deliberate
         // brake or reverse from the player is never reduced.

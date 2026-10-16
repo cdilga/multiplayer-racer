@@ -1,6 +1,6 @@
 {
   "contract": "jj-assist/1",
-  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side: they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input, and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
+  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side (P1-FL06: they carry the stability on the arcade handling; Lots catches slides, Some damps them, Off is the raw car): they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input with the line pull (the slide catch alone acts on a slide under any stick), and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
   "line": {
     "lookAheadS": 0.8,
     "minLookAheadM": 6.0,
@@ -19,6 +19,7 @@
   "levels": {
     "some": {
       "steerToLine": 0.45,
+      "slideCatch": 0.5,
       "speedSkill": 0.9,
       "brakeAssist": true,
       "autoThrottle": false,
@@ -27,12 +28,18 @@
     },
     "lots": {
       "steerToLine": 0.6,
+      "slideCatch": 1.0,
       "speedSkill": 0.9,
       "brakeAssist": true,
       "autoThrottle": true,
       "wheelie": false,
       "flipInstant": true
     }
+  },
+  "slide": {
+    "startDeg": 8.0,
+    "fullDeg": 25.0,
+    "liftTo": 0.4
   },
   "flip": {
     "upBelow": 0.2,
