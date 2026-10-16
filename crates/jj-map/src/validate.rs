@@ -761,7 +761,10 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                                 &mut v,
                                 Rule::Loop,
                                 &at,
-                                format!("gate at route point {} is inside the loop (the car is on the deck above it)", g.at),
+                                format!(
+                                    "gate at route point {} is inside the loop (the car is on the deck above it)",
+                                    g.at
+                                ),
                             );
                         }
                     }
