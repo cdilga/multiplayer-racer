@@ -85,6 +85,16 @@ fn overpass_leaps_lay_and_validate_on_generated_eights() {
         }
     }
     eprintln!("{}", rows.join("\n"));
+    // The self-review's map (docs/evidence/br-xlvx.5): JJ_EVIDENCE_DIR=<dir> writes Town seed 1's.
+    if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
+        let m = leap(1, Biome::Town).expect("an overpass leap");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            format!("{dir}/overpass-town-1.json"),
+            serde_json::to_vec(&m.map).unwrap(),
+        )
+        .unwrap();
+    }
     assert!(
         laid >= 16,
         "leaps laid on {laid} of 20 eights:\n{}",

@@ -418,6 +418,8 @@ export class MapRenderer {
     const side = params.detourSide ?? 1;
     const offset = mm(params.detourOffsetMm ?? 0);
     const half = mm(params.detourWidthMm ?? 8000) / 2;
+    // An overpass leap (piece 4, br-xlvx.5) has no detour.
+    if (half <= 0) return;
     const centre = ix.map((i, k) => {
       const [a, b] = [p[(i + n - 1) % n]!, p[(i + 1) % n]!];
       const l = Math.hypot(b.x - a.x, b.z - a.z) || 1;
