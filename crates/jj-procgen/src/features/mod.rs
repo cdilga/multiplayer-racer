@@ -707,7 +707,10 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
-        if matches!(f.kind, FeatureKind::SetPiece | FeatureKind::Fork | FeatureKind::Loop) {
+        if matches!(
+            f.kind,
+            FeatureKind::SetPiece | FeatureKind::Fork | FeatureKind::Loop
+        ) {
             // Checked against its own contract (crate::setpieces::check, jj_map::fork::problems, jj_map::looping::problems).
             continue;
         }
