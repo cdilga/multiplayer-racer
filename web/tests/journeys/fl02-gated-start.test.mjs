@@ -43,7 +43,8 @@ const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE
 //            GO the host holds a snap for GO instead): a false start, so the host forfeits this start's launch.
 //   'late'   wait for GO, charge 0.5 s later, hold 0.4 s, snap forward: a normal launch.
 //   'at-go'  pull back for the last 0.5 s of the countdown, snap forward when the phone is told the race is on (never before
-//            holding 0.35 s, the least a good launch needs; never past the 1.2 s that cancels a preload).
+//            holding 0.35 s, the least a good launch needs). The drive stick's launch never cancels a held pull and reverse stays
+//            locked while the grid pull is held (R127), so a phone that hears GO late (CI run 5253: > 1.1 s) still launches.
 const phoneGesture = (page, kind) =>
   page.evaluate(
     (kind) =>
@@ -107,7 +108,7 @@ const phoneGesture = (page, kind) =>
                 const racing = c.inspect().roomPhase === 'Racing';
                 const held = performance.now() - pulledAt;
                 if (racing && held >= 350) break;
-                if (held > 1100) throw new Error(`the phone held the pull ${Math.round(held)} ms and the race has not started`);
+                if (held > 6000) throw new Error(`the phone held the pull ${Math.round(held)} ms and the race has not started`);
                 if (performance.now() > goAt + 10_000) throw new Error('the phone never saw GO');
                 await sleep(2);
               }
