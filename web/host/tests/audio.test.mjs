@@ -291,7 +291,9 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   await page.evaluate(() => {
     window.__pump = setInterval(() => window.__jjTest.untilFact(() => false, { maxTicks: 6, every: 6 }), 60);
   });
-  await page.waitForTimeout(500);
+  // Wait for a snapshot that carries the stick rather than reading one at a fixed 500 ms: on a loaded runner the pump can
+  // stall past the input's freshness and the sampled engine read throttle 0 (CI run 5438). The assertions still judge it.
+  await page.waitForFunction((car) => (window.__jjAudio.engines().find((e) => e.car === car)?.throttle ?? 0) > 0.2, joined[0].car, { timeout: 10_000, polling: 50 }).catch(() => {});
   const engines = await page.evaluate(() => window.__jjAudio.engines());
   assert.equal(engines.length, 8, 'one engine per car');
   const own = engines.find((e) => e.car === joined[0].car);
