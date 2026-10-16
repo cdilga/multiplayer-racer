@@ -10,7 +10,7 @@ with `JJ_CAPTURE_DIR` set). TV size 1920×1080, mid chase camera. Browsers: Play
 Seeds (first seed of each recipe that places the kind): canyon leap Rocks 0, mesa drop Outback Bitumen 3, creek washout
 Outback Dirt 3. Reference: `art/references/australia/generated/biome-rocks-olgas.png`.
 
-## What I looked at, and what I saw
+## Looked at
 
 | Capture | Verdict |
 |---|---|
@@ -31,9 +31,25 @@ leaving the lip too slowly falls into the pit and respawns; every piece's landma
 10 s of the 15 s before its commitment point; every kicker and landing is a collider where the map says. The journey checks
 drawn kicker/landing triangles against the native collision mesh (R90 `jumpShapes`) and WASM against native replay.
 
-## Known gaps (stated, not hidden)
+## Defects found and fixed
 
-- Mesa drop reads weakly on screen (above).
+- Overview captures showed the camera inside a dome (the zero-car overview still followed a car slot): the journey now
+  calls `setFollow(null)` for the overview, as the landscape review tool does; recaptured.
+- The kicker's flat top ran the full road width, so its side slopes climbed the canyon wall and the front edge's normal
+  turned into a wall: cars stopped dead at the ramp's foot. Flat top = road − 2 × edge slope.
+- The approach ease started flat where a 12 % terrain climb met it (a crest the autopilot flipped on at 25 m/s): approach
+  and run-out are now C1 Hermites from the terrain's height and grade.
+- A far rim below the take-off ground gave a ~20° descent onto a 9° landing: the far rim now sits about level with the lip.
+- The pit started at the lip, sinking the kicker's last sections into the bilinear ground: it now starts 1.5 cells past.
+
+## Remaining defects
+
+- Mesa drop reads weakly on screen: the plateau is low (2.5–4 m) on the flattest biome.
+- The pit walls are jagged (2.5 m grid cells on near-vertical cliffs): reads as broken rock, not smooth.
+
+## Not covered
+
 - Bots always take the leap; choosing the detour is P1-FL16 (route choices).
 - The landing is aligned by geometry (far rim about level with the lip, down-slope landing); R129's landing-aligned boost
   is not part of this bead.
+- No phone or real TV: Playwright at 1920×1080 only. WebKit overview frames predate the overview fix.
