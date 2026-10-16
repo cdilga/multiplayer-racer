@@ -1,10 +1,16 @@
 // Gated start (R127): a big callout over a car for how its launch went: "PERFECT START!", "LAUNCH!" or "EARLY! NO LAUNCH".
+// Landings (R129, P1-FL07) use it too: "CLEAN LANDING! BOOST", "BIG AIR! BOOST", "HARD LANDING!", "STACKED IT!".
 // Same device as the Identify number (a billboard drawn over the world, so every tile that can see the car shows it).
 import { CanvasTexture, Sprite, SpriteMaterial, SRGBColorSpace, type Camera, type Scene } from 'three';
 import type { Sampled } from './interp';
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT, type LaunchOutcome } from '../../../shared/src/launch';
+import { LANDING_TEXT, type LandingCallout } from '../../../shared/src/landing';
 
-interface Callout {
+/** What a callout says: a start (R127) or a landing (R129). */
+export type Callout = LaunchOutcome | LandingCallout;
+const TEXT: Record<Callout, string> = { ...LAUNCH_TEXT, ...LANDING_TEXT };
+
+interface Live {
   sprite: Sprite;
   until: number;
 }
@@ -19,24 +25,28 @@ const REF = 12;
 const NEAR = 9;
 const FAR = 40;
 
-const FILL: Record<LaunchOutcome, { fill: string; ink: string }> = {
+const FILL: Record<Callout, { fill: string; ink: string }> = {
   Early: { fill: '#B3261E', ink: '#FFFFFF' },
   Perfect: { fill: '#FFB400', ink: '#15203A' },
   Launch: { fill: '#00C2B8', ink: '#15203A' },
+  Clean: { fill: '#00C2B8', ink: '#15203A' },
+  BigAir: { fill: '#FFB400', ink: '#15203A' },
+  Bad: { fill: '#FF7A1A', ink: '#15203A' },
+  Crash: { fill: '#B3261E', ink: '#FFFFFF' },
 };
 
 export class LaunchCallouts {
-  private readonly live = new Map<number, Callout>();
+  private readonly live = new Map<number, Live>();
   /** Every callout put up (car, outcome), oldest first: introspection for tests (R90). */
-  readonly shown: Array<{ car: number; outcome: LaunchOutcome }> = [];
+  readonly shown: Array<{ car: number; outcome: Callout }> = [];
 
   constructor(private readonly scene: Scene) {}
 
-  pop(car: number, outcome: LaunchOutcome, ms = LAUNCH_SHOWN_MS): void {
+  pop(car: number, outcome: Callout, ms = LAUNCH_SHOWN_MS): void {
     this.drop(car);
     this.shown.push({ car, outcome });
     if (this.shown.length > 500) this.shown.shift();
-    const text = LAUNCH_TEXT[outcome];
+    const text = TEXT[outcome];
     const { fill, ink } = FILL[outcome];
     const c = document.createElement('canvas');
     c.width = 720;

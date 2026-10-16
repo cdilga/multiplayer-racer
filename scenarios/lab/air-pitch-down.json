@@ -1,0 +1,67 @@
+{
+  "scenario": "air-pitch-down",
+  "what": "R129 air control and landing tiers (P1-FL07; docs/research/fun-tracks.md R14-R16) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out down its middle at 22 m/s, lifts off the throttle at the lip (tick 66) and flies the gap; it floors it again once down (tick 260). The three fixtures fly the same jump three ways (air-pitch-neutral, -down, -up). Nose down: a 0.18 s tap of throttle in the air (ticks 90-112, a human's reaction after the lip) pitches the nose down to meet the landing slope, so all four wheels land within 8 degrees of it: a clean landing, whose boost leaves it well faster than the neutral run 0.75 s later.",
+  "map": "maps/lab/canyon-leap.json",
+  "seed": 1,
+  "ticks": 420,
+  "cars": [
+    {
+      "pose": {
+        "x": -43.796,
+        "y": 20.42,
+        "z": 45.0,
+        "headingDeg": -90.0
+      },
+      "linvel": [
+        -22.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "toTick": 66,
+      "throttle": 1.0
+    },
+    {
+      "car": 0,
+      "fromTick": 90,
+      "toTick": 112,
+      "throttle": 1.0
+    },
+    {
+      "car": 0,
+      "fromTick": 260,
+      "throttle": 1.0
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "landingTier",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "car": 0,
+      "metric": "landingAngleDeg",
+      "min": 0,
+      "max": 8
+    },
+    {
+      "car": 0,
+      "metric": "landingSpeedRatio",
+      "min": 1.4,
+      "max": 2.0
+    },
+    {
+      "car": 0,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}

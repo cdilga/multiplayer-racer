@@ -1,0 +1,75 @@
+{
+  "scenario": "air-pitch-crash",
+  "what": "R129 / R16 crash and self-righting (P1-FL07) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s, lifts at the lip and then floors it in the air from tick 90 and keeps it floored, which pitches the nose down all the way (R129: throttle noses down; a throttle merely held through the lip is latched and doesn't). It hits the far rim nose first, about 45 degrees off the ground: a bad landing or a crash. A crash rights it whatever the assist level (R138, no flip traps): upright and on its wheels within 1.5 s of the hit (the hit is at tick 169; upY and wheels are checked at tick 349), and it drives on without a wreck.",
+  "map": "maps/lab/canyon-leap.json",
+  "seed": 1,
+  "ticks": 600,
+  "cars": [
+    {
+      "pose": {
+        "x": -43.796,
+        "y": 20.42,
+        "z": 45.0,
+        "headingDeg": -90.0
+      },
+      "linvel": [
+        -22.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "toTick": 66,
+      "throttle": 1.0
+    },
+    {
+      "car": 0,
+      "fromTick": 90,
+      "throttle": 1.0
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "landingTier",
+      "min": 2,
+      "max": 3
+    },
+    {
+      "car": 0,
+      "metric": "landingAngleDeg",
+      "min": 35,
+      "max": 180
+    },
+    {
+      "car": 0,
+      "atTick": 349,
+      "metric": "upY",
+      "min": 0.9,
+      "max": 1.001
+    },
+    {
+      "car": 0,
+      "atTick": 349,
+      "metric": "wheelsInContact",
+      "min": 3,
+      "max": 4
+    },
+    {
+      "car": 0,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "car": 0,
+      "metric": "forwardSpeed",
+      "min": 10,
+      "max": 60
+    }
+  ]
+}

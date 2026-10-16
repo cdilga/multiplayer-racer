@@ -219,6 +219,9 @@ pub struct CarObs {
     pub derby: Option<DerbyObs>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sanga: Option<crate::items::sanga::Active>,
+    /// Air control and landings (R129, P1-FL07): the last judged landing and what it earned.
+    #[serde(default)]
+    pub air: AirObs,
 }
 
 /// One car's derby facts: what the HUD bands, the results and the fixtures read (master §10.12).
@@ -257,6 +260,13 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
     Some(CarObs {
         car: car.0,
         sanga: sim.sanga_state(car),
+        air: sim.air_state(car).map_or_else(AirObs::default, |a| AirObs {
+            landings: a.landings,
+            last: a.last,
+            boost_s: a.boost_ticks as f32 / TICK_HZ as f32,
+            righting: a.righting_ticks > 0,
+            flying: a.flying(sim.air_profile(), TICK_HZ),
+        }),
         vehicle: sim.vehicle_of(car).unwrap_or(0) as u16,
         mass_kg: sim.car_mass(car).unwrap_or(0.0),
         max_engine_force: sim
@@ -362,6 +372,22 @@ pub fn observe_cars(sim: &Sim, route: &RouteGeom) -> Vec<CarObs> {
         .collect()
 }
 
+/// A car's landings as the sim judged them (R129, P1-FL07; [`crate::air`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AirObs {
+    /// Judged landings so far this life.
+    pub landings: u32,
+    /// The last one's tier, angle to the ground (degrees) and flight time (s).
+    pub last: Option<crate::air::Landing>,
+    /// Landing boost left (s), and a crashed car being righted.
+    pub boost_s: f32,
+    pub righting: bool,
+    /// Air control has the car (a jump, past `controlAfterS`).
+    #[serde(default)]
+    pub flying: bool,
+}
+
 /// A number that says what happened. The first eight are the car's state now; the rest accumulate over the run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -447,10 +473,20 @@ pub enum Metric {
     /// The farthest the car has been from the world origin in plan view, m (P1-M10: the arena is centred on it, so this
     /// is how far from the bowl's middle; containment is this staying under the wall's radius).
     MaxRadiusM,
+    /// R129 (P1-FL07): the first judged landing's tier (0 clean, 1 OK, 2 bad, 3 crash) and its angle to the ground,
+    /// degrees.
+    LandingTier,
+    LandingAngleDeg,
+    /// Horizontal speed `LANDING_SPEED_AFTER_S` after the first judged landing over the speed the tick before it: above
+    /// 1 a clean landing's boost, below 1 a bad landing's loss.
+    LandingSpeedRatio,
 }
 
+/// When [`Metric::LandingSpeedRatio`] is read after the landing, s.
+pub const LANDING_SPEED_AFTER_S: f64 = 0.75;
+
 impl Metric {
-    pub const ALL: [Metric; 47] = [
+    pub const ALL: [Metric; 50] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -498,6 +534,9 @@ impl Metric {
         Metric::DerbyRank,
         Metric::DerbyTimeLeftS,
         Metric::RoundOver,
+        Metric::LandingTier,
+        Metric::LandingAngleDeg,
+        Metric::LandingSpeedRatio,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -550,6 +589,9 @@ impl Metric {
             Metric::DerbyRank => "derbyRank",
             Metric::DerbyTimeLeftS => "derbyTimeLeftS",
             Metric::RoundOver => "roundOver",
+            Metric::LandingTier => "landingTier",
+            Metric::LandingAngleDeg => "landingAngleDeg",
+            Metric::LandingSpeedRatio => "landingSpeedRatio",
         }
     }
 }
@@ -589,6 +631,9 @@ pub struct SignatureTracker {
     energy0: Option<f64>,
     energy_gain: f64,
     max_radius: f64,
+    /// The first judged landing: tier, angle, the horizontal speed the tick before, its tick, and the ratio once read.
+    first_landing: Option<(crate::air::Landing, f64, u64)>,
+    landing_speed_ratio: Option<f64>,
 }
 
 /// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
@@ -638,6 +683,8 @@ impl SignatureTracker {
             energy0: None,
             energy_gain: 0.0,
             max_radius: 0.0,
+            first_landing: None,
+            landing_speed_ratio: None,
         }
     }
 
@@ -744,6 +791,22 @@ impl SignatureTracker {
                 self.slide_charge += f64::from((o.action.boost - prev.action.boost).max(0.0));
             }
         }
+        let flat = f64::from(o.linvel[0]).hypot(f64::from(o.linvel[2]));
+        if let Some(prev) = &self.last
+            && self.first_landing.is_none()
+            && o.air.landings > prev.air.landings
+            && let Some(l) = o.air.last
+        {
+            let before = f64::from(prev.linvel[0]).hypot(f64::from(prev.linvel[2]));
+            self.first_landing = Some((l, before, self.ticks));
+        }
+        if let Some((_, before, at)) = self.first_landing
+            && self.landing_speed_ratio.is_none()
+            && (self.ticks - at) as f64 >= LANDING_SPEED_AFTER_S * f64::from(TICK_HZ)
+            && before > 0.0
+        {
+            self.landing_speed_ratio = Some(flat / before);
+        }
         self.last = Some(o.clone());
     }
 
@@ -807,6 +870,9 @@ impl SignatureTracker {
             Metric::DerbyRank => f64::from(o.derby?.rank),
             Metric::DerbyTimeLeftS => o.derby?.time_left_ticks as f64 / f64::from(TICK_HZ),
             Metric::RoundOver => return None,
+            Metric::LandingTier => f64::from(self.first_landing?.0.tier.as_u8()),
+            Metric::LandingAngleDeg => f64::from(self.first_landing?.0.angle_deg),
+            Metric::LandingSpeedRatio => self.landing_speed_ratio?,
             Metric::SlipDeg => o
                 .wheels
                 .iter()

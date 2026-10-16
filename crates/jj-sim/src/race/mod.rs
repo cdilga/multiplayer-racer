@@ -338,6 +338,15 @@ pub enum Event {
         car: u32,
         outcome: StartLaunch,
     },
+    /// R129 (P1-FL07): how this car came down from a jump, judged by [`crate::air`]; the TV pops a callout over it.
+    Landed {
+        car: u32,
+        tier: crate::air::LandingTier,
+        angle_deg: f32,
+        airtime_ms: u32,
+        /// A clean landing after a long flight (the higher boost tier).
+        long: bool,
+    },
 }
 
 /// How a car's start went (R127).

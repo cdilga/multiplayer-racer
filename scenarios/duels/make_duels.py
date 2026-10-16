@@ -91,14 +91,15 @@ def acts(car, boost=None, pad=None):
     return out
 
 
-def write(name, what, seed, secs, cars, labels, inputs, gate, beats, extra=None, expect=None, solo=False):
+def write(name, what, seed, secs, cars, labels, inputs, gate, beats, extra=None, expect=None, solo=False, map=MAP):
     """One duel: the fixture and its ordering. `cars` has one entry per label. `solo`: one fixture per label with its car
-    alone (<duel>.<label>.json), for duels on a racing line where cars on one line would bump each other."""
+    alone (<duel>.<label>.json), for duels on a racing line where cars on one line would bump each other. `map`: the
+    yard unless the duel needs a piece of its own (the air control duel's canyon leap)."""
     assert len(cars) == len(labels)
     if solo:
         files = []
         for i, label in enumerate(labels):
-            fx = {"scenario": f"{name}.{label}", "what": what, "map": MAP, "seed": seed, "ticks": S(secs), "cars": [cars[i]]}
+            fx = {"scenario": f"{name}.{label}", "what": what, "map": map, "seed": seed, "ticks": S(secs), "cars": [cars[i]]}
             if extra and extra.get("autopilot") and any(a["car"] == i for a in extra["autopilot"]):
                 fx["autopilot"] = [{"tick": 0, "car": 0, "on": True}]
             fx["inputs"] = [dict(x, car=0) for x in inputs if x["car"] == i]
@@ -112,7 +113,7 @@ def write(name, what, seed, secs, cars, labels, inputs, gate, beats, extra=None,
         json.dump(o, open(f"scenarios/duels/orderings/{name}.json", "w"), indent=1)
         open(f"scenarios/duels/orderings/{name}.json", "a").write("\n")
         return
-    fx = {"scenario": name, "what": what, "map": MAP, "seed": seed, "ticks": S(secs), "cars": cars}
+    fx = {"scenario": name, "what": what, "map": map, "seed": seed, "ticks": S(secs), "cars": cars}
     if extra:
         fx.update(extra)
     fx["inputs"] = inputs
@@ -204,28 +205,24 @@ def wheelie_hop_door():
 wheelie_hop_door()
 
 # ----------------------------------------------------------------------------------------------------------------
-# Air control (§7.3 Air control): launched 3 m up tipped 40 degrees onto its side, 12 m/s forward and 6 m/s up, as the
-# feel bank's `air-level`; every car floors it once down. Gate 70 m on.
+# Air control (R129, P1-FL07): launched level 3 m up, 12 m/s forward and 6 m/s up, as the feel bank's `air-level`; in the air
+# the throttle noses the car down and the brake lifts it, so the skill is leaving the throttle alone until it's down (and
+# then flooring it). Gate 70 m on.
 # ----------------------------------------------------------------------------------------------------------------
 
 
 def air_control():
     labels = ["plain", "well", "over", "mash-a", "mash-b"]
-
-    def lev(car, a1, d1, a2, d2):
-        return [span(car, 0, d1, steer=a1, throttle=0.3), span(car, d1, d1 + d2, steer=a2, throttle=0.3), span(car, d1 + d2, None, throttle=0.5)]
-    ins = [span(0, 0, 1.6, throttle=0.3), span(0, 1.6, None, throttle=0.5)]   # no input in the air
-    ins += lev(1, 1.0, 0.7, -1.0, 0.4)                                       # steer into the tilt, then stop the roll
-    ins += [span(2, 0, 1.6, steer=1.0, throttle=0.3), span(2, 1.6, 1.8, steer=-1.0, throttle=0.3), span(2, 1.8, None, throttle=0.5)]  # held the whole flight (1.4 s no longer over-rotates the lower-CoM car)
-    ins += mash(51, 7, 3) + mash(52, 7, 4)
-    # After landing every car drives on at half stick: the drive force the duel was found with on the old 7 kN engine
-    # (the fun-pass engine is 14 kN, br-gw74.13), so a bad landing still costs time instead of being powered out of.
-    # Since owner playtest 1 the car levels itself in near-upright flight (air_level_torque, R122's arcade control), so
-    # a plain run lands level too: well-timed air control no longer gains time over it. Over-rotating still costs.
-    beats = [beat("plain", "over", 0.05), beat("well", "over", 0.1), beat("well", "mash-*", 0.0)]
+    down = 1.6
+    ins = [span(0, 0, down, throttle=0.5), span(0, down, None, throttle=1.0)]   # the habit: half throttle held through the flight
+    ins += [span(1, down, None, throttle=1.0)]                                   # off the throttle in the air, floored once down
+    ins += [span(2, 0, down, brake=0.5), span(2, down, None, throttle=1.0)]      # half brake held through the flight
+    ins += [dict(x, toTick=min(x["toTick"], S(down))) for x in mash(51, down, 3)] + [span(3, down, None, throttle=1.0)]
+    ins += [dict(x, toTick=min(x["toTick"], S(down))) for x in mash(52, down, 4)] + [span(4, down, None, throttle=1.0)]
+    beats = [beat("well", "plain", 0.1), beat("well", "over", 0.1), beat("well", "mash-*", 0.0)]
     write("air-control-duel",
-          "§7.3b air-control-duel (P1-S09), the feel bank's jump: five Cruz Missiles launched 3 m up at 12 m/s forward and 6 m/s up, tipped 40 degrees onto their right side, all flooring it after 1.6 s. plain: no input in the air, lands tipped and loses speed. well: steers into the tilt to roll level, then stops the roll, and lands on its wheels keeping its speed. over: holds the correction far too long and lands worst. mash: two seeded random scripts. Gate: 70 m from the launch.",
-          71, 7, same({"x": 10, "y": 3.0, "z": -4, "headingDeg": 90, "rollDeg": 40}, [12, 6, 0], len(labels)), labels, ins,
+          "§7.3b air-control-duel (P1-S09; R129, P1-FL07), the feel bank's jump: five Cruz Missiles launched level 3 m up at 12 m/s forward and 6 m/s up, all flooring it once down (1.6 s). In the air the throttle noses the car down and the brake lifts it. plain: holds half throttle through the flight out of habit, noses down and lands badly, losing speed. well: leaves the throttle alone until it's down, lands level (a clean landing and its boost). over: holds half brake, lands tail first. mash: two seeded random scripts in the air. Gate: 70 m from the launch.",
+          71, 7, same({"x": 10, "y": 3.0, "z": -4, "headingDeg": 90}, [12, 6, 0], len(labels)), labels, ins,
           {"metric": "travel", "at": 70.0}, beats)
 
 

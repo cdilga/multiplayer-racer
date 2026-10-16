@@ -1,0 +1,145 @@
+{
+  "scenario": "air-roof-crash",
+  "what": "R16 crash and self-righting (P1-FL07): two Cruz Missiles are tossed from 3 m on their roofs (rolled 175 degrees) at 12 m/s forward and 3 m/s up, one tipped each way. The roof first is a crash (well past 90 degrees to the ground, though the car rolls toward level on the way down), and the crash rights each car whatever the assist level (R138, no flip traps): upright on its wheels within 1.5 s of touching down, and drivable (floored from tick 300, it drives off). Baselines: with no input it is righted all the same but doesn't drive off; a mash ends at another speed.",
+  "map": "maps/greybox-loop.json",
+  "seed": 13,
+  "ticks": 480,
+  "cars": [
+    {
+      "pose": {
+        "x": 10,
+        "y": 3,
+        "z": -4,
+        "headingDeg": 90,
+        "rollDeg": 175
+      },
+      "linvel": [
+        12,
+        3,
+        0
+      ]
+    },
+    {
+      "pose": {
+        "x": 70,
+        "y": 3,
+        "z": 4,
+        "headingDeg": 90,
+        "rollDeg": -175
+      },
+      "linvel": [
+        12,
+        3,
+        0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 300,
+      "throttle": 1.0
+    },
+    {
+      "car": 1,
+      "fromTick": 300,
+      "throttle": 1.0
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "landingTier",
+      "min": 3,
+      "max": 3
+    },
+    {
+      "car": 0,
+      "metric": "landingAngleDeg",
+      "min": 100,
+      "max": 180
+    },
+    {
+      "car": 0,
+      "atTick": 270,
+      "metric": "upY",
+      "min": 0.9,
+      "max": 1.001
+    },
+    {
+      "car": 0,
+      "atTick": 270,
+      "metric": "wheelsInContact",
+      "min": 3,
+      "max": 4
+    },
+    {
+      "car": 0,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "car": 0,
+      "metric": "forwardSpeed",
+      "min": 5,
+      "max": 60
+    },
+    {
+      "car": 1,
+      "metric": "landingTier",
+      "min": 3,
+      "max": 3
+    },
+    {
+      "car": 1,
+      "metric": "landingAngleDeg",
+      "min": 100,
+      "max": 180
+    },
+    {
+      "car": 1,
+      "atTick": 270,
+      "metric": "upY",
+      "min": 0.9,
+      "max": 1.001
+    },
+    {
+      "car": 1,
+      "atTick": 270,
+      "metric": "wheelsInContact",
+      "min": 3,
+      "max": 4
+    },
+    {
+      "car": 1,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    },
+    {
+      "car": 1,
+      "metric": "forwardSpeed",
+      "min": 5,
+      "max": 60
+    }
+  ],
+  "baselines": {
+    "kinds": [
+      "no-input",
+      "mash"
+    ],
+    "differ": [
+      {
+        "car": 0,
+        "metric": "forwardSpeed",
+        "by": 3.0
+      },
+      {
+        "car": 1,
+        "metric": "forwardSpeed",
+        "by": 3.0
+      }
+    ]
+  }
+}

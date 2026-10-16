@@ -95,7 +95,10 @@ fn a_design_speed_kicker_lands_on_the_visible_roof_and_the_validator_rejects_an_
             && (45.5..54.5).contains(&c.position[0])
             && c.position[1] > 1.9
             && c.up_y > 0.9;
-        let input = if air {
+        // Off the stick in the air (R129: the brake would lift the nose), then brake to a stop once down on the roof.
+        let input = if air && c.wheels_in_contact == 0 {
+            DriveInput::default()
+        } else if air {
             DriveInput {
                 brake: i16::MAX,
                 no_reverse: true,

@@ -427,3 +427,19 @@ not feel targets.
   throws start a power slide and trip on rough ground.
 - **RCH env passthrough is not reliable for every variable.** A probe that read `JJ_PROBE` from the environment silently
   returned early on some runs. Read probe settings from a scratch file under the crate instead.
+
+## 2026-10-17 · Air control and landing judgement (P1-FL07, br-bbki.7)
+
+- **A held throttle is a habit, not an air input.** Throttle-pitches-the-car (R129) read straight from the stick flipped
+  every car over crests in the R122 handling bank, because phone players hold the throttle all the time (owner playtest 1's
+  "tipped onto its nose"). The stick held at takeoff is latched and only counts once that axis moves
+  (`air.json` `latchHeldInput`); air control also waits `controlAfterS` (0.15 s, under a human's reaction to the lip).
+- **Not every flight is a jump.** A spawn or respawn drop judged as a level landing handed out a boost (a respawn boost)
+  and fought a reversing car in `race.rs`; a car knocked airborne by a rail was pitched over and then judged "bad" on a
+  hillside. Placements at rest and flights after a hit (`knockDvMps`) get neither air control nor a landing.
+- **Judge a hit on the horizontal velocity change.** A 3D Δv flags a kicker's lip as a hit (22 m/s up a 14° ramp turns
+  ~5 m/s upward in a tick or two); a rail or a car changes the horizontal velocity.
+- **A contact manifold's normal isn't the ground's.** For a box edge on the ground Rapier reports the car's own face
+  normal, so a tail-first landing read 0°. Ray-cast down from the body for the ground's normal instead.
+- **The flip assist's torque can't right a crashed car in time.** `Race::assist_torque` rolled a nose-first crash onto
+  its roof; the crash righting drives a rate toward upright through the car's inertia (`air::righting_change`).

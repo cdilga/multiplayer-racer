@@ -629,6 +629,11 @@ fn event_samples() -> Vec<SimEvent> {
             seat: SeatId(2),
             outcome: LaunchOutcome::Perfect,
         },
+        SimEvent::Landed {
+            seat: SeatId(2),
+            tier: LandingTier::Clean,
+            long: true,
+        },
     ]
 }
 
@@ -795,7 +800,7 @@ fn every_variant_has_a_golden() {
     assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
-        13,
+        14,
         "every SimEvent variant, plus extra episode shapes"
     );
 }

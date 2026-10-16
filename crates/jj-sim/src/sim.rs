@@ -22,6 +22,7 @@ use sha2::{Digest, Sha256};
 
 use jj_map::{Footprint, LoadedMap, Registry, Terrain};
 
+use crate::air::{AirProfile, AirState, Touch};
 use crate::assist::{AssistLevel, AssistProfile, AssistReport, AssistState, CatchUp};
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::damage::episodes::{CarParts, Episodes, PreStep, TAG_CAR, TAG_PROP};
@@ -45,6 +46,10 @@ pub const TICK_HZ: u32 = 120;
 const AIR_LOOK_S: f32 = 0.6;
 const AIR_PITCH_GAIN: f32 = 4.0;
 pub const DT: f32 = 1.0 / TICK_HZ as f32;
+/// How far below a body-first car its ground is looked for, m.
+const BODY_GROUND_RAY_M: f32 = 6.0;
+/// A crashed car counts as righted once its up is this close to world-up (R16: drivable again).
+const CRASH_RIGHTED_UP_Y: f32 = 0.9;
 
 /// Collision groups (P1-S05): finished cars become ghosts that touch only the world (terrain and static dressing), so
 /// they stop colliding with racers and debris but keep driving on the ground.
@@ -174,6 +179,8 @@ struct Car {
     wheel_lost_at: Option<u64>,
     /// The player's learner assist (R125).
     assist: AssistState,
+    /// The flight, the landing being judged and what the last landing earned (R129, P1-FL07).
+    air: AirState,
     /// Each wheel's ground slip-curve factor this tick (R124), for the arcade handling layer (P1-FL04).
     side_stiffness: Vec<f32>,
     /// Riding a loop (br-xlvx.6): the loop carries the car until its exit, or lets it go if it gets too slow.
@@ -293,6 +300,8 @@ pub struct Sim {
     /// Learner-assist and catch-up data (R125) and the lobby's catch-up choice.
     assist_profile: AssistProfile,
     catch_up: CatchUp,
+    /// Air control and landing tiers (R129, P1-FL07): one profile for every car and every jump (R15).
+    air_profile: AirProfile,
 }
 
 fn yaw_rotation(yaw_cdeg: i32) -> Vector {
@@ -647,6 +656,7 @@ impl Sim {
             path: Path::new(map),
             assist_profile: AssistProfile::standard(),
             catch_up: CatchUp::Off,
+            air_profile: AirProfile::standard(),
         }
     }
 
@@ -1355,6 +1365,13 @@ impl Sim {
             return;
         };
         c.life = c.life.wrapping_add(1);
+        // Put down somewhere (a respawn, the grid, a test's placement), the drop isn't a jump; thrown upward (a scenario's
+        // launch off a lip), it is.
+        c.air = if linvel[1] > 0.0 {
+            AirState::default()
+        } else {
+            AirState::placed()
+        };
         c.loop_ride = None;
         c.loop_fall = None;
         self.takedowns.placed(car.0);
@@ -1720,6 +1737,7 @@ impl Sim {
             last_detach: None,
             wheel_lost_at: None,
             assist: AssistState::default(),
+            air: AirState::placed(),
         });
     }
 
@@ -1760,6 +1778,21 @@ impl Sim {
     /// Replaces the assist data (the tuning menu; not journaled, like [`Sim::set_tuning`]).
     pub fn set_assist_profile(&mut self, profile: AssistProfile) {
         self.assist_profile = profile;
+    }
+
+    /// The air-control and landing data in force (R129; tunable through [`Sim::set_air_profile`]).
+    pub fn air_profile(&self) -> &AirProfile {
+        &self.air_profile
+    }
+
+    /// Replaces the air data (the tuning menu; not journaled, like [`Sim::set_tuning`]).
+    pub fn set_air_profile(&mut self, profile: AirProfile) {
+        self.air_profile = profile;
+    }
+
+    /// `car`'s air state: whether it's flying, its last landing and what that earned (R90 introspection).
+    pub fn air_state(&self, car: CarId) -> Option<AirState> {
+        self.cars.get(car.0 as usize).map(|c| c.air)
     }
 
     pub fn assist_level(&self, car: CarId) -> AssistLevel {
@@ -1921,24 +1954,12 @@ impl Sim {
                     heading: libm::atan2f(fwd.x, fwd.z),
                     forward_speed: b.linvel().dot(fwd),
                 };
-                // P1-FL06: the slide catch reads the arcade controller's drift angle while the car is on its wheels.
-                let grounded = car
-                    .vehicle
-                    .wheels()
-                    .iter()
-                    .any(|w| w.raycast_info().is_in_contact);
-                let drift_deg = if grounded && p.tuning.arcade.is_some() {
-                    car.action.arcade.angle_deg
-                } else {
-                    0.0
-                };
                 input = car.assist.apply(
                     &self.assist_profile,
                     &self.path,
                     pose,
                     p.steer_lock(pose.forward_speed),
                     wheelbase,
-                    drift_deg,
                     input,
                 );
             }
@@ -1946,6 +1967,49 @@ impl Sim {
                 input = DriveInput::default();
             }
             car.applied = input;
+            // A body-first landing (R16): a part touching the world or terrain while no wheel is loaded is judged against
+            // the ground straight below the car (a contact manifold's normal follows the car's own face at an edge).
+            let body_ground = if car
+                .vehicle
+                .wheels()
+                .iter()
+                .all(|w| !(w.raycast_info().is_in_contact && w.wheel_suspension_force > 0.0))
+                && car.parts.iter().any(|&mine| {
+                    self.world
+                        .narrow_phase
+                        .contact_pairs_with(mine)
+                        .any(|pair| {
+                            let other = if pair.collider1 == mine {
+                                pair.collider2
+                            } else {
+                                pair.collider1
+                            };
+                            pair.has_any_active_contact()
+                                && self.world.colliders.get(other).is_some_and(|c| {
+                                    let m = c.collision_groups().memberships;
+                                    m.contains(GROUP_WORLD) || m.contains(GROUP_TERRAIN)
+                                })
+                        })
+                })
+                && let Some(b) = self.world.bodies.get(car.body)
+            {
+                let queries = self.world.broad_phase.as_query_pipeline(
+                    self.world.narrow_phase.query_dispatcher(),
+                    &self.world.bodies,
+                    &self.world.colliders,
+                    QueryFilter::default()
+                        .exclude_rigid_body(car.body)
+                        .groups(CAR_RAYS),
+                );
+                let ray = Ray::new(b.position().translation, -Vector::Y);
+                Some(
+                    queries
+                        .cast_ray_and_get_normal(&ray, BODY_GROUND_RAY_M, true)
+                        .map_or(Vector::Y, |(_, hit)| hit.normal),
+                )
+            } else {
+                None
+            };
             let mut wheel_grip: Vec<f32> = Vec::new();
             // The controls (P1-S03a, crate::vehicle): reverse near rest, speed-scaled steering, the grip of the
             // ground under each wheel, and air control while no wheel touches the ground.
@@ -2072,37 +2136,54 @@ impl Sim {
                     self.ledger += f64::from(impulse.dot(b.linvel()));
                     b.apply_impulse(impulse, true);
                 }
-                if airborne && !input.is_neutral() {
-                    let [tx, ty, tz] = vehicle::air_torque(p, input);
-                    let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
+                // R129 air control (P1-FL07, crate::air): in the air DRIVE y pitches and DRIVE x yaws the body at the
+                // profile's rates, the same for every car (each through its own inertia, integrated once per tick). Roll
+                // is held level, and a neutral stick holds the attitude, so the jump's lip decides where neutral lands.
+                // A crest hop or a spawn's settle (under the profile's `controlAfterS` in the air) is still the ground's: the
+                // levelling spring below, so a held throttle never noses a car into the road over a crest (owner playtest 1).
+                let up = iso.rotation * Vector::Y;
+                let bike = p.tuning.bike_balance.is_some();
+                let flying = airborne && car.air.flying(&self.air_profile, TICK_HZ);
+                car.air.feed(crate::air::sticks(input), airborne);
+                if flying {
+                    let air_sticks = car
+                        .air
+                        .air_sticks(&self.air_profile, crate::air::sticks(input));
+                    let w_body = iso.rotation.inverse() * b.angvel();
+                    let roll = libm::asinf((iso.rotation * Vector::X).y.clamp(-1.0, 1.0));
+                    let [dx, dy, dz] = crate::air::rate_change(
+                        &self.air_profile,
+                        air_sticks,
+                        [w_body.x, w_body.y, w_body.z],
+                        roll,
+                        bike,
+                        DT,
+                    );
+                    let inertia = b
+                        .mass_properties()
+                        .local_mprops
+                        .reconstruct_inertia_matrix();
+                    let ti = iso.rotation * (inertia * Vector::new(dx, dy, dz));
                     self.ledger += f64::from(ti.dot(b.angvel()));
                     b.apply_torque_impulse(ti, true);
                 }
-                // In the air the car levels itself (arcade, owner playtest 1: a held throttle over a real jump tipped
-                // it onto its nose): a spring toward world-up on pitch and roll, damped, so the stick only biases the
-                // attitude. Its work is authorised in the ledger like the stick's.
-                let up = iso.rotation * Vector::Y;
-                // A bike needs both axle contacts; a car needs three loaded
-                // contacts for a support plane. Once that plane disappears,
-                // arrest a tilt beyond the profile's supported-road envelope.
-                // Small road attitudes and rear-supported wheelies stay free.
-                let bike = p.tuning.bike_balance.is_some();
+                // A hop, or on the ground with its support plane gone (a rough verge, two wheels in the air), the car levels
+                // itself: a spring toward world-up on pitch and roll, damped, past the profile's supported-road tilt. A
+                // bike needs both axle contacts, a car three loaded ones. Small road attitudes and rear-supported
+                // wheelies stay free; fully inverted cars are the flip assist's. Its work is authorised in the ledger.
                 let stable_contacts = if bike { 2 } else { 3 };
                 let losing_balance = bike || up.y < libm::cosf(p.tuning.support_level_tilt_rad);
-                let level = airborne
-                    || (supported < stable_contacts
+                let level = (airborne && !flying)
+                    || (!airborne
+                        && supported < stable_contacts
                         && losing_balance
                         && car.action.wheelie_ticks == 0);
-                // Keep damping through the upright hemisphere: a 45-degree
-                // cutoff abandoned a recoverable rough-verge lean mid-flight.
-                // Fully inverted cars remain the flip assist's; bikes auto-balance.
                 if level && p.tuning.air_level_torque > 0.0 && (bike || up.y > 0.0) {
                     let tilt = up.cross(Vector::Y);
                     let w = b.angvel();
                     let w_tilt = w - Vector::Y * w.dot(Vector::Y);
-                    // Bike roll has its own actuator below; applying both roll
-                    // dampers would overdamp it and couple a fast yaw impact into
-                    // that correction. The flight spring supplies pitch only.
+                    // Bike roll has its own actuator below; applying both roll dampers would overdamp it, so a bike's
+                    // spring is pitch only.
                     let ti = if bike {
                         let axis = iso.rotation * Vector::X;
                         axis * (tilt.dot(axis) * p.tuning.air_level_torque
@@ -2114,6 +2195,67 @@ impl Sim {
                     };
                     self.ledger += f64::from(ti.dot(w));
                     b.apply_torque_impulse(ti, true);
+                }
+                // The landing judge (R14/R16): the car's up against the ground's normal under its loaded wheels at first
+                // contact. A part touching the world or terrain while no wheel is down is the body coming down first.
+                let body_hit = if airborne { body_ground } else { None };
+                let wheels = car.vehicle.wheels();
+                let attached = wheels
+                    .iter()
+                    .filter(|w| w.max_suspension_force > 0.0)
+                    .count();
+                let normal = wheels
+                    .iter()
+                    .filter(|w| w.raycast_info().is_in_contact && w.wheel_suspension_force > 0.0)
+                    .fold(Vector::ZERO, |n, w| n + w.raycast_info().contact_normal_ws);
+                let v = b.linvel();
+                let touch = Touch {
+                    supported,
+                    wheels: attached,
+                    // The ground's normal: under the loaded wheels, or where the body touched (whichever way the manifold
+                    // points, the ground's side faces up).
+                    cos_angle: match (supported, body_hit) {
+                        (0, Some(n)) => up.dot(if n.y < 0.0 { -n } else { n }),
+                        (0, None) => up.y,
+                        _ => up.dot(normal.normalize_or(Vector::Y)),
+                    },
+                    body_hit: body_hit.is_some(),
+                };
+                if let Some(landing) = car.air.tick(&self.air_profile, TICK_HZ, touch) {
+                    // A bad landing loses a share of the car's speed at once (R16); a clean one starts its boost.
+                    let keep = car
+                        .air
+                        .reward(&self.air_profile, TICK_HZ, landing, forward_speed);
+                    if keep < 1.0 {
+                        let impulse = v * ((keep - 1.0) * b.mass());
+                        self.ledger += f64::from(impulse.dot(v));
+                        b.apply_impulse(impulse, true);
+                    }
+                    self.race.note(
+                        tick,
+                        crate::race::Event::Landed {
+                            car: id,
+                            tier: landing.tier,
+                            angle_deg: landing.angle_deg,
+                            airtime_ms: libm::roundf(landing.airtime_s * 1000.0) as u32,
+                            long: landing.long,
+                        },
+                    );
+                }
+                // A clean landing's boost pushes along the level heading toward its target speed while the car is down.
+                if !airborne {
+                    let dv = car.air.boost_dv(
+                        &self.air_profile,
+                        DT,
+                        forward_speed,
+                        vehicle::stick(input).1,
+                    );
+                    let level_fwd = Vector::new(fwd.x, 0.0, fwd.z).normalize_or_zero();
+                    if dv > 0.0 && level_fwd != Vector::ZERO {
+                        let impulse = level_fwd * (dv * b.mass());
+                        self.ledger += f64::from(impulse.dot(b.linvel()));
+                        b.apply_impulse(impulse, true);
+                    }
                 }
             }
             // Only a positive engine force wakes a sleeping chassis in Rapier: wake it on any control input.
@@ -2131,7 +2273,30 @@ impl Sim {
                     car.assist
                         .flip_wanted(&self.assist_profile, up.y, b.linvel().dot(fwd))
                 });
-            if (self.race.is_assisting(id) || instant_flip)
+            // A crash landing (R16) is righted at once whatever the assist level: drivable within the profile's limit.
+            let crash_righting = car.air.righting(
+                self.world
+                    .bodies
+                    .get(car.body)
+                    .is_some_and(|b| (b.position().rotation * Vector::Y).y > CRASH_RIGHTED_UP_Y),
+            );
+            if crash_righting && let Some(b) = self.world.bodies.get_mut(car.body) {
+                let r = b.position().rotation;
+                let (up, w) = (r * Vector::Y, b.angvel());
+                let [dx, dy, dz] = crate::air::righting_change(
+                    &self.air_profile,
+                    [up.x, up.y, up.z],
+                    [w.x, w.y, w.z],
+                    DT,
+                );
+                let inertia = b
+                    .mass_properties()
+                    .local_mprops
+                    .reconstruct_inertia_matrix();
+                let ti = r * (inertia * (r.inverse() * Vector::new(dx, dy, dz)));
+                self.ledger += f64::from(ti.dot(w));
+                b.apply_torque_impulse(ti, true);
+            } else if (self.race.is_assisting(id) || instant_flip)
                 && let Some(b) = self.world.bodies.get_mut(car.body)
             {
                 let r = b.position().rotation;
@@ -2820,6 +2985,11 @@ impl Sim {
             // The chassis' acceleration over the whole tick (suspension, tyres, contacts and gravity); the part feels
             // gravity minus that, in vehicle space.
             let accel = (b.linvel() - car.last_linvel) / DT;
+            // A hit (R129): a car knocked into the air isn't on a jump, so air control leaves it to the levelling. Judged on
+            // the horizontal change, since a kicker's lip turns the velocity upward hard without hitting anything.
+            let dv = b.linvel() - car.last_linvel;
+            car.air
+                .note_hit(&self.air_profile, libm::hypotf(dv.x, dv.z));
             car.last_linvel = b.linvel();
             let force = b.position().rotation.inverse() * (Vector::new(0.0, -9.81, 0.0) - accel);
             #[allow(clippy::needless_range_loop)]
@@ -3346,9 +3516,12 @@ impl Sim {
                 })
             })
             .collect();
-        let new = self
-            .takedowns
-            .update(self.tick, &headings, &self.damage_events, &self.takedown_profile);
+        let new = self.takedowns.update(
+            self.tick,
+            &headings,
+            &self.damage_events,
+            &self.takedown_profile,
+        );
         for t in new {
             if let Some(c) = self.cars.get_mut(t.attacker as usize) {
                 c.action.boost = (c.action.boost + self.takedown_profile.boost).min(1.0);

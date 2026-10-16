@@ -1,0 +1,36 @@
+{
+  "contract": "jj-air/1",
+  "what": "R129 air control and landing tiers (P1-FL07; docs/research/fun-tracks.md R14-R16), one set for every car and every jump (R15: no per-jump or per-vehicle overrides). A crest hop is still the ground's (the car levels itself, owner playtest 1: a held throttle must not tip it onto its nose over a crest); after controlAfterS in the air (and unless a hit of knockDvMps in one tick threw it there: being knocked into the air isn't a jump, and isn't judged as a landing either), DRIVE y pitches the car (throttle noses down, brake noses up) and DRIVE x yaws it, as body rates the car reaches within responseS whatever its inertia. With latchHeldInput, the stick a player was already holding at takeoff (the throttle held through the lip, a steer held through a bend) doesn't count until that axis has moved latchReleaseStick from it: a habit never flips the car, a deliberate input in the air does; roll is held level. A neutral stick holds the attitude, so the jump's lip pitch against its landing slope decides where neutral lands (R14). Landing after at least minAirS in the air is judged on the angle between the car's up and the ground's normal at first contact: clean (within cleanDeg, every attached wheel down within allWheelsS) boosts, OK costs nothing, bad (badDeg to crashDeg) loses speed, crash (past crashDeg, roof or side first) self-rights within crash.rightWithinS. Every number is a starting value tunable in ?tune; crates/jj-sim validates this file at load.",
+  "pitchRateDps": 100.0,
+  "yawRateDps": 90.0,
+  "rollLevelPerS": 4.0,
+  "responseS": 0.08,
+  "controlAfterS": 0.15,
+  "knockDvMps": 6.0,
+  "latchHeldInput": true,
+  "latchReleaseStick": 0.25,
+  "minAirS": 0.35,
+  "bands": {
+    "cleanDeg": 8.0,
+    "badDeg": 25.0,
+    "crashDeg": 45.0,
+    "allWheelsS": 0.15
+  },
+  "clean": {
+    "gain": 0.3,
+    "seconds": 1.25,
+    "accelMps2": 14.0
+  },
+  "cleanLong": {
+    "airS": 1.5,
+    "gain": 0.35,
+    "seconds": 1.5
+  },
+  "bad": {
+    "speedLoss": 0.27
+  },
+  "crash": {
+    "rightWithinS": 1.5,
+    "rightRateDps": 240.0
+  }
+}

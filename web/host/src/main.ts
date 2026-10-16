@@ -28,6 +28,7 @@ import { mountResolutionSetting } from './render/settings';
 import { SyntheticSource } from './render/synthetic';
 import { rosterProfiles } from './render/vehicles/registry';
 import { World } from './render/world';
+import { LANDING_SHOWN_MS, landingCallout, type LandingTier } from '../../shared/src/landing';
 import { mountNameplates } from './identity/nameplates';
 import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
@@ -299,6 +300,13 @@ async function boot(): Promise<void> {
       if (sl) {
         const st = client.room?.seats.find((x) => x.seat === sl.seat);
         if (st && st.car !== null) world.launchCallouts.pop(st.car, sl.outcome);
+      }
+      // Landings (R129, P1-FL07): a clean landing's boost, a hard landing or a crash, popped over its car (OK says nothing).
+      const ld = (e as { Landed?: { seat: number; tier: LandingTier; long: boolean } }).Landed;
+      const call = ld && landingCallout(ld.tier, ld.long);
+      if (ld && call) {
+        const st = client.room?.seats.find((x) => x.seat === ld.seat);
+        if (st && st.car !== null) world.launchCallouts.pop(st.car, call, LANDING_SHOWN_MS);
       }
       const dist = e.CameraDistanceSet;
       if (dist) {

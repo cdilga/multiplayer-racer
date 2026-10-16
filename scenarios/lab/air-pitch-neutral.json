@@ -1,0 +1,61 @@
+{
+  "scenario": "air-pitch-neutral",
+  "what": "R129 air control and landing tiers (P1-FL07; docs/research/fun-tracks.md R14-R16) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out down its middle at 22 m/s, lifts off the throttle at the lip (tick 66) and flies the gap; it floors it again once down (tick 260). The three fixtures fly the same jump three ways (air-pitch-neutral, -down, -up). Neutral: no input in the air holds the lip's nose-up attitude, so it lands in the OK band (8-25 degrees to the landing): no boost, no loss. Its speed 0.75 s after landing is the reference the other two beat or lose to (the run-out is downhill, so it gains a little).",
+  "map": "maps/lab/canyon-leap.json",
+  "seed": 1,
+  "ticks": 420,
+  "cars": [
+    {
+      "pose": {
+        "x": -43.796,
+        "y": 20.42,
+        "z": 45.0,
+        "headingDeg": -90.0
+      },
+      "linvel": [
+        -22.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "toTick": 66,
+      "throttle": 1.0
+    },
+    {
+      "car": 0,
+      "fromTick": 260,
+      "throttle": 1.0
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "landingTier",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "car": 0,
+      "metric": "landingAngleDeg",
+      "min": 8,
+      "max": 25
+    },
+    {
+      "car": 0,
+      "metric": "landingSpeedRatio",
+      "min": 1.1,
+      "max": 1.35
+    },
+    {
+      "car": 0,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}
