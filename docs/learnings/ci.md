@@ -63,3 +63,20 @@ for the store copy): a corrupt cached copy is refetched, a corrupt stored one is
 With several lanes pushing, ci.yml's waiting run is replaced on every push (`cancel-in-progress: false` keeps the
 running one), so most commits never get a run of their own. `scripts/ci/green-for.py` judges a commit by any completed,
 successful run on a commit that contains it; close.sh and the verifier use it.
+
+## Native vs WASM hashes: never hash a `usize` (2026-10-17, br-lekz)
+
+Seven native-vs-WASM suites went red in one batch (CI 5495: F12 and JN4 replays, generated-jump, duels, feel, lab and
+set-piece scenes). The cause was one line in the autopilot's `hash_into`: `self.on.unwrap_or((usize::MAX, ..))` cast to
+u64. `usize` is 32-bit on wasm32, so the sentinel hashed as `0x0000_0000_FFFF_FFFF` there and `0xFFFF_FFFF_FFFF_FFFF`
+natively, for every autopilot car not on a fork. Hashed state uses fixed-width integers and `u64` sentinels
+(`map_or(u64::MAX, |i| i as u64)`). The first suspect, a vendored-parry patch landed in the same batch, was innocent:
+read the batch's diffs for target-width and iteration-order hazards before reverting.
+
+## A hung browser target holds the whole queue (2026-10-17)
+
+CI 5450's lab-scenes hung after its own 30-min test timeout, and the runner didn't enforce the job's `timeout-minutes`,
+so the run, and with it the branch's concurrency group, sat 45 min with every newer run waiting. There's no cancel in the
+Gitea API: the job was ended by killing its slot process in the container (`sudo -n docker exec <id> pkill -f
+run-slot.mjs` on the runner host). `run-slot.mjs` now wraps each target in `timeout -k 30` (3x its learned time, 15-25
+min).
