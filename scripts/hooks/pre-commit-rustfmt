@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# rustfmt pre-commit hook: refuses a commit whose staged .rs files aren't rustfmt-clean, so CI's rust-lint Format step
+# doesn't go red after the push (it did four times on 2026-10-17). Checks the staged content, not the working copy, with
+# the edition from Cargo.toml. Installed by scripts/hooks/install.sh into .git/hooks/hooks.d/pre-commit/.
+# Fix with: rustfmt --edition 2024 <file>   Bypass once: JJ_SKIP_RUSTFMT=1 git commit ...
+set -uo pipefail
+[[ ${JJ_SKIP_RUSTFMT:-} == 1 ]] && exit 0
+command -v rustfmt >/dev/null || exit 0
+bad=()
+while IFS= read -r f; do
+    [[ -n $f ]] || continue
+    # `rustfmt --check` on stdin always exits 0, so compare its output with the staged text.
+    if ! git show ":$f" | rustfmt --edition 2024 --emit stdout 2>/dev/null | cmp -s - <(git show ":$f"); then
+        bad+=("$f")
+    fi
+done < <(git diff --cached --name-only --diff-filter=ACMR -- '*.rs')
+if ((${#bad[@]})); then
+    echo "pre-commit: not rustfmt-clean (CI rust-lint would fail):" >&2
+    printf '  %s\n' "${bad[@]}" >&2
+    echo "  fix: rustfmt --edition 2024 ${bad[*]}   (then re-add)" >&2
+    exit 1
+fi

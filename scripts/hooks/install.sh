@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the repo's versioned git hooks into this clone's .git/hooks (P1-F02): today the evidence commit-msg hook.
+# Installs the repo's versioned git hooks into this clone's .git/hooks (P1-F02): the evidence commit-msg hook and the rustfmt pre-commit check.
 # Idempotent. An existing, different commit-msg hook is kept and chained (moved to hooks.d/commit-msg/00-previous).
 set -euo pipefail
 repo=$(git rev-parse --show-toplevel)
@@ -16,3 +16,8 @@ fi
 printf '%s\n' "$shim" >"$target.new" && chmod +x "$target.new" && mv "$target.new" "$target"
 chmod +x "$repo/scripts/hooks/commit-msg"
 echo "install: commit-msg -> scripts/hooks/commit-msg"
+# The rustfmt check joins the pre-commit chain (Agent Mail's chain runner runs every executable in hooks.d/pre-commit).
+mkdir -p "$hooks/hooks.d/pre-commit"
+printf '%s\n' "${shim/commit-msg/pre-commit-rustfmt}" >"$hooks/hooks.d/pre-commit/40-rustfmt"
+chmod +x "$hooks/hooks.d/pre-commit/40-rustfmt" "$repo/scripts/hooks/pre-commit-rustfmt"
+echo "install: pre-commit chain 40-rustfmt -> scripts/hooks/pre-commit-rustfmt"
