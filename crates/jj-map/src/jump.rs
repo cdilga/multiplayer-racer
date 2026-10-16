@@ -41,6 +41,10 @@ pub struct JumpDesign {
 impl JumpDesign {
     /// The design of a sharp jump, `None` for other features and for older jumps baked into the grid.
     pub fn of(f: &Feature) -> Option<Self> {
+        if f.kind == FeatureKind::SetPiece {
+            // A set piece's kicker: a free-standing ramp, the far rim is its landing (crate::setpiece).
+            return crate::setpiece::GapLeap::of(f).map(|g| g.kicker);
+        }
         if f.kind != FeatureKind::Jump {
             return None;
         }
@@ -89,7 +93,19 @@ impl JumpDesign {
 
     /// Height along the centerline (m) before any edge slope: the kicker, the table, the landing ramp.
     pub fn profile(&self, u: f64) -> f64 {
-        if u < 0.0 || u > self.length_m() {
+        // A hair of tolerance: the last section's `ramp * k / steps` can round a ulp past the end (a free kicker, with
+        // no table after it, then lost its whole lip there).
+        // A free kicker (no table or landing ramp): a section a ulp past its end is still its lip.
+        let u = if self.table_m == 0.0
+            && self.down_m == 0.0
+            && u > self.ramp_m
+            && u <= self.ramp_m + 1e-9
+        {
+            self.ramp_m
+        } else {
+            u
+        };
+        if u < 0.0 || u > self.length_m() + 1e-9 {
             0.0
         } else if u <= self.ramp_m {
             let (l, a) = (self.ramp_m, self.blend_m);
@@ -233,6 +249,16 @@ pub fn height_above_ground_m(route: &crate::model::Route, f: &Feature, x: f64, z
     d.height(best.1, best.2)
 }
 
+/// The point and unit tangent `u` metres along the route from a feature's base (its nearest route point).
+pub fn route_along(map: &Map, f: &Feature, u: f64) -> ([f64; 2], [f64; 2]) {
+    along(map, base_index(map, f), u)
+}
+
+/// The route point nearest a feature's pose.
+pub fn feature_base(map: &Map, f: &Feature) -> usize {
+    base_index(map, f)
+}
+
 /// The route point nearest a feature's pose.
 fn base_index(map: &Map, f: &Feature) -> usize {
     nearest_point(&map.route, f)
@@ -271,6 +297,12 @@ pub fn render_fingerprint(mesh: &JumpMesh) -> u64 {
         }
     }
     hash
+}
+
+/// Two corners of the triangle at the same point.
+fn degenerate(verts: &[[f64; 3]], tri: [u32; 3]) -> bool {
+    let [a, b, c] = tri.map(|i| verts[i as usize]);
+    a == b || b == c || a == c
 }
 
 /// A sharp jump as one triangle mesh (positions in metres, counter-clockwise from above): cross-sections every 25 cm up
@@ -319,6 +351,68 @@ pub fn jump_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
         prev = next;
     }
     if f.params.contains_key("roofTarget") {
+        return Some((verts, tris));
+    }
+    if f.kind == FeatureKind::SetPiece {
+        // The kicker's back face: the lip section dropped to the ground below it (the gap opens past it).
+        let skirt = verts.len() as u32;
+        for j in 0..4 {
+            let v = verts[(prev + j) as usize];
+            let g = ground_height_m(&map.terrain, v[0], v[2]);
+            verts.push([v[0], g, v[2]]);
+        }
+        // Where a side slope meets the ground the skirt's corner is the slope's own vertex: no triangle there (a
+        // zero-area triangle fails the trimesh's FIX_INTERNAL_EDGES topology and the piece loses its collider).
+        for j in 0..3 {
+            let (a0, a1, b0, b1) = (prev + j, prev + j + 1, skirt + j, skirt + j + 1);
+            for tri in [[a0, b0, a1], [a1, b0, b1]] {
+                if !degenerate(&verts, tri) {
+                    tris.push(tri);
+                }
+            }
+        }
+        // The landing: an exact surface from the far rim to the landing's end (crate::setpiece::landing_lift), with a
+        // front skirt down to the ground at the rim.
+        let g = crate::setpiece::GapLeap::of(f)?;
+        let land = |u: f64, verts: &mut Vec<[f64; 3]>| -> u32 {
+            let first = verts.len() as u32;
+            let (c, t) = frame(map, f, u);
+            for lat in [
+                -d.land_w / 2.0 - EDGE_SLOPE_M,
+                -d.land_w / 2.0,
+                d.land_w / 2.0,
+                d.land_w / 2.0 + EDGE_SLOPE_M,
+            ] {
+                let (x, z) = (c[0] - t[1] * lat, c[1] + t[0] * lat);
+                let gr = ground_height_m(&map.terrain, x, z);
+                verts.push([x, gr + crate::setpiece::landing_lift(&g, u, lat), z]);
+            }
+            first
+        };
+        let steps = libm::ceil(g.landing_m / crate::setpiece::LANDING_STEP_M) as usize;
+        let mut prev = land(g.rim_u(), &mut verts);
+        let front = verts.len() as u32;
+        for j in 0..4 {
+            let v = verts[(prev + j) as usize];
+            let gr = ground_height_m(&map.terrain, v[0], v[2]);
+            verts.push([v[0], gr, v[2]]);
+        }
+        // Wound against the landing strip's first triangles (a consistently oriented mesh, or the trimesh's
+        // FIX_INTERNAL_EDGES topology fails and the whole piece has no collider).
+        for j in 0..3 {
+            let (a0, a1, b0, b1) = (prev + j, prev + j + 1, front + j, front + j + 1);
+            for tri in [[a0, a1, b0], [a1, b1, b0]] {
+                if !degenerate(&verts, tri) {
+                    tris.push(tri);
+                }
+            }
+        }
+        for k in 1..=steps {
+            let u = g.rim_u() + g.landing_m * k as f64 / steps as f64;
+            let next = land(u, &mut verts);
+            strip(prev, next, &verts, &mut tris);
+            prev = next;
+        }
         return Some((verts, tris));
     }
     let (t0, t1) = (d.ramp_m, d.ramp_m + d.table_m);

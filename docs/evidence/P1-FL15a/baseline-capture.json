@@ -1,0 +1,428 @@
+{
+  "source": "https://jammers-preview.dilger.dev/p/v02-a1f7bf4b/",
+  "sha": "a1f7bf4b",
+  "size": [
+    1920,
+    1080
+  ],
+  "seeds": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "recipes": [
+    "rocks",
+    "outback-dirt",
+    "town",
+    "outback-bitumen"
+  ],
+  "rows": [
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "state": "high",
+      "routePoint": 493,
+      "file": "rocks-s2-high.jpg",
+      "reliefM": 10.216
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "state": "low",
+      "routePoint": 169,
+      "file": "rocks-s2-low.jpg",
+      "reliefM": 10.216
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "state": "climb",
+      "routePoint": 180,
+      "file": "rocks-s2-climb.jpg",
+      "reliefM": 10.216
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "state": "field",
+      "routePoint": null,
+      "file": "rocks-s2-field.jpg",
+      "reliefM": 10.216
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "state": "high",
+      "routePoint": 330,
+      "file": "rocks-s3-high.jpg",
+      "reliefM": 6.277
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "state": "low",
+      "routePoint": 210,
+      "file": "rocks-s3-low.jpg",
+      "reliefM": 6.277
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "state": "climb",
+      "routePoint": 99,
+      "file": "rocks-s3-climb.jpg",
+      "reliefM": 6.277
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "state": "field",
+      "routePoint": null,
+      "file": "rocks-s3-field.jpg",
+      "reliefM": 6.277
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "state": "high",
+      "routePoint": 364,
+      "file": "rocks-s4-high.jpg",
+      "reliefM": 11.992
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "state": "low",
+      "routePoint": 449,
+      "file": "rocks-s4-low.jpg",
+      "reliefM": 11.992
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "state": "climb",
+      "routePoint": 455,
+      "file": "rocks-s4-climb.jpg",
+      "reliefM": 11.992
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "state": "field",
+      "routePoint": null,
+      "file": "rocks-s4-field.jpg",
+      "reliefM": 11.992
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "state": "high",
+      "routePoint": 224,
+      "file": "outback-dirt-s2-high.jpg",
+      "reliefM": 5.271000000000001
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "state": "low",
+      "routePoint": 170,
+      "file": "outback-dirt-s2-low.jpg",
+      "reliefM": 5.271000000000001
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "state": "climb",
+      "routePoint": 176,
+      "file": "outback-dirt-s2-climb.jpg",
+      "reliefM": 5.271000000000001
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-dirt-s2-field.jpg",
+      "reliefM": 5.271000000000001
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "state": "high",
+      "routePoint": 329,
+      "file": "outback-dirt-s3-high.jpg",
+      "reliefM": 1.722
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "state": "low",
+      "routePoint": 258,
+      "file": "outback-dirt-s3-low.jpg",
+      "reliefM": 1.722
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "state": "climb",
+      "routePoint": 99,
+      "file": "outback-dirt-s3-climb.jpg",
+      "reliefM": 1.722
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-dirt-s3-field.jpg",
+      "reliefM": 1.722
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "state": "high",
+      "routePoint": 364,
+      "file": "outback-dirt-s4-high.jpg",
+      "reliefM": 8.027
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "state": "low",
+      "routePoint": 449,
+      "file": "outback-dirt-s4-low.jpg",
+      "reliefM": 8.027
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "state": "climb",
+      "routePoint": 307,
+      "file": "outback-dirt-s4-climb.jpg",
+      "reliefM": 8.027
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-dirt-s4-field.jpg",
+      "reliefM": 8.027
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "state": "high",
+      "routePoint": 216,
+      "file": "town-s2-high.jpg",
+      "reliefM": 2.095
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "state": "low",
+      "routePoint": 169,
+      "file": "town-s2-low.jpg",
+      "reliefM": 2.095
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "state": "climb",
+      "routePoint": 176,
+      "file": "town-s2-climb.jpg",
+      "reliefM": 2.095
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "state": "field",
+      "routePoint": null,
+      "file": "town-s2-field.jpg",
+      "reliefM": 2.095
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "state": "high",
+      "routePoint": 329,
+      "file": "town-s3-high.jpg",
+      "reliefM": 1.0710000000000002
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "state": "low",
+      "routePoint": 206,
+      "file": "town-s3-low.jpg",
+      "reliefM": 1.0710000000000002
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "state": "climb",
+      "routePoint": 98,
+      "file": "town-s3-climb.jpg",
+      "reliefM": 1.0710000000000002
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "state": "field",
+      "routePoint": null,
+      "file": "town-s3-field.jpg",
+      "reliefM": 1.0710000000000002
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "state": "high",
+      "routePoint": 364,
+      "file": "town-s4-high.jpg",
+      "reliefM": 7.412999999999999
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "state": "low",
+      "routePoint": 449,
+      "file": "town-s4-low.jpg",
+      "reliefM": 7.412999999999999
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "state": "climb",
+      "routePoint": 306,
+      "file": "town-s4-climb.jpg",
+      "reliefM": 7.412999999999999
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "state": "field",
+      "routePoint": null,
+      "file": "town-s4-field.jpg",
+      "reliefM": 7.412999999999999
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "state": "high",
+      "routePoint": 223,
+      "file": "outback-bitumen-s2-high.jpg",
+      "reliefM": 4.585
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "state": "low",
+      "routePoint": 169,
+      "file": "outback-bitumen-s2-low.jpg",
+      "reliefM": 4.585
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "state": "climb",
+      "routePoint": 176,
+      "file": "outback-bitumen-s2-climb.jpg",
+      "reliefM": 4.585
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-bitumen-s2-field.jpg",
+      "reliefM": 4.585
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "state": "high",
+      "routePoint": 329,
+      "file": "outback-bitumen-s3-high.jpg",
+      "reliefM": 1.242
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "state": "low",
+      "routePoint": 205,
+      "file": "outback-bitumen-s3-low.jpg",
+      "reliefM": 1.242
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "state": "climb",
+      "routePoint": 99,
+      "file": "outback-bitumen-s3-climb.jpg",
+      "reliefM": 1.242
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-bitumen-s3-field.jpg",
+      "reliefM": 1.242
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "state": "high",
+      "routePoint": 364,
+      "file": "outback-bitumen-s4-high.jpg",
+      "reliefM": 7.566
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "state": "low",
+      "routePoint": 449,
+      "file": "outback-bitumen-s4-low.jpg",
+      "reliefM": 7.566
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "state": "climb",
+      "routePoint": 307,
+      "file": "outback-bitumen-s4-climb.jpg",
+      "reliefM": 7.566
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "state": "field",
+      "routePoint": null,
+      "file": "outback-bitumen-s4-field.jpg",
+      "reliefM": 7.566
+    }
+  ],
+  "failures": [
+    {
+      "recipe": "rocks",
+      "seed": 1,
+      "error": "seed 1 skipped (at 2)"
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 1,
+      "error": "seed 1 skipped (at 2)"
+    },
+    {
+      "recipe": "town",
+      "seed": 1,
+      "error": "seed 1 skipped (at 2)"
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 1,
+      "error": "seed 1 skipped (at 2)"
+    }
+  ]
+}

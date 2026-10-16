@@ -108,20 +108,34 @@ interface JumpDesign {
   blend: number;
   downBlend: number;
   launchOnly: boolean;
+  /** A set piece's kicker (jj-map `setpiece`): the ramp alone, closed by a back face at the lip; the gap opens past it. */
+  backFace: boolean;
+  /** A set piece's gap and landing lengths (m): its exact landing surface runs from the far rim (`setpiece::landing_lift`). */
+  gap: number;
+  landing: number;
 }
+const LANDING_LIFT = 0.6;
+const LANDING_TAPER = 6;
+const LANDING_RISE = 3;
+const LANDING_STEP = 0.5;
 const EDGE_SLOPE = 1.5;
-const jumpDesign = (p: Params): JumpDesign | null => {
+const jumpDesign = (p: Params, kind = 'jump'): JumpDesign | null => {
   if (p.sharp !== 1) return null;
   const m = (k: string) => (p[k] ?? 0) / 1000;
   const lip = (p.lipHeightCm ?? 0) / 100;
+  if (kind === 'set-piece') {
+    return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: 0, landW: m('rampWidthMm'), down: 0, blend: m('blendMm'), downBlend: 0, launchOnly: false, backFace: true, gap: m('gapLengthMm'), landing: m('landingLengthMm') };
+  }
   const downBlend = m('downBlendMm');
   const launchOnly = p.roofTarget !== undefined;
-  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: launchOnly ? 0 : m('tableLengthMm'), landW: launchOnly ? m('rampWidthMm') : m('landingWidthMm'), down: launchOnly ? 0 : lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend: launchOnly ? 0 : downBlend, launchOnly };
+  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: launchOnly ? 0 : m('tableLengthMm'), landW: launchOnly ? m('rampWidthMm') : m('landingWidthMm'), down: launchOnly ? 0 : lip / m('downSlopeMilli') + downBlend / 2, blend: m('blendMm'), downBlend: launchOnly ? 0 : downBlend, launchOnly, backFace: false, gap: 0, landing: 0 };
 };
 const jumpLength = (d: JumpDesign) => d.ramp + d.table + d.down;
 /** Height along the centreline before any edge slope: the blended kicker, the table, the landing ramp. */
 const jumpProfile = (d: JumpDesign, u: number): number => {
-  if (u < 0 || u > jumpLength(d)) return 0;
+  // A free kicker (no table or landing ramp): a section a ulp past its end is still its lip.
+  if (d.table === 0 && d.down === 0 && u > d.ramp && u <= d.ramp + 1e-9) u = d.ramp;
+  if (u < 0 || u > jumpLength(d) + 1e-9) return 0;
   if (u <= d.ramp) {
     const slope = d.lip / (d.ramp - d.blend / 2);
     return u < d.blend ? (slope * u * u) / (2 * d.blend) : slope * (u - d.blend / 2);
@@ -293,6 +307,14 @@ export class MapRenderer {
       const ix = bridgeIndices(this.map,f.params);
       for (const i of ix.slice(0,-1)) elevated.add(i);
     }
+    // No road over a set piece's gap (jj-map `setpiece::gap_points`): the ribbon stops under the kicker's lip and
+    // starts again at the far rim.
+    for (const f of this.map.features) if (f.kind === 'set-piece') {
+      for (const i of this.gapPoints(f)) {
+        elevated.add(i);
+        elevated.add((i + p.length - 1) % p.length);
+      }
+    }
     // A point at lateral offset `off` from route point `k`, `y` above the ground the sim collides with there (the road lies
     // on the heightfield, so a ramp narrower than the road, or a banked corner, never leaves the ribbon floating).
     const rail = (k: number, off: number, y: number) => {
@@ -343,6 +365,64 @@ export class MapRenderer {
     const m = s.mesh(this.material);
     m.name = 'route';
     return m;
+  }
+
+  /** The lip (ground point under it, m) and its unit heading for a set piece's kicker. */
+  private setPieceLip(f: { pose: Pose; params: Params }): { x: number; z: number; tx: number; tz: number } {
+    return this.routeAlong(this.nearestIndex(f.pose.x, f.pose.z), mm(f.params.rampLengthMm ?? 0));
+  }
+
+  /** Route points strictly inside a set piece's gap (jj-map `setpiece::gap_points`). */
+  private gapPoints(f: { pose: Pose; params: Params }): number[] {
+    const p = this.map.route.points;
+    const n = p.length;
+    const lip = this.setPieceLip(f);
+    const gap = mm(f.params.gapLengthMm ?? 0);
+    const base = this.nearestIndex(f.pose.x, f.pose.z);
+    const out: number[] = [];
+    for (let k = 0; k < n; k++) {
+      const i = (base + k) % n;
+      const u = (mm(p[i]!.x) - lip.x) * lip.tx + (mm(p[i]!.z) - lip.z) * lip.tz;
+      if (u > gap) break;
+      if (u > 0) out.push(i);
+    }
+    return out;
+  }
+
+  /** A set piece's safe detour (jj-map `setpiece::detour_path`): a dirt track on the ground, offset from the route
+   *  from `fromAt` to `toAt`, easing out and back over 40 m at each end. */
+  private detour(s: Soup, params: Params): void {
+    const p = this.map.route.points;
+    const n = p.length;
+    const [from, to] = [params.fromAt ?? 0, params.toAt ?? 0];
+    const count = ((to - from + n) % n) + 1;
+    const ix = Array.from({ length: count }, (_, k) => (from + k) % n);
+    const u: number[] = [0];
+    for (let k = 1; k < count; k++) u.push(u[k - 1]! + Math.hypot(mm(p[ix[k]!]!.x - p[ix[k - 1]!]!.x), mm(p[ix[k]!]!.z - p[ix[k - 1]!]!.z)));
+    const len = u[count - 1]!;
+    const smooth = (t: number) => { const c = Math.min(1, Math.max(0, t)); return c * c * (3 - 2 * c); };
+    const side = params.detourSide ?? 1;
+    const offset = mm(params.detourOffsetMm ?? 0);
+    const half = mm(params.detourWidthMm ?? 8000) / 2;
+    const centre = ix.map((i, k) => {
+      const [a, b] = [p[(i + n - 1) % n]!, p[(i + 1) % n]!];
+      const l = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+      const [tx, tz] = [(b.x - a.x) / l, (b.z - a.z) / l];
+      const lat = side * offset * smooth(u[k]! / 40) * smooth((len - u[k]!) / 40);
+      return { x: mm(p[i]!.x) - tz * lat, z: mm(p[i]!.z) + tx * lat, tx, tz };
+    });
+    const colour = SURFACE_COLOURS['packed-dirt'] ?? '#b5793f';
+    const pt = (c: { x: number; z: number; tx: number; tz: number }, lat: number) => {
+      const [x, z] = [c.x - c.tz * lat, c.z + c.tx * lat];
+      return [x, this.groundAt(x, z) + 0.06, z];
+    };
+    for (let k = 0; k + 1 < count; k++) {
+      const [a, b] = [centre[k]!, centre[k + 1]!];
+      // Only where the track has left the road: the road's own ribbon covers the rest.
+      const off = Math.hypot(a.x - mm(p[ix[k]!]!.x), a.z - mm(p[ix[k]!]!.z));
+      if (off < half + mm(p[ix[k]!]!.width) / 2) continue;
+      s.quad(pt(a, half), pt(b, half), pt(b, -half), pt(a, -half), colour);
+    }
   }
 
   /** The route point nearest (x, z) mm, with its forward and left directions. */
@@ -407,10 +487,10 @@ export class MapRenderer {
         return [x, this.groundAt(x, z) + jumpProfile(d, u) * jumpSide(w, lat), z];
       });
     // Counter-clockwise from above, whatever order the corners came in.
-    const tri = (a: number[], b: number[], c: number[]) => {
+    const tri = (a: number[], b: number[], c: number[], paint = colour) => {
       const ny = (b[2]! - a[2]!) * (c[0]! - a[0]!) - (b[0]! - a[0]!) * (c[2]! - a[2]!);
-      if (ny >= 0) s.tri(a, b, c, colour);
-      else s.tri(a, c, b, colour);
+      if (ny >= 0) s.tri(a, b, c, paint);
+      else s.tri(a, c, b, paint);
     };
     const strip = (a: number[][], b: number[][]) => {
       for (let j = 0; j < 3; j++) {
@@ -426,6 +506,46 @@ export class MapRenderer {
       prev = next;
     }
     if (d.launchOnly) return;
+    if (d.backFace) {
+      const back = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
+      // Wound exactly as jj-map's (no flip, no zero-area corner), so the uploaded triangles hash the same (R90).
+      const same = (a: number[], b: number[]) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+      const face = (a: number[], b: number[], c: number[]) => { if (!same(a, b) && !same(b, c) && !same(a, c)) s.tri(a, b, c, colour); };
+      for (let j = 0; j < 3; j++) {
+        face(prev[j]!, back[j]!, prev[j + 1]!);
+        face(prev[j + 1]!, back[j]!, back[j + 1]!);
+      }
+      // The landing's exact surface, from the far rim (jj-map `jump_mesh` / `setpiece::landing_lift`), road coloured.
+      const road = SURFACE_COLOURS[this.map.route.points[base]!.surface] ?? SURFACE_COLOURS.tarmac!;
+      const [rim, end] = [d.ramp + d.gap, d.ramp + d.gap + d.landing];
+      const lift = (u: number, lat: number) => {
+        if (u < rim || u > end) return 0;
+        const sm = (x: number) => { const c = Math.min(1, Math.max(0, x)); return c * c * (3 - 2 * c); };
+        return LANDING_LIFT * jumpSide(d.landW, lat) * (sm((u - rim) / LANDING_RISE) * sm((end - u) / LANDING_TAPER));
+      };
+      const land = (u: number): number[][] =>
+        [-d.landW / 2 - EDGE_SLOPE, -d.landW / 2, d.landW / 2, d.landW / 2 + EDGE_SLOPE].map((lat) => {
+          const r = this.jumpFrame(base, u, pose);
+          const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
+          return [x, this.groundAt(x, z) + lift(u, lat), z];
+        });
+      prev = land(rim);
+      const front = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
+      for (let j = 0; j < 3; j++) {
+        face(prev[j]!, prev[j + 1]!, front[j]!);
+        face(prev[j + 1]!, front[j + 1]!, front[j]!);
+      }
+      const landSteps = Math.ceil(d.landing / LANDING_STEP);
+      for (let k = 1; k <= landSteps; k++) {
+        const next = land(rim + (d.landing * k) / landSteps);
+        for (let j = 0; j < 3; j++) {
+          tri(prev[j]!, next[j]!, prev[j + 1]!, j === 1 ? road : colour);
+          tri(prev[j + 1]!, next[j]!, next[j + 1]!, j === 1 ? road : colour);
+        }
+        prev = next;
+      }
+      return;
+    }
     prev = section(d.ramp, d.landW);
     const skirt = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
     for (let j = 0; j < 3; j++) {
@@ -476,7 +596,7 @@ export class MapRenderer {
       const ox = mm(f.pose.x);
       const oz = mm(f.pose.z);
       // A sharp jump follows the route's polyline and stands above the ground by its exact height (see `jumpMesh`).
-      const design = f.kind === 'jump' ? jumpDesign(f.params) : null;
+      const design = f.kind === 'jump' || f.kind === 'set-piece' ? jumpDesign(f.params, f.kind) : null;
       const base = design ? this.nearestIndex(f.pose.x, f.pose.z) : 0;
       const freePose = design?.launchOnly ? f.pose : undefined;
       const at = (along: number, lat: number, lift: number): number[] => {
@@ -517,7 +637,8 @@ export class MapRenderer {
         this.jumpMesh(s, design, base, freePose);
         this.jumpRanges.push({ feature, from, to: s.pos.length });
       }
-      if (f.kind === 'jump') {
+      if (f.kind === 'set-piece') this.detour(s, f.params);
+      if (f.kind === 'jump' || f.kind === 'set-piece') {
         const ramp = mm(f.params.rampLengthMm ?? 8000);
         const width = mm(f.params.rampWidthMm ?? 4500) / 2;
         for (const k of [0.3, 0.55, 0.8]) paint(ramp * k, ramp * k + 0.18, width, '#f2efe6', 0.075);

@@ -168,6 +168,8 @@ export class World {
   private half: [number, number] = [25, 25];
   private overviewDepth = 0;
   private mapBottom = 0;
+  private mapTop = 0;
+  private mapMid = 0;
   readonly stats: WorldStats;
   private userScale: number;
   /** Set only by a measured frame-budget miss; always below the user's choice; cleared only by choosing a setting. */
@@ -282,7 +284,14 @@ export class World {
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
-    this.mapBottom = Math.min(0, ...map.terrain.heights.map((h) => h / 100));
+    // (A loop, not Math.min(...heights): a large grid's spread overflows the argument stack.)
+    let [lo, hi] = [Infinity, -Infinity];
+    for (const h of map.terrain.heights) [lo, hi] = [Math.min(lo, h / 100), Math.max(hi, h / 100)];
+    this.mapBottom = Math.min(0, lo);
+    this.mapTop = Math.max(this.mapBottom, hi);
+    // The overview looks at the course's own height: terrain-first maps (P1-FL15a) sit tens of metres above zero.
+    const route = map.route.points;
+    this.mapMid = route.length ? route.reduce((sum, q) => sum + q.y / 1000, 0) / route.length : 0;
     this.ground.position.y = this.mapBottom - 0.05;
     const t = map.terrain;
     this.invalidate();
@@ -690,7 +699,7 @@ export class World {
     // The overview camera frames everything on the field (P1-R05 brings the real cameras): looking down at 50 degrees,
     // it starts close and backs off until the field's four corners all project inside the frame.
     if (box[0]! <= box[1]!) {
-      this.target.set((box[0]! + box[1]!) / 2, 0, (box[2]! + box[3]!) / 2);
+      this.target.set((box[0]! + box[1]!) / 2, this.mapMid, (box[2]! + box[3]!) / 2);
       this.half = [Math.max(12, (box[1]! - box[0]!) / 2 + 4), Math.max(12, (box[3]! - box[2]!) / 2 + 4)];
     }
     const tilt = (50 * Math.PI) / 180;
@@ -698,22 +707,23 @@ export class World {
     const [hx, hz] = this.half;
     let dist = Math.max(hx, hz) * 0.8;
     for (let k = 0; k < 120; k++, dist *= 1.03) {
-      cam.position.set(this.target.x, dist * Math.sin(tilt), this.target.z - dist * Math.cos(tilt));
+      cam.position.set(this.target.x, this.target.y + dist * Math.sin(tilt), this.target.z - dist * Math.cos(tilt));
       cam.near = Math.max(0.5, dist * 0.02); // depth precision for the grid at overview distances
       cam.far = dist * 4;
       cam.updateProjectionMatrix();
       cam.lookAt(this.target);
       cam.updateMatrixWorld();
       let fits = true;
-      for (const [dx, dz] of [[-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz]] as const) {
-        this.v.set(this.target.x + dx, 0, this.target.z + dz).project(cam);
+      // The field's corners at its lowest and highest ground both fit.
+      for (const y of [this.mapBottom, this.mapTop]) for (const [dx, dz] of [[-hx, -hz], [hx, -hz], [-hx, hz], [hx, hz]] as const) {
+        this.v.set(this.target.x + dx, y, this.target.z + dz).project(cam);
         if (Math.abs(this.v.x) > 0.94 || Math.abs(this.v.y) > 0.9 || this.v.z > 1) fits = false;
       }
       if (fits) break;
     }
     // Camera-space depth of the far ground edge. Near/far haze follows the overview's actual framing after resize;
     // chase and replay cameras pass no override and retain the accepted road-level look.
-    this.overviewDepth = dist + hz * Math.cos(tilt) - this.mapBottom * Math.sin(tilt);
+    this.overviewDepth = dist + hz * Math.cos(tilt) - (this.mapBottom - this.target.y) * Math.sin(tilt);
   }
 }
 

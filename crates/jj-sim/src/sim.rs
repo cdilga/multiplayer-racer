@@ -40,6 +40,10 @@ use crate::utility::{self, PropKind, UtilityEvent, UtilityKind, rules};
 use crate::vehicle;
 
 pub const TICK_HZ: u32 = 120;
+/// The autopilot's air control (R129): it pitches to the road's grade this many seconds ahead, with this gain from the
+/// pitch error (radians) to the stick.
+const AIR_LOOK_S: f32 = 0.6;
+const AIR_PITCH_GAIN: f32 = 4.0;
 pub const DT: f32 = 1.0 / TICK_HZ as f32;
 
 /// Collision groups (P1-S05): finished cars become ghosts that touch only the world (terrain and static dressing), so
@@ -1698,6 +1702,30 @@ impl Sim {
                     );
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost and drift ride on the autopilot's line. Only DRIVE moving counts as taking back over.
+                    // In the air the stick pitches and rolls the car (R129): the autopilot levels its nose to the road's
+                    // slope where it will come down (the grade ~0.6 s ahead), so it lands aligned instead of nosing in
+                    // under throttle (R132 set pieces). Pushing up noses down; pulling back lifts the nose.
+                    let airborne = car
+                        .vehicle
+                        .wheels()
+                        .iter()
+                        .all(|w| !w.raycast_info().is_in_contact);
+                    let out = if airborne {
+                        let i = ap.state().map_or(0, |s| s.route_point as usize);
+                        let v = b.linvel();
+                        let ahead = libm::hypotf(v.x, v.z) * AIR_LOOK_S;
+                        let want = libm::atanf(self.path.grade_ahead(i, ahead));
+                        let pitch = libm::asinf(fwd.y.clamp(-1.0, 1.0));
+                        let stick = (AIR_PITCH_GAIN * (pitch - want)).clamp(-1.0, 1.0);
+                        DriveInput {
+                            throttle: jj_types::axis::quantise_axis(stick.max(0.0)),
+                            brake: jj_types::axis::quantise_axis((-stick).max(0.0)),
+                            steer: 0,
+                            ..out
+                        }
+                    } else {
+                        out
+                    };
                     input = DriveInput {
                         drift: car.input.drift,
                         boost: car.input.boost,

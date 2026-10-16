@@ -33,6 +33,8 @@
     "straightSpread": 0.6,
     "minStraightM": 18.0,
     "bendSpacingM": 350.0,
+    "setPieceStraightM": [140.0, 180.0],
+    "setPieceStraightsPerKm": 0.35,
     "presets": {
       "twisty": {
         "weight": 1,
@@ -92,7 +94,50 @@
         "maxGrade": 0.03,
         "maxCurvature": 0.002,
         "maxBankCdeg": 200,
-        "blendM": 20.0
+        "blendM": 30,
+        "landforms": {
+          "domes": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "ridges": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "mesas": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "gullies": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "through": 0,
+          "far": 0,
+          "batter": 0.25,
+          "shoulderM": 3,
+          "fill": 0.0,
+          "climbM": 0.0,
+          "tilt": 0.8,
+          "flowPerKm": 0,
+          "underpass": 0
+        }
       },
       "features": {
         "jump": 2.0,
@@ -103,13 +148,56 @@
     },
     "town": {
       "terrain": {
-        "reliefM": 3.0,
-        "groundReliefM": 3.0,
-        "wavelengthM": 60.0,
-        "maxGrade": 0.03,
-        "maxCurvature": 0.002,
+        "reliefM": 32,
+        "groundReliefM": 0.6,
+        "wavelengthM": 420,
+        "maxGrade": 0.16,
+        "maxCurvature": 0.004,
         "maxBankCdeg": 200,
-        "blendM": 20.0
+        "blendM": 24,
+        "landforms": {
+          "domes": {
+            "perKm": 3.5,
+            "perKm2": 1,
+            "heightM": [10, 22],
+            "radiusM": [30, 60],
+            "aspect": [1, 1.8],
+            "shape": 0.6
+          },
+          "ridges": {
+            "perKm": 0.5,
+            "perKm2": 1,
+            "heightM": [6, 12],
+            "radiusM": [20, 35],
+            "aspect": [2.5, 4],
+            "shape": 1.2
+          },
+          "mesas": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "gullies": {
+            "perKm": 0.6,
+            "perKm2": 0.5,
+            "heightM": [3, 6],
+            "radiusM": [9, 14],
+            "aspect": [5, 9],
+            "shape": 0.8
+          },
+          "through": 0.7,
+          "far": 0.8,
+          "batter": 1.2,
+          "shoulderM": 3,
+          "fill": 0.3,
+          "climbM": 3,
+          "tilt": 0.8,
+          "flowPerKm": 1,
+          "underpass": 1
+        }
       },
       "features": {
         "jump": 0.0,
@@ -120,13 +208,56 @@
     },
     "rocks": {
       "terrain": {
-        "reliefM": 45.0,
-        "groundReliefM": 30.0,
-        "wavelengthM": 180.0,
-        "maxGrade": 0.18,
+        "reliefM": 44,
+        "groundReliefM": 2.5,
+        "wavelengthM": 380,
+        "maxGrade": 0.2,
         "maxCurvature": 0.006,
         "maxBankCdeg": 600,
-        "blendM": 20.0
+        "blendM": 24,
+        "landforms": {
+          "domes": {
+            "perKm": 4,
+            "perKm2": 14,
+            "heightM": [25, 60],
+            "radiusM": [30, 75],
+            "aspect": [1, 1.6],
+            "shape": 0.5
+          },
+          "ridges": {
+            "perKm": 1.0,
+            "perKm2": 4,
+            "heightM": [12, 30],
+            "radiusM": [20, 40],
+            "aspect": [2.5, 4.5],
+            "shape": 0.5
+          },
+          "mesas": {
+            "perKm": 0.4,
+            "perKm2": 1,
+            "heightM": [10, 20],
+            "radiusM": [45, 80],
+            "aspect": [1, 1.5],
+            "shape": 0.25
+          },
+          "gullies": {
+            "perKm": 0.4,
+            "perKm2": 0.5,
+            "heightM": [3, 6],
+            "radiusM": [8, 14],
+            "aspect": [6, 10],
+            "shape": 0.8
+          },
+          "through": 0.6,
+          "far": 0.35,
+          "batter": 5.0,
+          "shoulderM": 3,
+          "fill": 0.2,
+          "climbM": 6.0,
+          "tilt": 0.8,
+          "flowPerKm": 1,
+          "underpass": 1
+        }
       },
       "features": {
         "jump": 2.5,
@@ -137,13 +268,56 @@
     },
     "outbackDirt": {
       "terrain": {
-        "reliefM": 5.0,
-        "groundReliefM": 5.0,
-        "wavelengthM": 120.0,
-        "maxGrade": 0.05,
-        "maxCurvature": 0.003,
+        "reliefM": 40,
+        "groundReliefM": 2.0,
+        "wavelengthM": 480,
+        "maxGrade": 0.18,
+        "maxCurvature": 0.005,
         "maxBankCdeg": 500,
-        "blendM": 20.0
+        "blendM": 24,
+        "landforms": {
+          "domes": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "ridges": {
+            "perKm": 1.5,
+            "perKm2": 2,
+            "heightM": [6, 15],
+            "radiusM": [20, 35],
+            "aspect": [2.5, 4],
+            "shape": 0.8
+          },
+          "mesas": {
+            "perKm": 2.0,
+            "perKm2": 3.5,
+            "heightM": [10, 30],
+            "radiusM": [45, 110],
+            "aspect": [1, 1.8],
+            "shape": 0.18
+          },
+          "gullies": {
+            "perKm": 1.6,
+            "perKm2": 3,
+            "heightM": [3, 8],
+            "radiusM": [8, 16],
+            "aspect": [6, 12],
+            "shape": 0.7
+          },
+          "through": 0.6,
+          "far": 0.35,
+          "batter": 3.0,
+          "shoulderM": 3,
+          "fill": 0.3,
+          "climbM": 8,
+          "tilt": 0.8,
+          "flowPerKm": 1,
+          "underpass": 1
+        }
       },
       "features": {
         "jump": 2.0,
@@ -154,13 +328,56 @@
     },
     "outbackBitumen": {
       "terrain": {
-        "reliefM": 4.0,
-        "groundReliefM": 4.0,
-        "wavelengthM": 220.0,
-        "maxGrade": 0.035,
-        "maxCurvature": 0.0015,
+        "reliefM": 36,
+        "groundReliefM": 1.5,
+        "wavelengthM": 600,
+        "maxGrade": 0.17,
+        "maxCurvature": 0.004,
         "maxBankCdeg": 400,
-        "blendM": 24.0
+        "blendM": 28,
+        "landforms": {
+          "domes": {
+            "perKm": 0,
+            "perKm2": 0,
+            "heightM": [1, 1],
+            "radiusM": [1, 1],
+            "aspect": [1, 1],
+            "shape": 1
+          },
+          "ridges": {
+            "perKm": 1.8,
+            "perKm2": 1.5,
+            "heightM": [10, 18],
+            "radiusM": [25, 40],
+            "aspect": [2.5, 4],
+            "shape": 0.6
+          },
+          "mesas": {
+            "perKm": 1.0,
+            "perKm2": 2.5,
+            "heightM": [10, 25],
+            "radiusM": [45, 110],
+            "aspect": [1, 1.8],
+            "shape": 0.22
+          },
+          "gullies": {
+            "perKm": 1.0,
+            "perKm2": 2,
+            "heightM": [2, 5],
+            "radiusM": [10, 16],
+            "aspect": [6, 12],
+            "shape": 0.8
+          },
+          "through": 0.7,
+          "far": 0.4,
+          "batter": 1.5,
+          "shoulderM": 4,
+          "fill": 0.3,
+          "climbM": 3,
+          "tilt": 0.8,
+          "flowPerKm": 1,
+          "underpass": 1
+        }
       },
       "features": {
         "jump": 0.5,
@@ -184,7 +401,11 @@
   "itemStations": {
     "firstM": 160.0,
     "spacingM": 320.0,
-    "lateralM": [-3.5, 0.0, 3.5]
+    "lateralM": [
+      -3.5,
+      0.0,
+      3.5
+    ]
   },
   "roofStunts": {
     "spacingM": 120.0,

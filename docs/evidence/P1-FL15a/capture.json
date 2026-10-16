@@ -1,0 +1,801 @@
+{
+  "source": "local real jj-server",
+  "size": [
+    1920,
+    1080
+  ],
+  "seeds": [
+    2,
+    3,
+    4
+  ],
+  "recipes": [
+    "rocks",
+    "outback-dirt",
+    "town",
+    "outback-bitumen"
+  ],
+  "rows": [
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "rocks-s2-overview.jpg",
+      "reliefM": 45.2,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "valid": true,
+      "state": "high",
+      "routePoint": 84,
+      "file": "rocks-s2-high.jpg",
+      "reliefM": 45.2,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "valid": true,
+      "state": "low",
+      "routePoint": 343,
+      "file": "rocks-s2-low.jpg",
+      "reliefM": 45.2,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 422,
+      "file": "rocks-s2-climb.jpg",
+      "reliefM": 45.2,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 2,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 133,
+      "file": "rocks-s2-cutting.jpg",
+      "reliefM": 45.2,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "rocks-s3-overview.jpg",
+      "reliefM": 47.635,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "valid": true,
+      "state": "high",
+      "routePoint": 254,
+      "file": "rocks-s3-high.jpg",
+      "reliefM": 47.635,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "valid": true,
+      "state": "low",
+      "routePoint": 809,
+      "file": "rocks-s3-low.jpg",
+      "reliefM": 47.635,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 25,
+      "file": "rocks-s3-climb.jpg",
+      "reliefM": 47.635,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 3,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 482,
+      "file": "rocks-s3-cutting.jpg",
+      "reliefM": 47.635,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "rocks-s4-overview.jpg",
+      "reliefM": 46.926,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "valid": true,
+      "state": "high",
+      "routePoint": 227,
+      "file": "rocks-s4-high.jpg",
+      "reliefM": 46.926,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "valid": true,
+      "state": "low",
+      "routePoint": 731,
+      "file": "rocks-s4-low.jpg",
+      "reliefM": 46.926,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 862,
+      "file": "rocks-s4-climb.jpg",
+      "reliefM": 46.926,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "rocks",
+      "seed": 4,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 112,
+      "file": "rocks-s4-cutting.jpg",
+      "reliefM": 46.926,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-dirt-s2-overview.jpg",
+      "reliefM": 39.013,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "valid": true,
+      "state": "high",
+      "routePoint": 396,
+      "file": "outback-dirt-s2-high.jpg",
+      "reliefM": 39.013,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "valid": true,
+      "state": "low",
+      "routePoint": 120,
+      "file": "outback-dirt-s2-low.jpg",
+      "reliefM": 39.013,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 347,
+      "file": "outback-dirt-s2-climb.jpg",
+      "reliefM": 39.013,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 2,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 254,
+      "file": "outback-dirt-s2-cutting.jpg",
+      "reliefM": 39.013,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-dirt-s3-overview.jpg",
+      "reliefM": 52.07,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "valid": true,
+      "state": "high",
+      "routePoint": 858,
+      "file": "outback-dirt-s3-high.jpg",
+      "reliefM": 52.07,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "valid": true,
+      "state": "low",
+      "routePoint": 279,
+      "file": "outback-dirt-s3-low.jpg",
+      "reliefM": 52.07,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 317,
+      "file": "outback-dirt-s3-climb.jpg",
+      "reliefM": 52.07,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 5,
+      "file": "outback-dirt-s3-cutting.jpg",
+      "reliefM": 52.07,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-dirt-s4-overview.jpg",
+      "reliefM": 41.08,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "valid": true,
+      "state": "high",
+      "routePoint": 567,
+      "file": "outback-dirt-s4-high.jpg",
+      "reliefM": 41.08,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "valid": true,
+      "state": "low",
+      "routePoint": 159,
+      "file": "outback-dirt-s4-low.jpg",
+      "reliefM": 41.08,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 361,
+      "file": "outback-dirt-s4-climb.jpg",
+      "reliefM": 41.08,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-dirt",
+      "seed": 4,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 743,
+      "file": "outback-dirt-s4-cutting.jpg",
+      "reliefM": 41.08,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "town-s2-overview.jpg",
+      "reliefM": 30.842,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "valid": true,
+      "state": "high",
+      "routePoint": 386,
+      "file": "town-s2-high.jpg",
+      "reliefM": 30.842,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "valid": true,
+      "state": "low",
+      "routePoint": 99,
+      "file": "town-s2-low.jpg",
+      "reliefM": 30.842,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 342,
+      "file": "town-s2-climb.jpg",
+      "reliefM": 30.842,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 2,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 245,
+      "file": "town-s2-cutting.jpg",
+      "reliefM": 30.842,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "town-s3-overview.jpg",
+      "reliefM": 37.771,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "valid": true,
+      "state": "high",
+      "routePoint": 875,
+      "file": "town-s3-high.jpg",
+      "reliefM": 37.771,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "valid": true,
+      "state": "low",
+      "routePoint": 282,
+      "file": "town-s3-low.jpg",
+      "reliefM": 37.771,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 285,
+      "file": "town-s3-climb.jpg",
+      "reliefM": 37.771,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 3,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 526,
+      "file": "town-s3-cutting.jpg",
+      "reliefM": 37.771,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "town-s4-overview.jpg",
+      "reliefM": 31.918,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "valid": true,
+      "state": "high",
+      "routePoint": 207,
+      "file": "town-s4-high.jpg",
+      "reliefM": 31.918,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "valid": true,
+      "state": "low",
+      "routePoint": 570,
+      "file": "town-s4-low.jpg",
+      "reliefM": 31.918,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 95,
+      "file": "town-s4-climb.jpg",
+      "reliefM": 31.918,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "town",
+      "seed": 4,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 243,
+      "file": "town-s4-cutting.jpg",
+      "reliefM": 31.918,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-bitumen-s2-overview.jpg",
+      "reliefM": 37.175,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "valid": true,
+      "state": "high",
+      "routePoint": 79,
+      "file": "outback-bitumen-s2-high.jpg",
+      "reliefM": 37.175,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "valid": true,
+      "state": "low",
+      "routePoint": 373,
+      "file": "outback-bitumen-s2-low.jpg",
+      "reliefM": 37.175,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 18,
+      "file": "outback-bitumen-s2-climb.jpg",
+      "reliefM": 37.175,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 2,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 169,
+      "file": "outback-bitumen-s2-cutting.jpg",
+      "reliefM": 37.175,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-bitumen-s3-overview.jpg",
+      "reliefM": 42.112,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "valid": true,
+      "state": "high",
+      "routePoint": 871,
+      "file": "outback-bitumen-s3-high.jpg",
+      "reliefM": 42.112,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "valid": true,
+      "state": "low",
+      "routePoint": 277,
+      "file": "outback-bitumen-s3-low.jpg",
+      "reliefM": 42.112,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 279,
+      "file": "outback-bitumen-s3-climb.jpg",
+      "reliefM": 42.112,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 3,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 823,
+      "file": "outback-bitumen-s3-cutting.jpg",
+      "reliefM": 42.112,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "outback-bitumen-s4-overview.jpg",
+      "reliefM": 38.032,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "valid": true,
+      "state": "high",
+      "routePoint": 724,
+      "file": "outback-bitumen-s4-high.jpg",
+      "reliefM": 38.032,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "valid": true,
+      "state": "low",
+      "routePoint": 213,
+      "file": "outback-bitumen-s4-low.jpg",
+      "reliefM": 38.032,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 243,
+      "file": "outback-bitumen-s4-climb.jpg",
+      "reliefM": 38.032,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    },
+    {
+      "recipe": "outback-bitumen",
+      "seed": 4,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 396,
+      "file": "outback-bitumen-s4-cutting.jpg",
+      "reliefM": 38.032,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "21"
+      }
+    }
+  ],
+  "errors": []
+}

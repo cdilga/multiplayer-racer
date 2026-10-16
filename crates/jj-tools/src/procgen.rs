@@ -22,6 +22,8 @@ fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
         "attempts": r.attempts,
         "fallback": r.fallback,
         "rejects": r.rejects,
+        "setPieces": r.set_pieces,
+        "setPieceRejects": r.set_piece_rejects,
     })
 }
 

@@ -56,6 +56,23 @@ pub struct Path {
 }
 
 impl Path {
+    /// The road's grade (rise over run) from `metres` to `metres + 10` ahead of route point `i`: what the autopilot pitches
+    /// to in the air, so it comes down on the landing aligned (R129).
+    pub fn grade_ahead(&self, i: usize, metres: f32) -> f32 {
+        let n = self.pts.len();
+        let i = i % n;
+        let at = |m: f32| {
+            let mut j = i;
+            while self.ahead(i, j) < m && self.ahead(i, (j + 1) % n) > self.ahead(i, j) {
+                j = (j + 1) % n;
+            }
+            j
+        };
+        let (a, b) = (at(metres), at(metres + 10.0));
+        let run = self.ahead(a, b).max(1e-3);
+        (self.heights[b] - self.heights[a]) / run
+    }
+
     pub fn new(map: &LoadedMap) -> Self {
         let pts: Vec<(f32, f32)> = map
             .map

@@ -68,6 +68,10 @@ impl LengthClasses {
     }
 }
 
+fn default_set_piece_straight_m() -> [f64; 2] {
+    [0.0, 0.0]
+}
+
 /// The course designer's numbers (metres).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -82,6 +86,12 @@ pub struct CourseData {
     pub min_straight_m: f64,
     /// One extra left-right bend pair per this many metres of lap beyond the first few (longer tracks bend more).
     pub bend_spacing_m: f64,
+    /// Set-piece beats (R132): straights this long (m, drawn in the range) are kept out of the lap's scaling so a set
+    /// piece (P1-FL15b) has its run; at least one per lap, then this many per km.
+    #[serde(default = "default_set_piece_straight_m")]
+    pub set_piece_straight_m: [f64; 2],
+    #[serde(default)]
+    pub set_piece_straights_per_km: f64,
     pub presets: CoursePresets,
     pub crossing: CrossingData,
 }
@@ -237,6 +247,8 @@ pub struct TerrainData {
     pub max_curvature: f64,
     pub max_bank_cdeg: i16,
     pub blend_m: f64,
+    /// The biome's landform kit (P1-FL15a).
+    pub landforms: crate::terrain::landforms::Landforms,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -277,6 +289,14 @@ pub struct GeneratorData {
     pub item_stations: StationData,
     pub biomes: Biomes,
     pub roof_stunts: crate::roofs::RoofStunts,
+    /// Set pieces (R132, P1-FL15b) on or off; their own data is `assets/profiles/set-pieces.json`. Banks that study
+    /// one stage of the pipeline alone (terrain, crossings) turn them off.
+    #[serde(default = "set_pieces_on")]
+    pub set_pieces: bool,
+}
+
+fn set_pieces_on() -> bool {
+    true
 }
 
 /// Why a document or a change was refused: one line per problem.
@@ -531,6 +551,8 @@ impl GeneratorData {
             if t.max_grade > 0.5 {
                 bad.push(format!("biomes.{id}.terrain.maxGrade: above 0.5 (a wall)"));
             }
+            t.landforms
+                .check(&format!("biomes.{id}.terrain.landforms"), &mut bad);
             if !(0..=4500).contains(&t.max_bank_cdeg) {
                 bad.push(format!("biomes.{id}.terrain.maxBankCdeg: outside 0..4500"));
             }
@@ -613,6 +635,7 @@ impl GeneratorData {
             max_curvature: t.max_curvature,
             max_bank_cdeg: t.max_bank_cdeg,
             blend_m: t.blend_m,
+            landforms: t.landforms,
         }
     }
 

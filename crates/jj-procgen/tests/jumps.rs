@@ -338,6 +338,10 @@ fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
         let mut sim = Sim::new(&map, &jj_procgen::registry(), seed, VehicleProfile::cruz());
         sim.step();
         for (k, f) in map.map.features.iter().enumerate() {
+            // Line and road-wide jumps (a set piece's kicker has its own bank, tests/setpieces.rs).
+            if f.kind != FeatureKind::Jump {
+                continue;
+            }
             let Some(d) = JumpDesign::of(f) else { continue };
             // 1 cm before the lip's edge, on the centreline and 1.5 m either side (inside the 4 m flat top).
             let u = d.ramp_m - 0.01;
@@ -388,12 +392,20 @@ fn a_reserved_landing_without_a_receiving_surface_is_rejected() {
 
 #[test]
 fn a_corner_inside_the_jump_approach_is_rejected() {
-    let mut map = generate_recipe(9, &[Biome::Greybox]).unwrap().0;
+    // The first seed from 9 that places a jump (a set piece may take the straight a jump would have used, R132).
+    let mut map = (9..)
+        .map(|seed| generate_recipe(seed, &[Biome::Greybox]).unwrap().0)
+        .find(|m| {
+            m.features
+                .iter()
+                .any(|f| f.kind == FeatureKind::Jump && !f.params.contains_key("roofTarget"))
+        })
+        .unwrap();
     assert!(jj_procgen::features::check_envelope(&map).is_empty());
     let f = map
         .features
         .iter()
-        .find(|f| f.kind == FeatureKind::Jump)
+        .find(|f| f.kind == FeatureKind::Jump && !f.params.contains_key("roofTarget"))
         .unwrap();
     let base = map
         .route

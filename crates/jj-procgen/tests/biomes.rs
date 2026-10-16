@@ -72,11 +72,13 @@ fn validate_seeds(biome: Biome, label: &str) -> String {
         let p = prepare(seed, &[biome]);
         let problems = check(&p.map, &registry());
         assert!(
-            p.valid && problems.is_empty() && p.plan == Plan::Requested,
+            // R132: a course with no room for a set piece is redrawn, so a biome's own recipe may take a later draw.
+            p.valid && problems.is_empty() && matches!(p.plan, Plan::Requested | Plan::Redrawn(_)),
             "seed {seed}: {problems:?}"
         );
         out += &format!(
-            "seed {seed}: ok, plan requested, {} pieces, {} props, {} features, gameplay hash {}\n",
+            "seed {seed}: ok, plan {:?}, {} pieces, {} props, {} features, gameplay hash {}\n",
+            p.plan,
             p.map.dressing.len(),
             p.map.props.len(),
             p.map.features.len(),
@@ -164,9 +166,9 @@ fn assert_clear(map: &Map, label: &str) {
                 "{label}: {} is {edge:.2} m from the road edge",
                 d.kit_piece
             );
-            assert_eq!(
-                surface_at(map, p.0, p.1),
-                Surface::OffTrack,
+            // Off-road is the ground class or rock (steep walls, P1-FL15a).
+            assert!(
+                matches!(surface_at(map, p.0, p.1), Surface::OffTrack | Surface::Rock),
                 "{label}: {} on a road cell",
                 d.kit_piece
             );

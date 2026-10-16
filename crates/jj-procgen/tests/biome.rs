@@ -62,6 +62,7 @@ impl BiomeDef for Flat {
                 max_curvature: 0.001,
                 max_bank_cdeg: 100,
                 blend_m: 20.0,
+                landforms: Default::default(),
             },
             features: Density {
                 jump: 0.0,
@@ -174,6 +175,11 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                     return jj_map::bridge::indices(&map, d.upper)
                         .is_some_and(|ix| ix.contains(&i));
                 }
+                // A set piece owns its span's road profile (R132): its approach, gap, landing and run-out.
+                if let Some(d) = jj_map::setpiece::GapLeap::of(f) {
+                    let (from, to) = (d.from as usize, d.to as usize);
+                    return (i + n - from) % n <= (to + n - from) % n;
+                }
                 // A jump's own ramp, table and landing ramp reach past 80 m since they're built for 36 m/s take-offs.
                 let reach_mm = jj_map::jump::JumpDesign::of(f)
                     .map_or(80_000.0, |d| (d.length_m() + 10.0) * 1000.0)
@@ -194,7 +200,12 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                 let budget = grade_at(i).max(grade_at((i + 2) % n));
                 assert!(
                     grade <= budget + 0.02,
-                    "seed {seed} {label} point{i}: grade{grade:.3} vs local budget{budget}"
+                    "seed {seed} {label} point{i}: grade{grade:.3} vs local budget{budget}; set pieces {:?}",
+                    map.features
+                        .iter()
+                        .filter_map(jj_map::setpiece::GapLeap::of)
+                        .map(|d| (d.from, d.to))
+                        .collect::<Vec<_>>()
                 );
                 worst_grade = worst_grade.max(grade);
             }

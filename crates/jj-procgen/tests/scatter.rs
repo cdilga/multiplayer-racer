@@ -20,6 +20,8 @@ fn generate(seed: u64) -> Map {
     data.course
         .presets
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    // Set pieces are placed between the terrain and the features this scaffold re-runs (R132).
+    data.set_pieces = false;
     jj_procgen::generate_tuned_from(
         jj_procgen::seed::Streams::new(seed),
         &[Biome::Greybox],
@@ -171,9 +173,12 @@ fn nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_
                         "seed {seed} {biome:?}: {} {edge:.2} m from the road edge",
                         d.kit_piece
                     );
-                    assert_eq!(
-                        surface_at(&map, p.0, p.1),
-                        Surface::OffTrack,
+                    // Off-road is the ground class or rock (steep walls, P1-FL15a).
+                    assert!(
+                        matches!(
+                            surface_at(&map, p.0, p.1),
+                            Surface::OffTrack | Surface::Rock
+                        ),
                         "seed {seed} {biome:?}: {} on a road cell",
                         d.kit_piece
                     );

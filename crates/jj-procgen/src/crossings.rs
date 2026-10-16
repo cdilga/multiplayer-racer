@@ -7,6 +7,9 @@ use crate::{
 };
 use jj_map::{Feature, FeatureKind, Map, Pose, Registry};
 
+/// The deck counts as over the lower road within both roads' half-widths of each other plus this, m.
+const DECK_OVERLAP_MARGIN_M: f64 = 2.0;
+
 pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
     let Some([upper, lower]) = course.crossing else {
         return;
@@ -34,17 +37,53 @@ pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
         .collect();
     // A deck has its own smooth profile, rather than copying the ground's
     // intersection blend into each edge (Dirt seed 16 produced a 22.5% ripple).
-    // Both ends meet the real road edges; the unbanked crossing clears the
-    // highest sampled ground edge around the plateau.
-    let top = (a..=b)
-        .filter(|&i| (s[i] - mid).abs() <= data.plateau_half_m + crate::STEP_M)
-        .flat_map(|i| ground[i - a])
-        .fold(f64::NEG_INFINITY, f64::max)
-        + data.deck_height_m;
-    for (i, &distance) in s.iter().enumerate().take(b + 1).skip(a) {
+    // Both ends meet the real road edges; the deck stands its height over the lower road where that passes beneath (the
+    // terrain routes the lower road a deck's height under the upper one, P1-FL15a). Ground under the plateau is a blend
+    // of both roads' beds, so it is not the reference; the profile below still follows any ground above the cosine.
+    let blend_at = |distance: f64| {
         let u =
             ((distance - mid).abs() - data.plateau_half_m).max(0.0) / (half - data.plateau_half_m);
-        let blend = (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0;
+        (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0
+    };
+    // Where the deck passes over the lower road (its points within both half-widths and a margin of a lower point), its
+    // underside clears that road by the deck's height less its thickness, ramp included: at a shallow crossing angle
+    // the overlap runs past the plateau onto the cosine. Solve the cosine's top for each such point.
+    let reach = |i: usize, j: usize| {
+        let (p, q) = (&map.route.points[i], &map.route.points[j]);
+        let near = (f64::from(p.width) + f64::from(q.width)) / 2000.0 + DECK_OVERLAP_MARGIN_M;
+        libm::hypot(f64::from(p.x - q.x), f64::from(p.z - q.z)) / 1000.0 <= near
+    };
+    let lower_ix: Vec<usize> = (c..=d).collect();
+    let top = (a..=b)
+        .filter_map(|i| {
+            let under = lower_ix
+                .iter()
+                .filter(|&&j| reach(i, j))
+                .map(|&j| map.route.points[j].y as f64 / 1000.0)
+                .fold(f64::NEG_INFINITY, f64::max);
+            if !under.is_finite() {
+                return None;
+            }
+            let foot_edges = if s[i] < mid { ground[0] } else { ground[b - a] };
+            let foot = foot_edges.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+            let need = under + data.deck_height_m;
+            let k = blend_at(s[i]);
+            Some(if k > 1e-6 {
+                foot + (need - foot) / k
+            } else {
+                need
+            })
+        })
+        .fold(f64::NEG_INFINITY, f64::max)
+        // Never below the upper road's own routed line at the plateau (the terrain leaves it on the span's points).
+        .max(
+            (a..=b)
+                .filter(|&i| (s[i] - mid).abs() <= data.plateau_half_m)
+                .map(|i| map.route.points[i].y as f64 / 1000.0)
+                .fold(f64::NEG_INFINITY, f64::max),
+        );
+    for (i, &distance) in s.iter().enumerate().take(b + 1).skip(a) {
+        let blend = blend_at(distance);
         let end = if distance < mid {
             ground[0]
         } else {

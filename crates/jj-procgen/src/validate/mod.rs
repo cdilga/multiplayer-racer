@@ -22,8 +22,9 @@ use crate::biome::{self, SelectError};
 use crate::features;
 use crate::seed::Streams;
 
-/// Course draws tried with the full recipe (the seed's own, then derived ones).
-pub const MAX_DRAWS: u32 = 3;
+/// Course draws tried with the full recipe (the seed's own, then derived ones). Five since R132: a course with no room
+/// for a set piece is redrawn (every draw but the last asks for one).
+pub const MAX_DRAWS: u32 = 5;
 
 /// How a prepared track came about, best first.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -68,6 +69,7 @@ pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
     bad.extend(biome::check_transitions(map));
     bad.extend(features::check_envelope(map));
     bad.extend(biome::wayfinding::check(map));
+    bad.extend(crate::setpieces::check(map));
     bad
 }
 
@@ -113,7 +115,9 @@ pub fn prepare_tuned(
         lap.push(Biome::Greybox);
     }
     let mut attempts: Vec<Attempt> = Vec::new();
-    let mut try_one = |rec: &[Biome], draw: u32| -> Option<(Map, Report)> {
+    // R132: a lap carries its set pieces. Every draw but the last asks for them, so a course with no room for one is
+    // redrawn, and the last draw (and the fallbacks after it) still always yields a valid track.
+    let mut try_one = |rec: &[Biome], draw: u32, need_pieces: bool| -> Option<(Map, Report)> {
         let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
             Ok(m) => m,
             Err(e) => {
@@ -128,7 +132,10 @@ pub fn prepare_tuned(
                 return None;
             }
         };
-        let rejected = check(&map, &registry);
+        let mut rejected = check(&map, &registry);
+        if need_pieces && data.set_pieces {
+            rejected.extend(crate::setpieces::check_minimum(&map));
+        }
         let ok = rejected.is_empty();
         attempts.push(Attempt {
             recipe: rec.to_vec(),
@@ -140,7 +147,7 @@ pub fn prepare_tuned(
 
     // 1. The full recipe on the seed's own course, then derived draws.
     for draw in 0..draws {
-        if let Some((map, course)) = try_one(&lap, draw) {
+        if let Some((map, course)) = try_one(&lap, draw, draw + 1 < draws) {
             let plan = if draw == 0 {
                 Plan::Requested
             } else {
@@ -158,7 +165,7 @@ pub fn prepare_tuned(
     }
     // 2. Fewer biomes on the seed's own course.
     for keep in (2..lap.len()).rev() {
-        if let Some((map, course)) = try_one(&lap[..keep], 0) {
+        if let Some((map, course)) = try_one(&lap[..keep], 0, false) {
             return Prepared {
                 map,
                 course,
@@ -170,7 +177,7 @@ pub fn prepare_tuned(
     }
     // 3. The conservative recipe, on the seed's own course (and, if that is somehow rejected, the next draws).
     for draw in 0..if lap.len() > 1 { draws } else { 0 } {
-        if let Some((map, course)) = try_one(&lap[..1], draw) {
+        if let Some((map, course)) = try_one(&lap[..1], draw, false) {
             return Prepared {
                 map,
                 course,

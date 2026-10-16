@@ -12,6 +12,8 @@ use jj_sim::{DriveInput, Sim, TICK_HZ, VehicleProfile, route_spawn};
 
 const S: u64 = TICK_HZ as u64;
 const FULL: i16 = i16::MAX;
+/// The speed a generated crest keeps a car grounded to (`features`: vertical curvature for 25 m/s).
+const CREST_DESIGN_MPS: f32 = 25.0;
 
 fn loaded(seed: u64) -> LoadedMap {
     load_canonical(&canonical_bytes(&generate(seed)), &jj_procgen::registry())
@@ -155,6 +157,12 @@ fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
         let pts = &map.map.route.points;
         let near_jump = |at: usize| {
             map.map.features.iter().any(|f| {
+                // A set piece's whole span (approach, kicker, gap, landing, run-out) is the set-piece bank's
+                // (tests/setpieces.rs), as a jump's run-up and landing are the jump bank's.
+                if let Some(d) = jj_map::setpiece::GapLeap::of(f) {
+                    let (from, to) = (d.from as usize, d.to as usize);
+                    return (at + n - from) % n <= (to + n - from) % n || (from + n - at) % n <= 24;
+                }
                 if f.kind != jj_map::FeatureKind::Jump {
                     return false;
                 }
@@ -170,6 +178,27 @@ fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
                 let len = (f.params["rampLengthMm"] + f.params["landingLengthMm"]) as usize / 2_500;
                 let ahead = (base + n - at) % n; // points from `at` forward to the base
                 ahead <= 24 || (at + n - base) % n <= len
+            })
+        };
+        // A crest keeps a car grounded up to its design speed (features::design: 25 m/s); past it the crest is a jump
+        // taken too fast, and a steering throw on its brow is the stated gap below (the road's crests past their design
+        // range), not a turn.
+        let on_crest = |at: usize| {
+            map.map.features.iter().any(|f| {
+                if f.kind != jj_map::FeatureKind::Crest {
+                    return false;
+                }
+                let base = (0..n)
+                    .min_by_key(|&i| {
+                        let (dx, dz) = (
+                            i64::from(pts[i].x - f.pose.x),
+                            i64::from(pts[i].z - f.pose.z),
+                        );
+                        dx * dx + dz * dz
+                    })
+                    .unwrap();
+                let len = f.params["lengthMm"] as usize / 2_500;
+                (base + n - at) % n <= 24 || (at + n - base) % n <= len
             })
         };
         for at in (0..n).step_by(40).filter(|&at| !near_jump(at)) {
@@ -213,7 +242,14 @@ fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
                         grazes += 1;
                     }
                     if r.min_up_y < 0.5 {
-                        rolls.push(format!("{id}: upY {:.3}", r.min_up_y));
+                        if speed > CREST_DESIGN_MPS && on_crest(at) {
+                            road.push(format!(
+                                "{id} (crest past its design speed): upY {:.3}",
+                                r.min_up_y
+                            ));
+                        } else {
+                            rolls.push(format!("{id}: upY {:.3}", r.min_up_y));
+                        }
                     }
                 }
             }
@@ -408,7 +444,23 @@ fn cruz_generated_rough_verge_turns_do_not_roll() {
         (2, 280, 35.0, true),
         (5, 200, 35.0, false),
     ] {
-        let map = loaded(seed);
+        // These are fixed points on the verges of the seeds' own roads: built without set pieces (R132), which take
+        // a stretch of the road and would move what lies at a given point.
+        let mut data = jj_procgen::tuning::GeneratorData::shipped().clone();
+        data.set_pieces = false;
+        let map = load_canonical(
+            &canonical_bytes(
+                &jj_procgen::generate_tuned_from(
+                    jj_procgen::seed::Streams::new(seed),
+                    &[jj_map::Biome::Greybox],
+                    &data,
+                )
+                .unwrap()
+                .0,
+            ),
+            &jj_procgen::registry(),
+        )
+        .unwrap();
         let mut sim = Sim::new(&map, &jj_procgen::registry(), 7, VehicleProfile::cruz());
         let car = sim.spawn_grid(1)[0];
         let pose = route_spawn(&map, at, 0.0, 0.5);

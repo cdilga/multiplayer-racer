@@ -394,3 +394,15 @@ not feel targets.
 - **A grip multiplier on the lateral force alone hides the drivetrain.** Measure the friction circle on the share of
   the wheel's *drive* grip in use (Rapier's `friction_slip` × load), not on newtons against the lateral peak, or a
   high-grip preset never shows power oversteer.
+
+## Big landings on the terrain grid (P1-FL15b)
+
+- **A chassis that bottoms out on the 2.5 m heightfield at speed snags on the edge between two triangles**: 20 m/s to
+  4 m/s in a quarter second, a spin, stuck, recover. Turning on `FIX_INTERNAL_EDGES` for the whole heightfield fixed it
+  but moved the S03 feel bank (air-level yaw baseline, wheelie-ok front air time), so it stays off. Instead a set
+  piece's landing is an exact trimesh (`jj_map::setpiece::landing_lift`, like a tabletop's down-ramp) standing 0.6 m
+  over a bed the generator lowers by the same amount, rising from nothing at the rim (a step there stopped cars dead).
+- **A trimesh with a zero-area triangle or an inconsistently wound skirt fails `FIX_INTERNAL_EDGES`'s topology and is
+  silently left out** (`if let Ok(..)` in `Sim::new`); `tests/setpieces.rs` rays every kicker and landing to catch it.
+- **Autopilot air control (R129):** throttle in the air noses the car down (`air_torque`), so an autopilot that kept its
+  throttle on nosed into landings. It now pitches to the road's grade ~0.6 s ahead.

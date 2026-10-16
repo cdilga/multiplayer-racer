@@ -196,6 +196,9 @@ pub enum FeatureKind {
     /// A grade-separated crossing: route span on an explicit deck, over a disjoint lower-route span. Appended so
     /// existing maps retain their canonical bytes. Params and exact geometry are in [`crate::bridge`].
     Bridge,
+    /// A set piece that owns the terrain in its footprint (R132; appended so older maps keep their bytes). The gap
+    /// leap family (canyon leap, mesa drop, creek washout): params and contract in [`crate::setpiece`].
+    SetPiece,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

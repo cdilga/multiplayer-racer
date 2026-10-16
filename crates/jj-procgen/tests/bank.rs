@@ -103,7 +103,11 @@ fn every_seed_prepares_a_valid_track_and_every_fallback_is_counted() {
 fn the_conservative_recipe_is_always_available() {
     for seed in 0..seeds().min(30) {
         let p = prepare(seed, &[Biome::Town]);
-        assert!(p.valid && p.plan == Plan::Requested, "seed {seed}");
+        // R132: a course with no room for a set piece is redrawn, so Town may take a further draw of its own course.
+        assert!(
+            p.valid && matches!(p.plan, Plan::Requested | Plan::Redrawn(_)),
+            "seed {seed}"
+        );
         assert_eq!(p.map.route.segments.len(), 1);
     }
     // An empty recipe falls to the placeholder; a repeated biome is one biome.

@@ -15,6 +15,8 @@ fn generate(seed: u64) -> Map {
     data.course
         .presets
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    // Set pieces own their footprint's terrain (P1-FL15b); re-applying ground terrain alone would wipe their pits.
+    data.set_pieces = false;
     jj_procgen::generate_tuned_from(
         jj_procgen::seed::Streams::new(seed),
         &[Biome::Greybox],
@@ -333,15 +335,16 @@ fn the_painted_road_edge_has_no_cell_sized_saw_tooth() {
                 f64::from(t.origin_z) / 1000.0 + row * sp,
             );
             let d = jj_procgen::assemble::distance_to_loop(&r.pts, p);
-            // Only cells near the edge matter.
+            // Only cells near the edge matter. Off-road is the ground class or rock (steep walls, P1-FL15a).
             if (d - r.half).abs() < 6.0 && (d - r.half).abs() > 2e-3 {
+                let road = !matches!(s, Surface::OffTrack | Surface::Rock);
                 assert_eq!(
-                    s != Surface::OffTrack,
+                    road,
                     d <= r.half,
                     "seed {seed} cell {k}: d {d} half {}",
                     r.half
                 );
-                if s != Surface::OffTrack {
+                if road {
                     worst = worst.max(d - r.half);
                 } else {
                     worst = worst.max(r.half - d);

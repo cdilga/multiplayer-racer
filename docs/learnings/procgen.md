@@ -244,3 +244,95 @@ subtracting its shifted origin in floating point moves half-millimetre rounding 
 For integer route poses, split the millimetre offset into cell and remainder as integers. For metre-valued feature
 queries, split the world-grid fraction before subtracting the origin. Keep cell and fraction separate through the
 bilinear sample. The dressing-invariance fixture then passes without changing its whole-route equality assertion.
+
+## 2026-10-16 · Terrain-first landscapes (P1-FL15a, br-bbki.15.1)
+
+- **Route the road under the landscape, not over it.** The profile is the grade-limited *lower* envelope of the land
+  sampled across the road (two passes each way round the loop make any profile Lipschitz at `g`), mixed toward the
+  *upper* envelope by a per-biome `fill` share (embankments over gullies). Both envelopes are inside the grade, so any
+  mix is too. A lower envelope cuts through whatever it can't climb: that is where the gorges come from.
+- **Don't route on the full landform heights.** Routing on domes that cover most of a Rocks lap pins the road to the
+  gaps between them (notches ~200 m apart), and it can never climb more than `g × 100 m` between notches, whatever the
+  swells do. Route on the swells plus at most `climbM` of any landform; the heightfield keeps the full landform, so the
+  road still runs in a gorge.
+- **Relief comes from a tilt, not noise.** Two-octave noise normalised along the route loses half its relief to the
+  envelope (peaks are steeper than the road may climb). A plane tilted along the route's widest spread (80 %) plus
+  noise (20 %), normalised together, gives each side of the loop a clean climb. Scaling the swells up when relief
+  falls short doesn't help on grade-bound laps and turns the off-road ground into 100-200 m canyons: cap it (1.25× per
+  retry, 3 retries).
+- **Grade budget is per segment.** The bank's change of cross slope only costs edge grade at corner entries and exits.
+  Compute the bank first (it depends only on plan curvature), then give each segment `0.88·limit·f − half·Δtan(bank)/ds`
+  (at least `0.6·limit·f`). Short (600-700 m) sprint figure-eights are where 25 m of relief is tight.
+- **Crossings: route the lower road a deck height under the upper.** `crossings::place` used the highest ground at
+  the plateau, which, once roads differ in height, is the upper road's own bed, so the deck towered 6.5 m over it
+  (29 % grades). Now the terrain caps the lower road at `upper − deckHeight` near its crossing point. The upper road
+  takes the deck's own cosine-and-plateau shape across its span (unbanked ±10 m past it, grade capped so the cosine
+  peaks inside `maxGradeMilli`). The deck's top is the lower road's y + deck height.
+- **Features need room on steep roads.** Crests/whoops/creek dips now check the natural grade under them
+  (`LIMITS.piece_road_grade` 0.12), like jumps; otherwise the 0.22 envelope rejects them on 15 % climbs.
+- **Every lap gets one long cutting** of the biome's leading landform kind, lying along the road on the longest stretch
+  outside the keep-outs, standing 10 m above `climbM`. Random through-roles alone left 1-in-20 laps without one, and a
+  ridge *across* the road only makes a 15-20 m cutting.
+- **Keep-outs:** the start corridor, the finish run-in, a crossing's upper (deck) span and ±60 m around where the lower
+  road passes under it. A crossing's declared spans cover two thirds of a short figure-eight, so don't keep out the
+  lower span whole.
+- **Measure a corridor** with `terrain::corridor_depth_m`: on each side the highest ground 8-40 m out, the lower side,
+  minus road y; ≥ 6 m is a cutting/gorge. Sampling 15 m out only lands mid-wall.
+
+## Set pieces (P1-FL15b, R132)
+
+- **A piece owns its span's road profile.** `setpieces::place` runs after the terrain (and crossings), before the small
+  features; it overwrites heights and route `y` in its footprint, and the features' ranges are cut around it
+  (`setpieces::clear_of`). Component banks that re-run terrain or features on a finished map must build it with
+  `GeneratorData { set_pieces: false, .. }`, or the re-undulate wipes the pits.
+- **Join the terrain with matching slope.** The approach and run-out are cubic Hermites from the terrain road's height
+  *and grade* at the span ends; an ease that started flat put a kink (a crest) where a 12 % terrain climb met it, and the
+  autopilot flipped there at 25 m/s. Every blend is checked for grade and crest curvature (`MAX_CREST` 0.0125/m).
+- **The kicker's side slopes must stay on the road bed.** With the flat top the full road width, its side triangles
+  climbed the canyon wall beside the road and the front boundary edge's pseudo-normal turned into a wall: cars stopped
+  dead at the ramp's foot. Flat top = road − 2 × `EDGE_SLOPE_M`.
+- **The pit starts 1.5 cells past the lip** (bilinear ground under the lip must stay at take-off height, or the kicker's
+  last sections sink and the validator's take-off ground drops); the far rim may round over, every band landing comes
+  down past its margin.
+- **Far rim about level with the lip.** A rim below the take-off ground makes the fall long and the descent ~20° onto a
+  9° landing; level with the lip, the fall is short and the car comes down close to parallel.
+- **Sight from afar is measured from the mid chase camera** (8.4 m back, 4.4 m up, ±44° on 16:9), and counted as time in
+  view during the 15 s before the commitment point: a corner swings the landmark out of frame for a moment. Two domes
+  (the Olgas' group) chosen for the view, one flank dome beside a canyon's channel.
+- **Course beats:** a set piece needs a ~100 m straight core; the course designer gives each lap one 140-180 m beat
+  straight away from the start, and falls back to the plain draw (same stream state) if that course doesn't close.
+- **Bed planes need the road's slope.** The off-road IDW blends each route point's bed plane; a plane level along the
+  road (only tilted by bank) terraces a 14 % climb into 2.5 m steps under the sharp `1/(d²+1)³` kernel, which the
+  terrain bank reads as vertical curvature. Each plane now carries `slope · ahead` (clamped to one point spacing, or a
+  corner leaks it into the cross slope).
+- **Anything applied after the curvature relaxation leaves a kink.** The underpass cap and the deck's cosine shape now
+  run inside the relaxation loop (deck shape, cap, envelope, relax, until the relaxation changes nothing); a cap applied
+  after it made a -14 % → 0 sag that threw the bot into a recovery.
+- **Under a deck the ground follows the lower road and the landscape, not the upper bed.** Otherwise a deck-high
+  embankment stands beside the underpass (cars turning there scrape and roll). Keep the upper bed only near the span's
+  ends, and cap the ground within the upper bed across the span interior at the upper road's height (a hill under the
+  span lifts the deck over it) — but not near the ends, where it digs a drop in front of the deck's leading edge.
+- **Tests that guessed "off-road" or "deck" from height break on tall terrain.** `rock` is off-road too; a deck mark is
+  one whose nearest route point in 3D is on the upper span, not one above 3 m.
+- **Town lots vs relief.** 25 m of relief on a 250 m-wide sprint town makes most ground 10-13 %, over the rooftop lots'
+  10 %; Town keeps its hills either cut through or far out and its fine detail low (0.6 m). Lots now terrace their own
+  footprint (`roofs::terrace`): level at the ground's middle height, faded out over 4 m, never within 1 m of the road's
+  edge, refused past 1.5 m of cut or fill. A sloping terrace pitched the kicker and the car overshot the roof; a deep
+  cut left the hill behind the house at roof height and the car rolled off into it.
+- **The browser's WASM is a build artefact.** `scripts/build-host-wasm.sh` after a jj-map/jj-sim change, or the host
+  hangs silently loading a map whose JSON the stale parser rejects.
+- **The underpass dip is per biome (`underpass` share).** On flat ground (Greybox) a deck-height dip makes a 2 m trench
+  whose sides roll a bike flicked off the road at 35 m/s; there the old design (both roads level, the deck rising
+  over) is right. Steep biomes dip fully so the deck rides at the upper road's level.
+- **Flow beats (`flowPerKm`).** A landscape that climbs everywhere leaves the core's jumps nowhere to go (a jump wants
+  ≤ 4.5 % natural grade over ~150 m): ~200 m windows held to 3 % on the straightest stretches, preferring the land's
+  highest and lowest ground (a level run there costs no relief), bring them back (Rocks 0 → ~1 jump per seed).
+- **A gentle biome beside a steep one can stop the profile settling.** Greybox (3 %, curvature 0.002/m) meeting Outback
+  Dirt (18 %) asks for a grade change sharper than the road may bend: the relaxation bleeds the climb back into Greybox,
+  the envelope cuts it, and `PROFILE_ROUNDS` runs out with the relaxation last (grade 5 % on a 3 % biome). The biome
+  grade limit is now ramped (`terrain::ramp`: it changes by at most half the curvature limit per metre); one biome's
+  limit is constant, so single-biome maps don't change. Ramping the whole budget instead (flow beats, bank twist) cost
+  relief: two single-biome seeds fell under 25 m.
+- **Long beat straights put crests past their design speed.** A crest keeps a car grounded to 25 m/s; on a beat straight
+  the handling bank's 35 m/s flick lands on its brow and rolls. That's the stated gap (crests past their design range),
+  filed with the road-only runs, not a turn roll-over.

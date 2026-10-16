@@ -51,6 +51,8 @@ pub struct Limits {
     pub jump_foot_accel_mps2: f64,
     /// Steepest natural road grade across a jump's whole envelope.
     pub jump_road_grade: f64,
+    /// Steepest natural road grade under any other piece (crest, whoops, creek dip).
+    pub piece_road_grade: f64,
     /// Turning across the approach and ramp, radians (quantization tolerance for a straight).
     pub jump_entry_turn: f64,
     /// Straight run before the ramp's base, m.
@@ -82,6 +84,7 @@ pub const LIMITS: Limits = Limits {
     jump_foot_accel_mps2: 6.0,
     jump_min_ramp_slope: 0.16,
     jump_road_grade: 0.045,
+    piece_road_grade: 0.12,
     jump_entry_turn: 0.01,
     entry_m: 12.0,
     max_grade: 0.16,
@@ -230,7 +233,8 @@ pub fn place_in_tuned(
     ranges: &[(f64, f64, Density)],
     jumps: crate::tuning::JumpData,
 ) {
-    map.features.retain(|f| f.kind == FeatureKind::Bridge);
+    map.features
+        .retain(|f| matches!(f.kind, FeatureKind::Bridge | FeatureKind::SetPiece));
     let line = Line::new(map);
     // Counts per range: whole expected number plus one more with the fractional probability.
     let mut kinds: Vec<(FeatureKind, f64, f64)> = Vec::new();
@@ -421,7 +425,7 @@ fn draw_params(
             p.insert("lengthMm".into(), whole(rng, 34.0, 50.0, 2.0) * 2_000);
             p.insert("depthCm".into(), whole(rng, 30.0, 50.0, 10.0) * 10);
         }
-        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => {}
     }
     p
 }
@@ -462,17 +466,20 @@ fn zone_ok(map: &Map, line: &Line, kind: FeatureKind, z: &Zone, taken: &[Zone]) 
         if line.turn(i0, ramp_end) > LIMITS.jump_entry_turn {
             return false;
         }
-        let worst = (i0..i1)
-            .map(|i| {
-                libm::fabs(line.y(map, i + 1) - line.y(map, i))
-                    / (line.s[i + 1] - line.s[i]).max(1e-9)
-            })
-            .fold(0.0, f64::max);
-        if worst > LIMITS.jump_road_grade {
-            return false;
-        }
     }
-    true
+    let worst = (i0..i1)
+        .map(|i| {
+            libm::fabs(line.y(map, i + 1) - line.y(map, i)) / (line.s[i + 1] - line.s[i]).max(1e-9)
+        })
+        .fold(0.0, f64::max);
+    // A jump wants a near-level run-up; any other piece sits on a road gentle enough that the piece's own slope on top
+    // stays inside the envelope's grade (landscape climbs, P1-FL15a, can be steeper than that).
+    worst
+        <= if kind == FeatureKind::Jump {
+            LIMITS.jump_road_grade
+        } else {
+            LIMITS.piece_road_grade
+        }
 }
 
 /// A piece's height change (m) at distance `u` along its geometry and lateral offset `lat` from the centerline.
@@ -542,7 +549,7 @@ fn delta(
                 * libm::sin(core::f64::consts::TAU * u / pitch)
                 * road_wide()
         }
-        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => 0.0,
+        FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => 0.0,
     }
 }
 
@@ -637,6 +644,22 @@ fn carve_recovery(map: &mut Map, line: &Line) {
             *flag = false;
         }
     }
+    // A set piece's kicker, gap and landing (R132): a respawn never goes where a car is meant to fly.
+    for f in &map.features {
+        let Some(d) = jj_map::setpiece::GapLeap::of(f) else {
+            continue;
+        };
+        let base = jj_map::jump::feature_base(map, f);
+        let s0 = line.s[base];
+        let mut i = base;
+        while (line.s[i] - s0).rem_euclid(line.total) <= d.end_u() {
+            open[i] = false;
+            i = (i + 1) % n;
+            if i == base {
+                break;
+            }
+        }
+    }
     let mut spans = Vec::new();
     let mut from = None;
     for (i, &o) in open.iter().enumerate() {
@@ -670,6 +693,10 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
     let mut zones: Vec<(usize, Zone)> = Vec::new();
     for (k, f) in map.features.iter().enumerate() {
         let name = format!("features[{k}] {:?}", f.kind);
+        if f.kind == FeatureKind::SetPiece {
+            // Checked against its own contract (crate::setpieces::check).
+            continue;
+        }
         if f.kind == FeatureKind::Bridge {
             bad.extend(
                 jj_map::bridge::problems(map, f)
@@ -808,7 +835,8 @@ pub fn check_envelope(map: &Map) -> Vec<String> {
                 // Whoops are rough by design: grade only.
                 shape_ok(&name, &line, &h, i0, i1, None, &mut bad);
             }
-            FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge => {}
+            FeatureKind::Kerb | FeatureKind::Bowl | FeatureKind::Bridge | FeatureKind::SetPiece => {
+            }
         }
         for (j, o) in &zones {
             if z.from < o.to + LIMITS.gap_m - 1e-9 && o.from < z.to + LIMITS.gap_m - 1e-9 {

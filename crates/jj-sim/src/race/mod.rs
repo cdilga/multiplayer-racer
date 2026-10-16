@@ -88,6 +88,8 @@ pub struct Course {
     gates: Vec<Gate>,
     bounds: [f32; 4],
     kill_y: f32,
+    /// Set pieces' pits: a car that falls in respawns (jj_map::setpiece).
+    pits: Vec<jj_map::setpiece::Pit>,
     ref_lap_ticks: u64,
 }
 
@@ -190,6 +192,7 @@ impl Course {
                 b.max_z as f32 / 1000.0,
             ],
             kill_y: b.kill_y as f32 / 1000.0,
+            pits: jj_map::setpiece::pits(m),
             ref_lap_ticks: u64::from(m.header.ref_lap_ms) * SECOND / 1000,
         }
     }
@@ -212,9 +215,18 @@ impl Course {
         self.gates[i].anchor
     }
 
+    /// Below the kill plane, outside the bounds, or down a set piece's pit (a missed gap leap, R132).
     pub fn out_of_bounds(&self, p: [f32; 3]) -> bool {
         let [x0, z0, x1, z1] = self.bounds;
-        p[1] < self.kill_y || p[0] < x0 || p[0] > x1 || p[2] < z0 || p[2] > z1
+        p[1] < self.kill_y
+            || p[0] < x0
+            || p[0] > x1
+            || p[2] < z0
+            || p[2] > z1
+            || self
+                .pits
+                .iter()
+                .any(|pit| pit.contains(f64::from(p[0]), f64::from(p[1]), f64::from(p[2])))
     }
 
     /// Distance along the route from gate `from`'s route point, projecting only onto the route between gates `from`

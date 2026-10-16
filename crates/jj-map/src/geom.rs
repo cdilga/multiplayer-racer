@@ -189,6 +189,15 @@ impl RouteGeom {
         )
     }
 
+    /// Forward distance along the route from arc length `a` to `b` (wrapping on a closed route).
+    pub fn span_len(&self, a: f64, b: f64) -> f64 {
+        if self.closed && self.total > 0.0 {
+            (b - a).rem_euclid(self.total)
+        } else {
+            b - a
+        }
+    }
+
     /// True when arc length `s` lies in `[from, to]`, going forward from `from` (wrapping on a closed route).
     pub fn in_range(&self, s: f64, from: f64, to: f64) -> bool {
         if !self.closed || self.total <= 0.0 {

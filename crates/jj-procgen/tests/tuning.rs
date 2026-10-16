@@ -74,21 +74,22 @@ fn a_tuned_mix_draws_the_biome_counts_it_is_given() {
 #[test]
 fn a_tuned_relief_changes_the_built_height_range() {
     let mut fields: Vec<(String, String)> = Vec::new();
+    // The shipped landscapes (P1-FL15a) already climb as far as their grade allows, so tune the relief down: a much
+    // lower relief must build a much flatter course.
     for b in ["town", "rocks", "outbackDirt", "outbackBitumen"] {
-        fields.push((format!("biomes.{b}.terrain.reliefM"), "40".into()));
-        fields.push((format!("biomes.{b}.terrain.maxGrade"), "0.12".into()));
+        fields.push((format!("biomes.{b}.terrain.reliefM"), "8".into()));
     }
-    let tall = GeneratorData::shipped().with_fields(&fields).unwrap();
+    let low = GeneratorData::shipped().with_fields(&fields).unwrap();
     let (mut base, mut tuned) = (0.0, 0.0);
     for seed in SEEDS {
         base += route_relief(&prepare_data(seed, GeneratorData::shipped()).map);
-        tuned += route_relief(&prepare_data(seed, &tall).map);
+        tuned += route_relief(&prepare_data(seed, &low).map);
     }
     println!(
         "mean route relief {:.1} m -> {:.1} m",
         base / 12.0,
         tuned / 12.0
     );
-    // 1.4x: route relief includes crests, which the longer jumps of br-gw74.13.1 leave fewer stretches for.
-    assert!(tuned > base * 1.4, "relief {base} -> {tuned}");
+    // Route relief includes landforms the road climbs and crests, which the tuned relief doesn't move.
+    assert!(tuned < base * 0.7, "relief {base} -> {tuned}");
 }

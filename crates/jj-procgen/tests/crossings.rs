@@ -26,29 +26,33 @@ fn bitumen_marks_both_crossing_roads_and_keeps_upper_paint_on_the_deck() {
         .iter()
         .filter(|d| d.kit_piece == "outback_bitumen/centre-line")
         .collect();
-    let mut deck_marks = 0;
+    let lower = jj_map::bridge::indices(&map, design.lower).unwrap();
+    let (mut deck_marks, mut lower_marks) = (0, 0);
+    // A mark belongs to the road nearest it in 3D: the deck's marks to an upper-span point (the terrain is tens of metres
+    // high since P1-FL15a, so height above zero says nothing).
+    let p3 = |p: &jj_map::RoutePoint, d: &jj_map::Pose| {
+        i64::from(p.x - d.x).pow(2) + i64::from(p.y - d.y).pow(2) + i64::from(p.z - d.z).pow(2)
+    };
     for d in &paint {
-        if d.pose.y > 3000 {
-            let at = upper
-                .iter()
-                .map(|&i| &map.route.points[i])
-                .min_by_key(|p| i64::from(p.x - d.pose.x).pow(2) + i64::from(p.z - d.pose.z).pow(2))
-                .unwrap();
+        let nearest = (0..map.route.points.len())
+            .min_by_key(|&i| p3(&map.route.points[i], &d.pose))
+            .unwrap();
+        if upper.contains(&nearest) {
+            let at = &map.route.points[nearest];
             assert_eq!(
                 d.pose.y,
                 at.y + (jj_procgen::lineside::ROAD_SURFACE_LIFT_M * 1000.0).round() as i32
             );
             deck_marks += 1;
+        } else if lower.contains(&nearest) {
+            lower_marks += 1;
         }
     }
     assert!(
         deck_marks > 0,
         "upper crossing must retain painted lane markings"
     );
-    assert!(
-        paint.iter().any(|d| d.pose.y < 1000),
-        "lower road must retain its markings too"
-    );
+    assert!(lower_marks > 0, "lower road must retain its markings too");
 }
 
 #[test]

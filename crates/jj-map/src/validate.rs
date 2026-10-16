@@ -93,6 +93,8 @@ pub enum Rule {
     Crossing,
     /// An item station stands in the start corridor or on a jump (P1-W04).
     ItemStation,
+    /// A set piece breaks its contract: params, its pit, a straight core, the ballistic landing band, or a gate inside it.
+    SetPiece,
 }
 
 impl Rule {
@@ -126,6 +128,7 @@ impl Rule {
             Self::RoofReach => "roof-reach",
             Self::Crossing => "crossing",
             Self::ItemStation => "item-station",
+            Self::SetPiece => "set-piece",
         }
     }
 }
@@ -337,8 +340,26 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
         if r.closed {
             gaps.push((s.len() - 1, geom.total - s[s.len() - 1] + s[0]));
         }
+        // A set piece's span has no gate inside it (its detour leaves the road), so the gates either side of it may be
+        // further apart: the piece's length plus the usual spacing.
+        let piece_spans: Vec<(f64, f64)> = map
+            .features
+            .iter()
+            .filter_map(crate::setpiece::GapLeap::of)
+            .filter(|d| idx_ok(d.from) && idx_ok(d.to))
+            .map(|d| (geom.s_of(d.from as usize), geom.s_of(d.to as usize)))
+            .collect();
         for (k, gap) in gaps {
-            if gap > MAX_GATE_SPACING_MM {
+            let a = s[k];
+            let allowance: f64 = piece_spans
+                .iter()
+                .filter(|(p0, p1)| {
+                    let (l, off) = (geom.span_len(*p0, *p1), geom.span_len(a, *p0));
+                    off + l <= gap
+                })
+                .map(|(p0, p1)| geom.span_len(*p0, *p1))
+                .sum();
+            if gap > MAX_GATE_SPACING_MM + allowance {
                 add(
                     &mut v,
                     Rule::Gates,
@@ -699,6 +720,45 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
             FeatureKind::Bridge => {
                 for detail in crate::bridge::problems(map, f) {
                     add(&mut v, Rule::Crossing, &at, detail);
+                }
+            }
+            FeatureKind::SetPiece => {
+                for detail in crate::setpiece::problems(map, f) {
+                    add(&mut v, Rule::SetPiece, &at, detail);
+                }
+                if let Some(d) = crate::setpiece::GapLeap::of(f)
+                    && idx_ok(d.from)
+                    && idx_ok(d.to)
+                {
+                    let s0 = geom.s_of(d.from as usize);
+                    let s1 = s0 + geom.span_len(s0, geom.s_of(d.to as usize));
+                    for g in r.gates.iter().filter(|g| idx_ok(g.at)) {
+                        let gs = geom.s_of(g.at as usize);
+                        if g.at != d.from && g.at != d.to && geom.in_range(gs, s0, s1) {
+                            add(
+                                &mut v,
+                                Rule::SetPiece,
+                                &at,
+                                format!(
+                                    "gate at route point {} is inside the piece (the detour would miss it)",
+                                    g.at
+                                ),
+                            );
+                        }
+                    }
+                    let half = d.kicker.ramp_w / 2.0 * 1000.0;
+                    let k0 = nr.s;
+                    let lip = k0 + d.lip_u() * 1000.0;
+                    feature_zones.push((format!("{at} set-piece kicker"), k0, lip, -half, half));
+                    // The landing is the road from the far rim down the slope, its full width and a margin.
+                    let lw = half + 2_000.0;
+                    feature_zones.push((
+                        format!("{at} set-piece landing"),
+                        k0 + d.rim_u() * 1000.0,
+                        k0 + d.end_u() * 1000.0,
+                        -lw,
+                        lw,
+                    ));
                 }
             }
             FeatureKind::Crest | FeatureKind::Whoops | FeatureKind::CreekDip => {}

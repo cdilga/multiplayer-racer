@@ -26,6 +26,7 @@ pub mod playtest;
 pub mod roofs;
 pub mod scatter;
 pub mod seed;
+pub mod setpieces;
 pub mod signs;
 pub mod stations;
 pub mod terrain;
@@ -44,7 +45,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "21";
+pub const GENERATOR_VERSION: &str = "22";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -59,6 +60,9 @@ pub struct Report {
     pub fallback: bool,
     pub corners: BTreeMap<&'static str, u32>,
     pub rejects: BTreeMap<&'static str, u32>,
+    /// The set pieces placed on the lap, in route order, and why candidate sites were turned down (R90).
+    pub set_pieces: Vec<&'static str>,
+    pub set_piece_rejects: BTreeMap<String, u32>,
 }
 
 /// The map for `seed`.
@@ -128,7 +132,13 @@ pub fn generate_tuned_from(
         .iter()
         .map(|&(a, b, t)| data.terrain(a).lerp(&data.terrain(b), t))
         .collect();
-    terrain::undulate_along_crossing(&mut map, &mut st.terrain, &along, course.crossing);
+    terrain::undulate_along_crossing(
+        &mut map,
+        &mut st.terrain,
+        &along,
+        course.crossing,
+        &data.course.crossing,
+    );
     if course.crossing.is_some() {
         crossings::place(&mut map, &course, &data.course.crossing);
     }
@@ -151,7 +161,28 @@ pub fn generate_tuned_from(
             (lo, hi, data.density(b))
         })
         .collect();
+    // Set pieces (R132) own their stretch: placed first, from their own stream, and the small features keep clear.
+    let piece_ranges: Vec<(f64, f64, Biome)> = sel
+        .segments()
+        .into_iter()
+        .zip(&ranges)
+        .map(|((b, _, _), &(lo, hi, _))| (lo, hi, b))
+        .collect();
     let ranges = crossings::feature_ranges(&map, &ranges);
+    // Its own stream, seeded from the structure stream's state (a clone: nothing else moves), so each course draw of a
+    // seed gets its own placement.
+    let piece_seed = st.structure.clone().next_u64();
+    let (pieces, piece_rejects) = if data.set_pieces {
+        setpieces::place_counted(
+            &mut map,
+            &mut seed::Rng::stream(piece_seed, "set-pieces"),
+            &piece_ranges,
+            setpieces::shipped(),
+        )
+    } else {
+        Default::default()
+    };
+    let ranges = setpieces::clear_of(&ranges, &pieces);
     features::place_in_tuned(&mut map, &mut st.features, &ranges, data.jumps);
     let registry = biome::registry();
     stations::place(&mut map, &data.item_stations, &registry);
@@ -199,6 +230,7 @@ pub fn generate_tuned_from(
     // Last: check the complete street/scatter before adding stunt lots. Canonicalisation rebases
     // their dressing references; no earlier placement pass may fill the approach afterwards.
     crossings::clear_corridors(&mut map, &registry);
+    setpieces::clear_footprints(&mut map, &registry);
     // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
     // out of the same crossing envelopes as ordinary features.
     let eligible: Vec<bool> = sel
@@ -213,7 +245,10 @@ pub fn generate_tuned_from(
             0.0
         }
     });
-    Ok((map, report(&course)))
+    let mut rep = report(&course);
+    rep.set_pieces = pieces.iter().map(|p| p.kind.name()).collect();
+    rep.set_piece_rejects = piece_rejects;
+    Ok((map, rep))
 }
 
 /// The registry generated maps validate against: the generic kit plus the wayfinding family.
@@ -236,6 +271,8 @@ fn report(course: &Course) -> Report {
         fallback: course.fallback,
         corners,
         rejects: course.rejects.clone(),
+        set_pieces: Vec::new(),
+        set_piece_rejects: BTreeMap::new(),
     }
 }
 

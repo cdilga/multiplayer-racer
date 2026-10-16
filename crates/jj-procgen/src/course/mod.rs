@@ -203,12 +203,24 @@ fn range(rng: &mut Rng, (lo, hi): (f64, f64)) -> f64 {
     rng.range(lo, hi)
 }
 
+/// How an attempt treats the set-piece beat straights.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Beat {
+    Drawn,
+    Shortest,
+    None,
+}
+
+/// Largest share of the lap one set-piece beat straight may take.
+const BEAT_SHARE: f64 = 0.22;
+
 /// One draw: a corner list and straights, closed exactly, or why it couldn't be.
 fn draw(
     rng: &mut Rng,
     data: &CourseData,
     preset: &crate::tuning::CoursePreset,
     target_m: f64,
+    beat: Beat,
 ) -> Result<(Vec<Corner>, Vec<Piece>), &'static str> {
     // The turn budget: 360° of left-hand turning net, plus whatever an optional right-hander takes back.
     let right = (rng.unit() < preset.opposite_corner_probability).then(|| range(rng, (40.0, 75.0)));
@@ -351,6 +363,35 @@ fn draw(
             (1.0 - data.straight_spread, 1.0 + data.straight_spread),
         )));
     }
+    // Set-piece beats (R132): some of the straights after a corner get a fixed set-piece length, kept out of the
+    // scaling and the loop closing below, so every lap has the run a set piece needs (P1-FL15b).
+    let mut beats: Vec<usize> = Vec::new();
+    let [b0, b1] = data.set_piece_straight_m;
+    if beat != Beat::None && b1 > 0.0 {
+        let want = 1.max(libm::round(data.set_piece_straights_per_km * target_m / 1000.0) as usize);
+        let mut slots: Vec<usize> = (1..pieces.len())
+            .filter(|&i| matches!(pieces[i], Piece::Straight(_)))
+            .collect();
+        // The straights either side of the start (into the corridor, and right after the first corner) stay free: a
+        // piece there would crowd the grid.
+        slots.pop();
+        if slots.len() > 1 {
+            slots.remove(0);
+        }
+        for _ in 0..want.min(slots.len()) {
+            let k = (rng.next_u64() % slots.len() as u64) as usize;
+            let i = slots.remove(k);
+            // A short lap can't spare a long beat: at most a fifth of the lap.
+            let cap = target_m * BEAT_SHARE;
+            let l = range(rng, (b0.min(cap), b1.min(cap)));
+            pieces[i] = Piece::Straight(if beat == Beat::Shortest {
+                b0.min(cap)
+            } else {
+                l
+            });
+            beats.push(i);
+        }
+    }
     let arcs: f64 = pieces
         .iter()
         .map(|p| match *p {
@@ -362,16 +403,30 @@ fn draw(
         Piece::Straight(l) => l,
         Piece::Arc { .. } => 0.0,
     };
+    let fixed: f64 = beats
+        .iter()
+        .map(|&i| {
+            if let Piece::Straight(l) = pieces[i] {
+                l
+            } else {
+                0.0
+            }
+        })
+        .sum();
     let shares: f64 = pieces[1..]
         .iter()
-        .map(|p| if let Piece::Straight(l) = p { *l } else { 0.0 })
+        .enumerate()
+        .filter(|(k, _)| !beats.contains(&(k + 1)))
+        .map(|(_, p)| if let Piece::Straight(l) = p { *l } else { 0.0 })
         .sum();
-    let scale = (target_m - arcs - start) / shares;
+    let scale = (target_m - arcs - start - fixed) / shares;
     if scale * (1.0 - data.straight_spread) < data.min_straight_m {
         return Err("the target length leaves the straights too short");
     }
-    for p in &mut pieces[1..] {
-        if let Piece::Straight(l) = p {
+    for (k, p) in pieces[1..].iter_mut().enumerate() {
+        if let Piece::Straight(l) = p
+            && !beats.contains(&(k + 1))
+        {
             *l *= scale;
         }
     }
@@ -390,6 +445,9 @@ fn draw(
     let mut best: Option<(f64, usize, f64, usize, f64)> = None;
     for (x, &(i, di, li)) in dirs.iter().enumerate().skip(1) {
         for &(j, dj, lj) in dirs.iter().skip(x + 1) {
+            if beats.contains(&i) || beats.contains(&j) {
+                continue;
+            }
             let det = di.0 * dj.1 - di.1 * dj.0;
             if det.abs() < 0.2 {
                 continue;
@@ -472,33 +530,47 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
     let mut rejects: BTreeMap<&'static str, u32> = BTreeMap::new();
     for attempt in 1..=MAX_ATTEMPTS {
         let target = range(rng, (band.length_min_m, band.length_max_m));
-        let (corners, pieces) = match draw(
-            rng,
-            data,
-            data.presets.get(preset).expect("ordinary course preset"),
-            target,
-        ) {
-            Ok(d) => d,
-            Err(why) => {
+        // Each attempt first tries with the set-piece beat (drawn, then its shortest); if neither course works out, the
+        // same attempt runs again without it from the same stream state, so the beat never costs a course the plain
+        // designer would find.
+        let saved = rng.clone();
+        let mut found = None;
+        for beat in [Beat::Drawn, Beat::Shortest, Beat::None] {
+            *rng = saved.clone();
+            let (corners, pieces) = match draw(
+                rng,
+                data,
+                data.presets.get(preset).expect("ordinary course preset"),
+                target,
+                beat,
+            ) {
+                Ok(d) => d,
+                Err(why) => {
+                    *rejects.entry(why).or_default() += 1;
+                    continue;
+                }
+            };
+            let points = sample(&pieces);
+            let len = length(&points);
+            let why = if len < band.length_min_m {
+                Some("shorter than the length band")
+            } else if len > band.length_max_m {
+                Some("longer than the length band")
+            } else if !self_clear(&points) {
+                Some("the road comes too close to itself")
+            } else {
+                None
+            };
+            if let Some(why) = why {
                 *rejects.entry(why).or_default() += 1;
                 continue;
             }
-        };
-        let points = sample(&pieces);
-        let len = length(&points);
-        let why = if len < band.length_min_m {
-            Some("shorter than the length band")
-        } else if len > band.length_max_m {
-            Some("longer than the length band")
-        } else if !self_clear(&points) {
-            Some("the road comes too close to itself")
-        } else {
-            None
-        };
-        if let Some(why) = why {
-            *rejects.entry(why).or_default() += 1;
-            continue;
+            found = Some((corners, pieces, points, len));
+            break;
         }
+        let Some((corners, pieces, points, len)) = found else {
+            continue;
+        };
         return Course {
             corners,
             straights: straights(&pieces),

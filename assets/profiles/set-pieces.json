@@ -1,0 +1,203 @@
+{
+  "schema": "jj.setpieces.v1",
+  "note": "R132 set pieces (P1-FL15b): the gap-leap family. Lengths m, heights m, speeds m/s. [a, b] pairs are draw ranges. Validated by jj_procgen::setpieces::validate_data; every placed piece is also checked ballistically against the stamped terrain by jj_map::setpiece::problems.",
+  "minPerLap": 1,
+  "perKm": 0.5,
+  "spacingM": 60,
+  "sightSpeedMps": 20,
+  "minSightS": 10,
+  "sightWindowS": 15,
+  "sightEyeBackM": 8.4,
+  "sightEyeUpM": 4.4,
+  "sightHalfAngleDeg": 44,
+  "biomes": {
+    "greybox": [
+      "canyon-leap",
+      "mesa-drop",
+      "creek-washout"
+    ],
+    "rocks": [
+      "canyon-leap",
+      "canyon-leap",
+      "mesa-drop",
+      "creek-washout"
+    ],
+    "outback-dirt": [
+      "mesa-drop",
+      "creek-washout",
+      "canyon-leap"
+    ],
+    "outback-bitumen": [
+      "creek-washout",
+      "mesa-drop",
+      "canyon-leap"
+    ],
+    "town": [
+      "creek-washout"
+    ]
+  },
+  "pieces": {
+    "canyon-leap": {
+      "approachM": [
+        70,
+        120
+      ],
+      "climbM": [
+        -8,
+        9
+      ],
+      "rampM": [
+        11,
+        13
+      ],
+      "lipM": [
+        1.8,
+        2.4
+      ],
+      "blendM": 3,
+      "gapM": [
+        14,
+        18
+      ],
+      "pitDepthM": [
+        10,
+        14
+      ],
+      "rimDropM": [
+        -1.6,
+        -1.0
+      ],
+      "landingSlope": 0.16,
+      "runoutM": 40,
+      "wallHeightM": [
+        8,
+        13
+      ],
+      "wallWidthM": 9,
+      "wallFromM": 45,
+      "landmarkHeightM": [
+        42,
+        60
+      ],
+      "landmarkRadiusM": 36,
+      "pitFarM": 14,
+      "detourOffsetM": 34,
+      "detourWidthM": 9,
+      "fordDepthM": 0,
+      "speedBand": [
+        20,
+        28
+      ],
+      "pitSurface": "rock",
+      "wallSurface": "rock"
+    },
+    "mesa-drop": {
+      "approachM": [
+        110,
+        130
+      ],
+      "climbM": [
+        6,
+        12
+      ],
+      "rampM": [
+        10,
+        12
+      ],
+      "lipM": [
+        1.4,
+        1.9
+      ],
+      "blendM": 3,
+      "gapM": [
+        11,
+        14
+      ],
+      "pitDepthM": [
+        11,
+        14
+      ],
+      "rimDropM": [
+        2.5,
+        4.0
+      ],
+      "landingSlope": 0.18,
+      "runoutM": 45,
+      "wallHeightM": [
+        0,
+        0
+      ],
+      "wallWidthM": 16,
+      "wallFromM": 70,
+      "landmarkHeightM": [
+        32,
+        45
+      ],
+      "landmarkRadiusM": 26,
+      "pitFarM": 10,
+      "detourOffsetM": 36,
+      "detourWidthM": 9,
+      "fordDepthM": 0,
+      "speedBand": [
+        17,
+        28
+      ],
+      "pitSurface": "rock",
+      "wallSurface": "rock"
+    },
+    "creek-washout": {
+      "approachM": [
+        60,
+        110
+      ],
+      "climbM": [
+        -4,
+        3
+      ],
+      "rampM": [
+        10,
+        12
+      ],
+      "lipM": [
+        1.6,
+        2.1
+      ],
+      "blendM": 3,
+      "gapM": [
+        12,
+        15
+      ],
+      "pitDepthM": [
+        5,
+        6.5
+      ],
+      "rimDropM": [
+        -1.6,
+        -1.0
+      ],
+      "landingSlope": 0.15,
+      "runoutM": 40,
+      "wallHeightM": [
+        1.5,
+        2.5
+      ],
+      "wallWidthM": 5,
+      "wallFromM": 25,
+      "landmarkHeightM": [
+        24,
+        32
+      ],
+      "landmarkRadiusM": 18,
+      "pitFarM": 40,
+      "detourOffsetM": 30,
+      "detourWidthM": 9,
+      "fordDepthM": 2.5,
+      "speedBand": [
+        19,
+        28
+      ],
+      "pitSurface": "off-track",
+      "wallSurface": "rock"
+    }
+  }
+}

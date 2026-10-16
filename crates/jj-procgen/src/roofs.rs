@@ -139,6 +139,110 @@ fn obstacle_clear(
             })
 }
 
+/// Ground within this distance of the road's edge is never terraced, m: the road and its verge keep their profile.
+const TERRACE_ROAD_M: f64 = 1.0;
+/// A terraced lot's ground fades back to the landscape over this distance outside its rectangle, m (past one cell
+/// held flat, so the bilinear ground at the rectangle's edge is the terrace's).
+const TERRACE_BLEND_M: f64 = 4.0;
+/// The deepest cut or fill a terrace may make inside its lot, m: deeper, the hill around it stands at roof height.
+const TERRACE_MAX_M: f64 = 1.5;
+
+/// Terraces a lot whose ground is too steep (P1-FL15a: Town keeps 25 m of relief): level at the ground's height at its
+/// middle, faded back into the landscape outside it. A sloping terrace pitches the kicker and the car overshoots the
+/// roof; a cut or fill deeper than `TERRACE_MAX_M` leaves the hill at roof height, so that lot stays unbuilt. Returns
+/// the cells it changed with their old heights (none if it refused), to undo a lot that fails anyway.
+fn terrace(
+    map: &mut Map,
+    road: &RoadIndex,
+    f: &Feature,
+    (from, to, half): (f64, f64, f64),
+) -> Vec<(usize, i16)> {
+    let a = f64::from(f.pose.yaw) / 100.0 * core::f64::consts::PI / 180.0;
+    let (c, sn) = (libm::cos(a), libm::sin(a));
+    let (fx, fz) = (f64::from(f.pose.x) / 1000.0, f64::from(f.pose.z) / 1000.0);
+    let at = |u: f64| (fx + c * u, fz + sn * u);
+    let ground = |(x, z): (f64, f64)| ground_height_m(&map.terrain, x, z);
+    let mid = (from + to) / 2.0;
+    let level = ground(at(mid));
+    let t = &map.terrain;
+    let sp = f64::from(t.spacing) / 1000.0;
+    let (ox, oz) = (
+        f64::from(t.origin_x) / 1000.0,
+        f64::from(t.origin_z) / 1000.0,
+    );
+    let (cols, rows) = (t.cols as usize, t.rows as usize);
+    let reach = libm::hypot((to - from) / 2.0, half) + sp + TERRACE_BLEND_M;
+    let (mx, mz) = at(mid);
+    let c0 = libm::floor(((mx - reach - ox) / sp).max(0.0)) as usize;
+    let c1 = (libm::ceil(((mx + reach - ox) / sp).max(0.0)) as usize).min(cols - 1);
+    let r0 = libm::floor(((mz - reach - oz) / sp).max(0.0)) as usize;
+    let r1 = (libm::ceil(((mz + reach - oz) / sp).max(0.0)) as usize).min(rows - 1);
+    let mut changed = Vec::new();
+    let mut deepest: f64 = 0.0;
+    for r in r0..=r1 {
+        for col in c0..=c1 {
+            let (x, z) = (ox + col as f64 * sp, oz + r as f64 * sp);
+            let (dx, dz) = (x - fx, z - fz);
+            let (u, lat) = (dx * c + dz * sn, -dx * sn + dz * c);
+            let out = libm::hypot(u - u.clamp(from, to), (lat.abs() - half).max(0.0));
+            let w = if out <= sp {
+                1.0
+            } else {
+                let k = (1.0 - (out - sp) / TERRACE_BLEND_M).clamp(0.0, 1.0);
+                k * k * (3.0 - 2.0 * k)
+            };
+            if w <= 0.0 {
+                continue;
+            }
+            let (dist, nearest) = road.nearest((x, z));
+            if dist < f64::from(map.route.points[nearest].width) / 2000.0 + TERRACE_ROAD_M {
+                continue;
+            }
+            let at_cell = r * cols + col;
+            let old = map.terrain.heights[at_cell];
+            let plane = level;
+            if out <= 0.0 {
+                deepest = deepest.max((plane - f64::from(old) / 100.0).abs());
+            }
+            let new = f64::from(old) / 100.0 + w * (plane - f64::from(old) / 100.0);
+            let new = libm::round(new * 100.0) as i16;
+            if new != old {
+                map.terrain.heights[at_cell] = new;
+                changed.push((at_cell, old));
+            }
+        }
+    }
+    if deepest > TERRACE_MAX_M {
+        untrace(map, &changed);
+        changed.clear();
+    }
+    changed
+}
+
+/// Dressing and props (but the new house, `skip`) keep their height above the ground a terrace moved.
+fn settle(map: &mut Map, before: &jj_map::Terrain, skip: usize) {
+    let terrain = map.terrain.clone();
+    let poses = map
+        .dressing
+        .iter_mut()
+        .enumerate()
+        .filter(|(k, _)| *k != skip)
+        .map(|(_, d)| &mut d.pose)
+        .chain(map.props.iter_mut().map(|q| &mut q.pose));
+    for pose in poses {
+        let (x, z) = (f64::from(pose.x) / 1000.0, f64::from(pose.z) / 1000.0);
+        let moved = ground_height_m(&terrain, x, z) - ground_height_m(before, x, z);
+        pose.y += libm::round(moved * 1000.0) as i32;
+    }
+}
+
+/// Undoes [`terrace`].
+fn untrace(map: &mut Map, changed: &[(usize, i16)]) {
+    for &(at, old) in changed.iter().rev() {
+        map.terrain.heights[at] = old;
+    }
+}
+
 pub fn place(map: &mut Map, d: &RoofStunts, registry: &Registry, town: &dyn Fn(usize) -> f64) {
     let pts: Vec<_> = map
         .route
@@ -271,42 +375,59 @@ pub fn place(map: &mut Map, d: &RoofStunts, registry: &Registry, town: &dyn Fn(u
                     )
                 };
                 let samples = libm::ceil((to - from) / 1.0) as usize;
-                let clear_ground = (0..=samples).all(|k| {
-                    let u = from + (to - from) * k as f64 / samples as f64;
-                    [-half, 0.0, half].into_iter().all(|lat| {
-                        let (x, z) = at(u, lat);
-                        let (dist, nearest) = road.nearest((x, z));
-                        let h = ground_height_m(&map.terrain, x, z);
-                        let (xx, zz) = at(u + 0.5, lat);
-                        let (lx, lz) = at(u, lat + 0.5);
-                        let bounds = x * 1000.0 >= f64::from(b.min_x)
-                            && x * 1000.0 <= f64::from(b.max_x)
-                            && z * 1000.0 >= f64::from(b.min_z)
-                            && z * 1000.0 <= f64::from(b.max_z);
-                        let road_clear = dist
-                            >= f64::from(map.route.points[nearest].width) / 2000.0 + 3.5
-                            && town(nearest) >= 0.999;
-                        let grade = (h - ground_height_m(&map.terrain, xx, zz)).abs() / 0.5
-                            <= d.max_ground_grade
-                            && (h - ground_height_m(&map.terrain, lx, lz)).abs() / 0.5
-                                <= d.max_ground_grade;
-                        bounds && road_clear && grade
+                let clear_ground = |map: &Map| {
+                    (0..=samples).all(|k| {
+                        let u = from + (to - from) * k as f64 / samples as f64;
+                        [-half, 0.0, half].into_iter().all(|lat| {
+                            let (x, z) = at(u, lat);
+                            let (dist, nearest) = road.nearest((x, z));
+                            let h = ground_height_m(&map.terrain, x, z);
+                            let (xx, zz) = at(u + 0.5, lat);
+                            let (lx, lz) = at(u, lat + 0.5);
+                            let bounds = x * 1000.0 >= f64::from(b.min_x)
+                                && x * 1000.0 <= f64::from(b.max_x)
+                                && z * 1000.0 >= f64::from(b.min_z)
+                                && z * 1000.0 <= f64::from(b.max_z);
+                            let road_clear = dist
+                                >= f64::from(map.route.points[nearest].width) / 2000.0 + 3.5
+                                && town(nearest) >= 0.999;
+                            let grade = (h - ground_height_m(&map.terrain, xx, zz)).abs() / 0.5
+                                <= d.max_ground_grade
+                                && (h - ground_height_m(&map.terrain, lx, lz)).abs() / 0.5
+                                    <= d.max_ground_grade;
+                            bounds && road_clear && grade
+                        })
                     })
-                });
-                if !clear_ground {
-                    continue;
+                };
+                // Ground too steep for a lot is terraced (and the terrace undone if the lot fails anyway).
+                let mut terraced = Vec::new();
+                let before = map.terrain.clone();
+                if !clear_ground(map) {
+                    terraced = terrace(map, &road, &f, (from, to, half));
+                    if terraced.is_empty() || !clear_ground(map) {
+                        untrace(map, &terraced);
+                        continue;
+                    }
                 }
+                let mut house = house;
+                let mut f = f;
+                house.pose.y = mm(ground_height_m(&map.terrain, hx, hz));
+                f.pose.y = mm(ground_height_m(&map.terrain, x, z));
                 map.dressing.push(house);
                 if jj_map::roof::problems(map, &f).is_empty() {
                     map.features.push(f);
                     // Respect the route's existing feature exclusion around biome transitions
                     // as well as the physical lot's Town mask. Never move a boundary for a stunt.
                     if crate::biome::check_transitions(map).is_empty() {
+                        if !terraced.is_empty() {
+                            settle(map, &before, map.dressing.len() - 1);
+                        }
                         break 'candidate;
                     }
                     map.features.pop();
                 }
                 map.dressing.pop();
+                untrace(map, &terraced);
             }
         }
     }
