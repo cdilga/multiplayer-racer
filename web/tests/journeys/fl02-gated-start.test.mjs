@@ -157,11 +157,15 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   let preGoSpeed = 0;
   const watch = (async () => {
     for (;;) {
+      // The room view and the worker's snapshot come from different threads: sample only with at least 0.5 s of
+      // countdown left before the snapshot was asked for, so a sample can never be from after GO (CI run 5064).
       const s = await host.evaluate(async () => {
+        const v = window.__jjRoom.view();
         const o = await window.__jjTest.observe();
-        return { phase: window.__jjRoom.view().phase, cars: o.cars.map((c) => ({ p: c.position, v: Math.abs(c.forwardSpeed ?? 0) })) };
+        return { phase: v.phase, left: v.remainingMs ?? 0, cars: o.cars.map((c) => ({ p: c.position, v: Math.abs(c.forwardSpeed ?? 0) })) };
       });
       if (s.phase !== 'Countdown') return;
+      if (s.left < 500) { await host.waitForTimeout(120); continue; }
       after = s.cars.map((c) => c.p);
       preGoSpeed = Math.max(preGoSpeed, ...s.cars.map((c) => c.v));
       await host.waitForTimeout(120);
