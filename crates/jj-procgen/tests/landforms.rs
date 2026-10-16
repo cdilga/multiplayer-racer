@@ -1,7 +1,9 @@
 //! P1-FL15a (br-bbki.15.1, R132): terrain-first landscapes. Every real biome's generated courses span at least 25 m of
 //! road height, and the road runs through landforms: corridors where the ground rises at least 6 m above the road on
-//! BOTH sides within 8-40 m of the centerline (cuttings, gorges), on the validated map the game prepares. Set
+//! BOTH sides within 8-40 m of the centerline (cuttings, gorges), on the validated map the game prepares; and the autopilot
+//! laps every biome unaided on them. Set
 //! `JJ_EVIDENCE_DIR` (an absolute path) to write the table.
+#![cfg(not(target_arch = "wasm32"))]
 
 use jj_map::{Biome, Map};
 use jj_procgen::terrain::{CORRIDOR_WALL_M, corridor_depth_m};
@@ -103,4 +105,41 @@ fn every_biome_spans_25_m_and_runs_through_landforms() {
         std::fs::write(std::path::Path::new(&dir).join("landforms.txt"), &rows).unwrap();
     }
     assert!(bad.is_empty(), "{}\n{rows}", bad.join("\n"));
+}
+
+/// Seeds per biome the autopilot laps: 10 in release (the acceptance run), 1 in a debug build (~20x slower).
+const LAP_SEEDS: u64 = if cfg!(debug_assertions) { 1 } else { 10 };
+
+#[test]
+fn the_autopilot_laps_every_biome_unaided() {
+    let registry = jj_procgen::registry();
+    let n = std::env::var("JJ_LAP_SEEDS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(LAP_SEEDS);
+    let mut bad = Vec::new();
+    for biome in BIOMES {
+        for seed in 0..n {
+            // The game's path: the validated map with its set pieces.
+            let p = jj_procgen::prepare(seed, &[biome]);
+            let map = jj_map::load_canonical(&jj_map::canonical_bytes(&p.map), &registry).unwrap();
+            let mut sim = jj_sim::Sim::new(&map, &registry, seed, jj_sim::VehicleProfile::cruz());
+            let car = sim.spawn_grid(1)[0];
+            sim.start_race(1);
+            sim.set_autopilot(car, true);
+            while !sim.race().is_finished(car.0) && sim.tick() < 400 * u64::from(jj_sim::TICK_HZ) {
+                sim.step();
+            }
+            let race = sim.race().car(car.0).unwrap();
+            if race.finished_at.is_none() || race.recoveries > 0 || race.wrecks > 0 {
+                bad.push(format!(
+                    "{biome:?} seed {seed}: finished {} recoveries {} wrecks {}",
+                    race.finished_at.is_some(),
+                    race.recoveries,
+                    race.wrecks
+                ));
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
 }
