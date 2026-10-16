@@ -443,8 +443,12 @@ not feel targets.
   normal, so a tail-first landing read 0°. Ray-cast down from the body for the ground's normal instead.
 - **The flip assist's torque can't right a crashed car in time.** `Race::assist_torque` rolled a nose-first crash onto
   its roof; the crash righting drives a rate toward upright through the car's inertia (`air::righting_change`).
-- **parry 0.31.1 drops a vertical ray on a heightfield cell edge** (fixed in `vendor/parry3d`, see its JAMMERS-PATCH.md).
-  A ray straight down exactly on a grid line could miss the ground: rounding picked the neighbouring cell's triangles,
-  and a ray with no x or z never steps to another cell. A level bike placed on a 10 m grid line lost both suspension
-  rays and fell 0.44 m onto its hull (the flat banks in `jj-procgen/tests/handling.rs`, CI 5422). A car's wheels at
-  ±0.85 m straddle the line, so only single-track vehicles showed it. `rapier_api.rs` pins the fix.
+- **parry 0.31.1 drops a vertical ray on a heightfield cell edge, and patching it broke native/WASM parity.** A ray
+  straight down exactly on a grid line can miss the ground: rounding picks a neighbouring cell's triangles, and a ray with
+  no x or z never steps to another cell. A level bike placed on a 10 m grid line (x = 20 on the flat strips) lost both
+  suspension rays and fell onto its hull. A car's wheels at ±0.85 m straddle the line.
+  - A vendored repair (5c7fc473) guarded on `dir.x == 0.0 && dir.z == 0.0`, and that broke parity. In WASM a level
+    car's wheel ray is exactly vertical; natively the rotation maths leaves an ulp in x or z. The repair ran in WASM only,
+    and boost-line's hash split (br-lekz).
+  - The repair is reverted. The flat banks sit half a metre off the grid lines. A cross-platform repair is br-zrat.
+  - **Never branch on exact float equality of anything derived from a rotation.**

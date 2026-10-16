@@ -306,7 +306,10 @@ fn flat_bank(vehicle: &str, profile: &VehicleProfile) {
     let hull = profile.geometry.hull.clone();
     let mut worst = (0.0f32, String::new());
     let mut failures = Vec::new();
-    for x in [20.0f32, 60.0, 100.0, 140.0] {
+    // Half a metre off the strips' 10 m terrain grid lines: parry 0.31.1 can drop a vertical ray exactly on a
+    // heightfield cell edge, and a level bike's centreline wheels at x = 20 fell through onto its hull
+    // (docs/learnings/sim.md, br-zrat).
+    for x in [20.5f32, 60.5, 100.5, 140.5] {
         for speed in [10.0f32, 15.0, 20.0, 25.0, 30.0, 35.0] {
             for lock in [0.25f32, 0.5, 1.0] {
                 for ramp in [false, true] {

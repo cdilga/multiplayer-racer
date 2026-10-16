@@ -474,31 +474,3 @@ fn dominance_contact_models_work_with_either_body_insertion_order() {
         }
     }
 }
-
-/// parry 0.31.1 (vendor/parry3d/JAMMERS-PATCH.md): a vertical ray straight down a flat heightfield exactly on a cell
-/// edge missed it whenever rounding put the point a hair outside the cell it was looked up in. A level bike placed on
-/// a 10 m grid line (x = 20 on scenarios/bikes/flat-strips.json) fell 0.44 m through the ground onto its hull before
-/// its wheels touched. Every grid line, and the cell interiors either side, now hit at the ground's height.
-#[test]
-fn a_vertical_ray_on_a_heightfield_grid_line_hits_the_ground() {
-    let (rows, cols, spacing) = (17usize, 38usize, 10.0f32);
-    let heights = rapier3d::parry::utils::Array2::from_fn(rows, cols, |_, _| 0.0f32);
-    let (sx, sz) = ((cols - 1) as f32 * spacing, (rows - 1) as f32 * spacing);
-    let ground = ColliderBuilder::heightfield(heights, Vector::new(sx, 1.0, sz))
-        .translation(Vector::new(-140.0 + sx / 2.0, 0.0, -50.0 + sz / 2.0))
-        .build();
-    let mut missed = Vec::new();
-    for j in 1..cols - 1 {
-        for dx in [0.0f32, -0.001, 0.001] {
-            for z in [-45.0f32, -40.0, 0.0] {
-                let x = -140.0 + j as f32 * spacing + dx;
-                let ray = Ray::new(Vector::new(x, 0.5, z), Vector::new(0.0, -1.0, 0.0));
-                let hit = ground.shape().cast_ray(ground.position(), &ray, 2.0, true);
-                if hit.is_none_or(|t| (t - 0.5).abs() > 1e-4) {
-                    missed.push((x, z, hit));
-                }
-            }
-        }
-    }
-    assert!(missed.is_empty(), "rays that missed the ground: {missed:?}");
-}
