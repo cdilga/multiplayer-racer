@@ -84,19 +84,28 @@ fn class_map(biome: Biome, preset: PresetName, seed: u64) -> Option<LoadedMap> {
 }
 
 /// One solo lap (s) with the trial driver at `a_lat` and `brake`, or none if it didn't finish clean (a wreck or a
-/// recovery is a lap a player wouldn't keep).
+/// recovery is a lap a player wouldn't keep) or inside `bound_s` (a lap slower than the best so far can stop).
 fn lap(
     map: &LoadedMap,
     path: &Path,
     profile: &VehicleProfile,
     a_lat: f32,
     brake: f32,
+    bound_s: f32,
 ) -> Option<f32> {
     let mut sim = Sim::new(map, &jj_procgen::registry(), 3, profile.clone());
     let car = sim.spawn_grid(1)[0];
     sim.start_race(1);
     let mut hint = None;
-    while !sim.race().is_finished(car.0) && sim.tick() < MAX_LAP_S * S {
+    let bound = ((bound_s * TICK_HZ as f32) as u64).min(MAX_LAP_S * S);
+    while !sim.race().is_finished(car.0) && sim.tick() < bound {
+        if sim
+            .race()
+            .car(car.0)
+            .is_some_and(|rc| rc.wrecks > 0 || rc.recoveries > 0)
+        {
+            break;
+        }
         let st = sim.car_state(car).unwrap();
         let speed = st.forward_speed;
         let probe = path.probe(
@@ -136,6 +145,18 @@ fn lap(
         sim.step();
     }
     let rc = sim.race().car(car.0)?;
+    if std::env::var_os("JJ_BALANCE_TRACE").is_some() {
+        let st = sim.car_state(car).unwrap();
+        eprintln!(
+            "lap a_lat {a_lat} brake {brake}: tick {} finished {:?} wrecks {} recoveries {} progress {:.0} m at {:?}",
+            sim.tick(),
+            rc.finished_at,
+            rc.wrecks,
+            rc.recoveries,
+            sim.race().progress_m(car.0),
+            st.position
+        );
+    }
     (rc.wrecks == 0 && rc.recoveries == 0).then_some(rc.finished_at? as f32 / TICK_HZ as f32)
 }
 
@@ -145,7 +166,8 @@ fn best_lap(map: &LoadedMap, profile: &VehicleProfile) -> Option<(f32, f32, f32)
     let mut best: Option<(f32, f32, f32)> = None;
     for a in A_LAT {
         for b in BRAKE {
-            if let Some(t) = lap(map, &path, profile, a, b)
+            let bound = best.map_or(MAX_LAP_S as f32, |(bt, ..)| bt);
+            if let Some(t) = lap(map, &path, profile, a, b, bound)
                 && best.is_none_or(|(bt, ..)| t < bt)
             {
                 best = Some((t, a, b));
