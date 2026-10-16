@@ -2624,8 +2624,6 @@
     "boost_engine_gain": 0.55,
     "boost_drain_per_s": 0.3,
     "boost_recharge_per_s": 0.2,
-    "slide_charge_per_s": 0.4,
-    "slide_charge_min_mps": 5.0,
     "wheelie_full_preload_ms": 400.0,
     "wheelie_good_min_ms": 350.0,
     "wheelie_lift_impulse": 2050.0,
@@ -2670,6 +2668,17 @@
       "wheel_loss_respawn_s": 2.0,
       "detach_kick_mps": 1.5,
       "detach_clear_ms": 250.0
-    }
+    },
+    "drift_rear_grip": 0.55,
+    "drift_recovery_s": 0.15,
+    "drift_charge_per_s": 0.4,
+    "drift_charge_min_slip_deg": 10.0,
+    "drift_charge_min_mps": 5.0,
+    "drift_exit_min_s": 0.25,
+    "drift_exit_min_slip_deg": 4.0,
+    "drift_exit_boost_per_s": 1.5,
+    "drift_exit_boost_max_s": 2.5,
+    "drift_exit_boost_gain": 0.8,
+    "drift_drive_scale": 0.4
   }
 }
