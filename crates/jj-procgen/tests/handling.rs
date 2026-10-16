@@ -542,7 +542,9 @@ fn one_throw() {
     let pose = route_spawn(&map, at, 0.0, 0.5);
     let v = [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()];
     sim.place_car(car, pose, 0.0, v);
-    eprintln!("tick upY speed wheels angvel(x,y,z) groundY");
+    eprintln!("tick upY speed wheels angvel(x,y,z) bodyY/groundY x,z offRoad(m)");
+    // The hardest hit (largest one-tick velocity change), and what map features stand within 25 m of it.
+    let (mut hit, mut last_v) = ((0.0f32, [0.0f32; 3]), v);
     for t in 0..2 * S {
         let steer = match how {
             Throw::Hold => FULL,
@@ -560,14 +562,32 @@ fn one_throw() {
         );
         sim.step();
         let st = sim.car_state(car).unwrap();
-        if t % (S / 10) == 0 || st.up_y < 0.5 {
+        let dv = (0..3)
+            .map(|i| (st.linvel[i] - last_v[i]).powi(2))
+            .sum::<f32>()
+            .sqrt();
+        if dv > hit.0 {
+            hit = (dv, st.position);
+        }
+        last_v = st.linvel;
+        if t % (S / 20) == 0 || st.up_y < 0.5 {
             let g = ground_height_m(
                 &map.map.terrain,
                 f64::from(st.position[0]),
                 f64::from(st.position[2]),
             );
+            let off = map
+                .map
+                .route
+                .points
+                .iter()
+                .map(|q| {
+                    (q.x as f32 / 1000.0 - st.position[0])
+                        .hypot(q.z as f32 / 1000.0 - st.position[2])
+                })
+                .fold(f32::MAX, f32::min);
             eprintln!(
-                "{t:>4} {:>6.3} {:>6.2} {} ({:>6.2},{:>6.2},{:>6.2}) {:>6.2}/{:>6.2}",
+                "{t:>4} {:>6.3} {:>6.2} {} ({:>6.2},{:>6.2},{:>6.2}) {:>6.2}/{:>6.2} {:.1},{:.1} {off:.1}",
                 st.up_y,
                 st.forward_speed,
                 st.wheels_in_contact,
@@ -575,11 +595,24 @@ fn one_throw() {
                 st.angvel[1],
                 st.angvel[2],
                 st.position[1],
-                g
+                g,
+                st.position[0],
+                st.position[2]
             );
             if st.up_y < 0.3 {
                 break;
             }
+        }
+    }
+    let (dv, at) = hit;
+    eprintln!(
+        "hardest hit: {dv:.2} m/s in one tick at {:.1},{:.1}",
+        at[0], at[2]
+    );
+    for f in &map.map.features {
+        let d = (f.pose.x as f32 / 1000.0 - at[0]).hypot(f.pose.z as f32 / 1000.0 - at[2]);
+        if d < 25.0 {
+            eprintln!("  {:?} at {d:.1} m: {:?}", f.kind, f.params);
         }
     }
 }
