@@ -4,7 +4,7 @@
   "status": "awaiting-review",
   "date": "2026-10-10",
   "beads": ["P1-V02", "P1-V03", "br-bwju.1", "br-p1-d03b-poc-cleanup-uod"],
-  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Rear drive, 1200 kg.",
+  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Front drive, 1200 kg (R136: the Cruze is front-driven).",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {

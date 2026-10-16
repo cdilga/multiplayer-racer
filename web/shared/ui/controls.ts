@@ -2,8 +2,8 @@
 // host's lobby tiles, the race tile while Identify is held, the input drawer, the host menu's Controls page and the phone's
 // Help. It reads the key clusters and wheel profiles it is given (the host's clusters.json and wheels.json, never a copy), the
 // pad's and phone's wording from controls.json, so a card cannot drift from the mapping. Pure strings: no DOM, no renderer.
-// Layout (R116/R120): the right stick steers and flicks (OI! up, cone down); the left stick drives, brakes, drifts at full side
-// lock and launches (pull back, snap forward). A touch hint never appears on a pad, wheel or key card.
+// Layout (R116/R120): the right stick steers and flicks (OI! up, cone down); the left stick drives, brakes and launches (pull back,
+// snap forward; its sideways push is nothing, R128). A touch hint never appears on a pad, wheel or key card.
 import words from './controls.json';
 
 type Stick = { up: string; down: string; left: string; right: string };
@@ -11,13 +11,13 @@ export interface ControlsCluster {
   id: number;
   label: string;
   drive: Stick;
-  action: Stick;
+  action: { up: string; down: string };
   identify: string;
   ready: string;
 }
 export interface ControlsWheel {
   label: string;
-  buttons: Partial<Record<'boost' | 'drift' | 'oi' | 'cone' | 'identify' | 'ready', number>>;
+  buttons: Partial<Record<'boost' | 'oi' | 'cone' | 'identify' | 'ready', number>>;
 }
 export interface ControlsData {
   clusters: ControlsCluster[];
@@ -28,7 +28,7 @@ export type ControlsSource =
   | { kind: 'pad' }
   | { kind: 'wheel'; profile?: string }
   | { kind: 'keys'; cluster: number };
-export type ControlId = 'steer' | 'go' | 'drift' | 'launch' | 'flick' | 'identify' | 'ready';
+export type ControlId = 'steer' | 'go' | 'launch' | 'flick' | 'identify' | 'ready';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -75,7 +75,6 @@ export function glyphs(src: ControlsSource, id: ControlId, data: ControlsData): 
     return {
       steer: keycaps(c.drive.left, c.drive.right),
       go: keycaps(c.drive.up, c.drive.down),
-      drift: keycaps(c.action.left, c.action.right),
       launch: keycap(c.drive.down) + then + keycap(c.drive.up),
       flick: keycaps(c.action.up, c.action.down),
       identify: keycap(c.identify),
@@ -87,7 +86,6 @@ export function glyphs(src: ControlsSource, id: ControlId, data: ControlsData): 
     return {
       steer: pill(w.steer),
       go: pill(w.go) + pill(w.brake),
-      drift: wheelButton(src, data, 'drift', w.drift),
       launch: pill(w.brake) + then + pill(w.go),
       flick: wheelButton(src, data, 'oi', w.oi) + wheelButton(src, data, 'cone', w.cone),
       identify: wheelButton(src, data, 'identify', w.identify),
@@ -98,7 +96,6 @@ export function glyphs(src: ControlsSource, id: ControlId, data: ControlsData): 
   return {
     steer: sg('R', 'l', 'r'),
     go: sg('L', 'u', 'd'),
-    drift: sg('L', 'l', 'r'),
     launch: sg('L', 'd') + then + stick('L', 'u'),
     flick: sg('R', 'u', 'd'),
     identify: pill(phone ? words.phone.identify : words.pad.identify),
@@ -109,7 +106,6 @@ export function glyphs(src: ControlsSource, id: ControlId, data: ControlsData): 
 const ROWS: Array<[ControlId, string, string]> = [
   ['steer', 'Steer', ''],
   ['go', 'Go · brake', ''],
-  ['drift', 'Drift', 'all the way'],
   ['launch', 'Launch', 'pull back, snap'],
   ['flick', 'OI! · cone', 'flick'],
   ['identify', 'Identify', 'hold'],
@@ -131,7 +127,7 @@ export function controlsPage(data: ControlsData, opts: { compact?: boolean } = {
   return `<div class="jj-cpage" data-controls-page>${cards}${wheels}</div>`;
 }
 
-export type PromptStepId = 'steer' | 'go' | 'drift' | 'launch' | 'oi' | 'cone';
+export type PromptStepId = 'steer' | 'go' | 'launch' | 'oi' | 'cone';
 /** The wording of a first-drive prompt (P1-C06) in this source's own glyphs; null for a phone (its text stays in steps.ts). */
 export function promptGlyphs(step: PromptStepId, src: ControlsSource, data: ControlsData): string | null {
   if (src.kind === 'phone') return null;
@@ -141,7 +137,6 @@ export function promptGlyphs(step: PromptStepId, src: ControlsSource, data: Cont
     return {
       steer: `${keycap(c.drive.right)}${then}${keycap(c.drive.left)}`,
       go: `${keycap(c.drive.up)} drive ${keycap(c.drive.down)} brake`,
-      drift: `Hold ${keycap(c.action.left)} or ${keycap(c.action.right)}, then let go`,
       launch: `Hold ${keycap(c.drive.down)}, then ${keycap(c.drive.up)}`,
       oi: `Tap ${keycap(c.action.up)}`,
       cone: `Tap ${keycap(c.action.down)}`,
@@ -152,7 +147,6 @@ export function promptGlyphs(step: PromptStepId, src: ControlsSource, data: Cont
     return {
       steer: 'Turn the wheel right, then left',
       go: `${pill(w.go)} go ${pill(w.brake)} stop`,
-      drift: `Hold ${glyphs(src, 'drift', data)}, then let go`,
       launch: `${pill(w.brake)}${then}${pill(w.go)}`,
       oi: `Press ${wheelButton(src, data, 'oi', w.oi)}`,
       cone: `Press ${wheelButton(src, data, 'cone', w.cone)}`,
@@ -161,7 +155,6 @@ export function promptGlyphs(step: PromptStepId, src: ControlsSource, data: Cont
   return {
     steer: `Right stick ${stick('R', 'r')}${then}${stick('R', 'l')}`,
     go: `Left stick ${stick('L', 'u')} drive ${stick('L', 'd')} brake`,
-    drift: `Left stick ${stick('L', 'l')}${stick('L', 'r')} all the way, then let go`,
     launch: `Left stick ${stick('L', 'd')}${then}${stick('L', 'u')} snap`,
     oi: `Right stick flick ${stick('R', 'u')}`,
     cone: `Right stick flick ${stick('R', 'd')}`,

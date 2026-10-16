@@ -127,22 +127,17 @@ pub struct Tuning {
     /// How much of the tyres' side forces' real lever arm rolls the body (Bullet's `rollInfluence`: 1 physical, 0 none).
     /// Rapier fixes its own at 0.1 privately; the sim puts back the difference (`crate::vehicle::ROLL_INFLUENCE_RAPIER`).
     pub roll_influence: f32,
-    /// Handbrake drift (ACTION left, §7.3): the rear tyres' grip while it's held, and how long they take to come back
-    /// (linearly) once it's let go, s.
-    pub drift_rear_grip: f32,
-    pub drift_recovery_s: f32,
     /// Boost (ACTION right, §7.3): the meter at spawn (0..1), the extra engine force while boosting (+60 % = 0.6),
-    /// how fast boosting drains the meter and idling refills it (per s), and the extra refill while drifting (per s,
-    /// at least `drift_charge_min_slip_deg` of rear slip and `drift_charge_min_mps`).
+    /// how fast boosting drains the meter and idling refills it (per s), and the extra refill while the arcade
+    /// controller's slide is past half (per s, at `slide_charge_min_mps` or faster).
     pub boost_start: f32,
     /// A burst needs this much meter to start (then runs while held until empty).
     pub boost_min_start: f32,
     pub boost_engine_gain: f32,
     pub boost_drain_per_s: f32,
     pub boost_recharge_per_s: f32,
-    pub drift_charge_per_s: f32,
-    pub drift_charge_min_slip_deg: f32,
-    pub drift_charge_min_mps: f32,
+    pub slide_charge_per_s: f32,
+    pub slide_charge_min_mps: f32,
     /// Wheelie ("lift and launch", R64): lift scales with the gesture's preload up to `wheelie_full_preload_ms`, as an
     /// upward impulse at the front axle (N·s at full lift). A release preloaded at least `wheelie_good_min_ms` also
     /// adds `wheelie_drive_gain` to the drive force for `wheelie_drive_s`. (jj-input cancels a preload held past
@@ -174,24 +169,6 @@ pub struct Tuning {
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
-    /// R120 drift exit: the least drift held (s) that earns a boost on release, seconds of boost per second held, its cap.
-    #[serde(default)]
-    pub drift_exit_min_s: f32,
-    /// … counting only while the rear slides at least this much (deg): any real slide, not the meter's 10° charge.
-    #[serde(default)]
-    pub drift_exit_min_slip_deg: f32,
-    #[serde(default)]
-    pub drift_exit_boost_per_s: f32,
-    #[serde(default)]
-    pub drift_exit_boost_max_s: f32,
-    /// The exit boost's extra drive (like `boost_engine_gain`, which it replaces while it burns if larger; 0 = the meter boost's).
-    #[serde(default)]
-    pub drift_exit_boost_gain: f32,
-    /// Share of the drive the rear keeps while the handbrake drift is held (1 = all of it). The handbrake takes drive off
-    /// the rear, so the slide swings out instead of the car powering straight; the exit boost pays the speed back
-    /// (arcade fun pass, br-gw74.13).
-    #[serde(default = "one")]
-    pub drift_drive_scale: f32,
     /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
     #[serde(default)]
     pub air_level_torque: f32,
@@ -214,8 +191,12 @@ pub struct Tuning {
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]
     pub damage: DamageTuning,
-    /// Arcade handling (P1-FL04, R128): the per-axle lateral-grip layer that replaces Rapier's side friction. Absent,
-    /// Rapier's own side friction applies as before.
+    /// The arcade car controller (P1-FL04.2, R138): authored turn-in, grip and slides in place of Rapier's side
+    /// friction. Absent (the bikes), Rapier's own side friction applies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arcade: Option<crate::vehicle::arcade::Arcade>,
+    /// FL04's per-axle lateral-grip layer, for the Feel Lab's presets only (P1-FL04, R128). While set it replaces the
+    /// arcade controller.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub handling: Option<crate::vehicle::handling::Handling>,
 }
@@ -541,10 +522,6 @@ impl VehicleProfile {
             Surface::OffTrack => s.off_track,
         }
     }
-}
-
-fn one() -> f32 {
-    1.0
 }
 
 fn body_friction() -> f32 {

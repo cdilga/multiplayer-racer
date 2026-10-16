@@ -49,7 +49,7 @@ export function steerFrom(roll: number, neutral: number, s: TiltSettings): numbe
 
 /**
  * Tilt replaces the steering axis only (R116: the right stick's x; in the old one-stick layout the left stick's x): throttle,
- * brake, drift and the flicks pass through untouched.
+ * brake and the flicks pass through untouched.
  */
 export function applyTilt<T extends { x: number; y: number; touch: boolean }>(drive: T, action: T, steer: number | null, classic = false): [T, T] {
   if (steer === null) return [drive, action];

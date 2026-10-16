@@ -1,6 +1,6 @@
 {
   "//": "P1-C14: the words and button names the controls cards use for sources whose mapping is not in clusters.json. The pad's Identify and READY buttons are the standard-mapping indices the host and the controller sample (View/Select is button 8, Start/Menu is 9: web/host/src/input/local.ts, web/controller/src/sources/input.ts); a test checks these two against the sampling code's constants so the cards cannot drift from the mapping. Key clusters come from web/host/src/input/clusters.json and wheels from web/host/src/input/wheels.json; the card builders take them as arguments.",
   "pad": { "identify": "View", "ready": "Menu", "identifyButton": 8, "readyButton": 9, "label": "Pad" },
-  "wheel": { "label": "Wheel", "steer": "The wheel", "go": "Right pedal", "brake": "Left pedal", "drift": "Drift button", "oi": "OI! button", "cone": "Cone button", "identify": "Identify button", "ready": "READY button" },
+  "wheel": { "label": "Wheel", "steer": "The wheel", "go": "Right pedal", "brake": "Left pedal", "oi": "OI! button", "cone": "Cone button", "identify": "Identify button", "ready": "READY button" },
   "phone": { "label": "Phone", "identify": "Identify", "ready": "Ready" }
 }

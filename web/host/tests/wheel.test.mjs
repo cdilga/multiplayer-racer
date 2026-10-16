@@ -133,14 +133,12 @@ test('an unknown wheel waits for mapping, is calibrated in the drawer, joins on 
   await until('boost');
   await wheel(1, 1);
   await press([5]);
-  await until('drift');
+  await until('oi');
   await press([]);
   await page.waitForTimeout(60);
   await press([4]);
-  await until('oi');
-  await press([]);
-  await page.click('[data-jj-input-drawer] button[data-act="skip"][data-source="100"]').catch(() => {});
   await until('cone');
+  await press([]);
   await page.click('[data-jj-input-drawer] button[data-act="skip"][data-source="100"]').catch(() => {});
   await until('identify');
   await press([8]);
@@ -155,7 +153,7 @@ test('an unknown wheel waits for mapping, is calibrated in the drawer, joins on 
   assert.ok(p, 'the profile is saved for this device');
   assert.deepEqual([p.steer.axis, p.throttle.axis, p.brake.axis], [0, 2, 1]);
   assert.deepEqual([p.throttle.rest, p.throttle.full, p.brake.rest, p.brake.full], [1, -1, 1, -1]);
-  assert.deepEqual(p.buttons, { boost: 5, drift: 4, identify: 8, ready: 9 });
+  assert.deepEqual(p.buttons, { boost: 5, oi: 4, identify: 8, ready: 9 });
   await page.waitForTimeout(300);
   v = await view(page, 100);
   assert.equal(v.kind, 'wheel');

@@ -1,4 +1,4 @@
-//! The first-drive prompts' state (P1-C06): the six controls a newcomer is taught (R116 layout): steer, go and stop, drift,
+//! The first-drive prompts' state (P1-C06): the five controls a newcomer is taught (R116 layout, R128): steer, go and stop,
 //! launch (the boost: pull back, snap forward), OI!, cone, tracked from what the HOST detects for the seat (its sampled sticks and the discrete
 //! actions it applies), so the seat's tile can show the next one and clear it when the control is seen. The phone's
 //! own tutorial card tracks the same sequence from its side; the two never wait on each other and nothing here pauses
@@ -8,10 +8,9 @@ use jj_input::SourceSemantics;
 use jj_protocol::cmd::ActionKind;
 
 /// Each step's goal ids, in order (the wording is the host UI's, `web/host/src/ui/prompts/steps.ts`).
-pub const STEPS: [&[&str]; 6] = [
+pub const STEPS: [&[&str]; 5] = [
     &["right", "left"],
     &["go", "stop"],
-    &["drift"],
     &["launch"],
     &["oi"],
     &["cone"],
@@ -78,9 +77,6 @@ impl PromptTrack {
         if s.drive.brake > PAST && (self.done.contains(&"go") || self.step > 1) {
             self.tick_goal("stop");
         }
-        if s.drift {
-            self.tick_goal("drift");
-        }
     }
 
     /// A discrete action the host applied for the seat.
@@ -97,12 +93,11 @@ impl PromptTrack {
 mod tests {
     use super::*;
 
-    fn sticks(steer: f32, throttle: f32, brake: f32, drift: bool, boost: bool) -> SourceSemantics {
+    fn sticks(steer: f32, throttle: f32, brake: f32, boost: bool) -> SourceSemantics {
         let mut s = SourceSemantics::default();
         s.drive.steer = steer;
         s.drive.throttle = throttle;
         s.drive.brake = brake;
-        s.drift = drift;
         s.boost = boost;
         s
     }
@@ -110,43 +105,41 @@ mod tests {
     #[test]
     fn the_sequence_clears_one_control_at_a_time_in_order() {
         let mut p = PromptTrack::default();
-        p.sample(&sticks(1.0, 0.0, 0.0, false, false));
+        p.sample(&sticks(1.0, 0.0, 0.0, false));
         assert!(!p.showing(), "off until the phone asks");
         p.set(true);
-        p.sample(&sticks(0.0, 0.0, 0.0, true, true));
+        p.sample(&sticks(0.0, 0.0, 0.0, true));
         assert_eq!(
             (p.step, p.done().len()),
             (0, 0),
             "a later control ticks nothing early"
         );
-        p.sample(&sticks(1.0, 0.0, 0.0, false, false));
+        p.sample(&sticks(1.0, 0.0, 0.0, false));
         assert_eq!(p.done(), ["right"]);
-        p.sample(&sticks(-1.0, 0.0, 0.0, false, false));
+        p.sample(&sticks(-1.0, 0.0, 0.0, false));
         assert_eq!(
             (p.step, p.done().len()),
             (1, 0),
             "both sides done: next step"
         );
-        p.sample(&sticks(0.0, 0.0, 1.0, false, false));
+        p.sample(&sticks(0.0, 0.0, 1.0, false));
         assert!(p.done().is_empty(), "braking before going doesn't count");
-        p.sample(&sticks(0.0, 1.0, 0.0, false, false));
-        p.sample(&sticks(0.0, 0.0, 1.0, false, false));
-        assert_eq!(p.step, 2);
-        p.sample(&sticks(0.0, 0.0, 0.0, true, false));
-        assert_eq!(p.step, 3, "drift done: the launch is next");
+        p.sample(&sticks(0.0, 1.0, 0.0, false));
+        p.sample(&sticks(0.0, 0.0, 1.0, false));
+        assert_eq!(p.step, 2, "go and stop done: the launch is next");
         p.action(ActionKind::UtilityForward);
-        assert_eq!(p.step, 3, "OI! before the launch ticks nothing");
+        assert_eq!(p.step, 2, "OI! before the launch ticks nothing");
         p.action(ActionKind::Wheelie { preload_ms: 600 });
         p.action(ActionKind::UtilityForward);
         p.action(ActionKind::UtilityRear);
-        assert!(!p.showing(), "all six seen: finished");
+        assert!(!p.showing(), "all five seen: finished");
     }
 
     #[test]
     fn off_hides_it_and_on_again_repeats_from_the_start() {
         let mut p = PromptTrack::default();
         p.set(true);
-        p.sample(&sticks(1.0, 0.0, 0.0, false, false));
+        p.sample(&sticks(1.0, 0.0, 0.0, false));
         p.set(false);
         assert!(!p.showing());
         p.set(true);

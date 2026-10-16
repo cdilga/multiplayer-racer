@@ -25,8 +25,8 @@ export function shape(v: Stick, steering: Steering): Stick {
 
 /**
  * Both sticks through the personal curve. R116 (the default): the response preset shapes the right stick's x, the steering;
- * the left stick (throttle, brake, drift, launch) and the right stick's y (the flicks) keep a small dead zone and no curve, so
- * the snap and the drift sector land where the profile's thresholds say. The old one-stick layout shapes every axis, as before.
+ * the left stick (throttle, brake, launch) and the right stick's y (the flicks) keep a small dead zone and no curve, so
+ * the snap lands where the profile's thresholds say. The old one-stick layout shapes every axis, as before.
  */
 export function shapeSticks(drive: Stick, action: Stick, steering: Steering, controls: Controls): [Stick, Stick] {
   if (controls === 'classic') return [shape(drive, steering), shape(action, steering)];

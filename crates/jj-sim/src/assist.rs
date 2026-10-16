@@ -6,8 +6,8 @@
 //! rules use, integrated once per tick). The levels, from data (`assets/profiles/assist.json`):
 //!
 //! - **Some**: steering pulled 30 % toward the line when the stick is near centre, brake assist before bends, and no
-//!   accidental drift (the drift button counts only after the stick has been held at full lock 0.25 s).
-//! - **Lots**: auto-throttle (the player steers; the brake still works), 60 % steer-to-line, brake assist, drift and the
+//!   accidents.
+//! - **Lots**: auto-throttle (the player steers; the brake still works), 60 % steer-to-line, brake assist, the
 //!   wheelie launch off, and the flip assist acts at once.
 //!
 //! **Never fights the player.** The steer-to-line weight is full while the stick is within `nearCentre` of centre and
@@ -76,8 +76,6 @@ pub struct LineTuning {
     pub near_centre: f32,
     /// ... and gone at this deflection, linearly between.
     pub zero_at: f32,
-    /// A stick at or past this deflection counts as full lock (the drift gate).
-    pub full_lock: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -93,14 +91,6 @@ pub struct SpeedPlanTuning {
     pub throttle_gain: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum DriftRule {
-    Free,
-    HeldFullLock,
-    Off,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LevelTuning {
@@ -109,8 +99,6 @@ pub struct LevelTuning {
     pub speed_skill: f32,
     pub brake_assist: bool,
     pub auto_throttle: bool,
-    pub drift: DriftRule,
-    pub drift_hold_s: f32,
     pub wheelie: bool,
     pub flip_instant: bool,
 }
@@ -205,7 +193,6 @@ impl AssistProfile {
         let l = &self.line;
         unit("line.nearCentre", l.near_centre)?;
         unit("line.zeroAt", l.zero_at)?;
-        unit("line.fullLock", l.full_lock)?;
         if l.zero_at <= l.near_centre {
             return Err("assist line.zeroAt must be above line.nearCentre".into());
         }
@@ -221,10 +208,8 @@ impl AssistProfile {
         }
         for (name, lv) in [("some", &self.some), ("lots", &self.lots)] {
             unit(&format!("levels.{name}.steerToLine"), lv.steer_to_line)?;
-            if lv.speed_skill <= 0.0 || lv.speed_skill > 2.0 || lv.drift_hold_s < 0.0 {
-                return Err(format!(
-                    "assist levels.{name}: speedSkill 0..2, driftHoldS >= 0"
-                ));
+            if lv.speed_skill <= 0.0 || lv.speed_skill > 2.0 {
+                return Err(format!("assist levels.{name}: speedSkill 0..2"));
             }
         }
         let f = &self.flip;
@@ -279,7 +264,6 @@ pub struct AssistReport {
     pub target_speed: f32,
     pub brake_assist: f32,
     pub auto_throttle: f32,
-    pub drift_blocked: bool,
     pub flip_active: bool,
     /// Catch-up share (0..1) and the engine-force scale it gave.
     pub catch_share: f32,
@@ -291,8 +275,6 @@ pub struct AssistReport {
 pub struct AssistState {
     pub level: AssistLevel,
     route_idx: Option<usize>,
-    full_lock_ticks: u32,
-    drift_latched: bool,
     flip_active: bool,
     pub report: AssistReport,
 }
@@ -390,28 +372,6 @@ impl AssistState {
             }
         }
 
-        // Drift: off, or only after a held full lock.
-        let full_lock = s.abs() >= line.full_lock;
-        self.full_lock_ticks = if full_lock {
-            self.full_lock_ticks + 1
-        } else {
-            0
-        };
-        let hold_ticks = libm::ceilf(lv.drift_hold_s * crate::sim::TICK_HZ as f32) as u32;
-        match lv.drift {
-            DriftRule::Free => {}
-            DriftRule::Off => {
-                rep.drift_blocked = input.drift;
-                out.drift = false;
-            }
-            DriftRule::HeldFullLock => {
-                let allowed =
-                    input.drift && (self.drift_latched || self.full_lock_ticks >= hold_ticks);
-                self.drift_latched = allowed;
-                rep.drift_blocked = input.drift && !allowed;
-                out.drift = allowed;
-            }
-        }
         self.report = rep;
         out
     }
@@ -434,8 +394,6 @@ impl AssistState {
     pub fn hash_into(&self, out: &mut Vec<u8>) {
         out.push(self.level.as_u8());
         out.extend(self.route_idx.map_or(u64::MAX, |i| i as u64).to_le_bytes());
-        out.extend(self.full_lock_ticks.to_le_bytes());
-        out.push(u8::from(self.drift_latched));
         out.push(u8::from(self.flip_active));
     }
 }

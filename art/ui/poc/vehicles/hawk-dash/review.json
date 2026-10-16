@@ -400,8 +400,10 @@
     },
     "cornering": {
       "maxSteerRad": 0.52,
-      "steerFalloffMps": 24,
-      "frictionSlip": 1.95,
+      "turnG": 3.3,
+      "gripG": 3.7,
+      "punchSlide": 1,
+      "slideAngleDeg": 40,
       "rollInfluence": 0.11
     },
     "braking": {

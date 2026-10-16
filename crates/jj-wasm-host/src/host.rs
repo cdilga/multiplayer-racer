@@ -243,7 +243,7 @@ fn sha(bytes: &[u8]) -> [u8; 32] {
 }
 
 /// A seat's controls from its source's semantics. `jj-input` steers −1 left to +1 right; the sim's positive steer
-/// turns left, so steering flips here. The ACTION stick's held sectors pass through (drift left, boost right).
+/// turns left, so steering flips here. The ACTION stick's held boost sector passes through.
 /// A controller command that only joins or dresses a seat (never a car, the sim or the round's state), so it may apply
 /// while the race is held (P1-R07c). Leave, Sit out and Ready move the round director (eligibility, the all-ready
 /// start) and Recover and Action move a car: those wait for the resumed tick. `ForSource` is judged by what it wraps.
@@ -286,13 +286,7 @@ fn launch(
 }
 
 fn controls(s: SourceSemantics) -> DriveInput {
-    DriveInput::from_semantics(
-        s.drive.throttle,
-        s.drive.steer,
-        s.drive.brake,
-        s.drift,
-        s.boost,
-    )
+    DriveInput::from_semantics(s.drive.throttle, s.drive.steer, s.drive.brake, s.boost)
 }
 
 impl Host {
@@ -1681,7 +1675,7 @@ impl Host {
     /// one 40 B record per part that isn't intact, P1-S04b: car u32, part u16 (the sidecar's `parts` order), state u16
     /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
-    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting, bits 6-7 the ground under it: 0
+    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 sliding (an arcade slide past half), bits 6-7 the ground under it: 0
     /// tarmac, 1 dirt, 2 gravel; bits 16-31 the car's roster vehicle, R123: an index into the room's `vehicles`), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
     /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
     /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
@@ -1725,7 +1719,7 @@ impl Host {
                 | (u32::from(self.sim.has_autopilot(car)) << 2)
                 | (u32::from(race.is_held(car.0, self.sim.tick())) << 3)
                 | (u32::from(action.boosting) << 4)
-                | (u32::from(action.drift > 0.0) << 5)
+                | (u32::from(action.slide() > 0.5) << 5)
                 | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6)
                 // Presentation contact readout for P1-R09 air clips: raised ramps/bridges are ground too.
                 | (u32::from(s.wheels_in_contact == 0) << 8)

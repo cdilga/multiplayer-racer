@@ -53,7 +53,7 @@ function handling(profileFile, src) {
     drive: t.drive,
     accel: { value: +launch.toFixed(2), unit: 'm/s2', note: 'engine force over mass at launch: an upper bound, drag and traction not included' },
     topSpeed: src.topSpeedMps == null ? { value: null, note: src.topSpeedNote ?? 'not measured yet' } : { value: src.topSpeedMps, unit: 'm/s', note: src.topSpeedNote ?? '' },
-    cornering: { maxSteerRad: t.max_steer_rad, steerFalloffMps: t.steer_falloff_mps, frictionSlip: t.friction_slip, driftRearGrip: t.drift_rear_grip, rollInfluence: t.roll_influence },
+    cornering: { maxSteerRad: t.max_steer_rad, turnG: t.arcade?.turn_g ?? null, gripG: t.arcade?.grip_g ?? null, punchSlide: t.arcade?.punch_slide ?? null, slideAngleDeg: t.arcade?.slide_angle_deg ?? null, rollInfluence: t.roll_influence },
     braking: { maxBrakeForceN: t.max_brake_force },
     boost: { engineGain: t.boost_engine_gain, drainPerS: t.boost_drain_per_s, rechargePerS: t.boost_recharge_per_s },
     wheelRadiusM: g.wheel_radius,

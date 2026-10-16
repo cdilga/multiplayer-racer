@@ -1,6 +1,6 @@
 // Tutorial-lite (P1-C06), ported from the POC phone mock's coach (art/ui/poc/phone/phone.js, POC1-20, R101): a big
 // central card in the Lobby (there's no warm-up drive, R110), one step at a time, each ticking off when the player does
-// the gesture: steer, brake/reverse, boost, drift, OI!, cone, wheelie. Skip is one tap and remembered for this player;
+// the gesture: steer, brake/reverse, boost, OI!, cone, wheelie. Skip is one tap and remembered for this player;
 // Help shows it again. It only coaches: it never pauses anyone, blocks Ready or holds a race.
 import { controlsPage } from '../../../shared/ui';
 import clusterMap from '../../../host/src/input/clusters.json';
@@ -31,7 +31,7 @@ const WHEELIE = 0;
 const OI = 1;
 const CONE = 2;
 
-/** The default layout (R116): the right stick steers and flicks; the left stick drives, drifts and launches (the boost). */
+/** The default layout (R116): the right stick steers and flicks; the left stick drives and launches (the boost). */
 export const STEPS: Step[] = [
   { title: 'Steer', text: 'Push the right stick right, then left.', goals: [['right', 'Right'], ['left', 'Left']], stick: (k, v, g) => {
     if (k === 'action' && v.x > 0.7) g.right = true;
@@ -40,10 +40,6 @@ export const STEPS: Step[] = [
   { title: 'Go and stop', text: 'Push the left stick up to drive, then pull it back to brake.', goals: [['go', 'Go'], ['stop', 'Brake']], stick: (k, v, g) => {
     if (k === 'drive' && v.y < -0.7) g.go = true;
     if (k === 'drive' && g.go && v.y > 0.7) g.stop = true;
-  } },
-  { title: 'Drift', text: 'Push the left stick all the way to the side, steer against the slide, then let go: you shoot out of the corner.', goals: [['drift', 'Drift']], stick: (k, v, g) => {
-    // R120: a drift needs the stick fully (or nearly fully) sideways.
-    if (k === 'drive' && Math.abs(v.x) > 0.9) g.drift = true;
   } },
   { title: 'Launch', text: 'From a stop, pull the left stick all the way back, hold a moment, then snap it forward to launch. Nail it on GO for a flying start.', goals: [['launch', 'Launch']], action: (a, g) => {
     if (a === WHEELIE) g.launch = true;
@@ -56,7 +52,7 @@ export const STEPS: Step[] = [
   } },
 ];
 
-/** The old one-stick layout (a personal setting): the left stick steers, the right stick's sectors boost, drift and fire. */
+/** The old one-stick layout (a personal setting): the left stick steers, the right stick's sectors boost and fire. */
 export const STEPS_CLASSIC: Step[] = [
   { title: 'Steer', text: 'Push the left stick right, then left.', goals: [['right', 'Right'], ['left', 'Left']], stick: (k, v, g) => {
     if (k === 'drive' && v.x > 0.7) g.right = true;
@@ -68,9 +64,6 @@ export const STEPS_CLASSIC: Step[] = [
   } },
   { title: 'Boost', text: 'Hold the right stick to the right.', goals: [['boost', 'Boost']], stick: (k, v, g) => {
     if (k === 'action' && v.x > 0.7) g.boost = true;
-  } },
-  { title: 'Drift', text: 'Hold the right stick to the left through a corner.', goals: [['drift', 'Drift']], stick: (k, v, g) => {
-    if (k === 'action' && v.x < -0.7) g.drift = true;
   } },
   { title: 'OI!', text: 'Flick the right stick up: your headlights flash and everyone hears it.', goals: [['oi', 'OI!']], action: (a, g) => {
     if (a === OI) g.oi = true;

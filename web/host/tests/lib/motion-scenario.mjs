@@ -8,7 +8,7 @@ export async function motionScenario({ realtime }) {
   const HZ = 120;
   const STEP = 2; // sim ticks per record
   const G = 9.81;
-  const DRIFT = 32;
+  const SLIDING = 32;
   const BOOST = 16;
   const BASE_MS = 1_000_000; // virtual clock origin, clear of other tests' spacing state
   let tick = 1000;
@@ -86,26 +86,26 @@ export async function motionScenario({ realtime }) {
     car.speed = 20;
   });
   await seg('slide-light', 0.9, (p) => {
-    car.flags = DRIFT;
+    car.flags = SLIDING;
     car.yaw = 0.25 * Math.min(1, p * 2.5);
   });
   await seg('slide-deep', 1.2, (p) => {
     car.yaw = 0.25 + 0.3 * Math.min(1, p * 3);
   });
   await seg('straighten', 0.25, (p) => {
-    car.flags = 0; // the slide is let go: the held time is what the exit boost scales by
+    car.flags = 0; // the slide is let go
     car.yaw = 0.55 * (1 - p);
   });
-  await seg('exit-boost', 1.4, (p, s) => {
+  await seg('after-slide', 1.4, (p) => {
     car.yaw = 0;
-    car.flags = s > 0.1 ? BOOST : 0;
-    car.speed = 20 + 10 * Math.min(1, p * 2);
+    car.flags = 0;
+    car.speed = 20 + 4 * Math.min(1, p * 2);
   });
   await seg('cruise', 0.9, () => {
     car.flags = 0;
     car.speed = 24;
   });
-  await seg('scrub-no-drift-flag', 0.7, (p) => {
+  await seg('scrub-no-slide-flag', 0.7, (p) => {
     car.yaw = 0.4 * Math.sin(p * Math.PI);
   });
   await seg('cruise-2', 0.6, () => {

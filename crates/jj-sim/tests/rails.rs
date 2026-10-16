@@ -365,15 +365,16 @@ fn compliant_corner_and_low_speed_use_have_intact_replayable_outcomes() {
                     case.name
                 );
             } else if case.name == "give-prevents-spinout" {
-                assert!(
-                    !completed,
-                    "comparison must fail on the same scripted inputs: {row}"
-                );
+                // P1-FL04.2 (R138, forgiving at the edges): on the arcade controller the same scripted inputs no longer
+                // spin the car away even off a rigid rail, so the comparison now asserts that both rails let it out
+                // facing along the road (before FL04.2 the rigid rail spun it to x < -34 m, heading < -0.8 rad).
                 if mode == "rigid" {
                     assert!(
-                        exit.is_some_and(|(_, p, h, _)| p[0] < -34.0 && h < -0.8),
-                        "rigid rail spins the car away from the exit: {row}"
+                        completed,
+                        "the arcade car leaves even a rigid rail's corner facing along its road: {row}"
                     );
+                } else {
+                    assert!(!completed, "without a rail the car leaves the road: {row}");
                 }
             }
             rows.push(row);

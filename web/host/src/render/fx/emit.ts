@@ -1,5 +1,5 @@
 // What each effect family looks for in the snapshot (P1-R12). All of it is derived from state the renderer already has:
-// car pose, linear velocity, the flags (bit 16 boosting, 32 drifting, bits 6-7 the ground under it), the boost meter, the
+// car pose, linear velocity, the flags (bit 16 boosting, 32 sliding, bits 6-7 the ground under it), the boost meter, the
 // throttle, the part records (loose, detached) and the husks. No sim events and no sim writes: an effect that can't be
 // seen in the snapshot isn't drawn. Rules (§12.1a): emissive informs first and decorates second; comic effects never cover
 // identity or the road ahead (dust stays low and behind, lamp glows are lamp-sized, flashes live 0.14 s); reduced motion
@@ -9,7 +9,7 @@ import { PART_DETACHED, PART_LOOSE, PIECE_HUSK } from '../snapshot';
 import { envelope, Pool, rng, type Spawn } from './particles';
 
 export const FLAG_BOOSTING = 16;
-export const FLAG_DRIFTING = 32;
+export const FLAG_SLIDING = 32;
 /** Bits 6-7 of the flags: the ground under the car (0 tarmac, 1 dirt, 2 gravel). */
 export const surfaceOf = (flags: number) => (flags >> 6) & 3;
 
@@ -215,8 +215,8 @@ export class Emitter {
             });
         }
       }
-      // ---- Tyre smoke: drift and handbrake --------------------------------------------------------------------------
-      if (flags & FLAG_DRIFTING && !airborne && speed > 3) {
+      // ---- Tyre smoke: sliding --------------------------------------------------------------------------
+      if (flags & FLAG_SLIDING && !airborne && speed > 3) {
         for (const side of [0.85, -0.85])
           // Tuned with every particle drawn (until 06b05614 only the first 256 of a layer were): less, smaller, fainter.
           this.rate(st, `smoke${side}`, 32, dt, () => {

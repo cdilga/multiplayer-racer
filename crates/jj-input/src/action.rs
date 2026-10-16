@@ -1,5 +1,5 @@
 //! Sector detection on the ACTION stick (plan §7.6): up = forward utility, down = rear utility,
-//! right = boost (held), left = handbrake drift (held).
+//! right = boost (held); left names nothing (R128: no drift input).
 //!
 //! The stick is read as a four-way pad: the **dominant axis** (the larger of `|x|`, `|y|`; an
 //! exact tie has no dominant) names the sector. Hysteresis keeps a sector engaged through jitter
@@ -31,18 +31,16 @@ pub enum Sector {
     Down,
     /// Right: boost (held, §7.3).
     Right,
-    /// Left: handbrake drift (held, §7.3).
-    Left,
 }
 
 impl Sector {
-    /// Held semantics (boost/drift); up/down are discrete instead.
+    /// Held semantics (boost); up/down are discrete instead.
     pub fn held(self) -> bool {
-        matches!(self, Sector::Left | Sector::Right)
+        matches!(self, Sector::Right)
     }
 }
 
-/// The dominant sector of a sampled stick, if any axis reaches far enough to name one.
+/// The dominant sector of a sampled stick, if any axis reaches far enough to name one. Left names nothing.
 ///
 /// The dominant axis is the one with the strictly larger magnitude; an exact tie has no dominant
 /// sector (neither diagonal names a direction). Engagement uses [`ENTER`]; anything below
@@ -56,8 +54,10 @@ fn dominant(action: [i16; 2]) -> Option<Sector> {
     }
     let (dominant_q, sector) = if ay > ax {
         (y, if y > 0 { Sector::Up } else { Sector::Down })
+    } else if x > 0 {
+        (x, Sector::Right)
     } else {
-        (x, if x > 0 { Sector::Right } else { Sector::Left })
+        return None;
     };
     (i32::from(dominant_q).abs() >= i32::from(ENTER_Q)).then_some(sector)
 }
@@ -95,13 +95,13 @@ impl SectorMachine {
                     fired = Some(match s {
                         Sector::Up => Utility::Forward,
                         Sector::Down => Utility::Rear,
-                        _ => unreachable!("held sectors don't fire"),
+                        Sector::Right => unreachable!("held sectors don't fire"),
                     });
                 }
             }
             None => {
-                // No dominant sector: release below the hysteresis exit.
-                if self.engaged.is_some() && below_exit(action) {
+                // No dominant sector: release below the hysteresis exit, or once the stick swings left (which names nothing).
+                if self.engaged.is_some() && (below_exit(action) || left_dominant(action)) {
                     self.engaged = None;
                 }
             }
@@ -109,11 +109,10 @@ impl SectorMachine {
         fired
     }
 
-    /// The held sectors' current state (boost = right, drift = left).
+    /// The held sectors' current state (boost = right).
     pub fn held(&self) -> HeldActions {
         HeldActions {
             boost: self.engaged == Some(Sector::Right),
-            drift: self.engaged == Some(Sector::Left),
         }
     }
 
@@ -122,6 +121,12 @@ impl SectorMachine {
         self.engaged = None;
         self.disarmed = false;
     }
+}
+
+/// Whether the stick points left of its other axis: the one direction that names no sector (R128).
+fn left_dominant(action: [i16; 2]) -> bool {
+    let (x, y) = (sanitise_axis(action[0]), sanitise_axis(action[1]));
+    x < 0 && i32::from(x).abs() > i32::from(y).abs()
 }
 
 /// Whether both axes are below the hysteresis exit (the stick has left its sector).
@@ -134,8 +139,6 @@ fn below_exit(action: [i16; 2]) -> bool {
 pub struct HeldActions {
     /// Right sector: boost is held (§7.3).
     pub boost: bool,
-    /// Left sector: handbrake drift is held (§7.3).
-    pub drift: bool,
 }
 
 #[cfg(test)]
@@ -193,17 +196,16 @@ mod tests {
     }
 
     #[test]
-    fn held_sectors_switch_directly() {
+    fn left_names_no_sector_and_releases_a_held_boost() {
         let mut m = SectorMachine::default();
-        m.sample(LEFT);
-        assert!(m.held().drift);
+        assert_eq!(m.sample(LEFT), None);
+        assert_eq!(m.held(), HeldActions::default(), "left is nothing (R128)");
         m.sample(RIGHT);
-        assert_eq!(
-            m.held(),
-            HeldActions {
-                boost: true,
-                drift: false
-            }
+        assert_eq!(m.held(), HeldActions { boost: true });
+        m.sample(LEFT);
+        assert!(
+            !m.held().boost,
+            "swung to the left: past the exit, released"
         );
     }
 
@@ -282,7 +284,7 @@ mod tests {
             } else if ay > ax {
                 prop_assert_eq!(d, Some(if y > 0 { Sector::Up } else { Sector::Down }));
             } else if ax > ay {
-                prop_assert_eq!(d, Some(if x > 0 { Sector::Right } else { Sector::Left }));
+                prop_assert_eq!(d, (x > 0).then_some(Sector::Right));
             }
         }
     }

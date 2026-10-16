@@ -5,7 +5,7 @@
       "id": 1,
       "label": "Keys A",
       "drive": { "up": "KeyW", "down": "KeyS", "left": "KeyA", "right": "KeyD" },
-      "action": { "up": "KeyT", "down": "KeyG", "left": "KeyF", "right": "KeyH" },
+      "action": { "up": "KeyT", "down": "KeyG" },
       "identify": "KeyQ",
       "ready": "KeyE"
     },
@@ -13,7 +13,7 @@
       "id": 2,
       "label": "Keys B",
       "drive": { "up": "KeyI", "down": "KeyK", "left": "KeyJ", "right": "KeyL" },
-      "action": { "up": "ArrowUp", "down": "ArrowDown", "left": "ArrowLeft", "right": "ArrowRight" },
+      "action": { "up": "ArrowUp", "down": "ArrowDown" },
       "identify": "KeyU",
       "ready": "KeyO"
     },
@@ -21,7 +21,7 @@
       "id": 3,
       "label": "Keys C · numpad",
       "drive": { "up": "Numpad8", "down": "Numpad5", "left": "Numpad4", "right": "Numpad6" },
-      "action": { "up": "Numpad9", "down": "Numpad3", "left": "Numpad7", "right": "Numpad1" },
+      "action": { "up": "Numpad9", "down": "Numpad3" },
       "identify": "Numpad0",
       "ready": "NumpadDecimal"
     }

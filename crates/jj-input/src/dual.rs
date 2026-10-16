@@ -1,9 +1,8 @@
-//! The R116 dual-stick layout (P1-C11): the left stick drives, drifts and launches; the right stick steers and fires.
+//! The R116 dual-stick layout (P1-C11): the left stick drives and launches; the right stick steers and fires.
 //!
-//! - **Left stick** `y` is throttle, brake/reverse and the wheelie preload ([`crate::intent`], [`crate::wheelie`]). `x` is
-//!   **drift**, behind an angular deadzone about vertical (70 degrees and 0.9 deflection to enter, R120: full or nearly full side lock; 58 and 0.75 to leave:
-//!   hysteresis), so full throttle with a natural thumb lean never drifts. While drifting the throttle reads the stick's
-//!   magnitude, so a drift at the rim keeps full throttle. Sticks keep their circular range (no disc-to-square remap).
+//! - **Left stick** `y` is throttle, brake/reverse and the wheelie preload ([`crate::intent`], [`crate::wheelie`]). `x` does
+//!   nothing (R128: no drift input; sliding comes from the arcade handling). Sticks keep their circular range (no
+//!   disc-to-square remap).
 //!   **Boost is the wheelie launch**: a full pull back held for the preload time, then a snap to full forward inside the
 //!   profile's window. That is `WheelieDetector::sample_with` with the profile's snap line and window, and the cooldown in
 //!   [`crate::source::SourceState`]; speed arming and the lift and burst are the sim's.
@@ -15,39 +14,9 @@
 //! as a personal setting.
 
 use crate::intent::{DriveIntent, drive_intent};
-use crate::profile::{Resolved, off_vertical_at_least, within_of_vertical};
+use crate::profile::{Resolved, within_of_vertical};
 use crate::source::SourceSemantics;
 use jj_types::axis::{dequantise_axis, sanitise_axis};
-
-/// The left stick's drift, with hysteresis.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct DriveStickMachine {
-    drifting: bool,
-}
-
-impl DriveStickMachine {
-    pub fn sample(&mut self, drive: [i16; 2], p: &Resolved) {
-        let (x, y) = (sanitise_axis(drive[0]), sanitise_axis(drive[1]));
-        let not_pulled_back = i32::from(y) > -i32::from(p.drift_pull_back.0);
-        self.drifting = if self.drifting {
-            not_pulled_back
-                && p.drift_exit.met_by_xy(x, y)
-                && off_vertical_at_least(x, y, p.drift_exit_tan)
-        } else {
-            not_pulled_back
-                && p.drift_enter.met_by_xy(x, y)
-                && off_vertical_at_least(x, y, p.drift_enter_tan)
-        };
-    }
-
-    pub fn drifting(&self) -> bool {
-        self.drifting
-    }
-
-    pub fn reset(&mut self) {
-        *self = Self::default();
-    }
-}
 
 /// A flick that fired.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -104,31 +73,19 @@ pub fn steer(action: [i16; 2], p: &Resolved) -> f32 {
     v.signum() * v.abs().powf(p.steer_gamma)
 }
 
-/// What the two sticks mean under the dual layout: drive intent (steer from the right stick, throttle from the left, or its
-/// magnitude while drifting), plus the held drift (the boost is the wheelie launch, an action).
+/// What the two sticks mean under the dual layout: drive intent (steer from the right stick, throttle and brake from the
+/// left stick's `y`; its `x` is nothing). The boost is the wheelie launch, an action.
 pub fn semantics(
     drive: [i16; 2],
     action: [i16; 2],
-    held: &DriveStickMachine,
     wheelie_preload: bool,
     p: &Resolved,
 ) -> SourceSemantics {
     let mut intent: DriveIntent = drive_intent([0, drive[1]]);
     intent.steer = steer(action, p);
-    if held.drifting() {
-        let (x, y) = (
-            f64::from(sanitise_axis(drive[0])),
-            f64::from(sanitise_axis(drive[1])),
-        );
-        intent.throttle =
-            ((x * x + y * y).sqrt() / f64::from(jj_types::axis::AXIS_MAX)).min(1.0) as f32;
-        intent.brake = 0.0;
-        intent.reverse = false;
-    }
     SourceSemantics {
         drive: intent,
         boost: false,
-        drift: held.drifting(),
         wheelie_preload,
     }
 }
@@ -156,97 +113,37 @@ mod tests {
     #[test]
     fn full_throttle_with_full_lock_is_both_at_once_and_fires_nothing() {
         let p = p();
-        let mut held = DriveStickMachine::default();
         let mut flick = FlickMachine::default();
         let (drive, action) = ([0, AXIS_MAX], [AXIS_MAX, 0]);
-        held.sample(drive, &p);
         assert_eq!(flick.sample(action, 0, &p), None);
-        let s = semantics(drive, action, &held, false, &p);
+        let s = semantics(drive, action, false, &p);
         assert_eq!((s.drive.throttle, s.drive.steer), (1.0, 1.0));
         assert!(
-            !s.drift && !s.boost,
+            !s.boost,
             "full forward is only throttle: the boost is the launch"
         );
     }
 
     #[test]
-    fn a_drift_at_the_rim_keeps_full_throttle() {
+    fn r128_the_left_sticks_sideways_push_does_nothing() {
         let p = p();
-        let mut held = DriveStickMachine::default();
-        // Past the 70 degree entry angle (R120) at the rim.
-        for deg in [75.0, 80.0, 90.0, -75.0, -90.0] {
+        // Full forward deflection leaned any way, and a rim push to the side: throttle is the forward throttle, nothing else.
+        for deg in [0.0, 30.0, 60.0, 80.0, 90.0, -90.0, -60.0] {
             let drive = polar(1.0, deg);
-            held.sample(drive, &p);
-            let s = semantics(drive, [0, 0], &held, false, &p);
-            assert!(s.drift, "{deg} degrees at the rim drifts");
-            assert!(
-                s.drive.throttle > 0.99,
-                "{deg}: throttle reads the magnitude: {}",
-                s.drive.throttle
-            );
-            held.sample([0, 0], &p);
-        }
-        // Just inside the 0.9 entry deflection, sideways, is a drift at that throttle.
-        held.sample(polar(0.92, 90.0), &p);
-        let t = semantics(polar(0.92, 90.0), [0, 0], &held, false, &p)
-            .drive
-            .throttle;
-        assert!((t - 0.92).abs() < 0.01, "{t}");
-    }
-
-    #[test]
-    fn a_drift_has_hysteresis_in_angle_and_in_deflection() {
-        let p = p();
-        let mut h = DriveStickMachine::default();
-        h.sample(polar(0.95, 60.0), &p);
-        assert!(!h.drifting(), "60 degrees is inside the 70 degree deadzone");
-        h.sample(polar(0.95, 75.0), &p);
-        assert!(h.drifting());
-        h.sample(polar(0.95, 64.0), &p);
-        assert!(
-            h.drifting(),
-            "still a drift between the exit angle (58) and the entry angle (70)"
-        );
-        h.sample(polar(0.95, 50.0), &p);
-        assert!(!h.drifting(), "released below the exit angle");
-        h.sample(polar(0.8, 90.0), &p);
-        assert!(!h.drifting(), "0.8 deflection is below the entry 0.9");
-        h.sample(polar(0.95, 90.0), &p);
-        h.sample(polar(0.8, 90.0), &p);
-        assert!(h.drifting(), "held down to the exit deflection 0.75");
-        h.sample(polar(0.7, 90.0), &p);
-        assert!(!h.drifting());
-        // Pulled back to brake: never a drift.
-        h.sample(polar(1.0, 150.0), &p);
-        assert!(!h.drifting());
-    }
-
-    #[test]
-    fn r120_a_natural_lean_at_full_throttle_never_drifts_and_full_side_lock_does() {
-        let p = p();
-        // Full forward deflection leaned up to 60 degrees off vertical: never a drift, throttle unchanged.
-        for deg in [0.0, 15.0, 30.0, 45.0, 60.0] {
-            let mut h = DriveStickMachine::default();
-            let drive = polar(1.0, deg);
-            h.sample(drive, &p);
-            let s = semantics(drive, [0, 0], &h, false, &p);
-            assert!(!s.drift, "{deg} degrees at full forward is not a drift");
+            let s = semantics(drive, [0, 0], false, &p);
             assert_eq!(
                 s.drive.throttle,
                 drive_intent([0, drive[1]]).throttle,
                 "{deg}: throttle is the forward throttle"
             );
+            assert_eq!(s.drive.steer, 0.0, "{deg}: the left stick never steers");
+            assert!(!s.boost);
         }
-        // A push to 80 degrees at full deflection drifts.
-        let mut h = DriveStickMachine::default();
-        h.sample(polar(1.0, 80.0), &p);
-        assert!(h.drifting(), "80 degrees at full deflection drifts");
-        // Easing back to 65 degrees at 0.95 keeps the drift (hysteresis).
-        h.sample(polar(0.95, 65.0), &p);
-        assert!(h.drifting(), "65 degrees at 0.95 is still a drift");
-        // Down to 50 degrees releases it (below the 58 degree exit angle).
-        h.sample(polar(0.95, 50.0), &p);
-        assert!(!h.drifting(), "50 degrees releases the drift");
+        let side = semantics(polar(1.0, 90.0), [0, 0], false, &p);
+        assert_eq!(
+            side.drive.throttle, 0.0,
+            "a pure sideways push is no throttle"
+        );
     }
 
     #[test]
@@ -304,15 +201,12 @@ mod tests {
     }
 
     proptest! {
-        /// A natural thumb lean at full throttle (x up to 0.45 with y at least 0.9) never drifts and never loses throttle.
+        /// A natural thumb lean at full throttle (x up to 0.45 with y at least 0.9) never loses throttle.
         #[test]
-        fn a_thumb_lean_at_full_throttle_never_drifts(x in -0.45f32..0.45, y in 0.9f32..1.0) {
+        fn a_thumb_lean_at_full_throttle_never_loses_throttle(x in -0.45f32..0.45, y in 0.9f32..1.0) {
             let p = p();
-            let mut h = DriveStickMachine::default();
             let d = [q(x), q(y)];
-            h.sample(d, &p);
-            prop_assert!(!h.drifting());
-            let s = semantics(d, [0, 0], &h, false, &p);
+            let s = semantics(d, [0, 0], false, &p);
             prop_assert!(s.drive.throttle >= 0.89);
         }
 
@@ -331,16 +225,12 @@ mod tests {
             }
         }
 
-        /// The left stick's throttle, brake and wheelie axis never depend on x except through a drift.
+        /// The left stick's throttle, brake and wheelie axis never depend on x.
         #[test]
-        fn left_x_only_matters_through_a_drift(x in -1.0f32..1.0, y in 0.0f32..1.0) {
+        fn left_x_never_matters(x in -1.0f32..1.0, y in -1.0f32..1.0) {
             let p = p();
-            let mut h = DriveStickMachine::default();
-            h.sample([q(x), q(y)], &p);
-            let s = semantics([q(x), q(y)], [0, 0], &h, false, &p);
-            if !h.drifting() {
-                prop_assert_eq!(s.drive.throttle, drive_intent([0, q(y)]).throttle);
-            }
+            let s = semantics([q(x), q(y)], [0, 0], false, &p);
+            prop_assert_eq!(s.drive, drive_intent([0, q(y)]));
         }
     }
 }

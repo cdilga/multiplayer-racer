@@ -262,14 +262,14 @@ test('AC5: the host menu\'s Controls page has a card per source kind, and its ke
   assert.deepEqual(await ids(), ['phone', 'pad', 'wheel', ...file.clusters.map((c) => `keys-${c.id}`)]);
   const keysOf = (id) => page.evaluate((id) => [...document.querySelectorAll(`[data-controls-page] [data-card="${id}"] kbd`)].map((k) => k.dataset.code), id);
   const c1 = file.clusters[0];
-  assert.deepEqual(await keysOf('keys-1'), [c1.drive.left, c1.drive.right, c1.drive.up, c1.drive.down, c1.action.left, c1.action.right, c1.drive.down, c1.drive.up, c1.action.up, c1.action.down, c1.identify, c1.ready]);
+  assert.deepEqual(await keysOf('keys-1'), [c1.drive.left, c1.drive.right, c1.drive.up, c1.drive.down, c1.drive.down, c1.drive.up, c1.action.up, c1.action.down, c1.identify, c1.ready]);
   assert.equal(await page.locator('[data-controls-page] [data-card="phone"] kbd, [data-controls-page] [data-card="pad"] kbd').count(), 0, 'no keycaps on a phone or pad card');
   await shot(page, 'host-menu-controls-1366x768');
   // Change the data: Keys A's throttle moves to Z and another cluster appears; the page follows, with no rebuild.
   await page.evaluate(() => {
     const d = structuredClone(window.__jjControls.data());
     d.clusters[0].drive.up = 'KeyZ';
-    d.clusters.push({ id: 4, label: 'Keys D', drive: { up: 'Digit8', down: 'Digit2', left: 'Digit4', right: 'Digit6' }, action: { up: 'Numpad8', down: 'Numpad2', left: 'Numpad4', right: 'Numpad6' }, identify: 'Digit7', ready: 'Digit9' });
+    d.clusters.push({ id: 4, label: 'Keys D', drive: { up: 'Digit8', down: 'Digit2', left: 'Digit4', right: 'Digit6' }, action: { up: 'Numpad8', down: 'Numpad2' }, identify: 'Digit7', ready: 'Digit9' });
     window.__jjControls.setData(d);
   });
   await page.evaluate(() => window.__jjChrome.closeMenu());
@@ -350,10 +350,10 @@ for (const [name, viewport] of Object.entries(SIZES)) {
     // Without cards: every control used on every source.
     await useAll(page, 0);
     await useAll(page, 1);
-    for (const k of ['KeyD', 'KeyA', 'KeyW', 'KeyS', 'KeyF', 'KeyT', 'KeyG']) await tap(page, k);
+    for (const k of ['KeyD', 'KeyA', 'KeyW', 'KeyS', 'KeyT', 'KeyG']) await tap(page, k);
     await tap(page, 'KeyS', 600);
     await tap(page, 'KeyW', 350);
-    for (const k of ['KeyL', 'KeyJ', 'KeyI', 'KeyK', 'ArrowLeft', 'ArrowUp', 'ArrowDown']) await tap(page, k);
+    for (const k of ['KeyL', 'KeyJ', 'KeyI', 'KeyK', 'ArrowUp', 'ArrowDown']) await tap(page, k);
     await tap(page, 'KeyK', 600);
     await tap(page, 'KeyI', 350);
     await until(page, async () => (await cards(page)).length === 0, 'every card folded', 60_000);

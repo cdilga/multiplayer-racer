@@ -5,14 +5,12 @@
 use serde::{Deserialize, Serialize};
 
 /// One car's controls for a tick, quantised like the wire (`jj_types::axis`): throttle and steer −32767..32767,
-/// brake 0..32767, and the ACTION stick's held sectors (§7.3): left is the handbrake drift, right is boost.
+/// brake 0..32767, and the ACTION stick's held boost sector (§7.3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DriveInput {
     pub throttle: i16,
     pub steer: i16,
     pub brake: i16,
-    #[serde(default)]
-    pub drift: bool,
     #[serde(default)]
     pub boost: bool,
     /// The brakes are held but never become reverse: a car at rest stays at rest instead of backing up (scripted
@@ -38,19 +36,12 @@ impl DriveInput {
     /// From a source's interpreted sticks (jj-input's `SourceSemantics`): throttle and brake 0..1, steer −1 left ..
     /// +1 right. The sim's positive steer turns left, so steering flips here, in the one place the host and fixtures
     /// share.
-    pub fn from_semantics(
-        throttle: f32,
-        steer_right: f32,
-        brake: f32,
-        drift: bool,
-        boost: bool,
-    ) -> Self {
+    pub fn from_semantics(throttle: f32, steer_right: f32, brake: f32, boost: bool) -> Self {
         use jj_types::axis::quantise_axis;
         Self {
             throttle: quantise_axis(throttle),
             steer: quantise_axis(-steer_right),
             brake: quantise_axis(brake),
-            drift,
             boost,
             no_reverse: false,
         }

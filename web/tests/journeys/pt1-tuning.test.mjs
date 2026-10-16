@@ -139,10 +139,9 @@ test('?tune: a live change mid-race reaches the sim and the cars; reset; export'
   assert.deepEqual(errors, []);
 });
 
-// Part 2 (br-2sdu.2): the input profile in the same panel. A real phone joins through the real path and holds a left
-// stick just short of the shipped drift entry; the panel lowers the entry deflection mid-drive; the phone's own jj-input
-// and the host's reading of that seat both switch to drifting within a second; a value the validator refuses never
-// reaches the phone and stays out of the export; Reset puts the shipped threshold back on the phone.
+// Part 2 (br-2sdu.2): the input profile in the same panel. A real phone joins through the real path; the panel lowers the
+// flick rim mid-drive; the new profile reaches the phone's own jj-input within a second; a value the validator refuses
+// never reaches the phone and stays out of the export; Reset puts the shipped threshold back on the phone.
 test('?tune: an input threshold changed mid-drive reaches a connected phone within a second; refused values; reset; export', { timeout: 240_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
@@ -160,75 +159,63 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
   await wait(phone, () => window.__jjTutorial.inspect()?.open === true);
   await confirmInitialVehicle(phone);
   await phone.getByRole('button', { name: 'Skip tutorial' }).click();
-  const endpoint = (await phone.evaluate(() => window.__jjController.inspect())).link.endpointId;
 
-  const phoneView = () => phone.evaluate(() => { const i = window.__jjController.inspect().inputProfile; return { entry: i.profile.drift.enterDeflection, held: i.driftHeld, tuned: i.tuned }; });
-  const hostDrifts = () => host.evaluate(async (ep) => (await window.__jjTest.observe()).host.seats.find((s) => s.endpoint === ep)?.drifting, endpoint);
-  /** A fresh sample each call, like a thumb that never holds perfectly still: deflection 0.886, 84 degrees off vertical. */
-  const hold = () => phone.evaluate(() => window.__jjController.setSticks({ x: 0.88, y: 0.09, touch: true }, { x: 0, y: 0, touch: false }));
+  const phoneView = () => phone.evaluate(() => { const i = window.__jjController.inspect().inputProfile; return { rim: i.profile.flick.rim, tuned: i.tuned }; });
+  /** A fresh sample each call, like a thumb that never holds perfectly still. */
+  const hold = () => phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: -0.2, touch: true }, { x: 0, y: 0, touch: false }));
 
   await hold();
   await phone.waitForTimeout(800);
   await hold();
-  assert.deepEqual(await phoneView(), { entry: 0.9, held: false, tuned: false }, 'the shipped profile: 0.886 is short of the 0.9 entry');
-  assert.equal(await hostDrifts(), false, 'and the host reads no drift');
+  assert.deepEqual(await phoneView(), { rim: 0.9, tuned: false }, 'the shipped profile: the flick rim is 0.9');
 
   await host.locator('.jj-tune-toggle').click();
-  const entry = host.locator('[data-field="input.drift.enterDeflection"]');
-  await entry.waitFor();
-  assert.equal(Number(await entry.inputValue()), 0.9);
+  const rim = host.locator('[data-field="input.flick.rim"]');
+  await rim.waitFor();
+  assert.equal(Number(await rim.inputValue()), 0.9);
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-input-1280x720.png` });
   const t0 = Date.now();
-  await entry.fill('0.8');
-  await entry.dispatchEvent('change');
+  await rim.fill('0.8');
+  await rim.dispatchEvent('change');
   let seen;
   let phoneAt = 0;
   for (;;) {
     await hold();
     seen = await phoneView();
-    if (seen.entry === 0.8 && !phoneAt) phoneAt = Date.now() - t0;
-    if (seen.entry === 0.8 && seen.held && (await hostDrifts())) break;
+    if (seen.rim === 0.8 && !phoneAt) phoneAt = Date.now() - t0;
+    if (seen.rim === 0.8) break;
     assert.ok(Date.now() - t0 < 10_000, `the new threshold never took effect: ${JSON.stringify(seen)}`);
     await phone.waitForTimeout(30);
   }
   const appliedMs = Date.now() - t0;
   // Inside 1 s on the Mac; CI runners are several times slower (the same allowance as the vehicle change above).
-  assert.ok(appliedMs <= (process.env.CI ? 5000 : 1000), `the phone and the host used the new threshold in ${appliedMs} ms`);
+  assert.ok(appliedMs <= (process.env.CI ? 5000 : 1000), `the phone used the new threshold in ${appliedMs} ms`);
   assert.equal(seen.tuned, true);
-  console.log(`# input threshold live on the phone and the host in ${appliedMs} ms (profile on the phone after ${phoneAt} ms)`);
+  console.log(`# input threshold live on the phone in ${appliedMs} ms (profile on the phone after ${phoneAt} ms)`);
 
-  // A value the validator refuses (exit above entry) is shown, never sent on, and left out of the export.
-  const exit = host.locator('[data-field="input.drift.exitDeflection"]');
-  await exit.fill('0.99');
-  await exit.dispatchEvent('change');
-  await host.locator('[data-tune-error]').getByText('exitDeflection').waitFor({ timeout: 5000 });
-  await wait(host, () => !('input.drift.exitDeflection' in window.__jjTune.inspect().changed), undefined, 5000);
-  assert.equal(Number(await exit.inputValue()), 0.75, 'the row goes back to what the host holds');
+  // A value the validator refuses (the arm level above the rim) is shown, never sent on, and left out of the export.
+  const arm = host.locator('[data-field="input.flick.armBelow"]');
+  await arm.fill('0.99');
+  await arm.dispatchEvent('change');
+  await host.locator('[data-tune-error]').getByText('armBelow').waitFor({ timeout: 5000 });
+  await wait(host, () => !('input.flick.armBelow' in window.__jjTune.inspect().changed), undefined, 5000);
+  assert.equal(Number(await arm.inputValue()), 0.35, 'the row goes back to what the host holds');
   await hold();
-  assert.equal((await phone.evaluate(() => window.__jjController.inspect().inputProfile.profile.drift.exitDeflection)), 0.75);
+  assert.equal((await phone.evaluate(() => window.__jjController.inspect().inputProfile.profile.flick.armBelow)), 0.35);
   const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
-  assert.deepEqual(patch, { contract: 'jj.tuning-patch.v1', profile: 'assets/profiles/cruz-missile.json', set: [], inputProfile: 'assets/profiles/input.json', inputSet: [['drift.enterDeflection', '0.8']] });
+  assert.deepEqual(patch, { contract: 'jj.tuning-patch.v1', profile: 'assets/profiles/cruz-missile.json', set: [], inputProfile: 'assets/profiles/input.json', inputSet: [['flick.rim', '0.8']] });
   const [download] = await Promise.all([host.waitForEvent('download'), host.locator('[data-tune-export]').click()]);
   assert.match(download.suggestedFilename(), /^tuning-.*\.json$/);
 
   // Reset puts the shipped threshold back on the phone and the host.
-  await host.locator('[data-reset="input.drift.enterDeflection"]').click();
+  await host.locator('[data-reset="input.flick.rim"]').click();
   for (const t1 = Date.now(); ; ) {
     await hold();
-    if ((await phoneView()).entry === 0.9) break;
+    if ((await phoneView()).rim === 0.9) break;
     assert.ok(Date.now() - t1 < 10_000, 'reset never reached the phone');
     await phone.waitForTimeout(30);
   }
-  // The drift in hand stays held down to the exit deflection (hysteresis); let go, then the same push is no drift again.
   await phone.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
-  await phone.waitForTimeout(300);
-  for (const t1 = Date.now(); ; ) {
-    await hold();
-    const v = await phoneView();
-    if (!v.held && !(await hostDrifts())) break;
-    assert.ok(Date.now() - t1 < 5_000, `the shipped threshold is back, so no drift: ${JSON.stringify(v)}`);
-    await phone.waitForTimeout(30);
-  }
   assert.deepEqual(errors, []);
 });
 

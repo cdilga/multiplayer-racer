@@ -240,7 +240,7 @@ test('the old one-stick layout is a personal setting: the left stick steers agai
     }, endpoint);
   const left = (x, y) => page.evaluate(([x, y]) => window.__jjController.setSticks({ x, y, touch: true }, { x: 0, y: 0, touch: false }), [x, y]);
   assert.equal((await prefs(page)).controls, 'dual', 'two sticks by default');
-  // Two sticks: the left stick pushed sideways is a drift, never a steer.
+  // Two sticks: the left stick pushed sideways does nothing, never a steer.
   await left(0.9, -0.1);
   await page.waitForTimeout(1500);
   assert.ok(Math.abs((await seen()).steer ?? 0) < 0.1, 'the left stick does not steer in the two-stick layout');

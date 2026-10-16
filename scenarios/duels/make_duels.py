@@ -8,9 +8,9 @@ other until they part, so they don't touch at the start) with scripted inputs: a
 botched ones and mash scripts. The ordering is on the time each car takes to a gate after the segment.
 
 Where the line itself is the point (the wheelie duels, the air control duel) the inputs are the whole script. Where it
-isn't (drift, boost), the plain line is the sim's autopilot (a steady, deliberately weak pure-pursuit driver, so every car
+isn't (boost), the plain line is the sim's autopilot (a steady, deliberately weak pure-pursuit driver, so every car
 holds the same racing line and the duel isolates the technique) and the scripted part is the ACTION stick that rides on
-it: the handbrake drift and the boost. The timings were found with seeded random searches over the fixture runner
+it: the boost. The timings were found with seeded random searches over the fixture runner
 (`docs/evidence/P1-S09/search-log.md` lists them), then frozen here as literals.
 """
 import json
@@ -58,8 +58,8 @@ def span(car, a, b, **kw):
 
 
 def mash(seed, secs, car, sticks=False):
-    """A seeded mash script: every 50 ms the controls land somewhere new (DRIVE anywhere, ACTION drifting or boosting
-    a fifth of the time each; or the raw sticks, which is what a wheelie gesture is read from)."""
+    """A seeded mash script: every 50 ms the controls land somewhere new (DRIVE anywhere, ACTION boosting
+    a fifth of the time; or the raw sticks, which is what a wheelie gesture is read from)."""
     rng = random.Random(seed)
     out = []
     for t in range(0, S(secs), 6):
@@ -73,20 +73,18 @@ def mash(seed, secs, car, sticks=False):
             out.append({"car": car, "fromTick": t, "toTick": t + 6, "stick": [round(rng.random() * 2 - 1, 2), round(rng.random() * 2 - 1, 2)], "action": act})
         else:
             out.append({"car": car, "fromTick": t, "toTick": t + 6, "throttle": round(rng.random() * 2 - 1, 2),
-                        "steer": round(rng.random() * 2 - 1, 2), "drift": a < 0.2, "boost": 0.2 <= a < 0.4})
+                        "steer": round(rng.random() * 2 - 1, 2), "boost": 0.2 <= a < 0.4})
     return out
 
 
-def acts(car, drift=None, boost=None, pad=None):
-    """ACTION-only spans: handbrake over `drift=(from, to)` seconds, boost over `boost=(from, to)`. The rest of the
-    time the car's neutral (the autopilot supplies DRIVE)."""
-    cuts = sorted({0.0, *(x for w in (drift, boost) if w for x in w)})
+def acts(car, boost=None, pad=None):
+    """ACTION-only spans: boost over `boost=(from, to)` seconds. The rest of the time the car's neutral (the autopilot
+    supplies DRIVE)."""
+    cuts = sorted({0.0, *(x for w in (boost,) if w for x in w)})
     out = []
     for a, b in zip(cuts, cuts[1:] + [None]):
         mid = a + 1e-6
         kw = {}
-        if drift and drift[0] <= mid < drift[1]:
-            kw["drift"] = True
         if boost and boost[0] <= mid < boost[1]:
             kw["boost"] = True
         out.append(span(car, a, b, **kw))
@@ -234,35 +232,12 @@ def air_control():
 air_control()
 
 # ----------------------------------------------------------------------------------------------------------------
-# Autopilot lines: drift and boost ride on the autopilot's racing line (the ACTION stick passes through it).
+# Autopilot lines: boost rides on the autopilot's racing line (the ACTION stick passes through it).
 # ----------------------------------------------------------------------------------------------------------------
 
 
 def ap(n_driven):
     return {"autopilot": [{"tick": 0, "car": i, "on": True} for i in range(n_driven)]}
-
-
-def drift_straight_penalty():
-    labels = ["plain", "drift-short", "drift-long", "mash-a", "mash-b"]
-    ins = [span(0, 0, None, throttle=1.0)]
-    for car, (t0, dur) in {1: (0.5, 1.0), 2: (0.5, 2.0)}.items():
-        ins.append(span(car, 0, t0, throttle=1.0))
-        t, k = t0, 0
-        while t < t0 + dur - 1e-9:
-            ins.append(span(car, t, min(t + 0.3, t0 + dur), throttle=1.0, steer=0.1 * (1 if k % 2 == 0 else -1), drift=True))
-            t += 0.3
-            k += 1
-        ins.append(span(car, t0 + dur, None, throttle=1.0))
-    ins += mash(81, 9, 3) + mash(82, 9, 4)
-    # One tick (1/60 s) at least: times are tick-quantised, and since R122 (less body roll) the drift costs one or two.
-    beats = [beat("plain", "drift-*", 0.005), beat("plain", "mash-*", 0.0)]
-    write("drift-straight-penalty",
-          "§7.3b drift-straight-penalty (P1-S09): drifting down a straight is slower than driving it straight. Five Cruz Missiles at 18 m/s on the main straight, time to 150 m on. plain: flat out. drift-short and drift-long: the handbrake held for 1 s and 2 s with the small steering wiggle a driver needs to keep the tail out. mash: two seeded random scripts.",
-          81, 9, same({"x": 10, "y": 0.1, "z": 0, "headingDeg": 90}, [18, 0, 0], len(labels)), labels, ins,
-          {"metric": "progressM", "at": 150.0, "maxOffsetM": 9.0}, beats)
-
-
-drift_straight_penalty()
 
 
 def boost_placement():
@@ -298,33 +273,3 @@ def start_line_launch():
 start_line_launch()
 
 
-def drift_corner():
-    labels = ["plain", "straight-boost", "exit-boost", "well", "botched", "mash-a", "mash-b"]
-    ins = acts(1, boost=(1.0, 2.5)) + acts(2, boost=(6.86, 8.62)) + acts(3, drift=(2.0, 2.3), boost=(2.3, 3.235))
-    ins += acts(4, drift=(1.0, 4.5), boost=(4.5, 6.9)) + mash(101, 14, 5) + mash(102, 14, 6)
-    beats = [beat("well", "plain", 0.5), beat("plain", "botched", 0.1), beat("well", "mash-*", 0.0),
-             beat("well", "exit-boost", 0.2)]
-    write("drift-corner-duel",
-          "§7.3b drift-corner-duel (P1-S09): the greybox hairpin at 18 m/s entry, every car but the mashers on the autopilot's line, the ACTION stick the only difference. plain: nothing. straight-boost: the starting boost spent on the straight. exit-boost: boost spent on the exit. well: the handbrake held through the corner (the drift charges the meter) and the banked boost spent on the exit. botched: the handbrake held from 1.0 s, far too early, which spins it out. Since the fun pass (br-gw74.13) the drift-exit burst pays: well beats exit-boost, which carries its boost into the hairpin and crashes.",
-          91, 14, same({"x": 110, "y": 0.1, "z": 0, "headingDeg": 90}, [18, 0, 0], len(labels)), labels, ins,
-          {"metric": "progressM", "at": 110.0, "maxOffsetM": 12.0}, beats, extra=ap(5), solo=True)
-
-
-drift_corner()
-
-
-def drift_boost_chain():
-    labels = ["plain", "grip", "well", "botched", "mash-a", "mash-b"]
-    # Timings re-found for the fun-pass car (br-gw74.13, scenarios/duels/search.py): grip is the best boost window the
-    # search found for a grip line; well taps the handbrake into each bend and spends the meter on the straight.
-    ins = acts(1, boost=(1.049, 3.899))
-    ins += [span(2, a, b, **kw) for a, b, kw in [(0, 0.009, {}), (0.009, 0.163, dict(drift=True)), (0.163, 0.328, {}), (0.328, 0.554, dict(drift=True)), (0.554, 1.056, {}), (1.056, 6.056, dict(boost=True)), (6.056, None, {})]]
-    ins += acts(3, drift=(0.0, 16.0), boost=(1.056, 6.056)) + mash(111, 16, 4) + mash(112, 16, 5)
-    beats = [beat("well", "grip", 0.2, gap="since the fun pass (br-gw74.13) the best grip line ties the drift line in this quick S-bend: both are capped by the meter and the autopilot's 26 m/s plan (search: 5.608 s vs 5.600 s); a 90-degree corner still pays (drift_r120.rs, drift-corner-duel)"), beat("grip", "plain", 0.5), beat("grip", "botched", 0.0), beat("well", "mash-*", 0.0)]
-    write("drift-boost-chain",
-          "§7.3b drift-boost-chain (P1-S09): the greybox's S-bend (a left then a right) and the straight after it, entered at 18 m/s, every car but the mashers on the autopilot's line. plain: nothing. grip: the starting boost spent (the best place the search found). well: the handbrake through each bend (each drift charges the meter) and the banked boost spent on the straight. botched: the handbrake the whole way with the same boost. Gate: 150 m along the route.",
-          111, 16, same({"x": 107.5, "y": 0.1, "z": 30, "headingDeg": 270}, [-18, 0, 0], len(labels)), labels, ins,
-          {"metric": "progressM", "at": 150.0, "maxOffsetM": 12.0}, beats, extra=ap(4), solo=True)
-
-
-drift_boost_chain()

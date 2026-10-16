@@ -802,7 +802,7 @@ export class Session {
       source: this.parent ? this.via : null,
       kids: [...this.kids.keys()],
       inputProfile: this.endpoint
-        ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown, driftHeld: this.srcIdx >= 0 ? this.endpoint.driftHeld(this.srcIdx) : false }
+        ? { tuned: this.inputProfileApplied !== null, accepted: this.inputProfileApplied, at: this.inputProfileAt, profile: JSON.parse(this.endpoint.inputProfileJson()) as unknown }
         : null,
       inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
       launchOutcome: this.launchOutcome?.outcome ?? null,

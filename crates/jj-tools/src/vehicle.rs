@@ -260,7 +260,7 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
     struct Patch {
         profile: String,
         set: Vec<(String, String)>,
-        /// The input profile file and its changes (br-2sdu.2), paths as in that file (`drift.enterDeflection`).
+        /// The input profile file and its changes (br-2sdu.2), paths as in that file (`flick.rim`).
         #[serde(default)]
         input_profile: Option<String>,
         #[serde(default)]
@@ -469,21 +469,18 @@ mod tests {
             std::fs::write(&patch, body.to_string()).unwrap();
         };
         let original = std::fs::read_to_string(&input).unwrap();
-        // Entry deflection under the exit deflection breaks the hysteresis rule: refused, nothing written.
-        write(json!([["drift.enterDeflection", "0.5"]]));
+        // A rim under the 0.5 floor is refused, nothing written.
+        write(json!([["flick.rim", "0.3"]]));
         assert!(tune(&patch, false).is_err());
         assert_eq!(std::fs::read_to_string(&input).unwrap(), original);
-        write(json!([
-            ["drift.enterDeflection", "0.8"],
-            ["flick.cooldownMs", "500"]
-        ]));
+        write(json!([["flick.rim", "0.8"], ["flick.cooldownMs", "500"]]));
         let lines = tune(&patch, false).unwrap();
         assert_eq!(lines.len(), 2, "{lines:?}");
         let after = jj_input::InputProfile::from_json(&std::fs::read_to_string(&input).unwrap())
             .expect("the written file validates");
-        assert_eq!(after.drift.enter_deflection, 0.8);
+        assert_eq!(after.flick.rim, 0.8);
         assert_eq!(after.flick.cooldown_ms, 500);
-        assert_eq!(after.drift.enter_angle_deg, 70.0, "the rest is kept");
+        assert_eq!(after.flick.max_angle_deg, 30.0, "the rest is kept");
     }
 
     #[test]

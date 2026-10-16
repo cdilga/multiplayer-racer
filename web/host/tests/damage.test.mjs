@@ -69,7 +69,7 @@ test('a loose door swings on the car and a detached bumper stays behind as debri
   // A loose door (health 10 of 60) and a loose bumper: they swing on the chassis' accelerations as the car swerves.
   await damage(page, car, 'door_FR', 10);
   await damage(page, car, 'door_RR', 10);
-  // R116: the right stick steers (the left stick's x would drift), so the steer goes in `__steer`. A steady turn holds a sideways acceleration, which holds the door that way open: try each way until the door at the
+  // R116: the right stick steers (the left stick's x does nothing), so the steer goes in `__steer`. A steady turn holds a sideways acceleration, which holds the door that way open: try each way until the door at the
   // camera's side stands open (the one direction closes it against its stop).
   let swing = 0;
   for (const x of [-20000, 20000, -20000, 20000]) {

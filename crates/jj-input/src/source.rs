@@ -9,7 +9,7 @@
 //! same method (plan T5: touch, pads and keys mean the same thing).
 
 use crate::action::{HeldActions, SectorMachine, Utility};
-use crate::dual::{DriveStickMachine, Flick, FlickMachine};
+use crate::dual::{Flick, FlickMachine};
 use crate::intent::DriveIntent;
 use crate::profile::Resolved;
 use crate::wheelie::WheelieDetector;
@@ -49,8 +49,6 @@ pub struct SourceSemantics {
     pub drive: DriveIntent,
     /// Right sector held (boost, §7.3).
     pub boost: bool,
-    /// Left sector held (handbrake drift, §7.3).
-    pub drift: bool,
     /// A wheelie preload is pending (the HUD can hint it).
     pub wheelie_preload: bool,
 }
@@ -67,7 +65,7 @@ pub struct SampleFlags {
     pub action_touch: bool,
     /// The pause menu is open for this source.
     pub menu_open: bool,
-    /// The player chose the old one-stick layout (steer on the left stick, the right stick's sectors: boost, drift, forward,
+    /// The player chose the old one-stick layout (steer on the left stick, the right stick's sectors: boost, forward,
     /// back). The default is the R116 dual-stick layout.
     pub classic: bool,
 }
@@ -83,8 +81,7 @@ pub struct SourceState {
     flags: SampleFlags,
     sectors: SectorMachine,
     wheelie: WheelieDetector,
-    /// The R116 layout's machines and thresholds.
-    left: DriveStickMachine,
+    /// The R116 layout's machine and thresholds.
     flick: FlickMachine,
     profile: Resolved,
     /// The wheelie launch (the boost) is refused until this time; the phone's ring reads it.
@@ -122,7 +119,6 @@ impl SourceState {
             flags: SampleFlags::default(),
             sectors: SectorMachine::default(),
             wheelie: WheelieDetector::default(),
-            left: DriveStickMachine::default(),
             flick: FlickMachine::default(),
             profile: Resolved::default(),
             launch_ready_at_ms: 0,
@@ -153,7 +149,6 @@ impl SourceState {
         if self.has_sample && self.flags.classic != flags.classic {
             self.sectors.reset();
             self.wheelie.reset();
-            self.left.reset();
             self.flick.reset();
         }
         self.drive = effective.0;
@@ -167,7 +162,6 @@ impl SourceState {
         if flags.menu_open || !flags.available {
             self.sectors.reset();
             self.wheelie.reset();
-            self.left.reset();
             self.flick.reset();
             return out;
         }
@@ -177,7 +171,6 @@ impl SourceState {
                 Utility::Rear => ActionKind::UtilityRear,
             })
         } else {
-            self.left.sample(self.drive, &self.profile);
             self.flick
                 .sample(self.action, now_ms, &self.profile)
                 .map(|f| match f {
@@ -236,7 +229,6 @@ impl SourceState {
         self.action = [0, 0];
         self.sectors.reset();
         self.wheelie.reset();
-        self.left.reset();
         self.flick.reset();
         self.flags.drive_touch = false;
         self.flags.action_touch = false;
@@ -273,7 +265,6 @@ impl SourceState {
             return crate::dual::semantics(
                 self.drive,
                 self.action,
-                &self.left,
                 self.wheelie.is_preloading(),
                 &self.profile,
             );
@@ -282,7 +273,6 @@ impl SourceState {
         SourceSemantics {
             drive: crate::intent::drive_intent(self.drive),
             boost: held.boost,
-            drift: held.drift,
             wheelie_preload: self.wheelie.is_preloading(),
         }
     }

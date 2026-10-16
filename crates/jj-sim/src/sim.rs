@@ -144,7 +144,7 @@ struct Car {
     applied: DriveInput,
     /// Bumps on every teleport (placement, respawn): renderers never interpolate across a change of life (P1-S02).
     life: u32,
-    /// The ACTION stick's state: boost meter and drift (P1-S03b).
+    /// The ACTION stick's state: boost meter and arcade slide (P1-S03b).
     action: vehicle::ActionState,
     /// Each loose part's hinge spring (P1-S04b), in part order; closed and at rest while a part isn't loose.
     springs: Vec<Spring>,
@@ -1691,17 +1691,19 @@ impl Sim {
                         heading: libm::atan2f(fwd.x, fwd.z),
                         forward_speed: b.linvel().dot(fwd),
                     };
+                    // The lock the car really has at this speed (it eases off with speed), so the pursuit's stick turns
+                    // the curvature it asks for (P1-FL04.2).
                     let (out, recover) = ap.drive(
                         &self.path,
                         pose,
-                        p.tuning.max_steer_rad,
+                        p.steer_lock(pose.forward_speed),
                         wheelbase,
                         tick,
                         1.0 + self.assist_profile.catch_up.top_speed_gain
                             * catch_shares.get(i).copied().unwrap_or(0.0),
                     );
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
-                    // boost and drift ride on the autopilot's line. Only DRIVE moving counts as taking back over.
+                    // boost rides on the autopilot's line. Only DRIVE moving counts as taking back over.
                     // In the air the stick pitches and rolls the car (R129): the autopilot levels its nose to the road's
                     // slope where it will come down (the grade ~0.6 s ahead), so it lands aligned instead of nosing in
                     // under throttle (R132 set pieces). Pushing up noses down; pulling back lifts the nose.
@@ -1727,7 +1729,6 @@ impl Sim {
                         out
                     };
                     input = DriveInput {
-                        drift: car.input.drift,
                         boost: car.input.boost,
                         ..out
                     };
@@ -1753,7 +1754,7 @@ impl Sim {
                     &self.assist_profile,
                     &self.path,
                     pose,
-                    p.tuning.max_steer_rad,
+                    p.steer_lock(pose.forward_speed),
                     wheelbase,
                     input,
                 );
@@ -1762,6 +1763,7 @@ impl Sim {
                 input = DriveInput::default();
             }
             car.applied = input;
+            let mut wheel_grip: Vec<f32> = Vec::new();
             // The controls (P1-S03a, crate::vehicle): reverse near rest, speed-scaled steering, the grip of the
             // ground under each wheel, and air control while no wheel touches the ground.
             if let Some(b) = self.world.bodies.get_mut(car.body) {
@@ -1772,23 +1774,7 @@ impl Sim {
                     car.speed_history.pop_front();
                 }
                 car.speed_history.push_back(forward_speed);
-                // The rear tyres' slip from last tick's contacts decides the drift's boost charge, so libm.
-                let side = (iso.rotation * Vector::Y).cross(fwd);
-                let rear_slip = car.vehicle.wheels()[p.front_wheels()..]
-                    .iter()
-                    .filter(|w| w.raycast_info().is_in_contact)
-                    .map(|w| {
-                        let v = b.velocity_at_point(w.raycast_info().hard_point_ws);
-                        let (vf, vs) = (v.dot(fwd), v.dot(side));
-                        if libm::hypotf(vf, vs) < 0.5 {
-                            0.0
-                        } else {
-                            libm::fabsf(libm::atan2f(vs, libm::fabsf(vf))).to_degrees()
-                        }
-                    })
-                    .fold(0.0, f32::max);
-                car.action
-                    .update(p, input, rear_slip, b.linvel().length(), DT);
+                car.action.update(p, input, b.linvel().length(), DT);
                 // R125 catch-up: a trailing car's boost meter refills faster, in proportion to its gap.
                 let share = catch_shares.get(i).copied().unwrap_or(0.0);
                 if share > 0.0 && !car.action.boosting {
@@ -1815,6 +1801,7 @@ impl Sim {
                     side_stiffness[i] = p.tuning.side_friction_stiffness
                         * surface::table().tyre(ground).side_stiffness;
                 }
+                wheel_grip.clone_from(&grip);
                 let commands =
                     vehicle::wheel_commands(p, input, car.action, forward_speed, grip, DT);
                 // The front axle's travel off the nose (+ left), for the arcade handling's steer (P1-FL04).
@@ -1843,6 +1830,17 @@ impl Sim {
                             forward_speed,
                             front_beta,
                         ),
+                        // P1-FL04.2: the arcade controller turns the body; the wheels show the angle its ask needs.
+                        _ if i < p.front_wheels()
+                            && t_.handling.is_none()
+                            && let Some(a) = &t_.arcade =>
+                        {
+                            let v = forward_speed.abs().max(1.0);
+                            let lateral = libm::atanf(wheelbase * a.turn_g * 9.81 / (v * v));
+                            (jj_types::axis::dequantise_axis(input.steer)
+                                * p.steer_lock(forward_speed))
+                            .clamp(-lateral, lateral)
+                        }
                         _ => c.steering,
                     };
                     // Drive bites only on drivable ground (br-gw74.13): it fades out as the contact steepens past about
@@ -1860,7 +1858,7 @@ impl Sim {
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
                     // P1-FL04: with arcade handling the tyres' sideways force is `vehicle::handling`'s, not Rapier's.
-                    w.side_friction_stiffness = if t_.handling.is_some() {
+                    w.side_friction_stiffness = if t_.handling.is_some() || t_.arcade.is_some() {
                         0.0
                     } else {
                         side_stiffness[i]
@@ -2019,6 +2017,52 @@ impl Sim {
                     &car.side_stiffness,
                     car.action.load_shift,
                     jj_types::axis::dequantise_axis(input.steer),
+                    DT,
+                );
+            } else if let Some(a) = &p.tuning.arcade
+                && let Some(b) = self.world.bodies.get_mut(car.body)
+            {
+                // P1-FL04.2: the arcade controller turns the body, holds it on its line and lets the grip go on purpose.
+                let wheels = car.vehicle.wheels();
+                let loaded: Vec<usize> = (0..wheels.len())
+                    .filter(|&i| {
+                        wheels[i].raycast_info().is_in_contact
+                            && wheels[i].wheel_suspension_force > 0.0
+                    })
+                    .collect();
+                let mean = |v: &[f32]| {
+                    if loaded.is_empty() {
+                        1.0
+                    } else {
+                        loaded
+                            .iter()
+                            .map(|&i| v.get(i).copied().unwrap_or(1.0))
+                            .sum::<f32>()
+                            / loaded.len() as f32
+                    }
+                };
+                let (grip, side) = (mean(&wheel_grip), mean(&car.side_stiffness));
+                let (throttle, brake) = vehicle::stick(input);
+                let controls = vehicle::arcade::Controls {
+                    throttle: if car.action.boosting { 1.0 } else { throttle },
+                    brake,
+                    steer: jj_types::axis::dequantise_axis(input.steer),
+                };
+                let ground = vehicle::arcade::Ground {
+                    loaded: loaded.len() as f32 / wheels.len() as f32,
+                    grip,
+                    side,
+                };
+                self.ledger += vehicle::arcade::apply(
+                    a,
+                    &mut car.action.arcade,
+                    b,
+                    controls,
+                    ground,
+                    p.tuning.max_steer_rad,
+                    p.tuning.steer_falloff_mps,
+                    wheelbase,
+                    p.com()[2] - p.axle_rear_z(),
                     DT,
                 );
             }
@@ -3224,7 +3268,7 @@ impl Sim {
         )
     }
 
-    /// A car's ACTION-stick state: its boost meter, how far into a drift it is, and whether it's boosting (P1-S03b).
+    /// A car's ACTION-stick state: its boost meter, how far into an arcade slide it is, and whether it's boosting (P1-S03b).
     pub fn action_state(&self, car: CarId) -> Option<vehicle::ActionState> {
         self.cars.get(car.0 as usize).map(|c| c.action)
     }
@@ -3369,7 +3413,7 @@ impl Sim {
         }
         h.update(&assist);
         for c in &self.cars {
-            for f in [c.action.boost, c.action.drift] {
+            for f in [c.action.boost, c.action.slide()] {
                 h.update(f.to_bits().to_le_bytes());
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
@@ -3377,6 +3421,12 @@ impl Sim {
             if self.profiles[c.model].tuning.handling.is_some() {
                 h.update(c.action.load_shift.to_le_bytes());
             }
+            // The arcade controller's own state (P1-FL04.2); the angle and ask are observations, not state.
+            let arc = &c.action.arcade;
+            for f in [arc.slide, arc.load_shift] {
+                h.update(f.to_bits().to_le_bytes());
+            }
+            h.update(arc.since_low.to_le_bytes());
             h.update(c.action.wheelie_ready.to_le_bytes());
             h.update([u8::from(c.action.false_start)]);
             for (r, n) in c.action.utility_ready.iter().zip(c.action.utility_fired) {

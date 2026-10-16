@@ -61,7 +61,7 @@ mod tests {
     use proptest::prelude::*;
 
     const LSB: f32 = 1.0 / SCALE;
-    /// The thresholds `jj-input` and the phone use today (dead zones, sector entry, boost/drift); any new one is
+    /// The thresholds `jj-input` and the phone use today (dead zones, sector entry, boost); any new one is
     /// covered by the property test below.
     const THRESHOLDS: [f32; 8] = [0.08, 0.12, 0.15, 0.2, 0.25, 0.5, 0.75, 0.9];
 

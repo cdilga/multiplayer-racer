@@ -124,7 +124,6 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
             .inputs
             .iter()
             .map(|i| InputSpan {
-                drift: false,
                 boost: false,
                 action: None,
                 ..i.clone()
@@ -144,7 +143,6 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                     steer: 0.0,
                     brake: 0.0,
                     no_reverse: false,
-                    drift: false,
                     boost: true,
                     stick: None,
                     action: None,
@@ -178,7 +176,7 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
             let mut out = Vec::new();
             for t in (0..fx.ticks).step_by(EVERY as usize) {
                 for &car in &cars {
-                    // DRIVE anywhere; ACTION left (drift) or right (boost) a fifth of the time each.
+                    // DRIVE anywhere; ACTION right (boost) a fifth of the time.
                     let (throttle, steer, action) =
                         (rng.next_f32(), rng.next_f32(), rng.next_f32());
                     out.push(InputSpan {
@@ -189,7 +187,6 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                         steer: steer * 2.0 - 1.0,
                         brake: 0.0,
                         no_reverse: false,
-                        drift: action < 0.2,
                         boost: (0.2..0.4).contains(&action),
                         stick: None,
                         action: None,

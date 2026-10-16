@@ -248,7 +248,7 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
       return { endpoint, seat: seat.seat as number, source: seat.source, car: seat.car };
     },
 
-    /** Holds a fake controller's sticks (−32767..32767): `drive` is the left stick (throttle, brake, drift, launch), `action`
+    /** Holds a fake controller's sticks (−32767..32767): `drive` is the left stick (throttle, brake, launch), `action`
      *  the right (R116: its x steers, a flick fires the utilities); `null` lets go of both. */
     drive(endpoint: string, drive: [number, number] | null, action: [number, number] = [0, 0]) {
       const f = fakes.get(endpoint);

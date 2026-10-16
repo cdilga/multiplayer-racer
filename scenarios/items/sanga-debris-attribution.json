@@ -1,6 +1,6 @@
 {
   "scenario": "sanga-debris-attribution",
-  "what": "W03: tanking a dynamic prop still credits the buffed driver for its impulse, while ignoring damage to the driver. Causal ownership must survive immunity.",
+  "what": "W03: tanking a dynamic prop still credits the buffed driver for its impulse, while ignoring damage to the driver. Causal ownership must survive immunity. (P1-FL04.2: the buffed car pushes at 0.6 stick, was full: on the arcade controller every wheel drives, and a full-throttle push carried the car into the other car alongside the prop, so the hit was the car's, not the prop's.)",
   "map": "scenarios/damage/yard.json",
   "seed": 17,
   "ticks": 500,
@@ -39,7 +39,7 @@
       "toTick": 500,
       "stick": [
         0,
-        1
+        0.6
       ]
     },
     {
@@ -48,7 +48,7 @@
       "toTick": 280,
       "stick": [
         0,
-        1
+        0.6
       ],
       "action": [
         0,

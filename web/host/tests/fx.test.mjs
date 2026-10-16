@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { BoxGeometry } from 'three';
-const { Emitter, FLAG_BOOSTING, FLAG_DRIFTING } = await import('../src/render/fx/emit.ts');
+const { Emitter, FLAG_BOOSTING, FLAG_SLIDING } = await import('../src/render/fx/emit.ts');
 const { FAMILIES, Pool } = await import('../src/render/fx/particles.ts');
 const { smoothNormals, tierFor } = await import('../src/render/look/index.ts');
 const { decodeSnapshot, encodeSnapshot, PART_DETACHED, PART_LOOSE, PART_PIECE, PIECE_HUSK, snapshotBytes } = await import('../src/render/snapshot.ts');
@@ -58,7 +58,7 @@ test('the snapshot carries velocity, boost and throttle for the effects (and a w
   assert.deepEqual([...z.vel], [0, 0, 0]);
 });
 
-test('driving: dust by surface (light on tarmac, red on dirt, gravel spray), tyre smoke on a drift, a boost flame blue at full', () => {
+test('driving: dust by surface (light on tarmac, red on dirt, gravel spray), tyre smoke on a slide, a boost flame blue at full', () => {
   const tarmac = run(cruise({ flags: 0 }), 1);
   const dirt = run(cruise({ flags: 1 << 6 }), 1);
   const gravel = run(cruise({ flags: 2 << 6 }), 1);
@@ -69,8 +69,8 @@ test('driving: dust by surface (light on tarmac, red on dirt, gravel spray), tyr
   assert.ok(Math.abs(dustColour(tarmac)[0] - dustColour(tarmac)[2]) < 0.1, 'tarmac dust is grey');
   // Gravel adds pebbles: ballistic dots with gravity.
   assert.ok([...gravel.pool.grav.slice(0, gravel.pool.n)].some((g) => g > 5), 'gravel throws pebbles');
-  const drift = run(cruise({ flags: FLAG_DRIFTING }), 1);
-  assert.ok(drift.pool.spawned['tyre-smoke'] > 60, 'a drift smokes the tyres');
+  const slide = run(cruise({ flags: FLAG_SLIDING }), 1);
+  assert.ok(slide.pool.spawned['tyre-smoke'] > 60, 'a slide smokes the tyres');
   assert.equal(tarmac.pool.spawned['tyre-smoke'], 0);
   const orange = run(cruise({ flags: FLAG_BOOSTING, boost: 0.4 }), 0.5);
   const blue = run(cruise({ flags: FLAG_BOOSTING, boost: 1 }), 0.5);
@@ -130,8 +130,8 @@ test('damage: a part newly detached bursts, a badly damaged car smokes, a husk b
   assert.ok(w.pool.alive()['wreck-fire'] > 0, 'and is still burning after six seconds');
 });
 
-test('there is no particle cap: a field of 200 drifting cars emits for every one, and the pool grows by doubling', () => {
-  const cars = (tick) => ({ cars: Array.from({ length: 200 }, (_, i) => ({ id: i + 1, pos: [i * 5, 0, tick * (20 / HZ)], vel: [0, 0, 20], flags: FLAG_DRIFTING })) });
+test('there is no particle cap: a field of 200 sliding cars emits for every one, and the pool grows by doubling', () => {
+  const cars = (tick) => ({ cars: Array.from({ length: 200 }, (_, i) => ({ id: i + 1, pos: [i * 5, 0, tick * (20 / HZ)], vel: [0, 0, 20], flags: FLAG_SLIDING })) });
   const e = run(cars, 1);
   // Every one of the 200 cars: two wheels at 32 puffs a second for a second each.
   assert.ok(e.pool.spawned['tyre-smoke'] >= 200 * 60, `spawned ${e.pool.spawned['tyre-smoke']}`);

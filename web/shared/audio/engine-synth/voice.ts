@@ -4,7 +4,7 @@
 //   intake  : white noise -> band-pass that rises with revs, level from throttle
 //   exhaust : white noise -> low-pass, chopped at the firing rate (the chuff of each pulse)
 //   boost   : sine whine that sweeps with boost and revs + a band-passed whoosh
-//   squeal  : two high-Q band-passes on white noise with a slow wobble (drift)
+//   squeal  : two high-Q band-passes on white noise with a slow wobble (slide)
 //   surface : brown rumble + crackle through a low-pass chosen per surface (tarmac, dirt, gravel)
 //   rattle  : metallic band-passes on noise, chopped at a rate that follows revs (loose parts)
 //   pops    : short noise bursts when the throttle is lifted at revs (the Cruz's cheeky exhaust)

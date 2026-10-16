@@ -375,7 +375,7 @@
     "massKg": 1900,
     "drive": "Rear",
     "accel": {
-      "value": 6.05,
+      "value": 12.11,
       "unit": "m/s2",
       "note": "engine force over mass at launch: an upper bound, drag and traction not included"
     },
@@ -385,18 +385,19 @@
     },
     "cornering": {
       "maxSteerRad": 0.5,
-      "steerFalloffMps": 22,
-      "frictionSlip": 1.9,
-      "driftRearGrip": 0.55,
+      "turnG": 2.7,
+      "gripG": 3.1,
+      "punchSlide": 1,
+      "slideAngleDeg": 40,
       "rollInfluence": 0.1
     },
     "braking": {
       "maxBrakeForceN": 22000
     },
     "boost": {
-      "engineGain": 0.6,
-      "drainPerS": 0.35,
-      "rechargePerS": 0.12
+      "engineGain": 0.5,
+      "drainPerS": 0.3,
+      "rechargePerS": 0.2
     },
     "wheelRadiusM": 0.43
   }

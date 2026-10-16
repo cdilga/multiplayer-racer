@@ -330,7 +330,7 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   await page2.waitForFunction(() => window.__jjAudio.state().mix === 'running', null, { timeout: 10_000 });
   const out = await page2.evaluate(async () => {
     const a = window.__jjAudio;
-    const fact = (car, o) => ({ car, speed: 20, throttle: 1, boosting: false, boost: 0, drifting: false, surface: 0, damage: 0, held: false, ...o });
+    const fact = (car, o) => ({ car, speed: 20, throttle: 1, boosting: false, boost: 0, sliding: false, surface: 0, damage: 0, held: false, ...o });
     const levels = {};
     a.feedRoom({ phase: 'Running', remainingMs: 1e5, round: 1, laps: 3, freeDrive: false, armed: false, standings: [], results: null, seats: [] }, 1e12);
     a.useProfile('cruz-missile');
@@ -359,7 +359,7 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
     // steady update measurement. Exercise the live bank on successive snapshots,
     // excluding graph construction (already reported separately by the bank).
     a.useProfile('cruz-missile');
-    const facts=Array.from({length:8},(_,i)=>({car:200+i,speed:15+i,throttle:.7,boosting:false,boost:0,drifting:false,surface:i%4,damage:0,held:false}));
+    const facts=Array.from({length:8},(_,i)=>({car:200+i,speed:15+i,throttle:.7,boosting:false,boost:0,sliding:false,surface:i%4,damage:0,held:false}));
     const costs=[];
     for(let sample=0;sample<80;sample++) {
       await new Promise(requestAnimationFrame);
@@ -415,7 +415,7 @@ test('A07: a scripted crash round plays every effect at its event, scaled by imp
     a.feedEvents([ep(2, 8, 900, { Debris: { index: 3 } })]);
     a.feedEvents([{ PartLoose: { seat: 1, part: 3, cause: 'Car', instigator: 2 } }, { PartDetached: { seat: 1, part: 3, cause: 'Car', instigator: 2 } }, { Wrecked: { seat: 1, cause: 'Car', instigator: 2 } }]);
     a.feedEvents([{ Oi: { seat: 1 } }, { ConeDropped: { seat: 1, debris: 5 } }, { SeatJoined: { seat: 4, number: 4 } }, { Identify: { seat: 4 } }]);
-    const fact = (o) => ({ car: 0, speed: 20, throttle: 1, boosting: false, boost: 0, drifting: false, surface: 0, damage: 0, held: false, ...o });
+    const fact = (o) => ({ car: 0, speed: 20, throttle: 1, boosting: false, boost: 0, sliding: false, surface: 0, damage: 0, held: false, ...o });
     a.feedFacts([fact({})], [-8]);
     a.feedFacts([fact({ boosting: true })], [0.5]); // a fall of 8 m/s stops: a landing, and the boost starts
     // A burst past the voice budget.

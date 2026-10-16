@@ -17,7 +17,7 @@ import type { Sfx } from './sfx';
 type Phase = RoomView['phase'];
 const FLAG_HELD = 8;
 const FLAG_BOOSTING = 16;
-const FLAG_DRIFTING = 32;
+const FLAG_SLIDING = 32;
 /** Two finishes this close are a photo finish, ms. */
 const PHOTO_FINISH_MS = 500;
 /** A leader change needs the new leader to hold it this long to be called, ms. */
@@ -50,7 +50,7 @@ export class AudioDirector {
   readonly tracker = new MotionTracker();
   readonly motion: MotionBank;
   private lastTick = new Map<number, number>();
-  private mstate = new Map<number, { drifting: boolean; driftAt: number; driftEndAt: number; heldS: number; surface: number | undefined; air: boolean; wind: boolean }>();
+  private mstate = new Map<number, { sliding: boolean; slideAt: number; surface: number | undefined; air: boolean; wind: boolean }>();
 
   constructor(
     private mix: Mix,
@@ -297,7 +297,7 @@ export class AudioDirector {
           throttle: view.getFloat32(at + 60, true),
           boosting: (flags & FLAG_BOOSTING) !== 0,
           boost: view.getFloat32(at + 56, true),
-          drifting: (flags & FLAG_DRIFTING) !== 0,
+          sliding: (flags & FLAG_SLIDING) !== 0,
           surface: (flags >> 6) & 3,
           damage: Math.min(1, (loose.get(car) ?? 0) / 10),
           held: (flags & FLAG_HELD) !== 0,
@@ -324,39 +324,33 @@ export class AudioDirector {
   }
 
   motionCar(f: CarFact): MotionCar {
-    return { car: f.car, speed: f.speed, drifting: f.drifting, surface: f.surface, slip: f.slip ?? 0, airborne: f.airborne ?? false, airS: f.airS ?? 0, height: f.height ?? 0, held: f.held };
+    return { car: f.car, speed: f.speed, sliding: f.sliding, surface: f.surface, slip: f.slip ?? 0, airborne: f.airborne ?? false, airS: f.airS ?? 0, height: f.height ?? 0, held: f.held };
   }
 
-  /** One car's snapshot facts: drift, boost, take-off, landing and surface triggers (public so scripted rounds can feed facts the sim hasn't made). */
+  /** One car's snapshot facts: slide, boost, take-off, landing and surface triggers (public so scripted rounds can feed facts the sim hasn't made). */
   carFacts(f: CarFact, vy: number, nowMs = performance.now()): void {
     // A wreck hold ends when the car is let go again: the engine may start.
     if (!f.held && this.wrecked.has(f.car)) this.wrecked.delete(f.car);
     const id = String(f.car);
     let m = this.mstate.get(f.car);
     if (!m) {
-      m = { drifting: false, driftAt: 0, driftEndAt: -1e9, heldS: 0, surface: undefined, air: false, wind: false };
+      m = { sliding: false, slideAt: 0, surface: undefined, air: false, wind: false };
       this.mstate.set(f.car, m);
     }
     const air = f.airborne === true;
-    // Drift: the slide begins (a chirp, the squeal layer takes over) and ends (the held time is what the exit boost scales by).
-    if (f.drifting && !m.drifting) {
-      m.drifting = true;
-      m.driftAt = nowMs;
-      this.sfx.trigger('drift-start', Math.min(1, 0.35 + f.speed / 40 + (f.slip ?? 0) * 0.5), 'car.drift_start', { car: f.car, slip: +(f.slip ?? 0).toFixed(2), speed: +f.speed.toFixed(1) }, id, nowMs);
-    } else if (!f.drifting && m.drifting) {
-      m.drifting = false;
-      m.driftEndAt = nowMs;
-      m.heldS = (nowMs - m.driftAt) / 1000;
-      this.mix.note('motion', { event: 'drift-end', car: f.car, heldS: +m.heldS.toFixed(2) });
+    // Sliding: the slide begins (a chirp, the squeal layer takes over) and ends (the held time is noted).
+    if (f.sliding && !m.sliding) {
+      m.sliding = true;
+      m.slideAt = nowMs;
+      this.sfx.trigger('slide-start', Math.min(1, 0.35 + f.speed / 40 + (f.slip ?? 0) * 0.5), 'car.slide_start', { car: f.car, slip: +(f.slip ?? 0).toFixed(2), speed: +f.speed.toFixed(1) }, id, nowMs);
+    } else if (!f.sliding && m.sliding) {
+      m.sliding = false;
+      this.mix.note('motion', { event: 'slide-end', car: f.car, heldS: +((nowMs - m.slideAt) / 1000).toFixed(2) });
     }
-    // Boost: straightening out of a held drift is R120's exit boost (its own sound, sized by the drift held); any other boost is the whoosh.
+    // Boost: the whoosh.
     if (f.boosting && !this.boosting.has(f.car)) {
       this.boosting.add(f.car);
-      const fromDrift = m.drifting || nowMs - m.driftEndAt <= MOTION.exitWindowS * 1000;
-      if (fromDrift) {
-        const heldS = m.drifting ? (nowMs - m.driftAt) / 1000 : m.heldS;
-        this.sfx.trigger('drift-exit-boost', Math.min(1, Math.max(0.25, heldS / MOTION.exitFullHeldS)), 'car.drift_exit_boost', { car: f.car, heldS: +heldS.toFixed(2) }, id, nowMs);
-      } else this.sfx.trigger('boost-whoosh', 0.7, 'car.boost', { car: f.car }, id, nowMs);
+      this.sfx.trigger('boost-whoosh', 0.7, 'car.boost', { car: f.car }, id, nowMs);
     } else if (!f.boosting) this.boosting.delete(f.car);
     // Take-off and the wind that follows once the jump is long enough.
     if (air && !m.air) this.sfx.trigger('takeoff-whoosh', Math.min(1, 0.3 + f.speed / 30), 'car.takeoff', { car: f.car, speed: +f.speed.toFixed(1), vy: +vy.toFixed(1) }, id, nowMs);

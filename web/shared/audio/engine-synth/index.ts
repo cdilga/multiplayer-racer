@@ -2,7 +2,7 @@
 //
 //   import { create, assertProfile } from './engine-synth';
 //   const voice = create(audioContext, assertProfile(profileJson), { destination: mixer, seed: carNumber });
-//   voice.set({ rpm: 3200, throttle: 0.8, boost: 0.4, drift: 0, surface: 'tarmac', damage: 0.1, gear: 3 });
+//   voice.set({ rpm: 3200, throttle: 0.8, boost: 0.4, slide: 0, surface: 'tarmac', damage: 0.1, gear: 3 });
 //   voice.dispose();
 //
 // - `create(ctx, profile)` works on any BaseAudioContext (real-time or OfflineAudioContext). The profile is

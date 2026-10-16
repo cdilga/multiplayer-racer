@@ -59,15 +59,10 @@ fn the_state_hash_distinguishes_which_car_has_assist_before_it_steps() {
 }
 
 fn line_steer(route: &Route, p: Pose2) -> f32 {
-    let t = profile().tuning;
+    // The lock the car has at this speed, as the sim hands the assists (P1-FL04.2).
+    let lock = profile().steer_lock(p.forward_speed);
     route
-        .probe(
-            None,
-            p,
-            t.max_steer_rad,
-            profile().wheelbase(),
-            [0.8, 6.0, 6.0],
-        )
+        .probe(None, p, lock, profile().wheelbase(), [0.8, 6.0, 6.0])
         .steer
 }
 
@@ -282,38 +277,9 @@ fn assists_never_fight_a_full_lock_input() {
 }
 
 #[test]
-fn some_gates_the_drift_and_lots_turns_it_and_the_wheelie_off() {
+fn lots_turns_the_wheelie_off() {
     let fx = fixture("novice-laps.json");
     let map = map_of(&fx);
-    let ticks_for = |level: AssistLevel, steer: f32, held_ticks: u64| {
-        let mut sim = Sim::new(&map, &Registry::generic(), 4, profile());
-        let car = sim.spawn_grid(1)[0];
-        sim.set_assist(car, level);
-        sim.start_race(2);
-        let mut first = None;
-        for t in 0..held_ticks {
-            sim.set_input(
-                car,
-                DriveInput {
-                    throttle: quantise_axis(1.0),
-                    steer: quantise_axis(steer),
-                    drift: true,
-                    ..Default::default()
-                },
-            );
-            sim.step();
-            if first.is_none() && sim.applied_input(car).unwrap().drift {
-                first = Some(t);
-            }
-        }
-        first
-    };
-    // Off passes it at once; Some only after 0.25 s at full lock (30 ticks at 120 Hz); half lock never; Lots never.
-    assert_eq!(ticks_for(AssistLevel::Off, 0.5, 10), Some(0));
-    let hold = (0.25 * TICK_HZ as f32).ceil() as u64;
-    assert_eq!(ticks_for(AssistLevel::Some, 1.0, 2 * S), Some(hold - 1));
-    assert_eq!(ticks_for(AssistLevel::Some, 0.5, 2 * S), None);
-    assert_eq!(ticks_for(AssistLevel::Lots, 1.0, 2 * S), None);
     // Wheelie: refused for Lots only (the setup command is journaled either way).
     for (level, ok) in [
         (AssistLevel::Off, true),

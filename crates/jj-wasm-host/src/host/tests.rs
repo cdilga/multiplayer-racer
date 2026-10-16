@@ -285,12 +285,11 @@ fn an_input_profile_change_reaches_the_host_and_every_controller() {
     for m in join("early") {
         h.schedule(0, &m).unwrap();
     }
-    h.schedule(30, &tune("input.drift.enterDeflection", "0.8"))
+    h.schedule(30, &tune("input.flick.rim", "0.8")).unwrap();
+    h.schedule(31, &tune("input.flick.maxAngleDeg", "25"))
         .unwrap();
-    h.schedule(31, &tune("input.drift.enterAngleDeg", "65"))
-        .unwrap();
-    // exitDeflection must stay under the entry deflection: refused, nothing changes.
-    h.schedule(32, &tune("input.drift.exitDeflection", "0.99"))
+    // armBelow must stay under the rim: refused, nothing changes.
+    h.schedule(32, &tune("input.flick.armBelow", "0.99"))
         .unwrap();
     for m in join("late") {
         h.schedule(60, &m).unwrap();
@@ -327,37 +326,42 @@ fn an_input_profile_change_reaches_the_host_and_every_controller() {
     }
     let early = &got["early"];
     assert_eq!(early.len(), 2, "one message per accepted change: {early:?}");
-    assert_eq!(early[0].drift_enter_deflection, 8000);
-    assert_eq!(early[1].drift_enter_angle, 6500);
-    assert_eq!(early[1].drift_enter_deflection, 8000, "the whole profile");
+    assert_eq!(early[0].flick_rim, 8000);
+    assert_eq!(early[1].flick_max_angle, 2500);
+    assert_eq!(early[1].flick_rim, 8000, "the whole profile");
     assert_eq!(
         got["late"],
         vec![early[1]],
         "a later joiner gets the tuned profile"
     );
     let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
-    assert_eq!(shown["input"]["drift"]["enterDeflection"], 0.8);
+    assert_eq!(shown["input"]["flick"]["rim"], 0.8);
     assert!(
-        shown["error"]
-            .as_str()
-            .unwrap_or("")
-            .contains("exitDeflection"),
+        shown["error"].as_str().unwrap_or("").contains("armBelow"),
         "a value the validator refuses is shown: {shown}"
     );
-    // Replays bit for bit, and the host's own reading of a drift push changes with the threshold.
-    let drift_push = |extra: &[(u64, Vec<u8>)]| {
+    // Replays bit for bit, and the host's own reading of the right stick changes with the threshold: the steering curve's
+    // exponent bends a half push of the stick.
+    let steered = |extra: &[(u64, Vec<u8>)]| {
         let mut s = Vec::new();
         for t in (0..300u64).step_by(6) {
-            s.push((t, local(7, [26_000, 6_000])));
+            let push = MainToSim::LocalSource {
+                source: LocalSourceId(7),
+                axes: [0, 16_000, 16_000, 0],
+                buttons: 0,
+                seq: 0,
+            }
+            .encode();
+            s.push((t, push));
         }
         s.extend_from_slice(extra);
         run(16_667, 300, &s)
     };
-    let tuned = [(2u64, tune("input.drift.enterDeflection", "0.8"))];
-    assert_eq!(drift_push(&tuned), drift_push(&tuned), "replays");
+    let tuned = [(2u64, tune("input.steer.gamma", "2"))];
+    assert_eq!(steered(&tuned), steered(&tuned), "replays");
     assert_ne!(
-        drift_push(&tuned).1,
-        drift_push(&[]).1,
+        steered(&tuned).1,
+        steered(&[]).1,
         "and the threshold changed the run"
     );
 }
@@ -804,10 +808,10 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     assert_eq!(kinds2, 11, "the pieces keep their debris slots, kind 2");
 }
 
-fn boost_then_drift_classic() {
+fn boost_then_release_classic() {
     let classic = true;
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
-    // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.
+    // semantics into the sim's applied input); swinging ACTION left names nothing and lets go (R128).
     let mut h = driving_host();
     let hello = ControllerCmd::Hello {
         protocol: PROTOCOL_VERSION,
@@ -824,8 +828,7 @@ fn boost_then_drift_classic() {
     h.schedule(0, &net("phone", Channel::Cmd, claim.encode()))
         .unwrap();
     for (k, t) in (0..240u64).step_by(6).enumerate() {
-        // The old layout: the right stick held right boosts, held left drifts. R116: the left stick at the rim boosts, pushed
-        // sideways drifts.
+        // The old layout: the right stick held right boosts, swung left it lets go.
         let (drive, action) = match t < 120 {
             true => ([0, 32_767], [32_767, 0]),
             false => ([0, 32_767], [-32_767, 0]),
@@ -860,12 +863,8 @@ fn boost_then_drift_classic() {
         h.step_one();
     }
     let a = h.sim().action_state(CarId(0)).unwrap();
-    assert!(a.drift > 0.9 && !a.boosting, "drifts: {a:?}");
-    assert!(
-        h.sim()
-            .applied_input(CarId(0))
-            .is_some_and(|i| i.drift && !i.boost)
-    );
+    assert!(!a.boosting, "swung left lets go of the boost: {a:?}");
+    assert!(h.sim().applied_input(CarId(0)).is_some_and(|i| !i.boost));
 }
 
 /// P1-C13 (R119): a source on a shared connection that says it is unplugged keeps getting its 20 Hz refresh sent with the
@@ -959,15 +958,15 @@ fn an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_an
 }
 
 #[test]
-fn the_old_layouts_action_stick_still_boosts_then_drifts() {
+fn the_old_layouts_action_stick_still_boosts_then_lets_go() {
     // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.
-    boost_then_drift_classic();
+    boost_then_release_classic();
 }
 
 #[test]
-fn r116_the_rim_is_not_a_boost_and_a_sideways_push_drifts_at_full_throttle() {
+fn r128_the_rim_is_not_a_boost_and_a_sideways_push_is_nothing() {
     // P1-C11 (R116, amended): the boost is the wheelie launch, so full forward to the rim is only throttle; the left stick
-    // pushed sideways is the drift and its throttle reads the stick's magnitude.
+    // pushed sideways is nothing at all (R128: no drift input), so the throttle falls to zero.
     let mut h = driving_host();
     for c in [
         ControllerCmd::Hello {
@@ -1011,11 +1010,11 @@ fn r116_the_rim_is_not_a_boost_and_a_sideways_push_drifts_at_full_throttle() {
         h.step_one();
     }
     let a = h.sim().action_state(CarId(0)).unwrap();
-    assert!(a.drift > 0.9 && !a.boosting, "sideways drifts: {a:?}");
+    assert!(!a.boosting, "sideways is not a boost: {a:?}");
     let applied = h.sim().applied_input(CarId(0)).unwrap();
     assert!(
-        applied.drift && !applied.boost && applied.throttle > 30_000,
-        "at full throttle: {applied:?}"
+        !applied.boost && applied.throttle == 0 && applied.brake == 0,
+        "a sideways push is no input: {applied:?}"
     );
 }
 
@@ -3109,7 +3108,7 @@ fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
     let p = prompt(&h);
     assert_eq!(
         (p["step"].clone(), p["of"].clone(), p["done"].clone()),
-        (0.into(), 6.into(), serde_json::json!(["right"]))
+        (0.into(), 5.into(), serde_json::json!(["right"]))
     );
     drive(&mut h, -32_767, 10);
     assert_eq!(prompt(&h)["step"], 1, "both sides seen: the next control");

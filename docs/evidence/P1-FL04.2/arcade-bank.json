@@ -1,0 +1,86 @@
+[
+  {
+    "car": "before (Cruz, Rapier, RWD)",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      79.37971,
+      42.336845,
+      28.148783
+    ],
+    "steady_speed_mps": [
+      10.372006,
+      19.965902,
+      29.740776
+    ],
+    "turn_in_quarter_s_deg_s": [
+      37.48148,
+      27.509459
+    ],
+    "turn_in_peak_deg_s": [
+      41.568905,
+      28.160336
+    ],
+    "punch_rear_slip_deg": 1.3364332,
+    "punch_turned_deg": 57.581554,
+    "punch_caught_s": 0.06666667,
+    "lift_off_gain_deg_s": 17.825905,
+    "recovery_s": 0.05,
+    "min_up_y": 0.99918723
+  },
+  {
+    "car": "cruz-missile",
+    "drive": "Front",
+    "steady_yaw_deg_s": [
+      75.88779,
+      91.42834,
+      63.501656
+    ],
+    "steady_speed_mps": [
+      10.560263,
+      20.326416,
+      30.05102
+    ],
+    "turn_in_quarter_s_deg_s": [
+      88.22195,
+      61.748524
+    ],
+    "turn_in_peak_deg_s": [
+      91.058365,
+      63.45674
+    ],
+    "punch_rear_slip_deg": 1.4763572,
+    "punch_turned_deg": 69.90479,
+    "punch_caught_s": 0.11666667,
+    "lift_off_gain_deg_s": 16.46539,
+    "recovery_s": 0.18333334,
+    "min_up_y": 0.99923533
+  },
+  {
+    "car": "tradie-ute",
+    "drive": "Rear",
+    "steady_yaw_deg_s": [
+      64.75484,
+      65.23664,
+      43.360825
+    ],
+    "steady_speed_mps": [
+      10.495873,
+      20.194315,
+      29.874475
+    ],
+    "turn_in_quarter_s_deg_s": [
+      57.345066,
+      38.211494
+    ],
+    "turn_in_peak_deg_s": [
+      64.34604,
+      42.859756
+    ],
+    "punch_rear_slip_deg": 34.458797,
+    "punch_turned_deg": 106.896095,
+    "punch_caught_s": 0.45,
+    "lift_off_gain_deg_s": 8.405067,
+    "recovery_s": 0.275,
+    "min_up_y": 0.9986688
+  }
+]

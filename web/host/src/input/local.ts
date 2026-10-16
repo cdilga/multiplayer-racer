@@ -20,11 +20,12 @@ import { CAL_PROMPTS, Calibration, type PadLike, type WheelProfile, pedal, profi
 
 type Axes = [number, number, number, number];
 type Stick = { up: string; down: string; left: string; right: string };
+type FlickKeys = { up: string; down: string };
 export interface Cluster {
   id: number;
   label: string;
   drive: Stick;
-  action: Stick;
+  action: FlickKeys;
   identify: string;
   ready: string;
 }
@@ -394,16 +395,15 @@ export class LocalInput {
     if (!s) return;
     const k = (code: string) => (this.keys.has(code) ? 1 : 0);
     // R116 (P1-C11): the cluster's "drive" keys are throttle and brake (up, down) and STEER (left, right, on the right stick's x
-    // axis); its "action" keys are the drift (left, right, on the left stick's x axis) and the forward and back flick (up,
-    // down, on the right stick's y axis). Steering is rate-shaped: the axis ramps toward the keys, full lock in
+    // axis); its "action" keys are the forward and back flick (up,
+    // down, on the right stick's y axis); the left stick's x axis is nothing (R128, no drift). Steering is rate-shaped: the axis ramps toward the keys, full lock in
     // 1/steerRatePerS s. Launch: hold the brake key, then release it as the throttle key goes down (a snap from -1 to +1).
     const target = k(c.drive.right) - k(c.drive.left);
     const step = map.steerRatePerS * dt;
     const steer = s.axes[2] + Math.max(-step, Math.min(step, target - s.axes[2]));
     const y = k(c.drive.up) - k(c.drive.down);
-    const drift = k(c.action.right) - k(c.action.left);
     const flick = k(c.action.up) - k(c.action.down);
-    this.update(s, [drift, y, steer, flick], this.keys.has(c.identify), this.keys.has(c.ready), now);
+    this.update(s, [0, y, steer, flick], this.keys.has(c.identify), this.keys.has(c.ready), now);
   }
 
   private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number): void {
@@ -433,16 +433,15 @@ export class LocalInput {
     this.send(s, axes, buttons);
   }
 
-  /** Which of the seven controls this source has used (steer, go, brake, drift, launch, OI!, cone): the card folds at all of them. */
+  /** Which of the six controls this source has used (steer, go, brake, launch, OI!, cone): the card folds at all of them. */
   private trackUse(s: Source, axes: Axes, now: number): void {
     if (!s.view.claimed || s.view.left) return;
     const used = s.view.used;
     const mark = (id: string) => used.includes(id) || used.push(id);
-    const [dx, y, steer, flick] = axes;
+    const [, y, steer, flick] = axes;
     if (Math.abs(steer) > 0.7) mark('steer');
     if (y > 0.7) mark('go');
     if (y < -0.7) mark('brake');
-    if (Math.abs(dx) > 0.9) mark('drift');
     if (flick > 0.7) mark('oi');
     if (flick < -0.7) mark('cone');
     if (y < -0.9) {

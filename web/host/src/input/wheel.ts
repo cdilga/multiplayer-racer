@@ -1,7 +1,7 @@
 // Steering wheels with pedals as host players (P1-C05.2, R109). A wheel is a Gamepad API device mapped by a profile
 // (`wheels.json`, or one saved by calibration for that device) onto the same two sticks as a pad (R116): the ACTION
-// (right) stick's x is steering, the DRIVE (left) stick's y is accelerator minus brake, and buttons make the rest (drift on the
-// left stick's x, OI! up and cone down on the right stick's y). The boost is the launch: brake pedal, then a snap to the throttle.
+// (right) stick's x is steering, the DRIVE (left) stick's y is accelerator minus brake, and buttons make the rest (OI! up and
+// cone down on the right stick's y). The boost is the launch: brake pedal, then a snap to the throttle.
 // So the worker, jj-input and the sim see a wheel exactly as they see a pad (source-blind, R80).
 import data from './wheels.json';
 
@@ -28,7 +28,7 @@ export interface WheelProfile {
   note?: string;
 }
 
-export type WheelButton = 'boost' | 'drift' | 'oi' | 'cone' | 'identify' | 'ready';
+export type WheelButton = 'boost' | 'oi' | 'cone' | 'identify' | 'ready';
 
 /** The slice of a Gamepad this reads (so tests and traces can feed plain objects). */
 export interface PadLike {
@@ -87,7 +87,7 @@ export function pedal(v: number | undefined, spec: PedalSpec, dz = data.pedalDea
   return t <= dz ? 0 : (t - dz) / (1 - dz);
 }
 
-/** One wheel sample as the two sticks (−1..1) plus Identify and READY (R116: the wheel steers on the right stick's x, the pedals drive the left stick's y; the drift button is the left stick's x, the OI and cone buttons the right stick's y; the launch is the brake pedal then the throttle). */
+/** One wheel sample as the two sticks (−1..1) plus Identify and READY (R116: the wheel steers on the right stick's x, the pedals drive the left stick's y; the left stick's x is nothing, the OI and cone buttons the right stick's y; the launch is the brake pedal then the throttle). */
 export function wheelSample(pad: PadLike, p: WheelProfile): { axes: Axes; identify: boolean; ready: boolean } {
   const raw = ax(pad.axes, p.steer.axis) * (p.steer.invert ? -1 : 1);
   const steer = Math.abs(raw) <= data.steerDeadzone ? 0 : Math.max(-1, Math.min(1, raw));
@@ -96,13 +96,13 @@ export function wheelSample(pad: PadLike, p: WheelProfile): { axes: Axes; identi
     const i = p.buttons[k];
     return i !== undefined && (pad.buttons[i]?.pressed ?? false) ? 1 : 0;
   };
-  return { axes: [b('drift'), drive, steer, b('oi') - b('cone')], identify: b('identify') === 1, ready: b('ready') === 1 };
+  return { axes: [0, drive, steer, b('oi') - b('cone')], identify: b('identify') === 1, ready: b('ready') === 1 };
 }
 
 // ---- calibration: maps an unknown wheel in a few prompts and saves the profile for that device ----
 
 export type CalStep = 'centre' | 'left' | 'right' | 'throttle' | 'brake' | WheelButton | 'done';
-export const CAL_STEPS: CalStep[] = ['centre', 'left', 'right', 'throttle', 'brake', 'boost', 'drift', 'oi', 'cone', 'identify', 'ready', 'done'];
+export const CAL_STEPS: CalStep[] = ['centre', 'left', 'right', 'throttle', 'brake', 'boost', 'oi', 'cone', 'identify', 'ready', 'done'];
 export const CAL_PROMPTS: Record<CalStep, string> = {
   centre: 'Centre the wheel and let go of the pedals',
   left: 'Turn the wheel fully left',
@@ -110,7 +110,6 @@ export const CAL_PROMPTS: Record<CalStep, string> = {
   throttle: 'Press the accelerator all the way',
   brake: 'Press the brake all the way',
   boost: 'Press the button for boost (or Skip)',
-  drift: 'Press the button for drift (or Skip)',
   oi: 'Press the button for OI! (or Skip)',
   cone: 'Press the button for dropping a cone (or Skip)',
   identify: 'Press the button for Identify (or Skip)',

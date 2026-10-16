@@ -6,7 +6,7 @@
 /** The effect families the captures and the tests name (every one of the bead's list). */
 export const FAMILIES = [
   'dust', // surface dust and gravel spray behind the wheels
-  'tyre-smoke', // drift and handbrake
+  'tyre-smoke', // sliding
   'landing', // landing puffs
   'boost', // boost flame (blue at full) and its glow
   'sparks', // scrapes

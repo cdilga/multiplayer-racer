@@ -302,7 +302,7 @@ fn every_duel_holds_its_ordering() {
     files.sort();
     let scratch = duel_dir().ends_with("scratch");
     assert!(
-        scratch || files.len() >= 7,
+        scratch || files.len() >= 6,
         "every S09 duel has an ordering: {files:?}"
     );
     // Each duel is its own world: they run side by side.

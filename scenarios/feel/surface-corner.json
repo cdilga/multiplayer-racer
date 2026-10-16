@@ -1,6 +1,6 @@
 {
  "scenario": "surface-corner",
- "what": "R124 (br-xlvx.1): the same full-throttle corner (steer 0.6 left from 18 m/s for 1 s) on off-track, tarmac, packed dirt, gravel and rock. Dirt slides further (more slip angle), turns less and holds less speed than bitumen.",
+ "what": "R124 (br-xlvx.1): the same full-throttle corner (steer 0.6 left from 18 m/s for 1 s) on off-track, tarmac, packed dirt, gravel and rock. Dirt slides further (more slip angle), turns less and holds less speed than bitumen. P1-FL04.2 re-baseline: on the arcade controller loose ground turns less (the turn scales with the square root of the grip) and holds its line less (the line-holding scales with the surface table's side stiffness): tarmac 104 deg, 5.7 deg slip, 21.7 m/s; dirt 70 deg, 14 deg slip, 20.6 m/s; gravel 60 deg, 20 deg slip, 19.8 m/s; off-track 39 deg, 11.6 deg slip (its side stiffness is 0.8), 18.8 m/s. Dirt still slides further, turns less and holds less speed than bitumen. The off-track car starts at z -34 (was -38): turning harder, it reached the map's out-of-bounds edge and respawned inside the run.",
  "map": "maps/test/surface-strips.json",
  "seed": 17,
  "ticks": 150,
@@ -9,7 +9,7 @@
    "pose": {
     "x": 2,
     "y": 0.1,
-    "z": -38,
+    "z": -34,
     "headingDeg": 90
    },
    "linvel": [
@@ -107,74 +107,74 @@
   {
    "car": 1,
    "metric": "slipDeg",
-   "min": 12.6,
-   "max": 14.0
+   "min": 5.08,
+   "max": 6.28
   },
   {
    "car": 2,
    "metric": "slipDeg",
-   "min": 14.3,
-   "max": 14.85
+   "min": 13.37,
+   "max": 14.57
   },
   {
    "car": 3,
    "metric": "slipDeg",
-   "min": 14.85,
-   "max": 15.45
+   "min": 19.56,
+   "max": 20.76
   },
   {
    "car": 0,
    "metric": "slipDeg",
-   "min": 15.5,
-   "max": 16.3
+   "min": 10.96,
+   "max": 12.16
   },
   {
    "car": 1,
    "metric": "headingChangeDeg",
-   "min": 43.0,
-   "max": 50.0
+   "min": 100.02,
+   "max": 108.36
   },
   {
    "car": 2,
    "metric": "headingChangeDeg",
-   "min": 32.5,
-   "max": 36.5
+   "min": 67.03,
+   "max": 72.61
   },
   {
    "car": 3,
    "metric": "headingChangeDeg",
-   "min": 28.0,
-   "max": 32.4
+   "min": 57.21,
+   "max": 61.97
   },
   {
    "car": 0,
    "metric": "headingChangeDeg",
-   "min": 19.0,
-   "max": 24.0
+   "min": 37.02,
+   "max": 40.1
   },
   {
    "car": 1,
    "metric": "speed",
-   "min": 19.3,
-   "max": 19.7
+   "min": 21.34,
+   "max": 21.99
   },
   {
    "car": 2,
    "metric": "speed",
-   "min": 18.9,
-   "max": 19.3
+   "min": 20.26,
+   "max": 20.88
   },
   {
    "car": 3,
    "metric": "speed",
-   "min": 18.3,
-   "max": 18.9
+   "min": 19.47,
+   "max": 20.07
   },
   {
    "car": 0,
    "metric": "speed",
-   "min": 17.3,
-   "max": 18.2
+   "min": 18.48,
+   "max": 19.04
   },
   {
    "car": 0,

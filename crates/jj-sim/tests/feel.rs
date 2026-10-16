@@ -11,7 +11,7 @@ use jj_fixture::{BaselineKind, Fixture, run};
 use jj_map::{Registry, load_json};
 use jj_sim::VehicleProfile;
 
-/// The S03-owned affordance rows (the shared ones, `slalom`, `air-level`, `jump-land` and `drift-entry-exit`, live in
+/// The S03-owned affordance rows (the shared ones, `slalom`, `air-level` and `jump-land`, live in
 /// `scenarios/feel/`).
 const S03_ROWS: [&str; 7] = [
     "fwd-back-rest",

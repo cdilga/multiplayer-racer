@@ -271,11 +271,6 @@ fn host_samples() -> Vec<HostCmd> {
         HostCmd::InputProfile(InputThresholds {
             steer_radial_deadzone: 400,
             steer_gamma: 1000,
-            drift_enter_angle: 7000,
-            drift_enter_deflection: 9000,
-            drift_exit_angle: 5800,
-            drift_exit_deflection: 7500,
-            drift_max_pull_back: 3500,
             launch_snap_to: 9000,
             launch_snap_window_ms: 250,
             launch_cooldown_ms: 4000,

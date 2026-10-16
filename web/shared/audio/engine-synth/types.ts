@@ -17,7 +17,7 @@ export interface VoiceState {
   /** Boost pressure, 0 (none) to 1 (full). */
   boost: number;
   /** Tyre slip, 0 (gripping) to 1 (full slide). Drives the squeal. */
-  drift: number;
+  slide: number;
   /** What the tyres roll on. */
   surface: Surface;
   /** Loose-part fraction, 0 (intact) to 1 (everything hanging off). Drives the rattle. */

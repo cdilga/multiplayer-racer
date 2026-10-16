@@ -343,8 +343,7 @@ impl Autopilot {
             throttle: mix(self.last_out.throttle, player.throttle),
             steer: mix(self.last_out.steer, player.steer),
             brake: mix(self.last_out.brake, player.brake),
-            // The ACTION stick's held sectors are the player's own from the first handback tick.
-            drift: player.drift,
+            // The ACTION stick's boost is the player's own from the first handback tick.
             boost: player.boost,
             no_reverse: false,
         })

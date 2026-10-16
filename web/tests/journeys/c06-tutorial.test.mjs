@@ -1,6 +1,6 @@
 import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C06 journey: a newcomer's phone in the Lobby (no warm-up drive, R110) is coached through each control by doing
-// it: steer, brake/reverse, boost, drift, OI!, cone, wheelie. Each step clears on the gesture; Skip is one tap and
+// it: steer, brake/reverse, boost, OI!, cone, wheelie. Each step clears on the gesture; Skip is one tap and
 // remembered; Help shows it again; nothing pauses (the room view stays in the Lobby, the host's sim keeps ticking).
 //   node --test web/tests/journeys/c06-tutorial.test.mjs
 import assert from 'node:assert/strict';
@@ -90,22 +90,19 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await sticks(page, { x: 0, y: -1 }, z);
   await sticks(page, { x: 0, y: 1 }, z);
   await waitStep(page, 2);
-  await shot(page, 'phone-tutorial-step3-drift');
-  await sticks(page, { x: 1, y: -0.3 }, z, 200);
-  await waitStep(page, 3);
-  await shot(page, 'phone-tutorial-step4-launch');
+  await shot(page, 'phone-tutorial-step3-launch');
   await launch(page);
   await shot(page, 'phone-launch-cooldown-ring-844x390'); // the ring on the left stick knob while the launch cools down
-  await waitStep(page, 4);
+  await waitStep(page, 3);
   await shot(page, 'phone-tutorial-oi');
   await page.waitForTimeout(400);
   await sticks(page, z, { x: 0, y: -1 }, 80);
   await shot(page, 'phone-tutorial-oi-ticked');
-  await waitStep(page, 5);
-  await shot(page, 'phone-tutorial-step6-cone');
+  await waitStep(page, 4);
+  await shot(page, 'phone-tutorial-step5-cone');
   await page.waitForTimeout(400);
   await sticks(page, z, { x: 0, y: 1 }, 80);
-  await waitStep(page, 6);
+  await waitStep(page, 5);
   await shot(page, 'phone-tutorial-done');
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Lobby', 'the tutorial never starts or holds anything');
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'the host never paused');
@@ -166,10 +163,9 @@ test('C06: the host sees each control and the seat\'s tile shows the next one in
   await shot(host, 'tv-prompt-go-and-stop-1280x720');
   await sticks(page, { x: 0, y: -1 }, z, 400);
   await sticks(page, { x: 0, y: 1 }, z, 400);
-  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Drift/i.test(e.textContent)), undefined, 60_000);
-  await shot(host, 'tv-prompt-drift-1280x720');
-  await sticks(page, { x: 1, y: -0.3 }, z, 400);
-  await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 3, undefined, 10_000);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Launch/i.test(e.textContent)), undefined, 60_000);
+  await shot(host, 'tv-prompt-launch-1280x720');
+  await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 2, undefined, 10_000);
   assert.deepEqual(await tilePrompt(host).then((t) => t.length), 1, 'one prompt on the one tile');
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'prompts never paused the host');
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race runs on');

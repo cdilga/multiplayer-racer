@@ -17,7 +17,7 @@ export const DEFAULT_STATE: Readonly<VoiceState> = Object.freeze({
   rpm: 0,
   throttle: 0,
   boost: 0,
-  drift: 0,
+  slide: 0,
   surface: 'tarmac' as Surface,
   damage: 0,
   gear: 0,
@@ -47,7 +47,7 @@ export function mergeState(profile: EngineProfile, prev: VoiceState, next: Parti
   if (fin(next.rpm)) out.rpm = clamp(next.rpm, 0, profile.engine.limiterRpm);
   if (fin(next.throttle)) out.throttle = clamp01(next.throttle);
   if (fin(next.boost)) out.boost = clamp01(next.boost);
-  if (fin(next.drift)) out.drift = clamp01(next.drift);
+  if (fin(next.slide)) out.slide = clamp01(next.slide);
   if (fin(next.damage)) out.damage = clamp01(next.damage);
   if (fin(next.gear)) out.gear = clamp(Math.round(next.gear), 0, profile.gearbox.ratios.length);
   if (typeof next.surface === 'string' && (SURFACES as readonly string[]).includes(next.surface)) out.surface = next.surface;
@@ -111,14 +111,14 @@ export function computeTargets(p: EngineProfile, s: VoiceState): Targets {
   const b = p.boost;
   const boostAct = b ? Math.pow(s.boost, 1.4) * run : 0;
   const speedSqueal = smoothstep(p.squeal.minSpeedMps, p.squeal.fullSpeedMps, speed);
-  const squealAct = Math.pow(s.drift, 1.3) * speedSqueal;
+  const squealAct = Math.pow(s.slide, 1.3) * speedSqueal;
   const surf = p.surface[s.surface];
   const surfaceAct = Math.pow(speedN, p.surface.speedExponent) * surf.level;
   // The idle share needs the engine turning: a parked car with the engine off does not rattle.
   const rattleShare = p.rattle.idleShare * run + (1 - p.rattle.idleShare) * Math.max(rpmN, 0.7 * speedN);
   const rattleAct = Math.pow(s.damage, 1.2) * rattleShare;
 
-  const squealHz = elerp(p.squeal.centerMinHz, p.squeal.centerMaxHz, clamp01(0.6 * s.drift + 0.4 * speedN));
+  const squealHz = elerp(p.squeal.centerMinHz, p.squeal.centerMaxHz, clamp01(0.6 * s.slide + 0.4 * speedN));
 
   return {
     run,

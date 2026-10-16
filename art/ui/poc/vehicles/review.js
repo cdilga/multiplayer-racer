@@ -40,7 +40,7 @@ const handlingRows = h ? [
   ['Mass', `${h.massKg} kg, ${h.drive.toLowerCase()} drive`],
   ['Acceleration', `up to ${h.accel.value} m/s&sup2; at launch <small>(${esc(h.accel.note)})</small>`],
   ['Top speed', h.topSpeed.value != null ? `${h.topSpeed.value} m/s <small>${esc(h.topSpeed.note)}</small>` : `<i>${esc(h.topSpeed.note)}</i>`],
-  ['Cornering', `max steer ${num(h.cornering.maxSteerRad)} rad, easing off from ${h.cornering.steerFalloffMps} m/s; tyre grip ${h.cornering.frictionSlip}, drift rear grip ${h.cornering.driftRearGrip}, roll ${h.cornering.rollInfluence}`],
+  ['Cornering', `arcade controller: turns up to ${num(h.cornering.turnG)} g, holds its line to ${num(h.cornering.gripG)} g; ${h.cornering.punchSlide ? `a throttle punch swings the tail out to ${num(h.cornering.slideAngleDeg)}°` : 'no power slide (front drive pulls straight)'}; lock ${num(h.cornering.maxSteerRad)} rad`],
   ['Braking', `${h.braking.maxBrakeForceN} N`],
   ['Boost', `+${Math.round(h.boost.engineGain * 100)}% engine force, drains ${h.boost.drainPerS}/s, recharges ${h.boost.rechargePerS}/s`],
 ].map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('') : '';

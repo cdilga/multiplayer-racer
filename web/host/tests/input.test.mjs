@@ -247,7 +247,7 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
 
   // The drawer's legend is each cluster's controls card (P1-C14): every key of the cluster, Identify and READY included.
   const cardKeys = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-jj-input-drawer] [data-card^="keys-"]')].map((c) => [c.dataset.card, [...c.querySelectorAll('kbd')].map((k) => k.dataset.code)])));
-  for (const [n, codes] of [['keys-1', ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyT', 'KeyF', 'KeyG', 'KeyH', 'KeyQ', 'KeyE']], ['keys-2', ['KeyI', 'KeyJ', 'KeyK', 'KeyL', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'KeyU', 'KeyO']]])
+  for (const [n, codes] of [['keys-1', ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyT', 'KeyG', 'KeyQ', 'KeyE']], ['keys-2', ['KeyI', 'KeyJ', 'KeyK', 'KeyL', 'ArrowUp', 'ArrowDown', 'KeyU', 'KeyO']]])
     for (const code of codes) assert.ok(cardKeys[n]?.includes(code), `${n} card has ${code}: ${JSON.stringify(cardKeys)}`);
 
   // Joining flashes each seat once; past the seat reducer's 3 s limit, Identify flashes that seat only.

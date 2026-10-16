@@ -1,5 +1,5 @@
 // Engine audio in the game (P1-A05, R103): one synth voice per car (web/shared/audio/engine-synth), driven by the snapshot:
-// ground speed and the applied throttle give rpm and gear through the package's drivetrain, the boost meter, the drift flag,
+// ground speed and the applied throttle give rpm and gear through the package's drivetrain, the boost meter, the slide flag,
 // the ground class under the car and the count of loose or missing parts give the rest. A car's engine starts when it goes
 // on (the round's countdown, a respawn's end of hold) and stops when it goes off (a wreck, the round's end): the A04c
 // start and stop play out by themselves. Each car's engine is its roster vehicle's profile (R123); the Cruz Missile's profile
@@ -34,7 +34,7 @@ export interface CarFact {
   throttle: number;
   boosting: boolean;
   boost: number;
-  drifting: boolean;
+  sliding: boolean;
   surface: number;
   /** Loose plus detached parts as a fraction of the ten. */
   damage: number;
@@ -165,7 +165,7 @@ export class EngineBank {
         // Wheels off the ground, the engine unloads (throttle falls away). Tyre squeal is the motion layer's (it follows slip).
         throttle: f.airborne ? f.throttle * MOTION.airThrottle : f.throttle,
         boost: f.boosting ? 1 : 0,
-        drift: 0,
+        slide: 0,
         surface: SURFACES[f.surface] ?? 'tarmac',
         damage: f.damage,
         gear: s.gear,

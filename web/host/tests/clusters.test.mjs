@@ -9,10 +9,11 @@ const keysOf = (c) => [...Object.values(c.drive), ...Object.values(c.action), c.
 test('every cluster is a full two-stick player with its own Identify and READY', () => {
   assert.ok(map.clusters.length >= 1);
   for (const c of map.clusters) {
-    for (const stick of [c.drive, c.action]) assert.deepEqual(Object.keys(stick).sort(), ['down', 'left', 'right', 'up']);
+    assert.deepEqual(Object.keys(c.drive).sort(), ['down', 'left', 'right', 'up']);
+    assert.deepEqual(Object.keys(c.action).sort(), ['down', 'up'], 'the ACTION keys are the flicks only (R128: no drift keys)');
     assert.equal(typeof c.identify, 'string');
     assert.equal(typeof c.ready, 'string');
-    assert.equal(new Set(keysOf(c)).size, 10, `${c.label} uses a key twice`);
+    assert.equal(new Set(keysOf(c)).size, 8, `${c.label} uses a key twice`);
   }
   const ids = map.clusters.map((c) => c.id);
   assert.equal(new Set(ids).size, ids.length, 'cluster ids are unique');

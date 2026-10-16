@@ -3,7 +3,7 @@
 // groups), so a new profile field shows up without touching this file. A change goes to the sim as a `tune:` UI command,
 // applied at a tick boundary and journalled like every UI command, so a tuned session replays. Export downloads a
 // `jj.tuning-patch.v1` file that `jj vehicle tune <patch.json>` writes into assets/profiles/ as data.
-// Part 2 (br-2sdu.2) adds the input profile (assets/profiles/input.json: drift, deadzones, launch, flick) as `input.*`
+// Part 2 (br-2sdu.2) adds the input profile (assets/profiles/input.json: deadzones, launch, flick) as `input.*`
 // rows. Those travel the same `tune:` command; the host reads its seats with the new value at once and sends the whole
 // profile to every connected controller, so a mid-race change reaches phones, hubs and host pads. The export carries
 // them as `inputProfile` + `inputSet` (paths as in input.json).

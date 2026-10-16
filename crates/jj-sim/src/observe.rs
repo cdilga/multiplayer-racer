@@ -204,7 +204,7 @@ pub struct CarObs {
     pub race: RaceObs,
     /// The autopilot's last decision when it's driving (P1-S07): the visible "autopilot" badge and its target.
     pub autopilot: Option<crate::autopilot::AutopilotState>,
-    /// The ACTION stick (P1-S03b): the boost meter (0..1), boosting now, and how far into a drift (0 grip, 1 drift).
+    /// The ACTION stick (P1-S03b): the boost meter (0..1), boosting now, and how far into an arcade slide (0 grip, 1 sliding).
     pub action: ActionObs,
     /// Every part's health and state, in vehicle profile order (P1-S04a).
     pub parts: Vec<PartObs>,
@@ -240,7 +240,7 @@ pub struct DerbyObs {
 pub struct ActionObs {
     pub boost: f32,
     pub boosting: bool,
-    pub drift: f32,
+    pub slide: f32,
     /// A well-timed wheelie's extra drive is on (P1-S03c).
     pub wheelie: bool,
     /// ACTION utilities fired over the round (P1-S08): "OI!" flashes and cones dropped.
@@ -347,7 +347,7 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             .map_or_else(ActionObs::default, |a| ActionObs {
                 boost: a.boost,
                 boosting: a.boosting,
-                drift: a.drift,
+                slide: a.slide(),
                 wheelie: a.wheelie_ticks > 0,
                 oi: a.utility_fired[crate::utility::UtilityKind::Forward.index()],
                 cones: a.utility_fired[crate::utility::UtilityKind::Rear.index()],
@@ -414,12 +414,12 @@ pub enum Metric {
     /// The most nose-up or nose-down (squat, dive), and the most body roll, degrees.
     MaxPitchDeg,
     MaxRollDeg,
-    /// Boost (P1-S03b): the meter now (0..1), time spent boosting and time drifting (drift past half), s; the most
-    /// the meter gained over the run while drifting.
+    /// Boost (P1-S03b): the meter now (0..1), time spent boosting and time sliding (slide past half), s; the most
+    /// the meter gained over the run while sliding.
     BoostMeter,
     BoostTimeS,
-    DriftTimeS,
-    DriftChargeGained,
+    SlideTimeS,
+    SlideChargeGained,
     /// The largest |slip angle| over the wheels in contact now, degrees.
     SlipDeg,
     /// The wheelie (P1-S03c): the most nose-up pitch over the run (degrees, signed), the time with both front wheels
@@ -482,8 +482,8 @@ impl Metric {
         Metric::MaxRollDeg,
         Metric::BoostMeter,
         Metric::BoostTimeS,
-        Metric::DriftTimeS,
-        Metric::DriftChargeGained,
+        Metric::SlideTimeS,
+        Metric::SlideChargeGained,
         Metric::SlipDeg,
         Metric::MaxNoseUpDeg,
         Metric::FrontAirTimeS,
@@ -534,8 +534,8 @@ impl Metric {
             Metric::MaxRollDeg => "maxRollDeg",
             Metric::BoostMeter => "boostMeter",
             Metric::BoostTimeS => "boostTimeS",
-            Metric::DriftTimeS => "driftTimeS",
-            Metric::DriftChargeGained => "driftChargeGained",
+            Metric::SlideTimeS => "slideTimeS",
+            Metric::SlideChargeGained => "slideChargeGained",
             Metric::SlipDeg => "slipDeg",
             Metric::MaxNoseUpDeg => "maxNoseUpDeg",
             Metric::FrontAirTimeS => "frontAirTimeS",
@@ -581,8 +581,8 @@ pub struct SignatureTracker {
     max_pitch: f64,
     max_roll: f64,
     boost_ticks: u64,
-    drift_ticks: u64,
-    drift_charge: f64,
+    slide_ticks: u64,
+    slide_charge: f64,
     max_nose_up: f64,
     front_air_ticks: u64,
     wheelie_drive_ticks: u64,
@@ -630,8 +630,8 @@ impl SignatureTracker {
             max_pitch: 0.0,
             max_roll: 0.0,
             boost_ticks: 0,
-            drift_ticks: 0,
-            drift_charge: 0.0,
+            slide_ticks: 0,
+            slide_charge: 0.0,
             max_nose_up: 0.0,
             front_air_ticks: 0,
             wheelie_drive_ticks: 0,
@@ -739,9 +739,9 @@ impl SignatureTracker {
             if o.action.boosting {
                 self.boost_ticks += 1;
             }
-            if o.action.drift > 0.5 {
-                self.drift_ticks += 1;
-                self.drift_charge += f64::from((o.action.boost - prev.action.boost).max(0.0));
+            if o.action.slide > 0.5 {
+                self.slide_ticks += 1;
+                self.slide_charge += f64::from((o.action.boost - prev.action.boost).max(0.0));
             }
         }
         self.last = Some(o.clone());
@@ -792,8 +792,8 @@ impl SignatureTracker {
             Metric::MaxRollDeg => self.max_roll,
             Metric::BoostMeter => f64::from(o.action.boost),
             Metric::BoostTimeS => self.boost_ticks as f64 / f64::from(TICK_HZ),
-            Metric::DriftTimeS => self.drift_ticks as f64 / f64::from(TICK_HZ),
-            Metric::DriftChargeGained => self.drift_charge,
+            Metric::SlideTimeS => self.slide_ticks as f64 / f64::from(TICK_HZ),
+            Metric::SlideChargeGained => self.slide_charge,
             Metric::MaxNoseUpDeg => self.max_nose_up,
             Metric::FrontAirTimeS => self.front_air_ticks as f64 / f64::from(TICK_HZ),
             Metric::WheelieDriveS => self.wheelie_drive_ticks as f64 / f64::from(TICK_HZ),

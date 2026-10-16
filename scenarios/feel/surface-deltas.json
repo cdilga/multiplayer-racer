@@ -1,36 +1,155 @@
 {
  "scenario": "surface-deltas",
- "what": "§7.3 Surfaces (P1-S03a). On the surface-strips test map, four Cruz Missiles at 15 m/s turn full lock for 1 s on tarmac, packed dirt, gravel and rock. Grip follows the surface (tarmac 1.0, dirt 0.7, gravel 0.55, rock 0.9; re-blessed by R124 br-xlvx.1: dirt and gravel grip lowered 0.8/0.7 -> 0.7/0.55 and the surface table adds side-slip compliance, so dirt 38 deg (was 43), gravel 31 deg (was 36))): the grippier the ground, the more the car turns and the less it slides. Baselines: no input and mashing don't turn like that.",
+ "what": "§7.3 Surfaces (P1-S03a). On the surface-strips test map, four Cruz Missiles at 15 m/s turn full lock for 1 s on tarmac, packed dirt, gravel and rock. Grip follows the surface (tarmac 1.0, dirt 0.7, gravel 0.55, rock 0.9; re-blessed by R124 br-xlvx.1: dirt and gravel grip lowered 0.8/0.7 -> 0.7/0.55 and the surface table adds side-slip compliance, so dirt 38 deg (was 43), gravel 31 deg (was 36))): the grippier the ground, the more the car turns and the less it slides. Baselines: no input and mashing don't turn like that. P1-FL04.2 re-baseline: on the arcade controller full lock at 15 m/s for 1 s turns tarmac 85 deg, rock 80, dirt 71, gravel 63 (the turn scales with the square root of the grip, so a car on loose ground still steers; envelopes +-2.5 %, still disjoint in the same order).",
  "map": "maps/test/surface-strips.json",
  "seed": 17,
  "ticks": 120,
  "cars": [
-  {"pose": {"x": 4, "y": 0.1, "z": -8, "headingDeg": 90}, "linvel": [15, 0, 0]},
-  {"pose": {"x": 44, "y": 0.1, "z": -8, "headingDeg": 90}, "linvel": [15, 0, 0]},
-  {"pose": {"x": 84, "y": 0.1, "z": -8, "headingDeg": 90}, "linvel": [15, 0, 0]},
-  {"pose": {"x": 124, "y": 0.1, "z": -8, "headingDeg": 90}, "linvel": [15, 0, 0]}
+  {
+   "pose": {
+    "x": 4,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    15,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 44,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    15,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 84,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    15,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 124,
+    "y": 0.1,
+    "z": -8,
+    "headingDeg": 90
+   },
+   "linvel": [
+    15,
+    0,
+    0
+   ]
+  }
  ],
  "inputs": [
-  {"car": 0, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
-  {"car": 1, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
-  {"car": 2, "fromTick": 0, "throttle": 0.15, "steer": -1.0},
-  {"car": 3, "fromTick": 0, "throttle": 0.15, "steer": -1.0}
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 0.15,
+   "steer": -1.0
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "throttle": 0.15,
+   "steer": -1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "throttle": 0.15,
+   "steer": -1.0
+  },
+  {
+   "car": 3,
+   "fromTick": 0,
+   "throttle": 0.15,
+   "steer": -1.0
+  }
  ],
  "expect": [
-  {"car": 0, "metric": "headingChangeDeg", "min": 52, "max": 62},
-  {"car": 3, "metric": "headingChangeDeg", "min": 46, "max": 52},
-  {"car": 1, "metric": "headingChangeDeg", "min": 35, "max": 41},
-  {"car": 2, "metric": "headingChangeDeg", "min": 27, "max": 34},
-  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
-  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
-  {"car": 2, "metric": "minUpY", "min": 0.95, "max": 1.001},
-  {"car": 3, "metric": "minUpY", "min": 0.95, "max": 1.001}
+  {
+   "car": 0,
+   "metric": "headingChangeDeg",
+   "min": 82.61,
+   "max": 86.85
+  },
+  {
+   "car": 3,
+   "metric": "headingChangeDeg",
+   "min": 78.35,
+   "max": 82.37
+  },
+  {
+   "car": 1,
+   "metric": "headingChangeDeg",
+   "min": 68.81,
+   "max": 72.33
+  },
+  {
+   "car": 2,
+   "metric": "headingChangeDeg",
+   "min": 61.36,
+   "max": 64.5
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 2,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 3,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  }
  ],
  "baselines": {
-  "kinds": ["no-input", "mash"],
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
   "differ": [
-   {"car": 0, "metric": "headingChangeDeg", "by": 15.0},
-   {"car": 2, "metric": "headingChangeDeg", "by": 15.0}
+   {
+    "car": 0,
+    "metric": "headingChangeDeg",
+    "by": 15.0
+   },
+   {
+    "car": 2,
+    "metric": "headingChangeDeg",
+    "by": 15.0
+   }
   ]
  }
 }

@@ -3,7 +3,7 @@ import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // from the sim's applied input for that seat's car. Real host in free drive, real phone page, WebRTC: run on eris.
 //   node --test web/tests/journeys/c02-wire.test.mjs
 // DRIVE: up = throttle, down = brake/reverse, left/right = steer (the sim turns a push to the right into negative steer).
-// ACTION: right = boost, left = drift; the two sticks never leak into each other. Identify goes out from the tools row.
+// ACTION: the right stick steers and flicks; the two sticks never leak into each other. Identify goes out from the tools row.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -26,7 +26,7 @@ closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
-test('R116: the left stick drives, drifts and launches, the right stick steers: each independent of the other', { timeout: 240_000 }, async () => {
+test('R116: the left stick drives and launches, the right stick steers: each independent of the other', { timeout: 240_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   if (process.env.JJ_C02_CPU_RATE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_C02_CPU_RATE) });
   await host.goto(`${server.origin}${BASE}host?drive&test=live`);
@@ -98,12 +98,12 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
   if (process.env.JJ_C02_DIAGNOSTICS) console.log('C02 snap:', JSON.stringify(snap));
   await until('the launch', (s) => s.action.wheelie === true, 15_000);
   const both = await until('throttle and lock', (s) => s.throttle > 0.8 && Math.abs(s.steer) > 0.8);
-  assert.ok(!both.action.boosting && !both.action.drift, `full throttle with full lock is neither drift nor boost: ${JSON.stringify(both)}`);
-  // LEFT sideways: the drift, at the stick's magnitude of throttle, and the right stick still steers on its own.
-  await set({ x: 1, y: -0.3 }, still);
-  const drift = await until('drift', (s) => s.action.drift > 0.5 || s.action.drifting === true, 30_000);
-  assert.ok(drift.throttle > 0.9, `a drift at the rim keeps full throttle: ${JSON.stringify(drift)}`);
-  assert.ok(Math.abs(drift.steer) < 0.1, `the left stick's drift side does not steer: ${JSON.stringify(drift)}`);
+  assert.ok(!both.action.boosting, `full throttle with full lock is not a boost: ${JSON.stringify(both)}`);
+  // LEFT sideways (R128: no drift input): nothing at all, no throttle, no brake, no steer, no boost.
+  await set({ x: 1, y: 0 }, still);
+  await host.waitForTimeout(600);
+  const side = await until('sideways is nothing', (s) => s.throttle < 0.05 && s.brake < 0.05 && Math.abs(s.steer) < 0.05);
+  assert.ok(!side.action.boosting, `a sideways push is no boost: ${JSON.stringify(side)}`);
   await set(still, still);
   await until('neutral', (s) => Math.abs(s.steer) < 0.05 && s.throttle < 0.05 && s.brake < 0.05);
 });

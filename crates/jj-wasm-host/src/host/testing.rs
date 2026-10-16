@@ -169,7 +169,6 @@ impl Host {
                     "inputDropped": input.map(|i| i.dropped),
                     "idleCued": input.map(|i| i.idle_cued),
                     "idleForMs": input.map(|i| now_ms.saturating_sub(i.active_ms)),
-                    "drifting": sem.map(|s| s.drift),
                     "boosting": sem.map(|s| s.boost),
                     "fresh": age.is_some_and(|a| a <= STALE_MS),
                 })

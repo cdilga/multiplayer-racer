@@ -1,6 +1,6 @@
 {
  "scenario": "control-after-t-bone",
- "what": "\u00a77.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does. (R124 br-xlvx.1: launch speeds 10.4 and 12.5 m/s, up from 10 and 12, because the yard is off-track and its rolling drag takes about that much off before the strike, so the closing speed and contact are as blessed.)",
+ "what": "§7.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does. (R124 br-xlvx.1: launch speeds 10.4 and 12.5 m/s, up from 10 and 12, because the yard is off-track and its rolling drag takes about that much off before the strike, so the closing speed and contact are as blessed.) (P1-FL04.2: the stopped-spinning check reads the yaw rate 85 ticks after the hit, just before the steer starts at tick 120: on the arcade controller a full-lock steer at this speed turns about 90 deg/s by design, so a yaw read during it measured the steering, not the spin.)",
  "map": "scenarios/damage/yard.json",
  "seed": 1,
  "cars": [
@@ -89,7 +89,7 @@
     "car": 0,
     "metric": "yawRateDegS",
     "afterHit": [
-     120
+     85
     ],
     "min": 0,
     "max": 30

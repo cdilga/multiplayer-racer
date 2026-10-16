@@ -4,7 +4,7 @@
     "seed": 197,
     "speedMps": 25,
     "throttle": 11000,
-    "steer": -5898,
+    "steer": -8500,
     "releaseTick": 600,
     "ticks": 600,
     "maxSpeedMps": 25.1
@@ -13,7 +13,7 @@
     "name": "low-speed-rail-guided-turn",
     "seed": 197,
     "speedMps": 3,
-    "throttle": 5000,
+    "throttle": 4000,
     "steer": -2621,
     "releaseTick": 900,
     "ticks": 2800,

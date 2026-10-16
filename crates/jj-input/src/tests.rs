@@ -172,25 +172,30 @@ fn r116_full_throttle_and_full_lock_read_together_with_no_fire() {
     let sem = s.semantics();
     assert_eq!((sem.drive.throttle, sem.drive.steer), (1.0, 1.0));
     // Full forward is only throttle: the boost is the wheelie launch.
-    assert!(!sem.boost && !sem.drift);
+    assert!(!sem.boost);
 }
 
 #[test]
-fn r116_a_rim_drift_keeps_full_throttle_and_the_old_layout_still_reads_the_old_way() {
+fn r128_a_sideways_left_push_does_nothing_in_either_layout() {
+    // No drift input (R128): the dual layout's left x is nothing at all.
     let mut s = SourceState::new(SourceHandle(1));
     s.sample([32767, 0], [0, 0], DUAL, 0);
     let sem = s.semantics();
-    assert!(sem.drift && sem.drive.throttle > 0.99 && !sem.boost);
-    // The same samples in the old layout: left x steers, nothing drifts.
+    assert_eq!(
+        (sem.drive.throttle, sem.drive.brake, sem.drive.steer),
+        (0.0, 0.0, 0.0)
+    );
+    assert!(!sem.boost);
+    // The old layout: left x steers, and its ACTION stick's left sector names nothing.
     let mut c = SourceState::new(SourceHandle(2));
     let classic = SampleFlags {
         classic: true,
         ..DUAL
     };
-    c.sample([32767, 0], [0, 0], classic, 0);
+    c.sample([32767, 0], [-32767, 0], classic, 0);
     let sem = c.semantics();
     assert_eq!((sem.drive.steer, sem.drive.throttle), (1.0, 0.0));
-    assert!(!sem.drift);
+    assert!(!sem.boost);
 }
 
 #[test]
@@ -240,15 +245,15 @@ fn r116_changing_a_profile_value_changes_the_behaviour_with_no_code_change() {
 #[test]
 fn r116_the_record_carries_the_layout_and_neutralising_clears_both_machines() {
     let mut s = SourceState::new(SourceHandle(1));
-    s.sample([32767, 0], [0, 0], DUAL, 0);
-    assert!(s.semantics().drift);
+    s.sample([0, 0], [32767, 0], DUAL, 0);
+    assert_eq!(s.semantics().drive.steer, 1.0);
     assert!(
         !s.record()
             .flags
             .has(jj_protocol::state::StateFlags::CLASSIC)
     );
     s.neutralise(Neutralise::Hidden);
-    assert!(!s.semantics().drift);
+    assert_eq!(s.semantics().drive.steer, 0.0);
     let c = SampleFlags {
         classic: true,
         ..DUAL

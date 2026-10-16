@@ -9,7 +9,7 @@
     "br-bwju.1",
     "br-p1-d03b-poc-cleanup-uod"
   ],
-  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Rear drive, 1200 kg.",
+  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Front drive, 1200 kg (R136: the Cruze is front-driven).",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -383,9 +383,9 @@
   "handling": {
     "source": "assets/profiles/cruz-missile.json",
     "massKg": 1200,
-    "drive": "Rear",
+    "drive": "Front",
     "accel": {
-      "value": 5.83,
+      "value": 11.67,
       "unit": "m/s2",
       "note": "engine force over mass at launch: an upper bound, drag and traction not included"
     },
@@ -395,9 +395,10 @@
     },
     "cornering": {
       "maxSteerRad": 0.55,
-      "steerFalloffMps": 25,
-      "frictionSlip": 2,
-      "driftRearGrip": 0.37,
+      "turnG": 3.8,
+      "gripG": 4.2,
+      "punchSlide": 0,
+      "slideAngleDeg": 30,
       "rollInfluence": 0.12
     },
     "braking": {
@@ -405,8 +406,8 @@
     },
     "boost": {
       "engineGain": 0.6,
-      "drainPerS": 0.35,
-      "rechargePerS": 0.12
+      "drainPerS": 0.3,
+      "rechargePerS": 0.2
     },
     "wheelRadiusM": 0.4
   }

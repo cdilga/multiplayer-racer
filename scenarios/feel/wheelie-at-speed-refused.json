@@ -1,9 +1,9 @@
 {
  "scenario": "wheelie-at-speed-refused",
- "what": "R127: the wheelie launch fires only from a stop. Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 28 % steer. snap: the left stick pulled fully back for 0.45 s (brakes, since the car is moving) then snapped to full forward on the way out: at speed the snap is just throttle, so no wheelie and no burst. plain: brakes at 80 % then full forward at the same moment. roll-on: the same pull, eased to full forward over 0.8 s. Expect: none of the three lifts or bursts. (Was the R116 corner-exit launch, P1-C11, superseded by R127.) The roll-on car pitches up to about 5 degrees as hard braking hands over to throttle; that is body pitch, not a wheelie (frontAirTimeS and wheelieDriveS stay 0).",
+ "what": "R127: the wheelie launch fires only from a stop. Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 20 % steer. snap: the left stick pulled fully back for 0.45 s (brakes, since the car is moving) then snapped to full forward on the way out: at speed the snap is just throttle, so no wheelie and no burst. plain: brakes at 80 % then full forward at the same moment. roll-on: the same pull, eased to full forward over 0.8 s. Expect: none of the three lifts or bursts. (Was the R116 corner-exit launch, P1-C11, superseded by R127.) The roll-on car pitches up to about 5 degrees as hard braking hands over to throttle; that is body pitch, not a wheelie (frontAirTimeS and wheelieDriveS stay 0). (P1-FL04.2: the plain car's envelope is 0-5 degrees, up from 0-3: on the arcade controller every wheel drives, so the 80 % brake to full throttle handover pitches the body 3.9 degrees; frontAirTimeS and wheelieDriveS still stay 0.) (P1-FL04.2: 20 % steer, not 28 %, and 300 ticks, not the old length: the arcade controller holds the asked line, so a fixed 28 % at full throttle for 6 s reached the roadside and wrecked; the snap is at tick 54 and any launch shows within a second, so 2.5 s covers it.)",
  "map": "scenarios/duels/yard/duel-yard.json",
  "seed": 7,
- "ticks": 720,
+ "ticks": 300,
  "cars": [
   {
    "pose": {
@@ -55,7 +55,7 @@
     -1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -67,7 +67,7 @@
     1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -80,7 +80,7 @@
     -0.8
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -92,7 +92,7 @@
     1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -105,7 +105,7 @@
     -1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -118,7 +118,7 @@
     -0.75
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -131,7 +131,7 @@
     -0.5
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -144,7 +144,7 @@
     -0.25
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -157,7 +157,7 @@
     0.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -170,7 +170,7 @@
     0.25
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -183,7 +183,7 @@
     0.5
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -196,7 +196,7 @@
     0.75
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -209,7 +209,7 @@
     1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   },
@@ -221,7 +221,7 @@
     1.0
    ],
    "action": [
-    0.28,
+    0.2,
     0
    ]
   }
@@ -231,7 +231,7 @@
    "car": 1,
    "metric": "maxNoseUpDeg",
    "min": 0,
-   "max": 3
+   "max": 5
   },
   {
    "car": 1,

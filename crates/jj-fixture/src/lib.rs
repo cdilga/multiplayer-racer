@@ -83,8 +83,8 @@ pub struct Fixture {
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     /// How the raw `stick` / `action` spans are read: `"dual"` (R116, the default: the right stick steers on x and
-    /// flicks on y, the left stick drifts on x and boosts at the rim) or `"classic"` (the old one-stick layout, a
-    /// personal setting: the left stick steers, the right stick's sectors boost, drift, fire).
+    /// flicks on y, the left stick's x does nothing) or `"classic"` (the old one-stick layout, a
+    /// personal setting: the left stick steers, the right stick's sectors boost, fire).
     #[serde(default)]
     pub layout: Option<String>,
     #[serde(default)]
@@ -167,12 +167,12 @@ fn all_baselines() -> Vec<BaselineKind> {
 pub enum BaselineKind {
     /// No scripted input at all.
     NoInput,
-    /// Every car's sticks thrown somewhere new every 50 ms (seeded): DRIVE anywhere, ACTION drifting or boosting at
+    /// Every car's sticks thrown somewhere new every 50 ms (seeded): DRIVE anywhere, ACTION boosting at
     /// random.
     Mash,
     /// Every car holds its first scripted input for the whole run.
     Hold,
-    /// The same inputs without the ACTION stick: no drift, no boost (§7.3a "faster with boost than without").
+    /// The same inputs without the ACTION stick: no boost (§7.3a "faster with boost than without").
     NoAction,
     /// The same inputs with boost held throughout (§7.3a "boost-forever isn't the best line").
     BoostForever,
@@ -350,9 +350,6 @@ pub struct InputSpan {
     /// Hold the brakes at rest without selecting reverse (parking/landing fixtures).
     #[serde(default)]
     pub no_reverse: bool,
-    /// ACTION left held: the handbrake drift (P1-S03b).
-    #[serde(default)]
-    pub drift: bool,
     /// ACTION right held: boost (P1-S03b).
     #[serde(default)]
     pub boost: bool,
@@ -361,7 +358,7 @@ pub struct InputSpan {
     /// detected the real way; between its stick spans it reads neutral.
     #[serde(default)]
     pub stick: Option<[f32; 2]>,
-    /// The raw ACTION stick alongside `stick` (x right boosts, left drifts).
+    /// The raw ACTION stick alongside `stick` (x right boosts).
     #[serde(default)]
     pub action: Option<[f32; 2]>,
     /// The touch is cancelled for this span (a `pointercancel`: the source reads unavailable, so its sticks are
@@ -703,7 +700,6 @@ impl Harness {
                                 s.drive.throttle,
                                 s.drive.steer,
                                 s.drive.brake,
-                                s.drift,
                                 s.boost,
                             )
                         }
@@ -732,7 +728,6 @@ impl Harness {
                 throttle: quantise_axis(i.throttle),
                 steer: quantise_axis(i.steer),
                 brake: quantise_axis(i.brake.max(0.0)),
-                drift: i.drift,
                 boost: i.boost,
                 no_reverse: i.no_reverse,
             });

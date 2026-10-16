@@ -16,12 +16,14 @@
   {
    "faster": "plain",
    "slower": "over",
-   "byS": 0.05
+   "byS": 0.05,
+   "gap": "P1-FL04.2 (R138): the arcade controller is forgiving on landing, so landing tipped the other way (over) no longer costs speed (well 5.43 s, plain 5.46 s, over 5.38 s to the gate). R129's landing tiers (bad landing loses speed or spins) are P1-FL07 (br-bbki.7), which closes this gap."
   },
   {
    "faster": "well",
    "slower": "over",
-   "byS": 0.1
+   "byS": 0.1,
+   "gap": "P1-FL04.2 (R138): the arcade controller is forgiving on landing, so landing tipped the other way (over) no longer costs speed (well 5.43 s, plain 5.46 s, over 5.38 s to the gate). R129's landing tiers (bad landing loses speed or spins) are P1-FL07 (br-bbki.7), which closes this gap."
   },
   {
    "faster": "well",

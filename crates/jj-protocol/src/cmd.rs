@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use crate::DecodeError;
 
 /// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
-/// 3: `HostCmd::StartLaunch` (R127 gated start).
-pub const CMD_VERSION: u8 = 3;
+/// 3: `HostCmd::StartLaunch` (R127 gated start). 4: `InputThresholds` lost the `drift_*` fields (R128, no drift input).
+pub const CMD_VERSION: u8 = 4;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -282,11 +282,6 @@ pub enum LaunchOutcome {
 pub struct InputThresholds {
     pub steer_radial_deadzone: u16,
     pub steer_gamma: u16,
-    pub drift_enter_angle: u16,
-    pub drift_enter_deflection: u16,
-    pub drift_exit_angle: u16,
-    pub drift_exit_deflection: u16,
-    pub drift_max_pull_back: u16,
     pub launch_snap_to: u16,
     pub launch_snap_window_ms: u32,
     pub launch_cooldown_ms: u32,

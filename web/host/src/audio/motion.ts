@@ -22,7 +22,7 @@ export const MOTION = {
   squealSpeedMin: 4,
   squealSpeedFull: 14,
   squealGain: 0.5,
-  /** Squeal level when sliding without the drift flag (a scrub), against a flagged drift. */
+  /** Squeal level when scrubbing without the slide flag, against a flagged slide. */
   scrubShare: 0.6,
   squealHz: { min: 900, max: 2600 },
   /** Per surface: squeal share and pitch share, rolling layers (hum / rumble / crunch gains, rumble low-pass Hz, crunch band Hz). */
@@ -43,9 +43,6 @@ export const MOTION = {
   windHighM: 6,
   windGain: 0.55,
   windHz: { min: 350, max: 2200 },
-  /** The exit boost belongs to a drift that ended this recently (s); its size grows with the drift held, to this many s. */
-  exitWindowS: 0.6,
-  exitFullHeldS: 3,
   /** The engine's throttle share while the wheels are off the ground (it unloads). */
   airThrottle: 0.15,
 } as const;
@@ -135,7 +132,7 @@ export class MotionTracker {
 export interface MotionCar {
   car: number;
   speed: number;
-  drifting: boolean;
+  sliding: boolean;
   surface: number;
   slip: number;
   airborne: boolean;
@@ -164,7 +161,7 @@ export function motionLevels(f: MotionCar): Omit<MotionLevels, 'voiced'> {
   const grounded = !f.airborne && !f.held;
   const speedN = smooth(MOTION.squealSpeedMin, MOTION.squealSpeedFull, f.speed);
   const slipN = smooth(MOTION.slipMin, MOTION.slipFull, f.slip);
-  const share = f.drifting ? 1 : MOTION.scrubShare;
+  const share = f.sliding ? 1 : MOTION.scrubShare;
   const squeal = grounded ? MOTION.squealGain * Math.pow(slipN, 1.2) * speedN * share * sp.squeal : 0;
   const squealHz = MOTION.squealHz.min + (MOTION.squealHz.max - MOTION.squealHz.min) * (0.6 * slipN + 0.4 * speedN) * sp.pitch;
   const roll = grounded ? MOTION.rollGain * Math.pow(Math.min(1, f.speed / MOTION.rollSpeedFull), 0.8) : 0;

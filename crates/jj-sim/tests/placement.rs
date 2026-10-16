@@ -208,12 +208,14 @@ fn a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state() {
         through_start_line(&mut s, &map, c);
     }
     let mut last_progress = Vec::new();
-    for _ in 0..(6 * S) {
+    // P1-FL04.2: 3.5 s at gentler throttles. On the arcade controller every wheel drives, so 6 s at the old throttles took
+    // all three cars to the hairpin wall before the drop-in.
+    for _ in 0..(7 * S / 2) {
         for (i, &c) in cars.iter().enumerate() {
             s.set_input(
                 c,
                 DriveInput {
-                    throttle: [30_000, 24_000, 16_000][i],
+                    throttle: [14_000, 10_000, 6_000][i],
                     steer: 0,
                     brake: 0,
                     ..Default::default()

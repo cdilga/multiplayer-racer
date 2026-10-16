@@ -1,5 +1,5 @@
 // The Feel Lab tab of the owner tuning menu (P1-FL03, R131). Choose a handling preset (assets/profiles/handling-presets.json:
-// Off is today's car), move a few trade-off sliders that each scale several underlying tuning values at once, and flip the
+// Off is the shipped arcade controller, P1-FL04.2), move a few trade-off sliders that each scale several underlying tuning values at once, and flip the
 // whole setup between two saved slots (A/B) while the cars keep driving. Everything is applied to EVERY roster vehicle, so the
 // grid drives one setup, by the panel's own path: `tune-vehicle:` + `tune:` UI commands, journalled in the sim, and counted
 // in the panel's changes, so Export patch carries the lab's setup as ordinary `set` rows (the handling section as one
@@ -60,7 +60,7 @@ const times = (m: number) => `${round(m).toFixed(2)}x`;
 function summary(s: Setup | null): string {
   if (!s) return 'empty';
   const moved = SLIDERS.filter((x) => Math.abs((s.m[x.id] ?? 1) - 1) > 0.005).map((x) => `${(x.label.split(' ')[0] ?? '').toLowerCase()} ${times(s.m[x.id] ?? 1)}`);
-  return `${s.preset === OFF ? 'Off' : s.preset}${moved.length ? `, ${moved.join(', ')}` : ', sliders at 1x'}`;
+  return `${s.preset === OFF ? 'Shipped' : s.preset}${moved.length ? `, ${moved.join(', ')}` : ', sliders at 1x'}`;
 }
 
 function leafMap(obj: Record<string, unknown>, prefix = ''): Map<string, number> {
@@ -98,7 +98,7 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
   pane.innerHTML = `
     <h4>Handling preset <small>every vehicle</small></h4>
     <div class="lab-presets" role="radiogroup" aria-label="Handling preset">
-      ${[{ id: OFF, name: 'Off', what: "Today's car: Rapier's own side friction, no arcade handling layer." }, ...PRESETS.map((p) => ({ id: p.id, name: p.id.charAt(0).toUpperCase() + p.id.slice(1), what: p.what }))]
+      ${[{ id: OFF, name: 'Shipped', what: 'The arcade car controller every car ships with (FL04.2): turn-in, grip and slides authored, not a tyre model.' }, ...PRESETS.map((p) => ({ id: p.id, name: p.id.charAt(0).toUpperCase() + p.id.slice(1), what: p.what }))]
         .map((p) => `<button type="button" role="radio" aria-checked="false" data-lab-preset="${p.id}"><b>${p.name}</b><span>${p.what}</span></button>`)
         .join('')}
     </div>
@@ -136,7 +136,7 @@ export function mountFeelLab(pane: HTMLElement, panel: LabPanel): { inspect: () 
       input.disabled = off;
       q<HTMLButtonElement>(`[data-lab-one="${s.id}"]`).disabled = off || m === 1;
       pane.querySelector(`[data-lab-row="${s.id}"]`)!.classList.toggle('off', off);
-      q(`[data-lab-note="${s.id}"]`).textContent = off ? 'Pick Kart, Rally or Hooligan first: Off has no handling layer to tune.' : s.hint;
+      q(`[data-lab-note="${s.id}"]`).textContent = off ? 'Pick Kart, Rally or Hooligan first: this slider tunes their tyre layer, not the shipped controller.' : s.hint;
       const eff = s.fields
         .map(([path, dir]) => {
           const base = effectiveBase(path, sel);

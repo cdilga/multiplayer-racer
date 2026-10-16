@@ -28,7 +28,7 @@ export interface Cluster {
   id: number;
   label: string;
   drive: Stick;
-  action: Stick;
+  action: { up: string; down: string };
   identify: string;
   ready: string;
 }
@@ -98,9 +98,9 @@ export class KeyCluster {
     const step = STEER_RATE * dt;
     this.steer = want === 0 ? 0 : Math.max(-1, Math.min(1, this.steer + Math.sign(want) * step));
     // R116 (as the host's clusters): the cluster's drive keys are throttle and brake (y) and steer (the right stick's x); its action
-    // keys are the drift (the left stick's x) and the forward and back flick (the right stick's y).
+    // keys are the forward and back flick (the right stick's y); the left stick's x is nothing (R128, no drift).
     return {
-      drive: { x: h(c.action.right) - h(c.action.left), y: h(c.drive.down) - h(c.drive.up) },
+      drive: { x: 0, y: h(c.drive.down) - h(c.drive.up) },
       action: { x: this.steer, y: h(c.action.down) - h(c.action.up) },
       identify: this.held.has(c.identify),
       ready: this.held.has(c.ready),

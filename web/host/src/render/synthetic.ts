@@ -24,7 +24,7 @@ export interface SyntheticOptions {
   damage?: boolean;
   /** The damage strip (P1-V03): cars parked side by side, side-on to the overview camera, each in one state. */
   strip?: boolean;
-  /** The effects demo (P1-R12; `?fxdemo`): cars cycle through the families' triggers (dirt and gravel driving, a drift, a
+  /** The effects demo (P1-R12; `?fxdemo`): cars cycle through the families' triggers (dirt and gravel driving, a slide, a
    *  boost, impacts, landings, a part coming off) and a husk burns beside the oval. Presentation fixtures only. */
   fxDemo?: boolean;
   /** Cars take the roster's vehicles in turn (R123; `?vehicles=mixed`), so a grid shows every model; otherwise all draw the first. */
@@ -155,7 +155,7 @@ export function fxDemoState(i: number, n: number, tick: number): Pick<CarPose, '
   let throttle = 1;
   const cycle = tick % (4 * TICK_HZ);
   if (kind === 0) flags = 1 << 6; // dirt
-  else if (kind === 1) flags = 32; // drifting on tarmac
+  else if (kind === 1) flags = 32; // sliding on tarmac
   else if (kind === 2) [flags, boost] = [16 | 0, i % 12 === 2 ? 1 : 0.5]; // boosting (blue at full)
   else if (kind === 3) flags = 2 << 6; // gravel
   else if (kind === 4) {

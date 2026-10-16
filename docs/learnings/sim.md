@@ -406,3 +406,24 @@ not feel targets.
   silently left out** (`if let Ok(..)` in `Sim::new`); `tests/setpieces.rs` rays every kicker and landing to catch it.
 - **Autopilot air control (R129):** throttle in the air noses the car down (`air_torque`), so an autopilot that kept its
   throttle on nosed into landings. It now pitches to the road's grade ~0.6 s ahead.
+
+## The arcade car controller (P1-FL04.2)
+
+- **Pure pursuit must map curvature to stick through the car's real lock.** The autopilot and the assists divided the
+  wheel angle by `max_steer_rad` while the car eases its lock with speed (`steer_falloff_mps`), so at 37 m/s every line
+  correction came out a third of its size: assisted learners drifted 12 m off the straight and missed the start gate.
+  Pass `VehicleProfile::steer_lock(speed)`.
+- **A yaw ask that scales the lateral cap with the stick feels numb near centre at speed.** Ask for the kinematic turn
+  of a speed-eased lock and only cap it at `turn_g` / `yaw_max`: a small stick is a small turn, full stick the full turn.
+- **Hold the rear axle on its line, not the centre of mass.** Nulling the CoM's sideways velocity makes a gripping car
+  rotate about its middle and reads as 17° of rear slip in a plain 6 m/s turn.
+- **A yaw controller holds a stopped car straight into the wall it hit.** With Rapier's side friction off, nothing else
+  rotates it, so a car pushing against a wall, car or debris with steer on sat stuck until recovered. Stalled (driven
+  but not moving that way), it now pivots as if rolling at `pivot_mps`, at full authority. Braking a rolling car is not
+  a stall.
+- **Braking must never break grip.** A brake-plus-steer slide wrecked the autopilot (it brakes while turning into every
+  hairpin), and would wreck a learner the same way.
+- **A spawn at full throttle is not a punch.** The punch timer starts as "no recent lift", or the R122 bank's held-throttle
+  throws start a power slide and trip on rough ground.
+- **RCH env passthrough is not reliable for every variable.** A probe that read `JJ_PROBE` from the environment silently
+  returned early on some runs. Read probe settings from a scratch file under the crate instead.

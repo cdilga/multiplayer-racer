@@ -304,10 +304,6 @@ impl WasmEndpoint {
     pub fn boost_held(&self, idx: usize) -> bool {
         self.sources.get(idx).is_some_and(|s| s.semantics().boost)
     }
-    #[wasm_bindgen(js_name = driftHeld)]
-    pub fn drift_held(&self, idx: usize) -> bool {
-        self.sources.get(idx).is_some_and(|s| s.semantics().drift)
-    }
     #[wasm_bindgen(js_name = wheeliePreload)]
     pub fn wheelie_preload(&self, idx: usize) -> bool {
         self.sources

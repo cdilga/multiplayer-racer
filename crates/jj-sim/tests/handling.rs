@@ -29,6 +29,8 @@ fn skidpad() -> LoadedMap {
 /// The Cruz with a handling preset (`None`: as before FL04) and a drivetrain.
 fn car(handling: Option<&str>, drive: Drive) -> VehicleProfile {
     let mut p = VehicleProfile::cruz();
+    // FL04's bank compares its presets with Rapier's own side friction, not the shipped arcade controller (FL04.2).
+    p.tuning.arcade = None;
     p.tuning.handling = handling.map(|id| tuned(Handling::preset(id).expect("a preset")));
     p.tuning.drive = drive;
     p
