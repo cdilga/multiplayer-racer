@@ -5,13 +5,16 @@
     { "id": "cruz-missile", "name": "Cruz Missile", "cls": "Aussie classic", "blurb": "Honest all-rounder. Loves a kerb.", "art": "cruz-missile-hero.png", "stats": [6, 6, 7, 5] },
     { "id": "tradie-ute", "name": "Tradie Ute", "cls": "Work horse", "blurb": "Heavy, torquey and tough. Hauls itself out of anything.", "shape": "ute", "stats": [4, 7, 4, 8] },
     { "id": "hawk-dash", "name": "Hawk Dash", "cls": "Aussie V8", "blurb": "Rear-drive V8 with twin stripes. Punch it and the tail steps out.", "shape": "sedan", "spec": "aussie-v8", "stats": [8, 6, 5, 6] },
-    { "id": "lion-president", "name": "Lion President", "cls": "Aussie V8", "blurb": "The Hawk's old rival: the same V8 and the same grunt under a different body.", "shape": "sedan", "spec": "aussie-v8", "stats": [8, 6, 5, 6] }
+    { "id": "lion-president", "name": "Lion President", "cls": "Aussie V8", "blurb": "The Hawk's old rival: the same V8 and the same grunt under a different body.", "shape": "sedan", "spec": "aussie-v8", "stats": [8, 6, 5, 6] },
+    { "id": "postie-bike", "name": "Postie Bike", "cls": "Delivery run", "blurb": "Nippy step-through with a full mail run on the back. Gets everywhere, eventually.", "shape": "bike", "stats": [3, 7, 8, 4] },
+    { "id": "pig-catcher", "name": "Pig Catcher", "cls": "Outback trail bike", "blurb": "Tall, light and hungry for air. Wheelies on request.", "shape": "bike", "stats": [6, 8, 6, 3] }
   ],
   "shapes": {
     "sedan": "M14 62 L22 44 L58 40 L84 22 L134 20 L160 40 L188 46 L192 62 Z",
     "hatch": "M16 62 L22 42 L66 38 L92 20 L140 18 L168 42 L184 48 L186 62 Z",
     "ute": "M10 62 L12 38 L92 38 L94 20 L132 18 L158 40 L190 46 L192 62 Z",
     "wagon": "M12 64 L14 24 L132 18 L160 38 L190 44 L192 64 Z",
-    "kart": "M24 64 L30 52 L84 48 L96 34 L112 34 L120 48 L176 52 L182 64 Z"
+    "kart": "M24 64 L30 52 L84 48 L96 34 L112 34 L120 48 L176 52 L182 64 Z",
+    "bike": "M46 60 L74 36 L96 34 L108 14 L126 14 L124 32 L150 34 L166 56 L134 60 L66 60 Z"
   }
 }

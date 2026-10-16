@@ -293,7 +293,7 @@
     "massKg": 230,
     "drive": "Rear",
     "accel": {
-      "value": 11,
+      "value": 22.61,
       "unit": "m/s2",
       "note": "engine force over mass at launch: an upper bound, drag and traction not included"
     },
@@ -313,7 +313,7 @@
       "maxBrakeForceN": 3659
     },
     "boost": {
-      "engineGain": 0.6,
+      "engineGain": 0.9,
       "drainPerS": 0.35,
       "rechargePerS": 0.12
     },

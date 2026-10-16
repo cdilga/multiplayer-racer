@@ -76,9 +76,7 @@ These are not the host renderer, a real TV or a real phone. Every image named be
 
 ## Not covered
 
-- **The bikes aren't roster rows yet, so they can't be picked or driven.** Their profiles exist, synced from the bakes and tuned from
-  the two-wheel fixture with gains rescaled to these bodies. But the shared tree holds the R136 handling schema change uncommitted, so
-  the sim tests that every roster vehicle runs can't be run honestly here: the R122 handling bank, the fun launch/speed test and the
-  mixed roster. The roster rows and those tests follow when it lands, and this bead stays open until then.
+- **Racing in a real round on a real map:** both bikes are roster rows and pass the roster's sim tests (handling bank, launch and speed, the
+  mixed roster), but nobody has raced one on the TV, and their balance against the cars is br-bwju.6's to measure.
 - **Engine sounds:** the two profiles pass the validator. Nobody has listened to them.
 - **The host renderer in a real round**, real phones and a real TV: Playwright Chromium only.

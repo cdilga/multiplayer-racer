@@ -1,4 +1,4 @@
-Vehicle Model Validation: PASS (with the silhouette WARN below; the sim run follows with the roster row)
+Vehicle Model Validation: PASS (with the silhouette WARN below)
 
 Vehicle/part IDs: pig-catcher; core (frame, tank and side plastics, seat, engine, exhaust, bars with hand guards), front (forks, beaked front mudguard, number-plate shroud and headlamp, the light bar with two spotlights), back (rear mudguard, tail lamp, the rack with a coiled rope and a hessian sack), rider (green MX helmet with peak and goggles, khaki shirt, jeans, boots), wheel_F, wheel_R
 Commit: the br-bwju.5 commit on v0.2-revamp (this file ships in it)
@@ -32,9 +32,13 @@ Checks run:
 - profile: assets/profiles/pig-catcher.json geometry synced from the sidecar (jj vehicle sync: the bike part order, two wheels), tuning from
   the two-wheel sim fixture (br-bwju.4) with its balance and levelling gains rescaled to this body's inertia envelope
   (1.07 x 1.92 x 2.79 m, 230 kg) at the fixture's response frequencies, forces scaled by mass
-- NOT run: the roster's sim tests with this bike (R122 handling bank, fun launch/speed, mixed roster). The profile is not a roster
-  row yet: the shared tree holds the R136 handling schema change uncommitted, so a local sim build tests that schema, not HEAD's.
-  The roster row and those tests follow when it lands (this bead stays open until then).
+- roster row added once the R136 handling schema landed (27859cc5, ccffaa1d; this profile migrated by PeachSpire), then, on RCH:
+  - cargo test -p jj-sim --test roster --test bikes --test fun: pass (every roster vehicle built from and driven by its own profile;
+    the two-wheel bank; launch: Postie 0-100 km/h 2.0 s and 142 km/h at 150 m, Pig Catcher 1.7 s and 154 km/h, boost worth having)
+  - cargo test --release -p jj-procgen --test handling: both bikes' flat bank (worst roll under 9 degrees) and the generated-road bank
+    (no dives, no roll-overs) pass
+  - jj-wasm-host's mixed-roster hash is the same with and without the bike rows (only the first two vehicles are picked)
+- The power was raised from the fixture's (the bikes were 60-70 % of the cars' speed); R123's balance (br-bwju.6) measures it on maps
 
 Findings:
 - PASS contract + reproducibility (validator clean on the bike part set, origin on the ground between the axles, wheels on the centreline, anchors cam_fp, cam_tp_target, com, roof_number (the rider's back), lplate_front, lplate_rear; no badges, logos or real names)
@@ -47,4 +51,4 @@ Findings:
 - WARN detail: the engine is a plain dark box; from the side the raked shroud plates cross the fork line as an 'X'; the beak mudguard is a single slab; the rope coil hides behind the sack in most 3/4 views; LOD2's spots are 4-gons and its tail lamp goes
 
 Remaining blockers:
-- the roster row and the sim tests (R122 handling bank, fun, mixed roster) with this profile, after the R136 handling schema lands
+- none for the model, the gate and the roster row
