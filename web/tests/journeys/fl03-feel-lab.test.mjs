@@ -86,7 +86,10 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const ids = (await lab()).vehicles;
     assert.ok(ids.length >= 2, `the roster has several vehicles (${ids})`);
     const home = await host.evaluate(() => document.querySelector('[data-tune-vehicle]').value);
-    const idle = (host_) => wait(host_, () => !/Applying/.test(window.__jjTune.lab.inspect().status), undefined, 5000);
+    // The lab applies a change vehicle by vehicle at tick boundaries (~1 s each on a loaded CI host): the waits allow that
+    // ceiling per slider, and the asserts below judge the time against it (a 5 s wait timed out first with six vehicles).
+    const ceiling = 1000 * Math.max(4, ids.length);
+    const idle = (host_) => wait(host_, () => !/Applying/.test(window.__jjTune.lab.inspect().status), undefined, 3 * ceiling);
 
     /** The sim's value for a vehicle: the panel reads it back from the worker once that vehicle is selected. */
     const simValue = async (vehicle, path) => {
@@ -119,13 +122,13 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     const move = async (id, log2) => {
       const t0 = Date.now();
       await slide(host, id, log2);
-      await wait(host, ([sid, want]) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m[sid] - 2 ** want) < 1e-6 && !/Applying/.test(i.status); }, [id, log2], 5000);
+      await wait(host, ([sid, want]) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m[sid] - 2 ** want) < 1e-6 && !/Applying/.test(i.status); }, [id, log2], 2 * ceiling);
       return Date.now() - t0;
     };
     const flip = async (button, turn) => {
       const t0 = Date.now();
       await host.locator(button).click();
-      await wait(host, (w) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m.turn - w) < 1e-6 && !/Applying/.test(i.status); }, turn, 5000);
+      await wait(host, (w) => { const i = window.__jjTune.lab.inspect(); return i.applied && Math.abs(i.applied.m.turn - w) < 1e-6 && !/Applying/.test(i.status); }, turn, 2 * ceiling);
       return Date.now() - t0;
     };
 
@@ -146,7 +149,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     // CI runner takes ~2 s; 4 s still reads live.
     const tm = 2 ** 0.6;
     let ms = await move('turn', 0.6);
-    assert.ok(ms < 1000 * Math.max(4, ids.length), `Turn-in reached every vehicle in ${ms} ms`);
+    assert.ok(ms < ceiling, `Turn-in reached every vehicle in ${ms} ms`);
     await scaled('arcade.turn_g', turnBase, tm, 'Turn-in slider');
     await scaled('arcade.yaw_max_deg_s', yawBase, tm, 'Turn-in slider');
     await scaled('arcade.turn_in_s', turnInBase, 1 / tm, 'Turn-in slider');
@@ -156,7 +159,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     // Grip slidier (log2 -0.5): grip_g and the grip a slide keeps, on every vehicle.
     const gm = 2 ** -0.5;
     ms = await move('grip', -0.5);
-    assert.ok(ms < 1000 * Math.max(4, ids.length), `Grip reached every vehicle in ${ms} ms`);
+    assert.ok(ms < ceiling, `Grip reached every vehicle in ${ms} ms`);
     await scaled('arcade.grip_g', gripBase, gm, 'Grip slider');
     await scaled('arcade.slide_grip', slideGripBase, gm, 'Grip slider');
     await scaled('arcade.turn_g', turnBase, tm, 'Turn-in is untouched by the grip slider');
@@ -174,7 +177,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
     // A = turn 1.5x, slidier grip, 1.5x power; B = every slider at 1x. Flip live.
     await host.locator('[data-lab-save="A"]').click();
     for (const id of ['turn', 'grip', 'power']) await slide(host, id, 0);
-    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return Object.values(i.applied.m).every((v) => v === 1) && !/Applying/.test(i.status); }, undefined, 5000);
+    await wait(host, () => { const i = window.__jjTune.lab.inspect(); return Object.values(i.applied.m).every((v) => v === 1) && !/Applying/.test(i.status); }, undefined, 3 * ceiling);
     await host.locator('[data-lab-save="B"]').click();
     await scaled('arcade.turn_g', turnBase, 1, 'back to 1x');
     await scaled('arcade.grip_g', gripBase, 1, 'back to 1x');
@@ -185,7 +188,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]) {
       flips.push(await flip(`[data-lab-flip="${k}"]`, k === 'A' ? tm : 1));
       await moving(`after flipping to ${k}`);
     }
-    assert.ok(Math.max(...flips) < 1000 * Math.max(4, ids.length), `A/B flips applied in ${flips} ms`); // ~1 s per vehicle (each switch lands at a tick boundary)
+    assert.ok(Math.max(...flips) < ceiling, `A/B flips applied in ${flips} ms`); // ~1 s per vehicle (each switch lands at a tick boundary)
     await scaled('arcade.turn_g', turnBase, tm, 'slot A is live');
     await scaled('arcade.grip_g', gripBase, gm, 'slot A is live');
     await scaled('max_engine_force', base, tm, 'slot A power');
