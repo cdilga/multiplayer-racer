@@ -156,6 +156,8 @@ export class Session {
   private lostAt = 0;
   private relayTimer: ReturnType<typeof setInterval> | undefined;
   private relayGaveUpAt = 0;
+  /** Cuts the wait for `/version` short when the network comes back. */
+  private wakeVersion: (() => void) | undefined;
   private drive: Stick = { x: 0, y: 0, touch: false };
   private action: Stick = { x: 0, y: 0, touch: false };
   private tabs: BroadcastChannel | null = null;
@@ -196,12 +198,34 @@ export class Session {
     this.code = code.toUpperCase();
     this.set('finding');
     await loadInput();
-    try {
-      const v = (await (await fetch(underBase('version'), { cache: 'no-store' })).json()) as { build: string; realm: string };
-      this.realm = v.realm;
-      this.build = v.build;
-    } catch {
-      // Defaults stand; the server will say what it needs.
+    window.addEventListener('online', this.onOnline);
+    window.addEventListener('pageshow', this.onOnline);
+    // The realm names this seat's stored identity: a page reloaded before its network is back waits for it rather than
+    // looking under the default realm and claiming a new seat.
+    for (let wait = 500; ; wait = Math.min(wait * 2, 5_000)) {
+      let r: Response;
+      try {
+        r = await fetch(underBase('version'), { cache: 'no-store' });
+      } catch {
+        this.set('connecting');
+        await new Promise<void>((resolve) => {
+          const t = setTimeout(() => this.wakeVersion?.(), wait);
+          this.wakeVersion = () => {
+            clearTimeout(t);
+            this.wakeVersion = undefined;
+            resolve();
+          };
+        });
+        continue;
+      }
+      try {
+        const v = (await r.json()) as { build: string; realm: string };
+        this.realm = v.realm;
+        this.build = v.build;
+      } catch {
+        // Defaults stand; the server will say what it needs.
+      }
+      break;
     }
     this.persisted = this.store !== null;
     try {
@@ -229,10 +253,15 @@ export class Session {
     this.rawLink = link;
     this.stored ??= { endpointId: link.endpointId, secret: link.secret, requestId: 1 + Math.floor(Math.random() * 1e9), seated: false };
     this.save();
+    document.addEventListener('visibilitychange', this.onVisibility);
     try {
-      await link.join(this.code);
+      // A dead network says nothing about the room: keep trying (shown as connecting) until the server answers.
+      await link.joinRetrying(this.code, () => {
+        if (this.rawLink === link) this.set(this.you ? 'reconnecting' : 'connecting');
+      });
     } catch (e) {
       const msg = (e as Error).message;
+      if (msg === 'stopped' || this.rawLink !== link) return;
       if (msg === 'room-ended') return this.ended();
       if (e instanceof ApiError && (e.status === 410 || e.reason === 'preview-expired')) return this.set('preview-expired');
       if (msg === 'room-not-found') {
@@ -243,7 +272,6 @@ export class Session {
       }
       this.set('no-route');
     }
-    document.addEventListener('visibilitychange', this.onVisibility);
     this.pollTimer = setInterval(() => this.poll(), POLL_MS);
     this.watchRelay();
   }
@@ -680,6 +708,12 @@ export class Session {
     this.set('room-ended');
   }
 
+  /** The network came back (or a bfcache page was shown): retry a waiting join now rather than at the end of its backoff. */
+  private onOnline = (): void => {
+    this.wakeVersion?.();
+    if (!this.parent) this.link?.resume();
+  };
+
   private onVisibility = (): void => {
     for (const k of [...this.kids.values()]) k.onVisibility();
     if (this.endpoint && this.srcIdx >= 0) {
@@ -723,6 +757,8 @@ export class Session {
     clearInterval(this.pollTimer);
     clearInterval(this.relayTimer);
     document.removeEventListener('visibilitychange', this.onVisibility);
+    window.removeEventListener('online', this.onOnline);
+    window.removeEventListener('pageshow', this.onOnline);
     this.rawLink?.end();
     this.rawLink = null;
   }

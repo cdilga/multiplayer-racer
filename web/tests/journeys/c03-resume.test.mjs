@@ -5,7 +5,7 @@ import { confirmInitialVehicle } from './lib/vehicle.mjs';
 //   node --test web/tests/journeys/c03-resume.test.mjs
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
@@ -97,6 +97,55 @@ test('reloading the tab returns the same seat; a second tab fences the first and
   await wait(second, () => window.__jjController.inspect().phase === 'another-tab');
   assert.equal((await seats(host)).length, 1, 'one seat the whole time');
 });
+
+// br-bxsc (owner 2026-10-16): a phone reloaded (or woken) before its network is back used to stop at "Can't reach the
+// host" until a tap. The page comes from cache; every request it makes fails as a dead network does (a TypeError).
+for (const engine of ['chromium', 'webkit']) {
+  test(`${engine}: reloaded while offline, the phone keeps connecting and is back in its seat once the network returns, no tap`, { timeout: 180_000 }, async () => {
+    const { host, joinUrl } = await openHost();
+    const phoneBrowser = engine === 'webkit' ? await webkit.launch() : browser;
+    try {
+      const ctx = await phoneBrowser.newContext({ hasTouch: true, isMobile: engine === 'chromium', viewport: { width: 844, height: 390 } });
+      const page = await ctx.newPage();
+      await page.goto(joinUrl);
+      await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join', undefined, 60_000);
+      await page.locator('#name').fill('Marlene');
+      await page.getByRole('button', { name: 'Join the race' }).click();
+      await wait(page, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
+      await confirmInitialVehicle(page);
+      const before = (await inspect(page)).you;
+      const offline = (route) => route.abort('internetdisconnected');
+      const apis = new RegExp(`${BASE}(api/|version)`);
+      await page.route(apis, offline);
+      await page.reload();
+      // Long enough for the old code to give up; the retries (0.5, 1, 2, 4 s) keep going.
+      const phases = new Set();
+      for (let t = 0; t < 8; t += 1) {
+        await page.waitForTimeout(1_000);
+        phases.add(await page.evaluate(() => window.__jjController?.inspect().phase));
+      }
+      console.log(`# ${engine} offline after reload: ${[...phases].join(', ')}`);
+      assert.ok(!phases.has('no-route'), `never "Can't reach the host" (${[...phases]})`);
+      assert.ok([...phases].every((p) => ['finding', 'connecting', 'reconnecting'].includes(p)), [...phases].join(', '));
+      assert.doesNotMatch(await page.evaluate(() => document.body.textContent), /Can.t reach the host/);
+      // The network returns: the browser's 'online' event retries at once, well inside the 5 s backoff it was waiting out.
+      await page.unroute(apis, offline);
+      const t0 = Date.now();
+      await page.evaluate(() => window.dispatchEvent(new Event('online')));
+      await wait(page, () => {
+        const s = window.__jjController.inspect();
+        return s.phase === 'playing' && s.link?.state === 'connected';
+      }, undefined, 10_000);
+      const ms = Date.now() - t0;
+      console.log(`# ${engine} back in the seat ${ms} ms after the network returned`);
+      assert.deepEqual((await inspect(page)).you, before, 'the same seat, number and colour');
+      assert.equal((await seats(host)).length, 1, 'no second seat');
+      await ctx.close();
+    } finally {
+      if (phoneBrowser !== browser) await phoneBrowser.close();
+    }
+  });
+}
 
 test('a Claim retried with the same request id (a lost reply) yields one seat', { timeout: 120_000 }, async () => {
   const { host, joinUrl } = await openHost();

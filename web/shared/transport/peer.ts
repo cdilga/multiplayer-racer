@@ -73,6 +73,16 @@ export interface ControllerEvents {
 }
 
 /** One controller endpoint's link to the host. */
+/** An answer about the room or this endpoint that a retry can't change. Anything else (a network TypeError, a 5xx, a
+ *  timeout, a failed offer) is worth another try. */
+export function definitive(e: unknown): boolean {
+  const msg = (e as Error | null)?.message;
+  if (msg === 'room-ended' || msg === 'room-not-found') return true;
+  if (!(e instanceof ApiError)) return false;
+  if (e.status === 410 || e.reason === 'preview-expired') return true;
+  return e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429 && !(e.status === 404 && e.reason === 'unknown-room');
+}
+
 export class ControllerLink {
   state: LinkState = 'idle';
   /** Seeded from the clock (tenths of a second since 2023-11), so a reloaded page with the same endpoint is always a
@@ -92,6 +102,10 @@ export class ControllerLink {
   restarts = 0;
   rebuilds = 0;
   offerRetries = 0;
+  /** Failed join attempts retried by `joinRetrying` (a phone that woke before its network did). */
+  joinRetries = 0;
+  /** Cuts a `joinRetrying` wait short: the network came back or the page was shown. */
+  private wakeJoin: (() => void) | undefined;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private recoveryTimer: ReturnType<typeof setTimeout> | undefined;
   private ended = false;
@@ -169,6 +183,11 @@ export class ControllerLink {
   async join(code: string): Promise<void> {
     this.set('joining');
     this.code = code.toUpperCase();
+    // A retried join replaces whatever the failed attempt got as far as opening.
+    this.stream?.stop();
+    this.stream = null;
+    clearTimeout(this.recoveryTimer);
+    this.recoveryTimer = undefined;
     const found = await api.lookup(this.code);
     if (found.status === 'ended') throw new Error('room-ended');
     if (found.status === 'not-found' || !found.roomId) throw new Error('room-not-found');
@@ -189,6 +208,41 @@ export class ControllerLink {
     });
     this.stream.start();
     await this.build();
+  }
+
+  /** `join`, retried until the server gives a definitive answer: a phone woken or reloaded before its Wi-Fi is back gets
+   *  a network TypeError, which says nothing about the room. Backs off 0.5 s doubling to 5 s; `resume()` (page shown,
+   *  `online`) retries at once. Throws the definitive answer, or `stopped` once `end()` is called. */
+  async joinRetrying(code: string, onRetry?: (e: unknown, waitMs: number) => void): Promise<void> {
+    let wait = 500;
+    for (;;) {
+      if (this.ended) throw new Error('stopped');
+      try {
+        return await this.join(code);
+      } catch (e) {
+        if (this.ended) throw new Error('stopped');
+        if (definitive(e)) throw e;
+        // Nothing of the failed attempt stays live while we wait: `resume()` must not try to recover its half-built pc.
+        this.stream?.stop();
+        this.trigger?.dispose();
+        this.trigger = null;
+        clearTimeout(this.recoveryTimer);
+        this.recoveryTimer = undefined;
+        this.pc?.close();
+        this.pc = null;
+        this.joinRetries += 1;
+        onRetry?.(e, wait);
+        await new Promise<void>((resolve) => {
+          const t = setTimeout(() => this.wakeJoin?.(), wait);
+          this.wakeJoin = () => {
+            clearTimeout(t);
+            this.wakeJoin = undefined;
+            resolve();
+          };
+        });
+        wait = Math.min(wait * 2, 5_000);
+      }
+    }
   }
 
   /** (Re-)registers the endpoint with backoff (a restarted server forgot it); same id and secret every time. */
@@ -363,6 +417,7 @@ export class ControllerLink {
 
   /** Page resume: check the link and recover straight away if it isn't connected. */
   resume(): void {
+    this.wakeJoin?.();
     if (this.pc && !this.healthy(this.pc)) {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = undefined;
@@ -408,6 +463,7 @@ export class ControllerLink {
 
   end(): void {
     this.ended = true;
+    this.wakeJoin?.();
     this.trigger?.dispose();
     clearTimeout(this.refreshTimer);
     clearTimeout(this.recoveryTimer);
@@ -436,6 +492,7 @@ export class ControllerLink {
       sse: this.stream?.state ?? 'closed',
       sseReconnects: this.stream?.reconnects ?? 0,
       registrations: this.registrations,
+      joinRetries: this.joinRetries,
       restarts: this.restarts,
       rebuilds: this.rebuilds,
       offerRetries: this.offerRetries,
