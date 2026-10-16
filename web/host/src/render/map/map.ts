@@ -31,6 +31,8 @@ import { finishBanner } from './banner';
 import { bowlDesign, bowlQuads } from './bowl';
 import { bridgeIndices, bridgeMesh } from './bridge';
 import { forkPath, forkSurface } from './fork';
+import { loopFrame, loopMesh } from './loop';
+import type { LoopShot } from '../../camera/rig';
 
 export interface Pose {
   x: number;
@@ -175,6 +177,7 @@ export class MapRenderer {
   private railMatrix = new Matrix4();
   private jumpRanges: { feature: number; from: number; to: number }[] = [];
   private bridgeRanges: { feature: number; from: number; to: number }[] = [];
+  private loopRanges: { feature: number; from: number; to: number }[] = [];
 
   /** Hash the actual uploaded jump triangles (R90), excluding paint and decorative walls. No work until queried. */
   jumpShapes(): { feature: number; triangles: number; fingerprint: string }[] {
@@ -183,6 +186,11 @@ export class MapRenderer {
 
   bridgeShapes(): { feature: number; triangles: number; fingerprint: string }[] {
     return this.shapeFingerprints(this.bridgeRanges);
+  }
+
+  /** The uploaded loop triangles (jj-map `looping::loop_mesh`), hashed like `bridgeShapes`. */
+  loopShapes(): { feature: number; triangles: number; fingerprint: string }[] {
+    return this.shapeFingerprints(this.loopRanges);
   }
 
   private shapeFingerprints(ranges: {feature:number;from:number;to:number}[]): {feature:number;triangles:number;fingerprint:string}[] {
@@ -307,6 +315,11 @@ export class MapRenderer {
     for (const f of this.map.features) if (f.kind === 'bridge') {
       const ix = bridgeIndices(this.map,f.params);
       for (const i of ix.slice(0,-1)) elevated.add(i);
+    }
+    // No road under a loop: the deck carries the car from the entry to the exit point.
+    for (const f of this.map.features) if (f.kind === 'loop') {
+      const { entry, exit } = f.params;
+      if (Number.isInteger(entry) && Number.isInteger(exit)) for (let i = entry!; i < exit!; i++) elevated.add(i);
     }
     // No road over a set piece's gap (jj-map `setpiece::gap_points`): the ribbon stops under the kicker's lip and
     // starts again at the far rim.
@@ -610,6 +623,19 @@ export class MapRenderer {
         }
         continue;
       }
+      if (f.kind === 'loop') {
+        const mesh = loopMesh(this.map, f.params);
+        if (mesh) {
+          const from = s.pos.length;
+          for (const [i, tri] of mesh.triangles.entries()) {
+            // Deck in the road's colour, barriers white (as a bridge).
+            const colour = mesh.beams[i] ? '#f2efe6' : SURFACE_COLOURS[mesh.surfaces[i]!] ?? SURFACE_COLOURS.tarmac!;
+            s.tri(mesh.vertices[tri[0]!]!, mesh.vertices[tri[1]!]!, mesh.vertices[tri[2]!]!, colour);
+          }
+          this.loopRanges.push({ feature, from, to: s.pos.length });
+        }
+        continue;
+      }
       if (f.kind === 'fork') {
         this.fork(s, f.params);
         continue;
@@ -765,6 +791,17 @@ export class MapRenderer {
   };
 
   /** The `collides` dressing as oriented boxes: what the chase cameras pull in front of (P1-R05). */
+  /** Each loop's frame for the chase camera's loop shot (camera/rig.ts `LoopShot`). */
+  loopShots(): LoopShot[] {
+    const shots: LoopShot[] = [];
+    for (const f of this.map.features) if (f.kind === 'loop') {
+      const fr = loopFrame(this.map, f.params);
+      if (fr) shots.push({ entry: new Vector3(...fr.e), forward: new Vector3(fr.forward[0], 0, fr.forward[1]), left: new Vector3(fr.left[0], 0, fr.left[1]),
+        runOut: fr.runOut, shift: fr.shift, radius: f.params.radiusMm! / 1000, halfWidth: fr.halfWidth, rise: fr.yExit - fr.e[1] });
+    }
+    return shots;
+  }
+
   obstacles(): { centre: Vector3; half: Vector3; inv: Quaternion }[] {
     return this.map.dressing
       .filter((d) => d.collides && ENTRIES[d.kitPiece])

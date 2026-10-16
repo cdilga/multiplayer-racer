@@ -15,7 +15,7 @@ export function loopFrame(map: MapJson, p: Params): Frame | null {
   const n = map.route.points.length, entry = p.entry!, exit = p.exit!;
   if (!Number.isInteger(entry) || !Number.isInteger(exit) || entry === 0 || entry >= exit || exit >= n) return null;
   const e = point(map, entry), before = point(map, entry - 1);
-  const [dx, dz] = [e[0] - before[0], e[2] - before[2]], len = Math.hypot(dx, dz);
+  const [dx, dz] = [e[0] - before[0], e[2] - before[2]], len = Math.sqrt(dx * dx + dz * dz);
   if (len < 1e-6) return null;
   const forward: [number, number] = [dx / len, dz / len], left: [number, number] = [forward[1], -forward[0]];
   const x = point(map, exit), [ex, ez] = [x[0] - e[0], x[2] - e[2]];
@@ -23,10 +23,24 @@ export function loopFrame(map: MapJson, p: Params): Frame | null {
 }
 
 const TAU = 2 * Math.PI;
+/** jj-map::looping::DECK_LIFT_M: the deck surface sits the road ribbon's lift off the centre line, along its normal. */
+const DECK_LIFT_M = 0.05;
+
+/** jj-map::looping::sin_cos: the series, with only + − × ÷, so the bits match Rust's (Math.sin's last bit differs). */
+export function sinCos(th: number): [number, number] {
+  const x = th > Math.PI ? th - TAU : th, x2 = x * x;
+  let s = 1, c = 1;
+  for (let k = 14; k >= 1; k--) {
+    const n = 2 * k;
+    s = 1 - x2 / (n * (n + 1)) * s;
+    c = 1 - x2 / ((n - 1) * n) * c;
+  }
+  return [x * s, c];
+}
 
 /** jj-map::looping::centre. */
 function centre(fr: Frame, r: number, t: number): V3 {
-  const th = TAU * t, along = fr.runOut * t + r * Math.sin(th), up = r * (1 - Math.cos(th)), lat = fr.shift * (t - Math.sin(th) / TAU);
+  const [sin, cos] = sinCos(TAU * t), along = fr.runOut * t + r * sin, up = r * (1 - cos), lat = fr.shift * (t - sin / TAU);
   return [fr.e[0] + fr.forward[0] * along + fr.left[0] * lat, fr.e[1] + (fr.yExit - fr.e[1]) * t + up, fr.e[2] + fr.forward[1] * along + fr.left[1] * lat];
 }
 
@@ -48,7 +62,7 @@ export function loopMesh(map: MapJson, p: Params): { vertices: number[][]; trian
   const secs = Array.from({ length: segs + 1 }, (_, k) => {
     const t = k / segs, h = 1e-3, tg = tangent(t);
     const normal = unit(sub(tangent(t + h), tangent(t - h)));
-    return { c: centre(fr, r, t), side: cross(normal, tg), normal };
+    return { c: add(centre(fr, r, t), scale(normal, DECK_LIFT_M)), side: cross(normal, tg), normal };
   });
   const vertices: number[][] = [], triangles: number[][] = [], beams: number[] = [];
   for (let beam = 0; beam < 3; beam++) {

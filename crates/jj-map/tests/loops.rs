@@ -93,10 +93,16 @@ fn the_deck_leaves_and_rejoins_the_road_and_is_upside_down_at_the_top() {
             f64::from(q.z) / 1000.0,
         ]
     };
-    // E and X, flat (normal straight up) where the deck meets the road.
-    assert!(near(secs[0].c, pt(d.entry), 1e-9), "{:?}", secs[0].c);
+    // E and X (the deck's surface the road ribbon's lift above them), flat (normal straight up) where the deck meets the
+    // road.
+    let on = |i: usize| {
+        let mut p = pt(i);
+        p[1] += looping::DECK_LIFT_M;
+        p
+    };
+    assert!(near(secs[0].c, on(d.entry), 1e-9), "{:?}", secs[0].c);
     assert!(
-        near(secs[d.segments].c, pt(d.exit), 1e-6),
+        near(secs[d.segments].c, on(d.exit), 1e-6),
         "{:?}",
         secs[d.segments].c
     );
@@ -107,10 +113,10 @@ fn the_deck_leaves_and_rejoins_the_road_and_is_upside_down_at_the_top() {
             s.normal
         );
     }
-    // The top, halfway round: 2R up, the surface facing down.
+    // The top, halfway round: 2R up (the surface its lift below that, facing down).
     let top = secs[d.segments / 2];
     assert!(
-        (top.c[1] - 2.0 * d.radius_m).abs() < 1e-6,
+        (top.c[1] - (2.0 * d.radius_m - looping::DECK_LIFT_M)).abs() < 1e-6,
         "top at {}",
         top.c[1]
     );
@@ -251,7 +257,7 @@ fn the_posted_speed_is_the_minimum_at_the_top_plus_the_climb() {
 
 /// The native mesh's render fingerprint (jj_map::jump::render_fingerprint), which the TS counterpart
 /// (web/host/src/render/map/loop.ts) must reproduce: web/host/tests/loop-parity.test.mjs holds it to the same value.
-pub const LOOP_FINGERPRINT: u64 = 0xa791_2684_1eaf_44ec;
+pub const LOOP_FINGERPRINT: u64 = 0x45d1_55fd_ea1c_1d0c;
 
 #[test]
 fn the_native_mesh_has_the_committed_fingerprint() {
@@ -263,4 +269,15 @@ fn the_native_mesh_has_the_committed_fingerprint() {
         fp, LOOP_FINGERPRINT,
         "the loop mesh changed: update LOOP_FINGERPRINT and the TS parity test together"
     );
+}
+
+#[test]
+fn the_shared_sin_cos_matches_libm_over_its_range() {
+    // looping::sin_cos replaces libm's (the renderer's port must get the same bits); it is as good as libm on −π..3π.
+    for k in 0..=4000 {
+        let th = -core::f64::consts::PI + 4.0 * core::f64::consts::PI * f64::from(k) / 4000.0;
+        let (s, c) = looping::sin_cos(th);
+        assert!((s - libm::sin(th)).abs() < 1e-15, "sin({th}) = {s}");
+        assert!((c - libm::cos(th)).abs() < 1e-15, "cos({th}) = {c}");
+    }
 }

@@ -113,6 +113,7 @@ async function boot(): Promise<void> {
     rails: () => world.map?.railPoses() ?? [],
     jumpShapes: () => world.map?.jumpShapes() ?? [],
     bridgeShapes: () => world.map?.bridgeShapes() ?? [],
+    loopShapes: () => world.map?.loopShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
     cameras: () => world.rig.inspect(),

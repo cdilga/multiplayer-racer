@@ -123,7 +123,8 @@ pub fn frame(map: &Map, d: &LoopDesign) -> Option<LoopFrame> {
     let e = point(map, d.entry);
     let before = point(map, d.entry - 1);
     let (dx, dz) = (e[0] - before[0], e[2] - before[2]);
-    let len = libm::hypot(dx, dz);
+    // sqrt, not hypot: sqrt is correctly rounded everywhere, so the renderer's port gets the same bits.
+    let len = libm::sqrt(dx * dx + dz * dz);
     if len < 1e-6 {
         return None;
     }
@@ -144,13 +145,37 @@ pub fn frame(map: &Map, d: &LoopDesign) -> Option<LoopFrame> {
 }
 
 const TAU: f64 = core::f64::consts::TAU;
+/// The deck surface sits this far off the centre line along its normal, m: the road ribbon's lift over the ground
+/// (web/host map.ts), so where the deck lies on the road at its ends it never z-fights the ground.
+pub const DECK_LIFT_M: f64 = 0.05;
+
+/// sin and cos of `th` (−π..3π) from their series in nested (Horner) form, after reducing to −π..π: only +, −, × and ÷,
+/// which IEEE 754 rounds exactly alike in Rust and JavaScript, so web/host loop.ts computes the same bits. (libm's sin
+/// and the JS engines' Math.sin differ in the last bit for some angles; after the Frenet frame's differences that moved
+/// a vertex across an f32 rounding boundary and the drawn loop no longer hashed as the collision mesh.) Fourteen terms
+/// leave an error under 1e-17 on −π..π.
+pub fn sin_cos(th: f64) -> (f64, f64) {
+    let x = if th > core::f64::consts::PI {
+        th - TAU
+    } else {
+        th
+    };
+    let x2 = x * x;
+    let (mut s, mut c) = (1.0, 1.0);
+    for k in (1..=14).rev() {
+        let n = (2 * k) as f64;
+        s = 1.0 - x2 / (n * (n + 1.0)) * s;
+        c = 1.0 - x2 / ((n - 1.0) * n) * c;
+    }
+    (x * s, c)
+}
 
 /// The deck's centre-line point at t (0 at E, 1 at X), world metres.
 pub fn centre(fr: &LoopFrame, r: f64, t: f64) -> [f64; 3] {
-    let th = TAU * t;
-    let along = fr.run_out * t + r * libm::sin(th);
-    let up = r * (1.0 - libm::cos(th));
-    let lat = fr.shift * (t - libm::sin(th) / TAU);
+    let (sin, cos) = sin_cos(TAU * t);
+    let along = fr.run_out * t + r * sin;
+    let up = r * (1.0 - cos);
+    let lat = fr.shift * (t - sin / TAU);
     [
         fr.e[0] + fr.forward[0] * along + fr.left[0] * lat,
         fr.e[1] + (fr.y_exit - fr.e[1]) * t + up,
@@ -207,14 +232,15 @@ pub fn sections(fr: &LoopFrame, d: &LoopDesign) -> Vec<Section> {
         .collect()
 }
 
-/// The deck's section at any t in 0..=1 (the sections above are these at t = k / segments).
+/// The deck's section at any t in 0..=1 (the sections above are these at t = k / segments). Its centre is on the deck's
+/// surface, `DECK_LIFT_M` off the centre line.
 pub fn section_at(fr: &LoopFrame, d: &LoopDesign, t: f64) -> Section {
     let r = d.radius_m;
     let h = 1e-3;
     let tg = tangent(fr, r, t);
     let normal = unit(sub(tangent(fr, r, t + h), tangent(fr, r, t - h)));
     Section {
-        c: centre(fr, r, t),
+        c: add(centre(fr, r, t), scale(normal, DECK_LIFT_M)),
         side: cross(normal, tg),
         normal,
     }

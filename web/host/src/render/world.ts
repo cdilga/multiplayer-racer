@@ -281,6 +281,7 @@ export class World {
     this.props = new PropRenderer(this.scene, map);
     this.rig.obstacles = this.map.obstacles();
     this.rig.groundAt = this.map.groundAt;
+    this.rig.loops = this.map.loopShots();
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
@@ -558,6 +559,9 @@ export class World {
           }
           if (mode === 'tp') {
             // The off-screen arrow: the own car projected outside its tile (the chase aims at it; this is the backstop).
+            // Through this frame's camera: its matrices otherwise update in render, so a cut (a respawn, the loop shot)
+            // would project through the last frame's.
+            cam.updateMatrixWorld();
             const p = this.v.clone().setY(this.v.y + 0.6).project(cam);
             if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z > 1) arrows.push({ x: t.x, y: t.y, w: t.w, h: t.h, angle: Math.atan2(-p.y, p.x) });
           }
