@@ -29,8 +29,8 @@ const MAX_LAP_S: u64 = 300;
 /// The driver's pure-pursuit look-ahead (s, minimum m), as the race autopilot's.
 const LOOK: (f32, f32) = (0.8, 6.0);
 /// The speed plan's sweep: assumed lateral grip (m/s²) and planned braking (m/s²).
-const A_LAT: [f32; 4] = [7.0, 10.0, 13.0, 16.0];
-const BRAKE: [f32; 2] = [7.0, 11.0];
+const A_LAT: [f32; 5] = [10.0, 16.0, 22.0, 28.0, 36.0];
+const BRAKE: [f32; 3] = [8.0, 12.0, 18.0];
 const BIOMES: [Biome; 4] = [
     Biome::Town,
     Biome::Rocks,
