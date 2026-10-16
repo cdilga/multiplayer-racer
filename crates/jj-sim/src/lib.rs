@@ -13,6 +13,7 @@ pub mod damage;
 pub mod derby;
 pub mod items;
 pub mod journal;
+mod looping;
 pub mod observe;
 pub mod placement;
 pub mod profile;

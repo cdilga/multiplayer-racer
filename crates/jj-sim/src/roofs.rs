@@ -11,6 +11,19 @@ use crate::vehicle;
 pub(crate) const ROOF: Group = Group::GROUP_9;
 /// Collider metadata, independent of body tags used by damage attribution.
 pub(crate) const BRIDGE_SURFACE: u128 = 1 << 96;
+/// A loop's deck (br-xlvx.6): also a BRIDGE_SURFACE (its tyre surface in the low byte), with the loop's index in the map's
+/// loops in bits 8..40, so a wheel on it finds the loop's assist.
+pub(crate) const LOOP_SURFACE: u128 = 1 << 97;
+
+/// The loop (index into `Sim::loops`) under a wheel, if the wheel stands on a loop's deck.
+pub(crate) fn loop_under(colliders: &ColliderSet, wheel: &Wheel) -> Option<usize> {
+    let contact = wheel.raycast_info();
+    if !contact.is_in_contact {
+        return None;
+    }
+    let c = colliders.get(contact.ground_object?)?;
+    (c.user_data & LOOP_SURFACE != 0).then_some(((c.user_data >> 8) & 0xffff_ffff) as usize)
+}
 
 pub(crate) fn surface(
     terrain: &Terrain,

@@ -177,7 +177,14 @@ struct Car {
     assist: AssistState,
     /// Each wheel's ground slip-curve factor this tick (R124), for the arcade handling layer (P1-FL04).
     side_stiffness: Vec<f32>,
+    /// Riding a loop (br-xlvx.6): the loop carries the car until its exit, or lets it go if it gets too slow.
+    loop_ride: Option<crate::looping::LoopRide>,
+    /// The tick a loop let this car go for being too slow: it respawns before the loop shortly after.
+    loop_fall: Option<u64>,
 }
+
+/// How long after a loop lets a too-slow car go it respawns before the loop (br-xlvx.6): long enough to see it fall.
+const LOOP_FALL_TICKS: u64 = 3 * TICK_HZ as u64 / 2;
 
 /// The catch plane's top, below the kill plane, and its half extent, m.
 const CATCH_PLANE_BELOW_KILL_M: f32 = 10.0;
@@ -251,6 +258,9 @@ pub struct Sim {
     fresh_debris: Vec<(u32, u64)>,
     /// Per-part mass, centre of mass and hinge, from the profile.
     part_phys: Vec<Vec<PartPhys>>,
+    /// The map's loops (br-xlvx.6), in feature order: a wheel on a loop's deck carries the loop's index in its collider,
+    /// and a car that reaches one fast enough rides it (crate::looping).
+    loops: Vec<crate::looping::LoopRail>,
     /// Work the sim itself authorises into the bodies, J: engine force, air control, flip assist, wheelie lift, the roll
     /// correction and detach kicks. The energy accounting subtracts it (`Sim::energy_j`).
     ledger: f64,
@@ -342,7 +352,53 @@ impl Sim {
         // The derby bowl (P1-M10) is a trimesh of the same kind: the bank, the wall and the lip, ground to the car.
         // Sharp jumps (br-gw74.7.1): the ramp, table and landing ramp are the exact triangles of `jj_map::jump`, not a 2.5 m
         // grid's rounding of them. They are ground to the car (the terrain's groups).
+        let mut loops = Vec::new();
         for f in &m.features {
+            // A loop's deck (br-xlvx.6): the exact triangles of `jj_map::looping`, a trimesh per tyre surface like a bridge
+            // deck's, tagged as a loop with the loop's index so a wheel on it finds the loop's assist.
+            if let Some(d) = jj_map::looping::LoopDesign::of(f)
+                && let Some((verts, tris)) = jj_map::looping::loop_mesh(m, &d)
+            {
+                let materials = jj_map::looping::triangle_surfaces(m, &d).expect("validated loop");
+                let pts: Vec<Vector> = verts
+                    .iter()
+                    .map(|p| Vector::new(p[0] as f32, p[1] as f32, p[2] as f32))
+                    .collect();
+                let tag = crate::roofs::BRIDGE_SURFACE
+                    | crate::roofs::LOOP_SURFACE
+                    | ((loops.len() as u128) << 8);
+                for surface in [
+                    jj_map::Surface::Tarmac,
+                    jj_map::Surface::PackedDirt,
+                    jj_map::Surface::Gravel,
+                    jj_map::Surface::Rock,
+                    jj_map::Surface::OffTrack,
+                ] {
+                    let faces: Vec<_> = tris
+                        .iter()
+                        .zip(&materials)
+                        .filter(|(_, s)| **s == surface)
+                        .map(|(t, _)| *t)
+                        .collect();
+                    if faces.is_empty() {
+                        continue;
+                    }
+                    let b = ColliderBuilder::trimesh_with_flags(
+                        pts.clone(),
+                        faces,
+                        TriMeshFlags::FIX_INTERNAL_EDGES,
+                    )
+                    .expect("validated loop mesh");
+                    world.insert_collider(
+                        b.friction(0.9)
+                            .collision_groups(TERRAIN_GROUPS)
+                            .user_data(tag | surface as u128),
+                        None,
+                    );
+                }
+                loops.push(crate::looping::LoopRail::new(m, d).expect("validated loop"));
+                continue;
+            }
             if let Some((verts, tris)) = jj_map::bridge::bridge_mesh(m, f) {
                 let materials =
                     jj_map::bridge::triangle_surfaces(m, f).expect("validated bridge spans");
@@ -541,6 +597,7 @@ impl Sim {
             husks: std::collections::BTreeMap::new(),
             fresh_debris: Vec::new(),
             part_phys: phys,
+            loops,
             ledger: 0.0,
             utility_events: Vec::new(),
             item_cards: crate::items::Cards::shipped().expect("shipped item cards validate"),
@@ -1209,11 +1266,84 @@ impl Sim {
         self.teleport(car, pose, roll, linvel);
     }
 
+    /// The loops (br-xlvx.6, crate::looping): each car on a loop's deck near its entry, heading along it and fast enough,
+    /// starts riding it; each riding car is carried a tick along the deck (its pose and velocity set from the ride, the
+    /// energy that changes booked in the ledger) and let go at the exit, or where it got too slow. A car let go too slow
+    /// respawns before the loop `LOOP_FALL_TICKS` later.
+    fn ride_loops(&mut self, tick: u64) {
+        if self.loops.is_empty() {
+            return;
+        }
+        let g = self.world.gravity;
+        let mut fallen = Vec::new();
+        for (ci, car) in self.cars.iter_mut().enumerate() {
+            if let Some(at) = car.loop_fall
+                && tick >= at + LOOP_FALL_TICKS
+            {
+                car.loop_fall = None;
+                fallen.push(ci as u32);
+            }
+            let Some(b) = self.world.bodies.get_mut(car.body) else {
+                continue;
+            };
+            let ride = match car.loop_ride {
+                Some(r) => Some(r),
+                None => car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .find_map(|w| crate::roofs::loop_under(&self.world.colliders, w))
+                    .and_then(|k| self.loops.get(k).and_then(|rail| rail.lock_on(k, b.translation(), b.linvel()))),
+            };
+            let Some(ride) = ride else {
+                continue;
+            };
+            let p = &self.profiles[car.model];
+            let rail = &self.loops[ride.rail];
+            let (throttle, brake) = vehicle::stick(car.applied);
+            let throttle = if car.action.boosting { 1.0 + p.tuning.boost_engine_gain } else { throttle };
+            let mass = b.mass().max(1.0);
+            let drive = throttle
+                * p.tuning
+                    .max_engine_force
+                    .min(p.tuning.max_engine_power_w / ride.speed.max(1.0))
+                / mass;
+            let brake_accel = brake * p.tuning.max_brake_force / mass;
+            let (next, out, too_slow) = match rail.advance(ride, g, drive, brake_accel, DT) {
+                crate::looping::RideStep::On(r) => (r, false, false),
+                crate::looping::RideStep::Out(r) => (r, true, false),
+                crate::looping::RideStep::TooSlow(r) => (r, false, true),
+            };
+            let before = f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g));
+            let (pos, rotation, linvel, angvel) = rail.pose(&next, DT);
+            if too_slow {
+                // Let go where it is, at its speed along the deck: physics (and gravity) from here.
+                b.set_linvel(linvel, true);
+                car.loop_ride = None;
+                car.loop_fall = Some(tick);
+            } else {
+                b.set_position(Pose::from_parts(pos, rotation), true);
+                b.set_linvel(linvel, true);
+                b.set_angvel(if out { Vector::ZERO } else { angvel }, true);
+                car.loop_ride = if out { None } else { Some(next) };
+            }
+            car.last_linvel = b.linvel();
+            self.ledger += f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)) - before;
+        }
+        for id in fallen {
+            if let Some(effect) = self.race.wreck(tick, id, Respawned::Recover) {
+                self.apply(effect);
+            }
+        }
+    }
+
     fn teleport(&mut self, car: CarId, pose: SpawnPose, roll: f32, linvel: [f32; 3]) {
         let Some(c) = self.cars.get_mut(car.0 as usize) else {
             return;
         };
         c.life = c.life.wrapping_add(1);
+        c.loop_ride = None;
+        c.loop_fall = None;
         let c = &self.cars[car.0 as usize];
         let g = self.world.gravity;
         let mut moved = 0.0f64;
@@ -1569,6 +1699,8 @@ impl Sim {
             removed: vec![false; p.part_count()],
             speed_history: std::collections::VecDeque::new(),
             side_stiffness: Vec::new(),
+            loop_ride: None,
+            loop_fall: None,
             last_linvel: Vector::ZERO,
             incarnation: 0,
             last_detach: None,
@@ -2201,6 +2333,7 @@ impl Sim {
                 b.apply_torque_impulse(ti, true);
             }
         }
+        self.ride_loops(tick);
         // A stuck autopilot presses Recover: a consequence of the state, so not journaled.
         for id in stuck {
             if let Some(effect) = self.race.recover(tick, id) {
@@ -3359,6 +3492,13 @@ impl Sim {
             race.extend(c.incarnation.to_le_bytes());
             for v in &c.speed_history {
                 race.extend(v.to_bits().to_le_bytes());
+            }
+            // Only while a car rides or falls from a loop (br-xlvx.6): maps without loops keep their hashes.
+            if let Some(r) = &c.loop_ride {
+                r.hash_into(&mut race);
+            }
+            if let Some(t) = c.loop_fall {
+                race.extend(t.to_le_bytes());
             }
         }
         race.extend(self.ledger.to_bits().to_le_bytes());
