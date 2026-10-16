@@ -276,6 +276,9 @@ pub struct Sim {
     /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
     episodes: Episodes,
     damage_events: Vec<(u64, DamageEvent)>,
+    /// Takedowns (R134, P1-FL19): who wrecked or spun whom, from the damage records; each fills the attacker's boost.
+    takedowns: crate::takedown::Takedowns,
+    takedown_profile: crate::takedown::TakedownProfile,
     /// The derby ledger (P1-S10), once a derby round has started.
     derby: Option<crate::derby::Ledger>,
     /// The bodies' state before each step, for the contacts' closing speeds.
@@ -631,6 +634,8 @@ impl Sim {
             rail_joins,
             episodes: Episodes::default(),
             damage_events: Vec::new(),
+            takedowns: crate::takedown::Takedowns::new(),
+            takedown_profile: crate::takedown::TakedownProfile::standard(),
             derby: None,
             pre_step: PreStep::default(),
             tick: 0,
@@ -1352,6 +1357,7 @@ impl Sim {
         c.life = c.life.wrapping_add(1);
         c.loop_ride = None;
         c.loop_fall = None;
+        self.takedowns.placed(car.0);
         let c = &self.cars[car.0 as usize];
         let g = self.world.gravity;
         let mut moved = 0.0f64;
@@ -2396,6 +2402,7 @@ impl Sim {
             self.apply(effect);
         }
         self.check_wheel_wrecks();
+        self.step_takedowns();
         self.settle_protection();
         self.update_derby();
         self.step_boomerangs();
@@ -3314,6 +3321,51 @@ impl Sim {
         self.world.integration_parameters.num_solver_iterations *= factor.max(1);
     }
 
+    /// R134 (P1-FL19): this tick's takedowns, from the damage records (a wreck's instigator; a hit after which the car
+    /// spun round), each filling its attacker's boost meter by the profile's `boost`.
+    fn step_takedowns(&mut self) {
+        let headings: Vec<Option<f32>> = self
+            .cars
+            .iter()
+            .map(|c| {
+                (c.loop_ride.is_none() && c.loop_fall.is_none()).then(|| {
+                    let fwd = self.world.bodies[c.body].position().rotation * Vector::Z;
+                    libm::atan2f(fwd.x, fwd.z)
+                })
+            })
+            .collect();
+        let new = self
+            .takedowns
+            .update(self.tick, &headings, &self.damage_events, &self.takedown_profile);
+        for t in new {
+            if let Some(c) = self.cars.get_mut(t.attacker as usize) {
+                c.action.boost = (c.action.boost + self.takedown_profile.boost).min(1.0);
+            }
+        }
+    }
+
+    /// Sets a car's boost meter (0..1): fixtures and the Feel Lab start a car empty or full (R90).
+    pub fn set_boost_meter(&mut self, car: CarId, meter: f32) {
+        if let Some(c) = self.cars.get_mut(car.0 as usize) {
+            c.action.boost = meter.clamp(0.0, 1.0);
+        }
+    }
+
+    /// Every takedown so far, in order (R134, P1-FL19).
+    pub fn takedowns(&self) -> &[crate::takedown::Takedown] {
+        self.takedowns.log()
+    }
+
+    /// The takedown data in force.
+    pub fn takedown_profile(&self) -> &crate::takedown::TakedownProfile {
+        &self.takedown_profile
+    }
+
+    /// Replaces the takedown data (the Feel Lab's tuning, fixtures).
+    pub fn set_takedown_profile(&mut self, p: crate::takedown::TakedownProfile) {
+        self.takedown_profile = p;
+    }
+
     /// Every finished damage episode and part-state change so far, with the tick it happened (P1-S04a): the records
     /// S04b, the host's events and the traces read.
     pub fn damage_events(&self) -> &[(u64, DamageEvent)] {
@@ -3572,6 +3624,7 @@ impl Sim {
         h.update(&race);
         let mut items = Vec::new();
         self.items.hash_into(&mut items);
+        self.takedowns.hash_into(&mut items);
         // Boomerang flights and taken stations are hashed only once there are any, so sims without them keep their hashes.
         for f in &self.boomerangs {
             f.hash_into(&mut items);

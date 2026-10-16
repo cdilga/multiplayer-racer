@@ -23,6 +23,7 @@ pub mod rng;
 mod roofs;
 pub mod sim;
 pub mod surface;
+pub mod takedown;
 pub mod utility;
 pub mod vehicle;
 

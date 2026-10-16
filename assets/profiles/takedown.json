@@ -1,0 +1,8 @@
+{
+  "contract": "jj-takedown/1",
+  "what": "Takedowns in every race (R134 Burnout lens, P1-FL19 br-bbki.22): a hit by another car (or debris it threw) that wrecks the car it hit, or spins it at least `spinDeg` within `spinWindowS` of the hit, is a takedown. 75 degrees is a car knocked sideways: the arcade grip holds a 22 m/s ram across a rear quarter to about 85 degrees and a 16 m/s one to about 50 (crates/jj-sim/tests/takedown.rs), and an arcade slide swings the tail about 40. The attacker's boost meter gains `boost` (1 fills it). A hit counts when its fastest contact closed at `minClosingMps` or more (a glancing touch that leaves the other car going its way never pays, whatever its speed). One credit per hit: a spin that then wrecks pays once. Nothing here caps anything.",
+  "spinDeg": 75,
+  "spinWindowS": 1.5,
+  "minClosingMps": 5,
+  "boost": 1
+}
