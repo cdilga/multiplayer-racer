@@ -135,6 +135,9 @@ async function check(host, joinUrl, at) {
   // Hold the moving parts still so the boxes measured are the pixels captured. The positions strip's scroll runs on
   // Chromium's compositor, where a paused animation can still be drawn a step on: it's switched off for the capture
   // (the strip rests at its start), and anything else animating is paused.
+  // The race is held for the capture too: on a loaded WebKit runner the live positions re-ordered between every pair of
+  // measurements and ten tries never held still (CI run 5414). Paint through resizes is what's judged, not the race.
+  await host.evaluate(() => window.__jjTest.hold(true));
   await host.evaluate(() => {
     const st = document.createElement('style');
     st.id = 'jj-still';
@@ -153,7 +156,7 @@ async function check(host, joinUrl, at) {
     if (JSON.stringify(await scene(host)) === JSON.stringify(s)) break;
     assert.ok(tries < 10, `${at}: the screen never held still for a capture`);
   }
-  await host.evaluate(() => { document.getElementById('jj-still')?.remove(); for (const a of document.getAnimations()) a.play(); });
+  await host.evaluate(() => { document.getElementById('jj-still')?.remove(); for (const a of document.getAnimations()) a.play(); window.__jjTest.hold(false); });
   if (OUT) { mkdirSync(OUT, { recursive: true }); writeFileSync(`${OUT}/${at.replace(/\s+/g, '-')}.png`, buf); } // the frame judged
   const png = PNG.sync.read(buf);
   // Screenshots are in CSS px only at DPR 1 (the contexts below use it).
