@@ -19,12 +19,12 @@
 name: CI
 
 on:
-  # R139 (owner 2026-10-17): no CI per push, no schedule, no nightly (they waste compute); fast feedback on demand. Whoever
-  # has work ready dispatches a selective run (what changed since the last green); one runs at a time and later
-  # dispatches fold into the next batch, so a burst of agents costs one run. Red is fixed forward.
-  #   tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/ci.yml/dispatches \
-  #     -d '{"ref":"v0.2-revamp","inputs":{"full":"false"}}'     (scripts/ci/run.sh wraps it)
-  # full=true runs every suite (before a release or after a toolchain change).
+  # R139 (owner 2026-10-17): batch builds, fixed forward, no schedule or nightly. A push starts a run; a run in progress
+  # always finishes; everything that lands meanwhile folds into the one queued run (the concurrency group keeps only the
+  # newest waiting run), so 30 changes during a build get one build together, 32 if two more land. A red batch is fixed
+  # forward and passed back to its beads. scripts/ci/run.sh dispatches by hand (selective; --full for every suite).
+  push:
+    branches: ["**"] # branches only: the preview record's tags (preview/, retired/, pin/) never start a run
   workflow_dispatch:
     inputs:
       full:
