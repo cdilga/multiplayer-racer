@@ -1293,7 +1293,11 @@ impl Sim {
                     .wheels()
                     .iter()
                     .find_map(|w| crate::roofs::loop_under(&self.world.colliders, w))
-                    .and_then(|k| self.loops.get(k).and_then(|rail| rail.lock_on(k, b.translation(), b.linvel()))),
+                    .and_then(|k| {
+                        self.loops
+                            .get(k)
+                            .and_then(|rail| rail.lock_on(k, b.translation(), b.linvel()))
+                    }),
             };
             let Some(ride) = ride else {
                 continue;
@@ -1301,7 +1305,11 @@ impl Sim {
             let p = &self.profiles[car.model];
             let rail = &self.loops[ride.rail];
             let (throttle, brake) = vehicle::stick(car.applied);
-            let throttle = if car.action.boosting { 1.0 + p.tuning.boost_engine_gain } else { throttle };
+            let throttle = if car.action.boosting {
+                1.0 + p.tuning.boost_engine_gain
+            } else {
+                throttle
+            };
             let mass = b.mass().max(1.0);
             let drive = throttle
                 * p.tuning
@@ -1328,7 +1336,8 @@ impl Sim {
                 car.loop_ride = if out { None } else { Some(next) };
             }
             car.last_linvel = b.linvel();
-            self.ledger += f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)) - before;
+            self.ledger +=
+                f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)) - before;
         }
         for id in fallen {
             if let Some(effect) = self.race.wreck(tick, id, Respawned::Recover) {
