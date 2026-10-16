@@ -67,6 +67,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     const options = await host.locator(`[data-local-vehicle="${padSource}"] option`).evaluateAll(os=>os.map(o=>o.value));
     await wait(host,([source,want])=>document.querySelector(`.lb-cc:has([data-local-vehicle="${source}"]) [data-local-count]`)?.textContent===want,[padSource,`Car ${options.indexOf('tradie-ute')+1} of ${options.length}`]);
     assert.ok(await host.locator(`.lb-cc:has([data-local-vehicle="${padSource}"]) [data-local-count]`).isVisible(),'the count is on screen');
+    await shot(host,`${engine.name()}-pad-car-count`);
     await host.evaluate(()=>window.__pad([0,0,0,0],true));
     await wait(host,source=>window.__jjRoom.view().seats.find(s=>s.localSource===source)?.choosing===false,padSource);
     assert.equal(await host.evaluate(source=>window.__jjRoom.view().seats.find(s=>s.localSource===source).ready,padSource),false);
