@@ -98,3 +98,14 @@
   `RCH_REQUIRE_REMOTE=1` for workspace builds/tests and inspect the worker receipt, rather than assuming the wrapper
   proves offloading. A roof validation run accidentally started locally; it was stopped and rerun on eris with the
   requirement enabled. Retryable exit 103 means wait for the worker, not rerun Cargo locally.
+
+## 2026-10-17 · eris journeys run whatever host wasm was built last (br-b2sv)
+
+- **Symptom:** every journey on eris times out waiting for the host's Lobby, in Chromium and WebKit, with no page
+  errors: the page loads the testing worker and its wasm, then `client.start` never resolves and `__jjNet` never appears.
+  The same journey passes on the Mac.
+- **Cause:** `web/host/src/{worker,testing}/pkg` and `web/controller/src/pkg` are git-ignored build output, and neither
+  `scripts/remote/eris.sh` nor the journeys rebuild them. After a sim or profile change (here the bike variant in
+  7058ebb7), eris's pkg from an earlier run no longer matches the pushed tree.
+- **Fix:** start a browser run on eris with `scripts/build-host-wasm.sh` when the sim, profiles or roster changed since the
+  last build there.

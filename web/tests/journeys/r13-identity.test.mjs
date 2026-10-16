@@ -20,7 +20,7 @@ if (capture) mkdirSync(capture, { recursive: true });
 const shot = async (p, name) => capture && p.screenshot({ path: `${capture}/${name}.jpg`, quality: 90 });
 const wait = async (p, f, arg) => {
   try {return await p.waitForFunction(f, arg, { timeout: 60000 });}
-  catch(e) {console.log('identity wait failed',String(f),await p.evaluate(()=>({room:window.__jjRoom?.view(),controller:window.__jjController?.inspect()})));throw e;}
+  catch(e) {console.log('identity wait failed',String(f),JSON.stringify(await p.evaluate(()=>({room:window.__jjRoom?.view(),controller:window.__jjController?.inspect()}))));throw e;}
 };
 const server = () => deployed ? {origin:deployed.origin,close:async()=>{}} : serveWithLocalStun(dist, BASE);
 
@@ -60,7 +60,11 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       phones.push(p);
     }
     for (const p of phones) await p.getByRole('button',{name:/^Ready/}).click();
-    await wait(host,()=>window.__jjRoom.view().phase==='Running');
+    // br-b2sv: WebKit on CI has left the room in the Lobby after both Readys; on a miss, say what each phone thinks.
+    await wait(host,()=>window.__jjRoom.view().phase==='Running').catch(async (e) => {
+      for (const p of phones) console.log('phone after Ready', JSON.stringify(await p.evaluate(()=>({c:window.__jjController?.inspect(), ready:document.querySelector('[data-act=ready]')?.outerHTML?.slice(0,300)})).catch((x)=>String(x))));
+      throw e;
+    });
     await wait(host,()=>window.__jjRender.vehicles()?.cars===2 && document.querySelectorAll('.hud-badge[data-identity-pattern]').length===2);
     const identity=await host.evaluate(()=>({render:window.__jjRender.vehicles(),badges:[...document.querySelectorAll('.hud-badge')].map(b=>({text:b.textContent,pattern:b.dataset.identityPattern}))}));
     for (let i=0;i<2;i++) {
