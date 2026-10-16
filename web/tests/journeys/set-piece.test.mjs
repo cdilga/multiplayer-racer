@@ -144,7 +144,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
           await side.close();
           for (const [state, fixture] of [['afar', c.afar], ['overview', c.overview]]) {
             const p = await open();
-            await p.evaluate(async ({ fixture, mapJson }) => { window.__jjRender.hold(); await window.__jjTest.load(fixture, mapJson); await window.__jjTest.step(1); }, { fixture, mapJson: c.mapJson });
+            // The overview has no car to follow: the camera frames the whole map.
+            await p.evaluate(async ({ fixture, mapJson, overview }) => { if (overview) window.__jjRender.setFollow(null); window.__jjRender.hold(); await window.__jjTest.load(fixture, mapJson); await window.__jjTest.step(1); }, { fixture, mapJson: c.mapJson, overview: state === 'overview' });
             await shot(p, state);
             await p.close();
           }
