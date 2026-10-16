@@ -51,10 +51,12 @@ sha=$(git log -1 --format=%H --grep="$id" HEAD)
 [[ -n $sha ]] || die "no commit on this branch names $id: commit with the P1 ID and bead ID first"
 short=${sha:0:9}
 
-# Push the commit and its LFS objects when the branch is ahead of its upstream.
+# Push the commit and its LFS objects when the bead's commit isn't on the upstream yet. Only then: in the shared tree the
+# branch often carries other sessions' unpushed commits, whose reservations would refuse a push this close doesn't need.
 upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) || die "the branch has no upstream to push to"
 remote=${upstream%%/*} branch=$(git rev-parse --abbrev-ref HEAD)
-if [[ $(git rev-list --count "$upstream..HEAD") -gt 0 ]]; then
+git fetch -q "$remote" "$branch" 2>/dev/null || true
+if ! git merge-base --is-ancestor "$sha" "$upstream"; then
     echo "close: pushing $branch (Gitea, then the GitHub mirror)"
     scripts/push.sh "$branch"
 fi
