@@ -77,7 +77,9 @@ test('at short landscape heights nothing overlaps on the play screen', { timeout
         toolsScroll: document.querySelector('.tools').scrollWidth - document.querySelector('.tools').clientWidth,
         nameCut: nm.scrollWidth > nm.clientWidth + 1,
         basesInside: zones.every(({ z, b }) => b.l >= z.l - 1 && b.r <= z.r + 1 && b.t >= z.t - 1 && b.b <= z.b + 1),
-        meterTrack: fill.getBoundingClientRect().width < meter.getBoundingClientRect().width * 0.5,
+        // The meter is readiness since P1-FL14 (full when the launch is ready), so a full fill is right; the track is its
+        // painted background (or inset shadow), and the fill stays inside it.
+        meterTrack: (getComputedStyle(meter).backgroundColor !== 'rgba(0, 0, 0, 0)' || getComputedStyle(meter).boxShadow !== 'none') && fill.getBoundingClientRect().width <= meter.getBoundingClientRect().width + 0.5,
         pageScroll: document.documentElement.scrollHeight - innerHeight,
         iw: innerWidth,
       };

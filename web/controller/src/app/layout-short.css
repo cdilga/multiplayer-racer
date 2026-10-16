@@ -45,10 +45,26 @@
   .strip .tools .btn.icon { width: 48px; padding: 0; }
   .strip .tools .btn.identify { font-size: 14px; padding: 0 6px; }
   .strip .tools .btn[data-act=ready] { min-width: 64px; font-size: 16px; }
+  .strip .conn { font-size: 10px; padding-inline: 2px; }
+}
+
+/* Short landscape up to 960 px wide: a live room's strip also carries the connection badge, so the car button goes
+   icon-only (spoken name kept) and Identify drops its redundant Locate icon; the six icon tools and Ready stay on screen
+   (844x390 ran Ready off the left edge). */
+@media (orientation: landscape) and (max-height: 440px) and (max-width: 960px) {
   .strip .tools .btn.identify .ic { display: none; }
   .strip .tools .btn[data-act=car] { width: 48px; padding: 0; }
   .strip .tools .btn[data-act=car] .lbl { display: none; }
-  .strip .conn { font-size: 10px; padding-inline: 2px; }
+}
+
+/* The narrowest strips (640x300): the connection badge keeps its icon and colour (direct green, relay amber) and drops
+   its words, still read out (role=status), so nine 48 px targets fit beside the seat and name. */
+@media (orientation: landscape) and (max-height: 440px) and (max-width: 700px) {
+  .strip .conn.chip { font-size: 0; gap: 0; min-height: 26px; padding: 0 5px; margin-right: 0; }
+  .strip .conn.chip .ic { width: 16px; height: 16px; }
+  .strip { gap: 4px; padding-inline: 4px; }
+  .strip .who { gap: 4px; }
+  .strip .seatno.badge { font-size: 22px; padding: 2px 5px 3px; }
 }
 
 /* Portrait phones: the round banner centres on the screen, in the stick area clear of the two tool rows (40% sat on the
