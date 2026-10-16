@@ -70,7 +70,8 @@
         "radiusScale": 1.05
       },
       "figureEight": {
-        "weight": 0.6
+        "weight": 1.2,
+        "minLengthM": 850
       }
     },
     "crossing": {

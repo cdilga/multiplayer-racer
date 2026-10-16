@@ -150,6 +150,9 @@ pub struct CoursePresets {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CrossingPreset {
     pub weight: f64,
+    /// A figure eight is never shorter than this, m (within its length class's band): on a short sprint lap the deck's
+    /// span takes a third of the road and the lobes have no room to climb or breathe.
+    pub min_length_m: f64,
 }
 
 /// Figure-eight topology and crossing safety, consumed by course and deck generation.
@@ -447,6 +450,10 @@ impl GeneratorData {
                     "course.crossing.{key}: below crossing safety minimum {minimum}"
                 ));
             }
+        }
+        let min_eight = self.course.presets.figure_eight.min_length_m;
+        if !(min_eight >= 0.0 && min_eight.is_finite()) {
+            bad.push("course.presets.figureEight.minLengthM: must not be negative".into());
         }
         if !(1..=bl::MAX_GRADE_MILLI).contains(&bridge.max_grade_milli) {
             bad.push("course.crossing.maxGradeMilli: outside crossing safety envelope".into());

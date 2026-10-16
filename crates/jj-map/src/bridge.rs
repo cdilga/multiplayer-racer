@@ -20,8 +20,62 @@ pub fn triangle_surfaces(map: &Map, f: &Feature) -> Option<Vec<Surface>> {
         out.extend([map.route.points[ix[0]].surface; 2]);
         out.extend([map.route.points[*ix.last()?].surface; 2]);
     }
+    // Each pier: a closed box, six faces.
+    out.extend(core::iter::repeat_n(
+        Surface::Rock,
+        piers(map, &BridgeDesign::of(f)?, &ix).len() * 12,
+    ));
     Some(out)
 }
+
+/// Piers hold the deck up where it stands clear of the ground: a square column under each edge every `PIER_EVERY`
+/// route points, from just below the ground to the deck's underside. None where the deck is within `PIER_MIN_M` of the
+/// ground, and none within the lower road's half-width plus `PIER_CLEAR_M` of it, so the underpass stays open. Each is
+/// (centre x, z, foot y, head y), m.
+pub fn piers(map: &Map, d: &BridgeDesign, ix: &[usize]) -> Vec<[f64; 4]> {
+    let Some(lower) = indices(map, d.lower) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for (k, &i) in ix.iter().enumerate() {
+        if k < PIER_END || k + PIER_END >= ix.len() || (k - PIER_END) % PIER_EVERY != 0 {
+            continue;
+        }
+        let [left, right] = edges(map, i);
+        for (edge, other) in [(left, right), (right, left)] {
+            let width = libm::hypot(other[0] - edge[0], other[2] - edge[2]).max(1e-9);
+            let (x, z) = (
+                edge[0] + (other[0] - edge[0]) / width * PIER_INSET_M,
+                edge[2] + (other[2] - edge[2]) / width * PIER_INSET_M,
+            );
+            let head = edge[1] - d.thickness_m;
+            let ground = crate::jump::ground_height_m(&map.terrain, x, z);
+            if head - ground < PIER_MIN_M {
+                continue;
+            }
+            let open = lower.iter().all(|&j| {
+                let q = &map.route.points[j];
+                let reach = f64::from(q.width) / 2000.0 + PIER_CLEAR_M;
+                libm::hypot(f64::from(q.x) / 1000.0 - x, f64::from(q.z) / 1000.0 - z) > reach
+            });
+            if open {
+                out.push([x, z, ground - PIER_SINK_M, head]);
+            }
+        }
+    }
+    out
+}
+
+/// Pier spacing (route points), how far from each span end the first stands (route points), its half-width, how far
+/// inside the deck edge it stands, the least deck height it holds up, its clearance from the lower road and how deep it
+/// sinks into the ground, m.
+const PIER_EVERY: usize = 8;
+const PIER_END: usize = 4;
+const PIER_HALF_M: f64 = 0.4;
+const PIER_INSET_M: f64 = 1.2;
+const PIER_MIN_M: f64 = 1.0;
+const PIER_CLEAR_M: f64 = 2.5;
+const PIER_SINK_M: f64 = 0.3;
 
 /// Safety envelopes, not limits on the number of crossings or participants. Generated crossings additionally earn
 /// their grades/clearance through running fixtures.
@@ -164,6 +218,26 @@ pub fn bridge_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
         let end = start + (ix.len() as u32 - 1) * 4;
         quad(start, start + 2, start + 3, start + 1);
         quad(end, end + 1, end + 3, end + 2);
+    }
+    for [x, z, foot, head] in piers(map, &d, &ix) {
+        let a = verts.len() as u32;
+        for y in [foot, head] {
+            verts.extend([
+                [x - PIER_HALF_M, y, z - PIER_HALF_M],
+                [x + PIER_HALF_M, y, z - PIER_HALF_M],
+                [x + PIER_HALF_M, y, z + PIER_HALF_M],
+                [x - PIER_HALF_M, y, z + PIER_HALF_M],
+            ]);
+        }
+        let mut quad = |p: u32, q: u32, r: u32, e: u32| {
+            tris.extend([[a + p, a + q, a + r], [a + p, a + r, a + e]]);
+        };
+        quad(0, 1, 2, 3);
+        quad(4, 7, 6, 5);
+        quad(0, 4, 5, 1);
+        quad(1, 5, 6, 2);
+        quad(2, 6, 7, 3);
+        quad(3, 7, 4, 0);
     }
     Some((verts, tris))
 }

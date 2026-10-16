@@ -336,3 +336,9 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
 - **Long beat straights put crests past their design speed.** A crest keeps a car grounded to 25 m/s; on a beat straight
   the handling bank's 35 m/s flick lands on its brow and rolls. That's the stated gap (crests past their design range),
   filed with the road-only runs, not a turn roll-over.
+- **Bridge piers are geometry, not decoration (br-xlvx.3).** The bridge mesh is shared by the sim (collider) and the
+  renderer (fingerprint-checked against it), so piers live in `jj-map::bridge::piers` and its TS mirror with the same
+  constants and arithmetic (JS numbers are f64, so the same formulas in the same order agree); a renderer-only pier would
+  be a ghost a car drives through.
+- **Figure-eights need room.** On a 650 m sprint the deck's span is a third of the lap and its grade is capped for the
+  deck's cosine; the lobes can't climb 25 m. The family has a minimum length (`figureEight.minLengthM`, 850 m).

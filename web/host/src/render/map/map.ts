@@ -577,7 +577,8 @@ export class MapRenderer {
         if (mesh) {
           const from = s.pos.length;
           for (const [i,tri] of mesh.triangles.entries()) {
-            const colour = mesh.beams[i] ? '#f2efe6' : SURFACE_COLOURS[mesh.surfaces[i]!] ?? SURFACE_COLOURS.tarmac!;
+            // Deck in the road's colour, barriers white, piers concrete.
+            const colour = mesh.beams[i] === 3 ? '#a39d92' : mesh.beams[i] ? '#f2efe6' : SURFACE_COLOURS[mesh.surfaces[i]!] ?? SURFACE_COLOURS.tarmac!;
             s.tri(mesh.vertices[tri[0]!]!,mesh.vertices[tri[1]!]!,mesh.vertices[tri[2]!]!,colour);
           }
           this.bridgeRanges.push({feature,from,to:s.pos.length});

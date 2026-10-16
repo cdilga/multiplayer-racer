@@ -638,7 +638,12 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
 /// Opposite-hand lobes joined by long tangent straights, crossing once at a real angle.
 /// The upper straight's grade is applied after terrain, never baked into the lower road.
 fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: LengthClass) -> Course {
-    let target = rng.range(band.length_min_m, band.length_max_m);
+    let floor = data
+        .presets
+        .figure_eight
+        .min_length_m
+        .clamp(band.length_min_m, band.length_max_m);
+    let target = rng.range(floor, band.length_max_m);
     let angle = deg(rng.range(
         data.crossing.lobe_turn_min_deg,
         data.crossing.lobe_turn_max_deg,
