@@ -516,6 +516,8 @@ pub struct Harness {
     seen_damage: usize,
     /// The jj-input source machine of each car driven by raw `stick` spans.
     sources: std::collections::BTreeMap<u32, jj_input::SourceState>,
+    /// R127, as the host: cars whose pull has been held since the countdown (reverse stays locked until released).
+    start_lock: std::collections::BTreeSet<u32>,
 }
 
 /// Spawns a car the way a fixture's `cars` entry does (journaled); returns it and its spawn pose.
@@ -585,6 +587,7 @@ impl Harness {
             seen_race: 0,
             seen_damage: 0,
             sources: std::collections::BTreeMap::new(),
+            start_lock: std::collections::BTreeSet::new(),
         })
     }
 
@@ -684,18 +687,26 @@ impl Harness {
                     .race
                     .as_ref()
                     .is_some_and(|r| r.countdown && t < r.at_tick);
+                if grid_held {
+                    self.start_lock.insert(car);
+                } else if !s.drive.reverse {
+                    self.start_lock.remove(&car);
+                }
                 sim.set_input(
                     CarId(car),
                     if grid_held {
                         DriveInput::grid_held()
                     } else {
-                        DriveInput::from_semantics(
-                            s.drive.throttle,
-                            s.drive.steer,
-                            s.drive.brake,
-                            s.drift,
-                            s.boost,
-                        )
+                        DriveInput {
+                            no_reverse: self.start_lock.contains(&car),
+                            ..DriveInput::from_semantics(
+                                s.drive.throttle,
+                                s.drive.steer,
+                                s.drive.brake,
+                                s.drift,
+                                s.boost,
+                            )
+                        }
                     },
                 );
                 for a in fired {

@@ -141,6 +141,9 @@ struct SeatInput {
     /// The player's learner-assist level (R125, `SetAssist`): carried to this seat's car every tick, so it holds across
     /// rounds and new cars; the tile shows an L-plate while it isn't Off.
     assist: jj_sim::assist::AssistLevel,
+    /// R127: reverse is locked on the grid; a pull held through the countdown stays a brake after GO (no creeping back
+    /// that would cost a late launch) until the stick leaves the pull.
+    start_lock: bool,
 }
 
 /// A host pad or key cluster's button edges and its way back after leaving.
@@ -748,7 +751,7 @@ impl Host {
         let held = self.driving() == jj_session::director::Driving::Held;
         // R125: each seat's assist level rides to its car. Catch-up is a round rule applied at GO, so a
         // free-drive or fixture world retains its own rules and journals rather than being rewritten here.
-        for input in self.inputs.values() {
+        for input in self.inputs.values_mut() {
             let Some(car) = input.car else { continue };
             if self.sim.assist_level(car) != input.assist {
                 self.sim.set_assist(car, input.assist);
@@ -759,9 +762,15 @@ impl Host {
                     .age_ms(now_ms)
                     .is_some_and(|age| age <= STALE_MS);
             let controls = if held {
+                input.start_lock = true;
                 DriveInput::grid_held()
             } else if fresh {
-                controls(input.state.semantics())
+                let s = input.state.semantics();
+                input.start_lock &= s.drive.reverse;
+                DriveInput {
+                    no_reverse: input.start_lock,
+                    ..controls(s)
+                }
             } else {
                 DriveInput::default()
             };
@@ -1330,6 +1339,7 @@ impl Host {
                     menu_open: false,
                     unplugged_since_ms: None,
                     assist: jj_sim::assist::AssistLevel::Off,
+                    start_lock: false,
                     // P1-C14: a host pad, wheel or key cluster has no phone to turn the prompts on, so its seat starts with them on.
                     prompt: {
                         let mut p = prompts::PromptTrack::default();

@@ -1,9 +1,9 @@
 {
  "scenario": "start-launch",
- "what": "R127 gated start, driven through the raw sticks as a host pad is. Four Cruz Missiles on the greybox grid; the countdown holds the grid for 3 s (GO at tick 360), when no car moves whatever its stick says and reverse is locked. early: pulls back from the start and snaps forward at tick 300, before GO: a false start, so its launch is forfeited for this start and it just drives off at GO. perfect: pulls back through the countdown and snaps at GO: the launch fires with the perfect-start bonus. late: keeps pulling (backing up a little after GO) and snaps half a second late: a normal launch. none: no stick until GO, then full throttle. Expect: nobody moves before GO; only perfect and late launch; perfect leads.",
+ "what": "R127 gated start, driven through the raw sticks as a host pad is. Four Cruz Missiles on the greybox grid; the countdown holds the grid for 3 s (GO at tick 360), when no car moves whatever its stick says and reverse is locked. early: pulls back from the start and snaps forward at tick 300, before GO: a false start, so its launch is forfeited for this start and it just drives off at GO. perfect: pulls back through the countdown and snaps at GO: the launch fires with the perfect-start bonus. late: keeps pulling (backing up a little after GO) and snaps half a second late: a normal launch. none: no stick until GO, then full throttle. Expect: nobody moves before GO; only perfect and late launch; perfect leads. very-late: keeps pulling a full second past GO: reverse stays locked while the pull that began on the grid is held, so the car waits on its brakes and still launches.",
  "map": "maps/greybox-loop.json",
  "seed": 7,
- "ticks": 540,
+ "ticks": 600,
  "race": {
   "laps": 1,
   "atTick": 360,
@@ -25,6 +25,10 @@
   {
    "routePoint": 4,
    "lateral": 4.5
+  },
+  {
+   "routePoint": 1,
+   "lateral": 0
   }
  ],
  "inputs": [
@@ -91,6 +95,23 @@
   {
    "car": 3,
    "fromTick": 360,
+   "stick": [
+    0,
+    1
+   ]
+  },
+  {
+   "car": 4,
+   "fromTick": 0,
+   "stick": [
+    0,
+    -1
+   ],
+   "toTick": 480
+  },
+  {
+   "car": 4,
+   "fromTick": 480,
    "stick": [
     0,
     1
@@ -182,25 +203,42 @@
    "car": 0,
    "metric": "progressM",
    "min": 9,
-   "max": 14
+   "max": 14,
+   "atTick": 540
   },
   {
    "car": 1,
    "metric": "progressM",
    "min": 28,
-   "max": 38
+   "max": 38,
+   "atTick": 540
   },
   {
    "car": 2,
    "metric": "progressM",
    "min": 11,
-   "max": 18
+   "max": 18,
+   "atTick": 540
   },
   {
    "car": 3,
    "metric": "progressM",
    "min": 9,
-   "max": 14
+   "max": 14,
+   "atTick": 540
+  },
+  {
+   "car": 4,
+   "atTick": 479,
+   "metric": "forwardSpeed",
+   "min": -0.3,
+   "max": 0.3
+  },
+  {
+   "car": 4,
+   "metric": "wheelieDriveS",
+   "min": 0.7,
+   "max": 0.9
   }
  ],
  "baselines": {
