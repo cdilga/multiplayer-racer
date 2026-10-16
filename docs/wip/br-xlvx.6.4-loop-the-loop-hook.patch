@@ -1,0 +1,401 @@
+diff --git a/crates/jj-procgen/src/lib.rs b/crates/jj-procgen/src/lib.rs
+index 90659b78..f973ee2a 100644
+--- a/crates/jj-procgen/src/lib.rs
++++ b/crates/jj-procgen/src/lib.rs
+@@ -51,7 +51,7 @@ use crate::seed::Streams;
+ 
+ pub const GENERATOR_ID: &str = "jj.procgen.course";
+ /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
+-pub const GENERATOR_VERSION: &str = "24";
++pub const GENERATOR_VERSION: &str = "25";
+ const STEP_M: f64 = 2.5;
+ /// Rooftop lots keep this far (m along the road) from a set piece's span.
+ const ROOF_PIECE_MARGIN_M: f64 = 10.0;
+@@ -76,6 +76,9 @@ pub struct Report {
+     pub fork_rejects: BTreeMap<String, u32>,
+     /// The course's set-piece beat straights (m along the lap, P1-FL15c).
+     pub beat_spans: Vec<(f64, f64)>,
++    /// The loops placed on the lap (br-xlvx.6.4), and why candidate beats were turned down (R90).
++    pub loops: u32,
++    pub loop_rejects: BTreeMap<String, u32>,
+ }
+ 
+ /// The map for `seed`.
+@@ -161,11 +164,32 @@ pub fn generate_course(
+     data: &tuning::GeneratorData,
+     pieces: &setpieces::Data,
+ ) -> Result<(Map, Report), biome::SelectError> {
+-    let centerline = centred(&resample(&course.points));
++    let mut centerline = centred(&resample(&course.points));
++    // Loops (br-xlvx.6.4) take a set-piece beat straight: the centreline jogs under and after each before anything is
++    // laid on it, from their own stream (seeded off the structure stream's state, a clone: nothing else moves). The
++    // beats move with the jog (same route points, new arc lengths).
++    let loop_data = loops::shipped();
++    let (loop_sites, mut loop_rejects) = if data.set_pieces {
++        let loop_seed = st.structure.clone().next_u64() ^ 0x100F;
++        loops::jog(
++            &mut centerline,
++            &course.beat_spans,
++            WIDTH_M,
++            &mut seed::Rng::stream(loop_seed, "loops"),
++            loop_data,
++        )
++    } else {
++        Default::default()
++    };
++    let beat_spans = if loop_sites.is_empty() {
++        course.beat_spans.clone()
++    } else {
++        loops::moved_spans(&resample_s(&course.points), &centerline, &course.beat_spans)
++    };
+     let sel = if course.crossing.is_some() {
+         biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
+     } else {
+-        biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &course.beat_spans)?
++        biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &beat_spans)?
+     };
+     let props = placeholder_props(&mut st, &centerline);
+     let n = centerline.len();
+@@ -201,6 +225,12 @@ pub fn generate_course(
+     if course.crossing.is_some() {
+         crossings::place(&mut map, &course, &data.course.crossing);
+     }
++    // The loops stand on the finished ground (cut where it rises into the deck), before the set pieces, which keep a
++    // beat's spacing from them, and the small features, which keep off their straights.
++    let (loop_spans, place_rejects) = loops::place(&mut map, &loop_sites, loop_data);
++    for (k, v) in place_rejects {
++        *loop_rejects.entry(k).or_default() += v;
++    }
+     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
+     let ranges: Vec<(f64, f64, features::Density)> = sel
+         .segments()
+@@ -227,11 +257,14 @@ pub fn generate_course(
+         .zip(&ranges)
+         .map(|((b, _, _), &(lo, hi, _))| (lo, hi, b))
+         .collect();
+-    let ranges = crossings::feature_ranges(&map, &ranges);
++    let ranges = loops::clear_of(&crossings::feature_ranges(&map, &ranges), &loop_spans, 0.0);
++
+     // Its own stream, seeded from the structure stream's state (a clone: nothing else moves), so each course draw of a
+     // seed gets its own placement.
+     let piece_seed = st.structure.clone().next_u64();
+-    let (pieces, piece_rejects) = if data.set_pieces {
++    let (pieces, piece_rejects) = if !data.set_pieces {
++        Default::default()
++    } else if loop_spans.is_empty() {
+         setpieces::place_counted(
+             &mut map,
+             &mut seed::Rng::stream(piece_seed, "set-pieces"),
+@@ -239,7 +272,29 @@ pub fn generate_course(
+             pieces,
+         )
+     } else {
+-        Default::default()
++        // A loop is one of the lap's set pieces (R132): the gap-leaps make up the rest, a rhythm's spacing from it
++        // (R20) where the lap has the room, else the road two pieces keep between them (the minimum still holds).
++        let lap_m = sel.total;
++        let beside = loops::pieces_beside(pieces, loop_spans.len(), lap_m);
++        let want = setpieces::min_for(&beside, lap_m, &sel.biomes()) as usize;
++        let before = map.clone();
++        let spaced = setpieces::place_counted(
++            &mut map,
++            &mut seed::Rng::stream(piece_seed, "set-pieces"),
++            &loops::clear_of(&piece_ranges, &loop_spans, loops::piece_gap_m()),
++            &beside,
++        );
++        if spaced.0.len() >= want {
++            spaced
++        } else {
++            map = before;
++            setpieces::place_counted(
++                &mut map,
++                &mut seed::Rng::stream(piece_seed, "set-pieces"),
++                &loops::clear_of(&piece_ranges, &loop_spans, setpieces::CLEAR_M),
++                &beside,
++            )
++        }
+     };
+     let ranges = setpieces::clear_of(&ranges, &pieces);
+     // Route forks (R134, P1-FL16) on the sweepers left, from their own stream; the small features keep clear of them.
+@@ -299,6 +354,7 @@ pub fn generate_course(
+     // their dressing references; no earlier placement pass may fill the approach afterwards.
+     crossings::clear_corridors(&mut map, &registry);
+     setpieces::clear_footprints(&mut map, &registry);
++    loops::clear_footprints(&mut map);
+     forks::clear_corridors(&mut map, &registry);
+     biome::wayfinding::fork_gores(&mut map);
+     // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
+@@ -314,9 +370,13 @@ pub fn generate_course(
+         // A set piece's span and `ROOF_PIECE_MARGIN_M` either side: its approach and run-out are graded ground a
+         // lot's kicker would launch off (a lot just past a run-out overshot its roof, Town seed 0). Its detour's
+         // painted track is `roofs::place`'s own surface check.
+-        pieces.iter().any(|p| {
+-            sel.s[i] + ROOF_PIECE_MARGIN_M > p.from_s && sel.s[i] < p.to_s + ROOF_PIECE_MARGIN_M
+-        })
++        pieces
++            .iter()
++            .map(|p| (p.from_s, p.to_s))
++            .chain(loop_spans.iter().map(|p| (p.from_s, p.to_s)))
++            .any(|(from, to)| {
++                sel.s[i] + ROOF_PIECE_MARGIN_M > from && sel.s[i] < to + ROOF_PIECE_MARGIN_M
++            })
+     };
+     roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
+         if reserved(i) {
+@@ -332,6 +392,9 @@ pub fn generate_course(
+     rep.set_piece_rejects = piece_rejects;
+     rep.forks = fork_spans.len() as u32;
+     rep.fork_rejects = fork_rejects;
++    rep.loops = loop_spans.len() as u32;
++    rep.loop_rejects = loop_rejects;
++    rep.beat_spans = beat_spans;
+     Ok((map, rep))
+ }
+ 
+@@ -360,9 +423,16 @@ fn report(course: &Course) -> Report {
+         forks: 0,
+         fork_rejects: BTreeMap::new(),
+         beat_spans: course.beat_spans.clone(),
++        loops: 0,
++        loop_rejects: BTreeMap::new(),
+     }
+ }
+ 
++/// The arc length at each point of [`resample`]`(dense)` (the line the course's spans are measured on).
++fn resample_s(dense: &[(f64, f64)]) -> Vec<f64> {
++    arc_lengths(&resample(dense)).0
++}
++
+ /// Resamples a closed polyline to points evenly spaced by arc length (~[`STEP_M`]), keeping the first point.
+ fn resample(dense: &[(f64, f64)]) -> Vec<(f64, f64)> {
+     let (s, total) = arc_lengths(dense);
+diff --git a/crates/jj-procgen/src/loops.rs b/crates/jj-procgen/src/loops.rs
+index a03a060b..d2356233 100644
+--- a/crates/jj-procgen/src/loops.rs
++++ b/crates/jj-procgen/src/loops.rs
+@@ -476,19 +476,24 @@ fn regrounded(map: &mut Map) {
+     }
+ }
+ 
+-/// `ranges` with every loop's stretch cut out.
+-pub fn clear_of<T: Copy>(ranges: &[(f64, f64, T)], placed: &[Placed]) -> Vec<(f64, f64, T)> {
++/// `ranges` with every loop's stretch, and `margin_m` either side, cut out.
++pub fn clear_of<T: Copy>(
++    ranges: &[(f64, f64, T)],
++    placed: &[Placed],
++    margin_m: f64,
++) -> Vec<(f64, f64, T)> {
+     let mut out = ranges.to_vec();
+     for p in placed {
++        let (lo, hi) = (p.from_s - margin_m, p.to_s + margin_m);
+         out = out
+             .into_iter()
+             .flat_map(|(a, b, t)| {
+                 let mut keep = Vec::new();
+-                if a < p.from_s {
+-                    keep.push((a, b.min(p.from_s), t));
++                if a < lo {
++                    keep.push((a, b.min(lo), t));
+                 }
+-                if b > p.to_s {
+-                    keep.push((a.max(p.to_s), b, t));
++                if b > hi {
++                    keep.push((a.max(hi), b, t));
+                 }
+                 keep
+             })
+@@ -518,3 +523,44 @@ pub fn clear_footprints(map: &mut Map) {
+     map.dressing.retain(|d| !on(d.pose.x, d.pose.z));
+     map.props.retain(|q| !on(q.pose.x, q.pose.z));
+ }
++
++/// The loops on `map`.
++pub fn count(map: &Map) -> usize {
++    map.features.iter().filter(|f| LoopDesign::of(f).is_some()).count()
++}
++
++/// The road a gap-leap's kicker keeps from a loop's stretch (the rhythm's set-piece spacing, R20: `minSetPieceSpacingS`
++/// at its design speed, so the time between them is at least that wherever corners slow the car), m.
++pub fn piece_gap_m() -> f64 {
++    let r = crate::rhythm::shipped();
++    r.min_set_piece_spacing_s * r.design_speed_mps
++}
++
++/// The set-piece data for a lap that already has `loops` of its set pieces (R132: a loop is one): its minimums and
++/// its expected pieces per km each that many fewer (never below none).
++pub fn pieces_beside(
++    data: &crate::setpieces::Data,
++    loops: usize,
++    lap_m: f64,
++) -> crate::setpieces::Data {
++    let mut d = data.clone();
++    let k = loops as u32;
++    d.min_per_lap = d.min_per_lap.saturating_sub(k);
++    d.min_per_short_lap = d.min_per_short_lap.saturating_sub(k);
++    for v in d.min_per_lap_in.values_mut() {
++        *v = v.saturating_sub(k);
++    }
++    d.per_km = (d.per_km - loops as f64 / (lap_m / 1000.0).max(1e-6)).max(0.0);
++    d
++}
++
++/// `spans` (arc lengths along `before`, whose points are those of `after`) as arc lengths along `after`: [`jog`] moves
++/// points but keeps them, so a span keeps its route points and takes their new lengths.
++pub fn moved_spans(before: &[f64], after: &[(f64, f64)], spans: &[(f64, f64)]) -> Vec<(f64, f64)> {
++    let (s, total) = arc_lengths(after);
++    let at = |v: f64| match before.iter().position(|&b| b >= v) {
++        Some(i) if i < s.len() => s[i],
++        _ => total,
++    };
++    spans.iter().map(|&(lo, hi)| (at(lo), at(hi))).collect()
++}
+diff --git a/crates/jj-procgen/src/rhythm/mod.rs b/crates/jj-procgen/src/rhythm/mod.rs
+index a6ec92b7..5aa1dc38 100644
+--- a/crates/jj-procgen/src/rhythm/mod.rs
++++ b/crates/jj-procgen/src/rhythm/mod.rs
+@@ -1,7 +1,7 @@
+ //! The lap's beat rhythm (R132, R136, P1-FL15c; docs/research/fun-tracks.md R20/R21). Every route point of a finished
+ //! map is one beat:
+ //!
+-//! - **set piece**: `crossingBeatM` either side of a crossing point (over and under the deck), and from `setPieceLeadS` before a set piece's kicker (the commitment) to its landing's end;
++//! - **set piece**: `crossingBeatM` either side of a crossing point (over and under the deck), and from `setPieceLeadS` before a set piece's kicker (the commitment) to its landing's end (a loop's: its entry to its exit);
+ //! - **recovery**: the first `recoveryS` after the landing (the run-out, a stretch to settle);
+ //! - **technical**: a corner tight enough that the speed it allows (lateral grip over its radius) is under
+ //!   `technicalBelowMps`: hairpins, medium corners, chicanes;
+@@ -218,21 +218,25 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
+             }
+         }
+     }
+-    // Set pieces, then the recovery after each.
+-    let mut set_pieces = 0;
+-    let mut no_recovery = Vec::new();
+-    for f in &map.features {
+-        let Some(g) = GapLeap::of(f) else {
+-            continue;
+-        };
+-        // The beat is the commitment (a lead-in before the kicker) to the landing's end; the approach before it is
+-        // the road it's on, and the run-out after it is the recovery.
++    // Set pieces, then the recovery after each. The beat is the commitment (a lead-in before the kicker, or a loop's
++    // entry) to the landing's end (a loop's exit); the approach before it is the road it's on, and the run-out after it
++    // is the recovery. Loops (br-xlvx.6.4) are set pieces too (R132).
++    let lead = (libm::round(d.set_piece_lead_s * d.design_speed_mps / mean_ds) as usize).min(n - 1);
++    let gap_leaps = map.features.iter().filter_map(|f| {
++        let g = GapLeap::of(f)?;
+         let base = jj_map::jump::feature_base(map, f);
+-        let lead =
+-            (libm::round(d.set_piece_lead_s * d.design_speed_mps / mean_ds) as usize).min(n - 1);
+-        let from = (base + n - lead) % n;
+-        let to = (base + (libm::round(g.end_u() / mean_ds) as usize).min(n - 1)) % n;
+-        set_pieces += 1;
++        Some((base, (base + (libm::round(g.end_u() / mean_ds) as usize).min(n - 1)) % n))
++    });
++    let loops = map
++        .features
++        .iter()
++        .filter_map(jj_map::looping::LoopDesign::of)
++        .map(|l| (l.entry % n, l.exit % n));
++    let pieces: Vec<(usize, usize)> = gap_leaps.chain(loops).collect();
++    let set_pieces = pieces.len();
++    let mut no_recovery = Vec::new();
++    for (start, to) in pieces {
++        let from = (start + n - lead) % n;
+         let mut k = from;
+         loop {
+             beats[k] = Beat::SetPiece;
+diff --git a/crates/jj-procgen/src/setpieces/mod.rs b/crates/jj-procgen/src/setpieces/mod.rs
+index 8ab99a92..210c39da 100644
+--- a/crates/jj-procgen/src/setpieces/mod.rs
++++ b/crates/jj-procgen/src/setpieces/mod.rs
+@@ -1466,7 +1466,9 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
+         .features
+         .iter()
+         .filter(|f| GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s)
+-        .count();
++        .count()
++        // A loop is one of the lap's set pieces (R132), 15 m and more tall on its own beat straight.
++        + crate::loops::count(map);
+     let lap_m = crate::assemble::arc_lengths(
+         &map.route
+             .points
+diff --git a/crates/jj-procgen/src/stations.rs b/crates/jj-procgen/src/stations.rs
+index ad2891de..c80f50bd 100644
+--- a/crates/jj-procgen/src/stations.rs
++++ b/crates/jj-procgen/src/stations.rs
+@@ -44,6 +44,12 @@ pub fn place(map: &mut Map, data: &StationData, registry: &jj_map::Registry) {
+             .unwrap_or(0);
+         keep_out.push((s[base] - CLEAR_M, s[base] + d.length_m() + CLEAR_M));
+     }
++    // And each loop, its entry to its exit (br-xlvx.6.4).
++    for d in map.features.iter().filter_map(jj_map::looping::LoopDesign::of) {
++        if d.exit < n {
++            keep_out.push((s[d.entry] - CLEAR_M, s[d.exit] + CLEAR_M));
++        }
++    }
+     let blocked = |at: f64| {
+         keep_out.iter().any(|&(a, b)| {
+             let (a, b) = (a.rem_euclid(total), b.rem_euclid(total));
+diff --git a/crates/jj-procgen/tests/loops.rs b/crates/jj-procgen/tests/loops.rs
+index 64970af1..ef7ed5c9 100644
+--- a/crates/jj-procgen/tests/loops.rs
++++ b/crates/jj-procgen/tests/loops.rs
+@@ -153,3 +153,60 @@ fn a_bot_laps_a_generated_loop_upside_down_at_the_top() {
+         assert!(min_up < -0.9, "seed {seed}: never upside down ({min_up})");
+     }
+ }
++
++// ---- The procgen bank (br-xlvx.6.4 AC1): loops in the generated, race-prepared maps.
++
++const BIOMES: [Biome; 4] = [
++    Biome::Town,
++    Biome::Rocks,
++    Biome::OutbackDirt,
++    Biome::OutbackBitumen,
++];
++const BANK_SEEDS: u64 = if cfg!(debug_assertions) { 2 } else { 16 };
++
++/// A seed's race-prepared map, loaded as the game loads it.
++fn prepared(seed: u64, biome: Biome) -> (LoadedMap, jj_procgen::Prepared) {
++    let p = jj_procgen::prepare(seed, &[biome]);
++    let m = load_canonical(&canonical_bytes(&p.map), &jj_procgen::registry())
++        .unwrap_or_else(|r| panic!("{biome:?} seed {seed}: {:?}", r.violations));
++    (m, p)
++}
++
++#[test]
++fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
++    let mut lines = Vec::new();
++    for biome in BIOMES {
++        let mut with = 0;
++        for seed in 0..BANK_SEEDS {
++            let (m, p) = prepared(seed, biome);
++            assert!(p.valid, "{biome:?} seed {seed}: {:?}", p.attempts);
++            let loops: Vec<_> = m
++                .map
++                .features
++                .iter()
++                .filter(|f| f.kind == FeatureKind::Loop)
++                .collect();
++            for f in &loops {
++                let problems = jj_map::looping::problems(&m.map, &f.params);
++                assert!(problems.is_empty(), "{biome:?} seed {seed}: {problems:?}");
++            }
++            let report = jj_map::validate(&m.map, &jj_procgen::registry());
++            assert!(report.ok, "{biome:?} seed {seed}: {:?}", report.violations);
++            let rhythm = jj_procgen::rhythm::of(&m.map);
++            let notes = jj_procgen::rhythm::notes(&rhythm, jj_procgen::rhythm::shipped());
++            eprintln!(
++                "{biome:?} seed {seed}: {} loop(s), {} set piece(s) {:?}, {:.0} m {:?}, plan {:?}, loop rejects {:?}, notes {notes:?}",
++                loops.len(),
++                p.course.set_pieces.len(),
++                p.course.set_pieces,
++                p.course.length_m,
++                p.course.preset,
++                p.plan,
++                p.course.loop_rejects,
++            );
++            with += usize::from(!loops.is_empty());
++        }
++        lines.push(format!("{biome:?}: loops on {with} of {BANK_SEEDS} seeds"));
++    }
++    eprintln!("{}", lines.join("\n"));
++}
