@@ -105,6 +105,12 @@ Fixtures moved, each with its reason (also in the fixture's own `what`):
   car alongside the prop, so the hit was the car's.
 - `scenarios/duels/orderings/air-control-duel.json`: two beats carry a stated `gap`. A forgiving landing no longer makes
   an over-corrected tipped landing slower. R129's landing tiers are P1-FL07 (br-bbki.7), which closes the gap.
+- `assets/profiles/tradie-ute.json`: `roll_damping` 30 (was 8). On generated seed 4, point 520, the R122 bank's
+  35 m/s flick runs the rebuilt Ute 8 m off the centreline into the guard rails. The rail took 14 m/s in a tick and the
+  rebound rolled the car (upY 0.295). The Cruz, Hawk and Lion hit the same rails and stayed upright. One-throw variants
+  on eris: the bank hand-over off and `body_friction` 0.05 change nothing; `roll_damping` 30 gives upY 0.994. The full
+  bank for the Ute: 585 runs, 0 dives, 0 roll-overs (at 20: 1 dive). The other cars keep 8: at 30 the Lion rolls once.
+  `scenarios/roster/mixed-host.json` is re-blessed (the Ute is seat 1): f83b8fc3….
 
 ## Known gaps
 
