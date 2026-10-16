@@ -132,7 +132,8 @@ export class Session {
   /** The connection said Hello (sources attach and claim after it). */
   helloed = false;
   /** Counters for tests and the debug readout. */
-  stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0, records: 0 };
+  /** `dropped`: commands sent while the cmd channel wasn't open, which never left the phone (br-b2sv). */
+  stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0, records: 0, dropped: 0 };
   onChange: () => void = () => {};
   onIdentify: () => void = () => {};
   /** Every stick sample (the tutorial listens). */
@@ -324,7 +325,10 @@ export class Session {
       return;
     }
     const c = this.link?.channels?.[ch];
-    if (!c || c.readyState !== 'open') return;
+    if (!c || c.readyState !== 'open') {
+      if (ch === 'cmd') this.stats.dropped += 1;
+      return;
+    }
     c.send(bytes as Uint8Array<ArrayBuffer>);
     if (ch === 'cmd') this.stats.cmds += 1;
   }
