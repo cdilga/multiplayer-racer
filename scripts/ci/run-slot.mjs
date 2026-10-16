@@ -30,12 +30,17 @@ const envFor = (f) => {
 };
 // One target at a time within a slot: host pages render on the CPU (software GL) here, and parallel files starve each
 // other's timers, so the timing tests would measure the runner, not the host.
+// A hung target is killed, not waited for: the runner didn't enforce the job's timeout-minutes, and one hung
+// lab-scenes (CI run 5450) held the job, and with it every queued CI run, for 45 min. Three times the target's learned
+// time, between 15 and 25 min (under the job's 40); GNU timeout signals its whole process group, so the browsers go too.
+const limitS = (t) => Math.min(25 * 60, Math.max(15 * 60, 3 * (durations[t] ?? 0)));
 let failed = 0;
 for (const t of targets) {
   const f = fileOf(t);
   const start = Date.now();
   console.log(`::group::${t}`);
-  const r = spawnSync('node', nodeArgs(durations, t, !f.endsWith('sse.test.mjs')), { stdio: 'inherit', env: { ...base, ...envFor(f) } });
+  const r = spawnSync('timeout', ['-k', '30', String(limitS(t)), 'node', ...nodeArgs(durations, t, !f.endsWith('sse.test.mjs'))], { stdio: 'inherit', env: { ...base, ...envFor(f) } });
+  if (r.status === 124 || r.status === 137) console.log(`run-slot: ${t} killed after ${limitS(t)} s (hung)`);
   console.log('::endgroup::');
   const s = ((Date.now() - start) / 1000).toFixed(1);
   console.log(`slot-timing: ${s}s ${r.status === 0 ? 'pass' : 'FAIL'} ${t}`);

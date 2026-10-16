@@ -4,12 +4,8 @@
 [profile.default]
 default-filter = """
 not (
-    (binary_id(jj-procgen::setpieces) & test(=every_prepared_track_has_a_set_piece_per_lap_on_20_seeds_per_biome))
-  | (binary_id(jj-procgen::biomes) & test(=town_houses_face_straight_streets_with_junctions_and_signs))
-  | binary_id(jj-procgen::overpass)
-  | (binary_id(jj-procgen::handling) & test(=a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over))
+    (binary_id(jj-procgen::handling) & test(=a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over))
 )
 """
-# br-kx4o (CoralCrane, BrownHill): setpieces and biomes, fixed by the generator-24 joint landing.
-# br-wrij (CoralCrane): every overpass leap reports "Bent" on generated eights.
 # br-3pwa (PeachSpire): R122 roll-overs on guard rails (Ute seed 1/4 point 520, Lion seed 4 point 440).
+# Lifted: br-kx4o (setpieces, biomes) and br-wrij (overpass) pass on eris at 1d2b76b5 after the generator-24 landing.
