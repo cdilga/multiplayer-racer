@@ -399,3 +399,16 @@ index 64970af1..ef7ed5c9 100644
 +    }
 +    eprintln!("{}", lines.join("\n"));
 +}
+diff --git a/crates/jj-tools/src/procgen.rs b/crates/jj-tools/src/procgen.rs
+index e210dda2..a954d444 100644
+--- a/crates/jj-tools/src/procgen.rs
++++ b/crates/jj-tools/src/procgen.rs
+@@ -24,6 +24,8 @@ fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
+         "rejects": r.rejects,
+         "setPieces": r.set_pieces,
+         "setPieceRejects": r.set_piece_rejects,
++        "loops": r.loops,
++        "loopRejects": r.loop_rejects,
+     })
+ }
+ 
