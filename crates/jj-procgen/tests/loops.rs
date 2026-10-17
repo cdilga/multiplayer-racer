@@ -207,6 +207,10 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
             with += usize::from(!loops.is_empty());
         }
         lines.push(format!("{biome:?}: loops on {with} of {BANK_SEEDS} seeds"));
+        assert!(
+            with >= 1,
+            "{biome:?}: no loop on any of {BANK_SEEDS} seeds at the shipped loopsPerLap"
+        );
     }
     eprintln!("{}", lines.join("\n"));
 }

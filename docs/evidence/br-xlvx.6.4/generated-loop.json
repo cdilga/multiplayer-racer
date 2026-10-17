@@ -1,0 +1,2971 @@
+{
+  "browser": "chromium",
+  "fixture": {
+    "scenario": "generated-loop",
+    "what": "A Cruz rides a generator-placed loop at speed: over the top upside down, out along the road.",
+    "map": "jj procgen --seed 1 --recipe rocks",
+    "seed": 1,
+    "ticks": 420,
+    "cars": [
+      {
+        "routePoint": 871,
+        "lift": 0.3,
+        "linvel": [
+          9.59499333723546,
+          0,
+          -19.79737616095646
+        ]
+      }
+    ],
+    "race": {
+      "laps": 1,
+      "atTick": 0
+    },
+    "seats": [
+      {
+        "name": "Loopy",
+        "car": 0
+      }
+    ],
+    "inputs": [
+      {
+        "car": 0,
+        "fromTick": 0,
+        "toTick": 420,
+        "throttle": 1
+      }
+    ],
+    "expect": [
+      {
+        "car": 0,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0
+      },
+      {
+        "car": 0,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0
+      }
+    ]
+  },
+  "native": {
+    "scenario": "generated-loop",
+    "what": "A Cruz rides a generator-placed loop at speed: over the top upside down, out along the road.",
+    "ok": true,
+    "ticks": 420,
+    "stoppedEarly": false,
+    "stateHash": "5d073059693e26e4f76eee5cf3e8f9b7fd671ebd9db1996e3ca83aa9d4792867",
+    "replayHash": "5d073059693e26e4f76eee5cf3e8f9b7fd671ebd9db1996e3ca83aa9d4792867",
+    "replayMatches": true,
+    "tuned": [],
+    "checks": [
+      {
+        "car": 0,
+        "atTick": null,
+        "metric": "wrecks",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "car": 0,
+        "atTick": null,
+        "metric": "recoveries",
+        "min": 0,
+        "max": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "baselines": [],
+    "signature": [
+      {
+        "airtimeS": 0.041666666666666664,
+        "boostMeter": 1,
+        "boostTimeS": 0,
+        "car": 0,
+        "conesDropped": 0,
+        "energyGainJ": 0,
+        "energyJ": -594556425.5115285,
+        "finished": 0,
+        "forwardSpeed": 41.70409393310547,
+        "frontAirTimeS": 0.175,
+        "gatesPassed": 0,
+        "headingChangeDeg": 2.7069678926161336,
+        "height": 28.455320358276367,
+        "husks": 0,
+        "landingUpY": 0.9999996423721313,
+        "landings": 1,
+        "lapsCompleted": 0,
+        "lateralDrift": 17.319389529042382,
+        "legalProgressM": 0,
+        "maxNoseUpDeg": 64.66647992430983,
+        "maxPitchDeg": 64.66647992430983,
+        "maxRadiusM": 370.7946850228438,
+        "maxRollDeg": 29.12339826110619,
+        "maxRouteOffsetM": 6.170423747000982,
+        "maxSlipDeg": 89.5617446899414,
+        "maxSpeed": 91.68446350097656,
+        "maxYawRateDegS": 992.3975264007719,
+        "minUpY": -0.9983407855033875,
+        "oiFired": 0,
+        "progressM": 89.27105100069366,
+        "rebounds": 9,
+        "recoveries": 0,
+        "routeOffsetM": 5.795721136635132,
+        "slideChargeGained": 0,
+        "slideTimeS": 0,
+        "slipDeg": 0.02465537190437317,
+        "speed": 41.75619888305664,
+        "stopDistanceM": 44.03070506624205,
+        "stopTimeS": 2.0166666666666666,
+        "travel": 88.59823092167,
+        "upY": 0.9973633885383606,
+        "wheelieDriveS": 0,
+        "wheelsInContact": 2,
+        "wrecks": 0
+      }
+    ],
+    "observations": [
+      {
+        "cars": [
+          {
+            "action": {
+              "boost": 1,
+              "boosting": false,
+              "cones": 0,
+              "oi": 0,
+              "slide": 0,
+              "wheelie": false
+            },
+            "air": {
+              "boostS": 0,
+              "flying": false,
+              "landings": 0,
+              "last": null,
+              "righting": false
+            },
+            "angvel": [
+              -0.04548342525959015,
+              -0.03041173703968525,
+              -0.10573644191026688
+            ],
+            "authorisedJ": 595948851.2515198,
+            "autopilot": null,
+            "car": 0,
+            "derby": null,
+            "energyJ": 1392425.739991267,
+            "forwardSpeed": 41.70409393310547,
+            "headingDeg": 151.4354248046875,
+            "husks": 0,
+            "input": {
+              "brake": 0,
+              "steer": 0,
+              "throttle": 1
+            },
+            "linvel": [
+              20.04125213623047,
+              0.6121411919593811,
+              -36.62722396850586
+            ],
+            "massKg": 1200,
+            "maxEngineForce": 14000,
+            "parts": [
+              {
+                "angleDeg": 0,
+                "health": 0,
+                "part": "core",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "front",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 100,
+                "part": "back",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 60,
+                "part": "door_RR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_FR",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RL",
+                "state": "intact"
+              },
+              {
+                "angleDeg": 0,
+                "health": 80,
+                "part": "wheel_RR",
+                "state": "intact"
+              }
+            ],
+            "position": [
+              -273.3902282714844,
+              28.455320358276367,
+              -240.2130584716797
+            ],
+            "progress": {
+              "distanceM": 2265.3060513318956,
+              "fraction": 0.9257663980439857,
+              "lateralM": 5.795721136635132,
+              "routePoint": 905
+            },
+            "race": {
+              "anchorRoutePoint": null,
+              "assisting": false,
+              "finishedAt": null,
+              "gatesPassed": 0,
+              "ghost": false,
+              "held": false,
+              "laps": 0,
+              "late": false,
+              "progressM": 0,
+              "protected": false,
+              "recoveries": 0,
+              "wrecks": 0
+            },
+            "rotation": [
+              -0.024076007306575775,
+              0.9683204889297485,
+              0.027179785072803497,
+              0.24705713987350464
+            ],
+            "speed": 41.75619888305664,
+            "upY": 0.9973633885383606,
+            "vehicle": 0,
+            "wheels": [
+              {
+                "contact": false,
+                "forwardImpulse": 0,
+                "sideImpulse": 0,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 0,
+                "suspensionLength": 0.3499999940395355
+              },
+              {
+                "contact": false,
+                "forwardImpulse": 0,
+                "sideImpulse": 0,
+                "slipDeg": 0,
+                "steering": 0,
+                "suspensionForce": 0,
+                "suspensionLength": 0.3499999940395355
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": 0,
+                "slipDeg": 0.02465537190437317,
+                "steering": 0,
+                "suspensionForce": 0,
+                "suspensionLength": 0.2826145589351654
+              },
+              {
+                "contact": true,
+                "forwardImpulse": 0,
+                "sideImpulse": 0,
+                "slipDeg": 0.024572080001235008,
+                "steering": 0,
+                "suspensionForce": 0,
+                "suspensionLength": 0.3046657145023346
+              }
+            ],
+            "wheelsInContact": 2
+          }
+        ],
+        "debris": [
+          {
+            "dynamic": true,
+            "halfL": 0.1883544921875,
+            "halfW": 0.1924896240234375,
+            "kind": "Debris",
+            "x": -242.14053344726562,
+            "z": -304.9837951660156
+          },
+          {
+            "dynamic": true,
+            "halfL": 0.18279266357421875,
+            "halfW": 0.1965789794921875,
+            "kind": "Debris",
+            "x": -165.16925048828125,
+            "z": -24.470447540283203
+          },
+          {
+            "dynamic": true,
+            "halfL": 0.18416595458984375,
+            "halfW": 0.21656036376953125,
+            "kind": "Debris",
+            "x": 44.1563606262207,
+            "z": -105.91116333007812
+          },
+          {
+            "dynamic": true,
+            "halfL": 0.1855926513671875,
+            "halfW": 0.181396484375,
+            "kind": "Debris",
+            "x": 327.95391845703125,
+            "z": -156.38323974609375
+          }
+        ],
+        "rails": [
+          {
+            "displacementM": 0,
+            "dressing": 1831,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1832,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1833,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1834,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1835,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1836,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1837,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1838,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1839,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1840,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1841,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1842,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1843,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1844,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1845,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1846,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1847,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1848,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1849,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1850,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1851,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1852,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1853,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1854,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1855,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1856,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1857,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1858,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1859,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1860,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1861,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1862,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1863,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1864,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1865,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1866,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1867,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1868,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1869,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1870,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1871,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1872,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1873,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1874,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1875,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1876,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1877,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1878,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1879,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1880,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1881,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1882,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1883,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1884,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1885,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1886,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1887,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1888,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1889,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1890,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1891,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1892,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1893,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1894,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1895,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1896,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1897,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1898,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1899,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1900,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1901,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1902,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1903,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1904,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1905,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1906,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1907,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1908,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1909,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1910,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1911,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1912,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1913,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1914,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1915,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1916,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1917,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1918,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1919,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1920,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1921,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1922,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1923,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1924,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1925,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1926,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1927,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1928,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1929,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1930,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1931,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1932,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1933,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1934,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1935,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1936,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1937,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1938,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1939,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1940,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1941,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1942,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1943,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1944,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1945,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1946,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1947,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1948,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1949,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1950,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1951,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1952,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1953,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1954,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1955,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1956,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1957,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1958,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1959,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1960,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1961,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1962,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1963,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1964,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1965,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1966,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1967,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1968,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1969,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1970,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1971,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1972,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1973,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1974,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1975,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1976,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1977,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1978,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1979,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1980,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1981,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1982,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1983,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1984,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1985,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1986,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1987,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1988,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1989,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1990,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1991,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1992,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1993,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1994,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1995,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1996,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1997,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1998,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 1999,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2000,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2001,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2002,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2003,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2004,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2005,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2006,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2007,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2008,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2009,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2010,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2011,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2012,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2013,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2014,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2015,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2016,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2017,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2018,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2019,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2020,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2021,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2022,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2023,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2024,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2025,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2026,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2027,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2028,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2029,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2030,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2031,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2032,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2033,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2034,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2035,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2036,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2037,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2038,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2039,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2040,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2041,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2042,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2043,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2044,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2045,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2046,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2047,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2048,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2049,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2050,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2051,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2052,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2053,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2054,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2055,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2056,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2057,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2058,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2059,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2060,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2061,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2062,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2063,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2064,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2065,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2066,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2067,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2068,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2069,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2070,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2071,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2072,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2073,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2074,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2075,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2076,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2077,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2078,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2079,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2080,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2081,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2082,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2083,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2084,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2085,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2086,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2087,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2088,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2089,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2090,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2091,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2092,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2093,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2094,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2095,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2096,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2097,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2098,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2099,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2100,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2101,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2102,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2103,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2104,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2105,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2106,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2107,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2108,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2109,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2110,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2111,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2112,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2113,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2114,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2115,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2116,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2117,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2118,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2119,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2120,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2121,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2122,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2123,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2124,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2125,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2126,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2127,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2128,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2129,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2130,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2131,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2132,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2133,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2134,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2135,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2136,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2137,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2138,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2139,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2140,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2141,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2142,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2143,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2144,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2145,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2146,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2147,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          },
+          {
+            "displacementM": 0,
+            "dressing": 2148,
+            "fixed": false,
+            "springEnergyJ": 0,
+            "travelM": 0.6000000238418579,
+            "velocityMps": 0
+          }
+        ],
+        "session": {
+          "driving": "Held",
+          "gameMs": 0,
+          "gameRemainingMs": null,
+          "phase": "Lobby",
+          "readyRevision": 0,
+          "remainingMs": null,
+          "round": null,
+          "seats": [
+            {
+              "car": 0,
+              "colour": {
+                "index": 0,
+                "rgb": [
+                  229,
+                  50,
+                  45
+                ]
+              },
+              "connected": true,
+              "hasCar": true,
+              "name": "Loopy",
+              "number": 1,
+              "presence": "Active",
+              "ready": false,
+              "seat": 1,
+              "source": 1
+            }
+          ]
+        },
+        "tick": 420
+      }
+    ],
+    "out": "/var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/jj-genloop-LuxAgl/native",
+    "trace": null
+  },
+  "top": {
+    "tick": 246,
+    "position": [
+      -301.4763488769531,
+      42.32616424560547,
+      -205.09303283691406
+    ],
+    "upY": -0.9378751516342163
+  },
+  "rows": [
+    {
+      "file": "top-chase-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "view": "chase"
+    },
+    {
+      "file": "top-chase-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "view": "chase"
+    },
+    {
+      "file": "top-overview-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "view": "overview"
+    },
+    {
+      "file": "top-overview-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "view": "overview"
+    }
+  ],
+  "errors": []
+}
