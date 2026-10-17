@@ -98,7 +98,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await wait(host,()=>window.__jjRoom.view().seats.find(s=>s.name==='Davo')?.choosing===false);
     await shot(phone,`${engine.name()}-phone-ready`);
     await shot(host,`${engine.name()}-lobby-three`);
-    for(const [width,height] of [[412,915],[915,412],[375,667],[673,841],[841,673],[1920,1080],[1366,768]]) {
+    for(const [width,height] of [[412,915],[915,412],[375,667],[1920,1080],[1366,768],[673,841],[841,673]]) {
       await host.setViewportSize({width,height});
       await shot(host,`${engine.name()}-lobby-${width}x${height}`);
       // br-zhuw: every picker and legend under the roster is reachable (inside the strip, which scrolls), never under the
@@ -153,6 +153,8 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
       }
       await host.getByRole('button',{name:'Close',exact:true}).click();
     }
+    // The rest runs at the laptop size, as it did before the foldable sizes (br-8qen) joined the end of the loop.
+    await host.setViewportSize({width:1366,height:768});
     await host.locator('[data-local-ready="1"]').click();
     await wait(host,()=>window.__jjRoom.view().seats.find(s=>s.localSource===1)?.ready===true);
     // br-b2sv: the phone's command counts before Ready: sent (cmds) and dropped on a closed channel, to tell a lost click

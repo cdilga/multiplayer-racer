@@ -16,6 +16,9 @@ import { evidencePath } from '../../../tests/lib/evidence.mjs';
 const repo = resolve(import.meta.dirname, '../../../..');
 const out7 = join(evidencePath(), 'P1-F07');
 const out12 = join(evidencePath(), 'P1-F12');
+// Made here, not in before(): CI runs this file split by test, and a part with no test of its own runs after() alone.
+mkdirSync(out7, { recursive: true });
+mkdirSync(out12, { recursive: true });
 const BASE = '/p/clips/';
 let browser;
 let server;
@@ -24,8 +27,6 @@ const runs = { f07: {}, f12: {} };
 before(async () => {
   server = await serve(build('./', 'clips'), BASE, { JJ_STUN_URLS: '' });
   browser = await chromium.launch({ args: chromiumArgs });
-  mkdirSync(out7, { recursive: true });
-  mkdirSync(out12, { recursive: true });
 });
 after(async () => {
   await browser?.close();
