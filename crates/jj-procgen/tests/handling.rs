@@ -143,12 +143,63 @@ fn throw(map: &LoadedMap, profile: &VehicleProfile, at: usize, speed: f32, how: 
 /// for the bike sim's own tests, not in the roster) keeps the flat and full-lock banks below; its generated-road bank
 /// went with br-8bdm. It duplicated the roster bikes' throws here, and its third of their balance torque tipped it on
 /// a guard rail generator 24 placed (seed 3 point 120); the roster bikes stay upright there.
+/// One test per vehicle, so nextest runs the bank in parallel: as one test it took 2389 s and set CI's floor (run
+/// 5544). `the_r122_bank_names_every_roster_vehicle` fails when the roster gains or loses a vehicle this list misses.
+const R122_VEHICLES: [&str; 6] = [
+    "cruz-missile",
+    "hawk-dash",
+    "lion-president",
+    "pig-catcher",
+    "postie-bike",
+    "tradie-ute",
+];
+
+fn r122(id: &str) {
+    let (_, profile) = profiles()
+        .into_iter()
+        .find(|(v, _)| v == id)
+        .unwrap_or_else(|| panic!("{id} is not in the roster"));
+    thrown_about_on_generated_roads(id, &profile);
+}
+
 #[test]
-fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
-    for (id, profile) in profiles() {
-        eprintln!("vehicle {id}");
-        thrown_about_on_generated_roads(&id, &profile);
-    }
+fn the_r122_bank_names_every_roster_vehicle() {
+    let mut roster: Vec<String> = profiles().into_iter().map(|(id, _)| id).collect();
+    roster.sort();
+    assert_eq!(
+        roster, R122_VEHICLES,
+        "add the new vehicle's R122 test below"
+    );
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_cruz_missile() {
+    r122("cruz-missile");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_hawk_dash() {
+    r122("hawk-dash");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_lion_president() {
+    r122("lion-president");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_pig_catcher() {
+    r122("pig-catcher");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_postie_bike() {
+    r122("postie-bike");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_tradie_ute() {
+    r122("tradie-ute");
 }
 
 fn thrown_about_on_generated_roads(vehicle: &str, profile: &VehicleProfile) {
