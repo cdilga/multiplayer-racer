@@ -325,7 +325,9 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
       ...(generator.length ? { generator: GENERATOR_FILE, generatorSet: generator } : {}),
     };
   };
-  return { lab, inspect: () => ({ open: !panel.hidden, vehicle: vsel.selected(), current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), lab: lab.inspect(), error: errEl.hidden ? null : errEl.textContent }) };
+  // Introspection reads back what the sim holds: a test that steps a held clock past a change's tick sees it on its next
+  // poll, not only if the single refresh after the send happened to land after that tick.
+  return { lab, inspect: () => (void refresh(), { open: !panel.hidden, vehicle: vsel.selected(), current: Object.fromEntries(current), changed: Object.fromEntries(changed), patch: exportPatch(), generatorJournal: generatorJournal.map((j) => ({ ...j })), lab: lab.inspect(), error: errEl.hidden ? null : errEl.textContent })) };
 }
 
 type TuningState = Awaited<ReturnType<TuningClient['tuning']>>;

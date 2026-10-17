@@ -220,7 +220,8 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
 });
 
 // br-bbki.7.1: the air-control and landing data (assets/profiles/air.json) in the same panel, one set for every car.
-// Mid-race, a car is put 30 m up with the throttle held: it pitches its nose up at the profile's rate. Raising
+// Mid-race, a car is launched off the flat road with the throttle held: in the air it pitches its nose up at the profile's
+// rate (a car placed in mid-air never takes off, so air control never starts). Raising
 // air.pitchRateDps makes the same flight pitch faster at once; a band the air validator refuses is shown and kept out;
 // the export carries the change as airProfile + airSet for `jj vehicle tune`.
 test('?tune: air control values change a flight mid-race; refused values; reset; export', { timeout: 240_000 }, async () => {
@@ -234,14 +235,14 @@ test('?tune: air control values change a flight mid-race; refused values; reset;
   const pitch = host.locator('[data-field="air.pitchRateDps"]');
   await pitch.waitFor();
   assert.equal(Number(await pitch.inputValue()), 100, 'the shipped pitch rate');
-  // The same flight each time: car 0 placed 30 m over the flat start straight at 15 m/s, throttle held 1.5 s. The peak
-  // body rate is the air control's pitch (the car has nothing else to turn it).
+  // The same flight each time: car 0 launched off the flat start straight at 15 m/s forward and 14 m/s up, throttle held
+  // 1.5 s. The peak body rate is the air control's pitch (the car has nothing else to turn it).
   const flight = () => host.evaluate(async () => {
     const s = window.__jjTest;
     await s.hold(true);
     await s.command({ cmd: 'autopilot', on: false });
     const car = (await s.observe()).cars[0].car;
-    await s.command({ cmd: 'place', car, pose: { x: 0, y: 30, z: -3.5, headingDeg: 90 }, linvel: [15, 0, 0] });
+    await s.command({ cmd: 'place', car, pose: { x: 0, y: 0.05, z: -3.5, headingDeg: 90 }, linvel: [15, 14, 0] });
     await s.step(1);
     let peak = 0;
     for (let i = 0; i < 30; i++) {
