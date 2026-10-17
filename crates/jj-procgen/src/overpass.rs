@@ -498,7 +498,10 @@ fn feature_of(
             fr.at((prof.lip + prof.rim) / 2.0)[0],
             fr.at((prof.lip + prof.rim) / 2.0)[1],
         );
-    let width = 2.0 * hw;
+    // The flat top spans the road less its side slopes, as a set piece's does: the landing lift's taper then falls on the
+    // road bed, not between ground cells past its edge (where bilinear ground lifted the landing's edge vertices 0.4 m
+    // over the designed surface, Rocks seed 7).
+    let width = 2.0 * (hw - jj_map::jump::EDGE_SLOPE_M);
     Feature {
         kind: FeatureKind::SetPiece,
         pose: Pose {

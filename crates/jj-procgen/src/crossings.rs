@@ -213,9 +213,19 @@ pub fn clear_corridors(map: &mut Map, registry: &Registry) {
         .features
         .iter()
         .filter_map(|f| {
-            let d = jj_map::bridge::BridgeDesign::of(f)?;
+            // A bridge's deck, or an overpass leap's upper road (br-xlvx.10.3): furniture beside the road above stood on
+            // the road below.
+            let upper = if let Some(d) = jj_map::bridge::BridgeDesign::of(f) {
+                d.upper
+            } else {
+                let g = jj_map::setpiece::GapLeap::of(f).filter(|g| g.lower.is_some())?;
+                jj_map::Span {
+                    from: g.from,
+                    to: g.to,
+                }
+            };
             Some(
-                jj_map::bridge::indices(map, d.upper)?
+                jj_map::bridge::indices(map, upper)?
                     .iter()
                     .map(|&i| {
                         let p = &map.route.points[i];

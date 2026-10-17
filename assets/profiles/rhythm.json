@@ -1,6 +1,6 @@
 {
   "schema": "jj.rhythm.v1",
-  "note": "The lap's beat rhythm (R132, R136; docs/research/fun-tracks.md R20, R21): every route point is a beat (flow, set piece, technical, recovery), timed at the design speed. A corner is technical where the speed it allows (lateral grip over its radius) is under technicalBelowMps; a crossing's set-piece beat is crossingBeatM either side of the crossing point, over and under the deck; a set piece runs from setPieceLeadS before its kicker (the commitment) to its landing's end; the recoveryS after that is recovery; the rest is flow. The validator (jj_procgen::rhythm::problems, run on every prepared draw) gates FL15c's acceptance: at least minDistinctBeats beat types, no unbroken stretch of one beat over maxRunShare of the lap, at least the set pieces assets/profiles/set-pieces.json asks of the lap's length (minPerLap, or minPerShortLap under shortLapM). R20's proposals are reported, not gated (rhythm::notes): set pieces minSetPieceSpacingS apart, a recovery after each, flow stretches up to maxFlowRunS, and each beat's total share (R20 proposes 40%). Variety (R28, jj_procgen::variety): across a set of seeds no two laps are more similar than maxSeedSimilarity (route shape, corner sequence, relief, biome order, set-piece mix, rhythm and length); R28's proposed 0.85 is targetSeedSimilarity, reported until the couch calibrates the metric.",
+  "note": "The lap's beat rhythm (R132, R136; docs/research/fun-tracks.md R20, R21): every route point is a beat (flow, set piece, technical, recovery), timed at the design speed. A corner is technical where the speed it allows (lateral grip over its radius) is under technicalBelowMps; a crossing's set-piece beat is crossingBeatM either side of the crossing point, over and under the deck; a set piece runs from setPieceLeadS before its kicker (the commitment) to its landing's end; the recoveryS after that is recovery; the rest is flow. The validator (jj_procgen::rhythm::problems, run on every prepared draw) gates FL15c's acceptance: at least minDistinctBeats beat types, no unbroken stretch of one beat over maxRunShare of the lap, at least the set pieces assets/profiles/set-pieces.json asks of the lap's length (minPerLap, or minPerShortLap under shortLapM). R20's proposals are reported, not gated (rhythm::notes): set pieces minSetPieceSpacingS apart, a recovery after each, flow stretches up to maxFlowRunS, and each beat's total share (R20 proposes 40%). The road's relief (its highest point less its lowest) is at least minReliefM, so a lap is never a flat surface (R132). Variety (R28, jj_procgen::variety): across a set of seeds no two laps are more similar than maxSeedSimilarity (route shape, corner sequence, relief, biome order, set-piece mix, rhythm and length); R28's proposed 0.85 is targetSeedSimilarity, reported until the couch calibrates the metric.",
   "designSpeedMps": 26,
   "lateralGripMps2": 7,
   "radiusWindowM": 10,
@@ -14,5 +14,6 @@
   "maxFlowRunS": 20,
   "minSetPieceSpacingS": 15,
   "maxSeedSimilarity": 0.92,
-  "targetSeedSimilarity": 0.85
+  "targetSeedSimilarity": 0.85,
+  "minReliefM": 25
 }

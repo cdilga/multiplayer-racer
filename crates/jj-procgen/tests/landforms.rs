@@ -143,3 +143,27 @@ fn the_autopilot_laps_every_biome_unaided() {
     }
     assert!(bad.is_empty(), "{}", bad.join("\n"));
 }
+
+/// One prepared lap's plan, crossings and relief (`JJ_SEEDS`, default 7; OutbackBitumen).
+#[test]
+#[ignore]
+fn diag_relief() {
+    let seed: u64 = std::env::var("JJ_SEEDS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(7);
+    let p = jj_procgen::prepare(seed, &[Biome::OutbackBitumen]);
+    let kinds: Vec<_> = p
+        .map
+        .features
+        .iter()
+        .map(|f| format!("{:?}", f.kind))
+        .collect();
+    eprintln!(
+        "plan {:?} features {kinds:?} loopOvers {:?} relief {:.1} attempts {:?}",
+        p.plan,
+        jj_procgen::rhythm::loop_overs(&p.map),
+        metrics(&p.map).relief_m,
+        p.attempts.iter().map(|a| &a.rejected).collect::<Vec<_>>()
+    );
+}

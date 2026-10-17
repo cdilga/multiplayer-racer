@@ -977,6 +977,9 @@ fn span_contains(line: &Line, from: usize, to: usize, i: usize) -> bool {
     (i + n - from) % n <= (to + n - from) % n
 }
 
+/// The cells a stamp handles together (see the nearest-segment note in `stamp`).
+const BLOCK: usize = 4;
+
 /// Sculpts the piece into `map` and returns its feature, or `None` when the terrain can't take it (the run-out back to
 /// the terrain would be too steep).
 fn stamp(
@@ -1089,10 +1092,11 @@ fn stamp(
     let land_w = 2.0 * (hw - jj_map::jump::EDGE_SLOPE_M);
     let bed = hw + 1.5 * sp;
     // Each cell's nearest point on the span's polyline: the segment with the least distance, the lowest index on a tie (as
-    // a scan of every segment in order finds it). The previous cell's segment goes first, so the best is near from the
-    // start, and a segment whose bounding box is already farther than the best is skipped: its distance can't be smaller,
-    // nor equal beyond rounding, so the result is the full scan's, bit for bit (br-cxqk: the full scan for every cell
-    // was most of a draw's time).
+    // a scan of every segment in order finds it). The cells go in blocks of `BLOCK` x `BLOCK` (each cell's ground depends
+    // only on the old ground, so the order is free): a block's farthest corner from one segment bounds every cell's
+    // nearest distance from above, so only the segments (and other road points) whose boxes come within that bound can
+    // matter, and a block farther than the reach from every segment is skipped. The result is the full scan's, bit for
+    // bit (br-cxqk: the full scan for every cell was most of a draw's time).
     let segs = span.len() - 1;
     let boxes: Vec<[f64; 4]> = (0..segs)
         .map(|k| {
@@ -1108,141 +1112,204 @@ fn stamp(
         let (qx, qz) = (a.0 + tt * dx, a.1 + tt * dz);
         (libm::hypot(p.0 - qx, p.1 - qz), tt, dx, dz, l2, a)
     };
-    let mut k0 = 0usize;
-    for r in r0..=r1 {
-        for c in c0..=c1 {
-            let p = (ox + c as f64 * sp, oz + r as f64 * sp);
-            // Nearest point on the span's polyline: u and lat (left positive).
-            let mut best = (seg(k0, p).0, k0);
-            for (k, bx) in boxes.iter().enumerate() {
-                if k == k0 {
-                    continue;
-                }
-                let ex = (bx[0] - p.0).max(p.0 - bx[1]).max(0.0);
-                let ez = (bx[2] - p.1).max(p.1 - bx[3]).max(0.0);
-                if ex * ex + ez * ez > best.0 * best.0 + 1e-6 {
-                    continue;
-                }
-                let dd = seg(k, p).0;
-                if dd < best.0 || dd == best.0 && k < best.1 {
-                    best = (dd, k);
-                }
-            }
-            let (dist, kb) = best;
-            k0 = kb;
-            if dist > reach {
+    // The squared distance between an axis-aligned box and a segment's (or point's) box.
+    let gap2 = |bx: &[f64; 4], (px0, px1, pz0, pz1): (f64, f64, f64, f64)| {
+        let ex = (bx[0] - px1).max(px0 - bx[1]).max(0.0);
+        let ez = (bx[2] - pz1).max(pz0 - bx[3]).max(0.0);
+        ex * ex + ez * ez
+    };
+    let other_boxes: Vec<[f64; 4]> = others.iter().map(|q| [q.0, q.0, q.1, q.1]).collect();
+    let (mut cands, mut near) = (Vec::new(), Vec::new());
+    let mut br = r0;
+    while br <= r1 {
+        let re = (br + BLOCK - 1).min(r1);
+        let mut bc = c0;
+        while bc <= c1 {
+            let ce = (bc + BLOCK - 1).min(c1);
+            let block = (
+                ox + bc as f64 * sp,
+                ox + ce as f64 * sp,
+                oz + br as f64 * sp,
+                oz + re as f64 * sp,
+            );
+            let corners = [
+                (block.0, block.2),
+                (block.1, block.2),
+                (block.0, block.3),
+                (block.1, block.3),
+            ];
+            // The segment whose box is nearest the block, and how near (squared).
+            let (hint, lb2) = (0..segs)
+                .map(|k| (k, gap2(&boxes[k], block)))
+                .fold((0, f64::INFINITY), |b, x| if x.1 < b.1 { x } else { b });
+            // Every cell's nearest segment is no farther than that segment's farthest block corner.
+            let ub = corners.iter().map(|&q| seg(hint, q).0).fold(0.0, f64::max) + 1e-6;
+            cands.clear();
+            cands.extend(
+                (0..segs)
+                    .map(|k| (gap2(&boxes[k], block), k))
+                    .filter(|&(g, _)| g <= ub * ub),
+            );
+            cands.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            let skip = lb2 > (reach + 1e-6) * (reach + 1e-6);
+            let reach_o = ub + 4.0;
+            near.clear();
+            near.extend(
+                (0..others.len()).filter(|&k| gap2(&other_boxes[k], block) <= reach_o * reach_o),
+            );
+            let first_c = bc;
+            bc = ce + 1;
+            if skip {
                 continue;
             }
-            let (_, tt, dx, dz, l2, a) = seg(kb, p);
-            let best = dist;
-            let u = us[kb] + tt * (us[kb + 1] - us[kb]);
-            let lat = (-(p.0 - a.0) * dz + (p.1 - a.1) * dx) / libm::sqrt(l2);
-            // Leave the ground of any other part of the road alone.
-            if others
-                .iter()
-                .any(|q| libm::hypot(p.0 - q.0, p.1 - q.1) < best + 4.0)
-            {
-                continue;
-            }
-            let at = r * cols + c;
-            let h_old = f64::from(old[at]) / 100.0;
-            let road = prof.road(d, u);
-            let a = libm::fabs(lat);
-            let mut h;
-            let mut surf = None;
-            // 1. The road's own structure: the bed, then walls (or the mesa's plateau) and an embankment or cutting.
-            let in_walls = u >= wall_from && u <= d.lip_u();
-            let wall_env = smoothstep((u - wall_from) / 12.0);
-            let shoulder = if in_walls { hw + d.hw_wall() } else { bed };
-            if a <= bed {
-                h = road;
-            } else if in_walls && a <= shoulder {
-                let top = road + d.wall_h * wall_env;
-                // Walls rise steeply from the bed's edge: two cells to full height.
-                let rise = smoothstep((a - bed) / (2.0 * sp));
-                h = road + (top - road) * rise;
-                if d.wall_h > 0.0 && wall_env > 0.3 {
-                    surf = Some(d.p.wall_surface);
-                }
-            } else {
-                let edge_top = if in_walls {
-                    road + d.wall_h * wall_env
-                } else {
-                    road
-                };
-                let edge = if in_walls { shoulder } else { bed };
-                // Side slopes: steep (a wall reads as a wall) where they are tall, gentle where they are low.
-                let drop = libm::fabs(edge_top - h_old);
-                // Past the rim the verges are gentle and drivable (R133): a car that comes down off line or slides
-                // wide after a rough landing drives back up instead of meeting a wall.
-                let run = if u > d.rim_u() {
-                    (drop * 2.5).max(10.0)
-                } else {
-                    (drop * 0.6).max(6.0)
-                };
-                let w = 1.0 - smoothstep((a - edge) / run);
-                h = h_old + (edge_top - h_old) * w;
-                if in_walls && drop > 3.0 && w > 0.5 {
-                    surf = Some(d.p.wall_surface);
-                }
-            }
-            // 2. The landmark (a dome, butte or tor seen from afar) beyond the landing, and the canyon's flank dome.
-            let domes = landmarks
-                .iter()
-                .map(|&c| (c, d.p.landmark_radius_m, d.landmark_h))
-                .chain(flank);
-            for (c, r, height) in domes {
-                let dl = libm::hypot(u - c.0, lat - c.1);
-                // Never on the road bed.
-                if dl < r && a > bed + sp {
-                    let q = dl / r;
-                    let dome = prof.road(d, c.0) + height * libm::sqrt(1.0 - q * q).powf(0.8);
-                    if dome > h {
-                        h = dome;
-                        surf = Some(Surface::Rock);
+            for r in br..=re {
+                for c in first_c..=ce {
+                    let p = (ox + c as f64 * sp, oz + r as f64 * sp);
+                    // Nearest point on the span's polyline: u and lat (left positive).
+                    // Nearest boxes first; a box already farther than the best can't hold a nearer (or equal)
+                    // segment.
+                    let mut best = (f64::INFINITY, usize::MAX);
+                    for &(_, k) in &cands {
+                        let bx = &boxes[k];
+                        let ex = (bx[0] - p.0).max(p.0 - bx[1]).max(0.0);
+                        let ez = (bx[2] - p.1).max(p.1 - bx[3]).max(0.0);
+                        if ex * ex + ez * ez > best.0 * best.0 + 1e-6 {
+                            continue;
+                        }
+                        let dd = seg(k, p).0;
+                        if dd < best.0 || dd == best.0 && k < best.1 {
+                            best = (dd, k);
+                        }
+                    }
+                    let (dist, kb) = best;
+                    if dist > reach {
+                        continue;
+                    }
+                    let (_, tt, dx, dz, l2, a) = seg(kb, p);
+                    let best = dist;
+                    let u = us[kb] + tt * (us[kb + 1] - us[kb]);
+                    let lat = (-(p.0 - a.0) * dz + (p.1 - a.1) * dx) / libm::sqrt(l2);
+                    // Leave the ground of any other part of the road alone.
+                    // Squared distances decide all but a hair's breadth of cases; those take the exact `hypot`.
+                    let t2 = (best + 4.0) * (best + 4.0);
+                    if near.iter().any(|&k| {
+                        let q = others[k];
+                        let (dx, dz) = (p.0 - q.0, p.1 - q.1);
+                        let d2 = dx * dx + dz * dz;
+                        if d2 < t2 * (1.0 - 1e-9) {
+                            true
+                        } else if d2 > t2 * (1.0 + 1e-9) {
+                            false
+                        } else {
+                            libm::hypot(dx, dz) < best + 4.0
+                        }
+                    }) {
+                        continue;
+                    }
+                    let at = r * cols + c;
+                    let h_old = f64::from(old[at]) / 100.0;
+                    let road = prof.road(d, u);
+                    let a = libm::fabs(lat);
+                    let mut h;
+                    let mut surf = None;
+                    // 1. The road's own structure: the bed, then walls (or the mesa's plateau) and an embankment or cutting.
+                    let in_walls = u >= wall_from && u <= d.lip_u();
+                    let wall_env = smoothstep((u - wall_from) / 12.0);
+                    let shoulder = if in_walls { hw + d.hw_wall() } else { bed };
+                    if a <= bed {
+                        h = road;
+                    } else if in_walls && a <= shoulder {
+                        let top = road + d.wall_h * wall_env;
+                        // Walls rise steeply from the bed's edge: two cells to full height.
+                        let rise = smoothstep((a - bed) / (2.0 * sp));
+                        h = road + (top - road) * rise;
+                        if d.wall_h > 0.0 && wall_env > 0.3 {
+                            surf = Some(d.p.wall_surface);
+                        }
+                    } else {
+                        let edge_top = if in_walls {
+                            road + d.wall_h * wall_env
+                        } else {
+                            road
+                        };
+                        let edge = if in_walls { shoulder } else { bed };
+                        // Side slopes: steep (a wall reads as a wall) where they are tall, gentle where they are low.
+                        let drop = libm::fabs(edge_top - h_old);
+                        // Past the rim the verges are gentle and drivable (R133): a car that comes down off line or slides
+                        // wide after a rough landing drives back up instead of meeting a wall.
+                        let run = if u > d.rim_u() {
+                            (drop * 2.5).max(10.0)
+                        } else {
+                            (drop * 0.6).max(6.0)
+                        };
+                        let w = 1.0 - smoothstep((a - edge) / run);
+                        h = h_old + (edge_top - h_old) * w;
+                        if in_walls && drop > 3.0 && w > 0.5 {
+                            surf = Some(d.p.wall_surface);
+                        }
+                    }
+                    // 2. The landmark (a dome, butte or tor seen from afar) beyond the landing, and the canyon's flank dome.
+                    let domes = landmarks
+                        .iter()
+                        .map(|&c| (c, d.p.landmark_radius_m, d.landmark_h))
+                        .chain(flank);
+                    for (c, r, height) in domes {
+                        let dl = libm::hypot(u - c.0, lat - c.1);
+                        // Never on the road bed.
+                        if dl < r && a > bed + sp {
+                            let q = dl / r;
+                            let dome =
+                                prof.road(d, c.0) + height * libm::sqrt(1.0 - q * q).powf(0.8);
+                            if dome > h {
+                                h = dome;
+                                surf = Some(Surface::Rock);
+                            }
+                        }
+                    }
+                    // 3. The pit: the gap through the whole carved width, cliffs at its ends.
+                    let lat_left = lat;
+                    // Cells within one cell's diagonal of the lip keep the take-off ground, so the kicker stands on level
+                    // ground to its lip.
+                    let edge = PIT_EDGE_CELLS * sp;
+                    // The far rim may round over: every landing in the band comes down past the rim's margin.
+                    if u > d.lip_u() + edge
+                        && u < d.rim_u()
+                        && lat_left <= carve_left
+                        && lat_left >= -carve_right
+                    {
+                        h = prof.take_off - d.pit_depth;
+                        surf = Some(d.p.pit_surface);
+                    }
+                    // 4. The detour wins its corridor (it fords the creek, skirts the crack's end).
+                    if u >= us[0] && u <= us[us.len() - 1] {
+                        let dlat = libm::fabs(lat - detour_lat(u));
+                        let off = libm::fabs(detour_lat(u));
+                        if off > bed + det_half && dlat < det_half + 8.0 {
+                            let w = 1.0 - smoothstep((dlat - det_half) / 8.0);
+                            h = h + (detour_y(u) - h) * w;
+                            if dlat <= det_half {
+                                surf = Some(Surface::PackedDirt);
+                            }
+                        }
+                    }
+                    // Under the landing's exact surface (jj_map::setpiece::landing_lift) the ground sits that much lower.
+                    if u > d.rim_u() && u < d.land_end_u() {
+                        h -= setpiece::LANDING_LIFT_M
+                            * jj_map::jump::JumpDesign::side(land_w, lat)
+                            * setpiece::landing_taper(d.rim_u(), d.land_end_u(), u);
+                    }
+                    heights[at] = libm::round(h * 100.0)
+                        .clamp(f64::from(i16::MIN), f64::from(i16::MAX))
+                        as i16;
+                    if let Some(s) = surf
+                        && (a > hw || (u > d.lip_u() && u < d.rim_u()))
+                    {
+                        surfaces[at] = s;
                     }
                 }
-            }
-            // 3. The pit: the gap through the whole carved width, cliffs at its ends.
-            let lat_left = lat;
-            // Cells within one cell's diagonal of the lip keep the take-off ground, so the kicker stands on level
-            // ground to its lip.
-            let edge = PIT_EDGE_CELLS * sp;
-            // The far rim may round over: every landing in the band comes down past the rim's margin.
-            if u > d.lip_u() + edge
-                && u < d.rim_u()
-                && lat_left <= carve_left
-                && lat_left >= -carve_right
-            {
-                h = prof.take_off - d.pit_depth;
-                surf = Some(d.p.pit_surface);
-            }
-            // 4. The detour wins its corridor (it fords the creek, skirts the crack's end).
-            if u >= us[0] && u <= us[us.len() - 1] {
-                let dlat = libm::fabs(lat - detour_lat(u));
-                let off = libm::fabs(detour_lat(u));
-                if off > bed + det_half && dlat < det_half + 8.0 {
-                    let w = 1.0 - smoothstep((dlat - det_half) / 8.0);
-                    h = h + (detour_y(u) - h) * w;
-                    if dlat <= det_half {
-                        surf = Some(Surface::PackedDirt);
-                    }
-                }
-            }
-            // Under the landing's exact surface (jj_map::setpiece::landing_lift) the ground sits that much lower.
-            if u > d.rim_u() && u < d.land_end_u() {
-                h -= setpiece::LANDING_LIFT_M
-                    * jj_map::jump::JumpDesign::side(land_w, lat)
-                    * setpiece::landing_taper(d.rim_u(), d.land_end_u(), u);
-            }
-            heights[at] =
-                libm::round(h * 100.0).clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16;
-            if let Some(s) = surf
-                && (a > hw || (u > d.lip_u() && u < d.rim_u()))
-            {
-                surfaces[at] = s;
             }
         }
+        br = re + 1;
     }
     map.terrain.heights = heights;
     map.terrain.surfaces = surfaces;

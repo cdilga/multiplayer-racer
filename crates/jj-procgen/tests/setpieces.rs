@@ -75,8 +75,12 @@ fn every_prepared_track_has_a_set_piece_per_lap_on_20_seeds_per_biome() {
                 pieces.iter().map(|p| p.kind.name()).collect::<Vec<_>>()
             )
             .unwrap();
-            // A loop-the-loop is one of the lap's set pieces too (br-xlvx.6.4, R132).
-            if pieces.is_empty() && jj_procgen::loops::count(&map.map) == 0 {
+            // A loop-the-loop is one of the lap's set pieces too (br-xlvx.6.4, R132), and so is a loop-over's spiral
+            // over its own road (br-xlvx.10.2).
+            if pieces.is_empty()
+                && jj_procgen::loops::count(&map.map) == 0
+                && jj_procgen::rhythm::loop_overs(&map.map).is_empty()
+            {
                 missing.push(format!("{biome:?} {seed}"));
             }
         }
@@ -313,7 +317,9 @@ fn every_piece_is_in_view_10_s_before_the_commitment_point() {
                 .map
                 .features
                 .iter()
-                .filter(|f| GapLeap::of(f).is_some())
+                // An overpass leap is in plain sight (its road climbs onto an embankment over the other road), as
+                // `setpieces::check_minimum` counts it; it has no landmark.
+                .filter(|f| GapLeap::of(f).is_some_and(|g| g.lower.is_none()))
                 .enumerate()
             {
                 let s = setpieces::sight_seconds(&map.map, f, data);
@@ -891,5 +897,35 @@ fn diag_lap() {
             sim.race().is_finished(car.0),
             pieces.len()
         );
+    }
+}
+
+/// The ground across a set piece's landing, middle and edges (`JJ_SEEDS=<seed>`, Rocks; default 7): where the landing
+/// collider (a strip on the edges) and the ground under the middle part.
+#[test]
+#[ignore]
+fn diag_landing_cross_section() {
+    use jj_map::jump::ground_height_m;
+    let seed: u64 = std::env::var("JJ_SEEDS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(7);
+    let (map, _) = jj_procgen::generate_recipe(seed, &[Biome::Rocks]).unwrap();
+    for (k, f) in map.features.iter().enumerate() {
+        let Some(d) = GapLeap::of(f) else { continue };
+        for frac in [0.1, 0.3, 0.5, 0.7, 0.9] {
+            let u = d.rim_u() + d.landing_m * frac;
+            let (c, t) = jj_map::jump::route_along(&map, f, u);
+            let w = d.kicker.land_w / 2.0;
+            let at = |lat: f64| ground_height_m(&map.terrain, c[0] - t[1] * lat, c[1] + t[0] * lat);
+            eprintln!(
+                "feature {k} {:?} lower {:?} frac {frac}: ground -w {:.2} mid {:.2} +w {:.2}",
+                d.kind,
+                d.lower,
+                at(-w),
+                at(0.0),
+                at(w)
+            );
+        }
     }
 }

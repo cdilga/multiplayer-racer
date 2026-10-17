@@ -544,3 +544,51 @@ fn writes_the_capture() {
     out.extend(px.iter().flatten());
     std::fs::write(std::path::Path::new(&dir).join("two-biome-lap.ppm"), out).unwrap();
 }
+
+/// Where a map's features and one dressing piece sit (`JJ_SEEDS`, default 20; `JJ_DRESSING`, default 1955), four-biome.
+#[test]
+#[ignore]
+fn diag_dressing_near_features() {
+    let seed: u64 = std::env::var("JJ_SEEDS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(20);
+    let k: usize = std::env::var("JJ_DRESSING")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1955);
+    let recipe = [
+        Biome::Town,
+        Biome::Rocks,
+        Biome::OutbackDirt,
+        Biome::OutbackBitumen,
+    ];
+    let (map, _) = jj_procgen::generate_recipe(seed, &recipe).unwrap();
+    let near = |x: i32, z: i32| {
+        map.route
+            .points
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, q)| (i64::from(q.x - x)).pow(2) + (i64::from(q.z - z)).pow(2))
+            .map(|(i, q)| (i, ((f64::from(q.x - x)).hypot(f64::from(q.z - z)) / 1000.0)))
+            .unwrap()
+    };
+    for f in &map.features {
+        eprintln!(
+            "feature {:?} near {:?} params from {:?} to {:?} lower {:?}/{:?}",
+            f.kind,
+            near(f.pose.x, f.pose.z),
+            f.params.get("fromAt"),
+            f.params.get("toAt"),
+            f.params.get("lowerFrom"),
+            f.params.get("lowerTo")
+        );
+    }
+    let d = &map.dressing[k];
+    eprintln!(
+        "dressing {k} {} near {:?} y {}",
+        d.kit_piece,
+        near(d.pose.x, d.pose.z),
+        d.pose.y
+    );
+}

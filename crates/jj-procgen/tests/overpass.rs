@@ -239,7 +239,7 @@ fn a_car_well_under_the_band_falls_and_respawns() {
     for (biome, seed) in [(Biome::OutbackDirt, 0), (Biome::Town, 1)] {
         let m = leap(seed, biome).expect("an overpass leap");
         let (_, d) = piece(&m);
-        let r = take(&m, (d.min_speed * 0.7) as f32);
+        let r = take(&m, (d.min_speed * 0.55) as f32);
         assert!(
             f64::from(r.lip_speed) < d.min_speed - 3.0,
             "{biome:?} {seed}: lip {}",

@@ -50,6 +50,9 @@ pub struct Data {
     pub max_seed_similarity: f64,
     /// R28's proposed bound, reported against until the couch calibrates the metric.
     pub target_seed_similarity: f64,
+    /// The road climbs and falls at least this much over the lap, m (R132: terrain at 10-60 m, never a flat surface
+    /// with a few elements thrown on): a flatter draw is redrawn.
+    pub min_relief_m: f64,
 }
 
 /// The shipped data, parsed once.
@@ -109,6 +112,8 @@ pub struct Rhythm {
     /// A set piece followed by a technical stretch inside its recovery time (route point of the piece's end).
     #[serde(skip)]
     pub no_recovery: Vec<usize>,
+    /// The road's highest point less its lowest, m.
+    pub relief_m: f64,
 }
 
 /// A loop-over's lower and upper crossing points this close along the road (m) bound one held bend (br-xlvx.10).
@@ -167,6 +172,7 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
             set_pieces: 0,
             longest_flow_s: 0.0,
             no_recovery: Vec::new(),
+            relief_m: 0.0,
         };
     }
     let ds: Vec<f64> = (0..n)
@@ -346,6 +352,10 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
         set_pieces,
         longest_flow_s,
         no_recovery,
+        relief_m: {
+            let ys = map.route.points.iter().map(|p| f64::from(p.y) / 1000.0);
+            ys.clone().fold(f64::NEG_INFINITY, f64::max) - ys.fold(f64::INFINITY, f64::min)
+        },
     }
 }
 
@@ -353,6 +363,12 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
 /// the set-piece minimum); empty when it keeps them. A lap that breaks one is redrawn ([`crate::validate::prepare`]).
 pub fn problems(r: &Rhythm, d: &Data) -> Vec<String> {
     let mut out = Vec::new();
+    if r.relief_m < d.min_relief_m {
+        out.push(format!(
+            "terrain: the road spans {:.1} m of height (want >= {})",
+            r.relief_m, d.min_relief_m
+        ));
+    }
     let distinct = r.shares.values().filter(|&&s| s > 0.0).count();
     if distinct < d.min_distinct_beats {
         out.push(format!(
