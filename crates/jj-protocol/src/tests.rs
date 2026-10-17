@@ -653,6 +653,7 @@ fn event_samples() -> Vec<SimEvent> {
         SimEvent::PrepareRequested {
             preparation: PreparationId(5),
             seed: 77,
+            arena_cars: Some(6),
         },
         SimEvent::StartLaunch {
             seat: SeatId(2),

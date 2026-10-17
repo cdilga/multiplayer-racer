@@ -148,6 +148,21 @@ pub fn prepare_tuned(seed: f64, recipe: &str, generator: &str) -> Result<Prepare
     })
 }
 
+/// A derby round's arena (P1-G06, P1-M10): the generated bowl for `cars` cars (no cap), validated like every map.
+#[wasm_bindgen(js_name = prepareArena)]
+pub fn prepare_arena(seed: f64, cars: u32) -> Result<Prepared, JsError> {
+    let map =
+        jj_procgen::arena::prepare(seed as u64, (cars as usize).max(2), &jj_procgen::registry())
+            .map_err(|bad| JsError::new(&bad.join("; ")))?;
+    Ok(Prepared {
+        canonical: map.canonical.clone(),
+        map_json: serde_json::to_string(&map.map).map_err(|e| JsError::new(&e.to_string()))?,
+        log: "[]".into(),
+        plan: "arena".into(),
+        valid: true,
+    })
+}
+
 /// Validates an authored `jj.map.v1` JSON document against the same registry the sim uses and returns its canonical
 /// bytes (the dev map import). The error is the validator's: one `rule at: detail` line per violation.
 #[wasm_bindgen(js_name = validateMap)]

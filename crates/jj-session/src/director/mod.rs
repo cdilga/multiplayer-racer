@@ -324,6 +324,16 @@ impl Director {
         }
     }
 
+    /// The Intermission's length from the next one on (a host setting, §10.8; P1-G06).
+    pub fn set_intermission_ms(&mut self, ms: u32) {
+        self.cfg.intermission_ms = ms;
+    }
+
+    /// The Intermission's length now.
+    pub fn intermission_ms(&self) -> u32 {
+        self.cfg.intermission_ms
+    }
+
     pub fn phase(&self) -> Phase {
         self.phase
     }

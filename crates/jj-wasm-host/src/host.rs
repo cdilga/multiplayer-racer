@@ -806,6 +806,12 @@ impl Host {
             self.sim.set_input(car, controls);
         }
         self.sim.step();
+        // P1-G06: a derby round runs on game time; the director ends it at its limit (it stops with every pause).
+        if self.round.derby_now && self.phase() == jj_session::director::Phase::Running {
+            let t = self.sim.tick();
+            let ms = (tick_ms(t) - tick_ms(t.saturating_sub(1))) as u32;
+            self.director_apply(jj_session::director::Input::GameElapsed { ms });
+        }
         #[cfg(feature = "testing")]
         if let Some(h) = &mut self.test.harness {
             h.after_step(&self.sim, false);

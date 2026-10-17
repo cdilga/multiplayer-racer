@@ -275,6 +275,15 @@ pub mod codec {
                     value: value.to_owned(),
                 }
             }
+            // P1-G06: `mode:derby` / `mode:race`, `derby-ms:<n>`, `intermission-ms:<n>`.
+            "mode:derby" => UiCommand::SetMode { derby: true },
+            "mode:race" => UiCommand::SetMode { derby: false },
+            l if l.starts_with("derby-ms:") => UiCommand::SetDerbyLength {
+                ms: l[9..].parse().unwrap_or(180_000),
+            },
+            l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
+                ms: l[16..].parse().unwrap_or(60_000),
+            },
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

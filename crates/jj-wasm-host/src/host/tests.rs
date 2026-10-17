@@ -275,7 +275,7 @@ fn a_derby_rounds_facts_reach_the_phone_hud_and_the_room_view() {
     )
     .unwrap();
     let mut now = 0;
-    let mut huds = |h: &mut Host, now: &mut u64, n: usize| {
+    let huds = |h: &mut Host, now: &mut u64, n: usize| {
         let mut out = Vec::new();
         for _ in 0..n {
             h.advance(*now);
@@ -1882,6 +1882,147 @@ fn four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars() {
     assert_eq!(room["results"].as_array().unwrap().len(), 4);
 }
 
+/// P1-G06: the lobby's mode choice runs a derby round end to end. Four controllers claim, the host picks Derby with a
+/// 30 s round and a 10 s Intermission; the Countdown puts them in an arena (a bowl, not the course), GO starts the derby
+/// on game time, two cars ram (points), the director ends the round at the limit, the results rank by raw points, and
+/// after the Intermission the next round (still a derby) starts on its own. Then Race again runs a race.
+#[test]
+fn a_derby_round_runs_to_results_on_game_time_and_the_next_starts_on_its_own() {
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetMode { derby: true })).unwrap();
+    h.handle(&ui(UiCommand::SetDerbyLength { ms: 30_000 }))
+        .unwrap();
+    h.handle(&ui(UiCommand::SetIntermission { ms: 10_000 }))
+        .unwrap();
+    let phones = ["p1", "p2", "p3", "p4"];
+    for (k, p) in phones.iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    let mut now = 0u64;
+    let mut step = |h: &mut Host, ticks: u64| {
+        for _ in 0..ticks {
+            h.advance(now);
+            now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        step(&mut h, 30);
+        guard += 1;
+        assert!(guard < 1200, "the derby starts on its own");
+    }
+    assert!(
+        h.map
+            .map
+            .features
+            .iter()
+            .any(|f| f.kind == jj_map::model::FeatureKind::Bowl),
+        "a derby round is in an arena"
+    );
+    assert!(h.sim.derby().is_some(), "GO starts the derby, not a race");
+    assert!(h.sim.race().started_at.is_none());
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["mode"], "derby");
+    // Two cars ram: car 1 drives flat out into car 0, parked across its path, once spawn protection is over.
+    step(&mut h, 2 * 120);
+    let target = h.sim.car_state(CarId(0)).unwrap().position;
+    let from = h.sim.car_state(CarId(1)).unwrap().position;
+    let (dx, dz) = (target[0] - from[0], target[2] - from[2]);
+    let d = dx.hypot(dz);
+    let heading = dx.atan2(dz);
+    h.sim.place_car(
+        CarId(1),
+        jj_sim::SpawnPose {
+            x: target[0] - dx / d * 12.0,
+            y: target[1] + 0.3,
+            z: target[2] - dz / d * 12.0,
+            heading,
+        },
+        0.0,
+        [dx / d * 20.0, 0.0, dz / d * 20.0],
+    );
+    step(&mut h, 120);
+    let points = h.sim.derby().unwrap().points(1);
+    assert!(points > 0.0, "the ram scores: {points}");
+    let mut results = 0;
+    let mut started = 1;
+    let mut last = h.phase();
+    for _ in 0..(120 * 120) {
+        step(&mut h, 1);
+        let phase = h.phase();
+        if phase != last {
+            if phase == jj_session::director::Phase::Intermission {
+                results += 1;
+                let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+                let rows = room["results"].as_array().unwrap();
+                assert_eq!(rows.len(), 4, "every seat is in the results: {room}");
+                assert_eq!(
+                    rows[0]["number"], room["seats"][1]["number"],
+                    "the rammer ranks first: {rows:?}"
+                );
+                assert!(
+                    rows.iter().all(|r| r["timeMs"].is_null()),
+                    "a derby has no times"
+                );
+            }
+            if phase == jj_session::director::Phase::Running {
+                started += 1;
+            }
+            last = phase;
+        }
+        if started == 2 {
+            break;
+        }
+    }
+    assert_eq!(
+        results, 1,
+        "the derby ended at its 30 s limit and committed"
+    );
+    assert_eq!(
+        started, 2,
+        "the next round started on its own after the Intermission"
+    );
+    assert!(h.sim.derby().is_some(), "the next round is a derby too");
+    // Race again from the next round: switched mid-derby, it applies when this derby ends.
+    h.handle(&ui(UiCommand::SetMode { derby: false })).unwrap();
+    assert!(h.sim.derby().is_some(), "the derby on now carries on");
+    let mut guard = 0;
+    while !(h.phase() == jj_session::director::Phase::Running && h.sim.race().started_at.is_some())
+    {
+        step(&mut h, 30);
+        guard += 1;
+        assert!(guard < 4000, "a race round follows: {:?}", h.phase());
+    }
+    assert!(h.sim.derby().is_none(), "Race runs a race");
+}
+
 /// P1-G01 (R90 "settable"): the race can be finished on demand. A running 99-lap round with four racers plus
 /// `end_race_now` (what the test surface's `finishRace` calls) freezes the result as the finish window closing would:
 /// the race rules emit RaceOver, the director goes Running -> Finalising -> Intermission the normal way, and the standings
@@ -2077,7 +2218,10 @@ fn a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped() {
             while let Some(m) = h.next_message() {
                 if let SimToMain::Events { batch } = m {
                     for e in batch {
-                        if let SimEvent::PrepareRequested { preparation, seed } = e {
+                        if let SimEvent::PrepareRequested {
+                            preparation, seed, ..
+                        } = e
+                        {
                             *request = Some((preparation, seed));
                         }
                     }

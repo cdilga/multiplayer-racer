@@ -12,7 +12,9 @@ use jj_protocol::cmd::{CameraMode, ResultRow, RoomPhase, You};
 use jj_session::director::{
     Director, DirectorConfig, Driving, Input as DirIn, Output as DirOut, Phase,
 };
-use jj_session::results::{Entrant, FinishTime, RoundFacts, Ruleset, Standings};
+use jj_session::results::{
+    DerbyEntrant, DerbyFacts, Entrant, FinishTime, RoundFacts, Ruleset, Standings,
+};
 use jj_types::{LifeId, PreparationId, RoundId};
 
 use super::*;
@@ -45,7 +47,15 @@ pub(super) struct RoundState {
     /// R127: launch snaps that reached the host in the last `START_GRACE_MS` of the countdown fire at GO instead of
     /// counting as false starts (the phone's own countdown can run a few frames ahead of the host's).
     pub start_launches: Vec<(jj_sim::CarId, u16)>,
+    /// P1-G06: the next round is a derby (the lobby's mode choice), and whether the round on now is one.
+    pub derby_next: bool,
+    pub derby_now: bool,
+    /// A derby round's game-time length, ms (§10.12: 3 minutes).
+    pub derby_ms: u32,
 }
+
+/// The shortest derby round the host may set (a round of a few hits), ms.
+pub(super) const MIN_DERBY_MS: u32 = 30_000;
 
 /// How long before GO a launch snap still counts as "on GO" (ms).
 pub(super) const START_GRACE_MS: u64 = 150;
@@ -65,6 +75,9 @@ impl RoundState {
             seed,
             prepare_maps: false,
             start_launches: Vec::new(),
+            derby_next: false,
+            derby_now: false,
+            derby_ms: 180_000,
             pending: None,
             prepared: None,
             stale_dropped: 0,
@@ -125,16 +138,30 @@ impl Host {
                 let seed = self.round.seed.wrapping_add(u64::from(id.0));
                 self.round.pending = Some((id, seed));
                 self.round.prepared = None;
+                // A derby round's arena is sized for everyone in the room now (late joiners still fit: no cap).
+                let arena_cars = self
+                    .round
+                    .derby_next
+                    .then(|| (self.inputs.len() as u32).max(2));
                 self.events.push(SimEvent::PrepareRequested {
                     preparation: id,
                     seed,
+                    arena_cars,
                 });
                 vec![]
             }
-            DirOut::PrepareRequested { id, .. } => self
-                .round
-                .director
-                .apply(DirIn::PrepareFinished { id, ok: true }),
+            DirOut::PrepareRequested { id, .. } => {
+                // Without main's preparation (tests, the greybox), a derby round's arena is built here.
+                if self.round.derby_next {
+                    let seed = self.round.seed.wrapping_add(u64::from(id.0));
+                    let cars = self.inputs.len().max(2);
+                    self.round.prepared =
+                        jj_procgen::arena::prepare(seed, cars, &jj_procgen::registry()).ok();
+                }
+                self.round
+                    .director
+                    .apply(DirIn::PrepareFinished { id, ok: true })
+            }
             DirOut::PrepareCancelled { id } => {
                 if self.round.pending.is_some_and(|(p, _)| p == id) {
                     self.round.pending = None;
@@ -142,6 +169,7 @@ impl Host {
                 vec![]
             }
             DirOut::CountdownStarted { cohort, .. } => {
+                self.round.derby_now = self.round.derby_next;
                 self.start_grid(&cohort);
                 self.room_state_all();
                 vec![]
@@ -152,7 +180,13 @@ impl Host {
                 self.round.late.clear();
                 let laps = self.effective_laps();
                 self.sim.set_catch_up(self.round.catch_up);
-                self.sim.start_race(laps);
+                if self.round.derby_now {
+                    // P1-G06: a derby round on game time; the director ends it at the same limit (SetGameLimit).
+                    let ticks = u64::from(self.round.derby_ms) * u64::from(jj_sim::TICK_HZ) / 1000;
+                    self.sim.start_derby(ticks);
+                } else {
+                    self.sim.start_race(laps);
+                }
                 // Snaps that arrived just before GO launch now, the first tick of the race (R127).
                 for (car, preload_ms) in std::mem::take(&mut self.round.start_launches) {
                     self.sim.wheelie(car, preload_ms);
@@ -288,6 +322,9 @@ impl Host {
 
     /// Classifies the round from the race and commits it to the session standings; returns whether it saved.
     fn commit_results(&mut self, round: RoundId) -> bool {
+        if self.round.derby_now {
+            return self.commit_derby(round);
+        }
         let race = self.sim.race();
         let start = race.started_at.unwrap_or(0);
         let entrants: Vec<Entrant> = self
@@ -330,6 +367,61 @@ impl Host {
                     name: self.seats.display_name(c.seat).unwrap_or_default(),
                     place: c.place.unwrap_or(0),
                     time_ms,
+                    points: c.points,
+                })
+            })
+            .collect();
+        self.events.push(SimEvent::Results { rows: rows.clone() });
+        self.round.results = Some(rows);
+        true
+    }
+
+    /// P1-G06: a derby round's results from the ledger (P1-S10): ranked by raw points, ties sharing, the championship
+    /// table without a finish bonus.
+    fn commit_derby(&mut self, round: RoundId) -> bool {
+        let Some(ledger) = self.sim.derby() else {
+            return false;
+        };
+        let mut played: Vec<SeatId> = self.round.cohort.clone();
+        for &s in &self.round.late {
+            if !played.contains(&s) {
+                played.push(s);
+            }
+        }
+        let entrants: Vec<DerbyEntrant> = played
+            .iter()
+            .map(|&seat| {
+                let car = self.inputs.get(&seat).and_then(|i| i.car);
+                let present = self
+                    .seats
+                    .seat(seat)
+                    .is_some_and(|s| s.presence != seats::Presence::Left);
+                DerbyEntrant {
+                    seat,
+                    entered: car.is_some(),
+                    units: car.map_or(0, |c| ledger.units(c.0)),
+                    withdrawn: !present,
+                    late: self.round.late.contains(&seat),
+                }
+            })
+            .collect();
+        let facts = DerbyFacts { round, entrants };
+        let Ok(committed) = self.round.standings.commit_derby(&facts) else {
+            return false;
+        };
+        let result = match committed {
+            jj_session::results::Committed::New(r) | jj_session::results::Committed::Again(r) => r,
+        };
+        let rows: Vec<ResultRow> = result
+            .rows
+            .iter()
+            .filter_map(|c| {
+                let seat = self.seats.seat(c.seat)?;
+                Some(ResultRow {
+                    number: seat.number,
+                    name: self.seats.display_name(c.seat).unwrap_or_default(),
+                    place: c.place.unwrap_or(0),
+                    time_ms: None,
                     points: c.points,
                 })
             })
@@ -485,6 +577,11 @@ impl Host {
             "laps": self.effective_laps(),
             // Once the first car finishes, the rest have the finish window to finish (null before, and once it's over).
             "raceEndsInMs": race_ends_in_ms,
+            // P1-G06: this round's mode, the next round's (the lobby's choice), and the host's derby/intermission lengths.
+            "mode": if self.round.derby_now { "derby" } else { "race" },
+            "nextMode": if self.round.derby_next { "derby" } else { "race" },
+            "derbyMs": self.round.derby_ms,
+            "intermissionMs": self.round.director.intermission_ms(),
             // P1-S10: a derby round's game time left (null outside a derby).
             "derbyLeftMs": self.sim.derby().map(|l| super::tick_ms(l.time_left_ticks(self.sim.tick()))),
             "freeDrive": self.round.free_drive,
@@ -549,6 +646,25 @@ impl Host {
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
             UiCommand::SetLaps { laps } => self.round.laps = Some(laps.max(1)),
+            UiCommand::SetMode { derby } => {
+                self.round.derby_next = derby;
+                let limit = derby.then_some(self.round.derby_ms);
+                self.director_apply(DirIn::SetGameLimit(limit));
+                self.session_rev += 1;
+            }
+            UiCommand::SetDerbyLength { ms } => {
+                self.round.derby_ms = ms.max(MIN_DERBY_MS);
+                if self.round.derby_next {
+                    self.director_apply(DirIn::SetGameLimit(Some(self.round.derby_ms)));
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::SetIntermission { ms } => {
+                self.round
+                    .director
+                    .set_intermission_ms(ms.clamp(5_000, 600_000));
+                self.session_rev += 1;
+            }
             UiCommand::SetCatchUp { on } => {
                 self.round.catch_up = if on {
                     jj_sim::assist::CatchUp::Light
