@@ -261,6 +261,55 @@ test('the chase point stays clear of undulating ground (and would not without it
   assert.ok(control.worstClear < 0 || control.worstLos < 0, `without the ground the same drive buries the camera or hides the car (${JSON.stringify(control)})`);
 });
 
+// br-gw74.13.1.1: big air reads as big air. Off the ground the chase holds part of its height to the ground, so the car
+// climbs in frame (its screen height rises) and the ground under it shows; on the ground nothing changes.
+test('big air: the chase holds to the ground so a car in the air climbs in frame; on the ground it is unchanged', async () => {
+  const { CameraRig } = await loadRig();
+  const { Vector3, Quaternion, PerspectiveCamera } = await import('three');
+  const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
+  const flat = () => 0;
+  const shot = (ground, height) => {
+    const rig = new CameraRig();
+    rig.groundAt = ground;
+    const cam = new PerspectiveCamera(60, 16 / 9, 0.1, 500);
+    const car = { pos: new Vector3(0, 0.4, 0), rot: new Quaternion(), life: 1 };
+    // Settle on the ground, then the car is at `height` (a flight is continuous, so each frame is this shot).
+    for (let f = 0; f < 120; f++) rig.update(1, cam, car, 1 / 60);
+    car.pos.y = height;
+    for (let f = 0; f < 120; f++) rig.update(1, cam, car, 1 / 60);
+    cam.updateMatrixWorld();
+    return { camY: cam.position.y, carScreenY: car.pos.clone().project(cam).y };
+  };
+  const onGround = [shot(flat, 0.4), shot(null, 0.4)];
+  assert.deepEqual(onGround[0], onGround[1], 'on the ground the chase is exactly as before');
+  const air = shot(flat, 6.4), rideAlong = shot(null, 6.4);
+  const hold = Math.min(prof.rig.airHoldMaxM, (6.4 - prof.rig.airFromM) * prof.rig.airHold);
+  assert.ok(Math.abs(rideAlong.camY - air.camY - hold) < 1e-6, `held ${hold} m below its usual height (${JSON.stringify({ air, rideAlong })})`);
+  assert.ok(air.carScreenY > rideAlong.carScreenY + 0.15, `the car climbs in frame: ${rideAlong.carScreenY.toFixed(2)} -> ${air.carScreenY.toFixed(2)}`);
+  assert.ok(air.carScreenY < 0.9, `and stays in frame (${air.carScreenY.toFixed(2)})`);
+  const top = shot(flat, 40);
+  assert.ok(top.carScreenY < 1, `at the hold's limit the car is still in frame (${top.carScreenY.toFixed(2)})`);
+  // No pop at the lip or the landing: through a 2.5 s flight (14 m/s up, 9.81 down) the camera's frame-to-frame vertical
+  // velocity change never exceeds the car's own (the hold is continuous in the height; it only softens the rise).
+  const rig = new CameraRig();
+  rig.groundAt = flat;
+  const cam = new PerspectiveCamera(60, 16 / 9, 0.1, 500);
+  const car = { pos: new Vector3(0, 0.4, 0), rot: new Quaternion(), life: 1 };
+  const ys = [], carYs = [];
+  for (let f = 0; f < 240; f++) {
+    const t = Math.max(0, (f - 30) / 60);
+    car.pos.y = 0.4 + Math.max(0, 14 * t - 4.905 * t * t);
+    car.pos.z += 0.5;
+    rig.update(1, cam, car, 1 / 60);
+    ys.push(cam.position.y);
+    carYs.push(car.pos.y);
+  }
+  const jerk = (a) => Math.max(...a.slice(2).map((y, k) => Math.abs(y - 2 * a[k + 1] + a[k]) * 3600));
+  const camJerk = jerk(ys), carJerk = jerk(carYs);
+  assert.ok(camJerk <= carJerk + 1e-6, `camera jerk ${camJerk.toFixed(1)} <= the car's own ${carJerk.toFixed(1)} m/s²`);
+  runs.bigAir = { hold, onGround: onGround[0], air, rideAlong, top, flight: { camJerk, carJerk } };
+});
+
 test('camera distance is a setting: the host default follows the player count, a player may override, and null goes back', async () => {
   const { CameraRig, distanceFor } = await loadRig();
   const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));

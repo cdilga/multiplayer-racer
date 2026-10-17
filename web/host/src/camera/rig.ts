@@ -225,7 +225,7 @@ export class CameraRig {
     const yaw = s.heading + reverseYaw(s.rev);
     const dir = this.fwd.set(Math.sin(yaw), 0, Math.cos(yaw));
     const target = this.w.copy(car.pos).addScaledVector(dir, -R.backM);
-    target.y = car.pos.y + R.upM;
+    target.y = car.pos.y + R.upM - this.airHold(car);
     this.pullIn(s, car, target);
     this.overGround(car, target);
     s.pos.copy(target);
@@ -244,6 +244,17 @@ export class CameraRig {
     cam.position.copy(s.pos);
     cam.up.copy(UP);
     cam.lookAt(s.look);
+  }
+
+  /** Big air reads as big air (br-gw74.13.1.1): how far (m) the chase stays below its usual height over the car while the
+   *  car is off the ground. It holds `rig.airHold` of the car's height above `rig.airFromM` to the ground instead of
+   *  rising with the car (up to `rig.airHoldMaxM`), and keeps its pitch, so the car climbs in frame and the road falls
+   *  away under it; on the ground it is 0 and the chase is unchanged. Continuous in the height, so no pop at the lip. */
+  private airHold(car: CarView): number {
+    const ground = this.groundAt;
+    if (!ground) return 0;
+    const air = car.pos.y - ground(car.pos.x, car.pos.z) - profile.rig.airFromM;
+    return air > 0 ? Math.min(profile.rig.airHoldMaxM, air * profile.rig.airHold) : 0;
   }
 
   /** Raises `target` until it is clear of the ground under it and the ground doesn't hide the car (undulating maps:
