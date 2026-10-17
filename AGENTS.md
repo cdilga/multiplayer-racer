@@ -183,7 +183,9 @@ whole. The owner saw yesterday's build and concluded nothing had happened.
    and hands any red back to the bead's author with the cause; the author fixes it forward as their next task. An idle
    session, or one waiting on CI, is the coordinator's bug to fix that tick.
 9. **Two sessions** (owner, 2026-10-17): one Opus worker churns beads to done, one light Haiku deploy worker owns CI,
-   previews and `batch_pending` closes; the coordinator only nudges. More sessions need the owner. Every session, and
+   previews and `batch_pending` closes; the coordinator works beads too, all the time, and only glances at the other two
+   between its own commits (owner 2026-10-17: "why are you checking in every 30 mins and not working on the beads?").
+   More sessions need the owner. Every session, and
    every coordinator loop tick, rereads this file (`AGENTS.md`) before acting.
 
 ## Beads (Physical Soccer's model)
