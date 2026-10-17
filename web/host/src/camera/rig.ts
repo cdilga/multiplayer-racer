@@ -75,6 +75,9 @@ interface SeatState {
   signedMps: number;
   /** The loop (index into `loops`) whose loop shot this seat shows, or null. */
   loop: number | null;
+  /** How far (m) the chase stands above its preset height to clear the ground (br-gw74.14.1): it rises at once to
+   *  what the ground needs and settles back slowly, so relief never makes it pop. */
+  groundLift: number;
 }
 
 const UP = new Vector3(0, 1, 0);
@@ -103,7 +106,7 @@ export class CameraRig {
   private seat(id: number): SeatState {
     let s = this.seats.get(id);
     if (!s) {
-      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null };
+      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null, groundLift: 0 };
       this.seats.set(id, s);
     }
     return s;
@@ -227,7 +230,7 @@ export class CameraRig {
     const target = this.w.copy(car.pos).addScaledVector(dir, -R.backM);
     target.y = car.pos.y + R.upM - this.airHold(car);
     this.pullIn(s, car, target);
-    this.overGround(car, target);
+    this.overGround(s, car, target, dt, cut);
     s.pos.copy(target);
     // Look ahead along the car's own heading (in a turn it leads the camera's smoothed heading), further the faster it
     // goes, at the preset's pitch whatever the distance, so speed never tips the view up into the sky (R98).
@@ -259,27 +262,24 @@ export class CameraRig {
 
   /** Raises `target` until it is clear of the ground under it and the ground doesn't hide the car (undulating maps:
    *  in a dip the chase point can sit inside the rise behind the car). */
-  private overGround(car: CarView, target: Vector3): void {
+  private overGround(s: SeatState, car: CarView, target: Vector3, dt: number, cut: boolean): void {
     const ground = this.groundAt;
     if (!ground) return;
-    const minUp = profile.rig.groundClearM;
-    target.y = Math.max(target.y, ground(target.x, target.z) + minUp);
+    const base = target.y;
+    // The least height that clears the ground under the chase point and keeps the line of sight to the car 0.2 m over
+    // the ground at each sample, solved exactly (y(t) = Y + (eye − Y)t ≥ g + 0.2  ⇔  Y ≥ (g + 0.2 − eye·t) / (1 − t)),
+    // so it moves continuously with the car instead of in 0.5 m steps (br-gw74.14.1).
+    let need = Math.max(base, ground(target.x, target.z) + profile.rig.groundClearM);
     const eye = car.pos.y + profile.rig.pullInEyeUpM;
-    for (let lift = 0; lift < profile.rig.losMaxLiftM; lift += 0.5) {
-      let clear = true;
-      for (let k = 1; k < 8; k++) {
-        const t = k / 8;
-        const x = target.x + (car.pos.x - target.x) * t;
-        const z = target.z + (car.pos.z - target.z) * t;
-        const y = target.y + (eye - target.y) * t;
-        if (ground(x, z) + 0.2 > y) {
-          clear = false;
-          break;
-        }
-      }
-      if (clear) return;
-      target.y += 0.5;
+    for (let k = 1; k < 8; k++) {
+      const t = k / 8;
+      const g = ground(target.x + (car.pos.x - target.x) * t, target.z + (car.pos.z - target.z) * t);
+      need = Math.max(need, (g + 0.2 - eye * t) / (1 - t));
     }
+    const want = Math.min(need - base, profile.rig.losMaxLiftM);
+    // Up at once (the ground must never hide the car), down slowly (a crest passing doesn't drop the camera).
+    s.groundLift = cut || want >= s.groundLift ? want : want + (s.groundLift - want) * Math.exp(-dt / profile.rig.groundSettleS);
+    target.y = base + s.groundLift;
   }
 
   /** Moves `target` in front of the first obstacle between the car and it. */
