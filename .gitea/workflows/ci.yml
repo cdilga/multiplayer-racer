@@ -163,6 +163,13 @@ jobs:
           JJ_SOAK_S: ${{ steps.plan.outputs.soak }}
           SLOTS: ${{ steps.plan.outputs.slots }}
         run: node scripts/ci/run-slot.mjs ${{ matrix.slot }} "$SLOTS"
+      # br-oj4i: tests write receipts and captures to scratch unless asked (JJ_EVIDENCE_DIR, JJ_EVIDENCE, JJ_CAPTURE_DIR;
+      # web/tests/README.md); one that rewrites the committed evidence fails here, naming the files.
+      - name: Tests leave docs/evidence untouched
+        if: always() && steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
+        run: |
+          dirty=$(git status --porcelain -- docs/evidence)
+          if [ -n "$dirty" ]; then echo "::error::a test rewrote committed evidence (write to evidencePath() unless JJ_EVIDENCE_DIR/JJ_CAPTURE_DIR is set):"; echo "$dirty"; exit 1; fi
 
   # The jj-server image (P1-D02), built natively for linux/amd64 on the Jammers runner (the only one whose jobs get the
   # host's Docker socket), smoked as two previews of the same digest, then pushed to the Gitea registry by commit and

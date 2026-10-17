@@ -6,6 +6,7 @@
 //   AC3  the paper QR decodes (jsqr) to the join URL at the TV's smallest size, carries code and domain, keeps its quiet zone;
 //   AC4  the landing page uses the kit and no bundle on the landing or join path holds Three.js (uses landing/tests/bundle-check.mjs).
 //   node --test --test-concurrency=1 web/shared/ui/tests/
+// Receipts and captures go to a scratch directory; JJ_EVIDENCE_DIR=docs/evidence/P1-U06 rewrites the committed ones.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -20,9 +21,10 @@ import { analyse } from '../../../landing/tests/bundle-check.mjs';
 import { build } from '../../../landing/tests/lib/site.mjs';
 import { serveArtUi } from '../../../../art/ui/lib/serve.mjs';
 import { compare, decode } from './lib/compare.mjs';
+import { evidencePath } from '../../../tests/lib/evidence.mjs';
 
 const web = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const evidence = join(web, '..', 'docs', 'evidence', 'P1-U06');
+const evidence = evidencePath('P1-U06');
 const JOIN_URL = 'https://jammers.dilger.dev/j/ROO7';
 /** The recorded tolerance (the sheet crops include its dashed row guides and the spinner turns, which is the 2-4% floor): a button crop passes when fewer than this share of its pixels differ by more than 40/255 in any channel. */
 const TOLERANCE = { channel: 40, ratio: 0.05 };
