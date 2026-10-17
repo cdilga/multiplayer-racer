@@ -144,7 +144,7 @@ async function phone(joinUrl, name) {
 // more old (CI 5364, eris 3 of 4, the Mac at 2x CPU throttle), so snaps miss the start window; with JJ_CHROMIUM_GPU=1 on
 // eris it passed 3 of 3 in 15 s. It runs on the `gpu` runner (scripts/ci/plan.mjs) and skips on the SwiftShader lanes until br-bcuy.
 const gpu = Boolean(process.env.JJ_CHROMIUM_GPU);
-test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000 }, async () => {
+test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000, skip: !gpu && 'the gated start needs a GPU host (JJ_CHROMIUM_GPU=1): on a CI SwiftShader runner its five pages starve the phones (br-bcuy)' }, async () => {
   // br-bcuy: without a GPU the 1080p host page's software rendering takes the CPU the four phone pages need to send on
   // time (phone batches arrived up to 2.3 s apart at 2x throttle; main->worker <= 4 ms, worker->applied <= 12 ms), so a
   // software-GL host renders a quarter of the pixels.
