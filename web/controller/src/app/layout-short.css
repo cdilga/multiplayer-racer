@@ -81,3 +81,5 @@
 .round-banner[data-launch=perfect] { background: var(--c-saffron); --bz-fill: var(--c-saffron); }
 /* R134 (P1-FL19): you took someone down. */
 .round-banner[data-launch=takedown] { background: var(--c-danger); --bz-fill: var(--c-danger); color: var(--c-white); }
+/* Owner playtest 2026-10-17: your car finished. */
+.round-banner[data-launch=finished] { background: var(--c-saffron); --bz-fill: var(--c-saffron); }

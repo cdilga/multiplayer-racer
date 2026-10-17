@@ -152,6 +152,11 @@
 .hud-tile.compact .hud-status .chip { font-size: calc(var(--hud) * .8); }
 .hud-tile.compact .hud-centre { top: 55%; }
 .hud-tile.compact .wreck-word { font-size: calc(var(--hud) * 1.4); }
+/* A finished seat (owner playtest 2026-10-17): above the car, so the car still shows under it. */
+.hud-centre.hud-finished { top: 32%; }
+.hud-finished .wreck-word { color: var(--c-white); }
+.hud-finished .wreck-back { gap: .6em; font-size: calc(var(--hud) * 1.2); }
+.hud-finished .wreck-back sup { font-size: .6em; vertical-align: .45em; }
 @media (prefers-reduced-motion: reduce) { .cd-num { animation: none; } }
 .hud-tr[hidden] { display: none; }
 

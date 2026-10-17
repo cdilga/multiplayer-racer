@@ -620,9 +620,30 @@ impl Host {
                 .and_then(|i| i.car)
                 .and_then(|car| self.sim.action_state(car))
                 .map_or(0, |a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8);
+            // The car's place and lap (owner playtest 2026-10-17: a finished phone showed nothing). A lap past the
+            // total means the car has finished.
+            let car = self.inputs.get(&seat.id).and_then(|i| i.car);
+            let race = self.sim.race();
+            let (position, lap) = match car.filter(|_| race.started_at.is_some()) {
+                Some(car) => {
+                    let order = race.standings();
+                    let position = order
+                        .iter()
+                        .position(|r| r.car == car.0)
+                        .map(|p| p as u32 + 1);
+                    let done = race.laps_completed(car.0);
+                    let lap = if race.is_finished(car.0) {
+                        race.laps + 1
+                    } else {
+                        (done + 1).min(race.laps)
+                    };
+                    (position, Some((lap as u16, race.laps as u16)))
+                }
+                None => (None, None),
+            };
             let hud = Hud {
-                position: None,
-                lap: None,
+                position,
+                lap,
                 boost,
                 connection: None,
                 pause,

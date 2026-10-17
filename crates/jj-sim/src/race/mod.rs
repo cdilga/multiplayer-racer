@@ -57,6 +57,10 @@ pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
 /// Lateral slack beyond the road's half-width for a gate crossing.
 pub const GATE_MARGIN_M: f32 = 2.0;
+/// A car that misses a gate (ran wide, flew past) still gets it by crossing a later one at most this far round the route
+/// past it (m): gates stand about 40-55 m apart, so a missed gate or two never strands a lap, and an infield shortcut,
+/// which meets the road hundreds of metres further round, still earns nothing.
+pub const GATE_CATCH_UP_M: f32 = 120.0;
 pub const RESPAWN_LIFT_M: f32 = crate::placement::SPAWN_LIFT_M;
 /// Flip-assist PD gains about the axis that turns the car's up towards world up (TUNE, S03).
 pub const ASSIST_K: f32 = 9_000.0;
@@ -730,6 +734,27 @@ impl Race {
         effects
     }
 
+    /// Whether the move from `prev` to `now` crosses gate `g` forward (within the road's half-width plus
+    /// [`GATE_MARGIN_M`], on its layer): where in the step it was crossed, 0..=1.
+    fn crossing(g: &Gate, prev: CarView, now: CarView) -> Option<f32> {
+        let f = |p: [f32; 3]| (p[0] - g.x) * g.tx + (p[2] - g.z) * g.tz;
+        let lateral = ((now.position[0] - g.x) * -g.tz + (now.position[2] - g.z) * g.tx).abs();
+        let (before, after) = (f(prev.position), f(now.position));
+        if !(before < 0.0 && after >= 0.0 && lateral <= g.half_width + GATE_MARGIN_M) {
+            return None;
+        }
+        let t = (-before / (after - before)).clamp(0.0, 1.0);
+        let y = prev.position[1] + t * (now.position[1] - prev.position[1]);
+        // Use half the minimum separation: a full-clearance window would also
+        // admit the body centre of a car on the other layer of a low deck.
+        if g.layer_y.is_some_and(|h| {
+            (y - h).abs() > jj_map::bridge::limits::MIN_CLEARANCE_MM as f32 / 2000.0
+        }) {
+            return None;
+        }
+        Some(t)
+    }
+
     fn cross(
         &mut self,
         tick: u64,
@@ -742,27 +767,40 @@ impl Race {
         if n == 0 {
             return;
         }
-        let c = &self.cars[car as usize];
-        let gi = (c.gates_passed % n) as usize;
-        let g = &self.course.gates[gi];
-        let f = |p: [f32; 3]| (p[0] - g.x) * g.tx + (p[2] - g.z) * g.tz;
-        let lateral = ((now.position[0] - g.x) * -g.tz + (now.position[2] - g.z) * g.tx).abs();
-        let (before, after) = (f(prev.position), f(now.position));
-        if !(before < 0.0 && after >= 0.0 && lateral <= g.half_width + GATE_MARGIN_M) {
-            return;
+        // The expected gate, or a later one within GATE_CATCH_UP_M of route past it (owner playtest 2026-10-17: a car
+        // that ran wide past a gate never finished, with no sign why). Crossing a later gate counts every gate up to it.
+        let first = self.cars[car as usize].gates_passed;
+        let expected = &self.course.gates[(first % n) as usize];
+        let mut hit = None;
+        for k in 0..n {
+            let g = &self.course.gates[((first + k) % n) as usize];
+            let ahead = (g.from_finish - expected.from_finish).rem_euclid(self.course.total);
+            if k > 0 && ahead > GATE_CATCH_UP_M {
+                break;
+            }
+            if let Some(t) = Self::crossing(g, prev, now) {
+                hit = Some((k, t));
+                break;
+            }
         }
-        let t = (-before / (after - before)).clamp(0.0, 1.0);
-        let y = prev.position[1] + t * (now.position[1] - prev.position[1]);
-        // Use half the minimum separation: a full-clearance window would also
-        // admit the body centre of a car on the other layer of a low deck.
-        if g.layer_y.is_some_and(|h| {
-            (y - h).abs() > jj_map::bridge::limits::MIN_CLEARANCE_MM as f32 / 2000.0
-        }) {
+        let Some((skipped, t)) = hit else {
             return;
-        }
+        };
         // Where in this tick's step the line was crossed, linearly between the two positions.
-        let fraction = ((-before / (after - before)).clamp(0.0, 1.0) * 65535.0) as u16;
-        let anchor = g.anchor;
+        let fraction = (t * 65535.0) as u16;
+        for _ in 0..=skipped {
+            let gi = (self.cars[car as usize].gates_passed % n) as usize;
+            self.pass(tick, car, gi, fraction, effects);
+            if self.cars[car as usize].finished_at.is_some() {
+                break;
+            }
+        }
+    }
+
+    /// Car `car` passes gate `gi` (the next it expects): its anchor, the lap and the finish.
+    fn pass(&mut self, tick: u64, car: u32, gi: usize, fraction: u16, effects: &mut Vec<Effect>) {
+        let n = self.course.gates.len() as u32;
+        let anchor = self.course.gates[gi].anchor;
         let c = &mut self.cars[car as usize];
         c.gates_passed += 1;
         c.last_gate = Some(gi);

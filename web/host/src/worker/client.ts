@@ -192,6 +192,8 @@ export interface RoomView {
   remainingMs: number | null;
   round: number | null;
   laps: number;
+  /** Once the first car finishes: ms until the finish window closes the race (null before, and once it is over). */
+  raceEndsInMs?: number | null;
   catchUp?: boolean;
   freeDrive: boolean;
   /** The roster's vehicle ids in the host's table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123). */

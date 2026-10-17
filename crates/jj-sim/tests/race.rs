@@ -357,6 +357,58 @@ fn the_first_finisher_opens_the_30_s_window() {
     assert_eq!(standings[0].laps, 1);
 }
 
+/// Owner playtest 2026-10-17: "I finished a race with 3 laps … but the race didn't actually finish". A car that runs wide
+/// past a gate (or flies past it) never got that gate, so every later gate and the line were ignored and the lap never
+/// counted. Now crossing a later gate within `GATE_CATCH_UP_M` of route counts the missed ones, so a lap whose last gate
+/// before the line was missed still finishes the race.
+#[test]
+fn a_missed_gate_doesnt_strand_the_lap() {
+    let map = greybox();
+    let mut s = sim(&map, 4);
+    let a = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    s.start_race(1);
+    steps(&mut s, S);
+    let n = s.race().course.gate_count();
+    drive_through(&map, &mut s, a, 0);
+    // Gate 2 is missed entirely (the car is past it, never through it), then gate 3 is crossed: 2 and 3 both count.
+    drive_through(&map, &mut s, a, 1);
+    drive_through(&map, &mut s, a, 3);
+    assert_eq!(
+        s.race().car(0).unwrap().gates_passed,
+        4,
+        "the missed gate 2 counts when gate 3 is crossed"
+    );
+    for i in 4..n - 1 {
+        drive_through(&map, &mut s, a, i);
+    }
+    // The last gate before the line is missed too: crossing the line still completes the lap and finishes.
+    drive_through(&map, &mut s, a, 0);
+    let c = s.race().car(0).unwrap();
+    assert!(
+        c.finished_at.is_some(),
+        "the lap counted and the car finished: {c:?}"
+    );
+    assert!(
+        s.race()
+            .events()
+            .iter()
+            .any(|(_, e)| matches!(e, Event::Finished { car: 0 }))
+    );
+}
+
+#[test]
+fn a_gate_far_round_the_route_doesnt_count_the_ones_before_it() {
+    let map = greybox();
+    let mut s = sim(&map, 4);
+    let a = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    s.start_race(1);
+    steps(&mut s, S);
+    drive_through(&map, &mut s, a, 0);
+    // Gate 1 is next; gate 6 is far beyond the catch-up distance (greybox gates are 39-55 m apart).
+    drive_through(&map, &mut s, a, 6);
+    assert_eq!(s.race().car(0).unwrap().gates_passed, 1);
+}
+
 #[test]
 fn an_all_stuck_race_ends_at_the_deadline() {
     let map = greybox();

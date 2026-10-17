@@ -225,7 +225,7 @@ pub enum PauseReason {
 pub struct Hud {
     /// Race position, 1-based; `None` outside a race.
     pub position: Option<u32>,
-    /// `(current, total)` laps; `None` outside a race.
+    /// `(current, total)` laps; `None` outside a race. `current > total` once the car has finished.
     pub lap: Option<(u16, u16)>,
     /// Boost meter, 0..=255 for empty..full.
     pub boost: u8,

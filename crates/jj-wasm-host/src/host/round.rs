@@ -452,6 +452,8 @@ impl Host {
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
+                    // Owner playtest 2026-10-17 (finishing gave no feedback): the finishing time, for the tile's banner.
+                    "finishMs": race.and_then(|r| r.finished_at).map(|t| super::tick_ms(t.saturating_sub(self.sim.race().started_at.unwrap_or(t)))),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
@@ -469,11 +471,17 @@ impl Host {
             .iter()
             .map(|r| serde_json::json!({ "seat": r.seat.0, "place": r.place, "points": r.total.points, "wins": r.total.wins }))
             .collect();
+        let race = self.sim.race();
+        let race_ends_in_ms = race.first_finish.filter(|_| race.over.is_none()).map(|f| {
+            super::tick_ms((f + jj_sim::race::FINISH_WINDOW_TICKS).saturating_sub(self.sim.tick()))
+        });
         serde_json::json!({
             "phase": format!("{:?}", d.phase()),
             "remainingMs": d.remaining_ms(),
             "round": d.round().map(|r| r.0),
             "laps": self.effective_laps(),
+            // Once the first car finishes, the rest have the finish window to finish (null before, and once it's over).
+            "raceEndsInMs": race_ends_in_ms,
             "freeDrive": self.round.free_drive,
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
             // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).

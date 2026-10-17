@@ -14,7 +14,12 @@ type SeatView = RoomView['seats'][number] & {
   boost?: number | null;
   /** Wreck/respawn countdown in ms; the worker doesn't send it yet (report in docs/evidence/P1-R07), so the banner waits for it. */
   wreckMs?: number | null;
+  /** From `room_json`: the seat's finishing time (ms from the start) once its car has finished. */
+  finishMs?: number | null;
 };
+
+/** m:ss.t */
+const raceTime = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}.${Math.floor((ms % 1000) / 100)}`;
 
 export interface TileRect {
   seat: number;
@@ -58,7 +63,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
       <div class="hud-bottom"><div class="hud-boost" hidden><i></i></div><div class="hud-status"></div></div>
       <div class="hud-prompt" data-prompt hidden></div>
-      <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>`;
+      <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>
+      <div class="hud-centre hud-finished" data-finished hidden><div class="display wreck-word">Finished!</div><div class="wreck-back" data-finish-line></div></div>`;
     layer.append(b);
     return b;
   };
@@ -79,6 +85,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const lap = s?.laps === null || s?.laps === undefined ? null : Math.min(s.laps + 1, Math.max(1, total));
       const pos = s?.position ?? null;
       const unplugged = s?.unpluggedMs ?? null;
+      // Owner playtest 2026-10-17 (finishing gave no feedback): once the first car finishes, the rest see the window close.
+      const endsIn = room?.raceEndsInMs ?? null;
       const state = s ? (unplugged !== null ? 'unplugged' : s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
       // Placing rewrote the inline style, so the seat colour (border, Identify pulse) goes back on every paint.
       if (s) {
@@ -90,7 +98,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // P1-C14: a pad, wheel or key cluster seat is coached in its own glyphs, and holding its Identify shows its controls card.
       const src = sourceOf(s?.localSource);
       const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
-      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0]);
+      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -126,7 +134,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       boost.dataset.boost = boost.hidden ? '' : String(s.boost);
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
-        state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
+        (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
+        (started && endsIn !== null && !s.finished ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
       const prompt = started ? s.prompt : null;
@@ -137,6 +146,13 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
       centre.hidden = !(s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0);
       if (!centre.hidden) box.querySelector('.cd')!.textContent = String(Math.ceil(s.wreckMs! / 1000));
+      // The seat's finish: a banner with its place and time, held to the end of the race.
+      const fin = box.querySelector<HTMLElement>('[data-finished]')!;
+      fin.hidden = !(started && s.finished);
+      if (!fin.hidden) {
+        const [n, suf] = pos === null ? ['', ''] : ordinal(pos);
+        box.querySelector<HTMLElement>('[data-finish-line]')!.innerHTML = `${pos === null ? '' : `<b>${n}<sup>${suf}</sup></b>`}${s.finishMs == null ? '' : `<span>${raceTime(s.finishMs)}</span>`}`;
+      }
     }
   };
 

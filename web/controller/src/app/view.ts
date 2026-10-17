@@ -439,7 +439,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     };
     const posEl = app.querySelector<HTMLElement>('[data-hud=pos]');
     if (posEl) posEl.innerHTML = h?.position ? `${h.position}<sup>${place(h.position).slice(String(h.position).length)}</sup>` : '';
-    set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
+    set('lap', h?.lap ? (h.lap[0] > h.lap[1] ? 'Finished' : `Lap ${h.lap[0]}/${h.lap[1]}`) : '');
     paintItem();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
@@ -565,6 +565,11 @@ function roundBanner(app: HTMLElement, session: Session): void {
     // R134 (P1-FL19): you took someone down, and your boost is full.
     text = TAKEDOWN_TEXT.Takedown;
     tag = 'takedown';
+  } else if (session.roomPhase === 'Racing' && session.hud?.lap && session.hud.lap[0] > session.hud.lap[1]) {
+    // Owner playtest 2026-10-17 (finishing gave no feedback): the HUD's lap runs past the total once the car finishes.
+    const pos = session.hud.position;
+    text = `Finished${pos ? ` ${ordinal(pos)}` : ''}! Waiting for the others`;
+    tag = 'finished';
   } else if (session.idleCueAt !== null && session.roomPhase === 'Racing') {
     // G03: idle while racing. The countdown to the autopilot, then who's driving until the player steers.
     const left = session.idleCueMs - (performance.now() - session.idleCueAt);
