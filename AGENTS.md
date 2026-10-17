@@ -158,7 +158,7 @@ it never went green. Every agent chased red lanes with diagnostic pushes that re
 whole. The owner saw yesterday's build and concluded nothing had happened.
 
 **The rules that stop it happening again:**
-1. **One CI owner.** A single agent (the CI owner; today the "CI medic" session) is responsible for CI and the preview
+1. **One CI owner.** A single agent (the CI owner; since 2026-10-17 the Haiku deploy worker, `docs/process/deploy-worker.md`) is responsible for CI and the preview
    flow end to end, and does whatever it takes to make them work for us. Every other agent stays on game work: it runs the
    focused tests for what it touched before pushing, and fixes a red only when the CI owner hands it one with the cause.
 2. **The owner sees every build.** Previews publish from every CI run whose image built, red or not
