@@ -89,7 +89,11 @@ async function gameFlow() {
       const now = carOf(await observe());
       const moved = start && now ? Math.hypot(...now.position.map((v, i) => v - start.position[i])) : 0;
       if (now && now.forwardSpeed > 4 && moved > 3) break;
-      if (Date.now() - t0 > 30_000) fail(`the car didn't drive under the stick (speed ${now?.forwardSpeed}, moved ${moved.toFixed(1)} m)`);
+      if (Date.now() - t0 > 30_000) {
+        // The seeds (session and built track) replay the room's track with `host?seed=`; the car's state says how it stopped.
+        const seeds = await host.evaluate(() => ({ session: window.__jjSession?.seed, tracks: (window.__jjPrepare?.seeds() ?? []).map((s) => s.seed) }));
+        fail(`the car didn't drive under the stick (speed ${now?.forwardSpeed}, moved ${moved.toFixed(1)} m; seeds ${JSON.stringify(seeds)}; car ${JSON.stringify(now && { position: now.position, upY: now.upY, wrecks: now.wrecks, recoveries: now.recoveries })})`);
+      }
     }
     await phones[0].evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
     passed.push('drive');
