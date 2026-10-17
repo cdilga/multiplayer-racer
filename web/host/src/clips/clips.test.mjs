@@ -57,6 +57,8 @@ const replayJson = (file, build) => {
   return rows[0].report;
 };
 
+// `JJ_RUN_QUARANTINED=1` runs the quarantined tests too (reproducing them on eris, P0 br-53af/br-httj).
+const QUARANTINED = !process.env.JJ_RUN_QUARANTINED;
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 async function testHost(path = 'host?test') {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 }, acceptDownloads: true })).newPage();
@@ -141,7 +143,7 @@ test('F07 AC3: a clip from a different build is refused with a clear message', {
 });
 
 // Quarantined (CI owner, br-53af, owner SwiftBay): timed out at 301 s in batch 5809 (job 13055).
-test('F07 AC4: saving a clip never pauses or stutters the host (frame time recorded), and Ctrl/Cmd+Shift+B downloads one', { timeout: 300_000, skip: 'quarantined br-53af (owner SwiftBay): AC4 timed out at 301 s' }, async () => {
+test('F07 AC4: saving a clip never pauses or stutters the host (frame time recorded), and Ctrl/Cmd+Shift+B downloads one', { timeout: 300_000, skip: QUARANTINED && 'quarantined br-53af (owner SwiftBay): AC4 timed out at 301 s' }, async () => {
   const { page } = await testHost('host?test=live');
   // A long session so the clip is big, with the host animating while it runs.
   await page.evaluate(async () => {
@@ -177,7 +179,7 @@ test('F07 AC4: saving a clip never pauses or stutters the host (frame time recor
 });
 
 // Quarantined (CI owner, br-httj, owner SwiftBay): failed at 290 s in batch 5809 (job 13057).
-test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000, skip: 'quarantined br-httj (owner SwiftBay): session failed at 290 s' }, async () => {
+test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000, skip: QUARANTINED && 'quarantined br-httj (owner SwiftBay): session failed at 290 s' }, async () => {
   const { page, errors } = await testHost('host?room&test=live&laps=1');
   await wait(page, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const sent = [];
