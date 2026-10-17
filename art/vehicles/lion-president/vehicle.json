@@ -3,7 +3,7 @@
  "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into lion-president.asset.json. Same hinge layout as the Cruz (plan §6.3): doors 0–70° about the front edge, front (bonnet, scoops and fascia) and back (boot, wing and diffuser) hang 0–25° about their top edge, wheels ±6° camber. +X is the car's left.",
  "lods": [
   {
-   "maxTris": 1300
+   "maxTris": 2400
   },
   {
    "maxTris": 900

@@ -37,7 +37,7 @@
       "type": "array",
       "minItems": 1,
       "maxItems": 3,
-      "description": "One GLB per LOD, LOD0 first. maxTris may be lower than the qualified budgets (1300 / 900 / 600), never higher.",
+      "description": "One GLB per LOD, LOD0 first. maxTris may be lower than the qualified budgets (3000 / 900 / 600; LOD0 rose from 1300 in br-bwju.11), never higher.",
       "items": {
         "type": "object",
         "additionalProperties": false,

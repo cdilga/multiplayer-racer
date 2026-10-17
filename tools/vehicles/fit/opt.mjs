@@ -2,10 +2,13 @@
 // opt.mjs (br-bwju.3, Spike J's optimiser for any car on the Cruz's lofted-body parameters): pixel-driven tuning. Coordinate
 // descent on the model's numeric parameters, maximising the weighted silhouette IoU against a reference sheet, with a small
 // pull back to the hand-measured start (so the optimiser can't wander into odd shapes) and a smoothness penalty.
-//   node tools/vehicles/fit/opt.mjs <car> [sheet=lod1] [passes=4]  → rewrites art/vehicles/<car>/params.json and prints the log.
-// Structure changes stay manual; this only tunes numbers.
+//   node tools/vehicles/fit/opt.mjs <car> [sheet=lod1] [passes=4] [--out <file>]  → rewrites art/vehicles/<car>/params.json
+//   (or writes <file>, so a run on a shared clone leaves the tree untouched) and prints the log.
+// Structure changes stay manual; this only tunes numbers. params.json `pinned` lists top-level numbers the optimiser leaves
+// alone (br-bwju.11: the wheels' radius and track are the sim's, derived from the bake).
 import fs from 'node:fs'; import path from 'node:path'; import { open, close, REPO } from './lib.mjs';
-const car = process.argv[2], sheet = process.argv[3] || 'lod1', passes = +(process.argv[4] || 4);
+const argv = process.argv.slice(2), outAt = argv.indexOf('--out'), out = outAt >= 0 ? argv.splice(outAt, 2)[1] : null;
+const car = argv[0], sheet = argv[1] || 'lod1', passes = +(argv[2] || 4);
 if (!car) { console.error('usage: opt.mjs <car> [sheet] [passes]'); process.exit(2); }
 const page = await open(car); const pf = path.join(REPO, 'art/vehicles', car, 'params.json');
 const P0 = JSON.parse(fs.readFileSync(pf, 'utf8'));
@@ -26,7 +29,7 @@ if (BIKE) (function leaves(o, path) {
 })(P0, []);
 if (!BIKE) for (const k of ['ySh', 'yCr', 'hw', 'yBot']) P0[k].forEach((_, i) => add([k, i, 1], 0.02, k === 'yBot' ? 0.08 : 0.15));
 if (!BIKE) P0.cabin.forEach((c, i) => { add(['cabin', i, 'wb'], 0.02, 0.12); add(['cabin', i, 'wt'], 0.02, 0.15); if (c.yr != null) add(['cabin', i, 'yr'], 0.02, 0.12); if (i > 0 && i < P0.cabin.length - 1) add(['cabin', i, 'z'], 0.04, 0.3); });
-if (!BIKE) for (const k of ['wheelR', 'archTop', 'archR', 'track']) add([k], 0.01, 0.08);
+if (!BIKE) for (const k of ['wheelR', 'archTop', 'archR', 'track']) if (!P0.pinned?.includes(k)) add([k], 0.01, 0.08);
 if (!BIKE) for (const k of ['y', 'z', 'plateH', 'span']) if (P0.spoiler?.[k] != null) add(['spoiler', k], 0.02, 0.15);
 if (!BIKE) for (const k of ['out', 'y', 'z']) add(['mirror', k], 0.02, 0.1);
 if (!BIKE) { add(['roofCh'], 0.01, 0.05); add(['shoulderIn'], 0.01, 0.06); add(['sideDrop'], 0.01, 0.06); }
@@ -67,6 +70,6 @@ for (let pass = 1; pass <= passes; pass++) {
   log.push({ pass, score: best.r.score, obj: best.obj, moves: improved });
   if (!improved) for (const s of spec) s.step /= 2;
 }
-fs.writeFileSync(pf, `${JSON.stringify(P, null, 1)}\n`);
+fs.writeFileSync(out ?? pf, `${JSON.stringify(P, null, 1)}\n`);
 console.log(JSON.stringify({ sheet, final: best.r.score, moved: spec.map((s) => ({ p: s.path.join('.'), from: get(START, s.path), to: get(P, s.path) })).filter((m) => m.from !== m.to) }));
 await close();

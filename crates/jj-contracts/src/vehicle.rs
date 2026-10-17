@@ -42,7 +42,9 @@ pub const ANCHORS: [&str; 6] = [
     "lplate_rear",
 ];
 /// The qualified triangle budgets per LOD (plan §6.2; P1-Q01 requalifies them). A sidecar may ask for less, never more.
-pub const TRI_BUDGETS: [usize; 3] = [1300, 900, 600];
+/// LOD0 rose from 1300 to 3000 for the sheet-matched bodies (owner 2026-10-18, br-bwju.11): it draws only in tiles at
+/// least 540 px tall (the host's lodForTileHeight), so a few cars on a TV pay for it.
+pub const TRI_BUDGETS: [usize; 3] = [3000, 900, 600];
 /// Distance tolerances, metres.
 pub const POSITION_TOLERANCE_M: f64 = 0.001;
 pub const GROUND_TOLERANCE_M: f64 = 0.02;

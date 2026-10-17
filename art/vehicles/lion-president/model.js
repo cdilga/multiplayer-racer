@@ -1,27 +1,34 @@
-// model.js: the low-poly Lion President built from code (R81, R123, br-bwju.3): a caricatured Australian V8 sedan in the
-// spirit of the last V8 Commodore (SS-V Redline). Same spec and handling as the Hawk Dash, a different body.
+// model.js: the low-poly Lion President built from code (R81, R123; br-bwju.3, rebuilt against its sheet in br-bwju.11): a
+// caricatured Australian V8 sedan in the spirit of the last V8 Commodore (SS-V Redline). Same spec and handling as the Hawk
+// Dash, a different body.
 // build(P, lod) → { group, parts, stats } for three.js; soups(P, lod) → plain per-part triangle arrays for the bake
 // (tools/vehicles/bake.mjs). P comes from params.json, fitted to refs/lod-plus-1.png with tools/vehicles/fit (silhouette
-// IoU in docs/evidence/br-bwju.3/).
+// IoU in docs/evidence/P1-V-finish/lion-president/).
 //
 // Frame: metres, +Z = nose, +Y up, origin on the ground between the axles (jj.vehicle.v1). +X is the car's LEFT, so door_FL
 // and wheel_FL sit on +X. The driver sits on the right (cam_fp at −X).
 //
 // The body is the Cruz Missile's construction (two flat-shaded lofts, tub + greenhouse, sampled from smooth curves in P);
-// what makes it a Lion is its own proportions (shorter and stubbier than the Hawk, a steep short rear window) and details:
-// two big forward-facing bonnet nostril scoops, a slim upper grille over a very wide lower grille split by one thick bar,
-// sharp angular headlamps with LED fang strips under them, vertical slatted air curtains in the bumper corners, side
-// skirts, a tall boot wing on two posts with endplates, slim full-width tail lamps, a black diffuser with quad exhausts
-// at the corners, red calipers, the gloss-black roof and the black-and-gold shoulder pinstripe (atlas).
+// what makes it a Lion is its proportions (shorter and stubbier than the Hawk, a tall sedan cabin with strong tumblehome)
+// and the details its reference sheet shows, each built from numbers measured off the sheet (P.front, P.rear, P.windows…):
+//   - cabin: painted A and C pillars, black-framed side glass in three panes (front door, rear door, quarter), black B
+//     pillar, gloss-black roof, a shark fin; a whip aerial on the right front wing;
+//   - front: big fanged headlamps (a dark housing, a yellow chevron and two hanging fangs, wrapping onto the wings), a
+//     barred upper grille, a black lower bumper with slatted intakes either side and four LED blocks in the middle, a black
+//     splitter with a painted lip; two raised body-colour bonnet scoops with black mouths;
+//   - wheels: flared arches, 5-spoke dark rims with a hex hub in a dark barrel, red calipers (on the core: they don't spin);
+//   - rear: a tall wing on swan-neck posts with an N brace and tall endplates, a full-width tail-lamp bar (red outline,
+//     dark core) in a black band, a black diffuser with fins and four chrome tail pipes;
+//   - mirrors on stalks, door handles, side skirts and the black-and-gold side swoosh (atlas).
 // LOD changes only the sampling density and which details exist; part names and pivots are identical at every LOD.
 // Damage parts: front, back, door_FL/FR/RL/RR, wheel_FL/FR/RL/RR; everything else is core.
 import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 7, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 12, rim: 5, mirrors: 'shaped', spoiler: 'full', scoops: 'full', curtains: 3, exhaust: 'pipes', seams: true, splitter: true, skirts: true, calipers: true },
-  1: { arch: 5, nose: 1, curvePts: true, merge: 0.2, doorMid: true, wheelSeg: 8, rim: 5, mirrors: 'box', spoiler: 'full', scoops: 'full', curtains: 0, exhaust: 'flat', seams: false, splitter: true, skirts: true, calipers: false },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 8, rim: 0, mirrors: 'box', spoiler: 'plate', scoops: 'flat', curtains: 0, exhaust: 'none', seams: false, splitter: false, skirts: false, calipers: false },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, band: true, lamps: 'full', grilleBars: 2, slats: 7, splitter: true, scoops: 'box', aerial: true, fin: true, windows: true, mirrors: 'stalk', wing: 'swan', exhaust: 'rings', diffFins: 4, handles: true, skirts: true, calipers: true, corners: true },
+  1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', bayBoxes: true, hub: true, flare: 5, flareLip: false, flareEnds: true, tyreCap: false, band: false, lamps: 'full', grilleBars: 0, slats: 0, splitter: true, scoops: 'box', aerial: false, fin: false, windows: true, mirrors: 'box', wing: 'posts', exhaust: 'flat', diffFins: 0, handles: false, skirts: false, calipers: false, corners: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 3, flareLip: false, flareEnds: false, tyreCap: false, band: false, lamps: 'flat', grilleBars: 0, slats: 0, splitter: false, scoops: 'flat', aerial: false, fin: false, windows: 'flat', mirrors: 'box', wing: 'plate', exhaust: 'none', diffFins: 0, handles: false, skirts: false, calipers: false, corners: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -29,10 +36,26 @@ const lerpCurve = (pts, z) => {
   for (let i = 1; i < pts.length; i++) if (z >= pts[i][0]) { const [z0, a] = pts[i - 1], [z1, b] = pts[i]; return b + (a - b) * (z - z1) / (z0 - z1); }
   return pts[pts.length - 1][1];
 };
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+// a convex 2D polygon [[z, t]…] clipped to z ≤ k (side −1) or z ≥ k (side 1)
+const clipZ = (pts, k, side) => {
+  const inside = (p) => side * (p[0] - k) >= -1e-9, out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (inside(a)) out.push(a);
+    if (inside(a) !== inside(b)) { const t = (k - a[0]) / (b[0] - a[0]); out.push([k, a[1] + (b[1] - a[1]) * t]); }
+  }
+  return out.filter((p, i) => i === 0 || Math.hypot(p[0] - out[i - 1][0], p[1] - out[i - 1][1]) > 1e-6);
+};
 
 // ───────────────────────── triangle soup builder (non-indexed → flat shading) ─────────────────────────
 class Soup {
-  constructor() { this.p = []; this.uv = []; this.c = []; }
+  constructor() { this.p = []; this.uv = []; this.c = []; this.nc = []; }
+  /** Draws fn's triangles as decoration the bake leaves out of the part's collider (aerial, fin, calipers, mirrors). */
+  decor(fn) { const a = this.p.length / 3; fn(); this.nc.push([a, this.p.length / 3]); }
   tri(a, b, c, uv, col = 1) {
     // uv: swatch name, or a function (vertex) → [u,v]
     for (const v of [a, b, c]) {
@@ -42,6 +65,20 @@ class Soup {
     }
   }
   quad(a, b, c, d, uv, col) { this.tri(a, b, c, uv, col); this.tri(a, c, d, uv, col); }
+  /** A planar convex polygon, wound so its normal points along `out` (a direction, roughly). */
+  face(pts, uv, out) {
+    const n = cross(sub(pts[1], pts[0]), sub(pts[2], pts[0]));
+    const P = dot(n, out) >= 0 ? pts : pts.slice().reverse();
+    for (let i = 1; i < P.length - 1; i++) this.tri(P[0], P[i], P[i + 1], uv);
+  }
+  /** A convex solid given as faces (point lists): every face wound outward from the solid's centroid. */
+  solid(faces, uv) {
+    const all = faces.flat(), c = [0, 1, 2].map((k) => all.reduce((t, v) => t + v[k], 0) / all.length);
+    for (const f of faces) {
+      const fc = [0, 1, 2].map((k) => f.reduce((t, v) => t + v[k], 0) / f.length);
+      this.face(f, uv, sub(fc, c));
+    }
+  }
   // closed box with optional per-face swatch {px,nx,py,ny,pz,nz}
   box(cx, cy, cz, sx, sy, sz, sw, rot = null) {
     const h = [sx / 2, sy / 2, sz / 2], m = rot ? new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rot)) : null;
@@ -54,7 +91,20 @@ class Soup {
     this.quad(V(-1, -1, 1), V(1, -1, 1), V(1, 1, 1), V(-1, 1, 1), f('pz'));
     this.quad(V(1, -1, -1), V(-1, -1, -1), V(-1, 1, -1), V(1, 1, -1), f('nz'));
   }
-  // prism along an axis: n-gon radius r, from a to b (used for wheels, aerial, posts)
+  /** A square-section beam from a to b (four sides, open ends): struts, posts, the aerial. `up` orients its width. */
+  beam(a, b, w, t, sw, up = [0, 1, 0]) {
+    const ax = new THREE.Vector3(...sub(b, a)).normalize(), u = new THREE.Vector3(...up).cross(ax);
+    if (u.lengthSq() < 1e-6) u.set(1, 0, 0).cross(ax);
+    u.normalize(); const v = ax.clone().cross(u).normalize();
+    const off = (p, i, j) => [p[0] + u.x * i * w / 2 + v.x * j * t / 2, p[1] + u.y * i * w / 2 + v.y * j * t / 2, p[2] + u.z * i * w / 2 + v.z * j * t / 2];
+    const corners = [[1, 1], [-1, 1], [-1, -1], [1, -1]], mid = mix(a, b, 0.5);
+    for (let k = 0; k < 4; k++) {
+      const [i0, j0] = corners[k], [i1, j1] = corners[(k + 1) % 4];
+      const q = [off(a, i0, j0), off(a, i1, j1), off(b, i1, j1), off(b, i0, j0)];
+      const fc = mix(q[0], q[2], 0.5); this.face(q, sw, sub(fc, mid));
+    }
+  }
+  // prism along an axis: n-gon radius r, from a to b (used for wheels, pipes)
   prism(a, b, r, n, swSide, swCap, phase = 0, r2 = r) {
     const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), ax = B.clone().sub(A).normalize();
     const u = Math.abs(ax.y) < 0.9 ? new THREE.Vector3(0, 1, 0).cross(ax).normalize() : new THREE.Vector3(1, 0, 0).cross(ax).normalize(), w = ax.clone().cross(u);
@@ -62,12 +112,6 @@ class Soup {
     const ra = ring(A, r), rb = ring(B, r2);
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.quad(ra[i], ra[j], rb[j], rb[i], swSide); }
     if (swCap) for (let i = 1; i < n - 1; i++) { this.tri(ra[0], ra[i + 1], ra[i], swCap); this.tri(rb[0], rb[i], rb[i + 1], swCap); }
-  }
-  // polygon in the (z, y) plane (counter-clockwise seen from +X), extruded from x0 to x1 (x0 < x1)
-  slab(poly, x0, x1, swSide, swFace, swFace2 = swFace) {
-    const n = poly.length, A = poly.map(([z, y]) => [x0, y, z]), B = poly.map(([z, y]) => [x1, y, z]);
-    for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.quad(A[i], A[j], B[j], B[i], swSide); }
-    for (let i = 1; i < n - 1; i++) { this.tri(B[0], B[i], B[i + 1], swFace); this.tri(A[0], A[i + 1], A[i], swFace2); }
   }
   get tris() { return this.p.length / 9; }
 }
@@ -105,6 +149,15 @@ function makeSoups(P, lod) {
     const y2 = Math.max(lift + 0.03, yb + P.skirt), y3 = Math.max(y2 + 0.06, ysh - P.sideDrop);
     return [[0, yb, z], [s * (hw - P.floorIn), lift, z], [s * hw, y2, z], [s * hw, y3, z], [s * (hw - P.shoulderIn), ysh, z], [0, ycr, z]];
   };
+  // the tub's outer skin x at (z, y) on side s (the side wall, its shoulder chamfer, its floor chamfer)
+  const skinX = (z, y, s) => {
+    const r = ring(z, s);
+    if (y >= r[3][1]) return mix(r[3], r[4], Math.min(1, (y - r[3][1]) / Math.max(1e-6, r[4][1] - r[3][1])))[0];
+    if (y >= r[2][1]) return r[2][0];
+    return mix(r[1], r[2], Math.max(0, (y - r[1][1]) / Math.max(1e-6, r[2][1] - r[1][1])))[0];
+  };
+  // the tub's top surface height at (x, z): the slope from the shoulder to the crown
+  const deckY = (x, z) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), w = lerpCurve(P.hw, z) - P.shoulderIn; return ycr + (ysh - ycr) * Math.min(1, Math.abs(x) / w); };
 
   const soups = {}; const S = (id) => (soups[id] ??= new Soup());
   const partOfTub = (zm, seg, s) => {
@@ -114,135 +167,258 @@ function makeSoups(P, lod) {
     return 'core';
   };
   const sUV = sideUV(P), tUV = topUV(P);
-  const segSwatch = (seg, zm, isArch) => {
-    if (seg === 0) return 'under';
-    if (seg === 1) return isArch ? 'trim' : 'trim';
-    if (seg === 4) return tUV;
-    return sUV; // 2, 3: side skin with livery (seg 3 = shoulder chamfer carries livery too)
-  };
+  const segSwatch = (seg) => (seg === 0 ? 'under' : seg === 1 ? 'trim' : seg === 4 ? tUV : sUV); // 2, 3: side skin with livery
   for (const s of [1, -1]) {
     for (let i = 0; i < Z.length - 1; i++) {
-      const a = ring(Z[i], s), b = ring(Z[i + 1], s), zm = (Z[i] + Z[i + 1]) / 2, isArch = archY(Z[i]) > 0 || archY(Z[i + 1]) > 0;
+      const a = ring(Z[i], s), b = ring(Z[i + 1], s), zm = (Z[i] + Z[i + 1]) / 2;
       for (let k = 0; k < 5; k++) {
         const so = S(partOfTub(zm, k, s));
-        const uv = k === 3 ? sUV : segSwatch(k, zm, isArch);
         // winding: outward normals. ring order goes bottom→top on side s; for s>0 use (a_k, b_k, b_k+1, a_k+1)
-        if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], uv); else so.quad(a[k], a[k + 1], b[k + 1], b[k], uv);
+        if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], segSwatch(k)); else so.quad(a[k], a[k + 1], b[k + 1], b[k], segSwatch(k));
       }
     }
   }
   // end caps: nose (front) and tail (back) — fan over both sides' rings
   const cap = (z, id, sign, sw) => {
-    // polygon: floor centre, right side up, crown, left side down
     const R = ring(z, 1), Lr = ring(z, -1); const poly = [R[0], R[1], R[2], R[3], R[4], R[5], Lr[4], Lr[3], Lr[2], Lr[1]];
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
   cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'paint');
 
-  // greenhouse: ring per cabin station, one side: base(belt) → glass top → roof edge → crown
-  const cring = (c, s) => { const yb = lerpCurve(P.ySh, c.z) - 0.005, collapsed = c.yr == null, yr = collapsed ? lerpCurve(P.yCr, c.z) - 0.005 : c.yr, ch = collapsed ? 0 : P.roofCh;
-    return [[s * c.wb, yb, c.z], [s * c.wt, collapsed ? yb : yr - ch, c.z], [s * (c.wt - ch * 1.2) * (collapsed ? 0.5 : 1), yr, c.z], [0, yr + (collapsed ? 0 : P.roofCrown), c.z]]; };
+  // ── greenhouse: ring per cabin station, one side: base (belt) → glass top → roof edge → crown. The sides are painted
+  // (the A and C pillars); the side glass is laid over them below. A station with yr null is the windscreen base or the
+  // backlight foot: its ring lies flat on the body. Each station's `roof` says what the span behind it is: glass (the
+  // windscreen, the backlight) or the gloss-black roof. ──
+  const cring = (c, s) => {
+    const yb = lerpCurve(P.ySh, c.z) - 0.005;
+    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s * c.wb, yb, c.z], [s * c.wt, yb + 0.002, c.z], [s * (c.wt - P.roofCh), yc, c.z], [0, yc, c.z]]; }
+    return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0, c.yr + P.roofCrown, c.z]];
+  };
   const nC = P.cabin.length;
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
-    const c = P.cabin[i], a = cring(c, s), b = cring(P.cabin[i + 1], s);
+    const c = P.cabin[i], a = cring(c, s), b = cring(P.cabin[i + 1], s), roof = c.roof === 'paint';
     for (let k = 0; k < 3; k++) {
-      const sw = k === 0 ? (c.side === 'paint' ? sUV : c.side) : c.roof === 'paint' ? 'roofblack' : c.roof; // the gloss-black roof
+      const sw = k === 0 ? sUV : roof ? 'roofblack' : k === 1 ? sUV : 'glass';
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
-    // the B-pillar: a black strip across the side glass at the door cut, so the greenhouse reads as two windows
-    if (P.cabin[i].z >= P.zB && P.cabin[i + 1].z < P.zB && c.side === 'glass') {
-      const t = (c.z - P.zB) / (c.z - P.cabin[i + 1].z), at = (k) => a[k].map((v, j) => v + (b[k][j] - v) * t), o = s * 0.006;
-      const lo = at(0), hi = at(1), w = 0.05, q = [[lo[0] + o, lo[1], lo[2] + w], [lo[0] + o, lo[1], lo[2] - w], [hi[0] + o, hi[1], hi[2] - w], [hi[0] + o, hi[1], hi[2] + w]];
-      if (s > 0) S('core').quad(q[0], q[1], q[2], q[3], 'roofblack'); else S('core').quad(q[0], q[3], q[2], q[1], 'roofblack');
-    }
+  }
+  // a point on the greenhouse side at (z, t): t = 0 at the belt, 1 at the glass top; pushed out by `off`
+  const ghPoint = (z, t, s, off) => {
+    let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
+    const c0 = P.cabin[i], c1 = P.cabin[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
+    const a = cring(c0, s), b = cring(c1, s), lo = mix(a[0], b[0], u), hi = mix(a[1], b[1], u), p = mix(lo, hi, t);
+    const n = cross(sub(hi, lo), [0, 0, 1]); const L = Math.hypot(...n) || 1; const sg = Math.sign(n[0]) === s ? 1 : -1;
+    return [p[0] + sg * n[0] / L * off, p[1] + sg * n[1] / L * off, z];
+  };
+  // ── side glass: one black frame over the whole glazed band, then the three panes (front door, rear door, quarter) ──
+  const W = P.windows;
+  if (T.windows) for (const s of [1, -1]) {
+    // a (z, t) polygon, cut at every cabin station so each piece lies flat on its own span of the greenhouse
+    const poly = (pts, off, sw) => { for (let i = 0; i < nC - 1; i++) {
+      const piece = clipZ(clipZ(pts, P.cabin[i].z, -1), P.cabin[i + 1].z, 1);
+      if (piece.length >= 3) S('core').face(piece.map(([z, t]) => ghPoint(z, t, s, off)), sw, [s, 0.3, 0]);
+    } };
+    if (T.windows === true) { poly(W.frame, 0.006, 'roofblack'); for (const pane of W.panes) poly(pane, 0.011, 'glass'); }
+    else poly(W.frame, 0.008, 'glass'); // LOD2: one glazed band
   }
 
   // ── bays (dark, inside the shell; seen only when a panel is gone) ──
-  const bay = (cx, cy, cz, sx, sy, sz) => S('core').box(cx, cy, cz, sx, sy, sz, 'bay');
+  // (a box at LOD0/1; at LOD2 its two big faces only)
+  const bay = (cx, cy, cz, sx, sy, sz) => { if (T.bayBoxes) { S('core').box(cx, cy, cz, sx, sy, sz, 'bay'); return; }
+    for (const e of [-1, 1]) S('core').face([[cx - sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy + sy / 2, cz + e * sz / 2], [cx - sx / 2, cy + sy / 2, cz + e * sz / 2]], 'bay', [0, 0, e]); };
   { const hwA = lerpCurve(P.hw, zA) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zA)) / 2 - 0.02, zA + 0.03, hwA * 2, lerpCurve(P.ySh, zA) - 0.36, 0.06); } // firewall
   { const hwC = lerpCurve(P.hw, zC) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zC)) / 2 - 0.02, zC - 0.03, hwC * 2, lerpCurve(P.ySh, zC) - 0.36, 0.06); } // rear bulkhead
   for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) - 0.07); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
 
-  // ── bonnet (part: front): two big forward-facing nostril scoops, gloss black, open mouths facing the nose ──
+  // ── flared wheel arches: a band round each arch cut, standing proud of the side by P.flare.out at its lip, its outer edge
+  // flush with the body P.flare.w further out (front arch: part front; rear arch: part back) ──
+  if (T.flare) for (const [zc, id] of [[P.zFA, 'front'], [P.zRA, 'back']]) for (const s of [1, -1]) {
+    const So = S(id), n = T.flare, Fw = P.flare.w, Fo = P.flare.out, ht = P.archTop - P.archBase;
+    const E = [], Ep = [], O = [], Ei = [];
+    for (let i = 0; i < n; i++) {
+      const th = Math.PI * i / (n - 1), z = zc + P.archR * Math.cos(th), y = P.archBase + ht * Math.sin(th);
+      const zo = zc + (P.archR + Fw) * Math.cos(th), yo = P.archBase + (ht + Fw) * Math.sin(th);
+      const x = skinX(z, Math.max(y, lerpCurve(P.yBot, z) + P.skirt), s);
+      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo, P.track + P.wheelW / 2 + 0.02), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
+    }
+    for (let i = 0; i < n - 1; i++) {
+      const th = Math.PI * (i + 0.5) / (n - 1);
+      So.face([Ep[i], Ep[i + 1], O[i + 1], O[i]], sUV, [s, 0.6 * Math.sin(th), 0.6 * Math.cos(th)]); // the proud face
+      if (T.flareLip) So.face([Ei[i], Ei[i + 1], Ep[i + 1], Ep[i]], 'trim', [0, -Math.sin(th), -Math.cos(th)]); // the lip's underside
+    }
+    if (T.flareEnds) for (const i of [0, n - 1]) So.face([Ei[i], Ep[i], O[i]], sUV, [0, -0.2, i === 0 ? 1 : -1]);
+  }
+
+  // ── bonnet (part: front): two raised body-colour scoops with black mouths facing the nose ──
   const F = S('front');
   { const N = P.scoops;
     for (const s of [1, -1]) {
-      const x = s * N.x, z0 = N.z, z1 = N.z - N.l, y0 = lerpCurve(P.yCr, z0) - 0.01, y1 = lerpCurve(P.yCr, z1) - 0.01;
-      if (T.scoops === 'flat') { F.quad([x - N.w / 2, y0 + 0.012, z0], [x + N.w / 2, y0 + 0.012, z0], [x + N.w / 2, y1 + 0.012, z1], [x - N.w / 2, y1 + 0.012, z1], 'roofblack'); continue; } // a flat black decal at LOD2
-      // a wedge: flush at the back, N.h tall at the front, with a dark mouth on its front face
-      const a = [x - N.w / 2, y1, z1], b = [x + N.w / 2, y1, z1], c = [x + N.w / 2, y0 + N.h, z0], d = [x - N.w / 2, y0 + N.h, z0], e = [x + N.w / 2, y0, z0], f = [x - N.w / 2, y0, z0];
-      F.quad(a, d, c, b, 'roofblack'); // top
-      F.tri(b, c, e, 'roofblack'); F.tri(a, f, d, 'roofblack'); // sides
-      F.quad(f, e, c, d, 'grille'); // the mouth
+      const xc = s * N.x, z0 = N.z, z1 = N.z - N.l, xa = xc - N.w / 2, xb = xc + N.w / 2, ti = N.w * 0.12;
+      const g0a = deckY(xa, z0) + 0.004, g0b = deckY(xb, z0) + 0.004, g1a = deckY(xa, z1) - 0.01, g1b = deckY(xb, z1) - 0.01;
+      if (T.scoops === 'flat') { F.face([[xa, g0a + 0.01, z0], [xb, g0b + 0.01, z0], [xb, g1b + 0.012, z1], [xa, g1a + 0.012, z1]], 'grille', [0, 1, 0]); continue; } // a flat black decal at LOD2
+      const top = Math.max(g0a, g0b) + N.h;
+      const bfa = [xa, g0a, z0], bfb = [xb, g0b, z0], tfa = [xa + ti, top, z0 - 0.03], tfb = [xb - ti, top, z0 - 0.03], ra = [xa + ti * 0.5, g1a, z1], rb = [xb - ti * 0.5, g1b, z1];
+      F.face([tfa, tfb, rb, ra], tUV, [0, 1, 0.1]); // the top
+      F.face([bfa, tfa, ra], sUV, [-1, 0.3, 0]); F.face([bfb, tfb, rb], sUV, [1, 0.3, 0]); // the sides
+      F.face([bfa, bfb, tfb, tfa], sUV, [0, 0.2, 1]); // the front, then its black mouth just in front of it
+      const m = (p, q, r) => mix(p, r, 0.16);
+      const mc = mix(mix(bfa, bfb, 0.5), mix(tfa, tfb, 0.5), 0.5);
+      F.face([m(bfa, bfa, mc), m(bfb, bfb, mc), m(tfb, tfb, mc), m(tfa, tfa, mc)].map((p) => [p[0], p[1] - 0.008, p[2] + 0.006]), 'grille', [0, 0.2, 1]);
     } }
 
-  // ── front fascia (part: front): every detail sits on the vertical nose face at zn, sized relative to its half-width hwN
-  // (the fit narrows the nose; the slope above it is only a few centimetres tall) ──
-  const zn = P.zNose + 0.004, hwN = lerpCurve(P.hw, P.zNose);
-  const fq = (x0, y0, x1, y1, sw, dz = 0) => F.quad([x0, y0, zn + dz], [x1, y0, zn + dz], [x1, y1, zn + dz], [x0, y1, zn + dz], sw);
-  const ybN = lerpCurve(P.yBot, P.zNose), yTop = lerpCurve(P.ySh, P.zNose);
-  fq(-hwN * 0.48, yTop - 0.10, hwN * 0.48, yTop - 0.04, 'grille', 0.002); // slim upper grille
-  for (const s of [1, -1]) {
-    // sharp angular lamp: a quad whose outer corner sweeps up, and the LED fang hanging under its inner end
-    const q = [[0.44, yTop - 0.17], [0.98, yTop - 0.10], [0.98, yTop - 0.005], [0.50, yTop - 0.05]].map(([x, y]) => [s * x * hwN, y, zn + 0.003]);
-    if (s > 0) F.quad(q[0], q[1], q[2], q[3], 'head'); else F.quad(q[0], q[3], q[2], q[1], 'head');
-    const g = [[0.62, yTop - 0.26], [0.94, yTop - 0.14], [0.70, yTop - 0.155]].map(([x, y]) => [s * x * hwN, y, zn + 0.003]);
-    if (s > 0) F.tri(g[0], g[1], g[2], 'led'); else F.tri(g[0], g[2], g[1], 'led');
-    // the vertical air curtains in the bumper corners: a dark pocket with slats
-    const xa = 0.80 * hwN, xb = 0.98 * hwN, ya = ybN + 0.08, yb = yTop - 0.30;
-    fq(Math.min(s * xa, s * xb), ya, Math.max(s * xa, s * xb), yb, 'grille', 0.002);
-    for (let i = 0; i < T.curtains; i++) { const x = s * (xa + (xb - xa) * (i + 0.5) / T.curtains); F.box(x, (ya + yb) / 2, zn + 0.01, 0.015, yb - ya, 0.03, 'trim'); }
+  // ── front fascia (part: front): measured off the sheet's front view in units of the nose half-width hwN (u) and metres
+  // below the nose's top corner yTop (v). Everything sits on the vertical nose face at zn. ──
+  const zn = P.zNose, hwN = lerpCurve(P.hw, P.zNose), yTop = lerpCurve(P.ySh, P.zNose), ybN = lerpCurve(P.yBot, P.zNose), Fr = P.front;
+  const fpt = (u, v, dz = 0.004, s = 1) => [s * u * hwN, yTop - v, zn + dz];
+  const fpoly = (uvs, sw, dz, s = 1) => F.face(uvs.map(([u, v]) => fpt(u, v, dz, s)), sw, [0, 0, 1]);
+  const frect = (u0, v0, u1, v1, sw, dz) => fpoly([[u0, v0], [u1, v0], [u1, v1], [u0, v1]], sw, dz);
+  // the black lower bumper: the whole face below the lamps, following the face's own outline at the floor corners
+  { const r = ring(P.zNose, 1), yt = yTop - Fr.bumperTop;
+    F.face([[-r[1][0], r[1][1], zn + 0.002], [r[1][0], r[1][1], zn + 0.002], [r[2][0], r[2][1], zn + 0.002], [r[2][0], yt, zn + 0.002], [-r[2][0], yt, zn + 0.002], [-r[2][0], r[2][1], zn + 0.002]], 'trim', [0, 0, 1]); }
+  // its solid upper band stands forward of the intakes
+  if (T.band) F.box(0, yTop - (Fr.bumperTop + Fr.bandH / 2), zn + 0.02, hwN * 1.98, Fr.bandH, 0.04, 'trim');
+  // intakes: a dark recess either side (with vertical slats at LOD0) and the centre one with the four LED blocks
+  { const v0 = Fr.bumperTop + Fr.bandH + 0.01, v1 = yTop - ybN - 0.07;
+    for (const s of [1, -1]) {
+      fpoly([[Fr.slatU[0], v0], [Fr.slatU[1], v0], [Fr.slatU[1], v1], [Fr.slatU[0], v1]], 'grille', 0.005, s);
+      for (let i = 0; i < T.slats; i++) { // a slat: its front and two sides
+        const u = Fr.slatU[0] + (Fr.slatU[1] - Fr.slatU[0]) * (i + 0.5) / T.slats, x = s * u * hwN, w = 0.009, d = 0.03, y0 = yTop - v1, y1 = yTop - v0;
+        F.face([[x - w, y0, zn + d], [x + w, y0, zn + d], [x + w, y1, zn + d], [x - w, y1, zn + d]], 'rim', [0, 0, 1]);
+        for (const e of [-1, 1]) F.face([[x + e * w, y0, zn], [x + e * w, y0, zn + d], [x + e * w, y1, zn + d], [x + e * w, y1, zn]], 'trim', [e, 0, 0]);
+      }
+    }
+    frect(-Fr.centreU, v0, Fr.centreU, v1, 'grille', 0.005);
+    for (const u of Fr.ledU) for (const s of [1, -1]) fpoly([[u - Fr.ledW / 2, Fr.ledV - Fr.ledH / 2], [u + Fr.ledW / 2, Fr.ledV - Fr.ledH / 2], [u + Fr.ledW / 2, Fr.ledV + Fr.ledH / 2], [u - Fr.ledW / 2, Fr.ledV + Fr.ledH / 2]], 'led', T.lamps === 'full' ? 0.008 : 0.007, s);
   }
-  // very wide lower grille split by one thick horizontal bar
-  { const yb = ybN + 0.06, yt = yTop - 0.30; fq(-hwN * 0.74, yb, hwN * 0.74, yt, 'grille', 0.002); fq(-hwN * 0.76, (yb + yt) / 2 - 0.03, hwN * 0.76, (yb + yt) / 2 + 0.03, 'trim', 0.006); }
-  if (T.splitter) F.box(0, ybN + 0.01, P.zNose - 0.04, hwN * 2 + 0.06, 0.04, 0.24, 'trim');
+  // the barred upper grille between the lamps
+  frect(-Fr.grilleU, Fr.grilleV[0], Fr.grilleU, Fr.grilleV[1], 'grille', 0.004);
+  for (let i = 0; i < T.grilleBars; i++) { const v = Fr.grilleV[0] + (Fr.grilleV[1] - Fr.grilleV[0]) * (i + 1) / (T.grilleBars + 1); F.box(0, yTop - v, zn + 0.008, Fr.grilleU * hwN * 2, 0.014, 0.012, 'rim'); }
+  // the headlamps: a dark housing, a yellow chevron down its outer end, a yellow bar along its foot and two fangs hanging
+  // from it; at LOD0/1 the chevron wraps round the corner onto the wing
+  for (const s of [1, -1]) {
+    fpoly(Fr.lampHousing, 'trim', 0.006, s);
+    const Lp = T.lamps === 'full' ? Fr.lampYellow : Fr.lampYellow.slice(0, 2);
+    for (const p of Lp) fpoly(p, 'head', 0.008, s);
+    for (const p of T.lamps === 'full' ? Fr.fangs : Fr.fangs.slice(0, 1)) fpoly(p, 'head', 0.008, s);
+    if (T.corners) { // the wrap onto the wing, and the black bumper corner below it
+      const pts = Fr.lampWrap.map(([dz, v]) => { const z = P.zNose - dz, y = yTop - v; return [skinX(z, y, s) + s * 0.006, y, z]; });
+      F.face(pts, 'head', [s, 0, 0.2]);
+      const zb = P.zNose - Fr.cornerL, yt = yTop - Fr.bumperTop;
+      const cp = [[P.zNose, ybN + P.skirt], [zb, lerpCurve(P.yBot, zb) + P.skirt], [zb, yt - 0.04], [P.zNose, yt]].map(([z, y]) => [skinX(z, y, s) + s * 0.004, y, z]);
+      F.face(cp, 'trim', [s, 0, 0]);
+      if (T.slats) for (let i = 0; i < 3; i++) { const z = P.zNose - Fr.cornerL * (0.25 + 0.25 * i), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.05, y1 = yt - 0.08;
+        F.face([[skinX(z, y0, s) + s * 0.008, y0, z + 0.012], [skinX(z, y0, s) + s * 0.008, y0, z - 0.012], [skinX(z, y1, s) + s * 0.008, y1, z - 0.012], [skinX(z, y1, s) + s * 0.008, y1, z + 0.012]], 'grille', [s, 0, 0]); }
+    }
+  }
+  // the splitter: a black plate under the nose, its front edge painted (the sheet's red lip)
+  if (T.splitter) F.box(0, ybN - 0.005, P.zNose - 0.08, (hwN + Fr.splitterOut) * 2, 0.04, 0.32, { all: 'trim', pz: 'paint' });
+  // the whip aerial on the right front wing (the sheet's tall antenna)
+  if (T.aerial) { const A = P.aerial, y0 = deckY(A.x, A.z); F.decor(() => F.beam([A.x, y0, A.z], [A.x, A.top, A.z - 0.02], 0.014, 0.014, 'trim')); }
 
   // ── side skirts (core) ──
-  if (T.skirts) for (const s of [1, -1]) { const za = P.zFA - P.archR - 0.02, zb = P.zRA + P.archR + 0.02, x = s * (lerpCurve(P.hw, 0) + 0.015), y0 = lerpCurve(P.yBot, 0) + 0.02;
+  if (T.skirts) for (const s of [1, -1]) { const za = P.zFA - P.archR - P.flare.w, zb = P.zRA + P.archR + P.flare.w, x = s * (lerpCurve(P.hw, 0) + 0.015), y0 = lerpCurve(P.yBot, 0) + 0.02;
     S('core').box(x, y0 + 0.05, (za + zb) / 2, 0.06, 0.10, za - zb, 'trim'); }
+  // door handles: small black slots on each door
+  if (T.handles) for (const s of [1, -1]) for (const [z, door] of [[P.handles.zF, 'door_F'], [P.handles.zR, 'door_R']]) {
+    const y = P.handles.y, x = skinX(z, y, s) + s * 0.005;
+    S(door + (s > 0 ? 'L' : 'R')).face([[x, y - 0.018, z + 0.07], [x, y - 0.018, z - 0.07], [x, y + 0.018, z - 0.07], [x, y + 0.018, z + 0.07]], 'trim', [s, 0, 0]);
+  }
 
   // ── rear (part: back) ──
-  const Bk = S('back'), zt = P.zTail - 0.004, hwT = lerpCurve(P.hw, P.zTail), yshT = lerpCurve(P.ySh, P.zTail), ybT = P.yBot.at(-1)[1];
-  const bq = (x0, y0, x1, y1, sw, dz = 0) => Bk.quad([x1, y0, zt - dz], [x0, y0, zt - dz], [x0, y1, zt - dz], [x1, y1, zt - dz], sw);
-  bq(-hwT * 0.99, yshT - 0.16, hwT * 0.99, yshT - 0.02, 'roofblack'); // a black band across the boot
-  bq(-hwT * 0.95, yshT - 0.12, hwT * 0.95, yshT - 0.06, 'tail', 0.003); // and the slim full-width lamp in it
-  for (const s of [1, -1]) { // and their wrap onto the rear quarters
-    const z0 = P.zTail + 0.22, zz = P.zTail + 0.01, x0 = s * (lerpCurve(P.hw, z0) + 0.006), x1 = s * (lerpCurve(P.hw, zz) + 0.006);
-    const yh = lerpCurve(P.ySh, zz) - P.sideDrop + 0.02, yl = yh - 0.07;
-    if (s > 0) Bk.quad([x0, yl, z0], [x1, yl, zz], [x1, yh, zz], [x0, yh, z0], 'tail'); else Bk.quad([x0, yl, z0], [x0, yh, z0], [x1, yh, zz], [x1, yl, zz], 'tail');
+  const Bk = S('back'), zt = P.zTail, hwT = lerpCurve(P.hw, P.zTail), yshT = lerpCurve(P.ySh, P.zTail), ybT = lerpCurve(P.yBot, P.zTail), Rr = P.rear;
+  const rpt = (u, y, dz = 0.004, s = 1) => [s * u * hwT, y, zt - dz];
+  const rpoly = (pts, sw, dz, s = 1) => Bk.face(pts.map(([u, y]) => rpt(u, y, dz, s)), sw, [0, 0, -1]);
+  // the full-width tail lamp: a black band, the red lamp bar (pointed ends) and its dark core
+  { const [l0, l1] = Rr.lampY, ym = (l0 + l1) / 2, pts = (U, a, b) => [[-U, ym], [-U + 0.05, a], [U - 0.05, a], [U, ym], [U - 0.05, b], [-U + 0.05, b]];
+    rpoly([[-0.99, l0 - 0.025], [0.99, l0 - 0.025], [0.99, l1 + 0.025], [-0.99, l1 + 0.025]], 'roofblack', 0.003);
+    rpoly(pts(0.96, l0, l1), 'tail', 0.006);
+    if (T.lamps === 'full') rpoly(pts(0.91, l0 + 0.03, l1 - 0.03), 'taildk', 0.009);
+    if (T.corners) for (const s of [1, -1]) { // the lamp's wrap onto the rear quarter
+      const pts2 = [[0.005, l0], [Rr.wrapL, l0 + 0.02], [Rr.wrapL, l1 - 0.01], [0.005, l1]].map(([dz, y]) => { const z = P.zTail + dz; return [skinX(z, y, s) + s * 0.006, y, z]; });
+      Bk.face(pts2, 'tail', [s, 0, -0.2]);
+      const cp = [[P.zTail, ybT + P.skirt], [P.zTail + Rr.cornerL, lerpCurve(P.yBot, P.zTail + Rr.cornerL) + P.skirt], [P.zTail + Rr.cornerL, Rr.diffTop], [P.zTail, Rr.diffTop]].map(([z, y]) => [skinX(z, y, s) + s * 0.004, y, z]);
+      Bk.face(cp, 'trim', [s, 0, 0]);
+    }
   }
-  bq(-hwT * 0.92, ybT, hwT * 0.92, ybT + 0.20, 'under'); // black diffuser
-  for (const s of [1, -1]) for (const x of [0.58, 0.72]) { // quad exhausts at the corners
-    if (T.exhaust === 'pipes') Bk.prism([s * x, ybT + 0.09, zt + 0.06], [s * x, ybT + 0.09, zt - 0.05], 0.05, 6, 'chrome', 'under');
-    else if (T.exhaust === 'flat') bq(s * x - 0.045, ybT + 0.045, s * x + 0.045, ybT + 0.135, 'chrome');
+  // the black diffuser across the bottom, its fins and the four tail pipes in two pairs
+  { const r = ring(P.zTail, 1);
+    Bk.face([[r[1][0], r[1][1], zt - 0.003], [-r[1][0], r[1][1], zt - 0.003], [-r[2][0], r[2][1], zt - 0.003], [-r[2][0], Rr.diffTop, zt - 0.003], [r[2][0], Rr.diffTop, zt - 0.003], [r[2][0], r[2][1], zt - 0.003]], 'under', [0, 0, -1]);
+    for (let i = 0; i < T.diffFins; i++) { const u = Rr.finU[i % Rr.finU.length] * (i < Rr.finU.length ? 1 : -1), x = u * hwT, w = 0.012, d = 0.07, y0 = ybT, y1 = ybT + 0.16;
+      Bk.solid([[[x - w, y0, zt], [x - w, y1, zt], [x - w, y1, zt - d], [x - w, y0, zt - d * 1.4]], [[x + w, y0, zt], [x + w, y1, zt], [x + w, y1, zt - d], [x + w, y0, zt - d * 1.4]], [[x - w, y1, zt - d], [x + w, y1, zt - d], [x + w, y0, zt - d * 1.4], [x - w, y0, zt - d * 1.4]]], 'trim'); }
+    for (const s of [1, -1]) for (const x of Rr.pipeX) {
+      const c = [s * x, Rr.pipeY, zt], r0 = Rr.pipeR;
+      if (T.exhaust === 'rings') {
+        const n = 8, ring2 = (rr, dz) => Array.from({ length: n }, (_, i) => { const a = Math.PI * 2 * (i + 0.5) / n; return [c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr, zt - dz]; });
+        const o = ring2(r0, 0.05), o0 = ring2(r0, 0), inn = ring2(r0 * 0.72, 0.05), deep = ring2(r0 * 0.72, 0.02);
+        for (let i = 0; i < n; i++) { const j = (i + 1) % n;
+          Bk.face([o0[i], o0[j], o[j], o[i]], 'chrome', sub(mix(o[i], o[j], 0.5), [c[0], c[1], zt - 0.05])); // the pipe
+          Bk.face([o[i], o[j], inn[j], inn[i]], 'chrome', [0, 0, -1]); } // its rim
+        Bk.face(deep, 'under', [0, 0, -1]); // and its dark bore
+      } else if (T.exhaust === 'flat') rpoly([[(s * x - r0) / hwT, Rr.pipeY - r0], [(s * x + r0) / hwT, Rr.pipeY - r0], [(s * x + r0) / hwT, Rr.pipeY + r0], [(s * x - r0) / hwT, Rr.pipeY + r0]], 'chrome', 0.006);
+    } }
+  // the tall wing: a black blade, tall endplates, and swan-neck posts that rise behind it and hook over onto its top, with an
+  // N brace from the boot (the sheet's side view); a plain plate on two posts at LOD2
+  { const SP = P.spoiler, xs = SP.span * SP.postX;
+    Bk.box(0, SP.y, SP.z, SP.span * 2, 0.035, SP.chord, 'roofblack', [SP.tilt, 0, 0]);
+    if (T.wing !== 'plate') for (const s of [1, -1]) Bk.solid([
+      [[s * SP.span, SP.y - SP.plateLo, SP.z + SP.chord / 2 + 0.02], [s * SP.span, SP.y + SP.plateHi, SP.z + SP.chord / 2 - 0.04], [s * SP.span, SP.y + SP.plateHi, SP.z - SP.chord / 2 - 0.05], [s * SP.span, SP.y - SP.plateLo, SP.z - SP.chord / 2 + 0.02]],
+      [[s * (SP.span + 0.025), SP.y - SP.plateLo, SP.z + SP.chord / 2 + 0.02], [s * (SP.span + 0.025), SP.y + SP.plateHi, SP.z + SP.chord / 2 - 0.04], [s * (SP.span + 0.025), SP.y + SP.plateHi, SP.z - SP.chord / 2 - 0.05], [s * (SP.span + 0.025), SP.y - SP.plateLo, SP.z - SP.chord / 2 + 0.02]],
+    ].flatMap((f, k, all) => (k === 0 ? [f, all[1], ...f.map((p, i) => [p, f[(i + 1) % 4], all[1][(i + 1) % 4], all[1][i]])] : [])), 'roofblack');
+    for (const s of [1, -1]) {
+      const x = s * xs, deckF = deckY(x, SP.z + SP.chord * 0.3), deckR = deckY(x, SP.z - SP.chord * 0.3);
+      const base = [x, deckR, SP.z - SP.chord * 0.3], crest = [x, SP.y + 0.05, SP.z - SP.chord * 0.62], hook = [x, SP.y + 0.025, SP.z - SP.chord * 0.05];
+      if (T.wing === 'swan') { Bk.beam(base, crest, 0.035, 0.06, 'roofblack', [1, 0, 0]); Bk.beam(crest, hook, 0.035, 0.05, 'roofblack', [1, 0, 0]); Bk.beam([x, deckF, SP.z + SP.chord * 0.3], [x, SP.y - 0.04, SP.z - SP.chord * 0.45], 0.03, 0.05, 'roofblack', [1, 0, 0]); }
+      else Bk.beam([x, deckF, SP.z], [x, SP.y, SP.z], 0.04, 0.06, 'roofblack', [1, 0, 0]);
+    }
   }
-  // the tall wing on two posts, with endplates (a plain plate at LOD2)
-  { const SP = P.spoiler, deck = lerpCurve(P.yCr, SP.z);
-    Bk.box(0, SP.y, SP.z, SP.span * 2, 0.04, SP.chord, 'roofblack', [SP.tilt, 0, 0]);
-    for (const s of [1, -1]) Bk.box(s * SP.span * 0.6, (deck + SP.y) / 2, SP.z + 0.03, 0.05, SP.y - deck, 0.09, 'trim', [-0.2, 0, 0]);
-    if (T.spoiler === 'full') for (const s of [1, -1]) Bk.box(s * SP.span, SP.y + 0.02, SP.z - 0.02, 0.03, 0.16, SP.chord + 0.08, 'roofblack'); }
+  // the shark fin at the back of the roof
+  if (T.fin) { const c = P.cabin.find((k) => k.roof === 'paint' && k.z < -0.5) ?? P.cabin[3], y0 = c.yr + P.roofCrown - 0.005, z0 = c.z + 0.05;
+    S('core').decor(() => S('core').solid([[[-0.02, y0, z0], [-0.02, y0, z0 - 0.17], [-0.008, y0 + 0.065, z0 - 0.15]], [[0.02, y0, z0], [0.02, y0, z0 - 0.17], [0.008, y0 + 0.065, z0 - 0.15]], [[-0.02, y0, z0], [0.02, y0, z0], [0.008, y0 + 0.065, z0 - 0.15], [-0.008, y0 + 0.065, z0 - 0.15]], [[-0.02, y0, z0 - 0.17], [0.02, y0, z0 - 0.17], [0.008, y0 + 0.065, z0 - 0.15], [-0.008, y0 + 0.065, z0 - 0.15]]], 'roofblack')); }
 
-  // ── mirrors (core: they stay with the greenhouse): black ──
-  const M = P.mirror;
-  for (const s of [1, -1]) {
-    const x = s * (lerpCurve(P.hw, M.z) - 0.05 + M.out / 2);
-    S('core').box(x, M.y, M.z, M.out, M.h, M.l, 'roofblack', T.mirrors === 'shaped' ? [0, s * 0.15, 0] : null);
-  }
-  // door seams (L0): thin dark strips on the door edges
-  if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, zC + 0.012]) {
-    const x = s * (lerpCurve(P.hw, z) + 0.003), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.02, y1 = lerpCurve(P.ySh, z) - 0.05;
-    S('core').quad(...(s > 0 ? [[x, y0, z + 0.008], [x, y0, z - 0.008], [x, y1, z - 0.008], [x, y1, z + 0.008]] : [[x, y0, z - 0.008], [x, y0, z + 0.008], [x, y1, z + 0.008], [x, y1, z - 0.008]]), 'trim');
-  }
+  // ── mirrors (core: they stay with the greenhouse): black angular heads on short stalks at the front of the side glass ──
+  const M = P.mirror; // decoration: the collider stays the body's width
+  for (const s of [1, -1]) S('core').decor(() => {
+    const xb = skinX(M.z, M.y - 0.04, s), x0 = xb + s * M.stalk, x1 = x0 + s * M.out;
+    if (T.mirrors === 'box') { S('core').box((xb + x1) / 2, M.y, M.z, Math.abs(x1 - xb), M.h, M.l, 'roofblack'); return; }
+    S('core').beam([xb - s * 0.02, M.y - 0.045, M.z + 0.02], [x0 + s * 0.01, M.y - 0.02, M.z], 0.03, 0.05, 'roofblack', [0, 0, 1]);
+    const f = (x, k) => [[x, M.y - M.h / 2, M.z + M.l / 2 * k], [x, M.y + M.h / 2, M.z + M.l / 2 * k - 0.01], [x, M.y + M.h / 2, M.z - M.l / 2], [x, M.y - M.h / 2 + 0.02, M.z - M.l / 2]];
+    const a = f(x0, 1), b = f(x1, 0.4);
+    S('core').solid([a, b, ...a.map((p, i) => [p, a[(i + 1) % 4], b[(i + 1) % 4], b[i]])], 'roofblack');
+  });
 
-  // ── wheels: tyre prism + rim disc (5-gon, reads as a 5-spoke at low res) ──
-  // The tyre's circumradius makes its inscribed radius wheelR, so the bottom flat (phase π/n) touches the ground.
-  const tyreR = P.wheelR / Math.cos(Math.PI / T.wheelSeg);
-  for (const [id, z, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
-    const W = S(id), x = s * P.track, hw = P.wheelW / 2;
-    W.prism([x - s * hw, P.wheelR, z], [x + s * hw, P.wheelR, z], tyreR, T.wheelSeg, 'tyre', 'rim', Math.PI / T.wheelSeg);
-    if (T.rim) { W.prism([x + s * hw, P.wheelR, z], [x + s * (hw + 0.012), P.wheelR, z], P.wheelR * 0.68, T.rim, 'trim', 'trim', Math.PI / 2, P.wheelR * 0.6); W.prism([x + s * (hw + 0.012), P.wheelR, z], [x + s * (hw + 0.03), P.wheelR, z], 0.07, 5, 'rim', 'rim'); }
-    if (T.calipers) W.box(x + s * (hw + 0.006), P.wheelR + 0.13, z - 0.08, 0.012, 0.09, 0.12, 'caliper'); // red caliper behind the spokes
+  // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five spokes and a hex hub;
+  // LOD1 draws the spokes flat on the barrel, LOD2 a 5-gon decal. The tyre's circumradius makes its inscribed radius
+  // wheelR, so the bottom flat (phase π/n) touches the ground. ──
+  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n), rimR = P.wheelR * P.rim.r, depth = P.rim.depth;
+  for (const [id, zc, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
+    const Wh = S(id), xw = s * P.track, xo = xw + s * P.wheelW / 2, xi = xw - s * P.wheelW / 2, yc = P.wheelR;
+    const ringAt = (x, r, k = n, ph = 1.5 * Math.PI - Math.PI / k) => Array.from({ length: k }, (_, i) => { const a = ph + (i / k) * Math.PI * 2; return [x, yc + Math.sin(a) * r, zc + Math.cos(a) * r]; });
+    const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
+    if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
+    if (T.rim === 'decal') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, P.wheelR * 0.6, 5, Math.PI / 2), 'rim', [s, 0, 0]); continue; }
+    const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
+    if (T.rim === 'spokes') {
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'rim', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
+      Wh.face(rd, 'under', [s, 0, 0]); // the dark barrel
+    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR), 'under', [s, 0, 0]); } // LOD1: a flat sidewall, the barrel drawn on it
+    const hubR = 0.07, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
+    for (let k = 0; k < 5; k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
+      const a = Math.PI / 2 + k * Math.PI * 2 / 5, ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
+      const P0 = (r, w, x) => [x, yc + sa * r + ps * w, zc + ca * r + pc * w];
+      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 0.7, rr = rimR - 0.004;
+      const fr = [P0(hubR * 0.8, -w0, xf), P0(rr, -w1, xf), P0(rr, w1, xf), P0(hubR * 0.8, w0, xf)];
+      Wh.face(fr, 'rim', [s, 0, 0]);
+      if (T.rim === 'spokes') { const xb = xo - s * depth * 0.55; for (const e of [-1, 1]) Wh.face([P0(hubR * 0.8, e * w0, xf), P0(rr, e * w1, xf), P0(rr, e * w1, xb), P0(hubR * 0.8, e * w0, xb)], 'trim', [0, ps * e, pc * e]); }
+    }
+    const hub = ringAt(xf + s * 0.012, hubR, 6, 0);
+    if (T.hub) Wh.face(hub, 'rim', [s, 0, 0]);
+    if (T.rim === 'spokes') { const hb = ringAt(xf - s * 0.01, hubR, 6, 0); for (let i = 0; i < 6; i++) { const j = (i + 1) % 6; Wh.face([hb[i], hb[j], hub[j], hub[i]], 'trim', sub(mix(hub[i], hub[j], 0.5), [hub[i][0], yc, zc])); } }
+    // the red caliper: on the core (it doesn't turn with the wheel), up and behind the axle, inside the spokes
+    if (T.calipers) { const ang = (P.rim.caliperDeg * Math.PI) / 180, r = rimR * 0.68, cz = zc - Math.cos(ang) * r, cy = yc + Math.sin(ang) * r;
+      S('core').decor(() => S('core').box(xo - s * depth * 0.62, cy, cz, 0.03, 0.08, rimR * 0.6, 'caliper', [-(Math.PI / 2 - ang), 0, 0])); }
   }
 
   // ── interior blocks (P1-V03): what a missing panel shows, in vehicle space, the same at every LOD. Drawn only for a
@@ -281,12 +457,13 @@ function pivotOf(P, id, positions) {
   return [mid(0), mid(1), mid(2)];
 }
 
-/** Plain per-part triangle soups for the bake: { parts: { id: { pivot, positions (part space), uvs (v up), tris } } }. */
+/** Plain per-part triangle soups for the bake: { parts: { id: { pivot, positions (part space), uvs (v up), tris, noCollide? } } }
+ *  (noCollide: [first, end) vertex ranges of decoration the collider leaves out). */
 export function soups(P, lod = 0) {
   const { soups: raw, stations } = makeSoups(P, lod), pv = pivots(P), parts = {};
   for (const [id, so] of Object.entries(raw)) {
     const pivot = pv[id];
-    parts[id] = { pivot, positions: so.p.map((v, i) => v - pivot[i % 3]), uvs: so.uv.slice(), tris: so.tris };
+    parts[id] = { pivot, positions: so.p.map((v, i) => v - pivot[i % 3]), uvs: so.uv.slice(), tris: so.tris, ...(so.nc.length ? { noCollide: so.nc } : {}) };
   }
   return { parts, stations };
 }

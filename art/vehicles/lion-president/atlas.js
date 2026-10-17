@@ -13,7 +13,7 @@
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.
 
-export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'roofblack', 'gold', 'under', 'bay', 'chrome', 'caliper'];
+export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'roofblack', 'gold', 'under', 'bay', 'chrome', 'caliper', 'taildk'];
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
@@ -22,23 +22,28 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
 export const SPAN = { side: [4.8, 1.6], top: [4.8, 1.9] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#d8231c', trim: '#232427', glass: '#3e4955', tyre: '#2a2a2c', rim: '#4a4d52', head: '#ffe27a', led: '#fff6c0', tail: '#e8311f',
-  stripe: '#16181c', grille: '#111214', roofblack: '#141518', gold: '#e2b23a', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', caliper: '#d61a1a',
+  paint: '#d8231c', trim: '#232427', glass: '#3e4955', tyre: '#2a2a2c', rim: '#4a4d52', head: '#ffdc2e', led: '#ffe84a', tail: '#e8311f',
+  stripe: '#16181c', grille: '#111214', roofblack: '#141518', gold: '#e2b23a', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', caliper: '#d61a1a', taildk: '#4a0b08',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };
-const EMIT = { head: '#ffd860', led: '#fff0b0', tail: '#c81a0c' };
+const EMIT = { head: '#ffc800', led: '#ffd800', tail: '#c81a0c', taildk: '#2c0503' };
 
 // The drawing, as data: rectangles and polygons in atlas pixels (y down from the top of the image), drawn in order.
-// Side: a black pinstripe with a gold edge along the shoulder, headlamp to tail lamp, rising slightly toward the tail
-// (metres from the nose, height).
+// Side: the sheet's swoosh, measured off its side view (metres from the nose, height): a black band that starts as a point
+// at the headlamp's corner, sweeps up over the front wing and runs back, rising and thickening, to the tail lamp; a gold
+// pinstripe above it (a red gap between) and one below it.
+const SWOOSH = [[0.12, 0.70], [0.45, 0.765], [0.80, 0.815], [1.40, 0.90], [2.55, 0.94], [3.40, 0.975], [4.32, 1.0]];
+const swooshBand = (lo, hi) => [...SWOOSH.map(([z, y], i) => [z, y + lo(i / (SWOOSH.length - 1))]), ...SWOOSH.slice().reverse().map(([z, y], i) => [z, y + hi(1 - i / (SWOOSH.length - 1))])];
 function sideShapes(c) {
   const [u0, v0, u1, v1] = REGION.side, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
   const m = (pts) => pts.map(([x, y]) => [ox + (x / SPAN.side[0]) * px, oy + (1 - y / SPAN.side[1]) * py]);
+  const th = (t) => 0.012 + 0.058 * Math.min(1, t * 1.6); // the band's thickness along its length
   return [
     { rect: [ox, oy, px, py], fill: c.paint },
-    { poly: m([[0.10, 0.80], [4.70, 0.94], [4.70, 0.99], [0.10, 0.85]]), fill: c.stripe },
-    { poly: m([[0.10, 0.77], [4.70, 0.91], [4.70, 0.93], [0.10, 0.79]]), fill: c.gold },
+    { poly: m(swooshBand((t) => th(t) + 0.012 * Math.min(1, t * 4), (t) => th(t) + 0.012 * Math.min(1, t * 4) + 0.015)), fill: c.gold },
+    { poly: m(swooshBand(() => 0, th)), fill: c.stripe },
+    { poly: m(swooshBand((t) => -0.011 * Math.min(1, t * 4) - 0.015, (t) => -0.011 * Math.min(1, t * 4))), fill: c.gold },
   ];
 }
 // Top: plain paint (the roof is the gloss-black swatch on the greenhouse).

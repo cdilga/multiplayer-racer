@@ -137,8 +137,10 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     for (const [a, at] of Object.entries(V.anchors)) child({ name: a, translation: at });
     if (lod === 0) {
       for (const p of SET) {
-        const part = parts[p], pv = pivots[p], pts = [];
+        const part = parts[p], pv = pivots[p], pts = [], skip = part.noCollide ?? [];
         for (let i = 0; i < part.positions.length; i += 3) {
+          // decoration the model marks as no collision surface (soups' noCollide vertex ranges: aerials, fins, calipers)
+          if (skip.some(([a, b]) => i / 3 >= a && i / 3 < b)) continue;
           const q = [part.positions[i] + pv[0], part.positions[i + 1] + pv[1], part.positions[i + 2] + pv[2]];
           // The Cruz's UHF whip and its mount (on the bull bar's +X post) aren't a collision surface.
           if (p === 'front' && P.bar && Math.abs(q[0] - P.bar.hw) < 0.08 && Math.abs(q[2] - P.bar.z) < 0.08 && q[1] > P.bar.y1 + 0.03) continue;
