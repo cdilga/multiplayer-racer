@@ -3,7 +3,8 @@ import { confirmInitialVehicle } from './lib/vehicle.mjs';
 //  1. A real phone (Chromium, loopback WebRTC, the real host in free drive on the greybox) switches to Buttons in
 //     Settings and remaps two inputs (Boost and Gas each to a new spot); each button, pressed with a real touch, puts
 //     the same intent on the host's car as the one-stick layout's stick would (throttle, brake/reverse, steer, boost, OI!,
-//     cone); then the phone drives a lap of the greybox on the steer stick and the Gas button, both held by real touches.
+//     cone); then the phone drives a lap of the greybox on the steer stick and the Gas button (per-pointer events on the
+//     pad: CDP touch emulation cannot lift one finger of several).
 //  2. Multi-touch: the steer stick, Gas and Boost held at once by three pointers all register (Chromium and WebKit, the
 //     controller in `playing` through the state opener).
 //   node --test web/tests/journeys/fl13-buttons.test.mjs
@@ -124,6 +125,19 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
     await up(6);
     await until('cone', (s) => s.action.cones === before.cones + 1);
 
+    // The lap's fingers are per-pointer events on the pad's own elements (the multi-touch test's way): CDP's touch
+    // emulation can't lift one finger while others stay down (no pointerup comes, so a lifted Gas or Brake stayed held
+    // and the lap ran away or stalled, br-bbki.14); a real phone's lifted finger does get its pointerup.
+    if (fingers.size) await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    fingers.clear();
+    const fire = (sel, type, id, p) => page.evaluate(([sel, type, id, x, y]) => document.querySelector(sel).dispatchEvent(
+      new PointerEvent(type, { pointerId: id, pointerType: 'touch', bubbles: true, cancelable: true, clientX: x, clientY: y, isPrimary: id === 101 })),
+    [sel, type, id, p.x, p.y]);
+    const sel = { 1: '[data-box=zone-steer]', 2: '.padbtn[data-input=gas]', 7: '.padbtn[data-input=brake]' };
+    const held = new Map();
+    const pdown = async (id, p) => { held.set(id, p); await fire(sel[id], 'pointerdown', 100 + id, p); };
+    const pmove = async (id, p) => { held.set(id, p); await fire(sel[id], 'pointermove', 100 + id, p); };
+    const pup = async (id) => { const p = held.get(id); held.delete(id); await fire(sel[id], 'pointerup', 100 + id, p); };
     // A lap of the greybox: Gas held, steering on the stick toward the road a few points ahead, on the Some assist (R125:
     // a steer-to-line, the player still on the Gas button): a closed loop through Playwright lags ~100 ms, which on Off
     // wedged the car on a rail (br-bbki.14).
@@ -140,7 +154,7 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
     const gasAt = await btn('gas');
     const brakeAt = await btn('brake');
     let gasDown = false;
-    await down(1, steerAt);
+    await pdown(1, steerAt);
     const t0 = Date.now();
     let stuckSince = null;
     while (travelled < n) {
@@ -159,29 +173,29 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
       const push = Math.max(-1, Math.min(1, -err * 3 * Math.sign(-r.steer)));
       stuckSince = s.speed < 0.6 ? (stuckSince ?? Date.now()) : null;
       if (stuckSince !== null && Date.now() - stuckSince > 2000) {
-        if (gasDown) await up(2);
+        if (gasDown) await pup(2);
         gasDown = false;
-        await move(1, { x: steerAt.x - push * 60, y: steerAt.y });
-        await down(7, brakeAt);
+        await pmove(1, { x: steerAt.x - push * 60, y: steerAt.y });
+        await pdown(7, brakeAt);
         await host.waitForTimeout(1200);
-        await up(7);
+        await pup(7);
         stuckSince = null;
         continue;
       }
-      await move(1, { x: steerAt.x + push * 60, y: steerAt.y });
+      await pmove(1, { x: steerAt.x + push * 60, y: steerAt.y });
       const wantGas = s.speed < 11;
-      if (wantGas && !gasDown) await down(2, gasAt);
-      if (!wantGas && gasDown) await up(2);
+      if (wantGas && !gasDown) await pdown(2, gasAt);
+      if (!wantGas && gasDown) await pup(2);
       gasDown = wantGas;
       await host.waitForTimeout(80);
       // `JJ_TRACE=1`: the fingers the script holds, what the phone reads off its pad and what the host applies, every ~2 s.
       if (process.env.JJ_TRACE && Math.floor((Date.now() - t0) / 2000) !== Math.floor((Date.now() - t0 - 120) / 2000)) {
         const phoneDrive = await page.evaluate(() => ({ ...window.__jjController.inspect().drive, pressed: [...document.querySelectorAll('.padbtn.pressed')].map((b) => b.dataset.input) }));
-        console.log(`# trace ${travelled}/${n} fingers ${JSON.stringify([...fingers.keys()])} gasDown ${gasDown} phone ${JSON.stringify(phoneDrive)} host ${JSON.stringify({ t: s.throttle, st: s.steer, b: s.brake, v: +s.speed.toFixed(1) })}`);
+        console.log(`# trace ${travelled}/${n} fingers ${JSON.stringify([...held.keys()])} gasDown ${gasDown} phone ${JSON.stringify(phoneDrive)} host ${JSON.stringify({ t: s.throttle, st: s.steer, b: s.brake, v: +s.speed.toFixed(1) })}`);
       }
     }
-    await up(1);
-    if (gasDown) await up(2);
+    await pup(1);
+    if (gasDown) await pup(2);
     assert.ok(travelled >= n, `the car went round: ${travelled}/${n}`);
   } finally {
     await browser.close();
