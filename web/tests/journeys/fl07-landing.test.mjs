@@ -1,6 +1,7 @@
 // P1-FL07 / br-bbki.7 (R129): the same canyon leap flown three ways in the real worker and renderer, as the committed
-// fixtures (scenarios/lab/air-pitch-*.json) fly it natively: nose down lands clean, nose up lands hard, the throttle held
-// through the flight stacks it. The sim's judgement reaches the TV as a callout over the car ("CLEAN LANDING! BOOST",
+// fixtures (scenarios/lab/air-pitch-*.json) fly it natively: a brake tap noses it down and lands clean, a throttle tap
+// raises the nose and lands hard, the throttle floored in the air (or pinned from the start) over-rotates it (br-bbki.24:
+// air pitch follows the wheels). The sim's judgement reaches the TV as a callout over the car ("CLEAN LANDING! BOOST",
 // "HARD LANDING!", "STACKED IT!"); a neutral, OK landing says nothing. With JJ_CAPTURE_DIR set it captures each landing
 // from the chase camera and a side angle for the visual self-review.
 import assert from 'node:assert/strict';
@@ -21,6 +22,7 @@ const RUNS = [
   { run: 'air-pitch-down', tiers: ['Clean'], callout: 'Clean' },
   { run: 'air-pitch-up', tiers: ['Bad'], callout: 'Bad' },
   { run: 'air-pitch-crash', tiers: ['Bad', 'Crash'], callout: ['Bad', 'Crash'] },
+  { run: 'air-pitch-pinned', tiers: ['Bad', 'Crash'], callout: ['Bad', 'Crash'] },
 ];
 let server;
 
@@ -33,7 +35,7 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  test(`${name}: nose down lands clean, nose up lands hard, a held throttle stacks it, and the TV calls each one out`, { timeout: 900_000 }, async () => {
+  test(`${name}: brake noses down and lands clean, throttle noses up and lands hard, a pinned throttle over-rotates, and the TV calls each one out`, { timeout: 900_000 }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [];
     try {
@@ -51,6 +53,12 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
           for (let t = 0; t < fixture.ticks && !landing; t += 3) {
             const s = await page.evaluate(async () => { await window.__jjTest.step(3); return window.__jjTest.observe(); });
             landing = s.cars[0].air.last;
+            // Mid-air, just after the run's input in the air has had its effect (br-bbki.24: nose up under throttle,
+            // nose down under brake), one still from the side.
+            if (process.env.JJ_CAPTURE_DIR && view === 'side' && t === 120) {
+              await page.evaluate(() => { window.__jjRender.frame(); window.__jjRender.hold(); });
+              await page.screenshot({ path: join(out, `${name}-${r.run}-midair-side-1920x1080.jpg`), type: 'jpeg', quality: 85 });
+            }
           }
           assert.ok(landing, `${r.run}: the car landed`);
           assert.ok(r.tiers.includes(landing.tier), `${r.run}: ${JSON.stringify(landing)}`);
