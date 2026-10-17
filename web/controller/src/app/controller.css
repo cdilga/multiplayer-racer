@@ -308,10 +308,11 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 @media (orientation: landscape) {
   .coach { left: 50%; width: min(520px, 58%); }
 }
-/* Portrait (br-lks5): the card keeps to the top of the controls area so the steer stick's home and the Buttons pad, at
-   the bottom, stay in sight while a step asks for them; the step tag takes its own line so the buttons share one row. */
+/* Portrait (br-lks5): the card sits at the top of the screen, over the strip and the toolbar (nothing a step asks for),
+   so the sticks' homes and the Buttons pad below stay in sight while a step asks for them; on a 375x667 phone the
+   controls area alone was too short for the card. The step tag takes its own line so the buttons share one row. */
 @media (orientation: portrait) {
-  .coach { max-height: 46%; padding: 10px 14px 12px; gap: 6px; }
+  .coach { position: fixed; top: 8px; max-height: calc(48vh - 16px); padding: 10px 14px 12px; gap: 6px; }
   .coach h2 { font-size: 26px; }
   .coach p { font-size: 16px; }
   .coach-top { flex-wrap: wrap; gap: 6px; }
