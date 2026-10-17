@@ -174,6 +174,11 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
       if (!wantGas && gasDown) await up(2);
       gasDown = wantGas;
       await host.waitForTimeout(80);
+      // `JJ_TRACE=1`: the fingers the script holds, what the phone reads off its pad and what the host applies, every ~2 s.
+      if (process.env.JJ_TRACE && Math.floor((Date.now() - t0) / 2000) !== Math.floor((Date.now() - t0 - 120) / 2000)) {
+        const phoneDrive = await page.evaluate(() => window.__jjController.inspect().drive);
+        console.log(`# trace ${travelled}/${n} fingers ${JSON.stringify([...fingers.keys()])} gasDown ${gasDown} phone ${JSON.stringify(phoneDrive)} host ${JSON.stringify({ t: s.throttle, st: s.steer, b: s.brake, v: +s.speed.toFixed(1) })}`);
+      }
     }
     await up(1);
     if (gasDown) await up(2);
