@@ -11,6 +11,7 @@ import {
   HemisphereLight,
   Matrix4,
   Mesh,
+  Object3D,
   MeshLambertMaterial,
   PerspectiveCamera,
   PlaneGeometry,
@@ -309,6 +310,31 @@ export class World {
   /** Instances drawn per prop type (map props, dropped cones, debris). */
   propCounts(): Record<string, number> {
     return this.props.counts();
+  }
+
+  /** Triangles per named object under the scene (instanced meshes count every instance), and the layers each sits on:
+   *  what a camera pays per pass, for the many-tile cost work (br-jv69, R90). */
+  sceneTriangles(): Array<{ name: string; triangles: number; layers: number }> {
+    const out: Array<{ name: string; triangles: number; layers: number }> = [];
+    const walk = (o: Object3D, path: string) => {
+      const name = path ? `${path}/${o.name || o.type}` : o.name || o.type;
+      const m = o as Mesh & { count?: number; isInstancedMesh?: boolean };
+      if (m.isMesh && m.geometry && o.visible) {
+        const g = m.geometry;
+        const tris = (g.index ? g.index.count : g.getAttribute('position')?.count ?? 0) / 3;
+        out.push({ name, triangles: Math.round(tris * (m.isInstancedMesh ? m.count ?? 1 : 1)), layers: o.layers.mask });
+      }
+      if (o.visible) for (const c of o.children) walk(c, name);
+    };
+    walk(this.scene, '');
+    const byName = new Map<string, { name: string; triangles: number; layers: number }>();
+    for (const r of out) {
+      const k = r.name.split('/').slice(0, 3).join('/');
+      const e = byName.get(k) ?? { name: k, triangles: 0, layers: r.layers };
+      e.triangles += r.triangles;
+      byName.set(k, e);
+    }
+    return [...byName.values()].sort((a, b) => b.triangles - a.triangles);
   }
 
   /** Where world point (x, y, z) m lands on the canvas in CSS pixels, through the overview camera. */

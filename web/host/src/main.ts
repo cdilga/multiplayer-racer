@@ -118,6 +118,8 @@ async function boot(): Promise<void> {
     loopShapes: () => world.map?.loopShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
+    /** Triangles per scene group and its layers (br-jv69): what each camera pass pays. */
+    sceneTriangles: () => world.sceneTriangles(),
     cameras: () => world.rig.inspect(),
     /** Judder probe (br-gw74.14): `true` starts recording seat 1's camera every frame, `false` stops and returns the frames. */
     cameraTrace: (on: boolean) => {
