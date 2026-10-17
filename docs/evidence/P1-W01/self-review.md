@@ -9,9 +9,10 @@ for what W01 carries.
 - `phone-item-844x390.png`: the phone's item chip reads BOOMERANG +1 with its gesture (FLICK up THROW, down BACK):
   the front item from W01's `HostCmd::Inventory`, with the count. It sits in the header beside the connection chip, clear
   of the Ready/Identify buttons and the sticks.
-- `phone-item-390x844.png`: the same chip in portrait, readable, not clipped.
-- `picked-up.png`, `race-stations.png`, `boomerang-in-flight.png`: the TV through a pickup and a throw (W04/W02's
-  drawing of W01's item events).
+- `phone-item-390x844.png`: the same chip in portrait (here behind the Turn Sideways card in the Lobby): readable but small.
+- `race-stations.png`: two delivery-box pickups on the road either side of the car, clear on the TV.
+- `picked-up.png`: the road after the pickup, the box gone.
+- `boomerang-in-flight.png`: the boomerang is only a small mark ahead of the car at this distance (W02's look).
 
 ## Defects found and fixed
 
@@ -19,6 +20,7 @@ for what W01 carries.
 
 ## Remaining defects
 
+- A boomerang in flight is hard to see from the chase at range (W02's drawing, not W01).
 - The TV shows no queue for a car (by design: the queue is the player's, on the phone).
 
 ## Not covered
