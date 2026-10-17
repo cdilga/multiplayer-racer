@@ -649,6 +649,15 @@ impl Host {
                 }
                 None => (None, None),
             };
+            // P1-S10: in a derby round the seat's raw points, rank and the round's game time left.
+            let derby = car.and_then(|c| {
+                self.sim.derby().map(|l| jj_protocol::state::DerbyHud {
+                    half_points: (l.points(c.0) * 2.0).round() as u32,
+                    rank: l.rank_of(c.0).min(u32::from(u16::MAX)) as u16,
+                    left_s: (l.time_left_ticks(tick) / u64::from(jj_sim::TICK_HZ))
+                        .min(u64::from(u16::MAX)) as u16,
+                })
+            });
             let hud = Hud {
                 position,
                 lap,
@@ -656,6 +665,7 @@ impl Host {
                 connection: None,
                 pause,
                 tick: Tick(tick),
+                derby,
             };
             out.push(SimToMain::Outbound {
                 endpoint,

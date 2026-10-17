@@ -808,7 +808,14 @@ impl Sim {
                 self.race.add_late_car(pose, p, self.tick);
             }
             None => {
-                let pose = self.grid_pose(self.cars.len());
+                let grid = self.grid_pose(self.cars.len());
+                // A derby round's late joiner (P1-S10): its grid slot on the arena's edge, moved clear of the cars, debris
+                // and dressing already there, under spawn protection like every drop-in.
+                let pose = if self.derby.is_some() {
+                    self.clear_pose_near(None, grid, vehicle)
+                } else {
+                    grid
+                };
                 self.add_car(pose, vehicle);
                 if self.race.started_at.is_some() {
                     self.race.add_late_car(pose, -1.0, self.tick);

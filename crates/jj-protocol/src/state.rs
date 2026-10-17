@@ -18,7 +18,8 @@ pub const STATE_BATCH: u8 = 0x10;
 pub const HUD_UPDATE: u8 = 0x20;
 /// The minor version this build writes. Readers accept any minor: a minor bump only adds meaning to unused flag
 /// bits or HUD fields' trailing options, never moves a byte.
-pub const STATE_MINOR: u8 = 1;
+/// 2: the HUD's derby facts (P1-S10).
+pub const STATE_MINOR: u8 = 2;
 pub const BATCH_HEADER_LEN: usize = 7;
 pub const RECORD_LEN: usize = 13;
 /// The `count` field is a `u8`; more sources split into more batches (never truncated).
@@ -233,6 +234,20 @@ pub struct Hud {
     pub pause: Option<PauseReason>,
     /// The sim tick the HUD describes.
     pub tick: Tick,
+    /// This seat's derby facts while a derby round is on (P1-S10); `None` in a race.
+    pub derby: Option<DerbyHud>,
+}
+
+/// A seat's derby standing on its phone (P1-S10, master §10.12): raw points, rank and the round's game time left.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub struct DerbyHud {
+    /// Raw points × 2 (an autopilot's halved credit is a half point: exact in integers).
+    pub half_points: u32,
+    /// Competition rank by raw points, 1-based (ties share).
+    pub rank: u16,
+    /// Game time left in the round, whole seconds.
+    pub left_s: u16,
 }
 
 /// A HUD update on the state channel.

@@ -250,6 +250,79 @@ fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
     );
 }
 
+/// P1-S10: while a derby round is on, a seat's phone HUD carries its raw points, rank and the round's game time left, and
+/// the room view (the TV's) carries each seat's points and rank and the time left; a race's HUD carries none.
+#[test]
+fn a_derby_rounds_facts_reach_the_phone_hud_and_the_room_view() {
+    let mut h = driving_host();
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    h.schedule(
+        0,
+        &phone(ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        }),
+    )
+    .unwrap();
+    h.schedule(
+        0,
+        &phone(ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        }),
+    )
+    .unwrap();
+    let mut now = 0;
+    let mut huds = |h: &mut Host, now: &mut u64, n: usize| {
+        let mut out = Vec::new();
+        for _ in 0..n {
+            h.advance(*now);
+            *now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Outbound {
+                    channel: Channel::State,
+                    bytes,
+                    ..
+                } = m
+                    && let Ok(u) = HudUpdate::decode(&bytes)
+                {
+                    out.push(u.hud);
+                }
+            }
+        }
+        out
+    };
+    let before = huds(&mut h, &mut now, 240);
+    assert!(!before.is_empty(), "the phone hears its HUD");
+    assert!(
+        before.iter().all(|u| u.derby.is_none()),
+        "no derby facts outside a derby"
+    );
+    h.sim.start_derby(180 * u64::from(jj_sim::TICK_HZ));
+    let during = huds(&mut h, &mut now, 240);
+    let last = during
+        .last()
+        .and_then(|u| u.derby)
+        .expect("the HUD carries derby facts");
+    assert_eq!(last.rank, 1, "the only car ranks first");
+    assert_eq!(last.half_points, 0, "no damage dealt, no points");
+    assert!(
+        (170..=180).contains(&last.left_s),
+        "about three minutes left: {}",
+        last.left_s
+    );
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let left = room["derbyLeftMs"]
+        .as_u64()
+        .expect("the room view has the derby time left");
+    assert!((170_000..=180_000).contains(&left), "{left}");
+    let seat = &room["seats"][0];
+    assert_eq!(seat["derby"]["rank"], 1, "{seat}");
+    assert_eq!(seat["derby"]["points"], 0.0, "{seat}");
+}
+
 /// br-bbki.7.1: an `air.*` tuning change (assets/profiles/air.json) reaches the sim at a tick boundary, the menu reads it
 /// back, a value the air validator refuses changes nothing, and the next round's new world flies with the tuned set.
 #[test]

@@ -478,3 +478,63 @@ fn debug_trace() {
         }
     }
 }
+
+/// P1-S10: a late joiner in a running derby arrives on the arena's edge, clear of every car already there, under spawn
+/// protection, settles upright on the floor and ranks on raw points from when it arrived. Sixteen bots have been driving
+/// round the bowl for 10 s when it drops in (so its grid slot may be taken).
+#[test]
+fn a_derby_late_joiner_arrives_clear_on_the_edge_protected_and_upright() {
+    for seed in [2u64, 5] {
+        let map = arena(seed, 16);
+        let d = design(&map);
+        let mut sim = sim(&map);
+        let ids = sim.spawn_grid(16);
+        sim.start_derby(180 * S);
+        for &id in &ids {
+            sim.set_autopilot(id, true);
+        }
+        for _ in 0..(10 * S) {
+            sim.step();
+        }
+        let late = sim.drop_in();
+        assert!(
+            sim.is_protected(late),
+            "seed {seed}: the late joiner is protected"
+        );
+        let at = sim.car_state(late).unwrap().position;
+        let nearest = ids
+            .iter()
+            .filter_map(|&c| sim.car_state(c))
+            .map(|s| f64::from(s.position[0] - at[0]).hypot(f64::from(s.position[2] - at[2])))
+            .fold(f64::INFINITY, f64::min);
+        assert!(
+            nearest > 2.5,
+            "seed {seed}: the late joiner lands {nearest:.2} m from another car's centre"
+        );
+        for _ in 0..(3 * S) {
+            sim.step();
+        }
+        let st = sim.car_state(late).unwrap();
+        let r = f64::from(st.position[0]).hypot(f64::from(st.position[2]));
+        assert!(
+            r < d.floor_r + d.bank_r,
+            "seed {seed}: the late joiner is in the bowl (r = {r:.1})"
+        );
+        assert!(
+            st.up_y > 0.9,
+            "seed {seed}: the late joiner is upright ({})",
+            st.up_y
+        );
+        let ledger = sim.derby().expect("the derby is on");
+        let row = ledger
+            .rows()
+            .into_iter()
+            .find(|r| r.car == late.0)
+            .expect("the late joiner has a row");
+        assert!(
+            row.arrived > 10 * S - 1,
+            "seed {seed}: it ranks from arrival (tick {})",
+            row.arrived
+        );
+    }
+}

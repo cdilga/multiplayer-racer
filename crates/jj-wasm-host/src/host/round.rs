@@ -453,6 +453,8 @@ impl Host {
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
+                    // P1-S10: in a derby round, the seat's raw points and rank (ties share).
+                    "derby": car.and_then(|c| self.sim.derby().map(|l| serde_json::json!({ "points": l.points(c), "rank": l.rank_of(c) }))),
                     // Owner playtest 2026-10-17 (finishing gave no feedback): the finishing time, for the tile's banner.
                     "finishMs": race.and_then(|r| r.finished_at).map(|t| super::tick_ms(t.saturating_sub(self.sim.race().started_at.unwrap_or(t)))),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
@@ -483,6 +485,8 @@ impl Host {
             "laps": self.effective_laps(),
             // Once the first car finishes, the rest have the finish window to finish (null before, and once it's over).
             "raceEndsInMs": race_ends_in_ms,
+            // P1-S10: a derby round's game time left (null outside a derby).
+            "derbyLeftMs": self.sim.derby().map(|l| super::tick_ms(l.time_left_ticks(self.sim.tick()))),
             "freeDrive": self.round.free_drive,
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
             // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
