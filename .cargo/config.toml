@@ -20,6 +20,11 @@ opt-level = 1
 debug = false
 opt-level = 3
 
+# asupersync (the server's runtime) at opt-level 3 needs more memory than the CI build runner has: rustc was SIGKILLed
+# (CI 5917's build job, so every browser lane failed). Nothing it runs in tests is hot; 1 compiles in a fraction.
+[profile.dev.package.asupersync]
+opt-level = 1
+
 [profile.test]
 debug = "line-tables-only"
 
