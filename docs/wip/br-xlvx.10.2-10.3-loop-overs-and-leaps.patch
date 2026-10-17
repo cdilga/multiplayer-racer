@@ -1,5 +1,5 @@
 diff --git a/assets/profiles/generator.json b/assets/profiles/generator.json
-index 1c555124..7d5eeff8 100644
+index 61c2ae59..a597b2f7 100644
 --- a/assets/profiles/generator.json
 +++ b/assets/profiles/generator.json
 @@ -93,6 +93,17 @@
@@ -48,7 +48,7 @@ index 1c555124..7d5eeff8 100644
              "heightM": [2, 5],
              "radiusM": [10, 16],
 diff --git a/assets/profiles/overpass.json b/assets/profiles/overpass.json
-index 96a394a3..fca28c75 100644
+index 96a394a3..fdb4ea41 100644
 --- a/assets/profiles/overpass.json
 +++ b/assets/profiles/overpass.json
 @@ -1,6 +1,7 @@
@@ -61,6 +61,14 @@ index 96a394a3..fca28c75 100644
    "levelM": 25,
    "rampM": 16,
    "lipM": 3.0,
+@@ -14,6 +15,7 @@
+   "maxBandFloorMps": 30,
+   "runoutM": 70,
+   "maxGrade": 0.12,
++  "climbGrade": 0.18,
+   "shoulderM": 1,
+   "sideSlope": 1.0
+ }
 diff --git a/crates/jj-procgen/src/course/mod.rs b/crates/jj-procgen/src/course/mod.rs
 index a6e2e42f..9f57bc05 100644
 --- a/crates/jj-procgen/src/course/mod.rs
@@ -475,7 +483,7 @@ index a6e2e42f..9f57bc05 100644
          };
      }
 diff --git a/crates/jj-procgen/src/lib.rs b/crates/jj-procgen/src/lib.rs
-index dc261841..98882353 100644
+index 6898af7b..240fc045 100644
 --- a/crates/jj-procgen/src/lib.rs
 +++ b/crates/jj-procgen/src/lib.rs
 @@ -51,7 +51,7 @@ use crate::seed::Streams;
@@ -487,17 +495,17 @@ index dc261841..98882353 100644
  const STEP_M: f64 = 2.5;
  /// Rooftop lots keep this far (m along the road) from a set piece's span.
  const ROOF_PIECE_MARGIN_M: f64 = 10.0;
-@@ -200,6 +200,8 @@ pub fn generate_course(
+@@ -234,6 +234,8 @@ pub fn generate_course(
      );
      if !course.crossings.is_empty() {
          crossings::place(&mut map, &course, &data.course.crossing);
 +        // Each crossing square enough for a leap tries one, keeping its bridge when the leap is refused (br-xlvx.10.3).
 +        overpass::leap_crossings(&mut map, overpass::shipped());
      }
-     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
-     let ranges: Vec<(f64, f64, features::Density)> = sel
+     // The loops stand on the finished ground (cut where it rises into the deck), before the set pieces, which keep a
+     // beat's spacing from them, and the small features, which keep off their straights.
 diff --git a/crates/jj-procgen/src/overpass.rs b/crates/jj-procgen/src/overpass.rs
-index 386bbc16..47eb6cef 100644
+index 386bbc16..c08603ad 100644
 --- a/crates/jj-procgen/src/overpass.rs
 +++ b/crates/jj-procgen/src/overpass.rs
 @@ -26,6 +26,9 @@ const SHIPPED: &str = include_str!("../../../assets/profiles/overpass.json");
@@ -510,7 +518,18 @@ index 386bbc16..47eb6cef 100644
      pub take_off_above_lower_m: f64,
      pub level_m: f64,
      pub ramp_m: f64,
-@@ -169,6 +172,52 @@ impl Profile {
+@@ -40,6 +43,10 @@ pub struct OverpassData {
+     pub max_band_floor_mps: f64,
+     pub runout_m: f64,
+     pub max_grade: f64,
++    /// The approach's climb to the take-off (rise per metre), steeper than `maxGrade` so a leap fits a loop-over's exit
++    /// straight (br-xlvx.10.3; the bridges' decks climb at up to 20 %). Absent: `maxGrade`.
++    #[serde(default)]
++    pub climb_grade: Option<f64>,
+     pub shoulder_m: f64,
+     pub side_slope: f64,
+ }
+@@ -169,6 +176,52 @@ impl Profile {
      }
  }
  
@@ -563,8 +582,17 @@ index 386bbc16..47eb6cef 100644
  /// Lays an overpass leap at the crossing of `upper` (route points `a..=b`, the road on top) over `lower` (`c..=d`),
  /// in place of a bridge (the caller removes the bridge's feature and its deck heights first or keeps them on refusal).
  /// On success the map carries the piece's feature, its sculpted ground and the upper road's new heights; on refusal
+@@ -263,7 +316,7 @@ pub fn place(
+         pad,
+         natural,
+     };
+-    let climb = (take_off - prof.natural(level_from)).abs() / data.max_grade * 1.5;
++    let climb = (take_off - prof.natural(level_from)).abs() / data.climb_grade.unwrap_or(data.max_grade) * 1.5;
+     prof.start = level_from - climb.max(30.0);
+     let original = (map.terrain.clone(), map.route.clone());
+     let refuse = |map: &mut Map, why: Refused| {
 diff --git a/crates/jj-procgen/src/rhythm/mod.rs b/crates/jj-procgen/src/rhythm/mod.rs
-index 0e828751..1d5cc2bd 100644
+index f0667650..4f12e4b1 100644
 --- a/crates/jj-procgen/src/rhythm/mod.rs
 +++ b/crates/jj-procgen/src/rhythm/mod.rs
 @@ -111,6 +111,9 @@ pub struct Rhythm {
@@ -606,9 +634,9 @@ index 0e828751..1d5cc2bd 100644
 +            }
          }
      }
-     // Set pieces, then the recovery after each.
+     // Set pieces, then the recovery after each. The beat is the commitment (a lead-in before the kicker, or a loop's
 diff --git a/crates/jj-procgen/src/setpieces/mod.rs b/crates/jj-procgen/src/setpieces/mod.rs
-index 8ab99a92..2fe6f4a4 100644
+index d7b6b0d7..e9152a47 100644
 --- a/crates/jj-procgen/src/setpieces/mod.rs
 +++ b/crates/jj-procgen/src/setpieces/mod.rs
 @@ -924,7 +924,7 @@ fn site_ok(
@@ -648,7 +676,7 @@ index 8ab99a92..2fe6f4a4 100644
      Ok((from, to))
  }
  
-@@ -1465,7 +1486,11 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
+@@ -1491,7 +1512,11 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
      let seen = map
          .features
          .iter()
@@ -658,11 +686,11 @@ index 8ab99a92..2fe6f4a4 100644
 +            GapLeap::of(f).is_some_and(|g| g.lower.is_some())
 +                || GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s
 +        })
-         .count();
-     let lap_m = crate::assemble::arc_lengths(
-         &map.route
+         .count()
+         // A loop is one of the lap's set pieces (R132), 15 m and more tall on its own beat straight.
+         + crate::loops::count(map);
 diff --git a/crates/jj-procgen/src/tuning/mod.rs b/crates/jj-procgen/src/tuning/mod.rs
-index 47cc98b6..ccdb0a79 100644
+index 893ac53e..33996349 100644
 --- a/crates/jj-procgen/src/tuning/mod.rs
 +++ b/crates/jj-procgen/src/tuning/mod.rs
 @@ -126,6 +126,71 @@ pub struct CourseData {
@@ -737,7 +765,7 @@ index 47cc98b6..ccdb0a79 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-@@ -459,6 +524,7 @@ impl GeneratorData {
+@@ -463,6 +528,7 @@ impl GeneratorData {
          }
          pos("course.minStraightM", c.min_straight_m, &mut bad);
          pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
@@ -1095,46 +1123,3 @@ index 2e9703db..52ab30be 100644
              let band = data.course.classes.get(c.class);
              assert!((band.length_min_m..=band.length_max_m).contains(&c.length_m));
              // On Town, unless Town never draws the family (`familiesOffIn`, P1-FL15c): then on Greybox.
-diff --git a/crates/jj-procgen/tests/rhythm.rs b/crates/jj-procgen/tests/rhythm.rs
-index bb10f2ba..a78dbd3a 100644
---- a/crates/jj-procgen/tests/rhythm.rs
-+++ b/crates/jj-procgen/tests/rhythm.rs
-@@ -636,3 +636,18 @@ fn diag_eight_spans() {
-         }
-     }
- }
-+
-+/// The WASM regression guard's draw counts (`wasm_parity.rs`: 24 race seeds, worst <= 12, mean <= 5), measured
-+/// natively: the counts are deterministic, so this says before a WASM run whether a generator change keeps the guard.
-+#[test]
-+#[ignore]
-+fn diag_guard_draws() {
-+    let counts: Vec<usize> = (0..24u64)
-+        .map(|seed| jj_procgen::playtest::prepare(seed).attempts.len())
-+        .collect();
-+    let mean = counts.iter().sum::<usize>() as f64 / counts.len() as f64;
-+    eprintln!(
-+        "draws worst {}, mean {mean:.2}: {counts:?}",
-+        counts.iter().max().unwrap()
-+    );
-+}
-diff --git a/crates/jj-procgen/tests/setpieces.rs b/crates/jj-procgen/tests/setpieces.rs
-index 3536b57b..93d3a70a 100644
---- a/crates/jj-procgen/tests/setpieces.rs
-+++ b/crates/jj-procgen/tests/setpieces.rs
-@@ -75,7 +75,14 @@ fn every_prepared_track_has_a_set_piece_per_lap_on_20_seeds_per_biome() {
-                 pieces.iter().map(|p| p.kind.name()).collect::<Vec<_>>()
-             )
-             .unwrap();
--            if pieces.is_empty() {
-+            // A crossing's bridge is one of the lap's set pieces too (br-xlvx.10).
-+            let bridges = map
-+                .map
-+                .features
-+                .iter()
-+                .filter(|f| f.kind == jj_map::FeatureKind::Bridge)
-+                .count();
-+            if pieces.is_empty() && bridges == 0 {
-                 missing.push(format!("{biome:?} {seed}"));
-             }
-         }
