@@ -2180,9 +2180,14 @@ impl Sim {
                 let flying = airborne && car.air.flying(&self.air_profile, TICK_HZ);
                 car.air.feed(crate::air::sticks(input), airborne);
                 if flying {
-                    let air_sticks = car
-                        .air
-                        .air_sticks(&self.air_profile, crate::air::sticks(input));
+                    // A car on the autopilot flies neutral: the jump's lip decides its landing (R14). Its throttle is
+                    // pinned for the road, and in the air a pinned throttle raises the nose (br-bbki.24).
+                    let air_sticks = if car.autopilot.is_some() {
+                        (0.0, 0.0)
+                    } else {
+                        car.air
+                            .air_sticks(&self.air_profile, crate::air::sticks(input))
+                    };
                     let w_body = iso.rotation.inverse() * b.angvel();
                     let roll = libm::asinf((iso.rotation * Vector::X).y.clamp(-1.0, 1.0));
                     let [dx, dy, dz] = crate::air::rate_change(

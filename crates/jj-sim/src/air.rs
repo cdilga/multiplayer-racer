@@ -1,7 +1,8 @@
 //! Air control and landing tiers (R129, P1-FL07; `docs/research/fun-tracks.md` R14–R16), from one global profile
 //! (`assets/profiles/air.json`, R15: the same for every car and every jump).
 //!
-//! **In the air** DRIVE y pitches the car (throttle noses down, brake noses up) and DRIVE x yaws it. They are body
+//! **In the air** DRIVE y pitches the car as the wheels' reaction would (owner playtest 2026-10-17, br-bbki.24): throttle
+//! spins the wheels up and drops the rear (nose up), brake stops them and rotates the nose down. DRIVE x yaws it. They are body
 //! *rates*: each tick the sim turns the gap between the car's body rate and the wanted one into an angular impulse
 //! through the car's own inertia, closing it within `responseS`. So every car turns at the same degrees per second.
 //! Roll is held level. A neutral stick holds the attitude the car left the lip with, so the jump's geometry decides
@@ -47,8 +48,8 @@ pub struct AirProfile {
     /// A horizontal velocity change of more than this in one tick (m/s) is a hit, not a launch: a car knocked into the air
     /// by it keeps the ground's levelling for that flight (a kicker's lip turns the velocity upward, not sideways).
     pub knock_dv_mps: f32,
-    /// The stick held at takeoff doesn't pitch or yaw the car until that axis has moved `latch_release_stick` from it (a
-    /// throttle held through the lip is a habit, not an air input; owner playtest 1).
+    /// The steer held at takeoff doesn't yaw the car until it has moved `latch_release_stick` from it (a steer held
+    /// through a bend is a habit, not an air input). The throttle isn't latched (br-bbki.24).
     pub latch_held_input: bool,
     pub latch_release_stick: f32,
     /// Shorter flights (a bump, a kerb) aren't landings.
@@ -190,9 +191,10 @@ pub fn rate_change(
     bike: bool,
     dt: f32,
 ) -> [f32; 3] {
-    // A positive turn about +x (the car's left) lowers the nose; one about +y turns the nose toward the left.
+    // A positive turn about +x (the car's left) lowers the nose; one about +y turns the nose toward the left. Throttle
+    // (stick_y > 0) raises the nose, brake lowers it (br-bbki.24).
     let want = [
-        stick_y * p.pitch_rate_dps.to_radians(),
+        -stick_y * p.pitch_rate_dps.to_radians(),
         steer * p.yaw_rate_dps.to_radians(),
         -roll_rad * p.roll_level_per_s,
     ];
@@ -344,10 +346,9 @@ impl AirState {
         let (ly, lx) = self.latched.unwrap_or((0.0, 0.0));
         self.armed.0 |= (y - ly).abs() > p.latch_release_stick;
         self.armed.1 |= (x - lx).abs() > p.latch_release_stick;
-        (
-            if self.armed.0 { y } else { 0.0 },
-            if self.armed.1 { x } else { 0.0 },
-        )
+        // Only the steer is latched: a throttle held through the lip keeps spinning the wheels, so it keeps raising the
+        // nose and a pinned throttle over-rotates a long jump (br-bbki.24: it used to read neutral, the easy answer).
+        (y, if self.armed.1 { x } else { 0.0 })
     }
 
     /// The chassis' horizontal velocity changed by `dv` (m/s) this tick: past `knockDvMps` it was hit, not launched.
@@ -554,15 +555,15 @@ mod tests {
     }
 
     #[test]
-    fn throttle_noses_down_brake_noses_up_steer_yaws_and_roll_levels() {
+    fn throttle_raises_the_nose_brake_lowers_it_steer_yaws_and_roll_levels() {
         let p = AirProfile::standard();
         let dt = 1.0 / HZ as f32;
         let gas = rate_change(&p, sticks(input(1.0, 0.0, 0.0)), [0.0; 3], 0.0, false, dt);
         let brake = rate_change(&p, sticks(input(0.0, 0.0, 1.0)), [0.0; 3], 0.0, false, dt);
         let left = rate_change(&p, sticks(input(0.0, 1.0, 0.0)), [0.0; 3], 0.0, false, dt);
         assert!(
-            gas[0] > 0.0 && brake[0] < 0.0,
-            "gas lowers the nose, brake lifts it"
+            gas[0] < 0.0 && brake[0] > 0.0,
+            "gas spins the wheels up and drops the rear (nose up), brake rotates the nose down (br-bbki.24)"
         );
         assert!(left[1] > 0.0 && left[0] == 0.0, "steer yaws only");
         let tipped = rate_change(&p, (0.0, 0.0), [0.0; 3], 0.4, false, dt);
@@ -586,8 +587,9 @@ mod tests {
             let d = rate_change(&p, (1.0, 0.0), w, 0.0, false, dt);
             w[0] += d[0];
         }
+        // Full throttle: the nose rises at the full rate (a negative turn about +x).
         assert!(
-            (w[0] - p.pitch_rate_dps.to_radians()).abs() < 0.05 * p.pitch_rate_dps.to_radians()
+            (w[0] + p.pitch_rate_dps.to_radians()).abs() < 0.05 * p.pitch_rate_dps.to_radians()
         );
     }
 
@@ -754,7 +756,7 @@ mod tests {
     }
 
     #[test]
-    fn the_stick_held_at_takeoff_is_latched_until_it_moves() {
+    fn a_steer_held_at_takeoff_is_latched_but_a_held_throttle_counts() {
         let p = AirProfile::standard();
         let mut s = AirState::default();
         // Full throttle and a little steer held through the lip.
@@ -762,13 +764,14 @@ mod tests {
         s.feed((1.0, 0.2), true);
         assert_eq!(
             s.air_sticks(&p, (1.0, 0.2)),
-            (0.0, 0.0),
-            "a held throttle isn't an air input"
+            (1.0, 0.0),
+            "a pinned throttle keeps spinning the wheels (br-bbki.24); a held steer isn't an air input"
         );
-        assert_eq!(s.air_sticks(&p, (0.9, 0.3)), (0.0, 0.0), "nor is a wobble");
-        // Let go, then press again: deliberate.
-        assert_eq!(s.air_sticks(&p, (0.0, 0.2)), (0.0, 0.0));
-        assert_eq!(s.air_sticks(&p, (1.0, 0.2)), (1.0, 0.0));
+        assert_eq!(
+            s.air_sticks(&p, (0.9, 0.3)),
+            (0.9, 0.0),
+            "nor is a steer wobble"
+        );
         // Steering hard the other way arms the yaw.
         assert_eq!(s.air_sticks(&p, (1.0, -1.0)), (1.0, -1.0));
         // Down again: the latch resets for the next jump.

@@ -70,8 +70,10 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64, boost: bool) 
     take_jump_as(map, k, speed, sim_seed, boost, true, VehicleProfile::cruz())
 }
 
-/// [`take_jump`] with the vehicle, and with `pilot` off a player's run instead: full throttle, wheel straight, from the
-/// same start (the entry and ramp are straight), so the car reaches the lip as fast as it can.
+/// [`take_jump`] with the vehicle, and with `pilot` off a player's run instead: full throttle on the road, wheel straight,
+/// from the same start (the entry and ramp are straight), so the car reaches the lip as fast as it can; off the throttle
+/// while all four wheels are off the ground, as a player who knows the jump flies it (br-bbki.24: in the air a pinned
+/// throttle raises the nose and over-rotates, `scenarios/lab/air-pitch-pinned.json`).
 fn take_jump_as(
     map: &LoadedMap,
     k: usize,
@@ -123,6 +125,20 @@ fn take_jump_as(
         sim.step();
         ticks += 1;
         let st = sim.car_state(car).unwrap();
+        if !pilot {
+            sim.set_input(
+                car,
+                DriveInput {
+                    boost,
+                    throttle: if st.wheels_in_contact == 0 {
+                        0
+                    } else {
+                        i16::MAX
+                    },
+                    ..Default::default()
+                },
+            );
+        }
         let to_lip = (st.position[0] - lip[0] as f32).hypot(st.position[2] - lip[2] as f32);
         if to_lip < nearest_lip {
             nearest_lip = to_lip;
@@ -445,7 +461,8 @@ fn a_corner_inside_the_jump_approach_is_rejected() {
     );
 }
 
-/// br-gw74.13.1: a player holding full throttle reaches the lip far faster than the autopilot's 26 m/s plan. Every
+/// br-gw74.13.1: a player holding full throttle reaches the lip far faster than the autopilot's 26 m/s plan (and lifts
+/// off it in the air, br-bbki.24). Every
 /// generated jump, line and road-wide, lands upright with no recovery for the Cruz at 30-40 m/s and the Tradie Ute at
 /// 30-35 m/s (the ute tanks the big ones). Prints air time and flight distance per jump (`JJ_EVIDENCE_DIR` writes it).
 #[test]

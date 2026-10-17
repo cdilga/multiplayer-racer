@@ -1,6 +1,6 @@
 {
   "scenario": "air-pitch-crash",
-  "what": "R129 / R16 crash and self-righting (P1-FL07) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s, lifts at the lip and then floors it in the air from tick 90 and keeps it floored, which pitches the nose down all the way (R129: throttle noses down; a throttle merely held through the lip is latched and doesn't). It hits the far rim nose first, about 45 degrees off the ground: a bad landing or a crash. A crash rights it whatever the assist level (R138, no flip traps): upright and on its wheels within 1.5 s of the hit (the hit is at tick 169; upY and wheels are checked at tick 349), and it drives on without a wreck.",
+  "what": "R129 / R16 crash and self-righting (P1-FL07) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s, lifts at the lip and then floors it in the air from tick 90 and keeps it floored, which raises the nose all the way (br-bbki.24: throttle spins the wheels up and drops the rear): it comes down far off the landing's angle, a bad landing or a crash, and rights itself.",
   "map": "maps/lab/canyon-leap.json",
   "seed": 1,
   "ticks": 600,

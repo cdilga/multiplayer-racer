@@ -224,7 +224,7 @@ pub fn surface_at(terrain: &Terrain, x: f32, z: f32) -> Surface {
     terrain.surfaces[row as usize * terrain.cols as usize + col as usize]
 }
 
-/// Air control: the body-space torque (x pitches, z rolls) for `input`, N·m. Pushing up noses down; steering left
+/// Air control: the body-space torque (x pitches, z rolls) for `input`, N·m. Throttle raises the nose (br-bbki.24); steering left
 /// drops the left side.
 pub fn air_torque(p: &VehicleProfile, input: DriveInput) -> [f32; 3] {
     let t = &p.tuning;
@@ -234,7 +234,7 @@ pub fn air_torque(p: &VehicleProfile, input: DriveInput) -> [f32; 3] {
     // +x is the car's left: a positive turn about it lowers the nose. A positive turn about +z (forward) lifts the
     // left side, so steering left (positive) turns the other way.
     [
-        stick_y * t.air_pitch_torque,
+        -stick_y * t.air_pitch_torque,
         0.0,
         -steer * t.air_roll_torque,
     ]

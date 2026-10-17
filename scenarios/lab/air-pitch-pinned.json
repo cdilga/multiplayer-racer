@@ -1,0 +1,43 @@
+{
+  "scenario": "air-pitch-pinned",
+  "what": "br-bbki.24 (owner playtest 2026-10-17: 'it was easiest to just keep the throttle pinned') on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s and never lifts: the throttle stays pinned through the lip and the whole flight. It is no longer latched at takeoff, so it keeps raising the nose and over-rotates: it lands worse than the neutral run (air-pitch-neutral, OK) and the feathered one (air-pitch-down, clean).",
+  "map": "maps/lab/canyon-leap.json",
+  "seed": 1,
+  "ticks": 420,
+  "cars": [
+    {
+      "pose": {
+        "x": -43.796,
+        "y": 20.42,
+        "z": 45.0,
+        "headingDeg": -90.0
+      },
+      "linvel": [
+        -22.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "throttle": 1.0
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "metric": "landingTier",
+      "min": 2,
+      "max": 3
+    },
+    {
+      "car": 0,
+      "metric": "wrecks",
+      "min": 0,
+      "max": 0
+    }
+  ]
+}
