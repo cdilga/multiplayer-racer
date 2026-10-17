@@ -542,10 +542,7 @@ mod tests {
         let q = set("pitchRateDps", "140").unwrap();
         assert_eq!(q.pitch_rate_dps, 140.0);
         assert_eq!(set("bands.cleanDeg", "10").unwrap().bands.clean_deg, 10.0);
-        assert_eq!(
-            set("latchHeldInput", "false").unwrap().latch_held_input,
-            false
-        );
+        assert!(!set("latchHeldInput", "false").unwrap().latch_held_input);
         assert_eq!(p, AirProfile::standard(), "the original is untouched");
         for (f, v) in [
             ("nope", "1"),
