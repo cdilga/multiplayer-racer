@@ -1,0 +1,111 @@
+{
+ "scenario": "boomerang-vs-sanga",
+ "what": "P1-W02a: the target has eaten a sanga: the boomerang's push and damage are a fifth of the full hit (dv HIT_DV_MPS * SANGA_SCALE).",
+ "map": "maps/greybox-loop.json",
+ "seed": 17,
+ "ticks": 600,
+ "cars": [
+  {
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 52,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "race": {
+  "atTick": 0,
+  "laps": 99
+ },
+ "place": [
+  {
+   "tick": 230,
+   "car": 0,
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 1,
+   "pose": {
+    "x": 52,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "pickups": [
+  {
+   "tick": 251,
+   "car": 0,
+   "seat": 17,
+   "item": "boomerang"
+  },
+  {
+   "tick": 251,
+   "car": 1,
+   "seat": 18,
+   "item": "sanga"
+  }
+ ],
+ "inputs": [
+  {
+   "car": 1,
+   "fromTick": 253,
+   "toTick": 258,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 260,
+   "toTick": 275,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    1
+   ]
+  }
+ ],
+ "observe": [
+  300,
+  600
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  }
+ ]
+}

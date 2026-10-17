@@ -1,0 +1,150 @@
+{
+ "scenario": "boomerang-vs-debris",
+ "what": "P1-W02a: a wall of dynamic crates 8 m ahead of the thrower stops the boomerang; the target sheltering behind it is untouched.",
+ "map": "maps/greybox-loop.json",
+ "seed": 17,
+ "ticks": 600,
+ "cars": [
+  {
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 52,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "race": {
+  "atTick": 0,
+  "laps": 99
+ },
+ "place": [
+  {
+   "tick": 230,
+   "car": 0,
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 1,
+   "pose": {
+    "x": 52,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "pickups": [
+  {
+   "tick": 251,
+   "car": 0,
+   "seat": 17,
+   "item": "boomerang"
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 260,
+   "toTick": 275,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    1
+   ]
+  }
+ ],
+ "debris": [
+  {
+   "tick": 232,
+   "pose": {
+    "x": 48,
+    "y": 1,
+    "z": -3,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    1,
+    1
+   ]
+  },
+  {
+   "tick": 232,
+   "pose": {
+    "x": 48,
+    "y": 1,
+    "z": -1,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    1,
+    1
+   ]
+  },
+  {
+   "tick": 232,
+   "pose": {
+    "x": 48,
+    "y": 1,
+    "z": 1,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    1,
+    1
+   ]
+  },
+  {
+   "tick": 232,
+   "pose": {
+    "x": 48,
+    "y": 1,
+    "z": 3,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    1,
+    1
+   ]
+  }
+ ],
+ "observe": [
+  300,
+  600
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  }
+ ]
+}

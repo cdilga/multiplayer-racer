@@ -1,0 +1,68 @@
+{
+ "scenario": "boomerang-self-catch",
+ "what": "P1-W02a: the thrower alone: the boomerang goes out, turns and is caught by the thrower with no effect on any car.",
+ "map": "maps/greybox-loop.json",
+ "seed": 17,
+ "ticks": 600,
+ "cars": [
+  {
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "race": {
+  "atTick": 0,
+  "laps": 99
+ },
+ "place": [
+  {
+   "tick": 230,
+   "car": 0,
+   "pose": {
+    "x": 40,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "pickups": [
+  {
+   "tick": 251,
+   "car": 0,
+   "seat": 17,
+   "item": "boomerang"
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 260,
+   "toTick": 275,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    1
+   ]
+  }
+ ],
+ "observe": [
+  300,
+  600
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  }
+ ]
+}

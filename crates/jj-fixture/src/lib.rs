@@ -55,6 +55,9 @@ pub struct Fixture {
     /// Recover-button presses.
     #[serde(default)]
     pub recover: Vec<RecoverSpec>,
+    /// Ends the race at a tick the way the finish window would (`Sim::end_race_now`): flights drop, debris keeps moving (R90 settable).
+    #[serde(default)]
+    pub end_race: Vec<TickSpec>,
     /// Spawn this many more cars through the start grid (P1-S06), after `cars`.
     #[serde(default)]
     pub grid: Option<usize>,
@@ -665,6 +668,9 @@ impl Harness {
         }
         for r in fx.recover.iter().filter(|r| r.tick == t) {
             sim.recover(CarId(r.car));
+        }
+        for _ in fx.end_race.iter().filter(|r| r.tick == t) {
+            sim.end_race_now();
         }
         for d in fx.debris.iter().filter(|d| d.tick == t) {
             sim.spawn_debris(d.pose.spawn(), d.half);

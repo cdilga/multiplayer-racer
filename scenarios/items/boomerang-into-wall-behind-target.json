@@ -1,0 +1,92 @@
+{
+ "scenario": "boomerang-into-wall-behind-target",
+ "what": "P1-W02a: the thrower faces the hairpin's barrier (z = -8.7) from the centre line; the barrier stops the boomerang and the car parked beyond it is untouched.",
+ "map": "maps/greybox-loop.json",
+ "seed": 17,
+ "ticks": 600,
+ "cars": [
+  {
+   "pose": {
+    "x": 170,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 180
+   }
+  },
+  {
+   "pose": {
+    "x": 170,
+    "y": 0.6,
+    "z": -14,
+    "headingDeg": 180
+   }
+  }
+ ],
+ "race": {
+  "atTick": 0,
+  "laps": 99
+ },
+ "place": [
+  {
+   "tick": 230,
+   "car": 0,
+   "pose": {
+    "x": 170,
+    "y": 0.6,
+    "z": 0,
+    "headingDeg": 180
+   }
+  },
+  {
+   "tick": 230,
+   "car": 1,
+   "pose": {
+    "x": 170,
+    "y": 0.6,
+    "z": -14,
+    "headingDeg": 180
+   }
+  }
+ ],
+ "pickups": [
+  {
+   "tick": 251,
+   "car": 0,
+   "seat": 17,
+   "item": "boomerang"
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 260,
+   "toTick": 275,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    1
+   ]
+  }
+ ],
+ "observe": [
+  300,
+  600
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  }
+ ]
+}

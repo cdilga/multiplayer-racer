@@ -1,0 +1,758 @@
+{
+ "scenario": "boomerang-24-car-crowd",
+ "what": "P1-W02a: 23 cars in a grid ahead of the thrower: each is hit at most once a leg, none is pushed past 10 m/s, and nobody respawns.",
+ "map": "maps/greybox-loop.json",
+ "seed": 17,
+ "ticks": 600,
+ "cars": [
+  {
+   "pose": {
+    "x": 30.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 83.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 83.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "race": {
+  "atTick": 0,
+  "laps": 99
+ },
+ "place": [
+  {
+   "tick": 230,
+   "car": 0,
+   "pose": {
+    "x": 30.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 1,
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 2,
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 3,
+   "pose": {
+    "x": 38.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 4,
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 5,
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 6,
+   "pose": {
+    "x": 44.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 7,
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 8,
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 9,
+   "pose": {
+    "x": 51.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 10,
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 11,
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 12,
+   "pose": {
+    "x": 57.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 13,
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 14,
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 15,
+   "pose": {
+    "x": 64.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 16,
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 17,
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 18,
+   "pose": {
+    "x": 70.5,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 19,
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 20,
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 21,
+   "pose": {
+    "x": 77.0,
+    "y": 0.6,
+    "z": 4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 22,
+   "pose": {
+    "x": 83.5,
+    "y": 0.6,
+    "z": -4.0,
+    "headingDeg": 90
+   }
+  },
+  {
+   "tick": 230,
+   "car": 23,
+   "pose": {
+    "x": 83.5,
+    "y": 0.6,
+    "z": 0.0,
+    "headingDeg": 90
+   }
+  }
+ ],
+ "pickups": [
+  {
+   "tick": 251,
+   "car": 0,
+   "seat": 17,
+   "item": "boomerang"
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 260,
+   "toTick": 275,
+   "stick": [
+    0,
+    0
+   ],
+   "action": [
+    0,
+    1
+   ]
+  }
+ ],
+ "observe": [
+  300,
+  600
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 2,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 3,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 4,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 5,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 6,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 7,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 8,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 9,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 10,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 11,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 12,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 13,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 14,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 15,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 16,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 17,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 18,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 19,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 20,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 21,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 22,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 23,
+   "metric": "recoveries",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 2,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 3,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 4,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 5,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 6,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 7,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 8,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 9,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 10,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 11,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 12,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 13,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 14,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 15,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 16,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 17,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 18,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 19,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 20,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 21,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 22,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  },
+  {
+   "car": 23,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 10.5
+  }
+ ]
+}
