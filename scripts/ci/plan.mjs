@@ -37,9 +37,10 @@ const HOST = [...list('web/host/tests'), ...list('web/host/src/clips')];
 const TRANSPORT = list('web/shared/transport/tests');
 // The journeys and the public smoke flow (P1-D07): WebRTC tests through a local jj-server, one suite here.
 const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
-// Hardware fact (R93): these measure host frame time or render latency (FL17, FL02's gated start) or need 24-120 GPU-rendered tiles, so they run on a `gpu` runner
+// Hardware fact (R93): these measure host frame time or render latency (FL17) or need 24-120 GPU-rendered tiles, so they run on a `gpu` runner
 // with JJ_CHROMIUM_GPU=1 (on SwiftShader R06 skips itself and C06's 150 ms identify bound is loose).
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start)\.test\.mjs$/.test(f));
+// FL02 is back on the software lanes (br-bcuy): its host renders 960x540 there, so the phone pages keep sending on time.
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';

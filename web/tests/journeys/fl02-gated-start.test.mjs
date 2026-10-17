@@ -144,8 +144,11 @@ async function phone(joinUrl, name) {
 // more old (CI 5364, eris 3 of 4, the Mac at 2x CPU throttle), so snaps miss the start window; with JJ_CHROMIUM_GPU=1 on
 // eris it passed 3 of 3 in 15 s. It runs on the `gpu` runner (scripts/ci/plan.mjs) and skips on the SwiftShader lanes until br-bcuy.
 const gpu = Boolean(process.env.JJ_CHROMIUM_GPU);
-test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000, skip: !gpu && 'the gated start needs a GPU host (JJ_CHROMIUM_GPU=1); on software WebGL input reaches the sim too late' }, async () => {
-  const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
+test('FL02: early, perfect, late and none through four real phones', { timeout: 420_000 }, async () => {
+  // br-bcuy: without a GPU the 1080p host page's software rendering takes the CPU the four phone pages need to send on
+  // time (phone batches arrived up to 2.3 s apart at 2x throttle; main->worker <= 4 ms, worker->applied <= 12 ms), so a
+  // software-GL host renders a quarter of the pixels.
+  const host = await (await browser.newContext({ viewport: gpu ? { width: 1920, height: 1080 } : { width: 960, height: 540 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=1`);
@@ -155,6 +158,10 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   const phones = [];
   for (const n of names) phones.push(await phone(joinUrl, n));
   const [A, B, C, D] = phones;
+  // br-bcuy probe: JJ_PROBE_THROTTLE=N throttles every page's CPU N times (the loaded-runner repro on a fast machine).
+  if (process.env.JJ_PROBE_THROTTLE) {
+    for (const p of [host, ...phones]) await (await p.context().newCDPSession(p)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_PROBE_THROTTLE) });
+  }
   await wait(host, () => window.__jjRoom.view().seats.length === 4);
   const seats = await host.evaluate(() => window.__jjRoom.view().seats.map((s) => ({ seat: s.seat, name: s.name })));
   const seatOf = (name) => seats.find((s) => s.name === name).seat;
@@ -241,6 +248,14 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
     const shown = await host.evaluate(() => window.__jjRender.launchCalloutsShown());
     const phones = await Promise.all([A, B, C, D].map((p) => p.evaluate(() => { const i = window.__jjController.inspect(); return { outcome: i.launchOutcome, actions: i.stats.actions }; })));
     const ages = await host.evaluate(async () => (await window.__jjTest.observe()).host.seats.map((s) => ({ seat: s.seat, inputAgeMs: s.inputAgeMs, dropped: s.inputDropped })));
+    // Where the time goes per controller state batch: phone→host channel gaps (arrivedAt), main→worker (receivedAt −
+    // arrivedAt) and worker→applied (appliedAt − receivedAt), p50/p95/max over the run.
+    const stamps = await host.evaluate(() => window.__jjTest.netStamps());
+    const q = (a) => { const s = [...a].sort((x, y) => x - y); return { p50: Math.round(s[Math.floor(s.length / 2)] ?? 0), p95: Math.round(s[Math.floor(s.length * 0.95)] ?? 0), max: Math.round(s.at(-1) ?? 0), n: s.length }; };
+    const byEp = {};
+    for (const st of stamps) (byEp[st.endpoint] ??= []).push(st);
+    const gaps = Object.values(byEp).flatMap((l) => l.slice(1).map((st, k) => st.arrivedAt - l[k].arrivedAt));
+    console.log('FL02 stamps', JSON.stringify({ arrivalGap: q(gaps), mainToWorker: q(stamps.map((s) => s.receivedAt - s.arrivedAt)), workerToApplied: q(stamps.map((s) => s.appliedAt - s.receivedAt)) }));
     throw new Error(`B's and C's callouts: cars ${JSON.stringify(carsBySeat)}, shown ${JSON.stringify(shown)}, phones ${JSON.stringify(phones)}, host input ${JSON.stringify(ages)}: ${e.message}`);
   });
   await shot(B, 'phone-b-outcome');

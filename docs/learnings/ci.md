@@ -80,3 +80,11 @@ so the run, and with it the branch's concurrency group, sat 45 min with every ne
 Gitea API: the job was ended by killing its slot process in the container (`sudo -n docker exec <id> pkill -f
 run-slot.mjs` on the runner host). `run-slot.mjs` now wraps each target in `timeout -k 30` (3x its learned time, 15-25
 min).
+
+## Stale controller input on a loaded journey is the phones, not the host (br-bcuy, 2026-10-17)
+
+FL02's four phone pages and its host share one browser. At 2x CPU throttle every seat read 1.1-3.8 s stale and snaps missed
+the start window. The per-batch stamps (`__jjTest.netStamps()`) put the time on the phone side: main thread to worker
+at most 17 ms and worker to applied at most 12 ms, while one phone's batches arrived up to 2.3 s apart (p95 ~100 ms). The
+phones send on a `setInterval`, and a starved page fires it late. A real phone is its own device, so this is a harness
+artefact. Lighten the host page instead (FL02 renders the software-GL host at 960x540; it passes on SwiftShader again).
