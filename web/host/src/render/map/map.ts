@@ -344,6 +344,12 @@ export class MapRenderer {
     const r = this.map.route;
     const p = r.points;
     const s = new Soup();
+    // A derby bowl's route is the bots' ring round its floor (P1-M10), not a road: no ribbon, edge lines or start line.
+    if (this.map.features.some((f) => f.kind === 'bowl')) {
+      const m = s.mesh(this.material);
+      m.name = 'route';
+      return m;
+    }
     const lift = 0.05;
     const edge = 0.3;
     const segs = r.closed ? p.length : p.length - 1;

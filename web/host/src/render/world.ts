@@ -165,6 +165,9 @@ export class World {
   private grid: GridHelper;
   /** Where the map lies (metres: minX, maxX, minZ, maxZ), framed when nothing is on the field. */
   private mapBox: [number, number, number, number] | null = null;
+  /** A derby arena's circle the overview always frames (P1-M10, R107): the bowl out to its nearest rock, so the rocks
+   *  dressing stands in frame around the bowl however few cars there are. Null on a course. */
+  private arena: { x: number; z: number; r: number } | null = null;
   private sample: Sampled | undefined;
   private raf = 0;
   private observer: ResizeObserver;
@@ -304,6 +307,15 @@ export class World {
     const t = map.terrain;
     this.invalidate();
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
+    const bowl = map.features.find((f) => f.kind === 'bowl') as { pose?: { x: number; z: number }; params: Record<string, number> } | undefined;
+    this.arena = null;
+    if (bowl) {
+      const [x, z] = [(bowl.pose?.x ?? 0) / 1000, (bowl.pose?.z ?? 0) / 1000];
+      const p = bowl.params;
+      const outer = ((p.floorRadiusMm ?? 0) + (p.bankRadiusMm ?? 0) + (p.lipWidthMm ?? 0)) / 1000;
+      const rocks = (map.dressing ?? []).map((d) => Math.hypot(d.pose.x / 1000 - x, d.pose.z / 1000 - z)).filter((d) => d > outer);
+      this.arena = { x, z, r: rocks.length ? Math.min(...rocks) : outer * 1.25 };
+    }
     return this.map;
   }
 
@@ -743,6 +755,11 @@ export class World {
       box[3] = Math.max(box[3]!, z);
     };
     for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
+    if (this.arena) {
+      const a = this.arena;
+      grow(a.x - a.r, a.z - a.r);
+      grow(a.x + a.r, a.z + a.r);
+    }
     const f = s.frame;
     this.props.update(f);
     this.map?.updateRails(f);
