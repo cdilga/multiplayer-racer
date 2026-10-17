@@ -31,7 +31,29 @@ Measured on rch, the same test, same commit:
 18x on the test itself. `cargo test -p jj-sim -p jj-map` at the new profile: every binary passes (replay bit-for-bit
 tests included), slowest binary 34.9 s.
 
+## After change 1: CI run 5917 (commit 05fb2362, 2026-10-17 13:04 UTC)
+
+| lane | before (run 5544/5598) | after (run 5917) |
+|---|---|---|
+| checks | ~1 min | 1.0 min |
+| rust-lint | ~3 min | 3.1 min |
+| rust-test (1) | one lane, 41 min (5544) | 6.4 min |
+| rust-test (2) | | 7.0 min |
+| rust-test (3) | | 12.8 min |
+| build (server + WASM + web) | ~6 min | 6.6 min (failed: below) |
+
+Rust tests went from a 41-minute single lane to three shards of 6-13 minutes. Run 5917's build failed because rustc was
+SIGKILLed for memory compiling asupersync at opt-level 3; asupersync now builds at 1 (332fd8f0). Its browser lanes never
+ran, so their after-timings come from the next full run.
+
+## Also on 2026-10-17
+
+- Clips F07 AC4 drives 3000 ticks, not 6000 (70 s on eris, was 125 s; 134 s on CI). It was quarantined after a loaded
+  runner hit 300 s (br-53af).
+- Clips F12 starts round 2 with the button's own UI command, not a pointer click a starved runner couldn't dispatch in
+  30 s (br-httj).
+
 ## Next
 
-Per-lane before/after from the first CI run with change 1; then the browser lanes (step the sim instead of waiting real
-time, shard by `durations.json`).
+The browser lanes' after-timings from the first full run since 332fd8f0; then step the sim instead of waiting real time,
+and shard by `durations.json`.
