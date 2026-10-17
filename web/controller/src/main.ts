@@ -39,6 +39,8 @@ async function boot(root: HTMLElement): Promise<void> {
     claim: (name: string) => session.claim(name),
     setSticks: (d: { x: number; y: number; touch: boolean }, a: { x: number; y: number; touch: boolean }) => session.setSticks(d, a),
     identify: () => session.identify(),
+    /** The learner assist as Settings sets it (R125; the FL13 lap uses Some, R90). */
+    setAssist: (a: 'off' | 'some' | 'lots') => { session.assist = a; },
     /** Sent state batches with the touch each carries (P1-FL17). */
     latency: () => session.latency.slice(),
     wakeHeld,

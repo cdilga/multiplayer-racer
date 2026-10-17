@@ -44,7 +44,7 @@ async function chooseButtons(page) {
   assert.deepEqual(at, { 0: 'drop', 1: 'fire', 2: 'gas', 3: 'boost', 4: 'brake', 5: null }, `the pad follows the arrangement: ${JSON.stringify(at)}`);
 }
 
-test('Buttons, real phone and host: remap two inputs, each button is the one-stick intent, and a lap on the steer stick and Gas', { timeout: 420_000, skip: 'br-bbki.14 open: the remap and every intent pass; the scripted lap driver still wedges on a rail' }, async () => {
+test('Buttons, real phone and host: remap two inputs, each button is the one-stick intent, and a lap on the steer stick and Gas', { timeout: 420_000 }, async () => {
   const browser = await chromium.launch({ args: chromiumArgs });
   try {
     const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
@@ -118,7 +118,10 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
     await up(6);
     await until('cone', (s) => s.action.cones === before.cones + 1);
 
-    // A lap of the greybox: Gas held, steering on the stick toward the road a few points ahead.
+    // A lap of the greybox: Gas held, steering on the stick toward the road a few points ahead, on the Some assist (R125:
+    // a steer-to-line, the player still on the Gas button): a closed loop through Playwright lags ~100 ms, which on Off
+    // wedged the car on a rail (br-bbki.14).
+    await page.evaluate(() => window.__jjController.setAssist('some'));
     const map = JSON.parse(readFileSync(resolve(import.meta.dirname, '../../../maps/greybox-loop.json'), 'utf8'));
     const pts = map.route.points.map((p) => [p.x / 1000, p.z / 1000]);
     const n = pts.length;
