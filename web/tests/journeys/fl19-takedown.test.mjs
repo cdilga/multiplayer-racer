@@ -72,10 +72,17 @@ test('FL19: a ram that spins another car in a real round pops TAKEDOWN on the TV
     return (await s.observe()).cars.length;
   }, { attacker, victim });
   assert.ok(before >= 2);
+  const look = () => host.evaluate(async ({ attacker, victim }) => {
+    const o = await window.__jjTest.observe();
+    const c = (i) => { const x = o.cars[i]; return x && { p: x.position.map((v) => +v.toFixed(2)), v: +(x.speed ?? 0).toFixed(2), h: x.headingDeg ?? x.heading, up: x.upY }; };
+    return { tick: o.tick, attacker: c(attacker), victim: c(victim) };
+  }, { attacker, victim });
+  const placed = await look();
   for (let k = 0; k < 8; k++) await host.evaluate(() => window.__jjTest.step(60));
+  const after = await look();
 
   const events = await host.evaluate(() => window.__jjRoom.events().filter((e) => e.event.Takedown).map((e) => e.event.Takedown));
-  assert.ok(events.some((t) => t.attacker === attacker && t.victim === victim), `the host got the takedown: ${JSON.stringify(events)}`);
+  assert.ok(events.some((t) => t.attacker === attacker && t.victim === victim), `the host got the takedown: ${JSON.stringify({ events, placed, after })}`);
   // The TV: TAKEDOWN popped over the attacker's car.
   await wait(host, (car) => window.__jjRender.launchCalloutsShown().some((c) => c.car === car && c.outcome === 'Takedown'), attacker, 30_000);
   await shot(host, 'tv-takedown');
