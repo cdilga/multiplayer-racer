@@ -121,6 +121,11 @@ const LANDING_LIFT = 0.6;
 const LANDING_TAPER = 6;
 const LANDING_RISE = 3;
 const LANDING_STEP = 0.5;
+/** br-gw74.13.1.1.1: the last metres of a ramp up to its lip, and the first of a landing from its rim, are painted paper
+ *  white: up close a kerb at the lip, and at whole-lap scale (the overview) two bright lines across the road that bracket
+ *  the jump, where the tan ramp alone read as more road. */
+const LIP_BAND_M = 1.5;
+const LIP_COLOUR = '#fff4de';
 const EDGE_SLOPE = 1.5;
 const jumpDesign = (p: Params, kind = 'jump'): JumpDesign | null => {
   if (p.sharp !== 1) return null;
@@ -532,17 +537,17 @@ export class MapRenderer {
       if (ny >= 0) s.tri(a, b, c, paint);
       else s.tri(a, c, b, paint);
     };
-    const strip = (a: number[][], b: number[][]) => {
+    const strip = (a: number[][], b: number[][], paint = colour) => {
       for (let j = 0; j < 3; j++) {
-        tri(a[j]!, b[j]!, a[j + 1]!);
-        tri(a[j + 1]!, b[j]!, b[j + 1]!);
+        tri(a[j]!, b[j]!, a[j + 1]!, paint);
+        tri(a[j + 1]!, b[j]!, b[j + 1]!, paint);
       }
     };
     const steps = Math.ceil(d.ramp / 0.25);
     let prev = section(0, d.rampW);
     for (let k = 1; k <= steps; k++) {
       const next = section((d.ramp * k) / steps, d.rampW);
-      strip(prev, next);
+      strip(prev, next, d.ramp * k / steps > d.ramp - LIP_BAND_M ? LIP_COLOUR : colour);
       prev = next;
     }
     if (d.launchOnly) return;
@@ -578,9 +583,10 @@ export class MapRenderer {
       const landSteps = Math.ceil(d.landing / LANDING_STEP);
       for (let k = 1; k <= landSteps; k++) {
         const next = land(rim + (d.landing * k) / landSteps);
+        const deck = (d.landing * (k - 1)) / landSteps < LIP_BAND_M ? LIP_COLOUR : road;
         for (let j = 0; j < 3; j++) {
-          tri(prev[j]!, next[j]!, prev[j + 1]!, j === 1 ? road : colour);
-          tri(prev[j + 1]!, next[j]!, next[j + 1]!, j === 1 ? road : colour);
+          tri(prev[j]!, next[j]!, prev[j + 1]!, j === 1 ? deck : colour);
+          tri(prev[j + 1]!, next[j]!, next[j + 1]!, j === 1 ? deck : colour);
         }
         prev = next;
       }
@@ -595,7 +601,8 @@ export class MapRenderer {
     const tableSteps = Math.max(1, Math.ceil(d.table / .25));
     for (let k = 1; k <= tableSteps; k++) {
       const next = section(d.ramp + d.table * k / tableSteps, d.landW);
-      strip(prev, next);
+      // The table's far edge, where it drops to the landing ramp, gets the band too.
+      strip(prev, next, d.table > 2 * LIP_BAND_M && d.table * k / tableSteps > d.table - LIP_BAND_M ? LIP_COLOUR : colour);
       prev = next;
     }
     const downSteps = Math.ceil(d.down / .25);

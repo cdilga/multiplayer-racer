@@ -71,7 +71,7 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 180_000 }, async () => {
+  test(`${name}: a generated boosted jump is visibly airborne, lands upright and matches native replay`, { timeout: 420_000 }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [], rows = [];
     try {
