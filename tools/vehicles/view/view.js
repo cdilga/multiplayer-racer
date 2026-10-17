@@ -1,6 +1,7 @@
 // view.js (P1-V02): renders a baked vehicle GLB through three.js's GLTFLoader with the paint-key material, as a contact
 // sheet. Used by capture.mjs for the vehicle-model-validation evidence. Query:
-//   ?asset=/art/vehicles/cruz-missile/cruz-missile.asset.json&sheet=views|paints|lods|colliders
+//   ?asset=/art/vehicles/cruz-missile/cruz-missile.asset.json&sheet=views|paints|lods|colliders|hero
+// `hero` is the picker/brand render (br-bwju.10): one front 3/4 LOD0 shot on a transparent backdrop, cropped to the car.
 // When drawn, document.title becomes READY and window.__sheet holds the PNG data URL.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -10,7 +11,8 @@ const assetUrl = q.get('asset') ?? '/art/vehicles/cruz-missile/cruz-missile.asse
 const sheet = q.get('sheet') ?? 'views';
 const TILE = 360;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+const HERO = 1100;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: sheet === 'hero' });
 renderer.setPixelRatio(1);
 renderer.setSize(TILE, TILE);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -78,8 +80,36 @@ const VIEWS = {
   top: [[0, 9, 0.001], true], 'front 3/4': [[5.5, 3.2, 7], false], 'rear 3/4': [[-5.5, 3.2, -7], false],
 };
 
+// The hero: framed from the car's own bounds, so every vehicle (sedan, ute, bike) fills the picture the same way.
+async function hero(asset) {
+  const s = new THREE.Scene();
+  s.add(new THREE.HemisphereLight('#ffffff', '#8a8a90', 1.6));
+  const sun = new THREE.DirectionalLight('#ffffff', 2.2); sun.position.set(4, 8, 6); s.add(sun);
+  const fill = new THREE.DirectionalLight('#dfe8ff', 0.7); fill.position.set(-6, 3, -4); s.add(fill);
+  const car = await loadLod(asset.lods[0].file, q.get('paint') ?? '#22c3e6');
+  s.add(car);
+  const box = new THREE.Box3().setFromObject(car), mid = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
+  renderer.setSize(HERO, HERO); renderer.setClearColor(0x000000, 0);
+  const cam = new THREE.PerspectiveCamera(24, 1, 0.1, 100);
+  cam.position.copy(mid).add(new THREE.Vector3(0.62, 0.36, 0.7).normalize().multiplyScalar(r / Math.sin((12 * Math.PI) / 180)));
+  cam.lookAt(mid);
+  renderer.render(s, cam);
+  // Crop to the car, plus a small margin; the pages draw their own outline and shadow round the cut-out.
+  const c = document.createElement('canvas'); c.width = HERO; c.height = HERO;
+  const g = c.getContext('2d'); g.drawImage(renderer.domElement, 0, 0);
+  const px = g.getImageData(0, 0, HERO, HERO).data;
+  let x0 = HERO, y0 = HERO, x1 = 0, y1 = 0;
+  for (let y = 0; y < HERO; y++) for (let x = 0; x < HERO; x++) if (px[(y * HERO + x) * 4 + 3] > 8) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const pad = 8, out = document.getElementById('sheet');
+  out.width = x1 - x0 + 1 + 2 * pad; out.height = y1 - y0 + 1 + 2 * pad;
+  out.getContext('2d').drawImage(c, x0, y0, x1 - x0 + 1, y1 - y0 + 1, pad, pad, x1 - x0 + 1, y1 - y0 + 1);
+  window.__sheet = out.toDataURL('image/png');
+  document.title = 'READY';
+}
+
 async function draw() {
   const asset = await (await fetch(assetUrl)).json();
+  if (sheet === 'hero') return hero(asset);
   const tiles = [];
   if (sheet === 'views') {
     const s = scene(); s.add(await loadLod(asset.lods[0].file, '#22c3e6'));

@@ -185,3 +185,36 @@ test('the picker fits phones in landscape, portrait and the small phone, with Do
     await ctx.close();
   }
 });
+
+// br-bwju.10 (owner 2026-10-17: "I see crayon like drawings in places in the UI where we should have a proper render"):
+// every real roster car shows its own render, made from its in-game model, in the big panel and its thumbnail; only the
+// `&roster=N` stand-ins are silhouettes.
+test('every real roster car has its own render in the picker, big and thumbnail; only stand-ins are silhouettes', { timeout: 120_000 }, async () => {
+  for (const size of [{ width: 844, height: 390 }, { width: 390, height: 844 }]) {
+    const label = `${size.width}x${size.height}`;
+    const { ctx, page, errors } = await open(`playing&round=lobby&roster=${REAL + 2}`, size);
+    const upright = page.getByRole('button', { name: 'Play upright anyway' });
+    if (await upright.count()) {
+      await upright.click();
+      const skip = page.getByRole('button', { name: 'Skip tutorial' });
+      await skip.waitFor({ timeout: 2_000 }).then(() => skip.click(), () => {});
+    }
+    await page.getByRole('button', { name: /^(Choose|Change) car$/ }).click();
+    await page.locator('[data-overlay=cars]').waitFor();
+    const thumbs = await page.evaluate(() => [...document.querySelectorAll('.thumb')].map((t) => (t.querySelector('.carimg.sil') ? 'sil' : t.querySelector('img.carimg') ? 'img' : 'none')));
+    assert.deepEqual(thumbs, [...Array(REAL).fill('img'), 'sil', 'sil'], `${label}: thumbnails`);
+    const srcs = new Set();
+    for (let i = 0; i < REAL; i++) {
+      await page.locator(`.thumb[data-i="${i}"]`).click();
+      await page.waitForFunction(() => { const im = document.querySelector('img.carimg.big'); return im?.complete && im.naturalWidth > 0; }, undefined, { timeout: 10_000 });
+      const car = await page.evaluate(() => { const im = document.querySelector('img.carimg.big'); return { name: document.querySelector('[data-car-name]').textContent, src: im.getAttribute('src'), w: im.naturalWidth }; });
+      assert.equal(car.name, roster.cars[i].name);
+      assert.ok(car.w >= 400, `${car.name}: a real render, ${car.w} px wide`);
+      srcs.add(car.src);
+      await shot(page, `bwju10-${roster.cars[i].id}-${label}`);
+    }
+    assert.equal(srcs.size, REAL, 'each car its own render');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  }
+});

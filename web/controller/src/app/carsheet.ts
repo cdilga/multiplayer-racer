@@ -12,14 +12,16 @@ export interface RosterCar {
   name: string;
   cls: string;
   blurb: string;
-  art?: string;
   shape?: keyof typeof data.shapes;
   stats: number[];
 }
 
-const ART: Record<string, string> = {
-  'cruz-missile-hero.png': new URL('../../../../art/ui/brand/renders/cruz-missile-hero.png', import.meta.url).href,
-};
+// Every roster car's picker render, rendered from its in-game model (`node tools/vehicles/view/capture.mjs --heroes`,
+// br-bwju.10), keyed by car id; a car without one (only the `&roster=N` test stand-ins) draws a silhouette.
+const ART: Record<string, string> = Object.fromEntries(
+  Object.entries(import.meta.glob('../../../../art/ui/brand/renders/picker/*.png', { eager: true, query: '?url', import: 'default' }) as Record<string, string>)
+    .map(([file, url]) => [file.slice(file.lastIndexOf('/') + 1, -'.png'.length), url]),
+);
 const STATS = ['Speed', 'Accel', 'Handling', 'Toughness'];
 const SHAPE_NAMES = Object.keys(data.shapes) as Array<keyof typeof data.shapes>;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -38,8 +40,8 @@ export function rosterOf(extra = 0, cars: RosterCar[] = ROSTER): RosterCar[] {
 }
 
 const art = (c: RosterCar, hex: string, big: boolean): string =>
-  c.art
-    ? `<img class="carimg${big ? ' big' : ''}" alt="${esc(c.name)}" src="${ART[c.art] ?? ''}">`
+  ART[c.id]
+    ? `<img class="carimg${big ? ' big' : ''}" alt="${esc(c.name)}" src="${ART[c.id]}">`
     : `<svg class="carimg sil${big ? ' big' : ''}" viewBox="0 0 200 90" role="img" aria-label="${esc(c.name)} (silhouette)"><path d="${data.shapes[c.shape ?? 'sedan']}" fill="${hex}" stroke="#15203A" stroke-width="5" stroke-linejoin="round"/><circle cx="52" cy="66" r="15" fill="#15203A"/><circle cx="152" cy="66" r="15" fill="#15203A"/></svg>`;
 
 export class CarSheet {

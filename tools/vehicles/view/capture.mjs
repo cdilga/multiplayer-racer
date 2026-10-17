@@ -1,6 +1,8 @@
 // capture.mjs (P1-V02): renders a baked vehicle's contact sheets through view/index.html in Playwright Chromium and writes
 // them as PNGs. Serves the repo root on 127.0.0.1 only.
 //   node tools/vehicles/view/capture.mjs [--asset /art/vehicles/cruz-missile/cruz-missile.asset.json] [--out docs/evidence/P1-V02]
+//   node tools/vehicles/view/capture.mjs --heroes    every roster car's picker render -> art/ui/brand/renders/picker/<id>.png
+//                                                   (br-bwju.10: a new roster car gets its render from this, not by hand)
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -24,7 +26,12 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch();
 fs.mkdirSync(out, { recursive: true });
 try {
-  for (const sheet of ['views', 'paints', 'lods', 'colliders']) {
+  const jobs = args.includes('--heroes')
+    ? JSON.parse(fs.readFileSync(path.join(REPO, 'web/shared/src/roster.json'), 'utf8')).cars.map((c) => ({
+        sheet: 'hero', asset: `/art/vehicles/${c.id}/${c.id}.asset.json`, file: path.join(REPO, `art/ui/brand/renders/picker/${c.id}.png`),
+      }))
+    : ['views', 'paints', 'lods', 'colliders'].map((sheet) => ({ sheet, asset, file: path.join(out, `${sheet}.png`) }));
+  for (const { sheet, asset, file } of jobs) {
     const page = await browser.newPage();
     page.on('pageerror', (e) => console.log('PAGEERR', e.message));
     await page.goto(`${base}/tools/vehicles/view/index.html?asset=${encodeURIComponent(asset)}&sheet=${sheet}`);
@@ -32,7 +39,6 @@ try {
     const title = await page.title();
     if (title !== 'READY') throw new Error(`${sheet}: ${title}`);
     const url = await page.evaluate(() => window.__sheet);
-    const file = path.join(out, `${sheet}.png`);
     fs.writeFileSync(file, Buffer.from(url.split(',')[1], 'base64'));
     console.log(`wrote ${path.relative(REPO, file)}`);
     await page.close();

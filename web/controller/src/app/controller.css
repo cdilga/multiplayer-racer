@@ -317,6 +317,8 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .carimg { display: block; width: 100%; max-width: 360px; height: auto; }
 .carimg.big { margin: -6px -30px 0; width: calc(100% + 24px); filter: drop-shadow(3px 0 0 var(--c-ink)) drop-shadow(-3px 0 0 var(--c-ink)) drop-shadow(0 3px 0 var(--c-ink)) drop-shadow(0 -3px 0 var(--c-ink)); }
 .carimg.sil.big { filter: none; max-width: 300px; }
+/* Every render sits in the same box (br-bwju.10), so a tall bike and a long sedan leave the panel the same height. */
+img.carimg.big { aspect-ratio: 3 / 2; object-fit: contain; }
 .artnote { position: absolute; right: 10px; top: 10px; padding: 2px 8px; background: var(--c-paper-shade); border: 2px dashed var(--c-ink-soft); font-size: 13px; color: var(--c-ink-soft); }
 .stats { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; }
 .stat { display: grid; grid-template-columns: auto minmax(24px, 1fr); align-items: center; gap: 6px; font-size: 14px; font-weight: 700; min-width: 0; }
