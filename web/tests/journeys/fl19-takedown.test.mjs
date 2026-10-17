@@ -79,7 +79,12 @@ test('FL19: a ram that spins another car in a real round pops TAKEDOWN on the TV
     return { tick: o.tick, attacker: c(attacker), victim: c(victim) };
   }, { attacker, victim });
   const placed = await look();
-  for (let k = 0; k < 8; k++) await host.evaluate(() => window.__jjTest.step(60));
+  // Step until the takedown lands, then capture at once (the callouts are up for 1.8 s).
+  let found = false;
+  for (let k = 0; k < 48 && !found; k++) {
+    await host.evaluate(() => window.__jjTest.step(10));
+    found = await host.evaluate(() => window.__jjRoom.events().some((e) => e.event.Takedown));
+  }
   const after = await look();
 
   const events = await host.evaluate(() => window.__jjRoom.events().filter((e) => e.event.Takedown).map((e) => e.event.Takedown));
@@ -89,6 +94,9 @@ test('FL19: a ram that spins another car in a real round pops TAKEDOWN on the TV
   await shot(host, 'tv-takedown');
   // The attacker's phone: it counted the takedown and its banner says so while it is up.
   await wait(phone, () => window.__jjController.inspect().takedowns >= 1, undefined, 30_000);
+  await wait(phone, () => document.querySelector('[data-round-banner]')?.textContent === 'TAKEDOWN! BOOST', undefined, 5_000).catch(async () => {
+    throw new Error(`the phone's banner never said TAKEDOWN: ${JSON.stringify(await phone.evaluate(() => ({ banner: document.querySelector('[data-round-banner]')?.textContent, phase: window.__jjController.inspect().roomPhase })))}`);
+  });
   const banner = await phone.evaluate(() => document.querySelector('[data-round-banner]')?.textContent ?? '');
   await shot(phone, 'phone-takedown');
   console.log(`# FL19 takedown: ${JSON.stringify({ events, banner })}`);
