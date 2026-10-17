@@ -43,8 +43,12 @@ pub const STALL_US: u64 = 500_000;
 pub const STALL_HOLD_US: u64 = 1_000_000;
 /// The visible resume countdown after the last pause reason clears.
 pub const RESUME_COUNTDOWN_US: u64 = 3_000_000;
-/// A source silent this long reads neutral (dropout; autopilot takeover after 2 s is G03's).
+/// A sample is fresh this long: what counts as deliberate input (taking a car back, prompts, idle) (G03).
 pub const STALE_MS: u64 = 250;
+/// A source's last sample keeps driving its car this long without a new one (br-f3rz): the phone refreshes a held
+/// stick at 20 Hz and Wi-Fi power save delays packets 100-300 ms, so at 250 ms a held throttle coasted for a few ticks.
+/// A closed peer (`MainToSim::PeerGone`), a hidden page and a pause neutralise at once; the autopilot after DROPOUT_MS.
+pub const HOLD_MS: u64 = 1_000;
 /// A source silent (or gone) this long hands its car to the autopilot; fresh deliberate input takes it back (R45, §9).
 pub const DROPOUT_MS: u64 = 2_000;
 /// A connected seat that gives no deliberate input this long while racing gets the takeover cue (G03, §9)...
@@ -771,11 +775,7 @@ impl Host {
             if self.sim.assist_level(car) != input.assist {
                 self.sim.set_assist(car, input.assist);
             }
-            let fresh = !held
-                && input
-                    .state
-                    .age_ms(now_ms)
-                    .is_some_and(|age| age <= STALE_MS);
+            let fresh = !held && input.state.age_ms(now_ms).is_some_and(|age| age <= HOLD_MS);
             let controls = if held {
                 input.start_lock = true;
                 DriveInput::grid_held()
@@ -1041,6 +1041,23 @@ impl Host {
                 preparation,
                 map_bytes,
             } => self.map_ready(preparation, &map_bytes),
+            // br-f3rz: a closed or failed peer's seats read neutral at once (a silent one holds its last sample for
+            // HOLD_MS, then neutral; the autopilot after DROPOUT_MS either way).
+            MainToSim::PeerGone { endpoint } => {
+                if let Some(&conn) = self.conns.get(&endpoint) {
+                    let gone: Vec<SeatId> = self
+                        .seats
+                        .seats()
+                        .filter(|s| s.conn == Some(conn))
+                        .map(|s| s.id)
+                        .collect();
+                    for seat in gone {
+                        if let Some(input) = self.inputs.get_mut(&seat) {
+                            input.state.neutralise(Neutralise::Disconnected);
+                        }
+                    }
+                }
+            }
             // Buffers are main-thread plumbing; Init and Lifecycle act on arrival.
             _ => {}
         }

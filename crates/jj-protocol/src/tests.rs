@@ -472,6 +472,9 @@ fn main_samples() -> Vec<MainToSim> {
         MainToSim::Vehicles {
             vehicles: vec![("tradie-ute".into(), "{}".into())],
         },
+        MainToSim::PeerGone {
+            endpoint: EndpointId("ep-1".into()),
+        },
     ]
 }
 
@@ -485,9 +488,10 @@ fn main_variant(m: &MainToSim) -> &'static str {
         MainToSim::MapReady { .. } => "map-ready",
         MainToSim::ReturnBuffer { .. } => "return-buffer",
         MainToSim::Vehicles { .. } => "vehicles",
+        MainToSim::PeerGone { .. } => "peer-gone",
     }
 }
-const MAIN_VARIANTS: [&str; 8] = [
+const MAIN_VARIANTS: [&str; 9] = [
     "init",
     "net-bytes",
     "local-source",
@@ -496,6 +500,7 @@ const MAIN_VARIANTS: [&str; 8] = [
     "map-ready",
     "return-buffer",
     "vehicles",
+    "peer-gone",
 ];
 
 fn ui_samples() -> Vec<UiCommand> {

@@ -10,8 +10,8 @@ use crate::DecodeError;
 use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
-/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19).
-pub const ABI_VERSION: u16 = 6;
+/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19). 7: `MainToSim::PeerGone` (br-f3rz).
+pub const ABI_VERSION: u16 = 7;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -144,6 +144,11 @@ pub enum MainToSim {
     /// host's built-in first vehicle stands until then.
     Vehicles {
         vehicles: Vec<(String, String)>,
+    },
+    /// A controller's peer connection closed or failed (br-f3rz): its seats' sticks read neutral at once, instead of
+    /// holding their last sample through the held-input window. A reconnect's Hello resumes them as before.
+    PeerGone {
+        endpoint: EndpointId,
     },
 }
 

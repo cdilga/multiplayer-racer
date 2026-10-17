@@ -31,6 +31,11 @@ export class NetBridge {
           this.bytesIn += bytes.byteLength;
           client.input({ type: 'net', endpoint: peer.endpointId, channel, bytes, arrivedAt: performance.timeOrigin + performance.now() });
         },
+        // A closed or failed peer (not a passing `disconnected`, which ICE can recover): its seats read neutral at once
+        // rather than holding the last sample through the sim's held-input window (br-f3rz).
+        onPeerState: (peer, state) => {
+          if (state === 'closed' || state === 'failed') client.input({ type: 'net-gone', endpoint: peer.endpointId });
+        },
       },
       opts,
     );

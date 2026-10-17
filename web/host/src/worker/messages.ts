@@ -26,6 +26,8 @@ export type SimInput =
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   /** `arrivedAt` (ms, shared clock): when main got the bytes off the data channel, for the latency stages (P1-FL17). */
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array; arrivedAt?: number }
+  /** A controller's peer closed or failed (br-f3rz): its seats read neutral at once. */
+  | { type: 'net-gone'; endpoint: string }
   | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'catch-up' | 'prepare-maps' | 'reroll' | `laps:${number}` | `remove-seat:${number}` | `pick-local:${number}:${string}` | `ready-local:${number}` | `join-local:${number}` | `leave-local:${number}` | `sit-out-local:${number}` | `tune:${string}` | `tune-vehicle:${string}`; on?: boolean }
   /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
   | { type: 'map-ready'; preparation: number; bytes: Uint8Array };

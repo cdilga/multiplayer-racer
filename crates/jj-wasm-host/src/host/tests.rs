@@ -957,6 +957,76 @@ fn an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_an
     );
 }
 
+/// br-f3rz: a phone refreshes a held stick at 20 Hz and Wi-Fi power save can hold its packets 100-300 ms. A held
+/// throttle with a 300 ms gap in its samples keeps driving through the gap (HOLD_MS), and a closed peer
+/// (`MainToSim::PeerGone`) reads neutral at once.
+#[test]
+fn a_held_throttle_survives_a_300_ms_sample_gap_and_a_closed_peer_is_neutral_at_once() {
+    let mut h = driving_host();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Phone".into(),
+        },
+    ] {
+        h.schedule(0, &net("phone", Channel::Cmd, c.encode()))
+            .unwrap();
+    }
+    let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
+    // Throttle held, refreshed every 50 ms, except for nothing from 1000 ms to 1300 ms; the samples stop at 1500 ms.
+    for (i, t) in (0..1_500)
+        .step_by(50)
+        .filter(|t| !(1_000..1_300).contains(t))
+        .enumerate()
+    {
+        let k = i as u16 + 1;
+        let batch = StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: k,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(1),
+                seq: k,
+                drive: [0, 32_767],
+                action: [0, 0],
+                flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+            }],
+        };
+        h.schedule(
+            ms(t),
+            &net("phone", Channel::State, batch.encode().unwrap()),
+        )
+        .unwrap();
+    }
+    let throttle = |h: &Host| h.sim().applied_input(CarId(0)).map_or(0, |i| i.throttle);
+    while h.tick() < ms(1_280) {
+        h.step_one();
+    }
+    assert!(
+        throttle(&h) > 0,
+        "280 ms into the gap the held throttle still drives"
+    );
+    while h.tick() < ms(1_450) {
+        h.step_one();
+    }
+    assert!(throttle(&h) > 0, "and after it");
+    let gone = MainToSim::PeerGone {
+        endpoint: EndpointId("phone".into()),
+    }
+    .encode();
+    h.schedule(ms(1_460), &gone).unwrap();
+    while h.tick() < ms(1_470) {
+        h.step_one();
+    }
+    assert_eq!(throttle(&h), 0, "a closed peer is neutral at once");
+}
+
 #[test]
 fn the_old_layouts_action_stick_still_boosts_then_lets_go() {
     // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.

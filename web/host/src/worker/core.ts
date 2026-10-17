@@ -44,6 +44,7 @@ export interface WasmHost<S extends Sim> {
   encode_lifecycle(visible: boolean, renderOk: boolean): Uint8Array;
   encode_local_source(source: number, dx: number, dy: number, ax: number, ay: number, buttons: number, seq: number): Uint8Array;
   encode_net_bytes(endpoint: string, state: boolean, bytes: Uint8Array): Uint8Array;
+  encode_peer_gone(endpoint: string): Uint8Array;
   encode_ui(command: number, ui: string, on: boolean): Uint8Array;
   encode_map_ready(preparation: number, mapBytes: Uint8Array): Uint8Array;
   /** The controller message in a drained `SimToMain`, if it is one (routed to the transport by main). */
@@ -113,6 +114,8 @@ export class SimWorker<S extends Sim> {
       }
       case 'net':
         return w.encode_net_bytes(input.endpoint, input.channel === 'state', input.bytes);
+      case 'net-gone':
+        return w.encode_peer_gone(input.endpoint);
       case 'ui':
         return w.encode_ui(this.uiCommand++, input.ui, input.on ?? false);
       case 'map-ready':

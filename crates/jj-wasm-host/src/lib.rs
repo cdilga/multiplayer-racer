@@ -318,6 +318,15 @@ pub mod codec {
         }
         .encode()
     }
+
+    /// A controller's peer closed or failed (br-f3rz): its seats read neutral at once.
+    #[wasm_bindgen]
+    pub fn encode_peer_gone(endpoint: &str) -> Vec<u8> {
+        MainToSim::PeerGone {
+            endpoint: EndpointId(endpoint.into()),
+        }
+        .encode()
+    }
 }
 
 /// A `SimToMain::Outbound` split out for the transport: which controller endpoint, which channel, what bytes.
