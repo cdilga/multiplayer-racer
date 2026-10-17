@@ -45,10 +45,41 @@ pub(crate) struct Hooks<'a> {
     pub wall_normal_y: f32,
     /// Collision groups that are ground (terrain, the world's static solids).
     pub ground: Group,
+    /// The guard rails' beams (`crate::rails`), and the |normal y| below which a contact with one is a side hit.
+    pub rails: &'a [RigidBodyHandle],
+    pub rail_side_normal_max_y: f32,
+}
+
+impl Hooks<'_> {
+    /// A guard rail redirects (br-bbki.25, owner playtest 2026-10-17: "landing and colliding … re launched the car into
+    /// the air"). A rigid box hit by a car's wedge-shaped hull at an angle acts as a ramp: the contact normal on the
+    /// beam's top edge or the hull's sloped nose tips up and the car vaults the rail. A real W-beam deforms around the car
+    /// instead. So a side hit's normal is laid flat: the beam pushes across, never up. Something resting on the beam's
+    /// top (a normal steeper than the threshold) is left alone.
+    fn rail_side_hit(&self, ctx: &mut ContactModificationContext) -> bool {
+        let is_rail = |b: Option<RigidBodyHandle>| b.is_some_and(|b| self.rails.contains(&b));
+        if !(is_rail(ctx.rigid_body1) || is_rail(ctx.rigid_body2)) {
+            return false;
+        }
+        let Some(m) = ctx.rigid_mut() else {
+            return true;
+        };
+        let n = *m.normal;
+        if n.y.abs() < self.rail_side_normal_max_y {
+            let flat = Vector::new(n.x, 0.0, n.z);
+            if flat.length() > 1e-3 {
+                *m.normal = flat.normalize();
+            }
+        }
+        true
+    }
 }
 
 impl PhysicsHooks for Hooks<'_> {
     fn modify_solver_contacts(&self, ctx: &mut ContactModificationContext) {
+        if self.rail_side_hit(ctx) {
+            return;
+        }
         let (body1, body2) = (ctx.rigid_body1, ctx.rigid_body2);
         let Some((climber, car_first)) = self.climbers.iter().find_map(|c| {
             if body1 == Some(c.body) {

@@ -384,3 +384,97 @@ fn compliant_corner_and_low_speed_use_have_intact_replayable_outcomes() {
         std::fs::write(path, serde_json::to_string_pretty(&rows).unwrap() + "\n").unwrap();
     }
 }
+
+/// br-bbki.25 (owner playtest 2026-10-17: "there were some issues when landing and colliding which kinda re launched
+/// the car into the air in a strange way"). A car meets the yard's rail at an angle half a metre from its face: on its
+/// wheels, or still in the air at a landing's height and sink rate (the hull's underside near the beam's top edge). It
+/// must be stopped or turned along the rail, not thrown: from its first touch of the rail or the ground it never climbs
+/// faster than `CLIMB_MPS` or rises more than `RISE_M` above where it was then. Before the fix
+/// (`crate::climb::Hooks::rail_side_hit`) the rigid beam acted as a ramp under the hull's sloped nose: 24 of these 100
+/// contacts threw the car, up to 13.7 m/s (0.45 m up at 60 degrees and 40 m/s) and nearly 2 s in the air.
+#[test]
+fn a_car_driven_or_landed_into_a_rail_is_turned_not_thrown_into_the_air() {
+    const CLIMB_MPS: f32 = 3.5;
+    const RISE_M: f32 = 1.0;
+    let map = yard();
+    let mut misses = Vec::new();
+    // (height above its ride height m, sink m/s) as it meets the beam: driving in, and landing into it.
+    for (drop, sink) in [
+        (0.0f32, 0.0f32),
+        (0.2, -2.0),
+        (0.45, 0.0),
+        (0.45, -3.0),
+        (0.8, -4.0),
+    ] {
+        for speed in [12.0f32, 22.0, 32.0, 40.0] {
+            for degrees in [10.0f32, 30.0, 45.0, 60.0, 75.0] {
+                let mut sim = Sim::new(&map, &registry(), 77, VehicleProfile::cruz());
+                let car = sim.spawn_car(SpawnPose {
+                    x: -60.0,
+                    y: 0.1,
+                    z: -20.0,
+                    heading: 0.0,
+                });
+                for _ in 0..240 {
+                    sim.step();
+                }
+                let a = degrees.to_radians();
+                let (vx, vz) = (speed * a.cos(), speed * a.sin());
+                // Its hull's leading corner half a metre from the rail's face (z = -20, 0.15 m half-thickness).
+                let half = VehicleProfile::cruz().chassis_half();
+                let reach = half[0] * a.cos() + half[2] * a.sin();
+                sim.place_car(
+                    car,
+                    SpawnPose {
+                        x: -40.0,
+                        y: 0.05 + drop,
+                        z: -20.0 - 0.15 - reach - 0.5,
+                        heading: (90.0 - degrees).to_radians(),
+                    },
+                    0.0,
+                    [vx, sink, vz],
+                );
+                // From its first touch of the rail or the ground: how fast it climbs and how high it gets above where
+                // it was then (a car perched on the beam's top isn't thrown; one sent 2 m up is).
+                let (mut engaged, mut climb, mut from_y, mut rise) =
+                    (false, 0.0f32, 0.0f32, 0.0f32);
+                let mut hit = 0.0f32;
+                for _ in 0..(2 * 120) {
+                    sim.step();
+                    let st = sim.car_state(car).unwrap();
+                    hit = hit.max(sim.rail_states()[0].displacement_m.abs());
+                    if !engaged && (st.wheels_in_contact > 0 || hit > 0.01) {
+                        engaged = true;
+                        from_y = st.position[1];
+                    }
+                    if engaged {
+                        climb = climb.max(st.linvel[1]);
+                        rise = rise.max(st.position[1] - from_y);
+                    }
+                }
+                eprintln!(
+                    "up {drop} sink {sink:>4} {speed:>4} m/s {degrees:>4} deg: climb {climb:.2} m/s, rise {rise:.2} m, rail pushed {hit:.2} m"
+                );
+                assert!(hit > 0.0 || degrees < 20.0, "the car reached the rail");
+                if climb > CLIMB_MPS || rise > RISE_M {
+                    misses.push(format!(
+                        "up {drop} sink {sink}, {speed} m/s at {degrees} deg: climbed {climb:.2} m/s, rose {rise:.2} m"
+                    ));
+                }
+                if (drop, sink, speed, degrees) == (0.45, 0.0, 40.0, 60.0) {
+                    // The worst case before the fix replays bit for bit from its journal.
+                    let journal = Journal::from_bytes(&sim.journal().to_bytes()).unwrap();
+                    let replay = Sim::replay(
+                        &map,
+                        &registry(),
+                        VehicleProfile::cruz(),
+                        &journal,
+                        sim.tick(),
+                    );
+                    assert_eq!(replay.state_hash(), sim.state_hash());
+                }
+            }
+        }
+    }
+    assert!(misses.is_empty(), "{misses:#?}");
+}

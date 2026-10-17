@@ -2600,7 +2600,9 @@ impl Sim {
         self.pre_step.capture(&self.world.bodies);
         // P1-FL12: cars whose nose climbs a bank this step (`crate::climb`); the belt's work is authorised below.
         let climbers = self.climbers();
-        if climbers.is_empty() {
+        // Guard rails' side hits go through the same hook (`crate::climb::Hooks::rail_side_hit`, br-bbki.25).
+        let rail_bodies: Vec<RigidBodyHandle> = self.rails.iter().map(|r| r.body).collect();
+        if climbers.is_empty() && rail_bodies.is_empty() {
             self.world.step();
         } else {
             let g = self.world.gravity;
@@ -2618,6 +2620,8 @@ impl Sim {
                     climbers: &climbers,
                     wall_normal_y: WALL_NORMAL_Y,
                     ground: GROUP_TERRAIN | GROUP_WORLD,
+                    rails: &rail_bodies,
+                    rail_side_normal_max_y: self.rails.first().map_or(1.0, |r| r.side_normal_max_y),
                 },
                 &(),
             );

@@ -22,10 +22,19 @@ struct Flight {
     max_up_after: f32,
     air_after_ticks: u32,
     longest_air_after: u32,
+    /// How the landing was judged (R16), if it was.
+    tier: Option<jj_sim::air::LandingTier>,
+    /// Highest the centre went above where it touched down (m).
+    rise_after: f32,
 }
 
 /// Flies the neutral run: full throttle to the lip (tick 66), then nothing; `parked` puts a second car at a spot.
 fn fly(parked: Option<[f32; 3]>) -> Flight {
+    fly_with(parked, (0, 0))
+}
+
+/// As [`fly`], holding `air` (throttle, brake) from the lip on: throttle raises the nose, brake lowers it (br-bbki.24).
+fn fly_with(parked: Option<[f32; 3]>, air: (i16, i16)) -> Flight {
     let bytes = std::fs::read(root().join("maps/lab/canyon-leap.json")).unwrap();
     let map = load_json(&bytes, &jj_procgen::registry()).expect("the lab scene loads");
     let mut sim = Sim::new(&map, &jj_procgen::registry(), 1, VehicleProfile::cruz());
@@ -78,19 +87,36 @@ fn fly(parked: Option<[f32; 3]>) -> Flight {
         max_up_after: 0.0,
         air_after_ticks: 0,
         longest_air_after: 0,
+        tier: None,
+        rise_after: 0.0,
     };
+    let seen = sim.race().events().len();
     let (mut flying, mut was_air, mut run) = (false, false, 0u32);
     for t in 0..(5 * TICK_HZ as u64) {
-        let throttle = if t < 66 { i16::MAX } else { 0 };
+        let (throttle, brake) = if t < 66 { (i16::MAX, 0) } else { air };
         sim.set_input(
             car,
             DriveInput {
                 throttle,
+                brake,
                 ..Default::default()
             },
         );
         sim.step();
         let st = sim.car_state(car).unwrap();
+        if std::env::var_os("JJ_TRACE").is_some() && (200..420).contains(&t) {
+            eprintln!(
+                "  t {t} y {:.2} vy {:.2} upY {:.2} w [{:.1} {:.1} {:.1}] wheels {} fwd {:.1}",
+                st.position[1],
+                st.linvel[1],
+                st.up_y,
+                st.angvel[0],
+                st.angvel[1],
+                st.angvel[2],
+                st.wheels_in_contact,
+                st.forward_speed
+            );
+        }
         let air = st.wheels_in_contact == 0;
         if t > 40 && air {
             flying = true;
@@ -98,10 +124,12 @@ fn fly(parked: Option<[f32; 3]>) -> Flight {
         if flying && !air && out.touchdown.is_none() {
             out.touchdown = Some((st.position, t));
         }
-        if let Some((_, at)) = out.touchdown
+        if let Some((at_pos, at)) = out.touchdown
             && t > at
+            && t <= at + u64::from(TICK_HZ) * 3 / 2
         {
             out.max_up_after = out.max_up_after.max(st.linvel[1]);
+            out.rise_after = out.rise_after.max(st.position[1] - at_pos[1]);
             if air {
                 out.air_after_ticks += 1;
                 run += 1;
@@ -113,7 +141,44 @@ fn fly(parked: Option<[f32; 3]>) -> Flight {
         was_air = air;
     }
     let _ = (was_air, CarId(0));
+    out.tier = sim.race().events()[seen..]
+        .iter()
+        .find_map(|(_, e)| match e {
+            jj_sim::race::Event::Landed { car: c, tier, .. } if *c == car.0 => Some(*tier),
+            _ => None,
+        });
     out
+}
+
+/// The crash path (R16): braking through the flight noses the car past `crashDeg`, so it lands nose first and is righted
+/// by the crash torque. Righting must put it back on its wheels, not throw it: the owner's "re launched the car into the
+/// air in a strange way" (br-bbki.25).
+#[test]
+fn a_crash_landing_is_righted_without_relaunching_the_car() {
+    for air in [
+        (0, i16::MAX / 2),
+        (0, i16::MAX),
+        (i16::MAX, 0),
+        (i16::MAX / 2, 0),
+    ] {
+        let f = fly_with(None, air);
+        eprintln!(
+            "air (throttle, brake) {air:?}: tier {:?}, touchdown {:?}, rise after {:.2} m, max up after {:.2} m/s, air after {} ticks (longest {})",
+            f.tier,
+            f.touchdown,
+            f.rise_after,
+            f.max_up_after,
+            f.air_after_ticks,
+            f.longest_air_after
+        );
+        assert!(
+            f.max_up_after < RELAUNCH_MPS && f.longest_air_after < TICK_HZ / 4,
+            "{air:?}: {:?} landing rose at {:.2} m/s and flew {} ticks after touchdown",
+            f.tier,
+            f.max_up_after,
+            f.longest_air_after
+        );
+    }
 }
 
 #[test]

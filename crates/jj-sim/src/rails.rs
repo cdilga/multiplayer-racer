@@ -21,6 +21,9 @@ pub struct RailProfile {
     pub friction: f32,
     pub restitution: f32,
     pub end_radius_m: f32,
+    /// A contact with the beam whose normal's |y| is below this is a side hit: the beam pushes only across, never up
+    /// (`crate::climb::Hooks`). Above it, something is resting on the beam's top.
+    pub side_normal_max_y: f32,
 }
 
 impl RailProfile {
@@ -46,6 +49,7 @@ impl RailProfile {
             || !self.restitution.is_finite()
             || !(0.0..=1.0).contains(&self.restitution)
             || self.solver_iterations == 0
+            || !(self.side_normal_max_y > 0.0 && self.side_normal_max_y < 1.0)
         {
             return Err(
                 "rail profile needs finite physical coefficients and positive mass, spring, damping and travel",
@@ -82,6 +86,8 @@ pub(crate) struct Rail {
     stiffness: f32,
     travel: f32,
     half_length: f32,
+    /// `RailProfile::side_normal_max_y`, for the contact hook.
+    pub side_normal_max_y: f32,
 }
 
 impl Rail {
@@ -120,7 +126,9 @@ impl Rail {
                 .mass(mass)
                 .friction(p.friction)
                 .friction_combine_rule(CoefficientCombineRule::Min)
-                .restitution(p.restitution),
+                .restitution(p.restitution)
+                // Side hits are laid flat by `crate::climb::Hooks` (br-bbki.25).
+                .active_hooks(ActiveHooks::MODIFY_SOLVER_CONTACTS),
             Some(body),
         );
         world.impulse_joints.insert(
@@ -142,6 +150,7 @@ impl Rail {
             stiffness,
             travel: p.travel_m,
             half_length: length / 2.0,
+            side_normal_max_y: p.side_normal_max_y,
         }
     }
 

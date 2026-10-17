@@ -11,5 +11,6 @@
   "joinDistanceM": 0.4,
   "friction": 0.04,
   "restitution": 0.0,
-  "endRadiusM": 0.08
+  "endRadiusM": 0.08,
+  "sideNormalMaxY": 0.95
 }
