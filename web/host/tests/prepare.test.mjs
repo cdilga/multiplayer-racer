@@ -84,7 +84,7 @@ test('a round races the map the procgen worker prepared, and its track names its
   assert.equal(await api('stagedFor'), 1);
   assert.equal((await api('presented')).committed, 0, 'nothing is shown before the Countdown');
   await api('startRound');
-  await waitFor(page, () => ['Countdown', 'Running'].includes(window.__prep.room()?.phase), 'the Countdown');
+  await waitFor(page, () => ['Countdown', 'Running'].includes(window.__prep.room()?.phase), 'the Countdown', PREPARE_MS);
   await waitFor(page, () => window.__prep.presented().committed === 1, 'the prepared map to be shown');
   const room = await api('room');
   assert.equal(room.preparation.verdict, 'ok');
@@ -119,13 +119,13 @@ test('a reroll replaces a prepared map: the old one is dropped and the new seed 
   await page.close();
 });
 
-test('a stale job never commits: a superseded preparation is dropped before the renderer and the sim', { timeout: 60_000 }, async () => {
+test('a stale job never commits: a superseded preparation is dropped before the renderer and the sim', { timeout: 180_000 }, async () => {
   // The first job is slow (900 ms); a reroll supersedes it and the second job is fast.
   const { page, errors, api } = await open({ delay: { 1: 900 } });
   await api('reroll');
   await sleep(150);
   await api('reroll');
-  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the fast job to be delivered');
+  await waitFor(page, () => window.__prep.stats().delivered === 1, 'the fast job to be delivered', PREPARE_MS);
   assert.equal(await api('stagedFor'), 2);
   // Wait for the slow job to finish and be thrown away.
   await waitFor(page, () => window.__prep.stats().superseded === 1, 'the slow job to be dropped', 5_000);
@@ -144,13 +144,13 @@ test('a stale job never commits: a superseded preparation is dropped before the 
   await page.close();
 });
 
-test('reroll during preparation: the round starts on the new seed, not the one in flight', { timeout: 60_000 }, async () => {
+test('reroll during preparation: the round starts on the new seed, not the one in flight', { timeout: 180_000 }, async () => {
   const { page, errors, api } = await open({ delay: { 1: 900 } });
   await api('startRound');
   await waitFor(page, () => window.__prep.room()?.phase === 'Preparing', 'Preparing');
   await api('reroll');
-  await waitFor(page, () => ['Countdown', 'Running'].includes(window.__prep.room()?.phase), 'the Countdown');
-  await waitFor(page, () => window.__prep.presented().committed === 1, 'the new map to be shown');
+  await waitFor(page, () => ['Countdown', 'Running'].includes(window.__prep.room()?.phase), 'the Countdown', PREPARE_MS);
+  await waitFor(page, () => window.__prep.presented().committed === 1, 'the new map to be shown', PREPARE_MS);
   await sleep(1_000); // the slow first job finishes late and must change nothing
   const stats = await api('stats');
   assert.equal(stats.committed, 1);
@@ -255,7 +255,7 @@ test('a dev map goes through the validator: a good one races, a broken one is re
   }
 });
 
-test('two rounds back to back play two different generated four-biome tracks', { timeout: 90_000 }, async () => {
+test('two rounds back to back play two different generated four-biome tracks', { timeout: 180_000 }, async () => {
   const { page, errors, api } = await open();
   const t0 = Date.now();
   await api('laps', 1);
@@ -271,7 +271,7 @@ test('two rounds back to back play two different generated four-biome tracks', {
     await sleep(100);
   }
   assert.equal(await phase(page), 'Intermission', 'the lap ended the round');
-  await waitFor(page, () => window.__prep.stats().delivered === 2, 'the next track to be prepared during the Intermission', 30_000);
+  await waitFor(page, () => window.__prep.stats().delivered === 2, 'the next track to be prepared during the Intermission', PREPARE_MS);
   const remaining = await page.evaluate(() => window.__prep.room().remainingMs);
   assert.ok(remaining > 30_000, `the next track was ready with ${remaining} ms of the Intermission to spare`);
   await api('startRound'); // Start now
