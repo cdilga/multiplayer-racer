@@ -6,11 +6,11 @@ for what W01 carries.
 
 ## Looked at
 
-- `P1-W05/phone-item-844x390.png`: the phone's item chip reads BOOMERANG +1 with its gesture (FLICK up THROW, down BACK):
+- `phone-item-844x390.png`: the phone's item chip reads BOOMERANG +1 with its gesture (FLICK up THROW, down BACK):
   the front item from W01's `HostCmd::Inventory`, with the count. It sits in the header beside the connection chip, clear
   of the Ready/Identify buttons and the sticks.
-- `P1-W05/phone-item-390x844.png`: the same chip in portrait, readable, not clipped.
-- `P1-W05/picked-up.png`, `race-stations.png`, `boomerang-in-flight.png`: the TV through a pickup and a throw (W04/W02's
+- `phone-item-390x844.png`: the same chip in portrait, readable, not clipped.
+- `picked-up.png`, `race-stations.png`, `boomerang-in-flight.png`: the TV through a pickup and a throw (W04/W02's
   drawing of W01's item events).
 
 ## Defects found and fixed
