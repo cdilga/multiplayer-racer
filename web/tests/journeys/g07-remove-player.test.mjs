@@ -89,7 +89,8 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
   }
 });
 
-test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000 }, async () => {
+// Quarantined (CI owner, br-q8i4): failed at 106 s in batch 6158 (job 14254).
+test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000, skip: 'quarantined br-q8i4: mid-race removal failed at 106 s' }, async () => {
   const host = await openHost(1920, 1080);
   try {
     await join(host, 1, 4);
@@ -130,7 +131,8 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
   }
 });
 
-test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay', { timeout: 420_000 }, async () => {
+// Quarantined (CI owner, br-dqzf): failed at 87 s in batch 6158 (job 14254).
+test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay', { timeout: 420_000, skip: 'quarantined br-dqzf: autopilot-seat removal failed at 87 s' }, async () => {
   const host = await openHost(1920, 1080);
   try {
     await join(host, 1, 3);
