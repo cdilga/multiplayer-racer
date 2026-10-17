@@ -259,7 +259,12 @@ test('F12: a scripted two-round session records, survives a worker fault, never 
   assert.equal(report.ok, true, JSON.stringify(report));
   const roundWorlds = report.worlds.filter((w) => w.round !== null);
   assert.ok(roundWorlds.length >= 2, `rounds in the session: ${JSON.stringify(report.worlds.map((w) => [w.index, w.label, w.ticks]))}`);
-  assert.equal(roundWorlds.find((w) => w.round === 1).endHash, r1.stateHash, 'round 1 replays to its end-state hash');
+  // r1 is round 1's state at the checkpoint the test took in the Intermission; the world runs on after it until round 2
+  // replaces it (a GPU host runs many more ticks there than SwiftShader's), so judge the checkpoint at r1's tick, not
+  // the world's last tick (br-2wgv).
+  const r1Check = roundWorlds.find((w) => w.round === 1).checkpoints.find((c) => c.tick === r1.tick);
+  assert.ok(r1Check, `round 1 replays through the checkpoint at tick ${r1.tick}: ${JSON.stringify(roundWorlds.find((w) => w.round === 1).checkpoints)}`);
+  assert.equal(r1Check.actual, r1.stateHash, 'round 1 replays to its state at that checkpoint');
   assert.equal(report.worlds.at(-1).endHash, r2.stateHash, 'round 2 replays to its end-state hash');
   for (const w of report.worlds) assert.ok(w.checkpoints.every((c) => c.ok));
 
