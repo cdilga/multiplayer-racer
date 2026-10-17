@@ -24,7 +24,7 @@ after(async () => {
 });
 
 for (const [engine, launcher] of [['chromium', chromium], ['webkit', webkit]]) {
-  test(`${engine}: the Settings sheet is opaque over the Lobby at every phone size, and the toolbar sits on one row`, { timeout: 180_000 }, async () => {
+  test(`${engine}: the Settings sheet is opaque over the Lobby at every phone size, and the toolbar's icons share one row`, { timeout: 180_000 }, async () => {
     const browser = await launcher.launch(engine === 'chromium' ? { args: chromiumArgs } : {});
     try {
       for (const [width, height] of SIZES) {
