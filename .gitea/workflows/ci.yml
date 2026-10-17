@@ -87,16 +87,23 @@ jobs:
 
   # The tests of the selected crates and everything that depends on them, at opt-level 1 (debug assertions and overflow
   # checks stay on; the sim and procgen banks run ~8x faster than unoptimised), every test binary in parallel.
+  # Three nextest hash partitions on the rust runners (br-15gd): one job ran ~12000 test-seconds in 41 min (CI 5544).
+  # The last partition also runs the doc tests, the `testing` build and the WASM checks (scripts/ci/rust-test.sh).
   rust-test:
     runs-on: rust
     container:
       image: jj-ci:d161a07c0df4
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3]
     env:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers-o1
       CARGO_PROFILE_DEV_OPT_LEVEL: "1"
       CARGO_PROFILE_TEST_OPT_LEVEL: "1"
       JJ_COTURN_REQUIRED: "1"
+      JJ_PARTITION: ${{ matrix.part }}/3
     steps:
       - uses: actions/checkout@v4
       - name: Select (scripts/ci/plan.mjs)

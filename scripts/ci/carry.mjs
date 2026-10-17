@@ -139,10 +139,13 @@ async function unproven(run, repo, get) {
   for (const j of failed) {
     if (j.name === 'rust-lint') out.lint = true;
     else if (j.name === 'image') out.image = true;
-    else if (j.name === 'rust-test') {
+    else if (/^rust-test( \(\d+\))?$/.test(j.name)) {
+      // rust-test runs as nextest partitions (`rust-test (k)`): what any of them left unproven carries.
       const c = rustUnproven(await log(j));
       const all = plan.crates === 'all' ? 'all' : plan.crates.split(' ').filter(Boolean);
-      out.crates = c === 'all' ? all : c;
+      const add = c === 'all' ? all : c;
+      if (add === 'all' || out.crates === 'all') out.crates = 'all';
+      else out.crates = [...new Set([...(Array.isArray(out.crates) ? out.crates : []), ...add])].sort();
     } else if (/^browser \(\d+\)$/.test(j.name)) {
       const k = /\((\d+)\)/.exec(j.name)[1];
       const pass = passedTargets(await log(j));

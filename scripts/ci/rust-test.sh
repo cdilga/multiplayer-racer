@@ -5,7 +5,7 @@
 #   - jj-wasm-host's `testing` feature build, and the jj-map/jj-procgen WASM parity in Node, when selected.
 # The job sets the opt level (CARGO_PROFILE_DEV_OPT_LEVEL); debug assertions and overflow checks stay on.
 #
-# Usage: scripts/ci/rust-test.sh all | <crate>...
+# Usage: scripts/ci/rust-test.sh all | <crate>...    (env JJ_PARTITION=k/n: one nextest partition, as CI's matrix runs it)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 [[ $# -gt 0 ]] || { echo "usage: rust-test.sh all | <crate>..." >&2; exit 2; }
@@ -35,8 +35,16 @@ if [[ $mem =~ ^[0-9]+$ && $mem -lt $((12 * 1024 * 1024 * 1024)) && -z ${CARGO_BU
     echo "rust-test: job memory $((mem / 1024 / 1024)) MiB: CARGO_BUILD_JOBS=4"
 fi
 t() { local s=$SECONDS rc=0; "$@" || rc=$?; echo "rust-test: $((SECONDS - s))s exit $rc  $*"; return $rc; }
+# JJ_PARTITION=k/n (the job's matrix): this job runs nextest's k-th hash partition of the selection's tests, and the
+# last partition also runs the doc tests, the `testing` build and the WASM checks. Unset: everything (local runs).
+part=() last=1
+if [[ -n ${JJ_PARTITION:-} ]]; then
+    part=(--partition "hash:$JJ_PARTITION" --no-tests=pass)
+    [[ ${JJ_PARTITION%/*} == "${JJ_PARTITION#*/}" ]] || last=0
+fi
 rc=0
-t cargo nextest run --locked --no-fail-fast "${sel[@]}" || rc=1
+t cargo nextest run --locked --no-fail-fast ${part[@]+"${part[@]}"} "${sel[@]}" || rc=1
+if [[ $last == 0 ]]; then exit $rc; fi
 if [[ ${#doc[@]} -gt 0 ]]; then t cargo test --locked -q --doc "${doc[@]}" || rc=1; fi
 if has jj-wasm-host; then t cargo nextest run --locked --no-fail-fast -p jj-wasm-host --features testing || rc=1; fi
 wasm=()
