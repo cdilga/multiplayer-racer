@@ -636,3 +636,49 @@ fn diag_eight_spans() {
         }
     }
 }
+
+/// The WASM regression guard's sample (`wasm_parity.rs`: 24 race seeds) measured natively: draws per seed (deterministic,
+/// so this says before a WASM run whether a change keeps the guard) and wall time (br-cxqk).
+#[test]
+#[ignore]
+fn diag_prepare_cost() {
+    let mut ms = Vec::new();
+    let counts: Vec<usize> = (0..24u64)
+        .map(|seed| {
+            let t = std::time::Instant::now();
+            let n = jj_procgen::playtest::prepare(seed).attempts.len();
+            ms.push(t.elapsed().as_millis());
+            n
+        })
+        .collect();
+    let mean = counts.iter().sum::<usize>() as f64 / counts.len() as f64;
+    eprintln!(
+        "draws worst {}, mean {mean:.2}: {counts:?}",
+        counts.iter().max().unwrap()
+    );
+    eprintln!(
+        "native ms worst {}, mean {:.0}: {ms:?}",
+        ms.iter().max().unwrap(),
+        ms.iter().sum::<u128>() as f64 / ms.len() as f64
+    );
+}
+
+/// Why the guard sample's draws are rejected (br-cxqk): each rejection's leading words, counted over 24 race seeds.
+#[test]
+#[ignore]
+fn diag_prepare_rejects() {
+    let mut why: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    for seed in 0..24u64 {
+        for a in jj_procgen::playtest::prepare(seed).attempts {
+            for r in a.rejected {
+                let key: String = r.chars().take(70).collect();
+                *why.entry(key).or_default() += 1;
+            }
+        }
+    }
+    let mut v: Vec<_> = why.into_iter().collect();
+    v.sort_by_key(|x| std::cmp::Reverse(x.1));
+    for (k, n) in v {
+        eprintln!("{n:4}  {k}");
+    }
+}

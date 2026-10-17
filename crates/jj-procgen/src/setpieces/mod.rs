@@ -1067,34 +1067,60 @@ fn stamp(
     // The kicker's and the landing's flat width (the road less its side slopes).
     let land_w = 2.0 * (hw - jj_map::jump::EDGE_SLOPE_M);
     let bed = hw + 1.5 * sp;
+    // Each cell's nearest point on the span's polyline: the segment with the least distance, the lowest index on a tie (as
+    // a scan of every segment in order finds it). The previous cell's segment goes first, so the best is near from the
+    // start, and a segment whose bounding box is already farther than the best is skipped: its distance can't be smaller,
+    // nor equal beyond rounding, so the result is the full scan's, bit for bit (br-cxqk: the full scan for every cell
+    // was most of a draw's time).
+    let segs = span.len() - 1;
+    let boxes: Vec<[f64; 4]> = (0..segs)
+        .map(|k| {
+            let (a, b) = (line.pts[span[k]], line.pts[span[k + 1]]);
+            [a.0.min(b.0), a.0.max(b.0), a.1.min(b.1), a.1.max(b.1)]
+        })
+        .collect();
+    let seg = |k: usize, p: (f64, f64)| {
+        let (a, b) = (line.pts[span[k]], line.pts[span[k + 1]]);
+        let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+        let l2 = (dx * dx + dz * dz).max(1e-12);
+        let tt = (((p.0 - a.0) * dx + (p.1 - a.1) * dz) / l2).clamp(0.0, 1.0);
+        let (qx, qz) = (a.0 + tt * dx, a.1 + tt * dz);
+        (libm::hypot(p.0 - qx, p.1 - qz), tt, dx, dz, l2, a)
+    };
+    let mut k0 = 0usize;
     for r in r0..=r1 {
         for c in c0..=c1 {
             let p = (ox + c as f64 * sp, oz + r as f64 * sp);
             // Nearest point on the span's polyline: u and lat (left positive).
-            let (mut best, mut u, mut lat) = (f64::INFINITY, 0.0, 0.0);
-            for k in 0..span.len() - 1 {
-                let (a, b) = (line.pts[span[k]], line.pts[span[k + 1]]);
-                let (dx, dz) = (b.0 - a.0, b.1 - a.1);
-                let l2 = (dx * dx + dz * dz).max(1e-12);
-                let tt = (((p.0 - a.0) * dx + (p.1 - a.1) * dz) / l2).clamp(0.0, 1.0);
-                let (qx, qz) = (a.0 + tt * dx, a.1 + tt * dz);
-                let dd = libm::hypot(p.0 - qx, p.1 - qz);
-                if dd < best {
-                    best = dd;
-                    let l = libm::sqrt(l2);
-                    u = us[k] + tt * (us[k + 1] - us[k]);
-                    lat = (-(p.0 - a.0) * dz + (p.1 - a.1) * dx) / l;
+            let mut best = (seg(k0, p).0, k0);
+            for (k, bx) in boxes.iter().enumerate() {
+                if k == k0 {
+                    continue;
+                }
+                let ex = (bx[0] - p.0).max(p.0 - bx[1]).max(0.0);
+                let ez = (bx[2] - p.1).max(p.1 - bx[3]).max(0.0);
+                if ex * ex + ez * ez > best.0 * best.0 + 1e-6 {
+                    continue;
+                }
+                let dd = seg(k, p).0;
+                if dd < best.0 || dd == best.0 && k < best.1 {
+                    best = (dd, k);
                 }
             }
-            if best > reach {
+            let (dist, kb) = best;
+            k0 = kb;
+            if dist > reach {
                 continue;
             }
+            let (_, tt, dx, dz, l2, a) = seg(kb, p);
+            let best = dist;
+            let u = us[kb] + tt * (us[kb + 1] - us[kb]);
+            let lat = (-(p.0 - a.0) * dz + (p.1 - a.1) * dx) / libm::sqrt(l2);
             // Leave the ground of any other part of the road alone.
-            let other = others
+            if others
                 .iter()
-                .map(|q| libm::hypot(p.0 - q.0, p.1 - q.1))
-                .fold(f64::INFINITY, f64::min);
-            if other < best + 4.0 {
+                .any(|q| libm::hypot(p.0 - q.0, p.1 - q.1) < best + 4.0)
+            {
                 continue;
             }
             let at = r * cols + c;
