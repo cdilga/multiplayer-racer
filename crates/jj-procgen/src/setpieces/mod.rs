@@ -482,7 +482,14 @@ struct Line {
     pts: Vec<(f64, f64)>,
     s: Vec<f64>,
     total: f64,
+    /// The even route points by `GRID_M` square (origin `grid_o`, `grid_w` columns), for [`Line::even_near`].
+    grid: Vec<Vec<usize>>,
+    grid_o: (f64, f64),
+    grid_w: usize,
 }
+
+/// The cell of [`Line`]'s point index (m).
+const GRID_M: f64 = 32.0;
 
 impl Line {
     fn new(map: &Map) -> Self {
@@ -493,7 +500,50 @@ impl Line {
             .map(|q| (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0))
             .collect();
         let (s, total) = arc_lengths(&pts);
-        Self { pts, s, total }
+        let x0 = pts.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+        let z0 = pts.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+        let x1 = pts.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
+        let z1 = pts.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max);
+        let grid_w = (libm::floor((x1 - x0) / GRID_M) as usize) + 1;
+        let grid_h = (libm::floor((z1 - z0) / GRID_M) as usize) + 1;
+        let mut grid = vec![Vec::new(); grid_w * grid_h];
+        for j in (0..pts.len()).step_by(2) {
+            let c = libm::floor((pts[j].0 - x0) / GRID_M) as usize;
+            let r = libm::floor((pts[j].1 - z0) / GRID_M) as usize;
+            grid[r * grid_w + c].push(j);
+        }
+        Self {
+            pts,
+            s,
+            total,
+            grid,
+            grid_o: (x0, z0),
+            grid_w,
+        }
+    }
+    /// The even route points (`(0..n).step_by(2)`) in the cells that hold every point within `r` of `p`, in no set
+    /// order: a superset of those within `r`.
+    fn even_near(&self, p: (f64, f64), r: f64) -> impl Iterator<Item = usize> + '_ {
+        let rows = self.grid.len() / self.grid_w;
+        let cell = |v: f64, o: f64, max: usize| {
+            let k = libm::floor((v - o) / GRID_M);
+            if k < 0.0 {
+                0
+            } else {
+                (k as usize).min(max - 1)
+            }
+        };
+        let (c0, c1) = (
+            cell(p.0 - r, self.grid_o.0, self.grid_w),
+            cell(p.0 + r, self.grid_o.0, self.grid_w),
+        );
+        let (r0, r1) = (
+            cell(p.1 - r, self.grid_o.1, rows),
+            cell(p.1 + r, self.grid_o.1, rows),
+        );
+        (r0..=r1).flat_map(move |row| {
+            (c0..=c1).flat_map(move |c| self.grid[row * self.grid_w + c].iter().copied())
+        })
     }
     fn n(&self) -> usize {
         self.pts.len()
@@ -865,19 +915,18 @@ fn site_ok(
     let span: Vec<usize> = span_indices(line, from, to);
     let len = line.du(from, to);
     let hw = f64::from(map.route.points[base].width) / 2000.0;
-    let others: Vec<(f64, f64)> = (0..line.n())
-        .step_by(2)
-        .filter(|&j| {
-            !span_contains(line, from, to, j)
-                && libm::fabs(line.du(from, j)) > 40.0
-                && libm::fabs(line.du(to, j)) > 40.0
-        })
-        .map(|j| line.pts[j])
-        .collect();
+    // Every even route point outside the span and 40 m clear of its ends (found through the line's grid, br-cxqk: a
+    // scan of the whole lap per sample was a fifth of placement).
+    let other = |j: usize| {
+        !span_contains(line, from, to, j)
+            && libm::fabs(line.du(from, j)) > 40.0
+            && libm::fabs(line.du(to, j)) > 40.0
+    };
     let clear = |p: (f64, f64), r: f64| {
-        others
-            .iter()
-            .all(|q| libm::hypot(p.0 - q.0, p.1 - q.1) >= r)
+        line.even_near(p, r).all(|j| {
+            let q = line.pts[j];
+            !other(j) || libm::hypot(p.0 - q.0, p.1 - q.1) >= r
+        })
     };
     let side = d.side;
     for &k in span.iter().step_by(2) {
