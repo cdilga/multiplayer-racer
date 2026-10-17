@@ -295,6 +295,11 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         generator: Option<String>,
         #[serde(default)]
         generator_set: Vec<(String, String)>,
+        /// The air-control and landing data file and its changes (br-bbki.7.1), paths as in that file (`bands.cleanDeg`).
+        #[serde(default)]
+        air_profile: Option<String>,
+        #[serde(default)]
+        air_set: Vec<(String, String)>,
     }
     let raw: Value = serde_json::from_str(&read_text(patch_path)?)
         .map_err(|e| format!("{}: {e}", patch_path.display()))?;
@@ -364,7 +369,28 @@ pub fn tune(patch_path: &Path, check: bool) -> Result<Vec<String>, String> {
         }
         _ => None,
     };
+    let air_write = match (&patch.air_profile, patch.air_set.is_empty()) {
+        (Some(path), false) => {
+            let old = jj_sim::air::AirProfile::from_json(&read_text(Path::new(path))?)
+                .map_err(|e| format!("{path}: {e}"))?;
+            let new = old
+                .with_fields(&patch.air_set)
+                .map_err(|e| format!("{path}: {e}"))?;
+            for (field, raw) in &patch.air_set {
+                changes.push(format!("air {field}: -> {raw}"));
+            }
+            let out = serde_json::to_string_pretty(&new).map_err(|e| e.to_string())? + "\n";
+            Some((path.clone(), out))
+        }
+        (None, false) => {
+            return Err("the patch has air changes but no airProfile file".to_owned());
+        }
+        _ => None,
+    };
     if !check {
+        if let Some((path, out)) = air_write {
+            std::fs::write(&path, out).map_err(|e| format!("{path}: {e}"))?;
+        }
         if let Some((path, out)) = generator_write {
             std::fs::write(&path, out).map_err(|e| format!("{path}: {e}"))?;
         }
@@ -506,6 +532,37 @@ mod tests {
         assert_eq!(after.flick.rim, 0.8);
         assert_eq!(after.flick.cooldown_ms, 500);
         assert_eq!(after.flick.max_angle_deg, 30.0, "the rest is kept");
+    }
+
+    #[test]
+    fn tune_applies_air_profile_changes_and_refuses_invalid_ones_whole() {
+        let (profile, patch) = fixture("air", TUNING_PATCH, json!([]));
+        let air = profile.with_file_name("air.json");
+        std::fs::copy(
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../assets/profiles/air.json"
+            ),
+            &air,
+        )
+        .unwrap();
+        let write = |set: Value| {
+            let body = json!({ "contract": TUNING_PATCH, "profile": profile.to_str().unwrap(),
+                "set": [], "airProfile": air.to_str().unwrap(), "airSet": set });
+            std::fs::write(&patch, body.to_string()).unwrap();
+        };
+        let original = std::fs::read_to_string(&air).unwrap();
+        // A bad band past the crash band is refused, nothing written.
+        write(json!([["bands.badDeg", "60"]]));
+        assert!(tune(&patch, false).is_err());
+        assert_eq!(std::fs::read_to_string(&air).unwrap(), original);
+        write(json!([["pitchRateDps", "140"], ["bands.cleanDeg", "10"]]));
+        assert_eq!(tune(&patch, false).unwrap().len(), 2);
+        let after = jj_sim::air::AirProfile::from_json(&std::fs::read_to_string(&air).unwrap())
+            .expect("the written file validates");
+        assert_eq!(after.pitch_rate_dps, 140.0);
+        assert_eq!(after.bands.clean_deg, 10.0);
+        assert_eq!(after.yaw_rate_dps, 90.0, "the rest is kept");
     }
 
     #[test]

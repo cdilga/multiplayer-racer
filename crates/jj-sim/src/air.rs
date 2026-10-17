@@ -121,6 +121,31 @@ impl AirProfile {
         Ok(p)
     }
 
+    /// The same profile with each `(dotted path, json value)` set (`pitchRateDps`, `bands.cleanDeg`) for the owner tuning
+    /// menu and `jj vehicle tune` (br-bbki.7.1). Refuses an unknown path, a section, `contract`/`what`, a value of the wrong
+    /// type or one [`AirProfile::validate`] rejects; the original is untouched.
+    pub fn with_fields(&self, set: &[(String, String)]) -> Result<Self, String> {
+        let mut v = serde_json::to_value(self).map_err(|e| e.to_string())?;
+        for (path, raw) in set {
+            let value: serde_json::Value =
+                serde_json::from_str(raw).map_err(|e| format!("{path}: {e}"))?;
+            let mut slot = &mut v;
+            for part in path.split('.') {
+                slot = slot
+                    .get_mut(part)
+                    .ok_or_else(|| format!("no air field {path:?}"))?;
+            }
+            if slot.is_object() || path == "contract" || path == "what" {
+                return Err(format!("{path}: not a tunable value"));
+            }
+            *slot = value;
+        }
+        let p: Self = serde_json::from_value(v)
+            .map_err(|e| format!("air profile: {}", e.to_string().replace('\n', " ")))?;
+        p.validate()?;
+        Ok(p)
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.contract != CONTRACT {
             return Err(format!("air profile contract must be {CONTRACT}"));
@@ -509,6 +534,31 @@ mod tests {
     use jj_types::axis::quantise_axis;
 
     const HZ: u32 = 120;
+
+    #[test]
+    fn with_fields_sets_leaves_and_refuses_the_rest() {
+        let p = AirProfile::standard();
+        let set = |f: &str, v: &str| p.with_fields(&[(f.to_owned(), v.to_owned())]);
+        let q = set("pitchRateDps", "140").unwrap();
+        assert_eq!(q.pitch_rate_dps, 140.0);
+        assert_eq!(set("bands.cleanDeg", "10").unwrap().bands.clean_deg, 10.0);
+        assert_eq!(
+            set("latchHeldInput", "false").unwrap().latch_held_input,
+            false
+        );
+        assert_eq!(p, AirProfile::standard(), "the original is untouched");
+        for (f, v) in [
+            ("nope", "1"),
+            ("bands", "1"),
+            ("contract", "\"x\""),
+            ("what", "\"x\""),
+            ("pitchRateDps", "\"fast\""),
+        ] {
+            assert!(set(f, v).is_err(), "{f} = {v} is refused");
+        }
+        // The validator still holds: bands out of order are refused.
+        assert!(set("bands.badDeg", "60").is_err());
+    }
 
     fn input(throttle: f32, steer: f32, brake: f32) -> DriveInput {
         DriveInput {

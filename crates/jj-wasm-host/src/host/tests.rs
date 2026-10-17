@@ -250,6 +250,59 @@ fn a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit() {
     );
 }
 
+/// br-bbki.7.1: an `air.*` tuning change (assets/profiles/air.json) reaches the sim at a tick boundary, the menu reads it
+/// back, a value the air validator refuses changes nothing, and the next round's new world flies with the tuned set.
+#[test]
+fn an_air_profile_change_reaches_the_sim_and_the_next_round() {
+    let tune = |field: &str, value: &str| {
+        MainToSim::Ui {
+            command: CommandId(9),
+            ui: UiCommand::SetTuning {
+                field: field.into(),
+                value: value.into(),
+            },
+        }
+        .encode()
+    };
+    let mut h = driving_host();
+    h.schedule(5, &tune("air.pitchRateDps", "140")).unwrap();
+    h.schedule(6, &tune("air.bands.badDeg", "60")).unwrap();
+    h.stop_at(10);
+    let mut now = 0;
+    while h.tick() < 10 {
+        h.advance(now);
+        now += 16_667;
+    }
+    assert_eq!(
+        h.sim.air_profile().pitch_rate_dps,
+        140.0,
+        "the sim flies with the new value"
+    );
+    assert_eq!(
+        h.sim.air_profile().bands.bad_deg,
+        25.0,
+        "the refused band changed nothing"
+    );
+    let shown: serde_json::Value = serde_json::from_str(&h.tuning_json()).unwrap();
+    assert_eq!(
+        shown["air"]["pitchRateDps"], 140.0,
+        "the menu reads it back"
+    );
+    assert!(
+        shown["error"]
+            .as_str()
+            .unwrap_or("")
+            .starts_with("air.bands.badDeg:"),
+        "a bad value is refused: {shown}"
+    );
+    h.reset_world();
+    assert_eq!(
+        h.sim.air_profile().pitch_rate_dps,
+        140.0,
+        "a new round's world keeps the tuned air"
+    );
+}
+
 /// The owner tuning menu part 2 (br-2sdu.2): an input-profile change is a journalled UI command; the host reads its
 /// seats' sticks with it at once, every connected controller is sent the whole profile, one that joins later is sent it
 /// after its Welcome, a refused value changes nothing, and the same script replays bit for bit.

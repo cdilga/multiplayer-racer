@@ -251,7 +251,7 @@ impl Host {
     }
 
     /// A new sim on the same map and seed: every car, prop and piece of debris from before is gone with it.
-    fn reset_world(&mut self) {
+    pub(super) fn reset_world(&mut self) {
         // The tuned profile (owner tuning menu) carries into every round's new world.
         self.sim = Sim::with_profiles(
             &self.map,
@@ -259,6 +259,7 @@ impl Host {
             self.round.seed,
             self.vehicles.iter().map(|(_, p)| p.clone()).collect(),
         );
+        self.sim.set_air_profile(self.air_profile.clone());
         for input in self.inputs.values_mut() {
             input.car = None;
             input.dropped = false;
@@ -509,10 +510,13 @@ impl Host {
         let input: serde_json::Value =
             serde_json::from_str(&serde_json::to_string(&self.input_profile).unwrap_or_default())
                 .unwrap_or_default();
+        let air: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&self.air_profile).unwrap_or_default())
+                .unwrap_or_default();
         let ids: Vec<&str> = self.vehicles.iter().map(|(id, _)| id.as_str()).collect();
         let tuned = &self.vehicles[self.tuning_vehicle];
         serde_json::json!({
-            "tuning": tuned.1.tuning, "input": input, "error": self.tuning_error,
+            "tuning": tuned.1.tuning, "input": input, "air": air, "error": self.tuning_error,
             "vehicle": tuned.0, "vehicles": ids,
         })
         .to_string()
@@ -564,6 +568,21 @@ impl Host {
                         self.input_profile = p;
                         self.tuning_error = None;
                         self.apply_input_profile();
+                    }
+                    Err(e) => self.tuning_error = Some(format!("{field}: {e}")),
+                }
+                self.session_rev += 1;
+            }
+            // `air.<path>`: the air-control and landing data (br-bbki.7.1), one set for every car, live mid-flight.
+            UiCommand::SetTuning { field, value } if field.starts_with("air.") => {
+                match self
+                    .air_profile
+                    .with_fields(&[(field["air.".len()..].to_owned(), value)])
+                {
+                    Ok(p) => {
+                        self.sim.set_air_profile(p.clone());
+                        self.air_profile = p;
+                        self.tuning_error = None;
                     }
                     Err(e) => self.tuning_error = Some(format!("{field}: {e}")),
                 }

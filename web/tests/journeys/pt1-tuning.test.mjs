@@ -219,6 +219,64 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
   assert.deepEqual(errors, []);
 });
 
+// br-bbki.7.1: the air-control and landing data (assets/profiles/air.json) in the same panel, one set for every car.
+// Mid-race, a car is put 30 m up with the throttle held: it pitches its nose up at the profile's rate. Raising
+// air.pitchRateDps makes the same flight pitch faster at once; a band the air validator refuses is shown and kept out;
+// the export carries the change as airProfile + airSet for `jj vehicle tune`.
+test('?tune: air control values change a flight mid-race; refused values; reset; export', { timeout: 240_000 }, async () => {
+  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  const errors = [];
+  host.on('pageerror', (e) => errors.push(e.message));
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9&tune&map=greybox-loop`);
+  await race(host);
+  await wait(host, () => !!window.__jjTune);
+  await host.locator('.jj-tune-toggle').click();
+  const pitch = host.locator('[data-field="air.pitchRateDps"]');
+  await pitch.waitFor();
+  assert.equal(Number(await pitch.inputValue()), 100, 'the shipped pitch rate');
+  // The same flight each time: car 0 placed 30 m over the flat start straight at 15 m/s, throttle held 1.5 s. The peak
+  // body rate is the air control's pitch (the car has nothing else to turn it).
+  const flight = () => host.evaluate(async () => {
+    const s = window.__jjTest;
+    await s.hold(true);
+    await s.command({ cmd: 'autopilot', on: false });
+    const car = (await s.observe()).cars[0].car;
+    await s.command({ cmd: 'place', car, pose: { x: 0, y: 30, z: -3.5, headingDeg: 90 }, linvel: [15, 0, 0] });
+    await s.step(1);
+    let peak = 0;
+    for (let i = 0; i < 30; i++) {
+      const state = await s.observe();
+      for (const seat of state.host.seats) s.input({ type: 'controller', endpoint: seat.endpoint, frame: { state: { source: seat.source, seq: state.tick + 1, drive: [0, 32767], action: [0, 0] } } });
+      await s.step(6);
+      const c = (await s.observe()).cars.find((x) => x.car === car);
+      peak = Math.max(peak, Math.hypot(...c.angvel));
+    }
+    return peak;
+  });
+  const before = await flight();
+  assert.ok(before > 1, `the held throttle pitches the car in the air (${before.toFixed(2)} rad/s)`);
+  await pitch.fill('250');
+  await pitch.dispatchEvent('change');
+  await host.evaluate(() => window.__jjTest.step(1));
+  await wait(host, () => window.__jjTune.inspect().current['air.pitchRateDps'] === 250, undefined, 5_000);
+  const after = await flight();
+  assert.ok(after > before * 1.6, `a faster pitch rate turns the same flight faster (${before.toFixed(2)} -> ${after.toFixed(2)} rad/s)`);
+  if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-air-1280x720.png` });
+  // A bad band past the crash band is refused: shown, never applied, out of the export.
+  const bad = host.locator('[data-field="air.bands.badDeg"]');
+  await bad.fill('60');
+  await bad.dispatchEvent('change');
+  await host.evaluate(() => window.__jjTest.step(1));
+  await host.locator('[data-tune-error]').getByText('badDeg').waitFor({ timeout: 5000 });
+  await wait(host, () => !('air.bands.badDeg' in window.__jjTune.inspect().changed), undefined, 5000);
+  const patch = (await host.evaluate(() => window.__jjTune.inspect())).patch;
+  assert.deepEqual(patch, { contract: 'jj.tuning-patch.v1', profile: 'assets/profiles/cruz-missile.json', set: [], airProfile: 'assets/profiles/air.json', airSet: [['pitchRateDps', '250']] });
+  await host.locator('[data-reset="air.pitchRateDps"]').click();
+  await host.evaluate(() => window.__jjTest.step(1));
+  await wait(host, () => window.__jjTune.inspect().current['air.pitchRateDps'] === 100, undefined, 5_000);
+  assert.deepEqual(errors, []);
+});
+
 // Part 3 (br-2sdu.3): the generator data in the same panel. Length band and relief are changed, a value the generator's
 // validator refuses is shown and kept out, Regenerate builds the same seed again with them, and the measured track
 // matches; a second Regenerate with the same values builds the identical track (the journalled values replay it).

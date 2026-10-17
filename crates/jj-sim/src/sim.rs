@@ -2191,6 +2191,18 @@ impl Sim {
                     // pinned for the road, and in the air a pinned throttle raises the nose (br-bbki.24).
                     let air_sticks = if car.autopilot.is_some() {
                         (0.0, 0.0)
+                    } else if self.assist_profile.landing_help(car.assist.level) {
+                        // Lots (R125, br-bbki.7.1) pitches a learner's car to the landing: the nose to the road's grade
+                        // where it will come down (~0.6 s ahead), whatever DRIVE y holds (throttle raises the nose).
+                        let v = b.linvel();
+                        let i = car.assist.route_point().unwrap_or(0);
+                        let want = libm::atanf(
+                            self.path
+                                .grade_ahead(i, libm::hypotf(v.x, v.z) * AIR_LOOK_S),
+                        );
+                        let pitch = libm::asinf(fwd.y.clamp(-1.0, 1.0));
+                        let y = (AIR_PITCH_GAIN * (want - pitch)).clamp(-1.0, 1.0);
+                        (y, 0.0)
                     } else {
                         car.air
                             .air_sticks(&self.air_profile, TICK_HZ, crate::air::sticks(input))

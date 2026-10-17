@@ -11,6 +11,9 @@
 // biome's terrain and feature mix, the recipe) as `generator.*` rows. They are not sim values: they take effect when
 // Regenerate builds the current seed again with them, and each regenerate is journalled in `inspect().generatorJournal`
 // (and on the preparer's seeds, with the document used). The export carries them as `generator` + `generatorSet`.
+// br-bbki.7.1 adds the air-control and landing data (assets/profiles/air.json: pitch/yaw rates, controlAfterS, the
+// latch, the landing bands, boost and loss) as `air.*` rows, one set for every car, live mid-flight; the export carries
+// them as `airProfile` + `airSet`.
 import './panel.css';
 import { mountFeelLab } from './lab';
 
@@ -18,7 +21,7 @@ type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 
 export interface TuningClient {
   input(i: { type: 'ui'; ui: `tune:${string}` | `tune-vehicle:${string}` }): void;
-  tuning(): Promise<{ tuning: Record<string, unknown>; input?: Record<string, unknown>; error: string | null; vehicle?: string; vehicles?: string[] }>;
+  tuning(): Promise<{ tuning: Record<string, unknown>; input?: Record<string, unknown>; air?: Record<string, unknown>; error: string | null; vehicle?: string; vehicles?: string[] }>;
 }
 
 /** What the panel needs of round preparation and the generator (absent on pages that have no procgen worker). */
@@ -39,16 +42,20 @@ export interface GeneratorHooks {
 
 const INPUT_FILE = 'assets/profiles/input.json';
 const INPUT = 'input.';
+const AIR = 'air.';
+const AIR_FILE = 'assets/profiles/air.json';
 const GEN = 'generator.';
 const GENERATOR_FILE = 'assets/profiles/generator.json';
-/** The input file's own prose and version are not tunable. */
-const NOT_TUNABLE = new Set(['version', 'what']);
+/** The input and air files' own prose, version and contract are not tunable. */
+const NOT_TUNABLE = new Set(['version', 'what', 'contract']);
+const tunable = (o?: Record<string, unknown>) => Object.fromEntries(Object.entries(o ?? {}).filter(([k]) => !NOT_TUNABLE.has(k))) as Record<string, Json>;
 
-/** The sim's vehicle tuning plus the input profile, as one flat list of leaves (input paths carry the `input.` prefix). */
-function allLeaves(t: { tuning: Record<string, unknown>; input?: Record<string, unknown> }): Array<[string, Json]> {
-  const input = Object.fromEntries(Object.entries(t.input ?? {}).filter(([k]) => !NOT_TUNABLE.has(k)));
-  return [...leaves(t.tuning as Record<string, Json>), ...leaves(input as Record<string, Json>, 'input')];
+/** The sim's vehicle tuning plus the input and air profiles, as one flat list of leaves (`input.` and `air.` prefixes). */
+function allLeaves(t: { tuning: Record<string, unknown>; input?: Record<string, unknown>; air?: Record<string, unknown> }): Array<[string, Json]> {
+  return [...leaves(t.tuning as Record<string, Json>), ...leaves(tunable(t.input), 'input'), ...leaves(tunable(t.air), 'air')];
 }
+/** A row of a shared profile (input, air), not the selected vehicle's. */
+const shared = (path: string) => path.startsWith(INPUT) || path.startsWith(AIR);
 /** Built into a car's body when it spawns: a change shows on the next car (next round or respawn). */
 const AT_SPAWN = new Set(['mass', 'inertia_scale']);
 
@@ -164,7 +171,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     if (built) builtEl.textContent = `built: seed ${built.seed}, ${built.lengthM} m long, ${built.reliefM} m relief`;
     // A refused input value never reaches the controllers: its row goes back to what the host holds, out of the export.
     for (const path of [...changed.keys()]) {
-      if (path.startsWith(INPUT) && t.error?.startsWith(`${path}:`)) {
+      if (shared(path) && t.error?.startsWith(`${path}:`)) {
         changed.delete(path);
         const el = panel.querySelector<HTMLInputElement>(`[data-field="${path}"]`);
         const v = current.get(path);
@@ -307,12 +314,14 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     const all = [...changed].filter(([f]) => !f.startsWith(GEN));
     const generator = genSet();
     const inputs = all.filter(([f]) => f.startsWith(INPUT)).map(([f, v]) => [f.slice(INPUT.length), v]);
+    const air = all.filter(([f]) => f.startsWith(AIR)).map(([f, v]) => [f.slice(AIR.length), v]);
     return {
       contract: 'jj.tuning-patch.v1',
       profile: vsel.file(),
-      set: all.filter(([f]) => !f.startsWith(INPUT)),
+      set: all.filter(([f]) => !shared(f)),
       ...(vsel.others().length ? { otherVehicles: vsel.others() } : {}),
       ...(inputs.length ? { inputProfile: INPUT_FILE, inputSet: inputs } : {}),
+      ...(air.length ? { airProfile: AIR_FILE, airSet: air } : {}),
       ...(generator.length ? { generator: GENERATOR_FILE, generatorSet: generator } : {}),
     };
   };
@@ -337,7 +346,7 @@ function vehicleSelector(o: {
   refresh: () => Promise<void>;
 }): { file(): string; selected(): string; choose(id: string): Promise<void>; others(): Array<{ profile: string; set: Array<[string, string]> }> } {
   let vehicle = o.first.vehicle ?? '';
-  const isVehicleRow = (path: string) => !path.startsWith(INPUT) && !path.startsWith(GEN);
+  const isVehicleRow = (path: string) => !shared(path) && !path.startsWith(GEN);
   const shippedBy = new Map<string, Map<string, Json>>([[vehicle, new Map(leaves(o.first.tuning as Record<string, Json>))]]);
   /** Other vehicles' pending changes, set aside while another vehicle is selected. */
   const aside = new Map<string, Array<[string, string]>>();

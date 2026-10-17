@@ -228,6 +228,9 @@ pub struct Host {
     /// The input profile every seat's sticks are read with: the shipped one until the owner tuning menu changes it
     /// (br-2sdu.2). Held in its wire (fixed-point) form so the host and every controller resolve the same thresholds.
     input_profile: jj_input::InputProfile,
+    /// The air-control and landing data every round's world flies with (R129): the shipped one until the owner tuning
+    /// menu changes it (`air.*`, br-bbki.7.1).
+    air_profile: jj_sim::air::AirProfile,
     session_rev: u32,
     /// The party loop (G01): director, standings, laps, free drive.
     round: round::RoundState,
@@ -366,6 +369,7 @@ impl Host {
             tuning_vehicle: 0,
             tuning_error: None,
             input_profile: jj_input::InputProfile::standard(),
+            air_profile: jj_sim::air::AirProfile::standard(),
             session_rev: 0,
             round: round::RoundState::new(seed),
             #[cfg(feature = "testing")]

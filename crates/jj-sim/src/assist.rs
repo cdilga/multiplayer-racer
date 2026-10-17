@@ -111,6 +111,9 @@ pub struct LevelTuning {
     pub auto_throttle: bool,
     pub wheelie: bool,
     pub flip_instant: bool,
+    /// In the air the car's nose is pitched to the landing's grade, whatever the player's stick (br-bbki.7.1, R125).
+    #[serde(default)]
+    pub landing_help: bool,
 }
 
 /// When the slide catch starts and how hard it counter-steers (P1-FL06).
@@ -324,6 +327,11 @@ impl AssistProfile {
         self.level(level).is_none_or(|l| l.wheelie)
     }
 
+    /// Whether this level pitches the car to the landing in the air (Lots, br-bbki.7.1).
+    pub fn landing_help(&self, level: AssistLevel) -> bool {
+        self.level(level).is_some_and(|l| l.landing_help)
+    }
+
     /// The catch-up scale for a car `gap_m` behind the leader (1.0 at or before `startS`), and the share of the full
     /// effect (0..1) it represents.
     pub fn catch_up_share(&self, gap_m: f32) -> f32 {
@@ -363,6 +371,11 @@ pub struct AssistState {
 }
 
 impl AssistState {
+    /// The route point the line probe last tracked (None until the assist has run).
+    pub fn route_point(&self) -> Option<usize> {
+        self.route_idx
+    }
+
     pub fn set_level(&mut self, level: AssistLevel) {
         if self.level != level {
             *self = Self {

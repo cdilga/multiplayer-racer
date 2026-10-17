@@ -82,6 +82,9 @@ pub struct Fixture {
     /// The autopilot takes a car (`on`) or hands it back (P1-S07).
     #[serde(default)]
     pub autopilot: Vec<AutopilotSpec>,
+    /// A car's learner assist (R125: `Off`, `Some`, `Lots`) from a tick, journaled like the host's `SetAssist`.
+    #[serde(default)]
+    pub assist: Vec<AssistSpec>,
     /// A derby round (P1-S10): the sim's ledger starts at `atTick` and the fixture's director runs the round on the same
     /// game-time clock (`limitMs`, 3 minutes by default), so `expect` can read `derbyPoints`, `derbyRank`, `derbyTimeLeftS`
     /// and `roundOver`.
@@ -258,6 +261,15 @@ pub struct AutopilotSpec {
     pub tick: u64,
     pub car: u32,
     pub on: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AssistSpec {
+    #[serde(default)]
+    pub tick: u64,
+    pub car: u32,
+    pub level: jj_sim::assist::AssistLevel,
 }
 
 /// A part's health set at a tick: `part` is a contract part name (`front`, `door_FL`, `wheel_RR`…).
@@ -683,6 +695,9 @@ impl Harness {
         }
         for a in fx.autopilot.iter().filter(|a| a.tick == t) {
             sim.set_autopilot(CarId(a.car), a.on);
+        }
+        for a in fx.assist.iter().filter(|a| a.tick == t) {
+            sim.set_assist(CarId(a.car), a.level);
         }
         for car in 0..sim.cars().count() as u32 {
             let span =

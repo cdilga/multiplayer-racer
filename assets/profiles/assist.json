@@ -33,7 +33,8 @@
       "brakeAssist": true,
       "autoThrottle": true,
       "wheelie": false,
-      "flipInstant": true
+      "flipInstant": true,
+      "landingHelp": true
     }
   },
   "slide": {
