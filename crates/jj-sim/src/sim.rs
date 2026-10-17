@@ -2186,7 +2186,7 @@ impl Sim {
                         (0.0, 0.0)
                     } else {
                         car.air
-                            .air_sticks(&self.air_profile, crate::air::sticks(input))
+                            .air_sticks(&self.air_profile, TICK_HZ, crate::air::sticks(input))
                     };
                     let w_body = iso.rotation.inverse() * b.angvel();
                     let roll = libm::asinf((iso.rotation * Vector::X).y.clamp(-1.0, 1.0));

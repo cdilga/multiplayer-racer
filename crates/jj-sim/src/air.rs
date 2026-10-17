@@ -52,6 +52,9 @@ pub struct AirProfile {
     /// through a bend is a habit, not an air input). The throttle isn't latched (br-bbki.24).
     pub latch_held_input: bool,
     pub latch_release_stick: f32,
+    /// A throttle held through the lip starts raising the nose this long into a flight (br-bbki.24): a crest hop at full
+    /// throttle never tips a car (or flips a bike) backwards, and a pinned throttle still over-rotates a real jump.
+    pub throttle_latch_s: f32,
     /// Shorter flights (a bump, a kerb) aren't landings.
     pub min_air_s: f32,
     pub bands: Bands,
@@ -129,6 +132,7 @@ impl AirProfile {
             ("controlAfterS", self.control_after_s),
             ("knockDvMps", self.knock_dv_mps),
             ("latchReleaseStick", self.latch_release_stick),
+            ("throttleLatchS", self.throttle_latch_s),
             ("minAirS", self.min_air_s),
             ("bands.allWheelsS", self.bands.all_wheels_s),
             ("clean.seconds", self.clean.seconds),
@@ -339,16 +343,22 @@ impl AirState {
     }
 
     /// The sticks air control acts on: an axis still where it was held at takeoff reads neutral (`latchHeldInput`).
-    pub fn air_sticks(&mut self, p: &AirProfile, (y, x): (f32, f32)) -> (f32, f32) {
+    pub fn air_sticks(&mut self, p: &AirProfile, hz: u32, (y, x): (f32, f32)) -> (f32, f32) {
         if !p.latch_held_input {
             return (y, x);
         }
         let (ly, lx) = self.latched.unwrap_or((0.0, 0.0));
         self.armed.0 |= (y - ly).abs() > p.latch_release_stick;
         self.armed.1 |= (x - lx).abs() > p.latch_release_stick;
-        // Only the steer is latched: a throttle held through the lip keeps spinning the wheels, so it keeps raising the
-        // nose and a pinned throttle over-rotates a long jump (br-bbki.24: it used to read neutral, the easy answer).
-        (y, if self.armed.1 { x } else { 0.0 })
+        // A throttle held through the lip keeps spinning the wheels: once the car is properly airborne
+        // (`throttleLatchS`) it raises the nose, so a pinned throttle over-rotates a long jump (br-bbki.24: it used to
+        // read neutral all flight, the easy answer). A held steer stays latched.
+        let pitch_live =
+            self.armed.0 || self.flight_ticks() >= AirProfile::ticks(p.throttle_latch_s, hz);
+        (
+            if pitch_live { y } else { 0.0 },
+            if self.armed.1 { x } else { 0.0 },
+        )
     }
 
     /// The chassis' horizontal velocity changed by `dv` (m/s) this tick: past `knockDvMps` it was hit, not launched.
@@ -756,29 +766,33 @@ mod tests {
     }
 
     #[test]
-    fn a_steer_held_at_takeoff_is_latched_but_a_held_throttle_counts() {
+    fn a_held_throttle_raises_the_nose_once_properly_airborne_and_a_held_steer_stays_latched() {
         let p = AirProfile::standard();
         let mut s = AirState::default();
         // Full throttle and a little steer held through the lip.
         s.feed((1.0, 0.2), false);
         s.feed((1.0, 0.2), true);
         assert_eq!(
-            s.air_sticks(&p, (1.0, 0.2)),
-            (1.0, 0.0),
-            "a pinned throttle keeps spinning the wheels (br-bbki.24); a held steer isn't an air input"
+            s.air_sticks(&p, HZ, (1.0, 0.2)),
+            (0.0, 0.0),
+            "a crest hop at full throttle tips nothing"
         );
+        // Properly airborne: the pinned throttle raises the nose; the held steer still isn't an air input.
+        for _ in 0..AirProfile::ticks(p.throttle_latch_s, HZ) {
+            s.tick(&p, HZ, touch(0, 0.0));
+        }
         assert_eq!(
-            s.air_sticks(&p, (0.9, 0.3)),
-            (0.9, 0.0),
-            "nor is a steer wobble"
+            s.air_sticks(&p, HZ, (1.0, 0.2)),
+            (1.0, 0.0),
+            "a pinned throttle over-rotates a long jump"
         );
         // Steering hard the other way arms the yaw.
-        assert_eq!(s.air_sticks(&p, (1.0, -1.0)), (1.0, -1.0));
-        // Down again: the latch resets for the next jump.
+        assert_eq!(s.air_sticks(&p, HZ, (1.0, -1.0)), (1.0, -1.0));
+        // Down again: the latch resets for the next jump; a fresh brake from neutral pitches at once.
         s.feed((0.0, 0.0), false);
         s.feed((0.0, 0.0), true);
         assert_eq!(
-            s.air_sticks(&p, (-1.0, 0.0)),
+            s.air_sticks(&p, HZ, (-1.0, 0.0)),
             (-1.0, 0.0),
             "the brake from neutral pitches at once"
         );
