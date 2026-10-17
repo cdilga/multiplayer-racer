@@ -7,13 +7,13 @@ mipmapped edge between paint and a stripe therefore blends between the *tinted* 
 
 **How these images were made.** Playwright Chromium, headless, on eris. Before: 0779fd3f (old bakes and the old shader).
 After: 4abc1edb / 25c8be6d (bakes and shader from 5b9cd389).
-- `*-lod0-<paint>-before-after.png`: the LOD0 row (front, front 3/4, side, rear 3/4) of
+- The LOD0 before/after images: the LOD0 row (front, front 3/4, side, rear 3/4) of
   `node tools/vehicles/view/capture.mjs --asset … --sheet ladder --paint '#<paint>'` (software GL). Top half before, bottom half after.
   Seat paints: #2563EB (blue), #2A2D34 (charcoal), #FFD23F (yellow).
-- `*-grid-24-{before,after}.png` and `hawk-dash-paints-strip-{before,after}.png`: `node tools/vehicles/evidence/run.mjs <car>` (software GL).
-- `host-r13-cars-1-{before,after}.jpg`: the real host page from `web/tests/journeys/r13-identity.test.mjs` (`JJ_CHROMIUM_GPU=native`,
+- The grid-24 images and the Hawk Dash paint strips: `node tools/vehicles/evidence/run.mjs <car>` (software GL).
+- The two host-r13-cars-1 images: the real host page from `web/tests/journeys/r13-identity.test.mjs` (`JJ_CHROMIUM_GPU=native`,
   eris's RTX 2080 Super), one followed Cruz with its seat pattern and roof number.
-- `host-mixed-grid-12-{before,after}.png`: the real host page from `web/tests/journeys/v-roster-mixed.test.mjs` (software GL), 12 mixed roster cars.
+- The two host-mixed-grid-12 images: the real host page from `web/tests/journeys/v-roster-mixed.test.mjs` (software GL), 12 mixed roster cars.
 
 These are not a real TV or phone. Every image named below was opened and looked at.
 
