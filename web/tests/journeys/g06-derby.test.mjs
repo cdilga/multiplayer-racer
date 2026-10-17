@@ -99,8 +99,14 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.name === 'Late Lenny' && s.car !== null && s.car !== undefined), undefined, 30_000);
   const lateCar = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.name === 'Late Lenny').car);
   await host.evaluate(() => window.__jjTest.step(3 * 120));
-  await ram(host, lateCar, cars[0]);
-  const late = (await host.evaluate(() => window.__jjRoom.view())).seats.find((s) => s.name === 'Late Lenny');
+  // A target can itself be under spawn protection (wrecked earlier and back), and damage to it scores nothing (P1-S10):
+  // the late joiner rams others until a hit counts, as a player would.
+  let late;
+  for (const target of [cars[1], cars[3], cars[0], cars[5]]) {
+    await ram(host, lateCar, target);
+    late = (await host.evaluate(() => window.__jjRoom.view())).seats.find((s) => s.name === 'Late Lenny');
+    if (late.derby?.points > 0) break;
+  }
   assert.ok(late.derby && late.derby.points > 0, `the late joiner scores: ${JSON.stringify(late)}`);
   if (process.env.JJ_CAPTURE_DIR) {
     await host.evaluate(async () => { for (let i = 0; i < 10; i++) { window.__jjRender.frame(); await new Promise((r) => setTimeout(r, 16)); } });
