@@ -117,13 +117,15 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
           if(go&&getComputedStyle(go).display!=='none') out.stripIntoGo=meet(s,box(go));
           // Reachable: scrolling the strip brings each card's top into view, and its bottom (a card can be taller than
           // the strip on a short landscape screen).
+          // The strip is measured after each scroll: WebKit may scroll the clipped lobby around it as well, moving it.
           for(const cc of strip.querySelectorAll('.lb-cc')){
-            const v=box(strip);
             cc.scrollIntoView({block:'start'});
+            let v=box(strip);
             const top=box(cc).top>=v.top-1&&box(cc).top<v.bottom;
             cc.scrollIntoView({block:'end'});
+            v=box(strip);
             const bottom=box(cc).bottom<=v.bottom+1&&box(cc).bottom>v.top;
-            if(!(top&&bottom)) out.unreachable.push(cc.textContent.trim().slice(0,30));
+            if(!(top&&bottom)) out.unreachable.push(`${cc.textContent.trim().slice(0,30)} card ${JSON.stringify([box(cc).top,box(cc).bottom].map(Math.round))} strip ${JSON.stringify([v.top,v.bottom].map(Math.round))} scroll ${strip.scrollHeight}/${strip.clientHeight} ${getComputedStyle(strip).overflowY}`);
           }
         }
         if(cap&&box(cap).height>0) for(const e of document.querySelectorAll('.lobby .lb-hint, .lobby .lb-cc, .lobby .lcard')) if(meet(box(e),box(cap))) out.captionOver.push(e.className);

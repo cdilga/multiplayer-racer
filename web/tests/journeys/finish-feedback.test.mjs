@@ -104,7 +104,7 @@ test('finishing a race shows on the TV tile and the phone, the others see the ra
   });
   await shot(phone, 'phone-finished');
   // The window closes the race: on to the results.
-  await host.evaluate(() => window.__jjTest.step(31 * 60));
+  await host.evaluate(() => window.__jjTest.step(31 * 120)); // 31 s of sim time at 120 Hz (the window is 30 s)
   await wait(host, () => ['Finalising', 'Intermission'].includes(window.__jjRoom.view().phase), undefined, 30_000);
   console.log(`# finish feedback: ${JSON.stringify({ tiles, finishMs: me.finishMs, raceEndsInMs: view.raceEndsInMs })}`);
   assert.deepEqual(errors, []);
