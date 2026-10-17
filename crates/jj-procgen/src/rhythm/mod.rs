@@ -111,6 +111,38 @@ pub struct Rhythm {
     pub no_recovery: Vec<usize>,
 }
 
+/// A loop-over's lower and upper crossing points this close along the road (m) bound one held bend (br-xlvx.10).
+const LOOP_BEND_M: f64 = 800.0;
+
+/// Each loop-over's crossing as route indices `(lower, upper)`: where the road first passes under, and where it comes
+/// round and over itself within [`LOOP_BEND_M`] (a figure eight's two crossing points sit half a lap apart, so its
+/// bridge isn't one). A loop-over is one of the lap's set pieces (br-xlvx.10.2): a 240-270 degree spiral that climbs
+/// over its own road, seen from its entry on.
+pub fn loop_overs(map: &Map) -> Vec<(usize, usize)> {
+    let n = map.route.points.len();
+    if n < 3 {
+        return Vec::new();
+    }
+    let (_, lap_m) = crate::assemble::arc_lengths(
+        &map.route
+            .points
+            .iter()
+            .map(|p| (f64::from(p.x) / 1000.0, f64::from(p.z) / 1000.0))
+            .collect::<Vec<_>>(),
+    );
+    let loop_reach = (libm::round(LOOP_BEND_M * n as f64 / lap_m.max(1e-6)) as usize).min(n / 2);
+    map.features
+        .iter()
+        .filter_map(jj_map::bridge::BridgeDesign::of)
+        .filter_map(|design| {
+            let upper = jj_map::bridge::indices(map, design.upper)?;
+            let lower = jj_map::bridge::indices(map, design.lower)?;
+            let (a, b) = jj_map::bridge::crossing_point(map, &upper, &lower)?;
+            ((a + n - b) % n <= loop_reach).then_some((b, a))
+        })
+        .collect()
+}
+
 /// The lap's rhythm with the shipped data.
 pub fn of(map: &Map) -> Rhythm {
     of_with(map, shipped())
@@ -202,8 +234,8 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
         }
         i = j;
     }
-    // A crossing (a figure eight's bridge over the other road) is a built showpiece too: `crossingBeatM` either side of
-    // the crossing point, over the deck's crest and under it, is a set-piece beat, though not one of the lap's set pieces.
+    // A crossing (a bridge over another part of the lap) is a built showpiece: `crossingBeatM` either side of the
+    // crossing point, over the deck's crest and under it, is a set-piece beat.
     let reach = (libm::round(d.crossing_beat_m / mean_ds) as usize).min(n / 4);
     for f in &map.features {
         let Some(design) = jj_map::bridge::BridgeDesign::of(f) else {
@@ -224,9 +256,18 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
             }
         }
     }
+    let loop_overs = loop_overs(map);
+    for &(b, a) in &loop_overs {
+        for k in 0..=(a + n - b) % n {
+            if beats[(b + k) % n] == Beat::Flow {
+                beats[(b + k) % n] = Beat::Technical;
+            }
+        }
+    }
     // Set pieces, then the recovery after each. The beat is the commitment (a lead-in before the kicker, or a loop's
     // entry) to the landing's end (a loop's exit); the approach before it is the road it's on, and the run-out after it
-    // is the recovery. Loops (br-xlvx.6.4) are set pieces too (R132).
+    // is the recovery. Loops (br-xlvx.6.4) are set pieces too (R132), and so is a loop-over's spiral from under its
+    // crossing to over it, which holds one bend (technical, never flow; br-xlvx.10.2).
     let lead = (libm::round(d.set_piece_lead_s * d.design_speed_mps / mean_ds) as usize).min(n - 1);
     let gap_leaps = map.features.iter().filter_map(|f| {
         let g = GapLeap::of(f)?;
@@ -241,7 +282,7 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
         .iter()
         .filter_map(jj_map::looping::LoopDesign::of)
         .map(|l| (l.entry % n, l.exit % n));
-    let pieces: Vec<(usize, usize)> = gap_leaps.chain(loops).collect();
+    let pieces: Vec<(usize, usize)> = gap_leaps.chain(loops).chain(loop_overs).collect();
     let set_pieces = pieces.len();
     let mut no_recovery = Vec::new();
     for (start, to) in pieces {

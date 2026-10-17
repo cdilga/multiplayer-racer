@@ -93,6 +93,17 @@
       "barrierWidthMm": 350,
       "clearanceMm": 5000,
       "maxGradeMilli": 200
+    },
+    "crossover": {
+      "share": 1.0,
+      "perKm": 0.7,
+      "max": 3,
+      "maxLapShare": 0.6,
+      "turnDeg": [240.0, 270.0],
+      "radiusM": [52.0, 75.0],
+      "clearM": 90.0,
+      "leapClearM": 180.0,
+      "leapBeforeM": 130.0
     }
   },
   "biomes": {

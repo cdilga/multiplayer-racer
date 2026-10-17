@@ -924,7 +924,7 @@ fn site_ok(
             return Err("detour on a corner's outside");
         }
     }
-    // No bridge in the span.
+    // No bridge in the span, nor an overpass leap (either road of a crossing, br-xlvx.10.3).
     if map.features.iter().any(|f| f.kind == FeatureKind::Bridge) {
         let ix = map
             .features
@@ -940,6 +940,27 @@ fn site_ok(
             .collect::<Vec<_>>();
         if ix.iter().any(|&i| span_contains(line, from, to, i)) {
             return Err("bridge in the span");
+        }
+    }
+    for g in map.features.iter().filter_map(GapLeap::of) {
+        if let Some((a, b)) = g.lower {
+            let n = line.n();
+            let hit = |lo: u32, hi: u32| {
+                let (lo, hi) = (lo as usize % n, hi as usize % n);
+                let mut i = lo;
+                loop {
+                    if span_contains(line, from, to, i) {
+                        return true;
+                    }
+                    if i == hi {
+                        return false;
+                    }
+                    i = (i + 1) % n;
+                }
+            };
+            if hit(g.from, g.to) || hit(a, b) {
+                return Err("bridge in the span");
+            }
         }
     }
     Ok((from, to))
@@ -1491,10 +1512,16 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
     let seen = map
         .features
         .iter()
-        .filter(|f| GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s)
+        .filter(|f| {
+            // An overpass leap is in plain sight: the road climbs onto its embankment over the other road.
+            GapLeap::of(f).is_some_and(|g| g.lower.is_some())
+                || GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s
+        })
         .count()
-        // A loop is one of the lap's set pieces (R132), 15 m and more tall on its own beat straight.
-        + crate::loops::count(map);
+        // A loop is one of the lap's set pieces (R132), 15 m and more tall on its own beat straight, and so is a
+        // loop-over's spiral over its own road (br-xlvx.10.2).
+        + crate::loops::count(map)
+        + crate::rhythm::loop_overs(map).len();
     let lap_m = crate::assemble::arc_lengths(
         &map.route
             .points

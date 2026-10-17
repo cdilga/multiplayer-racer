@@ -26,6 +26,9 @@ const SHIPPED: &str = include_str!("../../../assets/profiles/overpass.json");
 pub struct OverpassData {
     #[serde(rename = "//", default)]
     pub note: String,
+    /// The generator tries a leap at a crossing this square or squarer (degrees between the two roads); shallower ones
+    /// keep their bridge (br-xlvx.10.3).
+    pub min_crossing_deg: f64,
     pub take_off_above_lower_m: f64,
     pub level_m: f64,
     pub ramp_m: f64,
@@ -40,6 +43,10 @@ pub struct OverpassData {
     pub max_band_floor_mps: f64,
     pub runout_m: f64,
     pub max_grade: f64,
+    /// The approach's climb to the take-off (rise per metre), steeper than `maxGrade` so a leap fits a loop-over's exit
+    /// straight (br-xlvx.10.3; the bridges' decks climb at up to 20 %). Absent: `maxGrade`.
+    #[serde(default)]
+    pub climb_grade: Option<f64>,
     pub shoulder_m: f64,
     pub side_slope: f64,
 }
@@ -169,6 +176,63 @@ impl Profile {
     }
 }
 
+/// Every bridge whose roads cross at `minCrossingDeg` or squarer becomes an overpass leap where [`place`] lays one, and
+/// stays a bridge where it refuses (br-xlvx.10.3). Shallower crossings keep their bridges. Returns how many leapt.
+pub fn leap_crossings(map: &mut Map, data: &OverpassData) -> usize {
+    let mut leapt = 0;
+    let mut k = 0;
+    while k < map.features.len() {
+        let Some(b) = jj_map::bridge::BridgeDesign::of(&map.features[k]) else {
+            k += 1;
+            continue;
+        };
+        let span = |s: jj_map::model::Span| (s.from as usize, s.to as usize);
+        let (upper, lower) = (span(b.upper), span(b.lower));
+        if crossing_deg(map, upper, lower) < data.min_crossing_deg {
+            k += 1;
+            continue;
+        }
+        let bridge = map.features.remove(k);
+        // The deck's heights go with it: the upper road lies on its ground again before the leap reshapes it (a ramp
+        // the leap's run-in doesn't reach would otherwise float over the ground).
+        let route = map.route.clone();
+        let n = map.route.points.len();
+        for i in (0..=(upper.1 + n - upper.0) % n).map(|k| (upper.0 + k) % n) {
+            let p = xz(map, i);
+            map.route.points[i].y = mm(ground_height_m(&map.terrain, p[0], p[1]));
+        }
+        match place(map, upper, lower, data) {
+            Ok(f) => {
+                map.features.insert(k, f);
+                leapt += 1;
+            }
+            Err(_) => {
+                map.route = route;
+                map.features.insert(k, bridge);
+            }
+        }
+        k += 1;
+    }
+    leapt
+}
+
+/// The angle between the two roads at their spans' middles, degrees (0..=90).
+fn crossing_deg(map: &Map, upper: (usize, usize), lower: (usize, usize)) -> f64 {
+    let n = map.route.points.len();
+    let heading = |(a, b): (usize, usize)| {
+        let mid = (a + ((b + n - a) % n) / 2) % n;
+        let (p, q) = (xz(map, (mid + n - 2) % n), xz(map, (mid + 2) % n));
+        libm::atan2(q[1] - p[1], q[0] - p[0])
+    };
+    let d = libm::fabs(heading(upper) - heading(lower)) % core::f64::consts::PI;
+    let d = if d > core::f64::consts::FRAC_PI_2 {
+        core::f64::consts::PI - d
+    } else {
+        d
+    };
+    d.to_degrees()
+}
+
 /// Lays an overpass leap at the crossing of `upper` (route points `a..=b`, the road on top) over `lower` (`c..=d`),
 /// in place of a bridge (the caller removes the bridge's feature and its deck heights first or keeps them on refusal).
 /// On success the map carries the piece's feature, its sculpted ground and the upper road's new heights; on refusal
@@ -263,7 +327,9 @@ pub fn place(
         pad,
         natural,
     };
-    let climb = (take_off - prof.natural(level_from)).abs() / data.max_grade * 1.5;
+    let climb = (take_off - prof.natural(level_from)).abs()
+        / data.climb_grade.unwrap_or(data.max_grade)
+        * 1.5;
     prof.start = level_from - climb.max(30.0);
     let original = (map.terrain.clone(), map.route.clone());
     let refuse = |map: &mut Map, why: Refused| {
@@ -291,6 +357,23 @@ pub fn place(
         let sizing = feature_of(map, &fr, &prof, &up, lower, data, 20.0, 27.0, hw);
         let d = GapLeap::of(&sizing).expect("an overpass leap");
         sculpt(map, &fr, &prof, &low, lower_hw, data, &d, base, hw);
+        // The embankment and cutting may reach another stretch of road beside the straight (a loop-over's own arc runs
+        // into it): a road whose heights the piece didn't set must keep its ground, or it floats over a cutting.
+        if let Some(i) = (0..n).find(|&i| {
+            let (q, q0) = (&map.route.points[i], &original.1.points[i]);
+            let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+            q.y == q0.y
+                && libm::fabs(
+                    ground_height_m(&map.terrain, x, z) - ground_height_m(&original.0, x, z),
+                ) > 0.1
+        }) {
+            return refuse(
+                map,
+                Refused::Contract(vec![format!(
+                    "the leap's ground reshapes the road at point {i}"
+                )]),
+            );
+        }
         // The band's floor: the slowest speed that comes down past the rim with margin (bisection on the validator's
         // own flight over this ground).
         let clears = |map: &Map, v: f64| {

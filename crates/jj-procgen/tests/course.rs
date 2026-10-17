@@ -36,18 +36,34 @@ fn a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix() {
             report.length_m,
             report.class.name()
         );
+        // A lap that crosses itself (a figure eight, or any family's loop-overs, br-xlvx.10) does so on a valid bridge
+        // or an overpass leap (br-xlvx.10.3) at each crossing, and nowhere else (the validator's layout check below); one that doesn't stays clear of
+        // itself.
+        let bridges: Vec<_> = map
+            .features
+            .iter()
+            .filter(|f| f.kind == jj_map::FeatureKind::Bridge)
+            .collect();
+        let leaps = map
+            .features
+            .iter()
+            .filter(|f| jj_map::setpiece::GapLeap::of(f).is_some_and(|g| g.lower.is_some()))
+            .count();
         if report.preset != jj_procgen::tuning::PresetName::FigureEight {
             ordinary_courses += 1;
+        } else {
+            assert!(
+                !bridges.is_empty() || leaps > 0,
+                "seed {seed}: grade separation required"
+            );
+        }
+        if bridges.is_empty() && leaps == 0 {
             assert!(
                 self_clear(&pts),
                 "seed {seed}: two parts of the road come within {CLEARANCE_M} m"
             );
-        } else {
-            let crossing = map
-                .features
-                .iter()
-                .find(|f| f.kind == jj_map::FeatureKind::Bridge)
-                .expect("grade separation required");
+        }
+        for crossing in &bridges {
             assert!(
                 jj_map::bridge::problems(&map, crossing).is_empty(),
                 "seed {seed}"

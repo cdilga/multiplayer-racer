@@ -26,7 +26,8 @@ fn preset_seed_bank_reports_geometry() {
         for seed in 0..100 {
             let c = course::design_with(&mut Rng::stream(seed, "structure"), &data.course);
             assert_eq!(c.preset, name);
-            assert!(course::self_clear(&c.points));
+            // Clear of itself except where it crosses itself by design (br-xlvx.10's loop-overs).
+            assert!(course::clear_except(&c.points, &c.crossings));
             let band = data.course.classes.get(c.class);
             assert!((band.length_min_m..=band.length_max_m).contains(&c.length_m));
             // On Town, unless Town never draws the family (`familiesOffIn`, P1-FL15c): then on Greybox.

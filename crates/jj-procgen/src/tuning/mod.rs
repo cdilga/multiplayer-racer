@@ -126,6 +126,71 @@ pub struct CourseData {
     pub set_piece_straights_min: u32,
     pub presets: CoursePresets,
     pub crossing: CrossingData,
+    /// Laps that cross themselves (br-xlvx.10): loop-over motifs in the ordinary families (absent: none).
+    #[serde(default)]
+    pub crossover: CrossoverData,
+}
+
+/// A loop-over (br-xlvx.10): one big same-hand corner whose exit straight crosses its own entry straight at 60-90°. The
+/// exit straight is the upper road (a deck or a leap), the entry straight the lower.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CrossoverData {
+    /// The share of ordinary laps that cross themselves.
+    pub share: f64,
+    /// Loop-overs per km of such a lap (at least one), at most `max` and only as many as fit `maxLapShare` of the lap.
+    pub per_km: f64,
+    pub max: u32,
+    pub max_lap_share: f64,
+    /// The loop's turn (degrees, 240-300: the crossing angle is 360 less it) and radius (m, raised where the crossing
+    /// would come closer than `clearM` to the arc).
+    pub turn_deg: [f64; 2],
+    pub radius_m: [f64; 2],
+    /// Straight road either side of the crossing on both roads, m: the deck's ramps, the underpass's approaches.
+    pub clear_m: f64,
+    /// The exit straight past the crossing on a loop-over square enough for an overpass leap (br-xlvx.10.3), m: the
+    /// leap's gap half, landing and run-out (`overpass.json`). 0 keeps `clearM`.
+    #[serde(default)]
+    pub leap_clear_m: f64,
+    /// The exit straight before the crossing on such a loop-over, m: the leap's climb to its take-off, level core and
+    /// kicker (the loop's radius grows to give it). 0 keeps `clearM`.
+    #[serde(default)]
+    pub leap_before_m: f64,
+}
+
+impl CrossoverData {
+    pub fn problems(&self) -> Vec<String> {
+        let mut bad = Vec::new();
+        if !(0.0..=1.0).contains(&self.share) {
+            bad.push("course.crossover.share: must be 0..1".into());
+        }
+        if self.share > 0.0 {
+            if !(self.per_km > 0.0 && self.max >= 1) {
+                bad.push("course.crossover: perKm must be positive and max at least 1".into());
+            }
+            if !(self.max_lap_share > 0.0 && self.max_lap_share <= 1.0) {
+                bad.push("course.crossover.maxLapShare: must be in (0, 1]".into());
+            }
+            let [t0, t1] = self.turn_deg;
+            if !(240.0 <= t0 && t0 <= t1 && t1 <= 300.0) {
+                bad.push(
+                    "course.crossover.turnDeg: 240 <= lo <= hi <= 300 (a 60-120 deg crossing)"
+                        .into(),
+                );
+            }
+            let [r0, r1] = self.radius_m;
+            if !(r0 >= 30.0 && r0 <= r1) {
+                bad.push("course.crossover.radiusM: 30 <= lo <= hi".into());
+            }
+            if self.clear_m.is_nan() || self.clear_m < 40.0 {
+                bad.push("course.crossover.clearM: at least 40 m".into());
+            }
+            if !(self.leap_clear_m == 0.0 || self.leap_clear_m >= self.clear_m) {
+                bad.push("course.crossover.leapClearM: 0, or at least clearM".into());
+            }
+        }
+        bad
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -463,6 +528,7 @@ impl GeneratorData {
         }
         pos("course.minStraightM", c.min_straight_m, &mut bad);
         pos("course.bendSpacingM", c.bend_spacing_m, &mut bad);
+        bad.extend(c.crossover.problems());
         let bridge = c.crossing;
         for (key, value) in [
             ("deckHeightM", bridge.deck_height_m),

@@ -131,7 +131,11 @@ pub fn prepare_tuned(
     // The best valid draw that missed only the set pieces or the rhythm (interior mutability: the ladder reads it
     // between steps while the draw closure keeps it).
     let best: std::cell::RefCell<Option<Best>> = std::cell::RefCell::new(None);
-    let mut try_one = |rec: &[Biome], draw: u32, need_pieces: bool| -> Option<(Map, Report)> {
+    let mut try_one = |rec: &[Biome],
+                       draw: u32,
+                       need_pieces: bool,
+                       data: &crate::tuning::GeneratorData|
+     -> Option<(Map, Report)> {
         let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
             Ok(m) => m,
             Err(e) => {
@@ -202,7 +206,7 @@ pub fn prepare_tuned(
     // 1. The full recipe on the seed's own course, then derived draws: each must carry its set pieces and keep the
     //    rhythm (P1-FL15c).
     for draw in 0..draws {
-        if let Some((map, course)) = try_one(&lap, draw, true) {
+        if let Some((map, course)) = try_one(&lap, draw, true, data) {
             let plan = if draw == 0 {
                 Plan::Requested
             } else {
@@ -217,6 +221,37 @@ pub fn prepare_tuned(
             };
         }
         // A single-biome recipe has no boundary to fail on: another draw only helps a rejected map.
+    }
+    // 1b. The same draws with fewer loop-overs (br-xlvx.10.2): on a short lap a loop-over's arc and straights can take the
+    //     room both set pieces need, and a lap that crosses itself is a bonus while two set pieces are the rule (R132).
+    //     Numbered on after the full draws.
+    //     One loop-over first (a lap that can't hold two may hold one), then none.
+    if data.course.crossover.share > 0.0 {
+        let mut fewer = data.clone();
+        let mut next = draws;
+        for max in [1u32, 0] {
+            if max > 0 && data.course.crossover.max <= max {
+                continue;
+            }
+            fewer.course.crossover.max = max.max(1);
+            fewer.course.crossover.share = if max == 0 {
+                0.0
+            } else {
+                data.course.crossover.share
+            };
+            for draw in 0..draws {
+                if let Some((map, course)) = try_one(&lap, draw, true, &fewer) {
+                    return Prepared {
+                        map,
+                        course,
+                        plan: Plan::Redrawn(next + draw),
+                        attempts,
+                        valid: true,
+                    };
+                }
+            }
+            next += draws;
+        }
     }
     // The requested biomes come first (a dropped biome is a broken request): the best full-recipe draw that missed
     // only the set pieces or the rhythm, before any shorter recipe.
@@ -241,7 +276,7 @@ pub fn prepare_tuned(
     // 2. Fewer biomes, still with the set pieces, when no full-recipe draw was valid at all.
     for keep in (1..lap.len()).rev() {
         for draw in 0..SHORTER_DRAWS.min(draws) {
-            if let Some((map, course)) = try_one(&lap[..keep], draw, true) {
+            if let Some((map, course)) = try_one(&lap[..keep], draw, true, data) {
                 return Prepared {
                     map,
                     course,

@@ -358,3 +358,14 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
   families or straights change.
 - **Shared enums break exhaustive matches across agents.** A new `jj_map::PieceKind` variant in the tree stops
   procgen compiling mid-run; match the kinds you mean and give the rest a `_` arm.
+- **An overpass leap inherits the bridge's road heights (br-xlvx.10.3).** Removing a bridge's feature leaves its deck
+  ramp heights on the upper road; the leap only rewrites heights from its own run-in on, so a ramp that started earlier
+  floated 2.6 m over the ground and its layered gate never counted (seed 78's bot never finished). Put the upper road
+  back on its ground before trying a leap (`overpass::leap_crossings`), and refuse a leap whose embankment reshapes the
+  ground under any road it doesn't set (a loop-over's own arc runs beside its exit straight).
+- **A leap needs about twice a bridged loop-over's road.** Its climb and landing on the exit straight push a loop-over
+  to ~1.1 km; on a sprint lap it never fit and was dropped. Shrink an unfitting first loop-over below the leap angle
+  (a compact bridge) instead of dropping it, and keep later ones compact.
+- **Judge a leap's landing with the air input a player uses.** Since br-bbki.24 a throttle pinned in the air raises the
+  nose on purpose; a bank that flies flat out lands nose-high. Fly neutral (it holds the take-off pitch) and judge the
+  first second after touchdown, not where an unsteered car ends up on a curving road.

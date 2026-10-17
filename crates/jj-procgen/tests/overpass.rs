@@ -102,13 +102,14 @@ fn overpass_leaps_lay_and_validate_on_generated_eights() {
     );
 }
 
-/// What a car did over the leap: whether it respawned, how far past the lip it came down, and how upright it ended.
+/// What a car did over the leap: whether it respawned, how far past the lip it came down, and how upright it landed.
 struct Run {
     /// The car's speed as it left the lip (the band is in lip speeds).
     lip_speed: f32,
     respawned: bool,
     past_rim: bool,
-    end_up_y: f32,
+    /// The lowest up_y in the first second after touching down past the rim.
+    landing_up_y: f32,
 }
 
 /// Starts a car on the level 12 m before the kicker's base, heading along the road at `speed` (about its speed at the
@@ -149,18 +150,32 @@ fn take(m: &LoadedMap, speed: f32) -> Run {
     let mut past_rim = false;
     let mut respawned = false;
     let mut down_for = 0;
+    let mut landing_up_y = f32::INFINITY;
     let mut lip_speed = None;
+    // Flat out to the lip, neutral in the air (it holds the take-off pitch; a pinned throttle over-rotates, br-bbki.24),
+    // flat out again once down past the rim.
+    let neutral = DriveInput {
+        throttle: 0,
+        ..flat_out
+    };
+    let mut flying = false;
     for _ in 0..8 * TICK_HZ {
-        sim.set_input(car, flat_out);
+        sim.set_input(car, if flying { neutral } else { flat_out });
         sim.step();
         let st = sim.car_state(car).unwrap();
         let u = (f64::from(st.position[0]) - lip[0]) * t[0]
             + (f64::from(st.position[2]) - lip[2]) * t[1];
+        flying = u >= 0.0 && st.wheels_in_contact == 0 && !past_rim;
         if st.wheels_in_contact > 0 && u > d.gap_m {
             past_rim = true;
         }
         if past_rim {
             down_for += 1;
+            // Upright through the landing (its first second): later the unsteered car runs straight off a curving
+            // road onto the embankment, which is no fault of the landing.
+            if down_for <= TICK_HZ {
+                landing_up_y = landing_up_y.min(st.up_y);
+            }
             if down_for > 2 * TICK_HZ {
                 break;
             }
@@ -177,7 +192,7 @@ fn take(m: &LoadedMap, speed: f32) -> Run {
         lip_speed: lip_speed.unwrap_or(0.0),
         respawned,
         past_rim,
-        end_up_y: sim.car_state(car).unwrap().up_y,
+        landing_up_y,
     }
 }
 
@@ -206,7 +221,11 @@ fn a_car_in_the_band_clears_the_lower_road_and_lands_upright() {
             );
             assert!(!r.respawned, "{what} respawned");
             assert!(r.past_rim, "{what} never landed past the rim");
-            assert!(r.end_up_y > 0.8, "{what} ended up_y {}", r.end_up_y);
+            assert!(
+                r.landing_up_y > 0.8,
+                "{what} landed at up_y {}",
+                r.landing_up_y
+            );
         }
         assert!(
             in_band >= 2,

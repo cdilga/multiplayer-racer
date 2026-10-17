@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "25";
+pub const GENERATOR_VERSION: &str = "26";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;
@@ -234,6 +234,8 @@ pub fn generate_course(
     );
     if !course.crossings.is_empty() {
         crossings::place(&mut map, &course, &data.course.crossing);
+        // Each crossing square enough for a leap tries one, keeping its bridge when the leap is refused (br-xlvx.10.3).
+        overpass::leap_crossings(&mut map, overpass::shipped());
     }
     // The loops stand on the finished ground (cut where it rises into the deck), before the set pieces, which keep a
     // beat's spacing from them, and the small features, which keep off their straights.

@@ -175,9 +175,22 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                     return jj_map::bridge::indices(&map, d.upper)
                         .is_some_and(|ix| ix.contains(&i));
                 }
-                // A set piece owns its span's road profile (R132): its approach, gap, landing and run-out.
+                // A set piece owns its span's road profile (R132): its approach, gap, landing and run-out. An overpass
+                // leap's upper road also climbs to its take-off before the kicker, as a bridge's deck ramps do
+                // (br-xlvx.10.3): up to 160 m of run-in.
                 if let Some(d) = jj_map::setpiece::GapLeap::of(f) {
-                    let (from, to) = (d.from as usize, d.to as usize);
+                    let (mut from, to) = (d.from as usize, d.to as usize);
+                    if d.lower.is_some() {
+                        let mut run = 0.0;
+                        while run < 160.0 {
+                            let (a, b) = (
+                                &map.route.points[(from + n - 1) % n],
+                                &map.route.points[from],
+                            );
+                            run += f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0;
+                            from = (from + n - 1) % n;
+                        }
+                    }
                     return (i + n - from) % n <= (to + n - from) % n;
                 }
                 // A jump's own ramp, table and landing ramp reach past 80 m since they're built for 36 m/s take-offs.

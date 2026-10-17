@@ -1,6 +1,7 @@
 {
-  "//": "Overpass leaps (R124 br-xlvx.5; docs/research/fun-tracks.md R10-R17), read by jj-procgen overpass.rs: at a figure-eight's crossing the upper road jumps the lower one instead of bridging it. The road climbs to a take-off `takeOffAboveLowerM` above the lower road, levels for `levelM` (R11's straight core), runs up a full-road-width kicker (`rampM` long, `lipM` high, foot blend `blendM`: about 15 degrees at the lip with a long concave foot so a car isn't slammed into it, R12), and the gap spans the lower road's footprint (with `bedClearM` beside it) across the flight's lane (the road and its shoulder) plus a steep abutment face (`faceSlope` rise per metre); the far rim stands `rimDropM` below the take-off and the landing runs down from it at the flight's own angle where the band's middle comes down (R13: a ski jump's landing hill, between `minLandingSlope` and `maxLandingSlope`). The speed band is found against the sculpted ground: its floor is the slowest a car can leave the lip and come down `rimMargin` past the rim, its top `bandWidth` above that (R11: at least 30%), flown as the validator flies it (with the cars' own damping in the air); a floor above `maxBandFloorMps` leaves the bridge in place. After the landing the road eases back to its own height over at least `runoutM` (R17: 2 s at the band's top) at no more than `maxGrade`. Embankments and cuttings meet the land at `sideSlope` past a `shoulderM` shoulder; the lower road's bed is never touched. Nothing here caps anything.",
-  "takeOffAboveLowerM": 10.0,
+  "//": "Overpass leaps (R124 br-xlvx.5; docs/research/fun-tracks.md R10-R17), read by jj-procgen overpass.rs: at a figure-eight's crossing the upper road jumps the lower one instead of bridging it. The road climbs to a take-off `takeOffAboveLowerM` above the lower road, levels for `levelM` (R11's straight core), runs up a full-road-width kicker (`rampM` long, `lipM` high, foot blend `blendM`: about 15 degrees at the lip with a long concave foot so a car isn't slammed into it, R12), and the gap spans the lower road's footprint (with `bedClearM` beside it) across the flight's lane (the road and its shoulder) plus a steep abutment face (`faceSlope` rise per metre); the far rim stands `rimDropM` below the take-off and the landing runs down from it at the flight's own angle where the band's middle comes down (R13: a ski jump's landing hill, between `minLandingSlope` and `maxLandingSlope`). The speed band is found against the sculpted ground: its floor is the slowest a car can leave the lip and come down `rimMargin` past the rim, its top `bandWidth` above that (R11: at least 30%), flown as the validator flies it (with the cars' own damping in the air); a floor above `maxBandFloorMps` leaves the bridge in place. After the landing the road eases back to its own height over at least `runoutM` (R17: 2 s at the band's top) at no more than `maxGrade`. Embankments and cuttings meet the land at `sideSlope` past a `shoulderM` shoulder; the lower road's bed is never touched. In the generator (br-xlvx.10.3) every crossing at `minCrossingDeg` or squarer tries a leap first and keeps its bridge when the leap is refused; a shallower crossing (a figure eight's ~40 degrees makes a gap the slow cars can't reach) is always a bridge. Nothing here caps anything.",
+  "minCrossingDeg": 70,
+  "takeOffAboveLowerM": 7.0,
   "levelM": 25,
   "rampM": 16,
   "lipM": 3.0,
@@ -14,6 +15,7 @@
   "maxBandFloorMps": 30,
   "runoutM": 70,
   "maxGrade": 0.12,
+  "climbGrade": 0.18,
   "shoulderM": 1,
   "sideSlope": 1.0
 }

@@ -402,14 +402,19 @@ fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
 
 #[test]
 fn a_reserved_landing_without_a_receiving_surface_is_rejected() {
-    let original = generate_recipe(0, &[Biome::Greybox]).unwrap().0;
+    // The first greybox seed with a core jump (set pieces, forks and crossings take some laps' room for one).
+    let (original, k) = (0..40)
+        .find_map(|seed| {
+            let map = generate_recipe(seed, &[Biome::Greybox]).unwrap().0;
+            let k = map
+                .features
+                .iter()
+                .position(|f| f.kind == FeatureKind::Jump)?;
+            Some((map, k))
+        })
+        .expect("a greybox seed with a core jump");
     let registry = jj_procgen::registry();
     assert!(jj_map::validate(&original, &registry).ok);
-    let k = original
-        .features
-        .iter()
-        .position(|f| f.kind == FeatureKind::Jump)
-        .unwrap();
     for (param, value, rule) in [
         ("tableLengthMm", 0, jj_map::Rule::LandingEnvelope),
         ("landingLengthMm", 34_000, jj_map::Rule::LandingEnvelope),

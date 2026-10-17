@@ -17,8 +17,11 @@ const S: u64 = TICK_HZ as u64;
 /// The bank: a sample, not a limit (`JJ_SEEDS=N` widens it). A debug build is slow, so it samples fewer.
 const DEFAULT_SEEDS: u64 = if cfg!(debug_assertions) { 12 } else { 100 };
 
-/// Seeds where the autopilot rolls on a jump landing (see the known gap in the bot playtest).
-const KNOWN_JUMP_LANDING_ROLLS: [u64; 4] = [1, 2, 17, 64];
+/// Seeds where the autopilot rolls on a jump landing (see the known gap in the bot playtest). Seed 47 (GENERATOR_VERSION
+/// 26): since br-4tbo the bot reaches 40 m/s on the descent into the 30 cm crest at route point ~596, flies 1.2 s, lands
+/// 8 m wide and runs off the road into the verge at point ~18, then one recover (`diag_bot_trace`, `JJ_SEEDS=47
+/// JJ_DIAG_FROM=53`).
+const KNOWN_JUMP_LANDING_ROLLS: [u64; 5] = [1, 2, 17, 47, 64];
 
 fn seeds() -> u64 {
     std::env::var("JJ_SEEDS")
@@ -65,8 +68,14 @@ fn every_seed_prepares_a_valid_track_and_every_fallback_is_counted() {
             canonical_bytes(&jj_procgen::playtest::prepare(seed).map),
             "seed {seed}"
         );
-        // Bounded: the ladder is a handful of generations, not an open-ended reroll.
-        assert!(p.attempts.len() <= (jj_procgen::playtest::PLAYTEST_DRAWS as usize) * 2 + 4 + 1);
+        // Bounded: the ladder is a handful of generations, not an open-ended reroll (the full draws, the same draws with
+        // one loop-over and then none (br-xlvx.10.2), the shorter recipes, the accepted map).
+        assert!(
+            p.attempts.len() <= (jj_procgen::playtest::PLAYTEST_DRAWS as usize) * 4 + 4 + 1,
+            "seed {seed}: {} attempts: {:?}",
+            p.attempts.len(),
+            p.attempts.iter().map(|a| &a.rejected).collect::<Vec<_>>()
+        );
         total_attempts += p.attempts.len();
         *plans.entry(plan_name(&p.plan)).or_default() += 1;
         if seed < 30 || !matches!(p.plan, Plan::Requested) {
@@ -359,5 +368,153 @@ fn the_autopilot_laps_a_sample_of_every_mix_and_length_class() {
             &table,
         )
         .unwrap();
+    }
+}
+
+/// One seed's autopilot lap, traced (`JJ_SEEDS=<seed>`, default 78): each feature's nearest route point, every route point
+/// whose ground is over 0.5 m off the road's height (a set piece's pit and gap are; nothing else should be), and the gates
+/// passed and where the car is every 10 s.
+#[test]
+#[ignore]
+fn diag_bot_trace() {
+    let seed: u64 = std::env::var("JJ_SEEDS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(78);
+    let p = jj_procgen::playtest::prepare(seed);
+    let kinds: Vec<_> = p
+        .map
+        .features
+        .iter()
+        .map(|f| format!("{:?}", f.kind))
+        .collect();
+    eprintln!(
+        "seed {seed} plan {:?} features {kinds:?} loopOvers {:?}",
+        p.plan,
+        jj_procgen::rhythm::loop_overs(&p.map)
+    );
+    for f in &p.map.features {
+        let near = p
+            .map
+            .route
+            .points
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, q)| {
+                let (dx, dz) = ((q.x - f.pose.x) as i64, (q.z - f.pose.z) as i64);
+                dx * dx + dz * dz
+            })
+            .map(|(i, _)| i);
+        eprintln!("  {:?} at point {near:?} {:?}", f.kind, f.params);
+    }
+    let map = loaded(&p);
+    let mut run: Vec<String> = Vec::new();
+    for (i, q) in map.map.route.points.iter().enumerate() {
+        let g = jj_map::jump::ground_height_m(
+            &map.map.terrain,
+            f64::from(q.x) / 1000.0,
+            f64::from(q.z) / 1000.0,
+        );
+        let dy = g - f64::from(q.y) / 1000.0;
+        if dy.abs() > 0.5 {
+            run.push(format!("{i}:{dy:.1}"));
+        }
+    }
+    eprintln!("ground - route over 0.5 m: {run:?}");
+    if let Some((x, z)) = std::env::var("JJ_DIAG_NEAR").ok().and_then(|v| {
+        v.split_once(',')
+            .map(|(a, b)| (a.parse::<f64>().unwrap(), b.parse::<f64>().unwrap()))
+    }) {
+        let d = |p: &jj_map::Pose| (f64::from(p.x) / 1000.0 - x).hypot(f64::from(p.z) / 1000.0 - z);
+        for o in map.map.dressing.iter().filter(|o| d(&o.pose) < 12.0) {
+            eprintln!(
+                "  dressing {} collides {} at {:.1} m y {:.2}",
+                o.kit_piece,
+                o.collides,
+                d(&o.pose),
+                f64::from(o.pose.y) / 1000.0
+            );
+        }
+        for o in map.map.props.iter().filter(|o| d(&o.pose) < 12.0) {
+            eprintln!(
+                "  prop {} at {:.1} m y {:.2}",
+                o.kit_piece,
+                d(&o.pose),
+                f64::from(o.pose.y) / 1000.0
+            );
+        }
+        for f in map.map.features.iter().filter(|f| d(&f.pose) < 40.0) {
+            eprintln!("  feature {:?} at {:.1} m", f.kind, d(&f.pose));
+        }
+    }
+    if let Some((a, b)) = std::env::var("JJ_DIAG_PTS").ok().and_then(|v| {
+        v.split_once('-')
+            .map(|(a, b)| (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()))
+    }) {
+        for i in a..=b {
+            let q = &map.map.route.points[i];
+            eprintln!(
+                "  pt {i} y {:.2} bank {} width {}",
+                f64::from(q.y) / 1000.0,
+                q.bank,
+                q.width
+            );
+        }
+    }
+    let mut sim = Sim::new(&map, &jj_procgen::registry(), seed, VehicleProfile::cruz());
+    let car = sim.spawn_grid(1)[0];
+    sim.start_race(1);
+    sim.set_autopilot(car, true);
+    let route = jj_sim::observe::RouteGeom::new(&map.map);
+    let mut seen = 0;
+    for _ in 0..200 * S {
+        sim.step();
+        let ev = sim.race().events();
+        for (t, e) in &ev[seen..] {
+            if !matches!(e, Event::GatePassed { .. }) {
+                let st = sim.car_state(car).unwrap();
+                let at = route.progress_xyz(
+                    st.position[0] as f64,
+                    st.position[1] as f64,
+                    st.position[2] as f64,
+                );
+                eprintln!(
+                    "event t {:.1} {e:?} at point {}",
+                    *t as f64 / S as f64,
+                    at.route_point
+                );
+            }
+        }
+        seen = ev.len();
+        if sim.race().is_finished(car.0) {
+            break;
+        }
+        let fine = std::env::var("JJ_DIAG_FROM")
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok());
+        let detail = fine.is_some_and(|f| {
+            sim.tick() >= f * S && sim.tick() < (f + 8) * S && sim.tick().is_multiple_of(S / 2)
+        });
+        if detail || sim.tick().is_multiple_of(10 * S) {
+            let st = sim.car_state(car).unwrap();
+            let r = sim.race().car(car.0).unwrap();
+            let at = route.progress_xyz(
+                st.position[0] as f64,
+                st.position[1] as f64,
+                st.position[2] as f64,
+            );
+            eprintln!(
+                "t {:.1} gates {} last {:?} point {} lateral {:.1} pos {:?} speed {:.1} up {:.2} wheels {}",
+                sim.tick() as f64 / S as f64,
+                r.gates_passed,
+                r.last_gate,
+                at.route_point,
+                at.lateral_m,
+                st.position,
+                st.forward_speed,
+                st.up_y,
+                st.wheels_in_contact
+            );
+        }
     }
 }

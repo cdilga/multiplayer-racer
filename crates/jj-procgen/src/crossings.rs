@@ -142,6 +142,10 @@ fn place_one(map: &mut Map, crossing: &Crossing, data: &CrossingData) {
     });
 }
 
+/// How far before an overpass leap's kicker its graded run-in (level and climb) can begin, m: the loop-over's
+/// `leapBeforeM` with margin.
+const LEAP_RUN_IN_M: f64 = 160.0;
+
 /// Keep each ordinary feature's full envelope away from both crossing straights.
 /// Features remain eligible throughout the rest of every biome.
 pub fn feature_ranges(map: &Map, ranges: &[(f64, f64, Density)]) -> Vec<(f64, f64, Density)> {
@@ -153,33 +157,51 @@ pub fn feature_ranges(map: &Map, ranges: &[(f64, f64, Density)]) -> Vec<(f64, f6
         .collect();
     let (s, total) = arc_lengths(&pts);
     let mut out = ranges.to_vec();
-    for f in &map.features {
-        let Some(d) = jj_map::bridge::BridgeDesign::of(f) else {
-            continue;
-        };
-        for span in [d.upper, d.lower] {
-            let (lo, hi) = (
-                (s[span.from as usize] - 30.0).max(0.0),
-                (s[span.to as usize] + 30.0).min(total),
-            );
-            out = out
-                .into_iter()
-                .flat_map(|(a, b, density)| {
-                    let mut v = Vec::new();
-                    if b <= lo || a >= hi {
-                        v.push((a, b, density));
-                    } else {
-                        if a < lo {
-                            v.push((a, lo, density));
-                        }
-                        if b > hi {
-                            v.push((hi, b, density));
-                        }
+    // A bridge's two roads, or an overpass leap's (br-xlvx.10.3: its upper road from its graded run-in, at most
+    // `LEAP_RUN_IN_M` before the kicker, the ramp, gap and landing).
+    let spans: Vec<(f64, f64)> = map
+        .features
+        .iter()
+        .flat_map(|f| {
+            let mut v = Vec::new();
+            if let Some(d) = jj_map::bridge::BridgeDesign::of(f) {
+                for span in [d.upper, d.lower] {
+                    v.push((s[span.from as usize] - 30.0, s[span.to as usize] + 30.0));
+                }
+            } else if let Some(g) = jj_map::setpiece::GapLeap::of(f)
+                && let Some((a, b)) = g.lower
+            {
+                v.push((
+                    s[g.from as usize % pts.len()] - LEAP_RUN_IN_M,
+                    s[g.to as usize % pts.len()] + 30.0,
+                ));
+                v.push((
+                    s[a as usize % pts.len()] - 30.0,
+                    s[b as usize % pts.len()] + 30.0,
+                ));
+            }
+            v
+        })
+        .collect();
+    for (lo, hi) in spans {
+        let (lo, hi) = (lo.max(0.0), hi.min(total));
+        out = out
+            .into_iter()
+            .flat_map(|(a, b, density)| {
+                let mut v = Vec::new();
+                if b <= lo || a >= hi {
+                    v.push((a, b, density));
+                } else {
+                    if a < lo {
+                        v.push((a, lo, density));
                     }
-                    v
-                })
-                .collect();
-        }
+                    if b > hi {
+                        v.push((hi, b, density));
+                    }
+                }
+                v
+            })
+            .collect();
     }
     out
 }
