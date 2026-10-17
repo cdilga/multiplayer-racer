@@ -29,9 +29,9 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lamps: 'full', intakeBars: 3, slots: true, splitter: true, vents: 4, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 4, handles: true, skirts: true, seams: true, corners: true },
-  1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 5, flareLip: false, flareEnds: false, tyreCap: false, cell: 0.3, lampCell: 0.4, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 0, bulge: true, windows: true, mirrors: 'box', wing: 'posts', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 3, flareLip: false, flareEnds: false, tyreCap: false, cell: 9, lampCell: 9, lamps: 'flat', intakeBars: 0, slots: false, splitter: false, vents: -1, bulge: false, windows: 'flat', mirrors: 'box', wing: 'plate', tips: false, exhaust: 'none', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, lamps: 'full', intakeBars: 3, slots: true, splitter: true, vents: 4, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 4, handles: true, skirts: true, seams: true, corners: true },
+  1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 5, flareLip: false, flareEnds: false, tyreCap: false, cell: 0.3, lampCell: 0.2, lampOff: 0.02, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 0, bulge: true, windows: true, mirrors: 'box', wing: 'posts', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 0, flareLip: false, flareEnds: false, tyreCap: false, cell: 0.35, lampCell: 0.25, lampOff: 0.025, lamps: 'flat', intakeBars: 0, slots: false, splitter: false, vents: -1, bulge: false, windows: 'flat', mirrors: 'box', wing: 'plate', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -313,7 +313,7 @@ function makeSoups(P, lod) {
   // ── front fascia (part: front): measured off the sheet's front view, (x, y) in metres, projected onto the nose ──
   const Fr = P.front, ybN = lerpCurve(P.yBot, P.zNose);
   // the twin stripes run down the nose to the bumper
-  for (const s of [1, -1]) decal(F, s > 0 ? Fr.stripe : mirrorX(Fr.stripe), 'stripe', 0.004, 1);
+  for (const s of [1, -1]) decal(F, s > 0 ? Fr.stripe : mirrorX(Fr.stripe), 'stripe', 0.004 + T.lampOff, 1);
   // the black upper grille: a long hexagon between the lamps, framed in trim
   decal(F, Fr.grille, 'trim', 0.006, 1);
   decal(F, Fr.grilleIn, 'grille', 0.009, 1);
@@ -323,7 +323,7 @@ function makeSoups(P, lod) {
     decal(F, [[-w, y - 0.008], [w, y - 0.008], [w, y + 0.008], [-w, y + 0.008]], 'trim', 0.01, 1); }
   // the swept headlamps: a dark rim and the lamp itself, wrapping round the corner onto the wing
   both((s, m) => {
-    decal(F, m(Fr.lamp), 'head', 0.01, 1, T.lampCell);
+    decal(F, m(Fr.lamp), 'head', 0.01 + T.lampOff, 1, T.lampCell);
   });
   // the bumper corners: vertical LED slots in black surrounds
   if (T.slots) both((s, m) => { decal(F, m(Fr.slotBox), 'grille', 0.006, 1); decal(F, m(Fr.slot), 'led', 0.01, 1); });
@@ -346,11 +346,11 @@ function makeSoups(P, lod) {
 
   // ── rear (part: back): measured off the sheet's rear view, projected onto the tail ──
   const Bk = S('back'), zt = P.zTail, Rr = P.rear;
-  for (const s of [1, -1]) decal(Bk, s > 0 ? Rr.stripe : mirrorX(Rr.stripe), 'stripe', 0.004, -1);
+  for (const s of [1, -1]) decal(Bk, s > 0 ? Rr.stripe : mirrorX(Rr.stripe), 'stripe', 0.004 + T.lampOff, -1);
   // the tail lamps: a red lamp, its smoked centre, wrapping onto the quarter
   both((s, m) => {
-    decal(Bk, m(Rr.lamp), 'tail', 0.008, -1, T.lampCell);
-    if (T.lamps === 'full') decal(Bk, m(Rr.lampIn), 'taildk', 0.012, -1, T.lampCell);
+    decal(Bk, m(Rr.lamp), 'tail', 0.008 + T.lampOff, -1, T.lampCell);
+    if (T.lamps === 'full') decal(Bk, m(Rr.lampIn), 'taildk', 0.012 + T.lampOff, -1, T.lampCell);
   });
   // the black diffuser hanging under the bumper, with fins, and four chrome tail pipes in two pairs
   { const D = Rr.diffuser, hwT = lerpCurve(P.hw, zt);
