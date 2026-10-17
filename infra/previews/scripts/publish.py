@@ -361,9 +361,21 @@ def edge_current(reg: dict) -> bool:
         return False
 
 
+def write_index(page: str):
+    """Puts the index in the edge's index folder on TrueNAS (edge.INDEX_DIR, served at /), through the runner's TrueNAS
+    Docker socket as infra/poc/publish.sh does: no SSH key, no secret. Written beside and renamed, so the edge never
+    serves half a page. It is a file, not part of the edge's compose, because the middleware's messages stop at 64 kB."""
+    script = "cat > /dst/index.html.tmp && chmod 644 /dst/index.html.tmp && mv /dst/index.html.tmp /dst/index.html"
+    subprocess.run(["docker", "run", "-i", "--rm", "-v", f"{edge.INDEX_DIR}:/dst", "alpine:3.22", "sh", "-euc", script],
+                   input=page.encode(), check=True, timeout=120)
+
+
 async def apply_edge(nas: TrueNAS, reg: dict):
-    """The index (P1-D05) lists the current previews: the edge is re-applied with it (a ~2 s edge restart)."""
-    (ROOT / "edge" / "index.html").write_text(index_html(reg))
+    """The index (P1-D05) lists the current previews: written to the edge's index folder, then the edge is re-applied (a
+    ~2 s edge restart; its compose is small and fixed, only the Caddyfile and the mounts)."""
+    page = index_html(reg)
+    (ROOT / "edge" / "index.html").write_text(page)
+    write_index(page)
     await nas.job("app.update", ["jammers-preview-edge", {"custom_compose_config": edge.compose()}])
 
 

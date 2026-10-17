@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
 
 class ChangedListBound(unittest.TestCase):
-    """The index rides inside the edge app's compose through the TrueNAS middleware (64 kB messages): a card lists the
+    """The index used to ride inside the edge app's compose (64 kB middleware messages); it is a file now, but page weight still matters: a card lists the
     first CHANGED_SHOWN commit titles and links to the rest, and a busy day's previews still fit."""
 
     def test_a_long_change_list_shows_the_first_titles_and_links_the_rest(self):
