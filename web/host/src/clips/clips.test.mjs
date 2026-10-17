@@ -1,8 +1,8 @@
 // P1-F07 (bug clips) and P1-F12 (session recorder) browser tests, on the real host page through the real build, with the
 // native `jj sim --replay` as the judge. Run on eris (browsers don't run on the Mac):
 //   scripts/remote/eris.sh --run f07 'scripts/build-host-wasm.sh && JJ_BIN=target/debug/jj node --test web/host/src/clips/clips.test.mjs'
-// (`JJ_BIN` defaults to `cargo run -p jj-tools`.) Evidence goes to docs/evidence/P1-F07/ and P1-F12/ (JJ_EVIDENCE_DIR
-// overrides both).
+// (`JJ_BIN` defaults to `cargo run -p jj-tools`.) Evidence goes to OS scratch; JJ_EVIDENCE_DIR=docs/evidence writes the
+// committed receipts in its P1-F07/ and P1-F12/ (br-oj4i).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -11,10 +11,11 @@ import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from '../../../tests/journeys/lib/chromium.mjs';
+import { evidencePath } from '../../../tests/lib/evidence.mjs';
 
 const repo = resolve(import.meta.dirname, '../../../..');
-const out7 = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'P1-F07');
-const out12 = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'P1-F12');
+const out7 = join(evidencePath(), 'P1-F07');
+const out12 = join(evidencePath(), 'P1-F12');
 const BASE = '/p/clips/';
 let browser;
 let server;
