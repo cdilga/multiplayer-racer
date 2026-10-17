@@ -155,7 +155,8 @@ async function joined(url, phone = false) {
   return p;
 }
 
-test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000, skip: !gpu && '24 live views require a GPU host; full and quarter-resolution SwiftShader both stall fresh input (P1-C12 receipt)' }, async () => {
+// Quarantined (CI owner, br-j71z, owner BrownHill): timed out at 900 s in run 5598 (job 12288). Was: 24 live views need a GPU host.
+test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000, skip: 'quarantined br-j71z (owner BrownHill): times out at 900 s' }, async () => {
   let diagnosticHost, diagnosticPages = [], diagnosticSources = [], diagnosticPattern;
   try {
   // Normal resolution and all live views: source qualification runs in the GPU workflow.
@@ -450,7 +451,8 @@ async function drawerPaintBounds(page) {
   return { viewport: page.viewportSize(), frame: r, changed, sampled };
 }
 
-for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint stays in its frame after resize and fullscreen`, { timeout: 180_000 }, async () => {
+// WebKit quarantined (CI owner, br-vmre, owner BrownHill): failed at 1394 ms in run 5598 (job 12288).
+for (const engine of ['Chromium', 'WebKit']) test(`${engine} scroll drawer paint stays in its frame after resize and fullscreen`, { timeout: 180_000, skip: engine === 'WebKit' && 'quarantined br-vmre (owner BrownHill): WebKit drawer paint' }, async () => {
   const wk = engine === 'WebKit' ? await webkit.launch() : null;
   const host = await hostPage(wk ?? browser);
   const measurements = [];

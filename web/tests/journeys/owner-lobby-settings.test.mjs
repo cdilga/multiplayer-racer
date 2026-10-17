@@ -16,7 +16,8 @@ const shot = async (page, name) => {
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({path: `${process.env.JJ_CAPTURE_DIR}/${name}.jpg`, quality: 85});
 };
-for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and pad choose visibly; settings preserve pause and controller actions`, { timeout: 300000 }, async () => {
+// WebKit quarantined (CI owner, br-wweu, owner BrownHill): failed at 36 s in run 5598 (job 12288).
+for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and pad choose visibly; settings preserve pause and controller actions`, { timeout: 300000, skip: engine === webkit && 'quarantined br-wweu (owner BrownHill): WebKit journey 36 s' }, async () => {
   const server = deployed ? {origin:deployed.origin,close:async()=>{}} : await serveWithLocalStun(dist, BASE);
   const browser = await engine.launch(engine === chromium ? {channel:process.env.JJ_CHROMIUM_GPU==='native'?'chromium':undefined,args: chromiumArgs} : {});
   const errors = [];

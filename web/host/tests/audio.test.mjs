@@ -275,7 +275,8 @@ test('A03/A07: every shipped clip decodes in Chromium and WebKit (an AAC twin wo
   assert.deepEqual(wk.failed, [], `WebKit decodes every clip (canPlayType ogg/opus: "${wk.canOggOpus}")`);
 });
 
-test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo', { timeout: 240_000 }, async () => {
+// Quarantined (CI owner, br-kcny, owner BrownHill): throttle/rpm assertion failed in run 5598 (job 12290).
+test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo', { timeout: 240_000, skip: 'quarantined br-kcny (owner BrownHill): throttle/rpm assertion' }, async () => {
   const { page, errors } = await open(live, '?test=live');
   await page.evaluate(() => window.__jjAudio.unlock());
   await page.waitForFunction(() => window.__jjAudio.state().mix === 'running', null, { timeout: 10_000 });

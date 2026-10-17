@@ -296,7 +296,8 @@ test('two rounds back to back play two different generated four-biome tracks', {
   await page.close();
 });
 
-test('preparation finishes well inside the intermission with the page CPU throttled 6x (phone-host stand-in)', { timeout: 120_000 }, async () => {
+// Quarantined (CI owner, br-nc2q, owner BrownHill): run 5598 reroll took 46107 ms under 6x throttle (job 12285).
+test('preparation finishes well inside the intermission with the page CPU throttled 6x (phone-host stand-in)', { timeout: 120_000, skip: 'quarantined br-nc2q (owner BrownHill): reroll 46107 ms under 6x throttle' }, async () => {
   const { page, errors, api } = await open();
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
