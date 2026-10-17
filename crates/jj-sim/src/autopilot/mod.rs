@@ -55,6 +55,9 @@ pub struct SpeedPlan {
     pub max_speed: f32,
     /// On a jump's ramp the plan holds to this (m/s): generated jumps are built for a take-off speed.
     pub takeoff_mps: f32,
+    /// The car's catch-up drive scale (1 when it isn't trailing): a trailing bot aims that much faster, so catch-up helps
+    /// it at its planned speed too, not only while it accelerates.
+    pub scale: f32,
 }
 
 /// What a route point asks of the plan: nothing, a jump's take-off speed, or a gap leap's own speed (the top of the
@@ -503,9 +506,8 @@ impl Autopilot {
         self.mode == Mode::Handback && tick >= self.handback_at + HANDBACK_TICKS
     }
 
-    /// The controls for this tick, and whether it wants to press Recover (stuck for 3 s). `speed_scale` is the car's
-    /// catch-up drive scale (1 when it isn't trailing): a trailing bot aims that much faster, so catch-up helps it at its
-    /// planned speed too, not only while it accelerates.
+    /// The controls for this tick, and whether it wants to press Recover (stuck for 3 s), on `plan` (its `scale` is the
+    /// catch-up).
     pub fn drive(
         &mut self,
         path: &Path,
@@ -513,7 +515,6 @@ impl Autopilot {
         max_steer: f32,
         wheelbase: f32,
         tick: u64,
-        speed_scale: f32,
         plan: &SpeedPlan,
     ) -> (DriveInput, bool) {
         let n = path.n();
@@ -603,7 +604,7 @@ impl Autopilot {
         walk(horizon, &mut |v, d| {
             cap = cap.min(libm::sqrtf(v * v + 2.0 * plan.plan_brake * d));
         });
-        let mut target_speed = cap * speed_scale;
+        let mut target_speed = cap * plan.scale;
         if self.mode == Mode::CoolDown {
             target_speed *= COOL_DOWN;
         }

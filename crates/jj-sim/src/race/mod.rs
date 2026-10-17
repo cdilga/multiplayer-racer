@@ -74,6 +74,8 @@ struct Gate {
     z: f32,
     /// Only layered courses need a height window: a car under a gate cannot pass it.
     layer_y: Option<f32>,
+    /// On a crossing, the other level's height at the gate (m), when it was found.
+    other_y: Option<f32>,
     /// Unit route tangent (x, z) at the gate.
     tx: f32,
     tz: f32,
@@ -155,6 +157,20 @@ impl Course {
                 .unwrap_or(at)
         };
         let layered = jj_map::bridge::layered_points(m);
+        // The other road at a crossing gate: the nearest layered point well away along the route (its own road's
+        // neighbours are within a few points), within a road's width across.
+        let other_level = |at: usize| {
+            layered
+                .iter()
+                .filter(|&&j| {
+                    let d = (j + n - at) % n;
+                    d.min(n - d) > 16
+                })
+                .map(|&j| (libm::hypotf(pts[j].0 - pts[at].0, pts[j].1 - pts[at].1), j))
+                .filter(|&(d, _)| d < 12.0)
+                .min_by(|a, b| a.0.total_cmp(&b.0))
+                .map(|(_, j)| m.route.points[j].y as f32 / 1000.0)
+        };
         let gates = sorted
             .iter()
             .map(|g| {
@@ -171,6 +187,11 @@ impl Course {
                         .binary_search(&at)
                         .is_ok()
                         .then_some(m.route.points[at].y as f32 / 1000.0),
+                    other_y: if layered.binary_search(&at).is_ok() {
+                        other_level(at)
+                    } else {
+                        None
+                    },
                     tx: dx / len,
                     tz: dz / len,
                     half_width: m.route.points[at].width as f32 / 2000.0,
@@ -745,12 +766,21 @@ impl Race {
         }
         let t = (-before / (after - before)).clamp(0.0, 1.0);
         let y = prev.position[1] + t * (now.position[1] - prev.position[1]);
-        // Use half the minimum separation: a full-clearance window would also
-        // admit the body centre of a car on the other layer of a low deck.
-        if g.layer_y.is_some_and(|h| {
-            (y - h).abs() > jj_map::bridge::limits::MIN_CLEARANCE_MM as f32 / 2000.0
-        }) {
-            return None;
+        // On a crossing the deck is the divide (a car can't pass through it): the lower road's gate counts a car anywhere
+        // below the deck, so one flying off a crest just before the gate still gets it; the upper road's gate counts a
+        // car no lower than half the minimum clearance under its own surface. A gate on a crossing's span with no other
+        // road under or over it (an overpass leap's landing end) has no other level to mistake, so it counts at any
+        // height: a fast car still in the air over the landing gets it (relief seed 7 never lapped at the new pace).
+        if let Some(h) = g.layer_y {
+            let half = jj_map::bridge::limits::MIN_CLEARANCE_MM as f32 / 2000.0;
+            let on_its_level = match g.other_y {
+                Some(o) if h < o => y < o,
+                Some(_) => y > h - half,
+                None => true,
+            };
+            if !on_its_level {
+                return None;
+            }
         }
         Some(t)
     }

@@ -213,6 +213,7 @@ impl AssistProfile {
             min_speed: a.min_speed,
             max_speed: (a.top_speed_share * top_speed_mps).max(a.min_speed),
             takeoff_mps: a.takeoff_mps,
+            scale: 1.0,
         }
     }
 

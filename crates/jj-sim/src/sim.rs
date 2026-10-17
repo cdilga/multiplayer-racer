@@ -1917,9 +1917,12 @@ impl Sim {
                         p.steer_lock(pose.forward_speed),
                         wheelbase,
                         tick,
-                        1.0 + self.assist_profile.catch_up.top_speed_gain
-                            * catch_shares.get(i).copied().unwrap_or(0.0),
-                        &self.assist_profile.speed_plan(p),
+                        &crate::autopilot::SpeedPlan {
+                            scale: 1.0
+                                + self.assist_profile.catch_up.top_speed_gain
+                                    * catch_shares.get(i).copied().unwrap_or(0.0),
+                            ..self.assist_profile.speed_plan(p)
+                        },
                     );
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost rides on the autopilot's line. Only DRIVE moving counts as taking back over.
