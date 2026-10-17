@@ -59,10 +59,8 @@ impl RouteGeom {
                 .iter()
                 .map(|p| p.y as f64 / 1000.0)
                 .collect(),
-            layered: map
-                .features
-                .iter()
-                .any(|f| f.kind == jj_map::FeatureKind::Bridge),
+            // A bridge or an overpass leap: two roads at one place, told apart by height.
+            layered: !jj_map::bridge::layered_points(map).is_empty(),
         }
     }
 

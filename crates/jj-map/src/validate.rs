@@ -550,6 +550,11 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
         }
     }
 
+    // The route crosses itself only at declared crossings, one crossing per route point (br-xlvx.10).
+    for detail in crate::bridge::layout_problems(map) {
+        add(&mut v, Rule::Crossing, "route", detail);
+    }
+
     // Features: params and the jump's landing envelope and bypass.
     let mut feature_zones: Vec<(String, f64, f64, f64, f64)> = Vec::new(); // (what, s0, s1, lateral lo, hi)
     for (i, f) in map.features.iter().enumerate() {

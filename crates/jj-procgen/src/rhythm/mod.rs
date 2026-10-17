@@ -209,11 +209,17 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
         let Some(design) = jj_map::bridge::BridgeDesign::of(f) else {
             continue;
         };
-        for span in [design.upper, design.lower] {
-            if let Some(ix) = jj_map::bridge::indices(map, span) {
-                let mid = ix[ix.len() / 2];
+        // Either side of where the two roads actually cross (not the spans' middles: a crossing may sit anywhere).
+        let (Some(upper), Some(lower)) = (
+            jj_map::bridge::indices(map, design.upper),
+            jj_map::bridge::indices(map, design.lower),
+        ) else {
+            continue;
+        };
+        if let Some((a, b)) = jj_map::bridge::crossing_point(map, &upper, &lower) {
+            for at in [a, b] {
                 for k in 0..=2 * reach {
-                    beats[(mid + n + k - reach) % n] = Beat::SetPiece;
+                    beats[(at + n + k - reach) % n] = Beat::SetPiece;
                 }
             }
         }

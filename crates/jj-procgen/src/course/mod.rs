@@ -100,8 +100,45 @@ pub struct Course {
     /// The set-piece beat straights, as arc-length spans (m from the start, before resampling): where the lap's set
     /// pieces go, so biome boundaries keep off them (P1-FL15c).
     pub beat_spans: Vec<(f64, f64)>,
-    /// Upper and lower straight spans in metres along the route, before resampling.
-    pub crossing: Option<[(f64, f64); 2]>,
+    /// Where the lap passes over itself (R124, br-xlvx.10): every crossing, in no particular order.
+    pub crossings: Vec<Crossing>,
+}
+
+/// A place where the lap passes over itself: the upper road's span (the deck or the leap) and the lower road's span it
+/// crosses, in metres along the route from the start before resampling, and where on each the two roads cross. Neither
+/// span straddles the lap's seam (`lo < hi`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Crossing {
+    pub upper: (f64, f64),
+    pub lower: (f64, f64),
+    /// The crossing point on the upper span and on the lower span, m.
+    pub at: (f64, f64),
+}
+
+impl Crossing {
+    /// A crossing at both straights' midpoints (the figure-eight's).
+    pub fn mid(upper: (f64, f64), lower: (f64, f64)) -> Self {
+        Self {
+            upper,
+            lower,
+            at: ((upper.0 + upper.1) / 2.0, (lower.0 + lower.1) / 2.0),
+        }
+    }
+
+    /// The upper span's length before and after its crossing point, m. A crossing at the midpoint gives the same half
+    /// both ways, computed as the span's half (so a midpoint crossing's deck is exactly what it always was).
+    pub fn halves(&self) -> (f64, f64) {
+        if self.at.0 == (self.upper.0 + self.upper.1) / 2.0 {
+            let half = (self.upper.1 - self.upper.0) / 2.0;
+            (half, half)
+        } else {
+            (self.at.0 - self.upper.0, self.upper.1 - self.at.0)
+        }
+    }
+
+    pub fn on_upper(&self, s: f64) -> bool {
+        s >= self.upper.0 && s <= self.upper.1
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -684,7 +721,7 @@ pub fn lab_oval(straight_m: f64, radius_m: f64) -> Course {
         attempts: 1,
         fallback: false,
         rejects: BTreeMap::new(),
-        crossing: None,
+        crossings: Vec::new(),
         beat_spans: Vec::new(),
     }
 }
@@ -822,7 +859,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
             attempts: attempt,
             fallback: false,
             rejects,
-            crossing: None,
+            crossings: Vec::new(),
             beat_spans: spans_of(&pieces, &beat_ix),
         };
     }
@@ -838,7 +875,7 @@ pub fn design_with(rng: &mut Rng, data: &CourseData) -> Course {
         attempts: MAX_ATTEMPTS,
         fallback: true,
         rejects,
-        crossing: None,
+        crossings: Vec::new(),
         beat_spans: Vec::new(),
     }
 }
@@ -972,13 +1009,13 @@ fn figure_eight(rng: &mut Rng, data: &CourseData, class: ClassName, band: Length
         attempts: 1,
         fallback: false,
         rejects: BTreeMap::new(),
-        crossing: Some([
+        crossings: vec![Crossing::mid(
             (
                 straight + lobe + k as f64 * beat_m,
                 2.0 * straight + lobe + k as f64 * beat_m,
             ),
             (0.0, straight),
-        ]),
+        )],
         beat_spans,
     }
 }

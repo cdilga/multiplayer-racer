@@ -145,7 +145,7 @@ pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
         map,
         rng,
         along,
-        None,
+        &[],
         &crate::tuning::GeneratorData::shipped().course.crossing,
     );
 }
@@ -157,7 +157,7 @@ pub fn undulate_along_crossing(
     map: &mut Map,
     rng: &mut Rng,
     along: &[TerrainParams],
-    crossing: Option<[(f64, f64); 2]>,
+    crossings: &[crate::course::Crossing],
     deck: &crate::tuning::CrossingData,
 ) {
     let min = |f: &dyn Fn(&TerrainParams) -> f64| along.iter().map(f).fold(f64::INFINITY, f64::min);
@@ -225,9 +225,9 @@ pub fn undulate_along_crossing(
     let keep_out = |sv: f64| {
         sv < KEEP_OUT_START_M
             || sv > total - KEEP_OUT_END_M
-            || crossing.is_some_and(|[upper, lower]| {
-                (sv > upper.0 - KEEP_OUT_CROSSING_M && sv < upper.1 + KEEP_OUT_CROSSING_M)
-                    || (sv - (lower.0 + lower.1) / 2.0).abs() < KEEP_OUT_UNDER_M
+            || crossings.iter().any(|c| {
+                (sv > c.upper.0 - KEEP_OUT_CROSSING_M && sv < c.upper.1 + KEEP_OUT_CROSSING_M)
+                    || (sv - c.at.1).abs() < KEEP_OUT_UNDER_M
             })
     };
     let route_pts: Vec<landforms::RoutePoint> = (0..n)
@@ -264,23 +264,30 @@ pub fn undulate_along_crossing(
     // landforms become cuttings and gorges with walls both sides.
     // The deck (`crossings::place`) follows the upper road with a cosine from its span's ends to its top; the cosine is
     // steeper than the road's own rise at its middle, so the road keeps its grade low enough there.
-    let deck_grade = crossing.map(|[upper, _]| {
-        let half_span = (upper.1 - upper.0) / 2.0;
-        let ramp = (half_span - deck.plateau_half_m).max(1.0);
-        (
-            upper,
-            DECK_GRADE_SHARE * deck.max_grade_milli as f64 / 1000.0 / core::f64::consts::FRAC_PI_2
-                * ramp
-                / half_span.max(1.0),
-        )
-    });
+    // Each side's cosine is its own length (the steeper, shorter side decides).
+    let deck_grade: Vec<((f64, f64), f64)> = crossings
+        .iter()
+        .map(|c| {
+            let (lo, hi) = c.halves();
+            let half_span = lo.min(hi);
+            let ramp = (half_span - deck.plateau_half_m).max(1.0);
+            (
+                c.upper,
+                DECK_GRADE_SHARE * deck.max_grade_milli as f64
+                    / 1000.0
+                    / core::f64::consts::FRAC_PI_2
+                    * ramp
+                    / half_span.max(1.0),
+            )
+        })
+        .collect();
     // Bank (as tan of the angle): toward the corner, then rate-limited so the edges stay inside the grade budget.
     let target: Vec<f64> = (0..n)
         .map(|i| {
             let max_tan =
                 libm::tan(f64::from(along[i].max_bank_cdeg) * core::f64::consts::PI / 18_000.0);
             // The deck's span is unbanked (its edges follow one cosine; a banked approach would kink them).
-            let on_deck = deck_grade.is_some_and(|(upper, _)| {
+            let on_deck = deck_grade.iter().any(|(upper, _)| {
                 s[i] >= upper.0 - DECK_UNBANKED_M && s[i] <= upper.1 + DECK_UNBANKED_M
             });
             if on_deck {
@@ -342,10 +349,10 @@ pub fn undulate_along_crossing(
                 let road = (EDGE_GRADE_SHARE * limit * f[i] - twist)
                     .max(PROFILE_GRADE_SHARE * limit * f[i]);
                 let road = if flow[i] { road.min(FLOW_GRADE) } else { road };
-                match deck_grade {
-                    Some((upper, limit)) if s[i] >= upper.0 && s[i] <= upper.1 => road.min(limit),
-                    _ => road,
-                }
+                deck_grade
+                    .iter()
+                    .filter(|(upper, _)| s[i] >= upper.0 && s[i] <= upper.1)
+                    .fold(road, |road, &(_, limit)| road.min(limit))
             })
             .collect()
     };
@@ -358,18 +365,20 @@ pub fn undulate_along_crossing(
             .min_by(|&a, &b| (s[a] - v).abs().total_cmp(&(s[b] - v).abs()))
             .unwrap_or(0)
     };
-    let under: Option<(usize, Vec<usize>)> = crossing.map(|[upper, lower]| {
-        let ml = (lower.0 + lower.1) / 2.0;
-        let window = (0..n)
-            .filter(|&i| {
-                let d = (s[i] - ml).abs();
-                d.min(total - d) <= UNDER_DECK_HALF_M
-            })
-            .collect();
-        (nearest((upper.0 + upper.1) / 2.0), window)
-    });
+    let under: Vec<(usize, Vec<usize>)> = crossings
+        .iter()
+        .map(|c| {
+            let window = (0..n)
+                .filter(|&i| {
+                    let d = (s[i] - c.at.1).abs();
+                    d.min(total - d) <= UNDER_DECK_HALF_M
+                })
+                .collect();
+            (nearest(c.at.0), window)
+        })
+        .collect();
     let under_deck = |h: &mut [f64]| {
-        if let Some((top, window)) = &under {
+        for (top, window) in &under {
             // The steeper side decides: a deck rising over a flat lower road onto a steep upper road is too steep.
             let dip = window
                 .first()
@@ -383,20 +392,16 @@ pub fn undulate_along_crossing(
     };
     // The upper road takes the deck's own shape across its span: level over the plateau, a cosine to each end (as
     // `crossings::place` builds the deck), so deck, road and ground agree and no edge kinks between them.
-    let deck_span = crossing.map(|[upper, _]| {
-        let mid = (upper.0 + upper.1) / 2.0;
-        (
-            nearest(upper.0),
-            nearest(upper.1),
-            mid,
-            (upper.1 - upper.0) / 2.0,
-        )
-    });
+    let deck_span: Vec<(usize, usize, f64, (f64, f64))> = crossings
+        .iter()
+        .map(|c| (nearest(c.upper.0), nearest(c.upper.1), c.at.0, c.halves()))
+        .collect();
     let deck_profile = |h: &mut [f64]| {
-        if let Some((a, b, mid, half_span)) = deck_span {
+        for &(a, b, mid, (half_lo, half_hi)) in &deck_span {
             let top = h[nearest(mid)];
             let (start, end) = (h[a], h[b]);
             for i in a..=b {
+                let half_span = if s[i] < mid { half_lo } else { half_hi };
                 let u = ((s[i] - mid).abs() - deck.plateau_half_m).max(0.0)
                     / (half_span - deck.plateau_half_m).max(1.0);
                 let blend = (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0;
@@ -479,56 +484,60 @@ pub fn undulate_along_crossing(
     );
     let bed = half + BED_SPACINGS * sp;
     let reach_m = bed + p.blend_m + REACH_EXTRA_M;
-    let layer_weight = crossing.map(|[upper, lower]| {
-        // Inside its span the upper road is the deck (`crossings::place`): the ground there follows the lower road and
-        // the landscape, not the upper road's bed (that would stand an embankment a deck's height high beside the
-        // underpass). Its influence fades back in toward the span's ends, where the deck meets the ground.
-        let upper: Vec<Option<f64>> = s
-            .iter()
-            .map(|&v| {
-                (v >= upper.0 && v <= upper.1)
-                    .then(|| 1.0 - smooth((v - upper.0).min(upper.1 - v) / DECK_END_FADE_M))
-            })
-            .collect();
-        let lower: Vec<usize> = s
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &v)| (v >= lower.0 && v <= lower.1).then_some(i))
-            .collect();
-        // Only cells inside the lower corridor can change an upper weight. Rasterise segment neighbourhoods instead
-        // of searching every lower segment for every cell in the world (important for WASM preparation latency).
-        let mut distances = vec![f64::INFINITY; cols * rows];
-        let fade = bed + p.blend_m;
-        for w in lower.windows(2) {
-            let (a, b) = (pts[w[0]], pts[w[1]]);
-            let (dx, dz) = (b.0 - a.0, b.1 - a.1);
-            let c0 = libm::floor(((a.0.min(b.0) - fade - ox) / sp).max(0.0)) as usize;
-            let c1 =
-                (libm::ceil(((a.0.max(b.0) + fade - ox) / sp).max(0.0)) as usize).min(cols - 1);
-            let r0 = libm::floor(((a.1.min(b.1) - fade - oz) / sp).max(0.0)) as usize;
-            let r1 =
-                (libm::ceil(((a.1.max(b.1) + fade - oz) / sp).max(0.0)) as usize).min(rows - 1);
-            for r in r0..=r1 {
-                for c in c0..=c1 {
-                    let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
-                    let t =
-                        (((x - a.0) * dx + (z - a.1) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
-                    let distance = (x - a.0 - t * dx).powi(2) + (z - a.1 - t * dz).powi(2);
-                    let at = r * cols + c;
-                    distances[at] = distances[at].min(distance);
+    let layer_weight: Vec<(Vec<Option<f64>>, Vec<f64>)> = crossings
+        .iter()
+        .map(|c| {
+            let (upper, lower) = (c.upper, c.lower);
+            // Inside its span the upper road is the deck (`crossings::place`): the ground there follows the lower road and
+            // the landscape, not the upper road's bed (that would stand an embankment a deck's height high beside the
+            // underpass). Its influence fades back in toward the span's ends, where the deck meets the ground.
+            let upper: Vec<Option<f64>> = s
+                .iter()
+                .map(|&v| {
+                    (v >= upper.0 && v <= upper.1)
+                        .then(|| 1.0 - smooth((v - upper.0).min(upper.1 - v) / DECK_END_FADE_M))
+                })
+                .collect();
+            let lower: Vec<usize> = s
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &v)| (v >= lower.0 && v <= lower.1).then_some(i))
+                .collect();
+            // Only cells inside the lower corridor can change an upper weight. Rasterise segment neighbourhoods instead
+            // of searching every lower segment for every cell in the world (important for WASM preparation latency).
+            let mut distances = vec![f64::INFINITY; cols * rows];
+            let fade = bed + p.blend_m;
+            for w in lower.windows(2) {
+                let (a, b) = (pts[w[0]], pts[w[1]]);
+                let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+                let c0 = libm::floor(((a.0.min(b.0) - fade - ox) / sp).max(0.0)) as usize;
+                let c1 =
+                    (libm::ceil(((a.0.max(b.0) + fade - ox) / sp).max(0.0)) as usize).min(cols - 1);
+                let r0 = libm::floor(((a.1.min(b.1) - fade - oz) / sp).max(0.0)) as usize;
+                let r1 =
+                    (libm::ceil(((a.1.max(b.1) + fade - oz) / sp).max(0.0)) as usize).min(rows - 1);
+                for r in r0..=r1 {
+                    for c in c0..=c1 {
+                        let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
+                        let t = (((x - a.0) * dx + (z - a.1) * dz) / (dx * dx + dz * dz))
+                            .clamp(0.0, 1.0);
+                        let distance = (x - a.0 - t * dx).powi(2) + (z - a.1 - t * dz).powi(2);
+                        let at = r * cols + c;
+                        distances[at] = distances[at].min(distance);
+                    }
                 }
             }
-        }
-        let cells: Vec<f64> = distances
-            .into_iter()
-            .map(|distance| {
-                let distance = libm::sqrt(distance);
-                let k = ((distance - bed) / p.blend_m).clamp(0.0, 1.0);
-                k * k * (3.0 - 2.0 * k)
-            })
-            .collect();
-        (upper, cells)
-    });
+            let cells: Vec<f64> = distances
+                .into_iter()
+                .map(|distance| {
+                    let distance = libm::sqrt(distance);
+                    let k = ((distance - bed) / p.blend_m).clamp(0.0, 1.0);
+                    k * k * (3.0 - 2.0 * k)
+                })
+                .collect();
+            (upper, cells)
+        })
+        .collect();
     // The road's grade at each point (central difference), for its bed plane.
     let slope: Vec<f64> = (0..n)
         .map(|i| (h[(i + 1) % n] - h[(i + n - 1) % n]) / (ds[i] + ds[(i + n - 1) % n]).max(1e-9))
@@ -557,9 +566,11 @@ pub fn undulate_along_crossing(
                     continue;
                 }
                 let at = r * cols + c;
-                let layer = layer_weight.as_ref().map_or(1.0, |(upper, cells)| {
-                    upper[i].map_or(1.0, |end| cells[at] * end)
-                });
+                // On a crossing's upper span, that crossing's lower road decides.
+                let layer = layer_weight
+                    .iter()
+                    .find_map(|(upper, cells)| upper[i].map(|end| cells[at] * end))
+                    .unwrap_or(1.0);
                 if layer == 0.0 {
                     continue;
                 }
@@ -622,10 +633,14 @@ pub fn undulate_along_crossing(
     }
     // Nothing under the deck stands above it: across the upper span the ground within the upper road's bed is cut down
     // to that road's own profile (the deck clears it; a hill under the span would otherwise lift the deck over it).
-    if let Some([upper, _]) = crossing {
+    if !crossings.is_empty() {
         let mut ceiling = vec![f64::INFINITY; cols * rows];
         // Only past the end fade: near its ends the deck meets the upper road's own ground, which must stay put.
-        for i in (0..n).filter(|&i| (s[i] - upper.0).min(upper.1 - s[i]) >= DECK_END_FADE_M) {
+        for i in (0..n).filter(|&i| {
+            crossings.iter().any(|c| {
+                c.on_upper(s[i]) && (s[i] - c.upper.0).min(c.upper.1 - s[i]) >= DECK_END_FADE_M
+            })
+        }) {
             let (px, pz) = pts[i];
             let c0 = libm::floor(((px - bed - ox) / sp).max(0.0)) as usize;
             let c1 = (libm::ceil(((px + bed - ox) / sp).max(0.0)) as usize).min(cols - 1);
@@ -678,7 +693,7 @@ pub fn undulate_along_crossing(
     for (i, q) in map.route.points.iter_mut().enumerate() {
         // Across a crossing's upper span the road is the deck: it keeps the profile it was routed on (the ground under
         // it follows the lower road and the landscape), and `crossings::place` builds the deck no lower than that.
-        if crossing.is_some_and(|[upper, _]| s[i] >= upper.0 && s[i] <= upper.1) {
+        if crossings.iter().any(|c| c.on_upper(s[i])) {
             q.y = libm::round(h[i] * 1000.0) as i32;
             continue;
         }

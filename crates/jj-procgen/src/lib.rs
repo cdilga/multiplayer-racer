@@ -162,7 +162,7 @@ pub fn generate_course(
     pieces: &setpieces::Data,
 ) -> Result<(Map, Report), biome::SelectError> {
     let centerline = centred(&resample(&course.points));
-    let sel = if course.crossing.is_some() {
+    let sel = if !course.crossings.is_empty() {
         biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
     } else {
         biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &course.beat_spans)?
@@ -195,10 +195,10 @@ pub fn generate_course(
         &mut map,
         &mut st.terrain,
         &along,
-        course.crossing,
+        &course.crossings,
         &data.course.crossing,
     );
-    if course.crossing.is_some() {
+    if !course.crossings.is_empty() {
         crossings::place(&mut map, &course, &data.course.crossing);
     }
     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
@@ -321,7 +321,7 @@ pub fn generate_course(
     roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
         if reserved(i) {
             0.0
-        } else if course.crossing.is_none() || eligible[i] {
+        } else if course.crossings.is_empty() || eligible[i] {
             sel.weight(Biome::Town, i)
         } else {
             0.0

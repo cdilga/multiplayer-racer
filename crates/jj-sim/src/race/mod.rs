@@ -150,6 +150,7 @@ impl Course {
                 .find(|&i| clear_ahead(i))
                 .unwrap_or(at)
         };
+        let layered = jj_map::bridge::layered_points(m);
         let gates = sorted
             .iter()
             .map(|g| {
@@ -161,15 +162,10 @@ impl Course {
                     at,
                     x: pts[at].0,
                     z: pts[at].1,
-                    layer_y: m
-                        .features
-                        .iter()
-                        .filter_map(jj_map::bridge::BridgeDesign::of)
-                        .any(|d| {
-                            [d.upper, d.lower].iter().any(|&span| {
-                                jj_map::bridge::indices(m, span).is_some_and(|ix| ix.contains(&at))
-                            })
-                        })
+                    // On either level of a crossing (a bridge or an overpass leap) a gate counts only at its road's height.
+                    layer_y: layered
+                        .binary_search(&at)
+                        .is_ok()
                         .then_some(m.route.points[at].y as f32 / 1000.0),
                     tx: dx / len,
                     tz: dz / len,

@@ -164,11 +164,8 @@ impl Path {
                 .iter()
                 .map(|p| p.y as f32 / 1000.0)
                 .collect(),
-            layered: map
-                .map
-                .features
-                .iter()
-                .any(|f| f.kind == jj_map::FeatureKind::Bridge),
+            // A bridge or an overpass leap: two roads at one place, told apart by height.
+            layered: !jj_map::bridge::layered_points(&map.map).is_empty(),
             s,
             curvature,
             total,

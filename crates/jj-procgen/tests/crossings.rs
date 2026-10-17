@@ -261,6 +261,10 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
 fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
     let d = data();
     let reg = jj_procgen::registry();
+    let roster = jj_sim::VehicleProfile::roster(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."),
+    )
+    .expect("the roster loads");
     let mut rows = Vec::new();
     for recipe in [
         vec![Biome::Town],
@@ -274,26 +278,43 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
             Biome::OutbackBitumen,
         ],
     ] {
-        for seed in 0..3 {
+        // Every roster vehicle (br-xlvx.10: bots of every roster vehicle lap both levels), each on its own seed of the
+        // recipe so the bank covers several courses.
+        for (vi, (vehicle, profile)) in roster.iter().enumerate() {
+            let seed = vi as u64 % 3;
             let prepared = jj_procgen::prepare_tuned(seed, &recipe, 8, &d);
             assert!(prepared.valid, "{recipe:?} {seed}: {:?}", prepared.attempts);
             let map =
                 jj_map::load_canonical(&jj_map::canonical_bytes(&prepared.map), &reg).unwrap();
-            let profile = jj_sim::VehicleProfile::cruz();
+            let profile = profile.clone();
             let mut sim = jj_sim::Sim::new(&map, &reg, seed, profile.clone());
             let car = sim.spawn_grid(1)[0];
             sim.start_race(1);
             sim.set_autopilot(car, true);
-            let bridge = map
+            // Every crossing's two levels and where they actually cross (a bridge's or an overpass leap's).
+            let crossings: Vec<[usize; 2]> = map
                 .map
                 .features
                 .iter()
-                .find(|f| f.kind == FeatureKind::Bridge)
-                .unwrap();
-            let shape = jj_map::bridge::BridgeDesign::of(bridge).unwrap();
-            let upper = jj_map::bridge::indices(&map.map, shape.upper).unwrap();
-            let lower = jj_map::bridge::indices(&map.map, shape.lower).unwrap();
-            let mut seen = [false; 2];
+                .filter_map(|f| {
+                    let (upper, lower) = if let Some(b) = jj_map::bridge::BridgeDesign::of(f) {
+                        (
+                            jj_map::bridge::indices(&map.map, b.upper)?,
+                            jj_map::bridge::indices(&map.map, b.lower)?,
+                        )
+                    } else {
+                        let g = jj_map::setpiece::GapLeap::of(f)?;
+                        let (a, b) = g.lower?;
+                        let span =
+                            |from, to| jj_map::bridge::indices(&map.map, jj_map::Span { from, to });
+                        (span(g.from, g.to)?, span(a, b)?)
+                    };
+                    let (a, b) = jj_map::bridge::crossing_point(&map.map, &upper, &lower)?;
+                    Some([a, b])
+                })
+                .collect();
+            assert!(!crossings.is_empty(), "{recipe:?} {seed}: no crossing");
+            let mut seen = vec![[false; 2]; crossings.len()];
             let route = jj_sim::observe::RouteGeom::new(&map.map);
             while !sim.race().is_finished(car.0) && sim.tick() < 400 * u64::from(jj_sim::TICK_HZ) {
                 sim.step();
@@ -305,15 +326,18 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
                         st.position[2] as f64,
                     )
                     .route_point as usize;
-                for (i, span) in [&upper, &lower].iter().enumerate() {
-                    if p == span[span.len() / 2] && st.wheels_in_contact > 0 {
-                        seen[i] = true;
+                for (c, points) in crossings.iter().enumerate() {
+                    for (level, &at) in points.iter().enumerate() {
+                        // A leap's upper level is flown, not driven: being over its crossing point counts.
+                        if p == at && (st.wheels_in_contact > 0 || level == 0) {
+                            seen[c][level] = true;
+                        }
                     }
                 }
             }
             let race = sim.race().car(car.0).unwrap();
             eprintln!(
-                "{recipe:?} seed {seed}: ticks {} seen {seen:?}, recoveries {}, wrecks {}",
+                "{vehicle} {recipe:?} seed {seed}: ticks {} seen {seen:?}, recoveries {}, wrecks {}",
                 sim.tick(),
                 race.recoveries,
                 race.wrecks
@@ -327,12 +351,22 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
                     sim.autopilot_state(car)
                 );
             }
-            assert!(race.finished_at.is_some(), "{recipe:?} {seed} stalled");
-            assert_eq!((race.recoveries, race.wrecks), (0, 0), "{recipe:?} {seed}");
-            assert_eq!(seen, [true, true], "both crossing layers physically driven");
+            assert!(
+                race.finished_at.is_some(),
+                "{vehicle} {recipe:?} {seed} stalled"
+            );
+            assert_eq!(
+                (race.recoveries, race.wrecks),
+                (0, 0),
+                "{vehicle} {recipe:?} {seed}"
+            );
+            assert!(
+                seen.iter().all(|s| *s == [true, true]),
+                "{vehicle} {recipe:?} {seed}: every crossing's both levels physically driven: {seen:?}"
+            );
             let replay = jj_sim::Sim::replay(&map, &reg, profile, sim.journal(), sim.tick());
             assert_eq!(sim.state_hash(), replay.state_hash());
-            rows.push(serde_json::json!({"seed":seed,"biomes":recipe,"ticks":sim.tick(),"seen":seen,"recoveries":race.recoveries,"wrecks":race.wrecks,"hash":jj_map::hex(&sim.state_hash())}));
+            rows.push(serde_json::json!({"vehicle":vehicle,"seed":seed,"biomes":recipe,"ticks":sim.tick(),"seen":seen,"recoveries":race.recoveries,"wrecks":race.wrecks,"hash":jj_map::hex(&sim.state_hash())}));
         }
     }
     if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {

@@ -1,7 +1,7 @@
 //! R124: explicit upper road; the terrain remains ground beneath the deck.
 use crate::{
     assemble::{arc_lengths, distance_to_loop, mm},
-    course::Course,
+    course::{Course, Crossing},
     features::Density,
     tuning::CrossingData,
 };
@@ -10,10 +10,15 @@ use jj_map::{Feature, FeatureKind, Map, Pose, Registry};
 /// The deck counts as over the lower road within both roads' half-widths of each other plus this, m.
 const DECK_OVERLAP_MARGIN_M: f64 = 2.0;
 
+/// Every crossing of the course becomes a bridge: its upper span a deck over the lower road.
 pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
-    let Some([upper, lower]) = course.crossing else {
-        return;
-    };
+    for c in &course.crossings {
+        place_one(map, c, data);
+    }
+}
+
+fn place_one(map: &mut Map, crossing: &Crossing, data: &CrossingData) {
+    let (upper, lower) = (crossing.upper, crossing.lower);
     let pts: Vec<_> = map
         .route
         .points
@@ -27,8 +32,15 @@ pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
             .unwrap()
     };
     let (a, b, c, d) = (at(upper.0), at(upper.1), at(lower.0), at(lower.1));
-    let mid = (s[a] + s[b]) / 2.0;
-    let half = (s[b] - s[a]) / 2.0;
+    // The deck's top is at the crossing point; each side ramps over its own length (equal at a mid-span crossing).
+    let (mid, half_lo, half_hi) = if crossing.halves().0 == crossing.halves().1 {
+        let half = (s[b] - s[a]) / 2.0;
+        ((s[a] + s[b]) / 2.0, half, half)
+    } else {
+        let t = (crossing.at.0 - upper.0) / (upper.1 - upper.0);
+        let mid = s[a] + t * (s[b] - s[a]);
+        (mid, mid - s[a], s[b] - mid)
+    };
     let ground: Vec<_> = (a..=b)
         .map(|i| {
             jj_map::bridge::edges(map, i)
@@ -41,6 +53,7 @@ pub fn place(map: &mut Map, course: &Course, data: &CrossingData) {
     // terrain routes the lower road a deck's height under the upper one, P1-FL15a). Ground under the plateau is a blend
     // of both roads' beds, so it is not the reference; the profile below still follows any ground above the cosine.
     let blend_at = |distance: f64| {
+        let half = if distance < mid { half_lo } else { half_hi };
         let u =
             ((distance - mid).abs() - data.plateau_half_m).max(0.0) / (half - data.plateau_half_m);
         (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0

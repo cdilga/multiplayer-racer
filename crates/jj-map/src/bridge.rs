@@ -123,6 +123,162 @@ impl BridgeDesign {
     }
 }
 
+/// Route points on either level of every crossing: a bridge's deck and the road under it, an overpass leap's span and
+/// the road it jumps (br-xlvx.10). There height tells the two roads apart (the race's gates, the autopilot's and the
+/// observer's projection onto the route). Sorted, each once.
+pub fn layered_points(map: &Map) -> Vec<usize> {
+    let mut out = Vec::new();
+    for f in &map.features {
+        if let Some(d) = BridgeDesign::of(f) {
+            for span in [d.upper, d.lower] {
+                out.extend(indices(map, span).unwrap_or_default());
+            }
+        }
+        if let Some(g) = crate::setpiece::GapLeap::of(f)
+            && let Some((a, b)) = g.lower
+        {
+            for (from, to) in [(g.from, g.to), (a, b)] {
+                out.extend(indices(map, Span { from, to }).unwrap_or_default());
+            }
+        }
+    }
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
+/// Where two levels of a crossing actually cross: the closest pair of their route points (upper's, lower's). A crossing
+/// needn't be at either span's middle (br-xlvx.10).
+pub fn crossing_point(map: &Map, upper: &[usize], lower: &[usize]) -> Option<(usize, usize)> {
+    let pts = &map.route.points;
+    upper
+        .iter()
+        .flat_map(|&i| lower.iter().map(move |&j| (i, j)))
+        .min_by_key(|&(i, j)| {
+            let (dx, dz) = (
+                i64::from(pts[i].x - pts[j].x),
+                i64::from(pts[i].z - pts[j].z),
+            );
+            dx * dx + dz * dz
+        })
+}
+
+/// Map-wide crossing checks (br-xlvx.10): wherever the route crosses itself in plan view it does so at a declared
+/// crossing (a bridge's deck over its lower road, an overpass leap over the road it jumps), never at grade; and no route
+/// point belongs to two crossings (one crossing's deck or leap never stands over or under another's road). A loop's
+/// span stacks its own points and is left out.
+pub fn layout_problems(map: &Map) -> Vec<String> {
+    let r = &map.route;
+    let n = r.points.len();
+    if n < 4 {
+        return Vec::new();
+    }
+    let span = |a: u32, b: u32| indices(map, Span { from: a, to: b }).unwrap_or_default();
+    // Each declared crossing's two levels.
+    let mut levels: Vec<(Vec<usize>, Vec<usize>)> = Vec::new();
+    let mut loops: Vec<usize> = Vec::new();
+    for f in &map.features {
+        if let Some(d) = BridgeDesign::of(f) {
+            levels.push((
+                indices(map, d.upper).unwrap_or_default(),
+                indices(map, d.lower).unwrap_or_default(),
+            ));
+        }
+        if let Some(g) = crate::setpiece::GapLeap::of(f)
+            && let Some((a, b)) = g.lower
+        {
+            levels.push((span(g.from, g.to), span(a, b)));
+        }
+        if let Some(l) = crate::looping::LoopDesign::of(f)
+            && l.entry < n
+            && l.exit < n
+        {
+            loops.extend((0..=(l.exit + n - l.entry) % n).map(|k| (l.entry + k) % n));
+        }
+    }
+    let mut bad = Vec::new();
+    let mut owner = vec![usize::MAX; n];
+    for (k, (upper, lower)) in levels.iter().enumerate() {
+        for &i in upper.iter().chain(lower) {
+            if owner[i] != usize::MAX && owner[i] != k {
+                bad.push(format!(
+                    "route point {i} belongs to two crossings ({} and {k})",
+                    owner[i]
+                ));
+                break;
+            }
+            owner[i] = k;
+        }
+    }
+    let p = |i: usize| {
+        let q = &r.points[i % n];
+        (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0)
+    };
+    let segments = if r.closed { n } else { n - 1 };
+    let mut arc = vec![0.0; n + 1];
+    for i in 0..n {
+        let (a, b) = (p(i), p(i + 1));
+        arc[i + 1] = arc[i] + libm::hypot(b.0 - a.0, b.1 - a.1);
+    }
+    let total = arc[n];
+    const MIN_RECROSS_M: f64 = 40.0;
+    // Segment pairs that cross (properly, in plan view), found through a coarse grid of their bounding boxes.
+    const CELL_M: f64 = 25.0;
+    let mut grid: std::collections::BTreeMap<(i64, i64), Vec<usize>> = Default::default();
+    for i in 0..segments {
+        let (a, b) = (p(i), p(i + 1));
+        let cell = |v: f64| libm::floor(v / CELL_M) as i64;
+        for cx in cell(a.0.min(b.0))..=cell(a.0.max(b.0)) {
+            for cz in cell(a.1.min(b.1))..=cell(a.1.max(b.1)) {
+                grid.entry((cx, cz)).or_default().push(i);
+            }
+        }
+    }
+    let crosses = |i: usize, j: usize| {
+        let (a, b, c, d) = (p(i), p(i + 1), p(j), p(j + 1));
+        let side = |o: (f64, f64), u: (f64, f64), v: (f64, f64)| {
+            (u.0 - o.0) * (v.1 - o.1) - (u.1 - o.1) * (v.0 - o.0)
+        };
+        // Touching counts (two roads crossing exactly at a route point); collinear overlap is the road itself.
+        let (s1, s2, s3, s4) = (side(a, b, c), side(a, b, d), side(c, d, a), side(c, d, b));
+        s1 * s2 <= 0.0 && s3 * s4 <= 0.0 && !(s1 == 0.0 && s2 == 0.0)
+    };
+    let declared = |i: usize, j: usize| {
+        let on = |set: &[usize], k: usize| set.contains(&k) || set.contains(&((k + 1) % n));
+        levels
+            .iter()
+            .any(|(u, l)| on(u, i) && on(l, j) || on(u, j) && on(l, i))
+    };
+    let mut seen = std::collections::BTreeSet::new();
+    for cell in grid.values() {
+        for (x, &i) in cell.iter().enumerate() {
+            for &j in &cell[x + 1..] {
+                // A road only comes back over itself after going round: segments closer than this along it are the
+                // same stretch (collinear neighbours on a straight touch within rounding).
+                let along = (arc[j] - arc[i]).abs();
+                if along.min(total - along) < MIN_RECROSS_M
+                    || loops.contains(&i)
+                    || loops.contains(&j)
+                {
+                    continue;
+                }
+                let key = (i.min(j), i.max(j));
+                if seen.contains(&key) || !crosses(i, j) {
+                    continue;
+                }
+                seen.insert(key);
+                if !declared(i, j) {
+                    bad.push(format!(
+                        "the road crosses itself at grade between route points {} and {} (no bridge or leap)",
+                        key.0, key.1
+                    ));
+                }
+            }
+        }
+    }
+    bad
+}
+
 pub fn indices(map: &Map, span: Span) -> Option<Vec<usize>> {
     let n = map.route.points.len();
     let (a, b) = (span.from as usize, span.to as usize);

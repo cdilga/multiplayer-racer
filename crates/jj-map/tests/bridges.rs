@@ -185,3 +185,24 @@ fn declaring_a_bridge_does_not_make_collinear_gates_valid() {
         "{r:#?}"
     );
 }
+
+#[test]
+fn a_route_crossing_itself_without_a_bridge_or_leap_is_rejected() {
+    // br-xlvx.10: the figure eight's crossing is declared by its bridge; take the bridge away and the same road crosses
+    // itself at grade, which the validator refuses.
+    let declared = crossing();
+    assert!(jj_map::bridge::layout_problems(&declared).is_empty());
+    let mut at_grade = crossing();
+    at_grade.features.retain(|f| f.kind != FeatureKind::Bridge);
+    let found = jj_map::bridge::layout_problems(&at_grade);
+    assert!(
+        found.iter().any(|p| p.contains("crosses itself at grade")),
+        "{found:?}"
+    );
+    let report = jj_map::validate::validate(&at_grade, &Registry::default());
+    assert!(
+        report.violations.iter().any(|v| v.rule == Rule::Crossing),
+        "{:?}",
+        report.violations
+    );
+}
