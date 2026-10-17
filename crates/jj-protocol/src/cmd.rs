@@ -14,7 +14,8 @@ use crate::DecodeError;
 
 /// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
 /// 3: `HostCmd::StartLaunch` (R127 gated start). 4: `InputThresholds` lost the `drift_*` fields (R128, no drift input).
-pub const CMD_VERSION: u8 = 4;
+/// 5: `HostCmd::Takedown` (R134, P1-FL19).
+pub const CMD_VERSION: u8 = 5;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -261,6 +262,10 @@ pub enum HostCmd {
     /// R127 gated start: how this seat's launch went (the phone shows it, as the TV does).
     StartLaunch {
         outcome: LaunchOutcome,
+    },
+    /// R134 (P1-FL19): this seat's car wrecked (`wreck`) or spun another car and its boost filled (the phone shows it).
+    Takedown {
+        wreck: bool,
     },
 }
 

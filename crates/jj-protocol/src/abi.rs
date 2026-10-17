@@ -10,8 +10,8 @@ use crate::DecodeError;
 use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
-/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows).
-pub const ABI_VERSION: u16 = 5;
+/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19).
+pub const ABI_VERSION: u16 = 6;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -297,6 +297,14 @@ pub enum SimEvent {
         seat: Option<SeatId>,
         tier: LandingTier,
         long: bool,
+    },
+    /// R134 (P1-FL19): car `attacker` wrecked (`wreck`) or spun car `victim`; its boost filled. The TV pops TAKEDOWN over
+    /// the attacker (every car's, a bot's too); `seat` is the attacker's player, if it has one.
+    Takedown {
+        attacker: u32,
+        victim: u32,
+        seat: Option<SeatId>,
+        wreck: bool,
     },
 }
 

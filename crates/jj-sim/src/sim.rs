@@ -3586,6 +3586,14 @@ impl Sim {
             if let Some(c) = self.cars.get_mut(t.attacker as usize) {
                 c.action.boost = (c.action.boost + self.takedown_profile.boost).min(1.0);
             }
+            self.race.note(
+                self.tick,
+                crate::race::Event::Takedown {
+                    attacker: t.attacker,
+                    victim: t.victim,
+                    how: t.how,
+                },
+            );
         }
     }
 

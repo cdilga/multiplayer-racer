@@ -29,6 +29,7 @@ import { SyntheticSource } from './render/synthetic';
 import { rosterProfiles } from './render/vehicles/registry';
 import { World } from './render/world';
 import { LANDING_SHOWN_MS, landingCallout, type LandingTier } from '../../shared/src/landing';
+import { TAKEDOWN_SHOWN_MS } from '../../shared/src/takedown';
 import { mountNameplates } from './identity/nameplates';
 import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
@@ -310,6 +311,9 @@ async function boot(): Promise<void> {
       const ld = (e as { Landed?: { car: number; tier: LandingTier; long: boolean } }).Landed;
       const call = ld && landingCallout(ld.tier, ld.long);
       if (ld && call) world.launchCallouts.pop(ld.car, call, LANDING_SHOWN_MS);
+      // Takedowns (R134, P1-FL19): over the car that wrecked or spun another (its boost just filled).
+      const td = (e as { Takedown?: { attacker: number } }).Takedown;
+      if (td) world.launchCallouts.pop(td.attacker, 'Takedown', TAKEDOWN_SHOWN_MS);
       const dist = e.CameraDistanceSet;
       if (dist) {
         if (dist.distance === 'Near') distOfSeat.set(Number(dist.seat), 'near');

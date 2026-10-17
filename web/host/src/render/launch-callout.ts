@@ -1,14 +1,16 @@
 // Gated start (R127): a big callout over a car for how its launch went: "PERFECT START!", "LAUNCH!" or "EARLY! NO LAUNCH".
-// Landings (R129, P1-FL07) use it too: "CLEAN LANDING! BOOST", "BIG AIR! BOOST", "HARD LANDING!", "STACKED IT!".
+// Landings (R129, P1-FL07) use it too: "CLEAN LANDING! BOOST", "BIG AIR! BOOST", "HARD LANDING!", "STACKED IT!"; and
+// takedowns (R134, P1-FL19): "TAKEDOWN! BOOST" over the car that did it.
 // Same device as the Identify number (a billboard drawn over the world, so every tile that can see the car shows it).
 import { CanvasTexture, Sprite, SpriteMaterial, SRGBColorSpace, type Camera, type Scene } from 'three';
 import type { Sampled } from './interp';
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT, type LaunchOutcome } from '../../../shared/src/launch';
 import { LANDING_TEXT, type LandingCallout } from '../../../shared/src/landing';
+import { TAKEDOWN_TEXT, type TakedownCallout } from '../../../shared/src/takedown';
 
-/** What a callout says: a start (R127) or a landing (R129). */
-export type Callout = LaunchOutcome | LandingCallout;
-const TEXT: Record<Callout, string> = { ...LAUNCH_TEXT, ...LANDING_TEXT };
+/** What a callout says: a start (R127), a landing (R129) or a takedown (R134). */
+export type Callout = LaunchOutcome | LandingCallout | TakedownCallout;
+const TEXT: Record<Callout, string> = { ...LAUNCH_TEXT, ...LANDING_TEXT, ...TAKEDOWN_TEXT };
 
 interface Live {
   sprite: Sprite;
@@ -33,6 +35,7 @@ const FILL: Record<Callout, { fill: string; ink: string }> = {
   BigAir: { fill: '#FFB400', ink: '#15203A' },
   Bad: { fill: '#FF7A1A', ink: '#15203A' },
   Crash: { fill: '#B3261E', ink: '#FFFFFF' },
+  Takedown: { fill: '#E5322D', ink: '#FFFFFF' },
 };
 
 export class LaunchCallouts {

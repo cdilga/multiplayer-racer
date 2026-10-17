@@ -295,6 +295,7 @@ fn host_samples() -> Vec<HostCmd> {
         HostCmd::StartLaunch {
             outcome: LaunchOutcome::Early,
         },
+        HostCmd::Takedown { wreck: true },
     ]
 }
 
@@ -313,9 +314,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::Inventory(_) => "inventory",
         HostCmd::ItemEvent(_) => "item-event",
         HostCmd::StartLaunch { .. } => "start-launch",
+        HostCmd::Takedown { .. } => "takedown",
     }
 }
-const HOST_VARIANTS: [&str; 13] = [
+const HOST_VARIANTS: [&str; 14] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -329,6 +331,7 @@ const HOST_VARIANTS: [&str; 13] = [
     "inventory",
     "item-event",
     "start-launch",
+    "takedown",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.
@@ -635,6 +638,12 @@ fn event_samples() -> Vec<SimEvent> {
             tier: LandingTier::Clean,
             long: true,
         },
+        SimEvent::Takedown {
+            attacker: 1,
+            victim: 2,
+            seat: Some(SeatId(3)),
+            wreck: false,
+        },
     ]
 }
 
@@ -801,7 +810,7 @@ fn every_variant_has_a_golden() {
     assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
-        14,
+        15,
         "every SimEvent variant, plus extra episode shapes"
     );
 }

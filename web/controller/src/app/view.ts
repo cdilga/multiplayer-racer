@@ -3,6 +3,7 @@
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
+import { TAKEDOWN_SHOWN_MS, TAKEDOWN_TEXT } from '../../../shared/src/takedown';
 import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
@@ -560,6 +561,10 @@ function roundBanner(app: HTMLElement, session: Session): void {
     // R127 gated start: how your launch went, over the countdown or the first seconds of the race.
     text = LAUNCH_TEXT[launch.outcome];
     tag = launch.outcome.toLowerCase();
+  } else if (session.takedownAt !== null && performance.now() - session.takedownAt < TAKEDOWN_SHOWN_MS && session.roomPhase === 'Racing') {
+    // R134 (P1-FL19): you took someone down, and your boost is full.
+    text = TAKEDOWN_TEXT.Takedown;
+    tag = 'takedown';
   } else if (session.idleCueAt !== null && session.roomPhase === 'Racing') {
     // G03: idle while racing. The countdown to the autopilot, then who's driving until the player steers.
     const left = session.idleCueMs - (performance.now() - session.idleCueAt);

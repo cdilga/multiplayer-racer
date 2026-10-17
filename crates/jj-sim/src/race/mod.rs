@@ -359,6 +359,13 @@ pub enum Event {
         car: u32,
         outcome: StartLaunch,
     },
+    /// R134 (P1-FL19): `attacker` wrecked or spun `victim` ([`crate::takedown`]); its boost meter filled, and the TV and
+    /// the attacker's phone call it out.
+    Takedown {
+        attacker: u32,
+        victim: u32,
+        how: crate::takedown::TakedownHow,
+    },
     /// R129 (P1-FL07): how this car came down from a jump, judged by [`crate::air`]; the TV pops a callout over it.
     Landed {
         car: u32,

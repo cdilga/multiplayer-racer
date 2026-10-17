@@ -1616,6 +1616,23 @@ impl Host {
                         long,
                     });
                 }
+                Event::Takedown {
+                    attacker,
+                    victim,
+                    how,
+                } => {
+                    let wreck = how == jj_sim::takedown::TakedownHow::Wreck;
+                    let seat = self.seat_of_car(attacker);
+                    self.events.push(SimEvent::Takedown {
+                        attacker,
+                        victim,
+                        seat,
+                        wreck,
+                    });
+                    if let Some(seat) = seat {
+                        self.send_seat_phone(seat, HostCmd::Takedown { wreck });
+                    }
+                }
                 Event::LapCompleted { car, laps } => {
                     if let Some(seat) = self.seat_of_car(car) {
                         self.events.push(SimEvent::Lap {
