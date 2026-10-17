@@ -327,7 +327,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
-    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
+    // The lobby's Race/Derby choice, its hint (laps or derby length) and the results' derby layout are part of what's drawn.
+    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);
