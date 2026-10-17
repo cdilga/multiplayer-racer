@@ -44,7 +44,7 @@ async function chooseButtons(page) {
   assert.deepEqual(at, { 0: 'drop', 1: 'fire', 2: 'gas', 3: 'boost', 4: 'brake', 5: null }, `the pad follows the arrangement: ${JSON.stringify(at)}`);
 }
 
-test('Buttons, real phone and host: remap two inputs, each button is the one-stick intent, and a lap on the steer stick and Gas', { timeout: 420_000, skip: 'br-bbki.14 open: the remap and every intent pass; the scripted lap still wedges on a rail even on the Some assist (eris 83bcccab: 76/246 points)' }, async () => {
+test('Buttons, real phone and host: remap two inputs, each button is the one-stick intent, and a lap on the steer stick and Gas', { timeout: 420_000 }, async () => {
   const browser = await chromium.launch({ args: chromiumArgs });
   try {
     const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
@@ -82,7 +82,13 @@ test('Buttons, real phone and host: remap two inputs, each button is the one-sti
     const touch = async (type) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: [...fingers.entries()].map(([id, p]) => ({ id, x: p.x, y: p.y })) });
     const down = async (id, p) => { fingers.set(id, p); await touch('touchStart'); };
     const move = async (id, p) => { fingers.set(id, p); await touch('touchMove'); };
-    const up = async (id) => { fingers.delete(id); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [...fingers.entries()].map(([i, p]) => ({ id: i, x: p.x, y: p.y })) }); };
+    // Lifting one finger while others stay down is a touchMove listing only those still down (CDP: a touchEnd carries no
+    // points and ends every touch, which dropped the held Gas and wedged the lap, br-bbki.14); the last finger is a touchEnd.
+    const up = async (id) => {
+      fingers.delete(id);
+      if (fingers.size) await touch('touchMove');
+      else await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    };
     const btn = (input) => centre(page, `.padbtn[data-input=${input}]`);
     const steerAt = await centre(page, '[data-box=zone-steer] .base');
 
