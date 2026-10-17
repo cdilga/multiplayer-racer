@@ -1,7 +1,7 @@
 // swatch-atlas.js (br-bwju.5): a one-texture atlas of flat colour swatches for code-built bikes, drawn without a DOM and
 // byte-reproducible (the Cruz Missile's rasteriser: 4x4 supersampling, integer box filter). 1024x512, 8 columns x 8 rows.
-// Paint key: the swatch named 'paint' is baked pure white so the renderer tints it with the seat colour; every other
-// swatch keeps its colour. The emissive atlas lights only the lamp swatches.
+// Paint key: the swatch named 'paint' is drawn pure white and baked as premultiplied paint coverage
+// (tools/vehicles/paint-key.mjs), so the renderer tints it with the seat colour; every other swatch keeps its colour. The emissive atlas lights only the lamp swatches.
 export const W = 1024, H = 512;
 const COLS = 8, ROWS = 8;
 

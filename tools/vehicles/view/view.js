@@ -7,6 +7,7 @@
 // When drawn, document.title becomes READY and window.__sheet holds the PNG data URL.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { paintKeyGlsl } from '/web/shared/render/paint-key.js';
 
 const q = new URLSearchParams(location.search);
 const assetUrl = q.get('asset') ?? '/art/vehicles/cruz-missile/cruz-missile.asset.json';
@@ -34,7 +35,8 @@ function scene() {
   return s;
 }
 
-// The paint key: pure-white atlas texels take the car colour; everything else keeps its colour (Spike J's carMaterial).
+// The paint key (web/shared/render/paint-key.js): the atlas's premultiplied paint coverage takes the car colour; everything
+// else keeps its colour.
 function paintKeyMaterial(src, paint) {
   const m = new THREE.MeshStandardMaterial({
     map: src.map, emissiveMap: src.emissiveMap, emissive: 0xffffff, emissiveIntensity: 1.2, flatShading: true, roughness: 0.55, metalness: 0.05,
@@ -43,8 +45,7 @@ function paintKeyMaterial(src, paint) {
   m.onBeforeCompile = (sh) => {
     sh.uniforms.paint = { value: tint };
     sh.fragmentShader = 'uniform vec3 paint;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-      float paintMask = step( 0.985, min( diffuseColor.r, min( diffuseColor.g, diffuseColor.b ) ) );
-      diffuseColor.rgb *= mix( vec3( 1.0 ), paint, paintMask );`);
+${paintKeyGlsl('paint')}`);
   };
   m.customProgramCacheKey = () => 'paint-' + paint;
   return m;

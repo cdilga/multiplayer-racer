@@ -52,7 +52,9 @@ name it.
 
 ### 3. Paint, identity and draw cost
 - **One material for all cars.** Player colour comes from `instanceColor` through the atlas
-  **paint key** (pure-white texels tint; glass, lamps and livery keep their colours). Per-car
+  **paint key** (the bake stores paint as premultiplied coverage in the atlas alpha, `tools/vehicles/paint-key.mjs`;
+  the shared rule `web/shared/render/paint-key.js` tints it; glass, lamps and livery keep their colours, and filtered edges
+  never fringe light: `tools/vehicles/test/paint-key.test.mjs`). Per-car
   material clones fail this gate.
 - Instanced rendering: one InstancedMesh per part type across all cars, so draws per tile stay
   constant as N grows. Report draws/frame for 24 cars × 24 tiles (Spike J: 216).

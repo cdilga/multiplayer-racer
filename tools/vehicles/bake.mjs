@@ -23,6 +23,7 @@ import { ConvexHull } from 'three/examples/jsm/math/ConvexHull.js';
 
 import { GlbBuilder } from './glb.mjs';
 import { encodePNG } from './png.mjs';
+import { paintKeyedAtlas } from './paint-key.mjs';
 
 export const PARTS = ['core', 'front', 'back', 'door_FL', 'door_FR', 'door_RL', 'door_RR', 'wheel_FL', 'wheel_FR', 'wheel_RL', 'wheel_RR'];
 /** A motorbike's parts (br-bwju.5; jj-contracts BIKE_PARTS): a vehicle.json with a wheel_F is a bike. */
@@ -72,7 +73,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
   const V = JSON.parse(fs.readFileSync(path.join(vehicleDir, 'vehicle.json'), 'utf8'));
   const id = V.id, pivots = model.pivots(P), files = new Map(), report = { id, lods: [] }, SET = partSet(V);
 
-  const atlas = drawAtlas();
+  const atlas = paintKeyedAtlas(drawAtlas); // premultiplied paint coverage in alpha (br-vhtm)
   const atlasPng = encodePNG(atlas.width, atlas.height, atlas.base);
   const emissivePng = encodePNG(atlas.width, atlas.height, atlas.emissive);
   files.set(`${id}.atlas.png`, atlasPng);
@@ -94,7 +95,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
       pbrMetallicRoughness: { baseColorTexture: { index: 0 }, metallicFactor: 0.05, roughnessFactor: 0.55 },
       emissiveTexture: { index: 1 },
       emissiveFactor: [1, 1, 1],
-      extras: { paintKey: 'pure-white texels tint by the car colour (instanceColor); everything else keeps its colour' },
+      extras: { paintKey: 'premultiplied: alpha is the non-paint coverage, colour = rgb + (1 - alpha) × the car colour (instanceColor)' },
     }];
     j.meshes = [];
     j.nodes = [{ name: id, children: [] }];

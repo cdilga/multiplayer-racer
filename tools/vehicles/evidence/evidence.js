@@ -4,6 +4,7 @@
 // window.__out (PNG data URL). Serve the repo root; run.mjs drives it.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { paintKeyGlsl } from '/web/shared/render/paint-key.js';
 
 const q = new URLSearchParams(location.search), mode = q.get('mode') ?? 'damage', car = q.get('car');
 const base = `/art/vehicles/${car}/`;
@@ -15,8 +16,7 @@ function paintKeyMaterial(src, paint) {
   m.onBeforeCompile = (sh) => {
     sh.uniforms.paint = { value: tint };
     sh.fragmentShader = 'uniform vec3 paint;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-      float paintMask = step( 0.985, min( diffuseColor.r, min( diffuseColor.g, diffuseColor.b ) ) );
-      diffuseColor.rgb *= mix( vec3( 1.0 ), paint, paintMask );`);
+${paintKeyGlsl('paint')}`);
   };
   m.customProgramCacheKey = () => 'paint-' + paint;
   return m;

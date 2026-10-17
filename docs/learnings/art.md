@@ -58,6 +58,9 @@
   `opt.mjs` now penalises the first two. Judge the third by eye, and keep identity cues such as the Lion's tall wing even if they cost IoU.
 - **The paint key fringes every livery edge** (br-vhtm). The mask is `step(0.985, min(rgb))` on the filtered sample, so any texel blended
   with paint, by linear filtering or by mipmapping, stays untinted grey. Dark stripes on paint read light grey at grid size.
+  Fixed: the bake stores paint premultiplied (alpha = non-paint coverage, rgb = livery × alpha in linear light; pure paint is
+  (0,0,0,0), which survives a browser premultiplying on decode) and every renderer draws rgb + (1 − alpha) × tint through
+  `web/shared/render/paint-key.js`. Never key a colour on a filtered sample: key a coverage that filters linearly.
 
 ## 2026-10-16 · Code-built motorbikes (br-bwju.5)
 

@@ -6,8 +6,8 @@
 // The emissive map has the same layout and is black except the light swatches. UVs here have v up (0 = bottom row of the
 // image), as Spike J's canvas texture had; the bake flips them for glTF.
 //
-// Paint key: the baked atlas draws paint pure white (#ffffff), and the renderer tints only pure-white texels by the car's
-// instanceColor, so glass, tyres, lamps and the pink/lime livery keep their colours. One material for every car.
+// Paint key: drawAtlas draws paint pure white (#ffffff); the bake stores it as premultiplied paint coverage (alpha;
+// tools/vehicles/paint-key.mjs) and the renderer tints that coverage by the car's instanceColor, so glass, tyres, lamps and the pink/lime livery keep their colours. One material for every car.
 //
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.

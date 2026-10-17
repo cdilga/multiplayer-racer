@@ -1,8 +1,9 @@
-// P1-R13: a shared pattern atlas sampled only through the model atlas's white paint channel.
+// P1-R13: a shared pattern atlas sampled only through the model atlas's paint coverage (the paint key, br-vhtm).
 // The pattern path is the same catalogue used by the UI. Per-instance UV rows add no meshes or draws.
 import { BufferAttribute, CanvasTexture, LinearFilter, Vector3, type BufferGeometry, type MeshStandardMaterial } from 'three';
 import { tokenData } from '../../../../shared/ui/tokens.generated';
 import { seatPattern } from '../../../../shared/ui/patterns';
+import { paintKeyGlsl } from '../../../../shared/render/paint-key.js';
 
 export function patternData(number: number): [number, number] {
   const p = seatPattern(number);
@@ -61,14 +62,14 @@ export function identityPaint(material: MeshStandardMaterial, roof?: number[]): 
     sh.fragmentShader = `uniform sampler2D jjPatternAtlas;\nuniform float jjPatternEnabled;\nuniform vec3 jjRoof;\nvarying vec3 jjPatternPosition;\nvarying vec3 jjPatternNormal;\nvarying vec2 jjPattern;\nvarying vec4 jjNumber;\n${sh.fragmentShader}`;
     sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', `
       #if defined( USE_INSTANCING_COLOR ) || defined( USE_COLOR )
-        float paintMask = step(0.985, min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b)));
         vec3 axes = abs(jjPatternNormal);
         vec2 pos = axes.y >= max(axes.x, axes.z) ? jjPatternPosition.xz :
                    axes.x >= axes.z ? jjPatternPosition.zy : jjPatternPosition.xy;
         vec2 uv = fract(pos / max(jjPattern.y, .001));
         float motif = texture2D(jjPatternAtlas, vec2((jjPattern.x + uv.x) * ${cell / width}, uv.y * .4)).a;
         vec3 identity = mix(vColor.rgb, vec3(.0075, .0144, .0423), motif * .28 * jjPatternEnabled);
-        diffuseColor.rgb *= mix(vec3(1.0), identity, paintMask);
+        // The paint key (br-vhtm): premultiplied paint coverage takes the identity colour (and the pattern, R13).
+        ${paintKeyGlsl('identity')}
         // Varyings interpolate even a constant instance value with tiny rounding error. Round before digit extraction.
         vec4 number = floor(jjNumber + .5);
         vec2 label = vec2(.5 - (jjPatternPosition.x - jjRoof.x) / 1.15, .5 - (jjPatternPosition.z - jjRoof.z) / .9);
@@ -80,6 +81,8 @@ export function identityPaint(material: MeshStandardMaterial, roof?: number[]): 
           float ink = texture2D(jjPatternAtlas, vec2((digit + fract(label.x * number.w)) * ${cell / width}, .4 + label.y * .6)).a;
           diffuseColor.rgb = mix(vec3(.9, .88, .83), vec3(.0075, .0144, .0423), ink);
         }
+      #else
+        ${paintKeyGlsl('vec3(1.0)')}
       #endif`);
   };
   material.customProgramCacheKey = () => `jj-identity-paint-${count}`;

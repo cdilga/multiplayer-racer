@@ -10,8 +10,9 @@
 //   draws per tile are constant in the number of cars and grow with the number of vehicle kinds on the field.
 // - Each part type has ONE instance-matrix buffer and ONE colour buffer, shared by its three LOD meshes; a tile picks
 //   its LOD class with camera layers (useLod), so tiles at different LOD classes cost no extra uploads.
-// - Paint key: atlas texels that are pure white take the car's identity colour (instanceColor); glass, lamps and
-//   livery keep theirs. One material for every car.
+// - Paint key: the atlas's premultiplied paint coverage (its alpha, web/shared/render/paint-key.js) takes the car's
+//   identity colour (instanceColor); glass, lamps and livery keep theirs, and filtered edges blend between the tinted
+//   paint and the livery. One material for every car.
 // - Part states from the snapshot (R86: intact -> loose -> detached): a loose part turns about its hinge at its pivot by
 //   the snapshot's angle; a detached part draws at its world pose, still in its owner's paint, and the core's dark bay
 //   shows where it was. Detached parts are debris: they stay for the round.

@@ -7,8 +7,8 @@
 // The emissive map has the same layout and is black except the light swatches. UVs have v up (0 = bottom row of the
 // image); the bake flips them for glTF.
 //
-// Paint key: the baked atlas draws paint pure white (#ffffff), and the renderer tints only pure-white texels by the car's
-// instanceColor, so the stripes, glass, tyres and lamps keep their colours. One material for every car.
+// Paint key: drawAtlas draws paint pure white (#ffffff); the bake stores it as premultiplied paint coverage (alpha;
+// tools/vehicles/paint-key.mjs) and the renderer tints that coverage by the car's instanceColor, so the stripes, glass, tyres and lamps keep their colours. One material for every car.
 //
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.
@@ -40,7 +40,7 @@ const offsetIn = (pts, d) => pts.map(([x, y], i) => [x + (i < 3 ? d : i > 6 ? 0 
 function sideShapes(c) {
   const [u0, v0, u1, v1] = REGION.side, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
   const m = (pts) => pts.map(([x, y]) => [ox + (x / SPAN.side[0]) * px, oy + (1 - y / SPAN.side[1]) * py]);
-  const pin0 = offsetIn(C_IN, 0.035), pin1 = offsetIn(C_IN, 0.058); // a gap wide enough to keep pure-white (paint-keyed) texels between its filtered edges
+  const pin0 = offsetIn(C_IN, 0.035), pin1 = offsetIn(C_IN, 0.058); // a gap wide enough to keep full paint between its filtered edges
   return [
     { rect: [ox, oy, px, py], fill: c.paint },
     { poly: m([...C_OUT, ...C_IN.slice().reverse()]), fill: c.stripe },
