@@ -15,6 +15,23 @@ builds and the WASM host build (Node), committed tree plus this change. Measurem
 The test asserts the floor: launch at least 30 % quicker (and under 4 s), at least 20 % more speed at 150 m, boost
 cutting the launch by at least 20 %.
 
+## Lap time on a standard generated track (after; br-4tbo, 2026-10-17)
+
+`crates/jj-procgen/tests/bot_pace.rs`: three standard-class generated tracks (seeds 4, 5, 7: 1400-1518 m), one lap from
+the grid. "Good" is the scripted good driver (assists Off: flat out, late hard braking, corners on 45 % of the car's own
+turn, features at design speed); "bot" is the autopilot after br-4tbo. No wreck and no recovery in any run. (There is no
+"before" lap: the old autopilot planned to 26 m/s whatever the car, so it measured the bot, not the car: 73-79 s.)
+
+| Vehicle | top speed | seed 4 good / bot | seed 5 good / bot | seed 7 good / bot |
+|---|---|---|---|---|
+| Cruz Missile | 50.6 m/s | 61.7 / 60.5 s | 55.6 / 58.1 s | 50.8 / 55.9 s |
+| Tradie Ute | 47.1 m/s | 65.0 / 66.3 s | 60.5 / 64.1 s | 55.9 / 62.1 s |
+| Hawk Dash | 56.5 m/s | 61.5 / 60.5 s | 56.6 / 59.0 s | 52.5 / 57.1 s |
+| Lion President | 56.5 m/s | 63.0 / 60.6 s | 56.8 / 59.1 s | 52.3 / 57.1 s |
+
+The bikes (Postie, Pig Catcher) aren't in this table: the good driver corners on the arcade turn they don't have. Their
+autopilot laps every generated biome upright (`bikes.rs`).
+
 ## What changed and why
 
 - **Engine** (data): Cruz 7 kN → 14 kN with a 460 kW power limit (force tapers past ~33 m/s, top speed about 50 m/s);
@@ -58,8 +75,14 @@ Safety rows (minUpY, wrecks, landings upright, wheels down) were never moved.
 
 - **drift-boost-chain**: in the greybox's quick S-bend the best grip line ties the drift line (5.600 s vs 5.592 s); both
   are capped by the meter and the autopilot's 26 m/s plan. Recorded as a known gap in the duel (`gap`).
-- **Bots and autopilot plan at 26 m/s** (unchanged): filler bots and locked-phone autopilot don't use the new top speed.
-- **Lap times per vehicle on a generated track** are not in this receipt: the bot bank laps every seed with zero wrecks
-  and recoveries, but at the autopilot's capped speed, so it doesn't show the cars' pace.
-- **Big/road-wide jumps, ute collisions and jump tanking**: split to br-gw74.13.1.
+- ~~Bots and autopilot plan at 26 m/s~~: fixed by br-4tbo (the plan follows each car's top speed and turn).
+- ~~Lap times per vehicle on a generated track~~: in the table above (2026-10-17).
+- **Big/road-wide jumps, ute collisions and jump tanking**: split to br-gw74.13.1 (closed).
+
+## Acceptance re-checked at 73836cb2 (2026-10-17)
+
+- AC2: `crates/jj-sim/tests/feel.rs` and `web/host/tests/feel-wasm.test.mjs` (eris, WASM) pass; safety rows unchanged.
+- AC3: `bank.rs` laps every mix and length class at the new speeds with 0 wrecks, 0 recoveries, 0 softlocks.
+- AC4: `duels.rs` `every_duel_holds_its_ordering` (the R120 drift-exit row) passes.
+- AC5: the fun levers are vehicle-profile data, live in `?tune`: `pt1-tuning.test.mjs` 6/6 on eris.
 - Live tuning of `body_friction` and `com_lower_m` applies when a car next spawns, not mid-flight.
