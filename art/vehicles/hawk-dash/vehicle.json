@@ -1,9 +1,9 @@
 {
  "id": "hawk-dash",
- "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into hawk-dash.asset.json. The Cruz Missile's hinge layout (plan §6.3): doors 0-70 degrees about the front edge, front (nose, bonnet, bulge and vents) and back (boot, lamps, ducktail and exhausts) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
+ "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into hawk-dash.asset.json. The Cruz Missile's hinge layout (plan \u00a76.3): doors 0-70 degrees about the front edge, front (nose, bonnet, bulge and vents, lamps, grille, splitter, front flares) and back (boot, lamps, wing, diffuser and exhausts, rear flares) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
  "lods": [
   {
-   "maxTris": 1300
+   "maxTris": 2800
   },
   {
    "maxTris": 900
@@ -208,6 +208,7 @@
   "lplate_rear": "Between the diffuser and the tail lamps."
  },
  "colliderExclude": {
-  "front": "The UHF whip and its mount: a thin aerial is not a collision surface."
+  "core": "The mirrors: decoration (model.js decor), not a collision surface, so the hull stays the body's width.",
+  "back": "The wing's turned-down tips (decoration)."
  }
 }

@@ -13,7 +13,7 @@
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.
 
-export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator'];
+export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator', 'roofblack', 'taildk'];
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
@@ -22,30 +22,37 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
 export const SPAN = { side: [4.8, 1.6], top: [4.8, 1.9] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#2c4fb4', trim: '#26282c', glass: '#2b3036', tyre: '#2a2a2c', rim: '#303236', head: '#fff2c8', led: '#fff6dc', tail: '#e8311f',
+  paint: '#2c4fb4', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#303236', head: '#ffeaa8', led: '#fff6dc', tail: '#e8311f',
   stripe: '#16181c', grille: '#111214', white: '#f2f4f8', fog: '#ffe9b0', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', indicator: '#ff9a1a',
+  roofblack: '#141518', taildk: '#3a1412',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };
-const EMIT = { head: '#fff0c0', led: '#fff2d0', tail: '#c81a0c', fog: '#ffe2a0', indicator: '#ff8a10' };
+const EMIT = { head: '#fff0c0', led: '#fff2d0', tail: '#c81a0c', fog: '#ffe2a0', indicator: '#ff8a10', taildk: '#1e0503' };
 
 // The drawing, as data: rectangles and polygons in atlas pixels (y down from the top of the image), drawn in order.
-// Side: the black "C" stripe: a leg up the front edge of the front door, a band along the lower doors, and a sweep up the
-// rear quarter to the tail lamp (metres from the nose, height).
+// Side: the sheet's black "C" graphic, measured off its side view (metres from the nose, height): a broad leg down behind
+// the front arch, a band along the sill, and a kick up over the rear arch that runs back under the shoulder to the tail
+// lamp; a pinstripe follows its inside edge, a paint gap away.
+const C_OUT = [[1.12, 0.86], [1.25, 0.62], [1.40, 0.45], [1.50, 0.365], [2.86, 0.365], [2.98, 0.48], [3.10, 0.70], [3.24, 0.82], [3.50, 0.85], [4.30, 0.87]];
+const C_IN = [[1.31, 0.86], [1.40, 0.64], [1.50, 0.48], [1.60, 0.425], [2.81, 0.425], [2.92, 0.53], [3.03, 0.73], [3.20, 0.875], [3.50, 0.905], [4.30, 0.925]];
+const offsetIn = (pts, d) => pts.map(([x, y], i) => [x + (i < 3 ? d : i > 6 ? 0 : d * 0.5), y + (i < 3 ? 0 : d)]);
 function sideShapes(c) {
   const [u0, v0, u1, v1] = REGION.side, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
   const m = (pts) => pts.map(([x, y]) => [ox + (x / SPAN.side[0]) * px, oy + (1 - y / SPAN.side[1]) * py]);
+  const pin0 = offsetIn(C_IN, 0.018), pin1 = offsetIn(C_IN, 0.03);
   return [
     { rect: [ox, oy, px, py], fill: c.paint },
-    { poly: m([[1.40, 0.33], [3.22, 0.33], [4.50, 0.86], [4.50, 0.95], [3.18, 0.42], [1.50, 0.42], [1.50, 0.86], [1.40, 0.86]]), fill: c.stripe },
+    { poly: m([...C_OUT, ...C_IN.slice().reverse()]), fill: c.stripe },
+    { poly: m([...pin0.slice(0, -1), ...pin1.slice(0, -1).reverse()]), fill: c.stripe },
   ];
 }
-// Top: twin stripes 0.22 m wide with a 0.08 m gap, nose to tail.
+// Top: twin stripes 0.185 m wide with a 0.07 m gap, nose to tail (the sheet's top view).
 function topShapes(c) {
   const [u0, v0, u1, v1] = REGION.top, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
   const m = (pts) => pts.map(([d, x]) => [ox + (d / SPAN.top[0]) * px, oy + (1 - (x / SPAN.top[1] + 0.5)) * py]);
   const out = [{ rect: [ox, oy, px, py], fill: c.paint }];
-  for (const s of [1, -1]) out.push({ poly: m([[0, s * 0.04], [4.8, s * 0.04], [4.8, s * 0.26], [0, s * 0.26]]), fill: c.stripe });
+  for (const s of [1, -1]) out.push({ poly: m([[0, s * 0.035], [4.8, s * 0.035], [4.8, s * 0.22], [0, s * 0.22]]), fill: c.stripe });
   return out;
 }
 function swatchShapes(c, emissive) {
