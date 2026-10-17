@@ -107,7 +107,9 @@ async function gameFlow() {
     if (results.length !== 2 || results.map((r) => r.place).sort().join() !== '1,2') fail(`Round complete results were ${JSON.stringify(results)}`);
     // A slow host can show a clickable results button while locator machinery times out
     // resolving it (br-5j46). Verify the actual target, then send a real browser pointer.
-    const target = await host.evaluate(() => {
+    // The results screen can still be settling (its entrance, an announcer caption) when Intermission begins: look for the
+    // button for up to 15 s before calling it missing (CI 5965 failed the first look).
+    const findTarget = () => host.evaluate(() => {
       const el = document.querySelector('[data-screen="results"] button[data-act="start"]');
       if (!el || el.disabled || el.textContent !== 'Start next round now') return null;
       const box = el.getBoundingClientRect();
@@ -122,6 +124,11 @@ async function gameFlow() {
       }, { once: true });
       return { x, y };
     });
+    let target = null;
+    for (const t0 = Date.now(); !target && Date.now() - t0 < 15_000; ) {
+      target = await findTarget();
+      if (!target) await host.waitForTimeout(250);
+    }
     if (!target) fail('the next-round action is missing, disabled, hidden or covered');
     await host.mouse.click(target.x, target.y);
     // Keep the original 60 s transition deadline. Read the small data surface directly:
