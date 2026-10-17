@@ -20,7 +20,7 @@ then give it `/loop` with: "Reread AGENTS.md and docs/process/deploy-worker.md, 
 3. **Close green hand-offs.** For each bead in `br list --status batch_pending`: `scripts/ci/green-for.py <commit>`
    (the commit and tests are in its hand-off comment). Green: `scripts/beads/close.sh <id> --tests "<its tests>"`.
    Pending: leave it. Red: find the failing assertion and file:line in the run log, put it on the bead as a comment,
-   set it to `rework` for its author, and tell the churner in its tmux pane (`multiplayer-racer--maps.1` today).
+   set it to `rework` for its author, and tell the churner in its tmux pane (`multiplayer-racer--maps` today, BrownHill).
 4. **Red budget (CI rule 4).** Red for 2 hours or 2 batches: quarantine the blocking test (skip it with a P0 bead naming
    the test, cause and owner) or relax a timing assertion with a stated reason. Escalate anything else to the
    coordinator (AmberSpring) rather than debugging deep yourself; no diagnostic pushes.
