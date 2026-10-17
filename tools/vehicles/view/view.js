@@ -1,6 +1,8 @@
 // view.js (P1-V02): renders a baked vehicle GLB through three.js's GLTFLoader with the paint-key material, as a contact
 // sheet. Used by capture.mjs for the vehicle-model-validation evidence. Query:
-//   ?asset=/art/vehicles/cruz-missile/cruz-missile.asset.json&sheet=views|paints|lods|colliders|hero
+//   ?asset=/art/vehicles/cruz-missile/cruz-missile.asset.json&sheet=views|paints|lods|colliders|hero|ladder[&paint=#rrggbb]
+// `ladder` (br-bwju.11) is every LOD from the six sheet-comparison views (front, front 3/4, side, rear 3/4, rear, top), one row
+// per LOD, in `paint` (default the sheets' cyan), for side-by-sides against a car's reference sheets.
 // `hero` is the picker/brand render (br-bwju.10): one front 3/4 LOD0 shot on a transparent backdrop, cropped to the car.
 // When drawn, document.title becomes READY and window.__sheet holds the PNG data URL.
 import * as THREE from 'three';
@@ -9,7 +11,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const q = new URLSearchParams(location.search);
 const assetUrl = q.get('asset') ?? '/art/vehicles/cruz-missile/cruz-missile.asset.json';
 const sheet = q.get('sheet') ?? 'views';
-const TILE = 360;
+const TILE = sheet === 'ladder' ? 440 : 360;
 
 const HERO = 1100;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: sheet === 'hero' });
@@ -125,11 +127,16 @@ async function draw() {
       tiles.push([`LOD${i} side`, shot(s, VIEWS.left[0], [0, 0.7, 0], true)]);
       tiles.push([`LOD${i} 3/4`, shot(s, VIEWS['front 3/4'][0])]);
     }
+  } else if (sheet === 'ladder') {
+    for (const [i, lod] of asset.lods.entries()) {
+      const s = scene(); s.add(await loadLod(lod.file, q.get('paint') ?? '#22c3e6'));
+      for (const name of ['front', 'front 3/4', 'left', 'rear 3/4', 'rear', 'top']) tiles.push([`LOD${i} ${name === 'left' ? 'side' : name}`, shot(s, VIEWS[name][0], [0, 0.7, 0], VIEWS[name][1])]);
+    }
   } else if (sheet === 'colliders') {
     const s = scene(); s.add(await loadLod(asset.lods[0].file, '#22c3e6', { colliders: true }));
     for (const name of ['left', 'front', 'top', 'front 3/4']) tiles.push([`colliders ${name}`, shot(s, VIEWS[name][0], [0, 0.7, 0], VIEWS[name][1])]);
   }
-  const cols = Math.min(4, tiles.length), rows = Math.ceil(tiles.length / cols), out = document.getElementById('sheet');
+  const cols = Math.min(sheet === 'ladder' ? 6 : 4, tiles.length), rows = Math.ceil(tiles.length / cols), out = document.getElementById('sheet');
   out.width = cols * TILE; out.height = rows * (TILE + 20);
   const g = out.getContext('2d');
   g.fillStyle = '#c9c9cb'; g.fillRect(0, 0, out.width, out.height);
