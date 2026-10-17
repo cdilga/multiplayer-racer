@@ -26,6 +26,14 @@ else
     done
 fi
 
+# A runner with a small job container (truenas-ci: 8 GB, shared with its browser slots) and a cold cache compiles
+# asupersync among dozens of parallel rustcs and gets OOM-killed (CI runs 5414, 5495, 5531: no test ran). There, fewer
+# compile jobs; the 12-16 GB rust runners keep cargo's default.
+mem=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo max)
+if [[ $mem =~ ^[0-9]+$ && $mem -lt $((12 * 1024 * 1024 * 1024)) && -z ${CARGO_BUILD_JOBS:-} ]]; then
+    export CARGO_BUILD_JOBS=4
+    echo "rust-test: job memory $((mem / 1024 / 1024)) MiB: CARGO_BUILD_JOBS=4"
+fi
 t() { local s=$SECONDS rc=0; "$@" || rc=$?; echo "rust-test: $((SECONDS - s))s exit $rc  $*"; return $rc; }
 rc=0
 t cargo nextest run --locked --no-fail-fast "${sel[@]}" || rc=1
