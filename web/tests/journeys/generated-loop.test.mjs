@@ -9,7 +9,7 @@ import {join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {chromium} from 'playwright';
 import {build,serve} from '../../landing/tests/lib/site.mjs';
-import {chromiumArgs} from './lib/chromium.mjs';
+import {chromiumArgs,gpu} from './lib/chromium.mjs';
 import {evidencePath} from '../lib/evidence.mjs';
 import {inFrameRide,labelClear,tilesFollowing} from './lib/in-frame.mjs';
 
@@ -112,7 +112,8 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
 
 // br-l4v5 (R125): at every tile size the race camera keeps the car in frame all the way round the loop (the loop shot
 // and the cuts in and out), checked 20 times a second.
-test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',{timeout:600_000},async()=>{
+// On the gpu runner (gpu.yml): nine SwiftShader tiles a frame are too slow for a CPU slot's budget.
+test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',{timeout:600_000,skip:!gpu&&'needs the gpu runner (JJ_CHROMIUM_GPU)'},async()=>{
   const browser=await chromium.launch({args:chromiumArgs});
   const rows=[];
   try {

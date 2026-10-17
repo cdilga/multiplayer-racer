@@ -156,7 +156,9 @@ async function joined(url, phone = false) {
 }
 
 // Quarantined (CI owner, br-j71z, owner BrownHill): timed out at 900 s in run 5598 (job 12288). Was: 24 live views need a GPU host.
-test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000 }, async () => {
+// A GPU journey (gpu.yml): on a SwiftShader slot the host and five pages starve each other and phones' input goes stale
+// (br-bcuy, br-j71z), so there it skips itself, as R06 does.
+test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000, skip: !gpu && 'needs the gpu runner (JJ_CHROMIUM_GPU)' }, async () => {
   let diagnosticHost, diagnosticPages = [], diagnosticSources = [], diagnosticPattern;
   try {
   // Normal resolution and all live views: source qualification runs in the GPU workflow.

@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, gpu } from './lib/chromium.mjs';
 import { evidencePath } from '../lib/evidence.mjs';
 import { inFrameRide, labelClear, tilesFollowing } from './lib/in-frame.mjs';
 
@@ -177,7 +177,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
 
 // br-l4v5 (R125): at every tile size the race camera keeps the car in frame through the whole jump (run-up, flight,
 // landing), checked 12 times a second (a 9-tile SwiftShader frame of this map is ~2.5 s).
-test('chromium: the jump stays in frame in 1, 4 and 9 tiles, 12 times a second', { timeout: 600_000 }, async () => {
+// On the gpu runner (gpu.yml): nine SwiftShader tiles of this map cost ~2.5 s a frame, past any slot's budget.
+test('chromium: the jump stays in frame in 1, 4 and 9 tiles, 12 times a second', { timeout: 600_000, skip: !gpu && 'needs the gpu runner (JJ_CHROMIUM_GPU)' }, async () => {
   const browser = await chromium.launch({ args: chromiumArgs });
   const rows = [];
   try {

@@ -41,7 +41,8 @@ const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // with JJ_CHROMIUM_GPU=1 (on SwiftShader R06 skips itself and C06's 150 ms identify bound is loose).
 // FL02 needs a GPU runner: on a CI SwiftShader runner its four phone pages and host still starve each other (CI 5722,
 // br-bcuy), even with the host at 960x540.
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start)\.test\.mjs$/.test(f));
+// generated-jump and generated-loop: their in-frame rides (br-l4v5) draw nine tiles a frame.
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start|generated-jump|generated-loop)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';
