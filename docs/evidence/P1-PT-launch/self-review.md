@@ -48,9 +48,19 @@ The canvas and car remain framed throughout. The Keys & Pads drawer stays visibl
 
 ## Remaining defects
 
-No jump-mesh, blank-world or fullscreen/resize defect found in this local matrix. Deployed review is still pending and these beads remain open until it is complete. Big-air/loop camera behavior remains separately tracked by br-l4v5.
+No jump-mesh, blank-world or fullscreen/resize defect found in this local matrix. The deployed review is below. Big-air/loop camera behavior remains separately tracked by br-l4v5.
 
 ## Not covered
 
 No physical phone, Safari, multiplayer input, deployed bundle or owner playtest in this fixture. Phone dimensions exercise a phone-sized host renderer, not the controller. The native ten-seed bank covers 94 jumps across all four placing biomes and normal/boost approaches; screenshots cover one regression jump. A whole-flight cinematic sequence is not captured here. The self-review does not claim completion of the later huge-jump or loop beads.
+
+## Deployed preview check (2026-10-17, AmberSpring)
+
+`JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/v02-dd7f30b2/ node --test web/tests/journeys/generated-jump.test.mjs`:
+2/2 pass on the deployed preview (generator 26; generated Rocks seed 8), Playwright Chromium and WebKit on the Mac. Each
+frame in `deployed/` is taken while the test asserts all four tyres clear of the receiving surface; the landing returns
+the car upright and the final state hash matches native. Looked at every frame: the car is airborne by the assertion, but
+from the chase camera the gap under it is hard to see at this jump's height. Making big air read as big air is
+br-gw74.13.1.1 (chase camera), not this bead. R120's drift fixtures are gone with the drift input (R128); the R122
+bank (`jj-procgen::handling`) passes in green CI run 5620.
 
