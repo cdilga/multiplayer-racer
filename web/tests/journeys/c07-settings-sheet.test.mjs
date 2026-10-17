@@ -2,7 +2,7 @@
 // mask, so the Lobby's "Tap Ready when you are" banner and the device tray ghosted through its bottom edge. On every phone
 // size and both engines, Settings opened over the Lobby: the sheet's background is fully opaque, it carries no mask, and
 // at the bottom edge (where the fade sits) the page shows the sheet's own colour, not the banner or tray behind it.
-// The toolbar's buttons sit on one row at 667x375 and 375x667. `JJ_CAPTURE_DIR=<dir>` saves each Settings view.
+// The toolbar's icons share one row and its labels aren't squeezed. `JJ_CAPTURE_DIR=<dir>` saves each Settings view.
 //   node --test web/tests/journeys/c07-settings-sheet.test.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -38,13 +38,16 @@ for (const [engine, launcher] of [['chromium', chromium], ['webkit', webkit]]) {
           const el = page.locator(sel).first();
           if (await el.count() && await el.isVisible()) await el.click().catch(() => {});
         }
-        // The toolbar (before Settings covers it): every button on one row.
-        const rows = await page.evaluate(() => {
-          const tops = [...document.querySelectorAll('[data-act=settings]')].map((b) => b.parentElement)
-            .flatMap((bar) => [...bar.children].filter((c) => c.offsetParent !== null).map((c) => Math.round(c.getBoundingClientRect().top)));
-          return new Set(tops).size;
+        // The toolbar (before Settings covers it): the icon buttons share one row (on a narrow phone the labelled Ready and
+        // Identify sit on the row above them, by design; the defect was one icon wrapping alone), and no label is squeezed.
+        const bar = await page.evaluate(() => {
+          const shown = (sel) => [...document.querySelectorAll(sel)].filter((c) => c.offsetParent !== null);
+          const iconRows = new Set(shown('.tools .btn.icon').map((c) => Math.round(c.getBoundingClientRect().top))).size;
+          const squeezed = shown('.tools .btn:not(.icon)').filter((c) => c.scrollWidth > c.clientWidth + 1 || c.getBoundingClientRect().height > 64).map((c) => c.dataset.act);
+          return { iconRows, squeezed };
         });
-        if (width === 667 || width === 375) assert.equal(rows, 1, `${engine} ${width}x${height}: the toolbar wraps onto ${rows} rows`);
+        assert.equal(bar.iconRows, 1, `${engine} ${width}x${height}: the toolbar's icons wrap onto ${bar.iconRows} rows`);
+        assert.deepEqual(bar.squeezed, [], `${engine} ${width}x${height}: squeezed toolbar labels`);
         await page.click('[data-act=settings]');
         const sheet = await page.waitForSelector('.menusheet.settings-sheet');
         const look = await sheet.evaluate((el) => {
