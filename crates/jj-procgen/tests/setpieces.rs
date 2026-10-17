@@ -75,7 +75,8 @@ fn every_prepared_track_has_a_set_piece_per_lap_on_20_seeds_per_biome() {
                 pieces.iter().map(|p| p.kind.name()).collect::<Vec<_>>()
             )
             .unwrap();
-            if pieces.is_empty() {
+            // A loop-the-loop is one of the lap's set pieces too (br-xlvx.6.4, R132).
+            if pieces.is_empty() && jj_procgen::loops::count(&map.map) == 0 {
                 missing.push(format!("{biome:?} {seed}"));
             }
         }

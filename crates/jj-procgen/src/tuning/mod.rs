@@ -337,6 +337,10 @@ pub struct GeneratorData {
     /// one stage of the pipeline alone (terrain, crossings) turn them off.
     #[serde(default = "set_pieces_on")]
     pub set_pieces: bool,
+    /// Loop-the-loops a lap takes where its beat straights allow (br-xlvx.6.4; owner 2026-10-17: "let me playtest and
+    /// have it tunable"); 0 turns them off. The loop's own shape stays in `assets/profiles/loops.json`.
+    #[serde(default = "one")]
+    pub loops_per_lap: u32,
 }
 
 fn set_pieces_on() -> bool {

@@ -1,7 +1,7 @@
 //! The lap's beat rhythm (R132, R136, P1-FL15c; docs/research/fun-tracks.md R20/R21). Every route point of a finished
 //! map is one beat:
 //!
-//! - **set piece**: `crossingBeatM` either side of a crossing point (over and under the deck), and from `setPieceLeadS` before a set piece's kicker (the commitment) to its landing's end;
+//! - **set piece**: `crossingBeatM` either side of a crossing point (over and under the deck), and from `setPieceLeadS` before a set piece's kicker (the commitment) to its landing's end (a loop's: its entry to its exit);
 //! - **recovery**: the first `recoveryS` after the landing (the run-out, a stretch to settle);
 //! - **technical**: a corner tight enough that the speed it allows (lateral grip over its radius) is under
 //!   `technicalBelowMps`: hairpins, medium corners, chicanes;
@@ -224,21 +224,28 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
             }
         }
     }
-    // Set pieces, then the recovery after each.
-    let mut set_pieces = 0;
-    let mut no_recovery = Vec::new();
-    for f in &map.features {
-        let Some(g) = GapLeap::of(f) else {
-            continue;
-        };
-        // The beat is the commitment (a lead-in before the kicker) to the landing's end; the approach before it is
-        // the road it's on, and the run-out after it is the recovery.
+    // Set pieces, then the recovery after each. The beat is the commitment (a lead-in before the kicker, or a loop's
+    // entry) to the landing's end (a loop's exit); the approach before it is the road it's on, and the run-out after it
+    // is the recovery. Loops (br-xlvx.6.4) are set pieces too (R132).
+    let lead = (libm::round(d.set_piece_lead_s * d.design_speed_mps / mean_ds) as usize).min(n - 1);
+    let gap_leaps = map.features.iter().filter_map(|f| {
+        let g = GapLeap::of(f)?;
         let base = jj_map::jump::feature_base(map, f);
-        let lead =
-            (libm::round(d.set_piece_lead_s * d.design_speed_mps / mean_ds) as usize).min(n - 1);
-        let from = (base + n - lead) % n;
-        let to = (base + (libm::round(g.end_u() / mean_ds) as usize).min(n - 1)) % n;
-        set_pieces += 1;
+        Some((
+            base,
+            (base + (libm::round(g.end_u() / mean_ds) as usize).min(n - 1)) % n,
+        ))
+    });
+    let loops = map
+        .features
+        .iter()
+        .filter_map(jj_map::looping::LoopDesign::of)
+        .map(|l| (l.entry % n, l.exit % n));
+    let pieces: Vec<(usize, usize)> = gap_leaps.chain(loops).collect();
+    let set_pieces = pieces.len();
+    let mut no_recovery = Vec::new();
+    for (start, to) in pieces {
+        let from = (start + n - lead) % n;
         let mut k = from;
         loop {
             beats[k] = Beat::SetPiece;

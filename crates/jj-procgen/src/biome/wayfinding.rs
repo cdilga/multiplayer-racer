@@ -334,10 +334,19 @@ pub fn check(map: &Map) -> Vec<String> {
                 .any(|q| libm::hypot(q[0] - x, q[1] - z) < w + RAIL_SECTION_M)
         })
     };
+    // And a loop's footprint (br-xlvx.6): `loops::clear_footprints` takes the rail and chevrons off where the loop stands.
+    let on_loop = |i: usize, outside: f64| {
+        let (p, _) = pose_at(map, &pts, i, outside * (half + RAIL_OFFSET_M));
+        crate::loops::in_footprint(
+            map,
+            [f64::from(p.x) / 1000.0, f64::from(p.z) / 1000.0],
+            RAIL_SECTION_M,
+        )
+    };
     for (k, c) in corners(&pts).iter().enumerate() {
         let (mid, first, last) = ((c.from + c.to) / 2, c.from, c.to);
         let side = if c.left { 1.0 } else { -1.0 };
-        let open = |i: usize| mouth(i) || on_detour(i, side);
+        let open = |i: usize| mouth(i) || on_detour(i, side) || on_loop(i, side);
         for &i in [first, mid, last].iter().filter(|&&i| !open(i)) {
             if !near(CHEVRON, i, CHEVRON_OFFSET_M + CHEVRON_SPACING_M) {
                 bad.push(format!(

@@ -1466,7 +1466,9 @@ pub fn check_minimum(map: &Map) -> Vec<String> {
         .features
         .iter()
         .filter(|f| GapLeap::of(f).is_some() && sight_seconds(map, f, data) >= data.min_sight_s)
-        .count();
+        .count()
+        // A loop is one of the lap's set pieces (R132), 15 m and more tall on its own beat straight.
+        + crate::loops::count(map);
     let lap_m = crate::assemble::arc_lengths(
         &map.route
             .points

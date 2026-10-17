@@ -450,5 +450,6 @@
     "tension": [0.45, 0.7],
     "shoulderM": 3.0,
     "fadeM": 8.0
-  }
+  },
+  "loopsPerLap": 1
 }

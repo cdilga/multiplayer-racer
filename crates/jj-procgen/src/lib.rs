@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "25";
+pub const GENERATOR_VERSION: &str = "26";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;
@@ -76,6 +76,9 @@ pub struct Report {
     pub fork_rejects: BTreeMap<String, u32>,
     /// The course's set-piece beat straights (m along the lap, P1-FL15c).
     pub beat_spans: Vec<(f64, f64)>,
+    /// The loops placed on the lap (br-xlvx.6.4), and why candidate beats were turned down (R90).
+    pub loops: u32,
+    pub loop_rejects: BTreeMap<String, u32>,
 }
 
 /// The map for `seed`.
@@ -161,11 +164,42 @@ pub fn generate_course(
     data: &tuning::GeneratorData,
     pieces: &setpieces::Data,
 ) -> Result<(Map, Report), biome::SelectError> {
-    let centerline = centred(&resample(&course.points));
-    let sel = if !course.crossings.is_empty() {
-        biome::select::select_crossing(&centerline, recipe, &mut st.structure, &course.beat_spans)?
+    let mut centerline = centred(&resample(&course.points));
+    // Loops (br-xlvx.6.4) take a set-piece beat straight: the centreline jogs under and after each before anything is
+    // laid on it, from their own stream (seeded off the structure stream's state, a clone: nothing else moves). The
+    // beats move with the jog (same route points, new arc lengths).
+    let loop_data = &loops::LoopData {
+        per_lap: data.loops_per_lap,
+        ..loops::shipped().clone()
+    };
+    // A course that crosses itself (br-xlvx.10) has its levels set on the designed line, so a loop's jog would move a
+    // road under a bridge: those courses take their crossings and no loop.
+    let (loop_sites, mut loop_rejects) = if !course.crossings.is_empty() && data.loops_per_lap > 0 {
+        (
+            Vec::new(),
+            BTreeMap::from([("course crosses itself".to_string(), 1)]),
+        )
+    } else if data.set_pieces {
+        let loop_seed = st.structure.clone().next_u64() ^ 0x100F;
+        loops::jog(
+            &mut centerline,
+            &course.beat_spans,
+            WIDTH_M,
+            &mut seed::Rng::stream(loop_seed, "loops"),
+            loop_data,
+        )
     } else {
-        biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &course.beat_spans)?
+        Default::default()
+    };
+    let beat_spans = if loop_sites.is_empty() {
+        course.beat_spans.clone()
+    } else {
+        loops::moved_spans(&resample_s(&course.points), &centerline, &course.beat_spans)
+    };
+    let sel = if !course.crossings.is_empty() {
+        biome::select::select_crossing(&centerline, recipe, &mut st.structure, &beat_spans)?
+    } else {
+        biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &beat_spans)?
     };
     let props = placeholder_props(&mut st, &centerline);
     let n = centerline.len();
@@ -201,6 +235,12 @@ pub fn generate_course(
     if !course.crossings.is_empty() {
         crossings::place(&mut map, &course, &data.course.crossing);
     }
+    // The loops stand on the finished ground (cut where it rises into the deck), before the set pieces, which keep a
+    // beat's spacing from them, and the small features, which keep off their straights.
+    let (loop_spans, place_rejects) = loops::place(&mut map, &loop_sites, loop_data);
+    for (k, v) in place_rejects {
+        *loop_rejects.entry(k).or_default() += v;
+    }
     // Features stay inside their biome's stretch, clear of the transition zones at its ends.
     let ranges: Vec<(f64, f64, features::Density)> = sel
         .segments()
@@ -227,11 +267,14 @@ pub fn generate_course(
         .zip(&ranges)
         .map(|((b, _, _), &(lo, hi, _))| (lo, hi, b))
         .collect();
-    let ranges = crossings::feature_ranges(&map, &ranges);
+    let ranges = loops::clear_of(&crossings::feature_ranges(&map, &ranges), &loop_spans, 0.0);
+
     // Its own stream, seeded from the structure stream's state (a clone: nothing else moves), so each course draw of a
     // seed gets its own placement.
     let piece_seed = st.structure.clone().next_u64();
-    let (pieces, piece_rejects) = if data.set_pieces {
+    let (pieces, piece_rejects) = if !data.set_pieces {
+        Default::default()
+    } else if loop_spans.is_empty() {
         setpieces::place_counted(
             &mut map,
             &mut seed::Rng::stream(piece_seed, "set-pieces"),
@@ -239,7 +282,29 @@ pub fn generate_course(
             pieces,
         )
     } else {
-        Default::default()
+        // A loop is one of the lap's set pieces (R132): the gap-leaps make up the rest, a rhythm's spacing from it
+        // (R20) where the lap has the room, else the road two pieces keep between them (the minimum still holds).
+        let lap_m = sel.total;
+        let beside = loops::pieces_beside(pieces, loop_spans.len(), lap_m);
+        let want = setpieces::min_for(&beside, lap_m, &sel.biomes()) as usize;
+        let before = map.clone();
+        let spaced = setpieces::place_counted(
+            &mut map,
+            &mut seed::Rng::stream(piece_seed, "set-pieces"),
+            &loops::clear_of(&piece_ranges, &loop_spans, loops::piece_gap_m()),
+            &beside,
+        );
+        if spaced.0.len() >= want {
+            spaced
+        } else {
+            map = before;
+            setpieces::place_counted(
+                &mut map,
+                &mut seed::Rng::stream(piece_seed, "set-pieces"),
+                &loops::clear_of(&piece_ranges, &loop_spans, setpieces::CLEAR_M),
+                &beside,
+            )
+        }
     };
     let ranges = setpieces::clear_of(&ranges, &pieces);
     // Route forks (R134, P1-FL16) on the sweepers left, from their own stream; the small features keep clear of them.
@@ -299,6 +364,7 @@ pub fn generate_course(
     // their dressing references; no earlier placement pass may fill the approach afterwards.
     crossings::clear_corridors(&mut map, &registry);
     setpieces::clear_footprints(&mut map, &registry);
+    loops::clear_footprints(&mut map);
     forks::clear_corridors(&mut map, &registry);
     biome::wayfinding::fork_gores(&mut map);
     // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers
@@ -314,9 +380,13 @@ pub fn generate_course(
         // A set piece's span and `ROOF_PIECE_MARGIN_M` either side: its approach and run-out are graded ground a
         // lot's kicker would launch off (a lot just past a run-out overshot its roof, Town seed 0). Its detour's
         // painted track is `roofs::place`'s own surface check.
-        pieces.iter().any(|p| {
-            sel.s[i] + ROOF_PIECE_MARGIN_M > p.from_s && sel.s[i] < p.to_s + ROOF_PIECE_MARGIN_M
-        })
+        pieces
+            .iter()
+            .map(|p| (p.from_s, p.to_s))
+            .chain(loop_spans.iter().map(|p| (p.from_s, p.to_s)))
+            .any(|(from, to)| {
+                sel.s[i] + ROOF_PIECE_MARGIN_M > from && sel.s[i] < to + ROOF_PIECE_MARGIN_M
+            })
     };
     roofs::place(&mut map, &data.roof_stunts, &registry, &|i| {
         if reserved(i) {
@@ -332,6 +402,9 @@ pub fn generate_course(
     rep.set_piece_rejects = piece_rejects;
     rep.forks = fork_spans.len() as u32;
     rep.fork_rejects = fork_rejects;
+    rep.loops = loop_spans.len() as u32;
+    rep.loop_rejects = loop_rejects;
+    rep.beat_spans = beat_spans;
     Ok((map, rep))
 }
 
@@ -360,7 +433,14 @@ fn report(course: &Course) -> Report {
         forks: 0,
         fork_rejects: BTreeMap::new(),
         beat_spans: course.beat_spans.clone(),
+        loops: 0,
+        loop_rejects: BTreeMap::new(),
     }
+}
+
+/// The arc length at each point of [`resample`]`(dense)` (the line the course's spans are measured on).
+fn resample_s(dense: &[(f64, f64)]) -> Vec<f64> {
+    arc_lengths(&resample(dense)).0
 }
 
 /// Resamples a closed polyline to points evenly spaced by arc length (~[`STEP_M`]), keeping the first point.

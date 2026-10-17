@@ -153,3 +153,60 @@ fn a_bot_laps_a_generated_loop_upside_down_at_the_top() {
         assert!(min_up < -0.9, "seed {seed}: never upside down ({min_up})");
     }
 }
+
+// ---- The procgen bank (br-xlvx.6.4 AC1): loops in the generated, race-prepared maps.
+
+const BIOMES: [Biome; 4] = [
+    Biome::Town,
+    Biome::Rocks,
+    Biome::OutbackDirt,
+    Biome::OutbackBitumen,
+];
+const BANK_SEEDS: u64 = if cfg!(debug_assertions) { 2 } else { 16 };
+
+/// A seed's race-prepared map, loaded as the game loads it.
+fn prepared(seed: u64, biome: Biome) -> (LoadedMap, jj_procgen::Prepared) {
+    let p = jj_procgen::prepare(seed, &[biome]);
+    let m = load_canonical(&canonical_bytes(&p.map), &jj_procgen::registry())
+        .unwrap_or_else(|r| panic!("{biome:?} seed {seed}: {:?}", r.violations));
+    (m, p)
+}
+
+#[test]
+fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
+    let mut lines = Vec::new();
+    for biome in BIOMES {
+        let mut with = 0;
+        for seed in 0..BANK_SEEDS {
+            let (m, p) = prepared(seed, biome);
+            assert!(p.valid, "{biome:?} seed {seed}: {:?}", p.attempts);
+            let loops: Vec<_> = m
+                .map
+                .features
+                .iter()
+                .filter(|f| f.kind == FeatureKind::Loop)
+                .collect();
+            for f in &loops {
+                let problems = jj_map::looping::problems(&m.map, &f.params);
+                assert!(problems.is_empty(), "{biome:?} seed {seed}: {problems:?}");
+            }
+            let report = jj_map::validate(&m.map, &jj_procgen::registry());
+            assert!(report.ok, "{biome:?} seed {seed}: {:?}", report.violations);
+            let rhythm = jj_procgen::rhythm::of(&m.map);
+            let notes = jj_procgen::rhythm::notes(&rhythm, jj_procgen::rhythm::shipped());
+            eprintln!(
+                "{biome:?} seed {seed}: {} loop(s), {} set piece(s) {:?}, {:.0} m {:?}, plan {:?}, loop rejects {:?}, notes {notes:?}",
+                loops.len(),
+                p.course.set_pieces.len(),
+                p.course.set_pieces,
+                p.course.length_m,
+                p.course.preset,
+                p.plan,
+                p.course.loop_rejects,
+            );
+            with += usize::from(!loops.is_empty());
+        }
+        lines.push(format!("{biome:?}: loops on {with} of {BANK_SEEDS} seeds"));
+    }
+    eprintln!("{}", lines.join("\n"));
+}

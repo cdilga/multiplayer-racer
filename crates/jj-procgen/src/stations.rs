@@ -44,6 +44,16 @@ pub fn place(map: &mut Map, data: &StationData, registry: &jj_map::Registry) {
             .unwrap_or(0);
         keep_out.push((s[base] - CLEAR_M, s[base] + d.length_m() + CLEAR_M));
     }
+    // And each loop, its entry to its exit (br-xlvx.6.4).
+    for d in map
+        .features
+        .iter()
+        .filter_map(jj_map::looping::LoopDesign::of)
+    {
+        if d.exit < n {
+            keep_out.push((s[d.entry] - CLEAR_M, s[d.exit] + CLEAR_M));
+        }
+    }
     let blocked = |at: f64| {
         keep_out.iter().any(|&(a, b)| {
             let (a, b) = (a.rem_euclid(total), b.rem_euclid(total));

@@ -476,19 +476,24 @@ fn regrounded(map: &mut Map) {
     }
 }
 
-/// `ranges` with every loop's stretch cut out.
-pub fn clear_of<T: Copy>(ranges: &[(f64, f64, T)], placed: &[Placed]) -> Vec<(f64, f64, T)> {
+/// `ranges` with every loop's stretch, and `margin_m` either side, cut out.
+pub fn clear_of<T: Copy>(
+    ranges: &[(f64, f64, T)],
+    placed: &[Placed],
+    margin_m: f64,
+) -> Vec<(f64, f64, T)> {
     let mut out = ranges.to_vec();
     for p in placed {
+        let (lo, hi) = (p.from_s - margin_m, p.to_s + margin_m);
         out = out
             .into_iter()
             .flat_map(|(a, b, t)| {
                 let mut keep = Vec::new();
-                if a < p.from_s {
-                    keep.push((a, b.min(p.from_s), t));
+                if a < lo {
+                    keep.push((a, b.min(lo), t));
                 }
-                if b > p.to_s {
-                    keep.push((a.max(p.to_s), b, t));
+                if b > hi {
+                    keep.push((a.max(hi), b, t));
                 }
                 keep
             })
@@ -517,4 +522,58 @@ pub fn clear_footprints(map: &mut Map) {
     };
     map.dressing.retain(|d| !on(d.pose.x, d.pose.z));
     map.props.retain(|q| !on(q.pose.x, q.pose.z));
+}
+
+/// Whether `p` (x, z, m) is on a loop's footprint, within `margin` m of where [`clear_footprints`] takes the dressing off:
+/// the outside rail and chevrons there are gone by design (the corner lint, `biome::wayfinding::check`, leaves it open).
+pub fn in_footprint(map: &Map, p: [f64; 2], margin: f64) -> bool {
+    map.features
+        .iter()
+        .filter_map(LoopDesign::of)
+        .filter_map(|d| Footprint::of(map, &d))
+        .any(|fp| fp.at(p[0], p[1]).0 < FURNITURE_CLEAR_M + margin)
+}
+
+/// The loops on `map`.
+pub fn count(map: &Map) -> usize {
+    map.features
+        .iter()
+        .filter(|f| LoopDesign::of(f).is_some())
+        .count()
+}
+
+/// The road a gap-leap's kicker keeps from a loop's stretch (the rhythm's set-piece spacing, R20: `minSetPieceSpacingS`
+/// at its design speed, so the time between them is at least that wherever corners slow the car), m.
+pub fn piece_gap_m() -> f64 {
+    let r = crate::rhythm::shipped();
+    r.min_set_piece_spacing_s * r.design_speed_mps
+}
+
+/// The set-piece data for a lap that already has `loops` of its set pieces (R132: a loop is one): its minimums and
+/// its expected pieces per km each that many fewer (never below none).
+pub fn pieces_beside(
+    data: &crate::setpieces::Data,
+    loops: usize,
+    lap_m: f64,
+) -> crate::setpieces::Data {
+    let mut d = data.clone();
+    let k = loops as u32;
+    d.min_per_lap = d.min_per_lap.saturating_sub(k);
+    d.min_per_short_lap = d.min_per_short_lap.saturating_sub(k);
+    for v in d.min_per_lap_in.values_mut() {
+        *v = v.saturating_sub(k);
+    }
+    d.per_km = (d.per_km - loops as f64 / (lap_m / 1000.0).max(1e-6)).max(0.0);
+    d
+}
+
+/// `spans` (arc lengths along `before`, whose points are those of `after`) as arc lengths along `after`: [`jog`] moves
+/// points but keeps them, so a span keeps its route points and takes their new lengths.
+pub fn moved_spans(before: &[f64], after: &[(f64, f64)], spans: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let (s, total) = arc_lengths(after);
+    let at = |v: f64| match before.iter().position(|&b| b >= v) {
+        Some(i) if i < s.len() => s[i],
+        _ => total,
+    };
+    spans.iter().map(|&(lo, hi)| (at(lo), at(hi))).collect()
 }
