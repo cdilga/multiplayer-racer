@@ -27,6 +27,14 @@ Collision compliance and forgiving rail use remain on br-gw74.9. These are stati
 
 ## Not covered
 
-Physical phones, physical TV, device Safari, impacts or spring deflection. No touch UI changed. Deployed pinned preview matrix will be recorded before close.
+Physical phones, physical TV, device Safari, impacts or spring deflection. No touch UI changed. The deployed preview matrix is below.
 
 Latest capture refresh: both browser tests passed in 18.63 s using the real Rust jj-server on this Mac. A test-source join through the existing simulation probe precedes normal room Start; this is not physical-controller evidence. The mounted room HUD, seat border, lap/place and footer are visible. All seven chase frames and five isolated kit frames inspected after the refresh. Generator 12, 160 joined rails, 48 chevrons.
+
+## Deployed preview check (2026-10-17, AmberSpring)
+
+`JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/v02-dd7f30b2/ node --test --test-name-pattern="generated corner row"
+web/host/tests/chevrons.test.mjs` (the test now takes `JJ_PREVIEW_URL`): pass, a real generated round on the deployed
+preview through its own jj-server, Playwright Chromium on the Mac. Looked at all seven frames in `deployed/` (1920x1080,
+1366x768, 915x412, 412x915, 375x667, fullscreen, after fullscreen): the W-beam runs unbroken along the outside of the
+bend behind the chevrons at every size.

@@ -21,7 +21,10 @@ before(async () => {
   code = (Array.isArray(result) ? result[0] : result).output[0].code;
   browser = await chromium.launch({ channel: process.env.JJ_CHROMIUM_GPU === 'native' ? 'chromium' : undefined, args: chromiumArgs });
   report.browser = `Chromium ${browser.version()}`;
-  server = await serveReal(process.env.JJ_DIST ?? buildPages('/', 'chevrons'));
+  // JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/<id>/ runs the round on a deployed preview (the deployed check).
+  server = process.env.JJ_PREVIEW_URL
+    ? { url: process.env.JJ_PREVIEW_URL.replace(/\/$/, ''), close: async () => {} }
+    : await serveReal(process.env.JJ_DIST ?? buildPages('/', 'chevrons'));
   if (out) mkdirSync(out, { recursive: true });
 });
 after(async () => {

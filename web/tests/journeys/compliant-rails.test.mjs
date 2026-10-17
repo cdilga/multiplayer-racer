@@ -10,16 +10,18 @@ import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 import { evidencePath } from '../lib/evidence.mjs';
 
-const BASE = '/p/rails/';
+// JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/<id>/ runs it against a deployed preview (the deployed check).
+const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
+const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/rails/';
 const mapJson = readFileSync('scenarios/rails/yard.json', 'utf8');
 const out = process.env.JJ_CAPTURE_DIR ?? evidencePath('P1-PT-barriers');
 const sizes = [[412,915],[915,412],[375,667],[1920,1080],[1366,768]];
 let server;
 before(async () => {
   mkdirSync(out, { recursive: true });
-  server = await serve(build('./', 'rails'), BASE, { JJ_STUN_URLS: '' });
+  server = deployed ? { origin: deployed.origin } : await serve(build('./', 'rails'), BASE, { JJ_STUN_URLS: '' });
 });
-after(async () => { await server?.close(); });
+after(async () => { await server?.close?.(); });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
   test(`${name}: the rail corner fixture has native/WASM full-state parity`, { timeout: 180_000 }, async () => {

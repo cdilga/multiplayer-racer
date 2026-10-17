@@ -44,8 +44,16 @@ Local macOS/arm64, Playwright Chromium and WebKit, real Rust server, built WASM 
 
 ## Remaining defects
 
-None in the changed rail rendering in this local matrix. Deployed-preview and remote captures are still required before closure.
+None in the changed rail rendering in this local matrix. The deployed preview check is below.
 
 ## Not covered
 
-Physical phones, Safari, WebGPU, deployed preview, remote GPU, actual controller connection, and vehicle-model acceptance are not claimed. The fixture tests the WASM/snapshot/instanced-rendering path; real transport has separate journeys. The complete bank and green CI are still required.
+Physical phones, Safari, WebGPU, remote GPU, actual controller connection, and vehicle-model acceptance are not claimed. The fixture tests the WASM/snapshot/instanced-rendering path; real transport has separate journeys. The complete bank and green CI are still required.
+
+## Deployed preview check (2026-10-17, AmberSpring)
+
+`JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/v02-dd7f30b2/ node --test web/tests/journeys/compliant-rails.test.mjs`
+(the journey now takes `JJ_PREVIEW_URL`): 4/4 pass on the deployed preview, Playwright Chromium and WebKit on the Mac.
+Corner fixture parity (native = WASM state hash), and the collision moving the drawn rail with the spring return at
+412x915, 915x412, 375x667, 1366x768 and 1920x1080, fullscreen and resized. Looked at the hit frames in both engines:
+the car meets the W-beam, the beam bends and is drawn continuous, nothing overlaps. Kept: `deployed/`.
