@@ -10,12 +10,13 @@ export async function inFrameRide(page, { ticks, every = 6, car = 0 }) {
       await window.__jjTest.step(every);
       const s = await window.__jjTest.observe();
       const c = s.cars.find((x) => x.car === car) ?? s.cars[car];
-      // A frame painted at this tick (the cameras move in frame()).
-      for (let k = 0; k < 20 && window.__jjRender.stats().tick < s.tick; k++) {
+      // A frame painted at (or a tick or two short of) this tick: the cameras move in frame(). A few ticks' lag is well
+      // inside a frustum's margin, and each SwiftShader frame of 9 tiles costs a lot.
+      let k = 0;
+      do {
         window.__jjRender.frame();
         await new Promise((r) => setTimeout(r, 10));
-      }
-      window.__jjRender.frame();
+      } while (++k < 3 && window.__jjRender.stats().tick < s.tick);
       const [x, y, z] = c.position;
       return { tick: s.tick, tiles: window.__jjRender.tilesSee([[x, y, z], [x, y + 1.2, z]]), position: c.position };
     }, { every, car });
