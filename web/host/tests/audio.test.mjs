@@ -275,8 +275,7 @@ test('A03/A07: every shipped clip decodes in Chromium and WebKit (an AAC twin wo
   assert.deepEqual(wk.failed, [], `WebKit decodes every clip (canPlayType ogg/opus: "${wk.canOggOpus}")`);
 });
 
-// Quarantined (CI owner, br-kcny, owner BrownHill): throttle/rpm assertion failed in run 5598 (job 12290).
-test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo', { timeout: 240_000, skip: 'quarantined br-kcny (owner BrownHill): throttle/rpm assertion' }, async () => {
+test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surface; start on engine-on, stop on a wreck; the Cruz has no turbo', { timeout: 240_000 }, async () => {
   const { page, errors } = await open(live, '?test=live');
   await page.evaluate(() => window.__jjAudio.unlock());
   await page.waitForFunction(() => window.__jjAudio.state().mix === 'running', null, { timeout: 10_000 });
@@ -294,8 +293,15 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   });
   // Wait for a snapshot that carries the stick rather than reading one at a fixed 500 ms: on a loaded runner the pump can
   // stall past the input's freshness and the sampled engine read throttle 0 (CI run 5438). The assertions still judge it.
-  await page.waitForFunction((car) => (window.__jjAudio.engines().find((e) => e.car === car)?.throttle ?? 0) > 0.2, joined[0].car, { timeout: 10_000, polling: 50 }).catch(() => {});
-  const engines = await page.evaluate(() => window.__jjAudio.engines());
+  // The engines are judged on that same snapshot (br-kcny): a second read a frame later can land on one where the test's
+  // stepping ran ahead of the fake controller's resend (the stick not yet fresh: throttle 0 for a frame or two).
+  const engines = await page
+    .waitForFunction((car) => {
+      const all = window.__jjAudio.engines();
+      return (all.find((e) => e.car === car)?.throttle ?? 0) > 0.2 ? all : null;
+    }, joined[0].car, { timeout: 10_000, polling: 50 })
+    .then((h) => h.jsonValue())
+    .catch(() => page.evaluate(() => window.__jjAudio.engines()));
   assert.equal(engines.length, 8, 'one engine per car');
   const own = engines.find((e) => e.car === joined[0].car);
   assert.ok(own.ignition && own.speed > 5 && own.rpm > 1500, `the driven car's engine follows its speed: ${JSON.stringify(own)}`);
