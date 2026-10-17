@@ -85,6 +85,9 @@ const LEN = 5.3; // matches atlas.js: the side livery spans 5.3 m from the nose
 function sideUV(P) { const [u0, v0, u1, v1] = REGION.side; return (v) => [u0 + (u1 - u0) * ((P.zNose - v[2]) / LEN), v0 + (v1 - v0) * (v[1] / 1.7)]; }
 function topUV(P) { const [u0, v0, u1, v1] = REGION.top; return (v) => [u0 + (u1 - u0) * (v[0] / 1.9 + 0.5), v1 - (v1 - v0) * ((P.zNose - v[2]) / 1.7)]; }
 // the canopy's sides: planar (z, y) over its own box, front edge at u0 (atlas.js draws the doors, seam and locks there)
+// the canopy's back (planar x, y) and its lid (planar x, z): atlas.js draws the rear door, window and chevrons, and the lid's ribs
+function canopyRearUV(P, y0) { const [u0, v0, u1, v1] = REGION.canopyRear, C = P.canopy; return (v) => [u0 + (u1 - u0) * ((v[0] + C.hw) / (2 * C.hw)), v0 + (v1 - v0) * ((v[1] - y0) / (C.y1 - y0))]; }
+function canopyTopUV(P) { const [u0, v0, u1, v1] = REGION.canopyTop, C = P.canopy; return (v) => [u0 + (u1 - u0) * ((v[0] + C.hw) / (2 * C.hw)), v1 - (v1 - v0) * ((C.z0 - v[2]) / (C.z0 - C.z1))]; }
 function canopyUV(P, y0) { const [u0, v0, u1, v1] = REGION.canopy, C = P.canopy; return (v) => [u0 + (u1 - u0) * ((C.z0 - v[2]) / (C.z0 - C.z1)), v0 + (v1 - v0) * ((v[1] - y0) / (C.y1 - y0))]; }
 
 // ───────────────────────── build ─────────────────────────
@@ -201,10 +204,10 @@ function makeSoups(P, lod) {
   const trayLen = TR.z0 - TR.z1, trayMid = (TR.z0 + TR.z1) / 2, deckTop = deckY + 0.06;
   Bk.box(0, deckY + 0.03, trayMid, C.hw * 2 + 0.04, 0.06, trayLen + 0.08, 'under'); // the tray deck, wider than the cab
   const cUV = canopyUV(P, deckTop);
-  Bk.box(0, (deckTop + C.y1) / 2, (C.z0 + C.z1) / 2, C.hw * 2, C.y1 - deckTop, C.z0 - C.z1, { all: 'canopy', px: cUV, nx: cUV, py: 'paint' }); // the canopy: black like the owner's, its lid in the seat colour so the chase cam sees whose it is
+  Bk.box(0, (deckTop + C.y1) / 2, (C.z0 + C.z1) / 2, C.hw * 2, C.y1 - deckTop, C.z0 - C.z1, { all: 'canopy', px: cUV, nx: cUV, nz: canopyRearUV(P, deckTop), py: canopyTopUV(P) }); // the canopy: black like the owner's, its lid in the seat colour so the chase cam sees whose it is
   const bq = (x0, y0, x1, y1, sw) => Bk.quad([x1, y0, zt], [x0, y0, zt], [x0, y1, zt], [x1, y1, zt], sw);
   if (T.tailLamps) for (const s of [1, -1]) { // the tray's combination lamps: amber, white, red from the middle out
-    for (const [a, b, sw] of [[0.52, 0.62, 'indicator'], [0.62, 0.70, 'head'], [0.70, 0.94, 'tail']]) { const xa = s * hwT * a, xb = s * hwT * b; bq(Math.min(xa, xb), 0.96, Math.max(xa, xb), 1.08, sw); }
+    for (const [a, b, sw] of [[0.52, 0.62, 'indicator'], [0.62, 0.70, 'head'], [0.70, 0.94, 'tail']]) { const xa = s * hwT * a, xb = s * hwT * b; bq(Math.min(xa, xb), 0.90, Math.max(xa, xb), 1.10, sw); } // tall, as the Cruz's are (br-bwju.8)
   }
   bq(-0.22, 0.74, 0.22, 0.86, 'white'); // number plate
   if (T.tow) { Bk.box(0, 0.42, zt - 0.06, 0.55, 0.10, 0.14, 'trim'); Bk.prism([0, 0.46, zt - 0.14], [0, 0.56, zt - 0.14], 0.04, 5, 'chrome', 'chrome'); }

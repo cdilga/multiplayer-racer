@@ -72,6 +72,22 @@ little too generic right now."
 7. **From the chase cam the Ute read as a black box.** The canopy hid the seat colour (grid-24). The canopy's lid now carries the
    seat colour; the sides and rear stay black like the owner's.
 8. **The hi-vis livery wasn't the owner's car.** Removed: the paint is plain, and the hi-vis bumper corners are now black.
+9. **Detail pass, 2026-10-17 (BrownHill).** Each plain panel now carries the owner's Triton's own detail. Every addition is
+   atlas or UV only, so the triangles stay 1250 / 828 / 592 and the bake is reproducible (`bake.mjs --check`).
+   - **Canopy sides:** the upper doors' T-handles and gas struts, a louvred vent, the drip rail, chrome corner protectors, and
+     amber (front) and red (rear) reflectors.
+   - **Canopy back:** a rear door with a tinted window, a T-handle and a third brake light (emissive). It has its own atlas
+     region; it used to be a flat black swatch.
+   - **Canopy lid:** the seat colour with tie-down rails along its edges. It has its own atlas region and is pure white
+     elsewhere, so the tint survives the mipmaps (thin ribs I tried first blended the white away and the lid went untinted at
+     a distance: `paints.png`, `grid-24.png`).
+   - **Cab sides:** door handles, the chrome shoulder line, the J-line down the cab's back and along the sill, the black
+     rocker, and the front guard's repeater.
+   - **Bonnet:** washer jets and the cowl vent.
+   - **Tray:** taller combination lamps.
+   - **Owner's correction:** I tried a hi-vis livery and bonnet stripes against the Cruz's livery density, then dropped them
+     when the owner clarified that the "filler" was the picker's silhouettes (br-bwju.10). The paint stays plain, as on their car.
+   - `ute-before-after-views.png`: the 2026-10-16 bake above, this one below.
 
 ## Remaining defects
 
