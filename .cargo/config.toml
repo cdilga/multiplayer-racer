@@ -9,11 +9,16 @@ incremental = false
 CARGO_INCREMENTAL = "0"
 
 # Slim dev profile: line tables only (backtraces keep file:line), no debug info for dependencies.
+# Optimised (br-15gd, 2026-10-17): the sim banks drive Rapier for minutes of game time, and unoptimised they dominated CI
+# (jj-procgen handling hawk_dash: 707 s at opt-level 0, 40 s with deps at 3 and our crates at 1, on rch). Debug assertions
+# and overflow checks stay on; Rust doesn't reorder float maths by opt level, so results are the same bits.
 [profile.dev]
 debug = "line-tables-only"
+opt-level = 1
 
 [profile.dev.package."*"]
 debug = false
+opt-level = 3
 
 [profile.test]
 debug = "line-tables-only"
