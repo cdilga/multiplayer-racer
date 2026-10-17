@@ -23,12 +23,12 @@ neither the car nor its road 8 m ahead of or behind it (`lib/in-frame.mjs` `labe
 
 ## Looked at
 
-- `chromium-overview-air-1920x1080.jpg` / `-1366x768.jpg`, plus `crop-jump.png` (crop of the 1920 still): the car mid-air
+- `chromium-overview-air-1920x1080.jpg`, `chromium-overview-air-1366x768.jpg`, plus `crop-jump.png` (crop of the 1920 still): the car mid-air
   over a generated road-wide jump (rocks), seen from the overview.
   - Two ink lines cross the road, the lip and the landing's start, with the shaded ramp between: it reads as a jump.
   - The "#0" badge stands to the left of the road, its leader running to the car between the lines. Neither the badge
     nor the leader covers the bands.
-- `top-overview-1920x1080.jpg` / `-1366x768.jpg`: the car at the top of a generated loop. The badge stands to the right
+- `top-overview-1920x1080.jpg`, `top-overview-1366x768.jpg`: the car at the top of a generated loop. The badge stands to the right
   of the loop with a short leader, and the loop's ring and its shadow are clear of it.
 
 ## Defects found and fixed
