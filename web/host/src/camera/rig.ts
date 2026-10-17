@@ -231,7 +231,7 @@ export class CameraRig {
     const target = this.w.copy(car.pos).addScaledVector(dir, -R.backM);
     target.y = car.pos.y + R.upM - this.airHold(car);
     this.pullIn(s, car, target);
-    this.overGround(s, car, target, dt, cut);
+    this.overGround(s, car, target, dt, cut, Math.sin(want) * s.speed, Math.cos(want) * s.speed);
     s.pos.copy(target);
     // Look ahead along the car's own heading (in a turn it leads the camera's smoothed heading), further the faster it
     // goes, at the preset's pitch whatever the distance, so speed never tips the view up into the sky (R98).
@@ -263,7 +263,7 @@ export class CameraRig {
 
   /** Raises `target` until it is clear of the ground under it and the ground doesn't hide the car (undulating maps:
    *  in a dip the chase point can sit inside the rise behind the car). */
-  private overGround(s: SeatState, car: CarView, target: Vector3, dt: number, cut: boolean): void {
+  private overGround(s: SeatState, car: CarView, target: Vector3, dt: number, cut: boolean, vx: number, vz: number): void {
     const ground = this.groundAt;
     if (!ground) return;
     const base = target.y;
@@ -272,19 +272,23 @@ export class CameraRig {
     // so it moves continuously with the car instead of in 0.5 m steps (br-gw74.14.1).
     const R = profile.rig;
     const eye = car.pos.y + R.pullInEyeUpM;
-    const solve = (margin: number) => {
-      let need = Math.max(base, ground(target.x, target.z) + R.groundClearM);
+    // `ahead` s from now, both points carried along the car's travel and the car riding the ground (relief look-ahead).
+    const solve = (margin: number, ahead = 0) => {
+      const dx = vx * ahead, dz = vz * ahead;
+      const rise = ahead ? ground(car.pos.x + dx, car.pos.z + dz) - ground(car.pos.x, car.pos.z) : 0;
+      const b = base + rise, e = eye + rise, tx = target.x + dx, tz = target.z + dz, cx = car.pos.x + dx, cz = car.pos.z + dz;
+      let need = Math.max(b, ground(tx, tz) + R.groundClearM);
       for (let k = 1; k < 8; k++) {
         const t = k / 8;
-        const g = ground(target.x + (car.pos.x - target.x) * t, target.z + (car.pos.z - target.z) * t);
-        need = Math.max(need, (g + margin - eye * t) / (1 - t));
+        need = Math.max(need, (ground(tx + (cx - tx) * t, tz + (cz - tz) * t) + margin - e * t) / (1 - t));
       }
-      return Math.min(need - base, R.losMaxLiftM);
+      return Math.min(need - b, R.losMaxLiftM);
     };
     // The lift follows what the ground needs (with headroom) on a critically damped spring, quick up and slow down, so
     // its acceleration stays continuous through every crest and dip; the floor (the line of sight 0.2 m over the
     // ground) holds whatever the spring does, so the car is never hidden.
-    const want = solve(0.2 + R.groundHeadroomM);
+    let want = 0;
+    for (let k = 0; k <= 4; k++) want = Math.max(want, solve(0.2 + R.groundHeadroomM, (k / 4) * R.groundLookAheadS));
     const floor = solve(0.2);
     if (cut) {
       s.groundLift = want;

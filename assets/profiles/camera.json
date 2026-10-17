@@ -31,6 +31,6 @@
     "fovKickMaxDeg": 9,
     "maxDtS": 0.1,
     "groundClearM": 1.2,
-    "losMaxLiftM": 8, "airFromM": 0.9, "airHold": 0.6, "airHoldMaxM": 4, "groundHeadroomM": 0.6, "groundRise": 9, "groundSettle": 2.5
+    "losMaxLiftM": 8, "airFromM": 0.9, "airHold": 0.6, "airHoldMaxM": 4, "groundHeadroomM": 0.6, "groundRise": 9, "groundSettle": 2.5, "groundLookAheadS": 0.5
   }
 }
