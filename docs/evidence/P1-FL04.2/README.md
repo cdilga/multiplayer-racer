@@ -119,4 +119,8 @@ Fixtures moved, each with its reason (also in the fixture's own `what`):
 
 ## Owner verdict
 
-Pending the couch test.
+Pending the couch test. The preview to judge is **`preview/v02-64d40dd7`**: the arcade controller is the default for every
+car, along with FL05, FL06, FL07 and FL12's Ute climb (ee5f1619).
+
+Don't use `v02-22502cef`. It has the arcade controller too, but its Ute can ride up a verge bank at speed and roll
+(f53c4026, replaced by ee5f1619).
