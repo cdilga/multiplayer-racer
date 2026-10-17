@@ -1,0 +1,213 @@
+{
+  "source": "local real jj-server",
+  "size": [
+    1920,
+    1080
+  ],
+  "seeds": [
+    5,
+    12,
+    1
+  ],
+  "recipes": [
+    "mix"
+  ],
+  "rows": [
+    {
+      "recipe": "mix",
+      "seed": 5,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "mix-s5-overview.jpg",
+      "reliefM": 45.799,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 5,
+      "valid": true,
+      "state": "high",
+      "routePoint": 812,
+      "file": "mix-s5-high.jpg",
+      "reliefM": 45.799,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 5,
+      "valid": true,
+      "state": "low",
+      "routePoint": 325,
+      "file": "mix-s5-low.jpg",
+      "reliefM": 45.799,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 5,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 375,
+      "file": "mix-s5-climb.jpg",
+      "reliefM": 45.799,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 5,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 363,
+      "file": "mix-s5-cutting.jpg",
+      "reliefM": 45.799,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 12,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "mix-s12-overview.jpg",
+      "reliefM": 43.396,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 12,
+      "valid": true,
+      "state": "high",
+      "routePoint": 700,
+      "file": "mix-s12-high.jpg",
+      "reliefM": 43.396,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 12,
+      "valid": true,
+      "state": "low",
+      "routePoint": 343,
+      "file": "mix-s12-low.jpg",
+      "reliefM": 43.396,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 12,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 427,
+      "file": "mix-s12-climb.jpg",
+      "reliefM": 43.396,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 12,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 271,
+      "file": "mix-s12-cutting.jpg",
+      "reliefM": 43.396,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 1,
+      "valid": true,
+      "state": "overview",
+      "routePoint": null,
+      "file": "mix-s1-overview.jpg",
+      "reliefM": 40.062,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 1,
+      "valid": true,
+      "state": "high",
+      "routePoint": 864,
+      "file": "mix-s1-high.jpg",
+      "reliefM": 40.062,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 1,
+      "valid": true,
+      "state": "low",
+      "routePoint": 484,
+      "file": "mix-s1-low.jpg",
+      "reliefM": 40.062,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 1,
+      "valid": true,
+      "state": "climb",
+      "routePoint": 893,
+      "file": "mix-s1-climb.jpg",
+      "reliefM": 40.062,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    },
+    {
+      "recipe": "mix",
+      "seed": 1,
+      "valid": true,
+      "state": "cutting",
+      "routePoint": 433,
+      "file": "mix-s1-cutting.jpg",
+      "reliefM": 40.062,
+      "generator": {
+        "id": "jj.procgen.course",
+        "version": "24"
+      }
+    }
+  ],
+  "errors": []
+}
