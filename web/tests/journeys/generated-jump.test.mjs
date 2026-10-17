@@ -10,6 +10,7 @@ import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 import { evidencePath } from '../lib/evidence.mjs';
+import { inFrameRide, tilesFollowing } from './lib/in-frame.mjs';
 
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/jump/';
@@ -177,3 +178,24 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     } finally { await browser.close(); }
   });
 }
+
+// br-l4v5 (R125): at every tile size the race camera keeps the car in frame through the whole jump (run-up, flight,
+// landing), checked every other tick.
+test('chromium: the jump stays in frame in 1, 2, 4 and 9 tiles, every frame', { timeout: 600_000 }, async () => {
+  const browser = await chromium.launch({ args: chromiumArgs });
+  const rows = [];
+  try {
+    for (const n of [1, 2, 4, 9]) {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      await page.route('**/generated-jump.json', r => r.fulfill({ contentType: 'application/json', body: mapJson }));
+      await page.goto(`${server.origin}${BASE}host?test&${tilesFollowing(n)}&look=on&res=1&autores=off&mapUrl=${encodeURIComponent(server.origin + '/generated-jump.json')}`);
+      await page.waitForFunction(() => window.__jjTest && window.__jjRender);
+      await page.evaluate(async ({ fixture, mapJson }) => { window.__jjRender.hold(); await window.__jjTest.load(fixture, mapJson); }, { fixture, mapJson });
+      const r = await inFrameRide(page, { ticks: fixture.ticks });
+      rows.push({ tiles: n, frames: r.frames, lost: r.lost.length });
+      assert.deepEqual(r.lost, [], `${n} tiles: the car leaves a tile's frame`);
+      await page.close();
+    }
+    if (process.env.JJ_CAPTURE_DIR) writeFileSync(join(out, 'in-frame.json'), JSON.stringify({ browser: 'chromium', viewport: '1366x768', rows }, null, 2) + '\n');
+  } finally { await browser.close(); }
+});
