@@ -166,7 +166,11 @@ const BANK_SEEDS: u64 = if cfg!(debug_assertions) { 2 } else { 16 };
 
 /// A seed's race-prepared map, loaded as the game loads it.
 fn prepared(seed: u64, biome: Biome) -> (LoadedMap, jj_procgen::Prepared) {
-    let p = jj_procgen::prepare(seed, &[biome]);
+    // Loops ship off by default until br-xlvx.6.5 (generator.loopsPerLap 0); the bank studies them at one a lap.
+    let data = jj_procgen::tuning::GeneratorData::shipped()
+        .with_fields(&[("loopsPerLap".to_string(), "1".to_string())])
+        .unwrap();
+    let p = jj_procgen::prepare_tuned(seed, &[biome], 5, &data);
     let m = load_canonical(&canonical_bytes(&p.map), &jj_procgen::registry())
         .unwrap_or_else(|r| panic!("{biome:?} seed {seed}: {:?}", r.violations));
     (m, p)
@@ -209,7 +213,7 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
         lines.push(format!("{biome:?}: loops on {with} of {BANK_SEEDS} seeds"));
         assert!(
             with >= 1,
-            "{biome:?}: no loop on any of {BANK_SEEDS} seeds at the shipped loopsPerLap"
+            "{biome:?}: no loop on any of {BANK_SEEDS} seeds at loopsPerLap 1"
         );
     }
     eprintln!("{}", lines.join("\n"));
