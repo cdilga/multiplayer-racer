@@ -35,7 +35,7 @@ const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 
 // Quarantined (CI owner, br-k5s4, owner AmberSpring): failed at 50 s in batch 6158 (job 14255).
-test('finishing a race shows on the TV tile and the phone, the others see the race end coming, and the race ends', { timeout: 300_000, skip: 'quarantined br-k5s4 (owner AmberSpring): race-end feedback failed at 50 s' }, async () => {
+test('finishing a race shows on the TV tile and the phone, the others see the race end coming, and the race ends', { timeout: 300_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
