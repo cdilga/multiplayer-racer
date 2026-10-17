@@ -49,15 +49,10 @@ fn narrowest_jump(map: &jj_map::Map) -> f64 {
         .fold(f64::INFINITY, f64::min)
 }
 
-/// Laps that still miss AC1, stated (a scenario bank's known gaps): figure-eight epic seeds whose lobes seat only one
-/// set piece seen from afar, so the lap runs on in one flow beat. br-bbki.15.4.1 seats two by construction and empties
-/// this list. A gap that starts passing fails the test too, so the list stays true.
-const KNOWN_GAPS: [(PresetName, u64); 2] =
-    [(PresetName::FigureEight, 5), (PresetName::FigureEight, 12)];
-
-/// AC1 (P1-FL15c): 20 seeds per course family, through the game's preparation: every lap carries its set pieces (two,
-/// or one under `shortLapM`), has at least three distinct beats with no one beat running on for more than 40% of the
-/// lap, and no jump narrower than the road (R10; the kicker's width rounds down to 10 cm).
+/// AC1 (P1-FL15c, and P1-FL15c.1 for the figure-eights: no known gaps): 20 seeds per course family, through the game's
+/// preparation: every lap carries its set pieces (two, or one under `shortLapM`), has at least three distinct beats with
+/// no one beat running on for more than 40% of the lap, and no jump narrower than the road (R10; the kicker's width
+/// rounds down to 10 cm).
 #[test]
 fn every_family_lap_carries_its_set_pieces_and_rhythm_and_full_width_jumps() {
     let d = rhythm::shipped();
@@ -71,17 +66,8 @@ fn every_family_lap_carries_its_set_pieces_and_rhythm_and_full_width_jumps() {
             let p = jj_procgen::playtest::prepare_data(seed, &data);
             assert!(p.valid, "{family:?} seed {seed}: {:?}", p.attempts);
             let r = rhythm::of(&p.map);
-            let problems = rhythm::problems(&r, d);
-            if KNOWN_GAPS.contains(&(family, seed)) {
-                if problems.is_empty() {
-                    bad.push(format!(
-                        "{family:?} seed {seed}: a known gap now passes (drop it from KNOWN_GAPS)"
-                    ));
-                }
-            } else {
-                for problem in problems {
-                    bad.push(format!("{family:?} seed {seed}: {problem}"));
-                }
+            for problem in rhythm::problems(&r, d) {
+                bad.push(format!("{family:?} seed {seed}: {problem}"));
             }
             let w = narrowest_jump(&p.map);
             if w < 0.98 {
@@ -108,6 +94,44 @@ fn every_family_lap_carries_its_set_pieces_and_rhythm_and_full_width_jumps() {
         std::fs::write(std::path::Path::new(&dir).join("rhythm.txt"), &table).unwrap();
     }
     assert!(bad.is_empty(), "{}\n{table}", bad.join("\n"));
+}
+
+/// P1-FL15c.1: a figure-eight's biome boundaries keep off its lobes' set-piece beat straights (a boundary inside one
+/// left that beat "outside one biome", and seeds 5 and 12 seated one set piece). Over the 20 epic eights of AC1, every
+/// beat straight lies in one biome, with the transition's half-width to spare.
+#[test]
+fn figure_eight_biome_boundaries_keep_off_the_beat_straights() {
+    let data = only(PresetName::FigureEight);
+    let mut bad = Vec::new();
+    for seed in 0..seeds() {
+        let p = jj_procgen::playtest::prepare_data(seed, &data);
+        let pts: Vec<(f64, f64)> = p
+            .map
+            .route
+            .points
+            .iter()
+            .map(|q| (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0))
+            .collect();
+        let (sl, _) = jj_procgen::assemble::arc_lengths(&pts);
+        assert!(
+            !p.course.beat_spans.is_empty(),
+            "seed {seed}: an epic eight has beat straights"
+        );
+        // Every segment start but the lap's own is a boundary.
+        for g in p.map.route.segments.iter().filter(|g| g.span.from > 0) {
+            let at = sl[g.span.from as usize];
+            if let Some(&(a, b)) = p.course.beat_spans.iter().find(|&&(a, b)| {
+                at > a - jj_procgen::biome::TRANSITION_M / 2.0
+                    && at < b + jj_procgen::biome::TRANSITION_M / 2.0
+            }) {
+                bad.push(format!(
+                    "seed {seed}: the {} boundary at {at:.0} m is on the beat {a:.0}..{b:.0} m",
+                    g.name
+                ));
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{bad:#?}");
 }
 
 /// AC2 (P1-FL15c): the validator rejects a course that repeats one beat for more than 40% of a lap. A lab oval with
@@ -558,5 +582,57 @@ fn diag_town_streets() {
             run(&no_forks),
             run(&no_pieces)
         );
+    }
+}
+
+#[test]
+#[ignore]
+fn diag_eight_spans() {
+    for seed in [5u64, 12, 1] {
+        let p = jj_procgen::playtest::prepare_data(seed, &only(PresetName::FigureEight));
+        let pts: Vec<(f64, f64)> = p
+            .map
+            .route
+            .points
+            .iter()
+            .map(|q| (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0))
+            .collect();
+        let (sl, total) = jj_procgen::assemble::arc_lengths(&pts);
+        let at = |i: u32| sl[i as usize] as i64;
+        eprintln!(
+            "seed {seed} plan {:?} len {:.0} (course {:.0}) start {} beats {:?}",
+            p.plan,
+            total,
+            p.course.length_m,
+            at(p.map.route.start.at),
+            p.course
+                .beat_spans
+                .iter()
+                .map(|(a, b)| (*a as i64, *b as i64))
+                .collect::<Vec<_>>(),
+        );
+        eprintln!(
+            "  segments {:?}",
+            p.map
+                .route
+                .segments
+                .iter()
+                .map(|g| (g.name.clone(), at(g.span.from), at(g.span.to)))
+                .collect::<Vec<_>>()
+        );
+        for f in &p.map.features {
+            if let Some(g) = jj_map::setpiece::GapLeap::of(f) {
+                eprintln!("  piece {:?} {}..{}", g.kind, at(g.from), at(g.to));
+            }
+            if let Some(d) = jj_map::bridge::BridgeDesign::of(f) {
+                eprintln!(
+                    "  bridge upper {}..{} lower {}..{}",
+                    at(d.upper.from),
+                    at(d.upper.to),
+                    at(d.lower.from),
+                    at(d.lower.to)
+                );
+            }
+        }
     }
 }

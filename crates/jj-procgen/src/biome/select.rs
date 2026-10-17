@@ -224,10 +224,13 @@ pub fn select_avoiding(
 /// Crossing layouts have two long straight runs. Plan all boundaries together:
 /// a greedy first cut at the end of one run can otherwise consume the room needed
 /// by the later cuts. Retains exactly the same turn, spacing, start and seam rules.
+/// Like [`select_avoiding`], the boundaries (and their transitions) keep off the `avoid` spans (the lobes' set-piece
+/// beat straights, P1-FL15c.1) where the lap has room for every boundary elsewhere; where it doesn't, anywhere.
 pub fn select_crossing(
     pts: &[(f64, f64)],
     recipe: &[Biome],
     rng: &mut Rng,
+    avoid: &[(f64, f64)],
 ) -> Result<Selection, SelectError> {
     let mut lap = Vec::new();
     for &b in recipe {
@@ -254,7 +257,7 @@ pub fn select_crossing(
     let hi = total - LIMITS.seam_m - TRANSITION_M;
     let spacing = (hi - lo) / (boundaries + 1) as f64;
     let at = |v: f64| s.iter().position(|&x| x >= v).unwrap_or(s.len() - 1);
-    let candidates: Vec<usize> = (0..s.len())
+    let straight: Vec<usize> = (0..s.len())
         .filter(|&i| {
             s[i] >= lo
                 && s[i] <= hi
@@ -265,11 +268,42 @@ pub fn select_crossing(
                 ) <= MAX_TURN
         })
         .collect();
+    let targets: Vec<f64> = (0..boundaries)
+        .map(|boundary| lo + spacing * (boundary + 1) as f64 + rng.range(-0.1, 0.1) * spacing)
+        .collect();
+    let off_avoided: Vec<usize> = straight
+        .iter()
+        .copied()
+        .filter(|&i| {
+            !avoid
+                .iter()
+                .any(|&(a, b)| s[i] > a - TRANSITION_M / 2.0 && s[i] < b + TRANSITION_M / 2.0)
+        })
+        .collect();
+    let cuts = match plan_cuts(&s, &off_avoided, &targets) {
+        Some(cuts) => cuts,
+        None => {
+            plan_cuts(&s, &straight, &targets).ok_or(SelectError::NoStraight(boundaries - 1))?
+        }
+    };
+    let cut_s = cuts.iter().map(|&i| s[i]).collect();
+    Ok(Selection {
+        lap,
+        cuts,
+        cut_s,
+        s,
+        total,
+    })
+}
+
+/// The boundary chain over `candidates` (route indices) nearest the `targets` (least squares), each boundary at least
+/// [`MIN_BOUNDARY_GAP_M`] after the one before; `None` if no chain fits.
+fn plan_cuts(s: &[f64], candidates: &[usize], targets: &[f64]) -> Option<Vec<usize>> {
+    let boundaries = targets.len();
     let n = candidates.len();
     let mut previous = vec![0.0f64; n];
     let mut parents = Vec::new();
-    for boundary in 0..boundaries {
-        let target = lo + spacing * (boundary + 1) as f64 + rng.range(-0.1, 0.1) * spacing;
+    for (boundary, &target) in targets.iter().enumerate() {
         let mut scores = vec![f64::INFINITY; n];
         let mut parent = vec![None; n];
         let (mut eligible, mut best) = (0, None::<usize>);
@@ -301,8 +335,7 @@ pub fn select_crossing(
     }
     let mut j = (0..n)
         .filter(|&j| previous[j].is_finite())
-        .min_by(|&a, &b| previous[a].total_cmp(&previous[b]))
-        .ok_or(SelectError::NoStraight(boundaries - 1))?;
+        .min_by(|&a, &b| previous[a].total_cmp(&previous[b]))?;
     let mut cuts = Vec::new();
     for boundary in (0..boundaries).rev() {
         cuts.push(candidates[j]);
@@ -311,14 +344,7 @@ pub fn select_crossing(
         }
     }
     cuts.reverse();
-    let cut_s = cuts.iter().map(|&i| s[i]).collect();
-    Ok(Selection {
-        lap,
-        cuts,
-        cut_s,
-        s,
-        total,
-    })
+    Some(cuts)
 }
 
 /// The transition rules, checked on a finished map's `route.segments`: the segments tile the route without gap or

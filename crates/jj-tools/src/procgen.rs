@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--recipe <biome,biome,..> | --mix] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first\n  --mix prepares the seed as a race does: its own biome mix and draws";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--class <sprint|standard|epic>] [--recipe <biome,biome,..> | --mix] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first\n  --mix prepares the seed as a race does: its own biome mix and draws";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
@@ -155,6 +155,36 @@ pub fn command(args: &[String]) -> ExitCode {
                 };
                 for n in jj_procgen::tuning::PresetName::ALL {
                     data.course.presets.set_weight(n, f64::from(n == name));
+                }
+            }
+            "--class" => {
+                let name = it.next().cloned().unwrap_or_default();
+                let Some(class) = jj_procgen::tuning::ClassName::ALL
+                    .into_iter()
+                    .find(|c| c.name() == name)
+                else {
+                    eprintln!("jj procgen: --class needs sprint, standard or epic\n{USAGE}");
+                    return ExitCode::from(2);
+                };
+                // Only this length class is drawn (as the rhythm bank samples a family on one class).
+                let classes = &mut data.course.classes;
+                for (c, w) in [
+                    (
+                        jj_procgen::tuning::ClassName::Sprint,
+                        &mut classes.sprint.weight,
+                    ),
+                    (
+                        jj_procgen::tuning::ClassName::Standard,
+                        &mut classes.standard.weight,
+                    ),
+                    (
+                        jj_procgen::tuning::ClassName::Epic,
+                        &mut classes.epic.weight,
+                    ),
+                ] {
+                    if c != class {
+                        *w = 0.0;
+                    }
                 }
             }
             "--mix" => mix = true,

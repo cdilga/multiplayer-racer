@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "24";
+pub const GENERATOR_VERSION: &str = "25";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;
@@ -163,7 +163,7 @@ pub fn generate_course(
 ) -> Result<(Map, Report), biome::SelectError> {
     let centerline = centred(&resample(&course.points));
     let sel = if !course.crossings.is_empty() {
-        biome::select::select_crossing(&centerline, recipe, &mut st.structure)?
+        biome::select::select_crossing(&centerline, recipe, &mut st.structure, &course.beat_spans)?
     } else {
         biome::select::select_avoiding(&centerline, recipe, &mut st.structure, &course.beat_spans)?
     };

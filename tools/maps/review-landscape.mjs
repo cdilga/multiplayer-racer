@@ -49,6 +49,9 @@ for(const recipe of recipes) for(const seed of seeds) {
   let valid=true;
   // A recipe of `mix` prepares the seed as a race does (its own biome mix, P1-FL15c).
   const which=recipe==='mix'?['--mix']:['--recipe',recipe];
+  // JJ_PRESET / JJ_CLASS pin the course family and length class (P1-FL15c.1: the rhythm bank's epic figure-eights).
+  if(process.env.JJ_PRESET) which.push('--preset',process.env.JJ_PRESET);
+  if(process.env.JJ_CLASS) which.push('--class',process.env.JJ_CLASS);
   try {execFileSync(process.env.JJ_BIN,['procgen','--seed',String(seed),...which,'--out',dir,'--json'],{stdio:['ignore','ignore','ignore']});}
   catch(e){if(process.env.JJ_ALLOW_INVALID!=='1') throw e; valid=false;}
   const map=JSON.parse(readFileSync(join(dir,'map.json'),'utf8'));
