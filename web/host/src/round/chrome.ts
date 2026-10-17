@@ -328,7 +328,15 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   // would lose its click when its button is replaced (WebKit drops it), so the redraw waits for the release (br-b2sv).
   // Each press and click on the menu goes in the history with the button it hit, so a lost click shows where it was lost.
   const actOf = (e: Event) => (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-act]')?.dataset.act ?? '-';
-  menuEl.addEventListener('pointerdown', (e) => { pressing = true; note(`down:${actOf(e)}`); }, true);
+  // WebKit sends a click whose press and release landed on different nodes to their common ancestor, so a press that
+  // began on a button can arrive as a click on the panel or the backdrop (br-b2sv: 'down:catch-up' then 'click:-', and a
+  // backdrop close). The button the press began on answers that click.
+  let pressed: { el: HTMLElement | null; at: number } = { el: null, at: 0 };
+  menuEl.addEventListener('pointerdown', (e) => {
+    pressing = true;
+    pressed = { el: (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-act]') ?? null, at: performance.now() };
+    note(`down:${actOf(e)}`);
+  }, true);
   // The redraw runs once the click has been delivered (the window sees it after the menu's own handler), or after a short
   // wait when the press ends with no click (dragged off the button).
   const redrawNow = () => {
@@ -343,7 +351,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   window.addEventListener('pointercancel', released, true);
   menuEl.addEventListener('click', (e) => {
     note(`click:${actOf(e)}`);
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+    const fromPress = pressed.el?.isConnected && menuEl.contains(pressed.el) && performance.now() - pressed.at < 1500 ? pressed.el : null;
+    pressed = { el: null, at: 0 };
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]') ?? fromPress;
     if (!b) {
       if (e.target === menuEl) closeMenu('backdrop');
       return;
