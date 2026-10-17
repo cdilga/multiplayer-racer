@@ -64,9 +64,10 @@ async function open(options = {}) {
 }
 
 // A map delivery waits on a whole WASM prepare: generator 24's worst seeds take ~27 s on a loaded CI runner (CI run 5495
-// timed out at 20 s; the 1.5 s laptop target is br-cxqk), so delivery waits allow 60 s.
+// timed out at 20 s; the 1.5 s laptop target is br-cxqk), so every wait here allows 60 s (CI 5544: the conservative
+// retry's map, shown after a whole prepare, timed out at 20 s too).
 const PREPARE_MS = 60_000;
-async function waitFor(page, predicate, what, timeoutMs = 20_000) {
+async function waitFor(page, predicate, what, timeoutMs = PREPARE_MS) {
   const t0 = Date.now();
   for (;;) {
     if (await page.evaluate(predicate)) return;
@@ -77,7 +78,7 @@ async function waitFor(page, predicate, what, timeoutMs = 20_000) {
 
 const phase = (page) => page.evaluate(() => window.__prep.room()?.phase);
 
-test('a round races the map the procgen worker prepared, and its track names its seed', { timeout: 180_000 }, async () => {
+test('a round races the map the procgen worker prepared, and its track names its seed', { timeout: 300_000 }, async () => {
   const { page, errors, api } = await open();
   await api('reroll');
   await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map to be delivered', PREPARE_MS);
@@ -98,7 +99,7 @@ test('a round races the map the procgen worker prepared, and its track names its
   await page.close();
 });
 
-test('a reroll replaces a prepared map: the old one is dropped and the new seed races', { timeout: 180_000 }, async () => {
+test('a reroll replaces a prepared map: the old one is dropped and the new seed races', { timeout: 300_000 }, async () => {
   const { page, errors, api } = await open();
   await api('reroll');
   await waitFor(page, () => window.__prep.stats().delivered === 1, 'the first map', PREPARE_MS);
@@ -119,7 +120,7 @@ test('a reroll replaces a prepared map: the old one is dropped and the new seed 
   await page.close();
 });
 
-test('a stale job never commits: a superseded preparation is dropped before the renderer and the sim', { timeout: 180_000 }, async () => {
+test('a stale job never commits: a superseded preparation is dropped before the renderer and the sim', { timeout: 300_000 }, async () => {
   // The first job is slow (900 ms); a reroll supersedes it and the second job is fast.
   const { page, errors, api } = await open({ delay: { 1: 900 } });
   await api('reroll');
@@ -144,7 +145,7 @@ test('a stale job never commits: a superseded preparation is dropped before the 
   await page.close();
 });
 
-test('reroll during preparation: the round starts on the new seed, not the one in flight', { timeout: 180_000 }, async () => {
+test('reroll during preparation: the round starts on the new seed, not the one in flight', { timeout: 300_000 }, async () => {
   const { page, errors, api } = await open({ delay: { 1: 900 } });
   await api('startRound');
   await waitFor(page, () => window.__prep.room()?.phase === 'Preparing', 'Preparing');
@@ -162,7 +163,7 @@ test('reroll during preparation: the round starts on the new seed, not the one i
   await page.close();
 });
 
-test('failure: the conservative retry runs, and if that fails the room settles in the Lobby with nothing loaded', { timeout: 60_000 }, async () => {
+test('failure: the conservative retry runs, and if that fails the room settles in the Lobby with nothing loaded', { timeout: 300_000 }, async () => {
   {
     // Only the full recipe fails: the director's one retry (the placeholder biome alone) succeeds and the round runs.
     const { page, errors, api } = await open({ fail: 'full' });
@@ -194,7 +195,7 @@ test('failure: the conservative retry runs, and if that fails the room settles i
   }
 });
 
-test('a preparation failure shows Retry / Lobby, keeps the room, and Retry prepares again', { timeout: 90_000 }, async () => {
+test('a preparation failure shows Retry / Lobby, keeps the room, and Retry prepares again', { timeout: 300_000 }, async () => {
   const { page, errors, api } = await open({ fail: 'all' });
   await api('startRound');
   await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') !== null, 'the Retry / Lobby screen');
@@ -227,7 +228,7 @@ test('a preparation failure shows Retry / Lobby, keeps the room, and Retry prepa
   await page.close();
 });
 
-test('a dev map goes through the validator: a good one races, a broken one is refused with the validator\'s message', { timeout: 60_000 }, async () => {
+test('a dev map goes through the validator: a good one races, a broken one is refused with the validator\'s message', { timeout: 300_000 }, async () => {
   const greybox = await readFile(join(repo, 'maps/greybox-loop.json'), 'utf8');
   {
     const { page, errors, api } = await open({ devMap: greybox });
@@ -255,7 +256,7 @@ test('a dev map goes through the validator: a good one races, a broken one is re
   }
 });
 
-test('two rounds back to back play two different generated four-biome tracks', { timeout: 180_000 }, async () => {
+test('two rounds back to back play two different generated four-biome tracks', { timeout: 300_000 }, async () => {
   const { page, errors, api } = await open();
   const t0 = Date.now();
   await api('laps', 1);
