@@ -245,7 +245,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${controlsPage(controlsData(), { compact: true })}
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="host-menu" data-autofocus>Back</button></div></section>`;
     } else if (state.page === 'controllers') {
-      menuEl.innerHTML = `<section class="mn-panel controls" data-controllers-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Con<span class="acc">trollers</span></h2><div data-controllers-slot></div>
+      // Already showing: its drawer updates itself, and rewriting the panel would replace Back under a landing click
+      // (WebKit drops it; a seat joining or choosing a car redraws here, br-wweu / br-b2sv).
+      if (menuEl.querySelector('[data-controllers-view]')) return;
+      menuEl.innerHTML =`<section class="mn-panel controls" data-controllers-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Con<span class="acc">trollers</span></h2><div data-controllers-slot></div>
         <div class="mn-acts"><button class="btn brush" data-act="controls">Control mappings</button><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
       if (opts.controllers) menuEl.querySelector('[data-controllers-slot]')!.append(opts.controllers);
     } else {
