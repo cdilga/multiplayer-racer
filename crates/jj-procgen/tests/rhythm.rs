@@ -682,3 +682,18 @@ fn diag_prepare_rejects() {
         eprintln!("{n:4}  {k}");
     }
 }
+
+/// One guard seed's whole ladder (`JJ_SEEDS`, default 10): each attempt's recipe, draw and rejections.
+#[test]
+#[ignore]
+fn diag_prepare_ladder() {
+    let seed: u64 = std::env::var("JJ_SEEDS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(10);
+    let p = jj_procgen::playtest::prepare(seed);
+    eprintln!("seed {seed} plan {:?}", p.plan);
+    for a in &p.attempts {
+        eprintln!("  {:?} draw {} {:?}", a.recipe, a.draw, a.rejected);
+    }
+}

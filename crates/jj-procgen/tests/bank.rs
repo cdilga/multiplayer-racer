@@ -518,3 +518,54 @@ fn diag_bot_trace() {
         }
     }
 }
+
+/// The preview smoke's drive step (br-xlvx.10.2 follow-up): from the grid, full throttle and no steering. Per seed, how
+/// long until the car is past 4 m/s and 3 m from where it started, and the road's steepest grade over the first 60 m.
+#[test]
+#[ignore]
+fn diag_grid_launch() {
+    let mut slow = Vec::new();
+    for seed in 0..seeds() {
+        let p = jj_procgen::playtest::prepare(seed);
+        let map = loaded(&p);
+        let mut sim = Sim::new(&map, &jj_procgen::registry(), seed, VehicleProfile::cruz());
+        let car = sim.spawn_grid(1)[0];
+        sim.start_race(1);
+        let start = sim.car_state(car).unwrap().position;
+        let mut at = None;
+        for _ in 0..20 * S {
+            sim.set_input(
+                car,
+                jj_sim::DriveInput {
+                    throttle: i16::MAX,
+                    steer: 0,
+                    brake: 0,
+                    boost: false,
+                    no_reverse: false,
+                },
+            );
+            sim.step();
+            let st = sim.car_state(car).unwrap();
+            let moved =
+                ((st.position[0] - start[0]).powi(2) + (st.position[2] - start[2]).powi(2)).sqrt();
+            if st.forward_speed > 4.0 && moved > 3.0 && !sim.race().is_held(car.0, sim.tick()) {
+                at = Some(sim.tick() as f64 / S as f64);
+                break;
+            }
+        }
+        let pts = &map.map.route.points;
+        let mut grade: f64 = 0.0;
+        for i in 0..24 {
+            let (a, b) = (&pts[i], &pts[i + 1]);
+            let run = f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0;
+            grade = grade.max(f64::from(b.y - a.y) / 1000.0 / run.max(0.1));
+        }
+        if at.is_none_or(|t| t > 8.0) {
+            slow.push(format!(
+                "seed {seed}: {at:?} s, climb {:.0}%",
+                grade * 100.0
+            ));
+        }
+    }
+    eprintln!("SLOW {} of {}: {slow:?}", slow.len(), seeds());
+}

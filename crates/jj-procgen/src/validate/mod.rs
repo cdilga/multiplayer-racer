@@ -131,13 +131,22 @@ pub fn prepare_tuned(
     // The best valid draw that missed only the set pieces or the rhythm (interior mutability: the ladder reads it
     // between steps while the draw closure keeps it).
     let best: std::cell::RefCell<Option<Best>> = std::cell::RefCell::new(None);
+    // How many loop-overs each draw's course took (br-xlvx.10.2), by draw: the fewer-loop-overs pass retries only the
+    // draws that had more than it allows (br-cxqk: retrying one that had none to drop was a whole wasted generation).
+    let loop_overs: std::cell::RefCell<std::collections::BTreeMap<u32, u32>> =
+        std::cell::RefCell::new(std::collections::BTreeMap::new());
     let mut try_one = |rec: &[Biome],
                        draw: u32,
                        need_pieces: bool,
                        data: &crate::tuning::GeneratorData|
      -> Option<(Map, Report)> {
         let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
-            Ok(m) => m,
+            Ok(m) => {
+                loop_overs
+                    .borrow_mut()
+                    .insert(draw, m.1.corners.get("loop-over").copied().unwrap_or(0));
+                m
+            }
             Err(e) => {
                 attempts.push(Attempt {
                     recipe: rec.to_vec(),
@@ -229,6 +238,7 @@ pub fn prepare_tuned(
     if data.course.crossover.share > 0.0 {
         let mut fewer = data.clone();
         let mut next = draws;
+        let full: std::collections::BTreeMap<u32, u32> = loop_overs.borrow().clone();
         for max in [1u32, 0] {
             if max > 0 && data.course.crossover.max <= max {
                 continue;
@@ -240,6 +250,10 @@ pub fn prepare_tuned(
                 data.course.crossover.share
             };
             for draw in 0..draws {
+                // One loop-over at most: only the draws that took more. None: every draw (its course is drawn afresh).
+                if max > 0 && full.get(&draw).is_none_or(|&n| n <= max) {
+                    continue;
+                }
                 if let Some((map, course)) = try_one(&lap, draw, true, &fewer) {
                     return Prepared {
                         map,

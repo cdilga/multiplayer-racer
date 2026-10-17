@@ -20,6 +20,9 @@ fn generate(seed: u64) -> Map {
     data.course
         .presets
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    // Nor any other lap that crosses itself (loop-overs, br-xlvx.10.2): re-running the terrain under a bridge's deck
+    // breaks its grades, as for a figure eight.
+    data.course.crossover.share = 0.0;
     // Set pieces are placed between the terrain and the features this scaffold re-runs (R132).
     data.set_pieces = false;
     // So are route forks (P1-FL16a): their branches are painted road the full pipeline clears around.

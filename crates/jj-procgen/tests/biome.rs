@@ -584,6 +584,20 @@ fn diag_dressing_near_features() {
             f.params.get("lowerTo")
         );
     }
+    if let Some((a, b)) = std::env::var("JJ_DIAG_PTS").ok().and_then(|v| {
+        v.split_once('-')
+            .map(|(a, b)| (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()))
+    }) {
+        for i in a..=b {
+            let q = &map.route.points[i];
+            let g = jj_map::jump::ground_height_m(
+                &map.terrain,
+                f64::from(q.x) / 1000.0,
+                f64::from(q.z) / 1000.0,
+            );
+            eprintln!("pt {i} route {:.2} ground {g:.2}", f64::from(q.y) / 1000.0);
+        }
+    }
     let d = &map.dressing[k];
     eprintln!(
         "dressing {k} {} near {:?} y {}",

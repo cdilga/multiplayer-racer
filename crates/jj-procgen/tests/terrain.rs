@@ -15,6 +15,9 @@ fn generate(seed: u64) -> Map {
     data.course
         .presets
         .set_weight(jj_procgen::tuning::PresetName::FigureEight, 0.0);
+    // Nor any other lap that crosses itself (loop-overs, br-xlvx.10.2): a bridge's deck and a leap's climb are built
+    // grades, not the terrain's.
+    data.course.crossover.share = 0.0;
     // Set pieces own their footprint's terrain (P1-FL15b); re-applying ground terrain alone would wipe their pits.
     data.set_pieces = false;
     // So do route forks (P1-FL16a): their branch's bed and paint are stamped into the terrain, off the route's band.
