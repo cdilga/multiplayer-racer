@@ -31,6 +31,10 @@ export interface GeneratorHooks {
   regenerate(doc: string | undefined): void;
   /** The newest built track as measured by preparation. */
   built(): { preparation: number; seed: number; lengthM?: number; reliefM?: number } | null;
+  /** The Feel Lab scenes (P1-FL03.1), the one loaded (null: generated tracks), and loading one (null: back to generated). */
+  scenes: string[];
+  scene(): string | null;
+  loadScene(name: string | null): Promise<void>;
 }
 
 const INPUT_FILE = 'assets/profiles/input.json';
@@ -122,6 +126,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     <div class="rows" data-tune-pane="values">${rows}</div>
     <div class="rows lab" data-tune-pane="lab" hidden></div>
     ${gen ? '<p class="built" data-tune-built></p>' : ''}
+    ${gen && gen.scenes.length ? `<p class="built seed" data-tune-scene-row>scene <select data-tune-scene aria-label="Feel Lab scene"><option value="">Generated tracks</option>${gen.scenes.map((n) => `<option value="${n}">${n}</option>`).join('')}</select><button type="button" data-tune-scene-go title="The next round runs on this Feel Lab scene (Generated tracks: back to the generator)">Load scene</button></p>` : ''}
     <p class="built seed" data-tune-seed-row>session seed <b data-tune-seed>?</b> <input type="number" min="0" step="1" placeholder="seed" data-tune-seed-input aria-label="Seed to play"><button type="button" data-tune-seed-go title="Open a new room on this seed (tracks are this seed + preparation id)">Play seed</button></p>
     <footer>${gen ? '<button type="button" data-tune-regenerate title="Build the current seed again with the generator values">Regenerate track</button>' : ''}<button type="button" data-tune-export>Export patch</button><span data-tune-count>No changes</span></footer>`;
 
@@ -134,6 +139,11 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
   const seedEl = panel.querySelector<HTMLElement>('[data-tune-seed]')!;
   const seedInput = panel.querySelector<HTMLInputElement>('[data-tune-seed-input]')!;
   const sessionSeed = () => (window as unknown as { __jjSession?: { seed: number } }).__jjSession?.seed;
+  // The Feel Lab scene picker (P1-FL03.1, br-bbki.19): the next round runs on the scene's map.
+  panel.querySelector('[data-tune-scene-go]')?.addEventListener('click', () => {
+    const name = panel.querySelector<HTMLSelectElement>('[data-tune-scene]')!.value || null;
+    void gen!.loadScene(name);
+  });
   panel.querySelector('[data-tune-seed-go]')!.addEventListener('click', () => {
     const want = seedInput.value.trim() === '' ? sessionSeed() : Number(seedInput.value) >>> 0;
     if (want === undefined) return;

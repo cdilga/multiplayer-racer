@@ -74,6 +74,9 @@ export class RoundPreparer {
   }> = [];
   /** The tuned generator document the next tracks are built with, until it's replaced or cleared (br-2sdu.3). */
   generator: string | undefined;
+  /** A Feel Lab scene (P1-FL03.1, br-bbki.19): the next tracks are its committed map, until another is chosen or it's
+   *  cleared (null: generated tracks). Its map bytes reach the sim through MapReady, so the journal carries it (R90). */
+  scene: { name: string; json: string } | null = null;
   private reuseSeed: number | null = null;
   /** The newest preparation the sim asked for, and the newest map main handed it. */
   current = 0;
@@ -103,6 +106,13 @@ export class RoundPreparer {
   /** Draws the next track seed (supersedes the pending preparation; the director cancels it and asks again). */
   reroll(): void {
     this.o.host.input({ type: 'ui', ui: 'reroll' });
+  }
+
+  /** Loads a Feel Lab scene's map as the next track (the director asks for a new preparation), or `null` for
+   *  generated tracks again. */
+  loadScene(scene: { name: string; json: string } | null): void {
+    this.scene = scene;
+    this.reroll();
   }
 
   /** Builds the current track's seed again with `generator` (a tuned `jj.generator` document, or none for the shipped
@@ -146,15 +156,15 @@ export class RoundPreparer {
     try {
       let json: string;
       let canonical: Uint8Array;
-      if (this.o.devMap) {
-        const authored = await this.o.devMap();
+      if (this.scene || this.o.devMap) {
+        const authored = this.scene ? this.scene.json : await this.o.devMap!();
         try {
           ({ canonical, mapJson: json } = await this.o.procgen.validate(authored));
         } catch (e) {
           this.stats.refused++;
           throw new Refused(e instanceof Error ? e.message : String(e));
         }
-        entry.plan = 'dev-map';
+        entry.plan = this.scene ? `lab:${this.scene.name}` : 'dev-map';
       } else {
         const generator = this.generator;
         const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : this.o.recipe;

@@ -372,7 +372,7 @@ async function boot(): Promise<void> {
   // (remembered; `?tune=off` switches it off). Its code is a separate chunk that a production build never contains.
   if (__JJ_OWNER_TOOLS__ && ownerTools(params)) {
     void import('./tuning/panel').then(async (m) => {
-      const prep = (window as unknown as { __jjPrepare?: { seeds(): Array<{ preparation: number; seed: number; lengthM?: number; reliefM?: number }>; regenerate(g?: string): void } }).__jjPrepare;
+      const prep = (window as unknown as { __jjPrepare?: { seeds(): Array<{ preparation: number; seed: number; lengthM?: number; reliefM?: number }>; regenerate(g?: string): void; loadScene(scene: { name: string; json: string } | null): void; scene(): string | null } }).__jjPrepare;
       // The generator rows exist where rounds are prepared in the procgen worker (the real room), not on free-drive pages.
       const generator = prep ? await import('./tuning/generator').then((g) => g.generatorHooks(prep)) : undefined;
       const panel = await m.mountTuningPanel(client, generator);
