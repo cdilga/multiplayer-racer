@@ -1,0 +1,527 @@
+{
+  "browser": "chromium",
+  "build": "https://jammers-preview.dilger.dev/p/v02-dd7f30b2/",
+  "method": "frame-stepped real WASM fixture; host phone viewports, no connected controller/device claim",
+  "native": "f9113fb4a5f9a2a48f9fd73e3d40e05bbec616a6be60ddefe440feeec201ff3d",
+  "air": {
+    "cars": [
+      {
+        "action": {
+          "boost": 1,
+          "boosting": false,
+          "cones": 0,
+          "oi": 0,
+          "slide": 0,
+          "wheelie": false
+        },
+        "air": {
+          "boostS": 0,
+          "flying": false,
+          "landings": 0,
+          "last": null,
+          "righting": false
+        },
+        "angvel": [
+          -0.002061481587588787,
+          -0.00041247846093028784,
+          -0.48243552446365356
+        ],
+        "authorisedJ": 289215.28317558253,
+        "autopilot": null,
+        "car": 0,
+        "derby": null,
+        "energyJ": 155498.96875,
+        "forwardSpeed": 14.006082534790039,
+        "headingDeg": 90.00222778320312,
+        "husks": 0,
+        "input": {
+          "brake": 1,
+          "steer": 0,
+          "throttle": 0
+        },
+        "linvel": [
+          13.849791526794434,
+          2.14863920211792,
+          0.000047546796849928796
+        ],
+        "massKg": 1200,
+        "maxEngineForce": 14000,
+        "parts": [
+          {
+            "angleDeg": 0,
+            "health": 0,
+            "part": "core",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ],
+        "position": [
+          37.301143646240234,
+          2.820284605026245,
+          20.996366500854492
+        ],
+        "progress": {
+          "distanceM": 37.301143646240234,
+          "fraction": 0.0606248738400558,
+          "lateralM": 20.996366500854492,
+          "routePoint": 14
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          -0.06698582321405411,
+          0.7039403319358826,
+          0.06752190738916397,
+          0.7038619518280029
+        ],
+        "speed": 14.015469551086426,
+        "upY": 0.981907308101654,
+        "vehicle": 0,
+        "wheels": [
+          {
+            "contact": false,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 0,
+            "suspensionLength": 0.3499999940395355
+          },
+          {
+            "contact": false,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 0,
+            "suspensionLength": 0.3499999940395355
+          },
+          {
+            "contact": false,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 0,
+            "suspensionLength": 0.3499999940395355
+          },
+          {
+            "contact": false,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 0,
+            "suspensionLength": 0.3499999940395355
+          }
+        ],
+        "wheelsInContact": 0
+      }
+    ],
+    "debris": [],
+    "host": {
+      "countdownMs": 0,
+      "held": true,
+      "pauseMask": 0,
+      "queued": 0,
+      "seats": []
+    },
+    "items": {
+      "boomerangs": [],
+      "effects": [],
+      "events": [],
+      "offers": [],
+      "queues": [
+        {
+          "car": 0,
+          "queue": {
+            "back": null,
+            "front": null
+          }
+        }
+      ],
+      "refusals": [],
+      "stations": []
+    },
+    "rails": [],
+    "session": {
+      "driving": "Held",
+      "gameMs": 0,
+      "gameRemainingMs": null,
+      "phase": "Lobby",
+      "readyRevision": 0,
+      "remainingMs": null,
+      "round": null,
+      "seats": []
+    },
+    "tick": 360
+  },
+  "final": {
+    "hash": {
+      "stateHash": "f9113fb4a5f9a2a48f9fd73e3d40e05bbec616a6be60ddefe440feeec201ff3d",
+      "tick": 960
+    },
+    "state": {
+      "cars": [
+        {
+          "action": {
+            "boost": 1,
+            "boosting": false,
+            "cones": 0,
+            "oi": 0,
+            "slide": 0,
+            "wheelie": false
+          },
+          "air": {
+            "boostS": 0,
+            "flying": false,
+            "landings": 2,
+            "last": {
+              "airtimeS": 0.3499999940395355,
+              "allWheels": true,
+              "angleDeg": 3.463510751724243,
+              "long": false,
+              "tier": "Clean"
+            },
+            "righting": false
+          },
+          "angvel": [
+            0.000002723850002439576,
+            3.579636143058451e-7,
+            -0.00000122876656405424
+          ],
+          "authorisedJ": 274288.8830123007,
+          "autopilot": null,
+          "car": 0,
+          "derby": null,
+          "energyJ": 29879.37432861328,
+          "forwardSpeed": -0.02125118300318718,
+          "headingDeg": 133.39364624023438,
+          "husks": 0,
+          "input": {
+            "brake": 1,
+            "steer": 0,
+            "throttle": 0
+          },
+          "linvel": [
+            -0.003338842187076807,
+            -0.03560374304652214,
+            0.017547503113746643
+          ],
+          "massKg": 1152,
+          "maxEngineForce": 14000,
+          "parts": [
+            {
+              "angleDeg": 0,
+              "health": 0,
+              "part": "core",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 100,
+              "part": "front",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 100,
+              "part": "back",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 60,
+              "part": "door_FL",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 60,
+              "part": "door_FR",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 0,
+              "part": "door_RL",
+              "state": "detached"
+            },
+            {
+              "angleDeg": 0,
+              "health": 60,
+              "part": "door_RR",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 80,
+              "part": "wheel_FL",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 80,
+              "part": "wheel_FR",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 80,
+              "part": "wheel_RL",
+              "state": "intact"
+            },
+            {
+              "angleDeg": 0,
+              "health": 80,
+              "part": "wheel_RR",
+              "state": "intact"
+            }
+          ],
+          "position": [
+            46.62174606323242,
+            2.233860731124878,
+            20.920734405517578
+          ],
+          "progress": {
+            "distanceM": 46.62174606323242,
+            "fraction": 0.0757734803010919,
+            "lateralM": 20.920734405517578,
+            "routePoint": 18
+          },
+          "race": {
+            "anchorRoutePoint": null,
+            "assisting": false,
+            "finishedAt": null,
+            "gatesPassed": 0,
+            "ghost": false,
+            "held": false,
+            "laps": 0,
+            "late": false,
+            "progressM": 0,
+            "protected": false,
+            "recoveries": 0,
+            "wrecks": 0
+          },
+          "rotation": [
+            0.05670464038848877,
+            0.9129471778869629,
+            0.1322738081216812,
+            0.38185805082321167
+          ],
+          "speed": 0.03983326628804207,
+          "upY": 0.9585763216018677,
+          "vehicle": 0,
+          "wheels": [
+            {
+              "contact": true,
+              "forwardImpulse": 4.449653148651123,
+              "sideImpulse": 0,
+              "slipDeg": 0,
+              "steering": 0,
+              "suspensionForce": 2464.89208984375,
+              "suspensionLength": 0.2236204445362091
+            },
+            {
+              "contact": true,
+              "forwardImpulse": 4.658794403076172,
+              "sideImpulse": 0,
+              "slipDeg": 0,
+              "steering": 0,
+              "suspensionForce": 2724.971435546875,
+              "suspensionLength": 0.2095121443271637
+            },
+            {
+              "contact": true,
+              "forwardImpulse": 4.44964075088501,
+              "sideImpulse": 0,
+              "slipDeg": 0,
+              "steering": 0,
+              "suspensionForce": 2694.34521484375,
+              "suspensionLength": 0.21117302775382996
+            },
+            {
+              "contact": true,
+              "forwardImpulse": 4.6587982177734375,
+              "sideImpulse": 0,
+              "slipDeg": 0,
+              "steering": 0,
+              "suspensionForce": 2954.416748046875,
+              "suspensionLength": 0.19706514477729797
+            }
+          ],
+          "wheelsInContact": 4
+        }
+      ],
+      "debris": [
+        {
+          "dynamic": true,
+          "halfL": 0.5478229522705078,
+          "halfW": 0.5642604827880859,
+          "kind": "Part",
+          "x": 44.31383514404297,
+          "z": 23.09615707397461
+        }
+      ],
+      "host": {
+        "countdownMs": 0,
+        "held": true,
+        "pauseMask": 0,
+        "queued": 0,
+        "seats": []
+      },
+      "items": {
+        "boomerangs": [],
+        "effects": [],
+        "events": [],
+        "offers": [],
+        "queues": [
+          {
+            "car": 0,
+            "queue": {
+              "back": null,
+              "front": null
+            }
+          }
+        ],
+        "refusals": [],
+        "stations": []
+      },
+      "rails": [],
+      "session": {
+        "driving": "Held",
+        "gameMs": 0,
+        "gameRemainingMs": null,
+        "phase": "Lobby",
+        "readyRevision": 0,
+        "remainingMs": null,
+        "round": null,
+        "seats": []
+      },
+      "tick": 960
+    }
+  },
+  "shapes": [
+    {
+      "feature": 0,
+      "fingerprint": "b93d2a2189c7a8d4",
+      "triangles": 192
+    }
+  ],
+  "rows": [
+    {
+      "file": "chromium-roof-412x915.jpg",
+      "width": 412,
+      "height": 915,
+      "state": "roof",
+      "tick": 960
+    },
+    {
+      "file": "chromium-roof-915x412.jpg",
+      "width": 915,
+      "height": 412,
+      "state": "roof",
+      "tick": 960
+    },
+    {
+      "file": "chromium-roof-375x667.jpg",
+      "width": 375,
+      "height": 667,
+      "state": "roof",
+      "tick": 960
+    },
+    {
+      "file": "chromium-roof-1366x768.jpg",
+      "width": 1366,
+      "height": 768,
+      "state": "roof",
+      "tick": 960
+    },
+    {
+      "file": "chromium-roof-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "roof",
+      "tick": 960
+    },
+    {
+      "file": "chromium-fullscreen-roof-1920x1080.jpg",
+      "width": 1920,
+      "height": 1080,
+      "state": "fullscreen-attempt",
+      "fullscreen": true
+    }
+  ],
+  "errors": []
+}

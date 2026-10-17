@@ -50,5 +50,13 @@ CI and deployed review remain outstanding; br-gw74.11 stays open.
 
 ## Not covered
 
-Deployed preview, a connected touchscreen controller, physical phone/Safari and WAN/GPU
-performance. One car at browser viewports is the fixture cohort. CI and deployed self-review remain required before close.
+A connected touchscreen controller, physical phone/Safari and WAN/GPU
+performance. One car at browser viewports is the fixture cohort. CI is green on run 5620; the deployed review is below.
+
+## Deployed preview check (2026-10-17, AmberSpring)
+
+`JJ_PREVIEW_URL=https://jammers-preview.dilger.dev/p/v02-dd7f30b2/ node --test web/tests/journeys/rooftop.test.mjs`: 2/2
+pass on the deployed preview (generator 26), Playwright Chromium and WebKit on the Mac, native/WASM parity included. Looked
+at every frame in `deployed/` (375x667, 412x915, 915x412, 1366x768, 1920x1080, fullscreen): the car sits square on the
+corrugated roof, wheels on the sheet, no clipping into the gable; the road and the house read clearly behind it.
+
