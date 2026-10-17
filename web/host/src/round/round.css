@@ -39,6 +39,9 @@
 .lb-join { display: flex; justify-content: center; }
 .lb-go { display: flex; flex-direction: column; gap: calc(10px * var(--k)); align-items: stretch; }
 .lb-go .btn { width: 100%; min-height: calc(84px * var(--k)); font-size: calc(40px * var(--k)); }
+/* P1-G06: the next round's Race/Derby choice is a small segmented pair above Start, not two more big buttons. */
+.lb-go .lb-mode { display: flex; gap: calc(8px * var(--k)); justify-content: center; }
+.lb-go .lb-mode .btn { width: auto; flex: 0 1 calc(180px * var(--k)); min-height: calc(48px * var(--k)); font-size: calc(22px * var(--k)); }
 .lb-hint { margin: 0; font: 600 calc(24px * var(--k))/1.25 var(--font-body); color: var(--c-ink-soft); text-align: center; }
 .lb-rwrap { grid-area: roster; display: flex; flex-direction: column; gap: calc(14px * var(--k)); min-height: 0; min-width: 0; }
 .lb-roster { flex: 1 1 auto; display: grid; grid-auto-flow: column; justify-content: start; align-content: start; min-height: 0; min-width: 0; font-size: var(--fs, 24px); }

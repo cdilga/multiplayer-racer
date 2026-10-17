@@ -87,6 +87,9 @@ export interface JoinInfo {
   localReady?: (source: number) => void;
 }
 
+/** A derby round's length for the lobby hint: whole minutes, or seconds under one. */
+const derbyLength = (ms: number) => (ms >= 60_000 ? `${Math.round(ms / 60_000)} min` : `${Math.round(ms / 1000)} s`);
+
 export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScreens {
   const root = document.createElement('div');
   root.className = 'jj-round';
@@ -188,7 +191,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
         <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>${derby ? 'Start derby' : 'Start race'}</button>
-        <p class="lb-hint">${n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${Math.round((room.derbyMs ?? 180_000) / 60_000)} min in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
+        <p class="lb-hint">${n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
         <p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
@@ -264,7 +267,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.innerHTML = `<section class="results" data-screen="results" data-count="${rows.length}">
       <div class="rs-reel" data-reel>
         <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
-          <span class="strip">Rematch on the same track · everyone keeps their number</span></header>
+          <span class="strip">${derby ? 'Most damage dealt wins · everyone keeps their number' : 'Rematch on the same track · everyone keeps their number'}</span></header>
         ${winner ? `<div class="rs-winner"><small>Winner</small><span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span></div>` : ''}
       </div>
       <div class="rs-side">

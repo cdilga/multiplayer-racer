@@ -119,11 +119,12 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   // No car leaves the bowl: every car inside the arena's bowl (an arena for seven is ~30 m to its lip) and above its floor.
   const positions = await inBowl(host);
   for (const c of positions.cars) assert.ok(c.r < 45 && c.y > -2, `car ${c.car} stays in the bowl: ${JSON.stringify(c)}`);
-  // The round ends on game time and ranks by raw points.
-  await host.evaluate(() => window.__jjTest.step(45 * 120));
+  // The round ends on game time and ranks by raw points: stepped a second at a time until round 1 ends (not past it).
+  for (let k = 0; k < 60 && (await host.evaluate(() => window.__jjRoom.view().phase)) === 'Running'; k++) await host.evaluate(() => window.__jjTest.step(120));
   await host.evaluate(() => window.__jjTest.hold(false));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission' && document.querySelector('[data-screen=results]'), undefined, 60_000);
   const res = await host.evaluate(() => window.__jjRoom.view());
+  assert.equal(res.round, 1, 'round 1\'s results');
   assert.equal(res.results.length, 7, `every seat, the late joiner included, is in the results: ${JSON.stringify(res.results)}`);
   assert.ok(res.results.some((r) => r.name === 'Late Lenny'), 'the late joiner appears in the results');
   assert.ok(res.results.every((r) => r.time_ms === null), 'a derby has no times');
