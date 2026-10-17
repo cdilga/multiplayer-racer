@@ -130,8 +130,8 @@ export class RoundPreparer {
 
   private onEvents(events: SimEventJson[]): void {
     for (const e of events) {
-      const r = e.PrepareRequested as { preparation: number; seed: number } | undefined;
-      if (r) void this.request(Number(r.preparation), Number(r.seed));
+      const r = e.PrepareRequested as { preparation: number; seed: number; arena_cars?: number | null } | undefined;
+      if (r) void this.request(Number(r.preparation), Number(r.seed), r.arena_cars ?? undefined);
     }
   }
 
@@ -140,7 +140,7 @@ export class RoundPreparer {
     this.staged = null;
   }
 
-  private async request(preparation: number, seed: number): Promise<void> {
+  private async request(preparation: number, seed: number, arenaCars?: number): Promise<void> {
     this.current = preparation;
     this.stats.requested++;
     if (this.reuseSeed !== null) {
@@ -156,7 +156,14 @@ export class RoundPreparer {
     try {
       let json: string;
       let canonical: Uint8Array;
-      if (this.scene || this.o.devMap) {
+      if (arenaCars) {
+        // P1-G06: a derby round: the generated bowl for the room, whatever the lab scene or dev map.
+        const p = await this.o.procgen.prepare(seed, undefined, undefined, arenaCars);
+        entry.plan = `arena:${arenaCars}`;
+        entry.ms = Math.round(p.ms);
+        json = p.mapJson;
+        canonical = p.canonical;
+      } else if (this.scene || this.o.devMap) {
         const authored = this.scene ? this.scene.json : await this.o.devMap!();
         try {
           ({ canonical, mapJson: json } = await this.o.procgen.validate(authored));

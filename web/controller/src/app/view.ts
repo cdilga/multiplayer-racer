@@ -438,8 +438,13 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       if (e) e.textContent = t;
     };
     const posEl = app.querySelector<HTMLElement>('[data-hud=pos]');
-    if (posEl) posEl.innerHTML = h?.position ? `${h.position}<sup>${place(h.position).slice(String(h.position).length)}</sup>` : '';
-    set('lap', h?.lap ? (h.lap[0] > h.lap[1] ? 'Finished' : `Lap ${h.lap[0]}/${h.lap[1]}`) : '');
+    // P1-G06: in a derby the place is the seat's rank by raw points, and the lap line its points and the time left.
+    const rank = h?.derby ? h.derby.rank : h?.position;
+    if (posEl) posEl.innerHTML = rank ? `${rank}<sup>${place(rank).slice(String(rank).length)}</sup>` : '';
+    if (h?.derby) {
+      const pts = h.derby.half_points % 2 ? (h.derby.half_points / 2).toFixed(1) : String(h.derby.half_points / 2);
+      set('lap', `${pts} pts · ${Math.floor(h.derby.left_s / 60)}:${String(h.derby.left_s % 60).padStart(2, '0')}`);
+    } else set('lap', h?.lap ? (h.lap[0] > h.lap[1] ? 'Finished' : `Lap ${h.lap[0]}/${h.lap[1]}`) : '');
     paintItem();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');

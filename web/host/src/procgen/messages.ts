@@ -1,7 +1,7 @@
 // Messages between main and the procgen worker (P1-M08a).
 
 export type ToProcgen =
-  | { kind: 'prepare'; job: number; seed: number; recipe?: string; /** A tuned `jj.generator` document (br-2sdu.3); absent = the shipped data. */ generator?: string }
+  | { kind: 'prepare'; job: number; seed: number; recipe?: string; /** A tuned `jj.generator` document (br-2sdu.3); absent = the shipped data. */ generator?: string; /** P1-G06: a derby round's arena for this many cars, instead of a course. */ arenaCars?: number }
   /** A dev map: authored `jj.map.v1` JSON through the same validator the sim uses. */
   | { kind: 'validate'; job: number; json: string };
 

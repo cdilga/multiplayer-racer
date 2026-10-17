@@ -4,6 +4,7 @@
 // (art/ui/accepted/2026-10-07/poc/tv: Lobby br-dim.6, Round complete br-dim.7, Per-tile HUD, Countdown R99). Driven by the
 // worker's room view (`SimClient.onRoom`). Any N, any aspect: the roster and the placings pick the richest card tier that
 // stays legible and never cap, scroll or page (fit.ts). Copy says room and round, never game (R112).
+import { set as setRule } from './rules';
 import roster from '../../../shared/src/roster.json' with { type: 'json' };
 import { controlsCard, installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
@@ -178,13 +179,16 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
   const lobby = (room: RoomView) => {
     const ready = room.seats.filter((s) => stateOf(s) === 'ready').length;
     const n = room.seats.length;
+    // P1-G06: the next round's mode, Race or Derby (applies from the next round; remembered on this device).
+    const derby = room.nextMode === 'derby';
     screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
       <header class="lb-head"><span class="bn display">Lob<span class="acc">by</span></span>
         <span class="tag"><b data-count-label>${n}</b> in the room · <b>${ready}</b> ready</span>
         <span class="strip">Join → choose your vehicle → Ready</span></header>
       <div class="lb-side"><div class="lb-join"></div>
-      <div class="lb-go"><button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>Start race</button>
-        <p class="lb-hint">${n ? `${room.armed ? 'Everyone ready starts the race on its own' : 'Start race when everyone\'s ready'} · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
+      <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
+        <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>${derby ? 'Start derby' : 'Start race'}</button>
+        <p class="lb-hint">${n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${Math.round((room.derbyMs ?? 180_000) / 60_000)} min in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
         <p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
@@ -217,6 +221,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     paintStrip(room, true);
     paintKit(screen);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
+    screen.querySelectorAll<HTMLButtonElement>('[data-act=mode]').forEach((b) => b.addEventListener('click', () => setRule((i) => client.input(i), 'mode', b.dataset.mode!)));
     screen.querySelector('[data-act=catch-up]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'catch-up', on: room.catchUp === false }));
     // Select a card to remove that player (P1-G07): works at every tier, and asks first.
     const pick = (e: Event) => {
@@ -254,9 +259,11 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const seatOf = (num: number) => room.seats.find((s) => s.number === num);
     const winner = rows[0];
     const ws = winner ? seatOf(winner.number) : undefined;
+    // P1-G06: a derby ranks by raw points; it has no times.
+    const derby = room.mode === 'derby';
     screen.innerHTML = `<section class="results" data-screen="results" data-count="${rows.length}">
       <div class="rs-reel" data-reel>
-        <header class="rs-head"><span class="bn display">Round ${room.round ?? ''} <span class="acc">complete</span></span>
+        <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
           <span class="strip">Rematch on the same track · everyone keeps their number</span></header>
         ${winner ? `<div class="rs-winner"><small>Winner</small><span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span></div>` : ''}
       </div>
@@ -276,7 +283,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const pts = `<span class="pts">+${r.points}</span>`;
       const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>`;
       const body =
-        tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${raceTime(r.time_ms)}</span>${pts}`
+        tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? '' : raceTime(r.time_ms)}</span>${pts}`
         : tier === 'name' ? `<span class="pl display">${place}</span>${badge}${nm}${pts}`
         : tier === 'seat' ? `<span class="pl display">${place}</span>${badge}${pts}`
         : `<span class="pl display">${place}</span>${badge}`;

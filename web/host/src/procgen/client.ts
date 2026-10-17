@@ -16,7 +16,7 @@ export interface PreparedMap {
 /** What round preparation needs of a procgen worker (the tests substitute one). */
 export interface Procgen {
   /** The seed's validated map for the recipe (comma-separated biome names; default: empty, the seed's own one to four biomes, R125). */
-  prepare(seed: number, recipe?: string, generator?: string): Promise<PreparedMap>;
+  prepare(seed: number, recipe?: string, generator?: string, arenaCars?: number): Promise<PreparedMap>;
   /** An authored `jj.map.v1` JSON through the sim's validator; rejects with the validator's message. */
   validate(json: string): Promise<{ canonical: Uint8Array; mapJson: string }>;
 }
@@ -41,7 +41,7 @@ export class ProcgenClient implements Procgen {
     };
   }
 
-  private call(msg: { kind: 'prepare'; seed: number; recipe?: string; generator?: string } | { kind: 'validate'; json: string }): Promise<FromProcgen> {
+  private call(msg: { kind: 'prepare'; seed: number; recipe?: string; generator?: string; arenaCars?: number } | { kind: 'validate'; json: string }): Promise<FromProcgen> {
     const job = this.next++;
     return new Promise((ok, fail) => {
       this.waiting.set(job, { ok, fail });
@@ -49,8 +49,8 @@ export class ProcgenClient implements Procgen {
     });
   }
 
-  async prepare(seed: number, recipe?: string, generator?: string): Promise<PreparedMap> {
-    const m = await this.call({ kind: 'prepare', seed, recipe, generator });
+  async prepare(seed: number, recipe?: string, generator?: string, arenaCars?: number): Promise<PreparedMap> {
+    const m = await this.call({ kind: 'prepare', seed, recipe, generator, arenaCars });
     if (m.kind !== 'prepared') throw new Error('unexpected procgen reply');
     return { seed: m.seed, canonical: m.canonical, mapJson: m.mapJson, log: JSON.parse(m.log), plan: m.plan, valid: m.valid, ms: m.ms };
   }

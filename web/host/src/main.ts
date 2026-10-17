@@ -4,6 +4,7 @@
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (override of the Render resolution setting, R111; also turns auto-lowering off), `?autores=off|injected`, `?maxcanvas=<px>` (test: a small browser canvas limit),
 // `?synthetic=<cars>[&freeze=<tick>][&damage[=strip]]` (draw from the synthetic snapshot source instead of the sim), `?bench`
 // (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far`, `?mapUrl=<url>` (a plain chase-camera tile view until the grid, P1-R04).
+import { applySaved as applySavedRules } from './round/rules';
 import greyboxJson from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountAudio } from './audio';
@@ -229,8 +230,13 @@ async function boot(): Promise<void> {
   // plain test pages stay offline (no server).
   const freeDrive = params.has('drive') || (testing !== null && !params.has('room'));
   if (freeDrive) client.input({ type: 'ui', ui: 'free-drive', on: true });
+  // P1-G06: the round rules remembered on this host device first; the URL's own (journeys) override them.
+  applySavedRules((i) => client.input(i));
   const laps = Number(params.get('laps'));
   if (laps > 0) client.input({ type: 'ui', ui: `laps:${laps}` });
+  if (params.get('mode') === 'derby' || params.get('mode') === 'race') client.input({ type: 'ui', ui: `mode:${params.get('mode') as 'derby' | 'race'}` });
+  const derbyMs = Number(params.get('derbyMs'));
+  if (derbyMs > 0) client.input({ type: 'ui', ui: `derby-ms:${derbyMs}` });
   const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
   if (online) await openRoom(client, world, params, freeDrive, input);
   else mountDrawer(document.body, input);

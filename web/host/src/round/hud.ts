@@ -40,6 +40,14 @@ export interface Hud {
   identify(seat: number): boolean;
 }
 
+/** Raw derby points: whole, or with the autopilot's half point (17.5). */
+const derbyPoints = (p: number) => (Number.isInteger(p) ? String(p) : p.toFixed(1));
+/** A round clock, m:ss. */
+const clock = (ms: number) => {
+  const s = Math.ceil(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
 export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
   const layer = document.createElement('div');
   layer.className = 'jj-hud';
@@ -83,7 +91,10 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const s = seatOf(r.seat);
       const total = room?.laps ?? 0;
       const lap = s?.laps === null || s?.laps === undefined ? null : Math.min(s.laps + 1, Math.max(1, total));
-      const pos = s?.position ?? null;
+      // P1-G06: in a derby round the pill is the seat's rank and raw points, and the status shows the round's time left.
+      const derby = room?.mode === 'derby' ? s?.derby ?? null : null;
+      const derbyLeft = room?.mode === 'derby' ? room?.derbyLeftMs ?? null : null;
+      const pos = derby ? derby.rank : s?.position ?? null;
       const unplugged = s?.unpluggedMs ?? null;
       // Owner playtest 2026-10-17 (finishing gave no feedback): once the first car finishes, the rest see the window close.
       const endsIn = room?.raceEndsInMs ?? null;
@@ -98,7 +109,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // P1-C14: a pad, wheel or key cluster seat is coached in its own glyphs, and holding its Identify shows its controls card.
       const src = sourceOf(s?.localSource);
       const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
-      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0]);
+      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -125,17 +136,19 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       }
       posEl.dataset.pos = pos === null ? '' : String(pos);
       const lapEl = box.querySelector<HTMLElement>('.hud-lap')!;
-      lapEl.textContent = s.finished ? 'Finished' : lap === null ? '' : `Lap ${lap}/${total}`;
-      lapEl.dataset.lap = lap === null ? '' : String(lap);
+      lapEl.textContent = derby ? `${derbyPoints(derby.points)} pts` : s.finished ? 'Finished' : lap === null ? '' : `Lap ${lap}/${total}`;
+      lapEl.dataset.lap = derby || lap === null ? '' : String(lap);
+      lapEl.dataset.points = derby ? String(derby.points) : '';
       // Before the race there is no place or lap yet: no empty pill.
-      box.querySelector<HTMLElement>('.hud-tr')!.hidden = !started || (pos === null && lap === null && !s.finished);
+      box.querySelector<HTMLElement>('.hud-tr')!.hidden = !started || (pos === null && lap === null && !s.finished && !derby);
       const boost = box.querySelector<HTMLElement>('.hud-boost')!;
       boost.hidden = s.boost === undefined || s.boost === null;
       boost.dataset.boost = boost.hidden ? '' : String(s.boost);
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
-        (started && endsIn !== null && !s.finished ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '');
+        (started && endsIn !== null && !s.finished ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
+        (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
       const prompt = started ? s.prompt : null;

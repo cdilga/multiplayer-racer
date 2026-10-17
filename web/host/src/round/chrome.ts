@@ -3,6 +3,7 @@
 // (P1-G07), End round, Disband room, each behind its own confirmation) and the diagnostics overlay (room code, phase and
 // per seat: direct or relay, RTT; IPs never shown). The footer lives in the bottom safe margin the grid leaves
 // (`--foot`), so nothing but the countdown and Identify ever overlays a tile. Opening the menu in a race pauses it first.
+import { DERBY_MS, INTERMISSION_MS, LAPS, set as setRule } from './rules';
 import type { PathStats } from '../../../shared/transport/stats';
 import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
@@ -221,7 +222,16 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></div></div></section>`;
     } else if (state.page === 'rules') {
-      menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>
+      // P1-G06: the next round's mode, laps, derby length and intermission, from the next round (laps never mid-race),
+      // remembered on this device.
+      const r = room!;
+      const choice = (rule: string, label: string, values: Array<[number | string, string]>, on: number | string | undefined) =>
+        `<h3 class="display">${label}</h3><div class="mn-acts" role="group" aria-label="${label}">${values.map(([v, t]) => `<button class="btn brush${on === v ? ' primary' : ''}" type="button" data-act="rule" data-rule="${rule}" data-value="${v}" aria-pressed="${on === v}">${t}</button>`).join('')}</div>`;
+      const rules = choice('mode', 'Next round', [['race', 'Race'], ['derby', 'Derby']], r.nextMode ?? 'race')
+        + choice('laps', 'Laps', LAPS.map((n) => [n, String(n)]), r.laps)
+        + choice('derbyMs', 'Derby length', DERBY_MS.map((ms) => [ms, `${ms / 60_000} min`]), r.derbyMs ?? 180_000)
+        + choice('intermissionMs', 'Between rounds', INTERMISSION_MS.map((ms) => [ms, `${ms / 1000} s`]), r.intermissionMs ?? 60_000);
+      menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>${rules}<p class="mn-hint">They apply from the next round.</p>
         <h3 class="display">Catch-up</h3><p>Give trailing racers a small speed and boost recharge advantage.</p>
         <div class="mn-acts" role="group" aria-label="Catch-up">${[false, true].map((on) => `<button class="btn brush${(room!.catchUp !== false) === on ? ' primary' : ''}" type="button" data-act="catch-up" data-on="${on}" aria-pressed="${(room!.catchUp !== false) === on}">${on ? 'Light' : 'Off'}</button>`).join('')}</div>
         <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
@@ -375,6 +385,11 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       case 'catch-up':
         send('catch-up', b.dataset.on === 'true');
         return;
+      case 'rule': {
+        const rule = b.dataset.rule as 'mode' | 'laps' | 'derbyMs' | 'intermissionMs';
+        setRule(opts.input, rule, rule === 'mode' ? b.dataset.value! : Number(b.dataset.value));
+        return;
+      }
       case 'diagnostics':
         toggleDiagnostics();
         return renderMenu();

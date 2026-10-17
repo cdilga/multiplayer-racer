@@ -42,6 +42,8 @@ export interface Hud {
   lap: [number, number] | null;
   boost: number;
   pause: string | null;
+  /** P1-S10/G06: this seat's derby standing while a derby round is on (raw points × 2, rank, whole seconds left). */
+  derby: { half_points: number; rank: number; left_s: number } | null;
 }
 
 interface Stored {
@@ -409,8 +411,8 @@ export class Session {
     if (ch === 'state') {
       const j = wasm.decodeHud(bytes);
       if (!j) return;
-      const h = (JSON.parse(j) as { hud: { position: number | null; lap: [number, number] | null; boost: number; pause: string | null } }).hud;
-      this.hud = { position: h.position, lap: h.lap, boost: h.boost, pause: h.pause };
+      const h = (JSON.parse(j) as { hud: { position: number | null; lap: [number, number] | null; boost: number; pause: string | null; derby?: Hud['derby'] } }).hud;
+      this.hud = { position: h.position, lap: h.lap, boost: h.boost, pause: h.pause, derby: h.derby ?? null };
       if (h.pause === 'HostHidden' && this.you) this.set('host-paused');
       else if (this.phase === 'host-paused') this.set('playing');
       this.onChange();
