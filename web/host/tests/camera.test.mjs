@@ -310,6 +310,47 @@ test('big air: the chase holds to the ground so a car in the air climbs in frame
   runs.bigAir = { hold, onGround: onGround[0], air, rideAlong, top, flight: { camJerk, carJerk } };
 });
 
+// br-gw74.14.1: relief must not make the chase pop. Over rolling ground with a sharp crest and a dip, at 60 and 120 Hz,
+// the camera's vertical jerk stays within 1.5x the car's own at p99, and the ground never hides the car (every frame).
+test('relief: the chase rides crests and dips without popping, and the ground never hides the car (60 and 120 Hz)', async () => {
+  const { CameraRig } = await loadRig();
+  const { Vector3, Quaternion, PerspectiveCamera } = await import('three');
+  const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
+  // Rolling 0-8 m every 30 m, plus a sharp 3 m crest at z 120 and a 4 m dip at z 200 (generated tracks' relief).
+  const ground = (x, z) => 4 + 4 * Math.sin((z / 30) * Math.PI * 2) + 3 * Math.exp(-(((z - 120) / 4) ** 2)) - 4 * Math.exp(-(((z - 200) / 6) ** 2));
+  const p99 = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length * 0.99)];
+  const out = {};
+  for (const hz of [60, 120]) {
+    const rig = new CameraRig();
+    rig.groundAt = ground;
+    const cam = new PerspectiveCamera(60, 16 / 9, 0.1, 500);
+    const car = { pos: new Vector3(0, ground(0, 0) + 0.4, 0), rot: new Quaternion(), life: 1 };
+    const camY = [], carY = [];
+    let hidden = 0;
+    for (let f = 0; f < 18 * hz; f++) {
+      car.pos.z += 15 / hz; // 15 m/s
+      car.pos.y = ground(car.pos.x, car.pos.z) + 0.4;
+      rig.update(1, cam, car, 1 / hz);
+      camY.push(cam.position.y);
+      carY.push(car.pos.y);
+      const eye = car.pos.y + prof.rig.pullInEyeUpM;
+      for (let k = 1; k < 8; k++) {
+        const t = k / 8;
+        const z = cam.position.z + (car.pos.z - cam.position.z) * t;
+        if (cam.position.y + (eye - cam.position.y) * t < ground(cam.position.x, z) + 0.2 - 1e-6) { hidden++; break; }
+      }
+    }
+    const jerk = (a) => a.slice(3).map((y, k) => Math.abs(y - 3 * a[k + 2] + 3 * a[k + 1] - a[k]) * hz ** 3);
+    out[hz] = { camP99: +p99(jerk(camY)).toFixed(1), carP99: +p99(jerk(carY)).toFixed(1), hiddenFrames: hidden };
+  }
+  console.log(`# relief jerk (m/s³, p99): ${JSON.stringify(out)}`);
+  runs.relief = out;
+  for (const [hz, r] of Object.entries(out)) {
+    assert.equal(r.hiddenFrames, 0, `${hz} Hz: the ground never hides the car`);
+    assert.ok(r.camP99 <= 1.5 * r.carP99, `${hz} Hz: camera jerk p99 ${r.camP99} within 1.5x the car's ${r.carP99}`);
+  }
+});
+
 test('camera distance is a setting: the host default follows the player count, a player may override, and null goes back', async () => {
   const { CameraRig, distanceFor } = await loadRig();
   const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
