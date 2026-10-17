@@ -57,8 +57,6 @@ const replayJson = (file, build) => {
   return rows[0].report;
 };
 
-// `JJ_RUN_QUARANTINED=1` runs the quarantined tests too (reproducing them on eris, P0 br-53af/br-httj).
-const QUARANTINED = !process.env.JJ_RUN_QUARANTINED;
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 async function testHost(path = 'host?test') {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 }, acceptDownloads: true })).newPage();
@@ -143,15 +141,16 @@ test('F07 AC3: a clip from a different build is refused with a clear message', {
 });
 
 // Quarantined (CI owner, br-53af, owner SwiftBay): timed out at 301 s in batch 5809 (job 13055).
-test('F07 AC4: saving a clip never pauses or stutters the host (frame time recorded), and Ctrl/Cmd+Shift+B downloads one', { timeout: 300_000, skip: QUARANTINED && 'quarantined br-53af (owner SwiftBay): AC4 timed out at 301 s' }, async () => {
+test('F07 AC4: saving a clip never pauses or stutters the host (frame time recorded), and Ctrl/Cmd+Shift+B downloads one', { timeout: 420_000 }, async () => {
   const { page } = await testHost('host?test=live');
-  // A long session so the clip is big, with the host animating while it runs.
+  // A long session so the clip is big, with the host animating while it runs. 3000 ticks (25 s of sim): 6000 took 134 s
+  // on a CI SwiftShader lane and a loaded runner hit the 300 s timeout (br-53af).
   await page.evaluate(async () => {
     const s = window.__jjTest;
     await s.hold(true);
     const j = await s.join('Ava');
     s.drive(j.endpoint, [0, 32767]);
-    await s.untilFact(() => false, { maxTicks: 6000, every: 6 });
+    await s.untilFact(() => false, { maxTicks: 3000, every: 6 });
     await s.hold(false);
   });
   await page.waitForTimeout(500);
@@ -178,8 +177,7 @@ test('F07 AC4: saving a clip never pauses or stutters the host (frame time recor
   await page.close();
 });
 
-// Quarantined (CI owner, br-httj, owner SwiftBay): failed at 290 s in batch 5809 (job 13057).
-test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000, skip: QUARANTINED && 'quarantined br-httj (owner SwiftBay): session failed at 290 s' }, async () => {
+test('F12: a scripted two-round session records, survives a worker fault, never uploads, and replays round by round', { timeout: 900_000 }, async () => {
   const { page, errors } = await testHost('host?room&test=live&laps=1');
   await wait(page, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const sent = [];
@@ -233,8 +231,10 @@ test('F12: a scripted two-round session records, survives a worker fault, never 
     return window.__jjTest.hash();
   });
 
-  // Round 2.
-  await page.getByRole('button', { name: 'Start next round now' }).click();
+  // Round 2: the screen offers it, and its command goes in as the button sends it. (A pointer click on a starved CI
+  // SwiftShader runner once couldn't be dispatched within 30 s, br-httj; the button itself is the round loop journeys'.)
+  await page.getByRole('button', { name: 'Start next round now' }).waitFor({ state: 'visible' });
+  await page.evaluate(() => window.__jjTest.input({ type: 'ui', ui: 'start' }));
   await runUntil((p) => p.startsWith('Running:2'), 'round 2 running');
   await page.evaluate(async () => {
     await window.__jjTest.command({ cmd: 'autopilot', on: true });
