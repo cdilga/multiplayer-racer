@@ -101,6 +101,30 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     for(const [width,height] of [[412,915],[915,412],[375,667],[1920,1080],[1366,768]]) {
       await host.setViewportSize({width,height});
       await shot(host,`${engine.name()}-lobby-${width}x${height}`);
+      // br-zhuw: every picker and legend under the roster is reachable (inside the strip, which scrolls), never under the
+      // footer or into Start race, and the announcer's caption covers no lobby text while it shows.
+      const lay = await host.evaluate(()=>{
+        const box=(e)=>e.getBoundingClientRect();
+        const meet=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+        const strip=document.querySelector('.lb-controls:not([hidden])');
+        const foot=document.querySelector('.jj-foot, footer, [data-foot]');
+        const go=document.querySelector('.lb-go');
+        const cap=document.querySelector('#jj-caption .capt, #jj-caption > *');
+        const out={stripUnderFoot:false,stripIntoGo:false,unreachable:[],captionOver:[]};
+        if(strip){
+          const s=box(strip);
+          if(foot) out.stripUnderFoot=s.bottom>box(foot).top+1;
+          if(go&&getComputedStyle(go).display!=='none') out.stripIntoGo=meet(s,box(go));
+          for(const cc of strip.querySelectorAll('.lb-cc')){
+            cc.scrollIntoView({block:'nearest'});
+            const r=box(cc), v=box(strip);
+            if(r.top<v.top-1||r.bottom>v.bottom+1) out.unreachable.push(cc.textContent.trim().slice(0,30));
+          }
+        }
+        if(cap&&box(cap).height>0) for(const e of document.querySelectorAll('.lobby .lb-hint, .lobby .lb-cc, .lobby .lcard')) if(meet(box(e),box(cap))) out.captionOver.push(e.className);
+        return out;
+      });
+      assert.deepEqual(lay,{stripUnderFoot:false,stripIntoGo:false,unreachable:[],captionOver:[]},`${engine.name()} lobby ${width}x${height}: ${JSON.stringify(lay)}`);
       if(width<500) {
         // Visual staging: a just-arrived room update can replace this card while Playwright waits for stability.
         await host.locator(`[data-local-ready="${padSource}"]`).evaluate(el=>el.scrollIntoView({block:'nearest'}));

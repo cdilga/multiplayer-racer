@@ -192,6 +192,9 @@
 
 /* The screens stop above the footer; the countdown covers everything. */
 .jj-screen > .lobby, .jj-screen > .results { bottom: var(--foot); inset-block-end: var(--foot); }
+/* The announcer's caption (the welcome line) reserves its painted height above the footer, so it never covers the
+   lobby's pickers, legends or Start race hint while it shows (br-zhuw). */
+.jj-screen > .lobby { bottom: calc(var(--foot) + var(--jj-caption-space, 0px)); inset-block-end: calc(var(--foot) + var(--jj-caption-space, 0px)); }
 .jj-screen > .results { bottom: calc(var(--foot) + var(--jj-caption-space, 0px)); inset-block-end: calc(var(--foot) + var(--jj-caption-space, 0px)); }
 .jj-screen:has(> .results) { background: var(--c-paper); }
 .results .rs-side { container-type: inline-size; }
@@ -357,6 +360,9 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 
 /* Controls cards under the lobby roster (P1-C14): one per pad, wheel or key-cluster seat still learning its controls. */
 .lb-controls { flex: none; display: flex; flex-wrap: wrap; gap: calc(10px * var(--k)); align-items: flex-end; font-size: calc(23px * var(--k)); }
+/* On a short screen the pickers and legends take at most half the roster column and scroll there, instead of running
+   under the footer (landscape) or into Start race (portrait) (br-zhuw). */
+.lb-controls { flex: 0 1 auto; min-height: 0; max-height: 50%; overflow: auto; }
 .lb-controls[hidden] { display: none; }
 .lb-cc { display: flex; align-items: flex-start; gap: calc(8px * var(--k)); min-width: 0; }
 .lb-cc > .badge { font-size: calc(22px * var(--k)); }
