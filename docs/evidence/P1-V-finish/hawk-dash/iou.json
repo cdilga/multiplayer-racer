@@ -1,0 +1,75 @@
+{
+ "what": "Weighted silhouette IoU of the Hawk Dash against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). before = the br-bwju.3 bake: LOD0 and LOD2 from its committed score.json (before-br-bwju.3/); LOD1 was never scored then, so its number comes from the same evaluator ported to the CPU (it agreed with the browser within 0.001 on LOD0 and LOD2). after = reference-lod<N>/score.json, commit 09a3e725, Playwright Chromium on eris. tris are the bake's (parts only; the interior blocks, 84 triangles drawn only when exposed, are left out; the fit page's stats include them).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9638,
+   "views": {
+    "side": 0.9762,
+    "top": 0.9529,
+    "front": 0.9481,
+    "rear": 0.9684
+   },
+   "tris": 1140
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.9604,
+   "views": {
+    "side": 0.9724,
+    "top": 0.9528,
+    "front": 0.9393,
+    "rear": 0.9645
+   },
+   "tris": 872,
+   "source": "CPU port of the evaluator"
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9555,
+   "views": {
+    "side": 0.9633,
+    "top": 0.957,
+    "front": 0.9319,
+    "rear": 0.9552
+   },
+   "tris": 512
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9633,
+   "views": {
+    "side": 0.9792,
+    "top": 0.953,
+    "front": 0.9335,
+    "rear": 0.9713
+   },
+   "tris": 2459
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.9609,
+   "views": {
+    "side": 0.9795,
+    "top": 0.9447,
+    "front": 0.9295,
+    "rear": 0.9752
+   },
+   "tris": 896
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9505,
+   "views": {
+    "side": 0.9586,
+    "top": 0.9579,
+    "front": 0.9082,
+    "rear": 0.9562
+   },
+   "tris": 596
+  }
+ },
+ "note": "The weighted score is flat (LOD0 -0.0005, LOD1 +0.0005, LOD2 -0.005): the old body already fitted the outline well, and this rebuild was about the details inside it. Side and rear rise at every LOD; front falls (LOD0 0.948 -> 0.934) because the nose now has the sheet's flat fascia and narrower plan, which the evaluator's 8-degree front camera reads as a taller, narrower front. By eye the front is much closer to the sheet (ladder-lod0.png), so the by-eye pass wins there (the Lion President's front-camera lesson)."
+}

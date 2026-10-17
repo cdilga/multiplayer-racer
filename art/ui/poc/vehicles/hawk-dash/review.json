@@ -2,12 +2,13 @@
   "id": "hawk-dash",
   "name": "Hawk Dash",
   "status": "awaiting-review",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "R123's Hawk Dash: a bubbly Aussie V8 sedan in the spirit of the Falcon XR8 Sprint. Long bonnet with a power bulge and two vents, a gaping hexagonal grille under swept narrow lamps, vertical lamp slots in the bumper corners, wide wrap-around tail lamps, quad exhausts, a ducktail lip, twin stripes nose to tail and a side 'C' stripe. Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Lion President's spec twin.",
+  "summary": "R123's Hawk Dash: a bubbly Aussie V8 sedan in the spirit of the Falcon XR8 Sprint. Rebuilt against its contact sheet (br-bwju.11): painted pillars with black-framed side glass in three panes and a black B pillar, the roof painted and carrying the twin stripes; swept headlamps wrapping round the corner; a black hexagonal upper grille; a big lower intake with mesh bars; vertical LED slots in black surrounds; a wide black splitter; the bonnet bulge and two louvred vents; widebody flares; dark 5-spoke rims; angular tail lamps with smoked centres; a body-colour wing on short posts with turned-down tips; a black diffuser with fins and four chrome pipes; big black mirrors on stalks; the twin stripes nose to tail and the side 'C' graphic with its pinstripe. LOD0 2459 triangles (qualified budget 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Lion President's spec twin.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -22,24 +23,36 @@
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9762,
-          "top": 0.9529,
-          "front": 0.9481,
-          "rear": 0.9684
+          "side": 0.9792,
+          "top": 0.953,
+          "front": 0.9335,
+          "rear": 0.9713
         },
-        "weightedIou": 0.9638
+        "weightedIou": 0.9633
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "sheet": "media/reference-lod1/sheet.png",
+        "iou": {
+          "side": 0.9795,
+          "top": 0.9447,
+          "front": 0.9295,
+          "rear": 0.9752
+        },
+        "weightedIou": 0.9609
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9633,
-          "top": 0.957,
-          "front": 0.9319,
-          "rear": 0.9552
+          "side": 0.9586,
+          "top": 0.9579,
+          "front": 0.9082,
+          "rear": 0.9562
         },
-        "weightedIou": 0.9555
+        "weightedIou": 0.9505
       }
     ]
   },
@@ -52,15 +65,15 @@
       {
         "lod": 0,
         "glb": "media/model/hawk-dash.lod0.glb",
-        "tris": 1140,
+        "tris": 2459,
         "draws": 11,
-        "maxTris": 1300,
+        "maxTris": 2800,
         "withinBudget": true
       },
       {
         "lod": 1,
         "glb": "media/model/hawk-dash.lod1.glb",
-        "tris": 872,
+        "tris": 896,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -68,7 +81,7 @@
       {
         "lod": 2,
         "glb": "media/model/hawk-dash.lod2.glb",
-        "tris": 512,
+        "tris": 596,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -102,8 +115,8 @@
         },
         "pivot": [
           0,
-          1.0854545454545454,
-          0.72
+          1.0702727272727273,
+          0.9
         ]
       },
       {
@@ -119,8 +132,8 @@
         },
         "pivot": [
           0,
-          1.0875000000000001,
-          -0.8999999999999999
+          1.0824500000000001,
+          -0.9099999999999999
         ]
       },
       {
@@ -135,9 +148,9 @@
           "max": 0
         },
         "pivot": [
-          0.9578571428571429,
-          0.611842105263158,
-          0.8999999999999999
+          0.9457,
+          0.601842105263158,
+          0.9099999999999999
         ]
       },
       {
@@ -152,9 +165,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9578571428571429,
-          0.611842105263158,
-          0.8999999999999999
+          -0.9457,
+          0.601842105263158,
+          0.9099999999999999
         ]
       },
       {
@@ -169,8 +182,8 @@
           "max": 0
         },
         "pivot": [
-          0.8942142857142857,
-          0.6098289473684211,
+          0.8954294642857143,
+          0.6027500000000001,
           -0.3
         ]
       },
@@ -186,8 +199,8 @@
           "max": 70
         },
         "pivot": [
-          -0.8942142857142857,
-          0.6098289473684211,
+          -0.8954294642857143,
+          0.6027500000000001,
           -0.3
         ]
       },
@@ -356,31 +369,39 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean, origin between the axles, anchors cam_fp, cam_tp_target, com, roof_number, lplate_front, lplate_rear; no badges, logos or real names)"
+        "text": "contract + reproducibility (validator clean; origin between the axles; anchors unchanged)"
       },
       {
         "result": "PASS",
-        "text": "budget; silhouette: weighted IoU 0.964 for LOD0 against 'lod + 1' (side 0.976, top 0.953, front 0.948, rear 0.968) and 0.956 for LOD2 against 'lowest'"
+        "text": "budget: LOD0 2459 <= 2800 <= 3000; LOD1 896 <= 900; LOD2 596 <= 600"
       },
       {
         "result": "PASS",
-        "text": "by-eye cues: bonnet bulge and vents, hexagonal grille, swept lamps, corner lamp slots, wrap-around tails, quad exhausts, ducktail, twin stripes and the side C stripe all read in views.png and grid-1.png"
+        "text": "silhouette (held, not raised): weighted IoU LOD0 0.9638 -> 0.9633, LOD1 0.9604 -> 0.9609, LOD2 0.9555 -> 0.9505 (iou.json). Side and rear rise at every LOD (LOD0 side 0.976 -> 0.979, rear 0.968 -> 0.971); front falls (0.948 -> 0.934, the evaluator's 8-degree front camera against the new flat fascia). Above the skill's ~0.95 at every LOD"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (the Cruz's atlas layout and material; draws per tile are the Cruz's 11 parts, one InstancedMesh per part type)"
+        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): painted pillars and black-framed side glass, striped roof, swept wrap-round headlamps, hexagonal grille, lower intake, LED slots, splitter, bulge and louvred vents, flares, dark 5-spoke rims, angular smoked tail lamps, body-colour wing, diffuser with quad pipes, big mirrors, door handles, twin stripes nose to tail, side C graphic"
       },
       {
         "result": "PASS",
-        "text": "damage states (each part turns about its hinge line to its limit; detached parts lie as separate bodies; dark bays and interior blocks behind missing panels)"
+        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
       },
       {
         "result": "PASS",
-        "text": "physics fit (convex collider per part from the bake, colliders.png; profile geometry synced from the sidecar; rear drive, 1700 kg)"
+        "text": "damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (colliders.png: one convex hull per part; mirrors and wing tips are left out of the colliders)"
       },
       {
         "result": "WARN",
-        "text": "identity at the smallest tile: legible as a striped sedan in grid-24.png, but the stripes read light grey there, not black, because of the paint key's filtered edges (br-vhtm, renderer-wide). The roof number isn't drawn by this viewer."
+        "text": "wheel size: the sheet's wheels are about 0.35 m in radius, the model's 0.40 m (the sim's wheel_radius); not changed here"
+      },
+      {
+        "result": "WARN",
+        "text": "the stripes' and C graphic's edges read light grey in the viewer and the host at small sizes (br-vhtm, renderer-wide filtered paint-key edges)"
       }
     ],
     "report": "media/gate/validation.md"

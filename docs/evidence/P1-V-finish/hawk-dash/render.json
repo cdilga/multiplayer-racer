@@ -1,0 +1,1340 @@
+[
+ {
+  "which": "old",
+  "tiles": 1,
+  "drawCalls": 90,
+  "triangles": 64418,
+  "frames": 40,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 1280,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 1216,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 1040,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 752,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 736,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 688,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 560,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 464,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 4,
+  "drawCalls": 228,
+  "triangles": 105288,
+  "frames": 39,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 1280,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 1216,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 1040,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 752,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 736,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 688,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 560,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 464,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 24,
+  "drawCalls": 1148,
+  "triangles": 526448,
+  "frames": 32,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 1280,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 1216,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 1040,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 752,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 736,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 688,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 560,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 464,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 1,
+  "drawCalls": 90,
+  "triangles": 74970,
+  "frames": 38,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 2888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 2820,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 2672,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 1136,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 920,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 904,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 864,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 624,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 608,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 536,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 520,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 4,
+  "drawCalls": 228,
+  "triangles": 105768,
+  "frames": 39,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 2888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 2820,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 2672,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 1136,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 920,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 904,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 864,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 624,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 608,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 536,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 520,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 24,
+  "drawCalls": 1148,
+  "triangles": 528848,
+  "frames": 35,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "hawkGroups": [
+   {
+    "name": "Scene/hawk-dash.back.lod0",
+    "triangles": 2888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod0",
+    "triangles": 2820,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod0",
+    "triangles": 2672,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod0",
+    "triangles": 1136,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod1",
+    "triangles": 920,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod1",
+    "triangles": 904,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod1",
+    "triangles": 864,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.core.lod2",
+    "triangles": 624,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod1",
+    "triangles": 608,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.back.lod2",
+    "triangles": 536,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.front.lod2",
+    "triangles": 520,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/hawk-dash.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/hawk-dash.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "hawkTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ }
+]

@@ -1,4 +1,4 @@
-# P1-V-finish self-review (br-bwju.11): Lion President
+# P1-V-finish self-review (br-bwju.11): Lion President, Hawk Dash
 
 **How these images were made.** Playwright Chromium, headless, on eris, at commit 54a30978 (the bakes in this commit):
 - `tools/vehicles/fit` for the reference comparisons;
@@ -109,3 +109,108 @@ Per view at LOD0:
 - **Real phones and a real TV.**
 - **The owner's verdict on recognisability.**
 - **The other roster cars.** The bead continues with the Hawk Dash and the rest.
+
+# Hawk Dash
+
+**How these images were made.** Playwright Chromium, headless, on eris, at commit 09a3e725 (the bakes in this commit), with the same tools as the Lion President above; the host captures and `render.json` are the real host page's synthetic mixed grid. Sheets and ladders composed on the Mac. These are not a real TV or phone. Every image named below was opened and looked at. All of them are in `hawk-dash/`.
+
+## Looked at
+
+- `hawk-dash/ladder-lod0.png`, `hawk-dash/ladder-lod1.png`, `hawk-dash/ladder-lod2.png`.
+  - The sheet crop, then the br-bwju.3 bake (before), then this bake (after), in the sheet's blue.
+  - Views: front, front 3/4, side, rear 3/4, rear and top. The sheet has no rear 3/4 view.
+  - The raw sheets are `hawk-dash/ladder-before-raw.png` and `hawk-dash/ladder-after-raw.png`.
+- `hawk-dash/reference-lod0/sheet.png`, `hawk-dash/reference-lod1/sheet.png`, `hawk-dash/reference-lod2/sheet.png`.
+  - Per view: the reference crop, the shaded model and the silhouette diff, with the IoU numbers.
+  - `hawk-dash/iou.json` has the before and after numbers; `hawk-dash/before-br-bwju.3/sheet-lod0.png` and `hawk-dash/before-br-bwju.3/sheet-lod2.png` are the old sheets.
+- `hawk-dash/views.png`, `hawk-dash/lods.png`, `hawk-dash/paints.png`, `hawk-dash/paints-strip.png`.
+  - Every side at every LOD, and six paints. Tyres, glass, lamps, stripes and the C graphic keep their colours under every paint; on the dark navy paint the black stripes are faint, as they would be on a real car.
+- `hawk-dash/colliders.png`: one hull per part; the mirrors stay outside the hulls.
+- `hawk-dash/damage-strip.png`, `hawk-dash/damage-strip-overview.png`: all ten states; parts swing about their hinges, with dark bays behind missing panels.
+- `hawk-dash/grid-1.png`, `hawk-dash/grid-4.png`, `hawk-dash/grid-24.png` (viewer). At grid-24 the stripes, the C graphic and the tail lamps still tell it apart from the Lion.
+- `hawk-dash/host-grid-1.png`, `hawk-dash/host-grid-4.png`, `hawk-dash/host-grid-24.png`.
+  - The real host page with every roster car four times. The followed car in tile 1 is a Cruz; in `hawk-dash/host-grid-4.png` the bottom-left tile follows an orange Hawk from behind (stripes, tail lamps, wing, pipes) and the bottom-right tile has another beside a teal car.
+
+**What the model now shows that it didn't.** Compare the before and after columns of `hawk-dash/ladder-lod0.png`:
+
+| Part | Before | Now |
+|---|---|---|
+| Cabin | One dark wedge, the roof dark too | Painted A and C pillars, black-framed side glass in three panes (front door, rear door, quarter), a black B pillar; the roof painted, carrying the twin stripes; lighter glass |
+| Wheels | 12-sided tyres with a pentagon disc | 16-sided tyres; dark 5-spoke rims with a rim lip, a dark barrel and a hub |
+| Arches | None | Widebody flares with a black lip, standing clear of the tyres |
+| Headlamps | Small slits on the nose face | Swept lamps from the grille's end round the corner onto the wing (they show in the top view, as on the sheet) |
+| Grille | A thin slot above a hexagon | A black hexagonal upper grille between the lamps, framed in trim |
+| Lower front | A hexagonal grille, white corner bars | A big lower intake with mesh bars; vertical LED slots in black surrounds; a wide black splitter |
+| Bonnet | Two black boxes | A narrower power bulge and two louvred vents (four louvres each) |
+| Stripes | Bonnet and boot only, ending at the edges | Nose to tail: down the nose past the grille, over the bonnet, roof and boot, down the tail to the diffuser |
+| Side graphic | A thin L | The sheet's C: a broad leg behind the front arch, a band along the sill, a kick over the rear arch to the tail lamp, and its pinstripe |
+| Wing | A tall wing on two posts | A body-colour blade on short black posts with turned-down tips |
+| Tail lamps | Red rectangles | Angular lamps with a red outline and a smoked centre, wrapping onto the quarters |
+| Exhausts | Two hexagonal stubs a side | A black diffuser with fins and four chrome pipes with dark bores, in two pairs |
+| Mirrors and doors | Small boxes | Big black mirrors on stalks; door handles; side skirts |
+
+At LOD1 and LOD2:
+- Both keep the lamps, stripes nose to tail, C graphic, tail lamps, grille and intake, wing, and the painted roof.
+- LOD1 keeps the framed side glass, the flares, the LED slots and flat 5-spoke rims.
+- LOD2 has one glazed band, flat 5-spoke rims and flat pipes, and no flares.
+
+**Silhouette IoU (weighted):**
+
+| LOD | Before | After |
+|---|---|---|
+| LOD0 | 0.9638 | 0.9633 |
+| LOD1 | 0.9604 (CPU) | 0.9609 |
+| LOD2 | 0.9555 | 0.9505 |
+
+Per view at LOD0:
+
+| View | Before | After |
+|---|---|---|
+| Side | 0.9762 | 0.9792 |
+| Top | 0.9529 | 0.9530 |
+| Front | 0.9481 | 0.9335 |
+| Rear | 0.9684 | 0.9713 |
+
+The old body already fitted its outline; this rebuild is about what's inside it. The front score falls because the nose now has the sheet's flat fascia, which the evaluator's 8° front camera reads as taller and narrower. By eye the front is far closer (`hawk-dash/ladder-lod0.png`, `hawk-dash/reference-lod0/sheet.png`), so the by-eye pass wins there.
+
+**Triangles:**
+- LOD0: 1140 to 2459. It asks 2800 of the qualified 3000.
+- LOD1: 872 to 896.
+- LOD2: 512 to 596.
+
+**Host render cost** (`hawk-dash/render.json`; 24 synthetic cars, four of them Hawks, 1920x1080, old Hawk GLBs routed in for "before"):
+- 1 tile: 64,418 to 74,970 triangles per frame (+10,552: the four LOD0 Hawks, about 2,640 more each, in two passes).
+- 4 tiles: 105,288 to 105,768. The tiles draw LOD1.
+- 24 tiles: 526,448 to 528,848.
+- Draw calls are unchanged: 90, 228 and 1148; 44 draws per tile.
+- These totals are lower than the Lion's above because the host changed between the two runs; compare before and after within one car.
+
+## Defects found and fixed
+
+1. **The fascia didn't fit on the nose.** The fitted nose had its centre crown 10 cm below its corners (a V-shaped top), so a flat grille or lamp cut into it. The nose top is now flat at 0.78 m, and the fascia is projected onto the body rather than drawn on one plane.
+2. **Projected decals sank into the curved corners** (fragmented lamps, tail lamps drawn as broken pieces). LOD0 cuts them into 6 cm cells; LOD1 and LOD2, which can't afford cells, lift them 2-2.5 cm off the surface.
+3. **The LED slots spread over the corner** as white blocks in the 3/4 view. They moved in to the nose's flat face.
+4. **The C graphic's leg hid under the front flare.** It moved back behind the arch, matching its place relative to the wheel on the sheet.
+5. **The pinstripe's paint gap read as a white line.** At 1.2 cm, every texel in it was a filtered blend of the paint key and black, so none was tinted. It is now 3.5 cm.
+6. **The diffuser was wider than the fitted tail** and stuck out at the sides; the tail lamps wrapped too far. Both were rescaled to the optimiser's narrower tail.
+7. **LOD2's three-segment flares read as flaps.** LOD2 has no flares.
+8. **LOD1 came to 948 triangles, over its 900 budget.** 8-sided tyres, no bay boxes and coarser lamp cells bring it to 896.
+9. **The front flare reached behind the front cut line onto the door**, so LOD0's front pivot sat 9 cm behind LOD2's front edge (tools/vehicles/test/pivots.test.mjs failed). The flares now stop at the cut lines.
+10. **The mirrors would have widened the hull** to ±1.08 m. They are decoration now, as are the wing tips; the hull is ±0.995 m.
+
+## Remaining defects
+
+- **The wheels are too big for the sheet.** The sheet's tyres are about 0.35 m in radius; the model keeps the sim's 0.40 m and 0.84 m track (the owner's call: no handling change).
+- **The stripes' and C graphic's edges read light grey** in the viewer and on the host, most at small sizes (br-vhtm, renderer-wide). On the sheet they are crisp black on blue.
+- **The front view is taller and narrower than the sheet's** in the evaluator (front IoU 0.948 to 0.934), and the lamps sit a little lower in the face than the sheet's.
+- **The lower intake's honeycomb is three bars,** and the boot lid's panel line and the bonnet's crease lines are not modelled.
+- **LOD2's stripes break on the tail's top chamfer,** where its coarse surface curves away from the decal.
+- **The diffuser hangs a few centimetres below the tail** and reads as a black skirt from low rear angles.
+
+## Not covered
+
+- **A Hawk-only close-up in a live round.** The host captures are the synthetic mixed grid.
+- **The jj-sim roster tests on the new hull:** CI runs them. The jj-procgen handling test passed through RCH, including the Hawk.
+- **Real phones and a real TV.**
+- **The owner's verdict on recognisability.**
+- **The Cruz Missile, Tradie Ute, Pig Catcher and Postie Bike.** The bead continues with them.
