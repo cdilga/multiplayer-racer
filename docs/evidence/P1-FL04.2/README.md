@@ -114,12 +114,22 @@ Fixtures moved, each with its reason (also in the fixture's own `what`):
 
 ## Known gaps
 
-- Not yet felt by a player. The punch, slide angle, turn rate and caps are profile data, tunable in `?tune`.
+- Felt by the owner on 2026-10-17 (below). The punch, slide angle, turn rate and caps are profile data, tunable in `?tune`.
 - The bikes keep Rapier's side friction (no `arcade` block): they are their own thing.
 
 ## Owner verdict
 
-Pending the couch test. The preview to judge is **`preview/v02-64d40dd7`**: the arcade controller is the default for every
+**2026-10-17, owner playtest of the latest preview (the arcade controller as the default, after `v02-64d40dd7`):**
+"Generally moving in the right direction! Had issues with the in flight jump stuff, it was easiest to just keep the
+throttle pinned, I expected actual physics to apply (spinning wheel faster in air would drop rear, brake would rotate
+forward?) and there were some issues when landing and colliding which kinda re launched the car into the air in a strange
+way. Generally this point is 'fun' though and I'm happy to see the changes." Earlier the same day: "cars look good now".
+
+The handling itself is accepted as fun. The two issues raised are separate beads, both handed off on 2026-10-17:
+air pitch from throttle and brake (br-bbki.24, P1-FL07b) and the landing/colliding relaunch, which was guard rails acting
+as ramps (br-bbki.25, P1-FL07c).
+
+The preview judged before that was **`preview/v02-64d40dd7`**: the arcade controller is the default for every
 car, along with FL05, FL06, FL07 and FL12's Ute climb (ee5f1619).
 
 Don't use `v02-22502cef`. It has the arcade controller too, but its Ute can ride up a verge bank at speed and roll
