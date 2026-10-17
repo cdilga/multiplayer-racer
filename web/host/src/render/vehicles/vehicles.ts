@@ -51,10 +51,17 @@ export function lodForTileHeight(px: number): number {
   return px >= 540 ? 0 : px >= 200 ? 1 : 2;
 }
 
-/** Shows only LOD class `lod` (plus the world) to this camera. */
+/** The world's fine detail (the full-resolution terrain, roadside scatter and wayfinding) and its coarse stand-in (a
+ *  low-resolution terrain). A tile too small for more than the lowest car LOD sees the coarse one: a 120-tile host drew
+ *  every scatter instance and the full terrain in every 160 px tile (180 M triangles a frame, br-jv69). */
+export const DETAIL_LAYER = 1 + LOD_CLASSES;
+export const COARSE_LAYER = 2 + LOD_CLASSES;
+
+/** Shows only LOD class `lod` (plus the world, in detail for LOD0/1 and coarse for LOD2) to this camera. */
 export function useLod(camera: Camera, lod: number): void {
   camera.layers.set(0);
   camera.layers.enable(lodLayer(lod));
+  camera.layers.enable(lod >= LOD_CLASSES - 1 ? COARSE_LAYER : DETAIL_LAYER);
 }
 
 const MAX_STEER = (25 * Math.PI) / 180;

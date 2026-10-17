@@ -24,6 +24,7 @@ import {
   type Scene,
 } from 'three';
 import { colliderSize, ENTRIES, MODULES, withDefaults } from '../kit/registry';
+import { COARSE_LAYER, DETAIL_LAYER } from '../vehicles/vehicles';
 import type { Params } from '../kit/types';
 import type { Frame } from '../snapshot';
 import { InkHull, toon } from '../look';
@@ -246,7 +247,7 @@ export class MapRenderer {
     opts: { repeat?: number } = {},
   ) {
     this.group.name = 'map';
-    this.group.add(this.terrain(), this.route(), this.features());
+    this.group.add(this.terrain(), this.coarseTerrain(), this.route(), this.features());
     const kitInstances = this.dressing(opts.repeat ?? 1);
     const banner = finishBanner(map);
     if (banner) this.group.add(...banner);
@@ -298,6 +299,31 @@ export class MapRenderer {
     }
     const m = s.mesh(this.material);
     m.name = 'terrain';
+    m.layers.set(DETAIL_LAYER);
+    return m;
+  }
+
+  /** The terrain for tiles too small for detail (`COARSE_LAYER`): one quad per block of cells, at most ~4000 blocks,
+   *  each painted as its corner sample (br-jv69). */
+  private coarseTerrain(): Mesh {
+    const t = this.map.terrain;
+    const k = Math.max(1, Math.ceil(Math.sqrt(((t.cols - 1) * (t.rows - 1)) / 4000)));
+    const s = new Soup();
+    const at = (i: number, j: number) => i * t.cols + j;
+    const x = (j: number) => mm(t.originX + j * t.spacing);
+    const z = (i: number) => mm(t.originZ + i * t.spacing);
+    const h = (i: number, j: number) => t.heights[at(i, j)]! / 100;
+    const paint = (i: number, j: number) => (ROAD_SURFACES.has(t.surfaces[at(i, j)]!) ? SURFACE_COLOURS['off-track']! : SURFACE_COLOURS[t.surfaces[at(i, j)]!] ?? SURFACE_COLOURS['off-track']!);
+    for (let i = 0; i + 1 < t.rows; i += k) {
+      const i1 = Math.min(i + k, t.rows - 1);
+      for (let j = 0; j + 1 < t.cols; j += k) {
+        const j1 = Math.min(j + k, t.cols - 1);
+        s.quad([x(j), h(i, j), z(i)], [x(j), h(i1, j), z(i1)], [x(j1), h(i1, j1), z(i1)], [x(j1), h(i, j1), z(i)], paint(i, j));
+      }
+    }
+    const m = s.mesh(this.material);
+    m.name = 'terrain-coarse';
+    m.layers.set(COARSE_LAYER);
     return m;
   }
 
@@ -748,6 +774,8 @@ export class MapRenderer {
       if (!entry || !mod) throw new Error(`no kit module for ${id}`);
       const im = new InstancedMesh(mod.geometry(), this.material, list.length);
       im.name = id;
+      // Roadside scatter and wayfinding are fine detail: tiles too small for them don't draw them (br-jv69).
+      if (id.startsWith('outback_dirt/') || id.startsWith('wayfinding/')) im.layers.set(DETAIL_LAYER);
       im.castShadow = true;
       im.receiveShadow = true;
       im.frustumCulled = false;
