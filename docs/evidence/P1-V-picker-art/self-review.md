@@ -29,5 +29,16 @@ drew every car except the Cruz as a flat SVG silhouette (the stand-in shape the 
 - `picker-portrait-390x844.png`: the same in portrait. Before the 3:2 box, the Pig Catcher's tall render pushed the
   buttons down; after it, the panels match and only the blurb length varies.
 
-Known gap: the renders use the default cyan paint, not the player's seat colour (the silhouette was tinted). The seat
-colour shows elsewhere on the phone.
+## Defects found and fixed
+
+- The first renders faced right while the Cruz brand render faces left: the hero camera moved to the car's other side.
+- Portrait: the Pig Catcher's tall render pushed Use this vehicle down; the big render now sits in a 3:2 box.
+
+## Remaining defects
+
+- None seen in the captures.
+
+## Not covered
+
+- The renders use the default cyan paint, not the player's seat colour (the silhouette was tinted); the seat colour shows
+  elsewhere on the phone. WebKit was not run for this journey.
