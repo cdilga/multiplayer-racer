@@ -79,6 +79,7 @@ interface SeatState {
    *  spring, quick up and slow down, never under the line-of-sight floor, so relief never makes it pop (br-gw74.14.1). */
   groundLift: number;
   groundLiftRate: number;
+  groundWant: number;
 }
 
 const UP = new Vector3(0, 1, 0);
@@ -107,7 +108,7 @@ export class CameraRig {
   private seat(id: number): SeatState {
     let s = this.seats.get(id);
     if (!s) {
-      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null, groundLift: 0, groundLiftRate: 0 };
+      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null, groundLift: 0, groundLiftRate: 0, groundWant: 0 };
       this.seats.set(id, s);
     }
     return s;
@@ -291,11 +292,14 @@ export class CameraRig {
     for (let k = 0; k <= 4; k++) want = Math.max(want, solve(0.2 + R.groundHeadroomM, (k / 4) * R.groundLookAheadS));
     const floor = solve(0.2);
     if (cut) {
+      s.groundWant = want;
       s.groundLift = want;
       s.groundLiftRate = 0;
     } else {
-      const om = want > s.groundLift ? R.groundRise : R.groundSettle;
-      s.groundLiftRate += (om * om * (want - s.groundLift) - 2 * om * s.groundLiftRate) * dt;
+      // A first-order smoothing of the aim ahead of the spring: together third order, so the camera's jerk stays finite.
+      s.groundWant += (want - s.groundWant) * (1 - Math.exp(-dt / R.groundAimS));
+      const om = s.groundWant > s.groundLift ? R.groundRise : R.groundSettle;
+      s.groundLiftRate += (om * om * (s.groundWant - s.groundLift) - 2 * om * s.groundLiftRate) * dt;
       s.groundLift += s.groundLiftRate * dt;
     }
     if (s.groundLift < floor) {
