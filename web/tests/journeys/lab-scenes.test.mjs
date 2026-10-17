@@ -47,8 +47,7 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  // Quarantined (CI owner, red budget): P0 br-51rx, it hangs since FL12's climb scene (c2dbb172).
-  test(`${name}: every lab scene's runs match native in the real worker and renderer`, { timeout: 1_800_000, skip: 'quarantined: P0 br-51rx (hangs since the climb scene)' }, async () => {
+  test(`${name}: every lab scene's runs match native in the real worker and renderer`, { timeout: 1_800_000 }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [], rows = [];
     try {
@@ -82,13 +81,22 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         // half second off the ground, if it has one.
         const ticks = c.native.ticks ?? c.fixture.ticks;
         const page = await open();
-        await page.evaluate(async ({ fixture, mapJson }) => { await window.__jjTest.load(fixture, mapJson); }, { fixture: c.fixture, mapJson: c.mapJson });
-        let takeoff = null, t = 0;
-        for (; t < ticks && takeoff === null; t += 6) {
-          const s = await page.evaluate(async () => { await window.__jjTest.step(6); return window.__jjTest.observe(); });
-          if (s.cars[0].wheelsInContact === 0 && s.tick > TICK_HZ / 2) takeoff = s.tick;
-        }
-        await page.evaluate(async n => window.__jjTest.step(n), ticks - Math.min(t, ticks));
+        // In one page call with the renderer held (br-51rx): a run that never leaves the ground (the climb and hairpin
+        // laps, ~6000 ticks) took a round trip and a software-GL frame per 6 ticks and outlived the CI timeout.
+        const takeoff = await page.evaluate(async ({ fixture, mapJson, ticks, hz }) => {
+          window.__jjRender.hold();
+          await window.__jjTest.load(fixture, mapJson);
+          let takeoff = null, t = 0;
+          // Never past the native run's ticks (a lap that never leaves the ground ends on a tick that 6 needn't divide).
+          for (let n = 6; t < ticks && takeoff === null; t += n) {
+            n = Math.min(6, ticks - t);
+            await window.__jjTest.step(n);
+            const s = await window.__jjTest.observe();
+            if (s.cars[0].wheelsInContact === 0 && s.tick > hz / 2) takeoff = s.tick;
+          }
+          await window.__jjTest.step(ticks - Math.min(t, ticks));
+          return takeoff;
+        }, { fixture: c.fixture, mapJson: c.mapJson, ticks, hz: TICK_HZ });
         const final = await page.evaluate(async () => ({ hash: await window.__jjTest.hash(), state: await window.__jjTest.observe() }));
         assert.equal(final.hash.stateHash, c.native.stateHash, `${c.run}: WASM matches native`);
         await page.close();
