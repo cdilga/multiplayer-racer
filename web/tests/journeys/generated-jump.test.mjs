@@ -149,23 +149,30 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         rows.push({ file, state: 'side-air', width: 1366, height: 768, tick: air.tick });
         // br-gw74.13.1.1.1: the host's own overview (whole-lap scale): the jump reads as a jump and the car's label stands
         // beside the car in the air, not over it or the jump.
+        // Its own page: WebKit reports the first page's in-flight audio fetches, cancelled by a navigation, as page errors.
         const over = new URL(page.url());
         over.searchParams.delete('orbit'); over.searchParams.delete('tiles'); over.searchParams.delete('camdist');
-        await page.goto(over.href);
-        await page.waitForFunction(() => window.__jjTest && window.__jjRender);
-        await page.evaluate(async ({ fixture, mapJson }) => {
+        const ov = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+        ov.on('pageerror', e => errors.push(e.message));
+        await ov.route('**/generated-jump.json', r => r.fulfill({ contentType: 'application/json', body: mapJson }));
+        await ov.goto(over.href);
+        await ov.waitForFunction(() => window.__jjTest && window.__jjRender);
+        await ov.evaluate(async ({ fixture, mapJson }) => {
           await window.__jjTest.load(fixture, mapJson);
           await window.__jjTest.step(180);
         }, { fixture, mapJson });
-        await page.waitForFunction(() => !document.querySelector('#jj-caption')?.textContent, undefined, { timeout: 20_000 });
+        await ov.waitForFunction(() => !document.querySelector('#jj-caption')?.textContent, undefined, { timeout: 20_000 });
         for (const [width, height] of [[1920, 1080], [1366, 768]]) {
-          await page.setViewportSize({ width, height });
-          await paint(20);
-          const lab = await labelClear(page);
+          await ov.setViewportSize({ width, height });
+          await ov.evaluate(async () => {
+            for (let i = 0; i < 20; i++) { window.__jjRender.frame(); await new Promise(r => setTimeout(r, 16)); }
+            window.__jjRender.hold();
+          });
+          const lab = await labelClear(ov);
           assert.ok(lab.labelled, 'the overview labels the car');
           assert.deepEqual(lab.covered, [], `${width}x${height}: the label covers neither the car nor the jump around it: ${JSON.stringify(lab)}`);
           const file = `${name}-overview-air-${width}x${height}.jpg`;
-          await page.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
+          await ov.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
           rows.push({ file, state: 'overview-air', width, height, tick: air.tick });
         }
       }
