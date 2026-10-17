@@ -185,9 +185,12 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 }
 
 /* review fixes (P1-U03 round 2) */
-.menusheet { position: absolute; inset: 0; z-index: 5; overflow: auto; padding: 16px; background: rgb(21 32 58 / .97); }
-/* More below (owner playtest 1: a cut-off row read as broken): the bottom edge fades until you've scrolled to the end. */
-.menusheet[data-more] { mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), rgb(0 0 0 / .15)); }
+.menusheet { position: absolute; inset: 0; z-index: 5; overflow: auto; padding: 16px; background: rgb(21 32 58); }
+/* More below (owner playtest 1: a cut-off row read as broken): the bottom edge fades until you've scrolled to the end.
+   The fade is painted in the sheet's own colour over its content (a sticky strip), never a see-through mask: a mask let
+   the Ready banner and the device tray behind the sheet show through it (br-0lua). */
+.menusheet[data-more]::after { content: ''; display: block; position: sticky; bottom: -16px; height: 48px; margin: -48px -16px -16px;
+  background: linear-gradient(to bottom, rgb(21 32 58 / 0), rgb(21 32 58)); pointer-events: none; }
 .menusheet h2 { margin: 0 0 10px; font-size: 26px; }
 .banner { pointer-events: none; }
 .zone.action .knob { border-radius: 18px; display: grid; place-items: center; }
