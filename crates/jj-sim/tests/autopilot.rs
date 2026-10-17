@@ -5,9 +5,7 @@
 //! - It recovers itself after being stuck 3 s, and its state (target, look-ahead) is introspectable.
 
 use jj_map::{LoadedMap, Registry, load_json};
-use jj_sim::autopilot::{
-    HANDBACK_TICKS, MAX_SPEED, MIN_LOOK_AHEAD_M, MIN_SPEED, Mode, STUCK_TICKS, is_deliberate,
-};
+use jj_sim::autopilot::{HANDBACK_TICKS, MIN_LOOK_AHEAD_M, Mode, STUCK_TICKS, is_deliberate};
 use jj_sim::race::{Event, Respawned};
 use jj_sim::{CarId, DriveInput, Journal, Sim, SpawnPose, TICK_HZ, VehicleProfile};
 use jj_types::axis::{dequantise_axis, quantise_axis};
@@ -195,7 +193,9 @@ fn it_recovers_itself_after_being_stuck_3_s_and_its_state_is_introspectable() {
         "target {d} m ahead, look-ahead {}",
         a.look_ahead_m
     );
-    assert!((MIN_SPEED..=MAX_SPEED).contains(&a.target_speed));
+    // br-4tbo: the plan is data, up to a share of the car's own top speed.
+    let plan = jj_sim::assist::AssistProfile::standard().speed_plan(&VehicleProfile::cruz());
+    assert!((plan.min_speed..=plan.max_speed).contains(&a.target_speed));
     while !s.race().events().iter().any(|(_, e)| {
         matches!(
             e,

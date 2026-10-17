@@ -505,6 +505,19 @@ impl VehicleProfile {
         [x, y - self.tuning.com_lower_m, z]
     }
 
+    /// The car's flat-road top speed, m/s: where the engine's power (or its force, without a power limit) meets the
+    /// linear drag (`m × c × v`). What the autopilot plans up to (br-4tbo).
+    pub fn top_speed_mps(&self) -> f32 {
+        let t = &self.tuning;
+        let drag = t.mass * t.linear_damping.max(1e-3);
+        let by_force = t.max_engine_force / drag;
+        if t.max_engine_power_w > 0.0 {
+            libm::sqrtf(t.max_engine_power_w / drag).min(by_force)
+        } else {
+            by_force
+        }
+    }
+
     pub fn steer_lock(&self, speed: f32) -> f32 {
         self.tuning.max_steer_rad / (1.0 + speed.abs() / self.tuning.steer_falloff_mps)
     }

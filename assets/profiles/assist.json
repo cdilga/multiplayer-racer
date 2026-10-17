@@ -1,6 +1,6 @@
 {
   "contract": "jj-assist/1",
-  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side (P1-FL06: they carry the stability on the arcade handling; Lots catches slides, Some damps them, Off is the raw car): they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input with the line pull (the slide catch alone acts on a slide under any stick), and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
+  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side (P1-FL06: they carry the stability on the arcade handling; Lots catches slides, Some damps them, Off is the raw car): they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input with the line pull (the slide catch alone acts on a slide under any stick), and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. The autopilot (bots, idle and finished cars) plans up to topSpeedShare of each car's own top speed and holds to takeoffMps on a jump's ramp (br-4tbo). Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
   "line": {
     "lookAheadS": 0.8,
     "minLookAheadM": 6.0,
@@ -45,6 +45,15 @@
     "upBelow": 0.2,
     "speedBelowMps": 2.0,
     "doneAbove": 0.7
+  },
+  "autopilot": {
+    "lateralGrip": 7.0,
+    "turnShare": 0.3,
+    "skill": 0.9,
+    "planBrake": 10.0,
+    "minSpeed": 4.0,
+    "topSpeedShare": 0.85,
+    "takeoffMps": 34.0
   },
   "catchUp": {
     "referenceSpeedMps": 20.0,

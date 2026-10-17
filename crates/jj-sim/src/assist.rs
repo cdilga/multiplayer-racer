@@ -145,6 +145,23 @@ pub struct CatchUpTuning {
     pub boost_refill: f32,
 }
 
+/// The autopilot's speed plan (bots, idle and finished cars; br-4tbo): it plans up to a share of each car's own top
+/// speed, so filler bots keep up with the arcade cars, and holds to `takeoffMps` on a jump's ramp.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AutopilotTuning {
+    /// The cornering grip the plan assumes (m/s²) for a car without the arcade controller (the bikes).
+    pub lateral_grip: f32,
+    /// An arcade car corners at this share of its authored turn (`arcade.turnG` × g).
+    pub turn_share: f32,
+    pub skill: f32,
+    pub plan_brake: f32,
+    pub min_speed: f32,
+    /// The plan's ceiling as a share of the car's top speed (`VehicleProfile::top_speed_mps`).
+    pub top_speed_share: f32,
+    pub takeoff_mps: f32,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Levels {
@@ -164,6 +181,7 @@ struct AssistFile {
     slide: SlideTuning,
     flip: FlipTuning,
     catch_up: CatchUpTuning,
+    autopilot: AutopilotTuning,
 }
 
 /// The assist data, validated.
@@ -176,9 +194,28 @@ pub struct AssistProfile {
     pub slide: SlideTuning,
     pub flip: FlipTuning,
     pub catch_up: CatchUpTuning,
+    pub autopilot: AutopilotTuning,
 }
 
 impl AssistProfile {
+    /// The autopilot's speed plan for a car: up to a share of its top speed, cornering on a share of its own turn.
+    pub fn speed_plan(&self, car: &crate::VehicleProfile) -> crate::autopilot::SpeedPlan {
+        let a = &self.autopilot;
+        let top_speed_mps = car.top_speed_mps();
+        crate::autopilot::SpeedPlan {
+            lateral_grip: car
+                .tuning
+                .arcade
+                .as_ref()
+                .map_or(a.lateral_grip, |arc| a.turn_share * arc.turn_g * 9.81),
+            skill: a.skill,
+            plan_brake: a.plan_brake,
+            min_speed: a.min_speed,
+            max_speed: (a.top_speed_share * top_speed_mps).max(a.min_speed),
+            takeoff_mps: a.takeoff_mps,
+        }
+    }
+
     pub fn from_json(json: &str) -> Result<Self, String> {
         let f: AssistFile =
             serde_json::from_str(json).map_err(|e| format!("bad assist profile: {e}"))?;
@@ -196,6 +233,7 @@ impl AssistProfile {
             slide: f.slide,
             flip: f.flip,
             catch_up: f.catch_up,
+            autopilot: f.autopilot,
         };
         p.validate()?;
         Ok(p)
@@ -245,6 +283,17 @@ impl AssistProfile {
         let f = &self.flip;
         if f.up_below >= f.done_above || f.speed_below_mps < 0.0 {
             return Err("assist flip needs upBelow < doneAbove and speedBelowMps >= 0".into());
+        }
+        let a = &self.autopilot;
+        if a.lateral_grip <= 0.0
+            || !(a.turn_share > 0.0 && a.turn_share <= 1.0)
+            || a.skill <= 0.0
+            || a.plan_brake <= 0.0
+            || a.min_speed <= 0.0
+            || !(a.top_speed_share > 0.0 && a.top_speed_share <= 1.5)
+            || a.takeoff_mps <= a.min_speed
+        {
+            return Err("assist autopilot needs positive grip, skill, planBrake, minSpeed, 0 < topSpeedShare <= 1.5 and takeoffMps > minSpeed".into());
         }
         let c = &self.catch_up;
         if c.reference_speed_mps <= 0.0

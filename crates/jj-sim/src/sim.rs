@@ -1631,10 +1631,16 @@ impl Sim {
             // its spawn protection (ghosted for cars) runs again from now.
             Effect::Roll { car } => {
                 if let Some(st) = self.car_state(CarId(car)) {
+                    let plan = self
+                        .assist_profile
+                        .speed_plan(&self.profiles[self.cars[car as usize].model]);
                     let v = crate::race::RESPAWN_ROLL_FRACTION
-                        * self
-                            .path
-                            .planned_speed(st.position[0], st.position[1], st.position[2]);
+                        * self.path.planned_speed(
+                            st.position[0],
+                            st.position[1],
+                            st.position[2],
+                            &plan,
+                        );
                     // `heading` is libm's (car_state): it feeds the physics here, so native and WASM step bit for bit.
                     let heading = st.heading;
                     let (sin, cos) = (libm::sinf(heading), libm::cosf(heading));
@@ -1913,6 +1919,7 @@ impl Sim {
                         tick,
                         1.0 + self.assist_profile.catch_up.top_speed_gain
                             * catch_shares.get(i).copied().unwrap_or(0.0),
+                        &self.assist_profile.speed_plan(p),
                     );
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost rides on the autopilot's line. Only DRIVE moving counts as taking back over.

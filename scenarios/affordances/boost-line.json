@@ -1,6 +1,6 @@
 {
  "scenario": "boost-line",
- "what": "§7.3a 'go meaningfully faster with boost than without, and boost-forever isn't the best line' (P1-S03b). Two Cruz Missiles lap the greybox on the autopilot's line (it steers, throttles and brakes; their ACTION stick passes through), one from the kerb straight and one from the grid, for 20 s. The driver presses boost on the straights and lets go before the corners, so each burst re-arms and the meter refills between them. Without boost the same line is far slower; holding boost the whole way gets one burst, because an emptied meter only restarts after a release, so it's slower too. Baselines: no input and holding the first input are the same as those; mashing boosts at random. (P1-FL04.2: the grid car's envelope is 335-380 m, was 240-280: on the arcade controller every wheel drives and turns keep their speed, so it reaches 51 m/s on the back straight and, with the autopilot steering through the car's real speed-eased lock, takes the S-bend cleanly: 359 m. The kerb car stays 307 m in 285-325.)",
+ "what": "§7.3a 'go meaningfully faster with boost than without, and boost-forever isn't the best line' (P1-S03b). Two Cruz Missiles lap the greybox on the autopilot's line (it steers, throttles and brakes; their ACTION stick passes through), one from the kerb straight and one from the grid, for 20 s. The driver presses boost on the straights and lets go before the corners, so each burst re-arms and the meter refills between them. Without boost the same line is far slower; holding boost the whole way gets one burst, because an emptied meter only restarts after a release, so it's slower too. Baselines: no input and holding the first input are the same as those; mashing boosts at random. (P1-FL04.2: the grid car's envelope is 335-380 m, was 240-280: on the arcade controller every wheel drives and turns keep their speed, so it reaches 51 m/s on the back straight and, with the autopilot steering through the car's real speed-eased lock, takes the S-bend cleanly: 359 m. The kerb car stays 307 m in 285-325. br-4tbo: the autopilot plans up to 0.85 of the car's top speed, not 26 m/s, cornering on a share of its own turn and braking on a curve, so the kerb car makes 502 m (envelope 475-525) and the grid car stays in 405-455.)",
  "map": "maps/greybox-loop.json",
  "seed": 53,
  "ticks": 2400,
@@ -68,14 +68,14 @@
   {
    "car": 0,
    "metric": "progressM",
-   "min": 285.0,
-   "max": 325.0
+   "min": 475.0,
+   "max": 525.0
   },
   {
    "car": 1,
    "metric": "progressM",
-   "min": 335.0,
-   "max": 380.0
+   "min": 405.0,
+   "max": 455.0
   },
   {
    "car": 0,

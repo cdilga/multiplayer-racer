@@ -4,8 +4,9 @@
 //! - **Pure pursuit** on the map's centerline. The look-ahead is ≈ 0.8 s × speed (at least [`MIN_LOOK_AHEAD_M`]), and
 //!   steering is the pursuit curvature turned into a wheel angle with the car's wheelbase. Route tracking only searches
 //!   forward from the last point, so a crossing or a nearby stretch of the loop can't pull it across.
-//! - **Speed** comes from the sharpest curvature ahead: `0.7 × √(a_lat / κ)` (low skill), clamped. A cool-down lap
-//!   (finished cars) goes at 0.6 of that.
+//! - **Speed** comes from the sharpest curvature ahead: `skill × √(a_lat / κ)`, clamped to the car's own ceiling (a share
+//!   of its top speed, br-4tbo: the arcade cars reach ~50 m/s) and held to a jump's take-off speed on its ramp. The plan
+//!   is data ([`SpeedPlan`], `assets/profiles/assist.json` `autopilot`). A cool-down lap (finished cars) goes at 0.6 of it.
 //! - **Forks** (P1-FL16). A route fork's branch is a line of its own. Approaching a split, a car takes the branch when
 //!   its index plus the forks it has met, plus a bit drawn from the sim seed and the fork, is odd: half of any pack
 //!   takes each way, and each car alternates from one pass to the next (R29). It pursues the branch from the split and
@@ -31,14 +32,7 @@ use crate::sim::TICK_HZ;
 const SECOND: u64 = TICK_HZ as u64;
 pub const LOOK_AHEAD_S: f32 = 0.8;
 pub const MIN_LOOK_AHEAD_M: f32 = 6.0;
-/// Lateral grip the speed plan assumes (m/s²), before the skill factor.
-pub const LATERAL_GRIP: f32 = 7.0;
-pub const SKILL: f32 = 0.7;
 pub const COOL_DOWN: f32 = 0.6;
-pub const MIN_SPEED: f32 = 4.0;
-pub const MAX_SPEED: f32 = 26.0;
-/// Braking the speed plan assumes when it looks ahead for a corner (m/s²).
-pub const PLAN_BRAKE: f32 = 6.0;
 pub const STUCK_SPEED: f32 = 1.0;
 pub const STUCK_TICKS: u64 = 3 * SECOND;
 pub const HANDBACK_TICKS: u64 = SECOND / 4;
@@ -47,6 +41,47 @@ pub const NOISE_STEER: f32 = 0.04;
 pub const NOISE_EVERY_TICKS: u64 = SECOND / 4;
 /// An axis has to move this much (of full scale) between two inputs to count as deliberate.
 pub const DELIBERATE_AXIS: f32 = 0.25;
+
+/// How fast the autopilot plans to go (br-4tbo): one car's, from the assist data and its profile's top speed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SpeedPlan {
+    /// Lateral grip the plan assumes (m/s²), before the skill factor.
+    pub lateral_grip: f32,
+    pub skill: f32,
+    /// Braking the plan assumes when it looks ahead for a corner (m/s²).
+    pub plan_brake: f32,
+    pub min_speed: f32,
+    /// The car's ceiling (m/s).
+    pub max_speed: f32,
+    /// On a jump's ramp the plan holds to this (m/s): generated jumps are built for a take-off speed.
+    pub takeoff_mps: f32,
+}
+
+/// What a route point asks of the plan: nothing, a jump's take-off speed, or a gap leap's own speed (the top of the
+/// window it is built for).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum RampCap {
+    None,
+    Jump,
+    Leap(f32),
+}
+
+impl SpeedPlan {
+    /// The speed this plan allows at a point of curvature `k` (1/m), on a jump's ramp or not.
+    pub fn cap(&self, k: f32, ramp: RampCap) -> f32 {
+        let mut v = if k > 1e-4 {
+            self.skill * libm::sqrtf(self.lateral_grip / k)
+        } else {
+            self.max_speed
+        };
+        match ramp {
+            RampCap::None => {}
+            RampCap::Jump => v = v.min(self.takeoff_mps),
+            RampCap::Leap(mps) => v = v.min(mps),
+        }
+        v.clamp(self.min_speed, self.max_speed)
+    }
+}
 
 /// The centerline as the autopilot sees it: points (m), arc lengths and curvature at each point (1/m).
 #[derive(Clone, Debug)]
@@ -58,6 +93,8 @@ pub struct Path {
     curvature: Vec<f32>,
     total: f32,
     branches: Vec<Branch>,
+    /// Route points on a jump's or a gap leap's run-up and ramp, where the plan holds to its take-off speed.
+    takeoff: Vec<RampCap>,
 }
 
 /// A route fork's branch (jj-map `fork::path`): it leaves the route at point `from` and rejoins it at `to`.
@@ -170,6 +207,15 @@ impl Path {
             curvature,
             total,
             branches,
+            takeoff: takeoff_points(map, n),
+        }
+    }
+
+    /// What the point under a cursor asks of the plan (branches carry no jumps).
+    fn takeoff_at(&self, c: Cursor) -> RampCap {
+        match c {
+            Cursor::Route(i) => self.takeoff[i],
+            Cursor::Branch(..) => RampCap::None,
         }
     }
 
@@ -247,24 +293,19 @@ impl Path {
 
     /// The speed the autopilot plans at (x, z) from a standing start: the tightest curvature within its braking horizon
     /// at full speed sets it, as `drive` does (R125's rolling respawn starts from a fraction of it).
-    pub fn planned_speed(&self, x: f32, y: f32, z: f32) -> f32 {
+    pub fn planned_speed(&self, x: f32, y: f32, z: f32, plan: &SpeedPlan) -> f32 {
         let n = self.n();
         let idx = self.nearest(x, y, z);
-        let horizon = MAX_SPEED * MAX_SPEED / (2.0 * PLAN_BRAKE);
-        let (mut k_max, mut p) = (0.0f32, idx);
+        let horizon = plan.max_speed * plan.max_speed / (2.0 * plan.plan_brake);
+        let (mut v, mut p) = (plan.max_speed, idx);
         while self.ahead(idx, p) <= horizon {
-            k_max = k_max.max(self.curvature[p]);
+            v = v.min(plan.cap(self.curvature[p], self.takeoff[p]));
             p = (p + 1) % n;
             if p == idx {
                 break;
             }
         }
-        if k_max > 1e-4 {
-            SKILL * libm::sqrtf(LATERAL_GRIP / k_max)
-        } else {
-            MAX_SPEED
-        }
-        .clamp(MIN_SPEED, MAX_SPEED)
+        v.clamp(plan.min_speed, plan.max_speed)
     }
 }
 
@@ -473,6 +514,7 @@ impl Autopilot {
         wheelbase: f32,
         tick: u64,
         speed_scale: f32,
+        plan: &SpeedPlan,
     ) -> (DriveInput, bool) {
         let n = path.n();
         // On a branch: follow it to its last point, then the route from its merge.
@@ -523,8 +565,8 @@ impl Autopilot {
             Some((b, j)) => Cursor::Branch(b, j),
             None => Cursor::Route(idx),
         };
-        // Walks the line the car drives from `start` until `until` metres, calling `each` with every point's curvature.
-        let walk = |until: f32, each: &mut dyn FnMut(f32)| {
+        // Walks the line the car drives from `start` until `until` metres, calling `each` with every point's planned cap.
+        let walk = |until: f32, each: &mut dyn FnMut(f32, f32)| {
             let (mut c, mut gone) = (start, 0.0f32);
             for _ in 0..n * 2 {
                 let next = path.next(c, takes);
@@ -535,13 +577,13 @@ impl Autopilot {
                 }
                 gone += step;
                 c = next;
-                each(path.at(c).1);
+                each(plan.cap(path.at(c).1, path.takeoff_at(c)), gone);
             }
             c
         };
         let speed = car.forward_speed.max(0.0);
         let look = (LOOK_AHEAD_S * speed).max(MIN_LOOK_AHEAD_M);
-        let target = path.at(walk(look, &mut |_| {})).0;
+        let target = path.at(walk(look, &mut |_, _| {})).0;
         // Pure pursuit: the angle to the target in the car's frame (+ = to its left, +x when facing +z).
         let (sh, ch) = (libm::sinf(car.heading), libm::cosf(car.heading));
         let (dx, dz) = (target.0 - car.x, target.1 - car.z);
@@ -555,16 +597,13 @@ impl Autopilot {
         self.noise_now += (self.noise_target - self.noise_now) * 0.05;
         let steer = (wheel / max_steer + self.noise_now).clamp(-1.0, 1.0);
         // The speed plan: the sharpest bend within stopping distance plus the look-ahead.
-        let horizon = speed * speed / (2.0 * PLAN_BRAKE) + look;
-        let mut k_max = path.at(start).1;
-        walk(horizon, &mut |k| k_max = k_max.max(k));
-        let mut target_speed = if k_max > 1e-4 {
-            SKILL * libm::sqrtf(LATERAL_GRIP / k_max)
-        } else {
-            MAX_SPEED
-        }
-        .clamp(MIN_SPEED, MAX_SPEED)
-            * speed_scale;
+        let horizon = speed * speed / (2.0 * plan.plan_brake) + look;
+        // Braking on a curve, not at sight: each point's cap reached from here at the planned braking (v² = cap² + 2·a·d).
+        let mut cap = plan.cap(path.at(start).1, path.takeoff_at(start));
+        walk(horizon, &mut |v, d| {
+            cap = cap.min(libm::sqrtf(v * v + 2.0 * plan.plan_brake * d));
+        });
+        let mut target_speed = cap * speed_scale;
         if self.mode == Mode::CoolDown {
             target_speed *= COOL_DOWN;
         }
@@ -641,4 +680,43 @@ pub fn is_deliberate(previous: DriveInput, now: DriveInput) -> bool {
     moved(previous.throttle, now.throttle)
         || moved(previous.steer, now.steer)
         || moved(previous.brake, now.brake)
+}
+
+/// Route points from a jump's base to its lip, and a gap leap's run-up to its far rim, with what each asks of the plan.
+fn takeoff_points(map: &LoadedMap, n: usize) -> Vec<RampCap> {
+    let mut out = vec![RampCap::None; n];
+    let m = &map.map;
+    for f in &m.features {
+        // Route points are ~2.5 m apart; a few before the base so the car is at the speed as it meets the ramp.
+        let (from, to, cap) = if let Some(g) = jj_map::setpiece::GapLeap::of(f) {
+            // The top of the window the piece is built and checked for: a bot at the middle of it came off the lip
+            // slower still (the ramp takes speed) and fell short of a creek washout.
+            (
+                g.from as usize + n - 4,
+                g.to as usize,
+                RampCap::Leap(g.max_speed as f32),
+            )
+        } else if f.kind == jj_map::model::FeatureKind::Jump {
+            let Some(d) = jj_map::jump::JumpDesign::of(f) else {
+                continue;
+            };
+            let base = jj_map::jump::feature_base(m, f);
+            (
+                base + n - 4,
+                base + (d.ramp_m / 2.5).ceil() as usize,
+                RampCap::Jump,
+            )
+        } else {
+            continue;
+        };
+        let mut i = from % n;
+        loop {
+            out[i] = cap;
+            if i == to % n {
+                break;
+            }
+            i = (i + 1) % n;
+        }
+    }
+    out
 }

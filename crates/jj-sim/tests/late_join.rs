@@ -39,6 +39,7 @@ fn run(
     husk: bool,
     debris: bool,
     parked: usize,
+    pack_s: f32,
 ) -> (f32, [f32; 3], bool) {
     let mut sim = Sim::new(map, &Registry::generic(), 7, VehicleProfile::cruz());
     let ids = sim.spawn_grid(11);
@@ -46,9 +47,9 @@ fn run(
     for &c in &ids {
         sim.set_autopilot(c, true);
     }
-    // The pack runs for 6 s, then car 5 wrecks (its first husk) and stands at its anchor with its controller idle: it is the
+    // The pack runs for `pack_s` (6 s before br-4tbo's faster autopilot took the pack past the straight), then car 5 wrecks (its first husk) and stands at its anchor with its controller idle: it is the
     // last racer, and standing still it pins the newcomer's target, so the scene built there stays where the placement looks.
-    for _ in 0..6 * S {
+    for _ in 0..(pack_s * S as f32) as u64 {
         sim.step();
     }
     sim.set_autopilot(ids[5], false);
@@ -61,7 +62,12 @@ fn run(
         .drop_in_progress(sim.tick())
         .expect("history to place a drop-in by");
     let target = Some(sim.race().finish_s() + p).filter(|x| (lo..140.0).contains(x));
-    let tx = target.expect("the drop-in lands on the straight");
+    let tx = target.unwrap_or_else(|| {
+        panic!(
+            "the drop-in lands on the straight: {} (from {lo})",
+            sim.race().finish_s() + p
+        )
+    });
     if husk {
         // A wreck exactly where the newcomer would be placed: its husk stays as a dynamic body.
         sim.set_autopilot(ids[5], false);
@@ -175,7 +181,7 @@ fn a_late_joiner_into_a_crowd_with_a_husk_and_debris_drives_away() {
         (true, true, 2),
         (true, true, 4),
     ] {
-        let (driven, end, protected) = run(&greybox(), &[], 20.0, husk, debris, parked);
+        let (driven, end, protected) = run(&greybox(), &[], 20.0, husk, debris, parked, 3.0);
         assert!(
             driven > 20.0,
             "husk {husk} debris {debris} parked {parked}: the newcomer drove only {driven:.1} m in 4 s (ends at {end:?}, protected {protected})"
@@ -225,7 +231,7 @@ fn narrow_road() -> (LoadedMap, Vec<Rect>) {
 fn on_a_narrow_road_the_newcomer_is_placed_clear_of_the_barriers_too() {
     let (map, barriers) = narrow_road();
     // The husk takes the line (lateral 0), so the search goes sideways or back; sideways is inside a barrier here.
-    let (driven, end, protected) = run(&map, &barriers, 110.0, true, false, 0);
+    let (driven, end, protected) = run(&map, &barriers, 110.0, true, false, 0, 4.0);
     assert!(
         driven > 20.0,
         "the newcomer drove only {driven:.1} m in 4 s (ends at {end:?})"
