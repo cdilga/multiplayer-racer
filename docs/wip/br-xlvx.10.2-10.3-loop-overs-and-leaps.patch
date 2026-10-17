@@ -1,5 +1,5 @@
 diff --git a/assets/profiles/generator.json b/assets/profiles/generator.json
-index 1c555124..a7807e47 100644
+index 1c555124..7d5eeff8 100644
 --- a/assets/profiles/generator.json
 +++ b/assets/profiles/generator.json
 @@ -93,6 +93,17 @@
@@ -16,7 +16,7 @@ index 1c555124..a7807e47 100644
 +      "radiusM": [52.0, 75.0],
 +      "clearM": 90.0,
 +      "leapClearM": 180.0,
-+      "leapBeforeM": 0.0
++      "leapBeforeM": 130.0
      }
    },
    "biomes": {
@@ -48,17 +48,19 @@ index 1c555124..a7807e47 100644
              "heightM": [2, 5],
              "radiusM": [10, 16],
 diff --git a/assets/profiles/overpass.json b/assets/profiles/overpass.json
-index 96a394a3..20ab6105 100644
+index 96a394a3..fca28c75 100644
 --- a/assets/profiles/overpass.json
 +++ b/assets/profiles/overpass.json
-@@ -1,5 +1,6 @@
+@@ -1,6 +1,7 @@
  {
 -  "//": "Overpass leaps (R124 br-xlvx.5; docs/research/fun-tracks.md R10-R17), read by jj-procgen overpass.rs: at a figure-eight's crossing the upper road jumps the lower one instead of bridging it. The road climbs to a take-off `takeOffAboveLowerM` above the lower road, levels for `levelM` (R11's straight core), runs up a full-road-width kicker (`rampM` long, `lipM` high, foot blend `blendM`: about 15 degrees at the lip with a long concave foot so a car isn't slammed into it, R12), and the gap spans the lower road's footprint (with `bedClearM` beside it) across the flight's lane (the road and its shoulder) plus a steep abutment face (`faceSlope` rise per metre); the far rim stands `rimDropM` below the take-off and the landing runs down from it at the flight's own angle where the band's middle comes down (R13: a ski jump's landing hill, between `minLandingSlope` and `maxLandingSlope`). The speed band is found against the sculpted ground: its floor is the slowest a car can leave the lip and come down `rimMargin` past the rim, its top `bandWidth` above that (R11: at least 30%), flown as the validator flies it (with the cars' own damping in the air); a floor above `maxBandFloorMps` leaves the bridge in place. After the landing the road eases back to its own height over at least `runoutM` (R17: 2 s at the band's top) at no more than `maxGrade`. Embankments and cuttings meet the land at `sideSlope` past a `shoulderM` shoulder; the lower road's bed is never touched. Nothing here caps anything.",
+-  "takeOffAboveLowerM": 10.0,
 +  "//": "Overpass leaps (R124 br-xlvx.5; docs/research/fun-tracks.md R10-R17), read by jj-procgen overpass.rs: at a figure-eight's crossing the upper road jumps the lower one instead of bridging it. The road climbs to a take-off `takeOffAboveLowerM` above the lower road, levels for `levelM` (R11's straight core), runs up a full-road-width kicker (`rampM` long, `lipM` high, foot blend `blendM`: about 15 degrees at the lip with a long concave foot so a car isn't slammed into it, R12), and the gap spans the lower road's footprint (with `bedClearM` beside it) across the flight's lane (the road and its shoulder) plus a steep abutment face (`faceSlope` rise per metre); the far rim stands `rimDropM` below the take-off and the landing runs down from it at the flight's own angle where the band's middle comes down (R13: a ski jump's landing hill, between `minLandingSlope` and `maxLandingSlope`). The speed band is found against the sculpted ground: its floor is the slowest a car can leave the lip and come down `rimMargin` past the rim, its top `bandWidth` above that (R11: at least 30%), flown as the validator flies it (with the cars' own damping in the air); a floor above `maxBandFloorMps` leaves the bridge in place. After the landing the road eases back to its own height over at least `runoutM` (R17: 2 s at the band's top) at no more than `maxGrade`. Embankments and cuttings meet the land at `sideSlope` past a `shoulderM` shoulder; the lower road's bed is never touched. In the generator (br-xlvx.10.3) every crossing at `minCrossingDeg` or squarer tries a leap first and keeps its bridge when the leap is refused; a shallower crossing (a figure eight's ~40 degrees makes a gap the slow cars can't reach) is always a bridge. Nothing here caps anything.",
 +  "minCrossingDeg": 70,
-   "takeOffAboveLowerM": 10.0,
++  "takeOffAboveLowerM": 7.0,
    "levelM": 25,
    "rampM": 16,
+   "lipM": 3.0,
 diff --git a/crates/jj-procgen/src/course/mod.rs b/crates/jj-procgen/src/course/mod.rs
 index a6e2e42f..9f57bc05 100644
 --- a/crates/jj-procgen/src/course/mod.rs
@@ -744,7 +746,7 @@ index 47cc98b6..ccdb0a79 100644
          for (key, value) in [
              ("deckHeightM", bridge.deck_height_m),
 diff --git a/crates/jj-procgen/src/validate/mod.rs b/crates/jj-procgen/src/validate/mod.rs
-index 653f18fe..4081f5b8 100644
+index 653f18fe..7d512dda 100644
 --- a/crates/jj-procgen/src/validate/mod.rs
 +++ b/crates/jj-procgen/src/validate/mod.rs
 @@ -89,6 +89,7 @@ fn streams(seed: u64, draw: u32) -> Streams {
@@ -777,32 +779,41 @@ index 653f18fe..4081f5b8 100644
              let plan = if draw == 0 {
                  Plan::Requested
              } else {
-@@ -218,6 +223,24 @@ pub fn prepare_tuned(
+@@ -218,6 +223,33 @@ pub fn prepare_tuned(
          }
          // A single-biome recipe has no boundary to fail on: another draw only helps a rejected map.
      }
-+    // 1b. The same draws without loop-overs (br-xlvx.10.2): on a short lap a loop-over's arc and straights can take the
++    // 1b. The same draws with fewer loop-overs (br-xlvx.10.2): on a short lap a loop-over's arc and straights can take the
 +    //     room both set pieces need, and a lap that crosses itself is a bonus while two set pieces are the rule (R132).
 +    //     Numbered on after the full draws.
++    //     One loop-over first (a lap that can't hold two may hold one), then none.
 +    if data.course.crossover.share > 0.0 {
-+        let mut flat = data.clone();
-+        flat.course.crossover.share = 0.0;
-+        for draw in 0..draws {
-+            if let Some((map, course)) = try_one(&lap, draw, true, &flat) {
-+                return Prepared {
-+                    map,
-+                    course,
-+                    plan: Plan::Redrawn(draws + draw),
-+                    attempts,
-+                    valid: true,
-+                };
++        let mut fewer = data.clone();
++        let mut next = draws;
++        for max in [1u32, 0] {
++            if max > 0 && data.course.crossover.max <= max {
++                continue;
 +            }
++            fewer.course.crossover.max = max.max(1);
++            fewer.course.crossover.share = if max == 0 { 0.0 } else { data.course.crossover.share };
++            for draw in 0..draws {
++                if let Some((map, course)) = try_one(&lap, draw, true, &fewer) {
++                    return Prepared {
++                        map,
++                        course,
++                        plan: Plan::Redrawn(next + draw),
++                        attempts,
++                        valid: true,
++                    };
++                }
++            }
++            next += draws;
 +        }
 +    }
      // The requested biomes come first (a dropped biome is a broken request): the best full-recipe draw that missed
      // only the set pieces or the rhythm, before any shorter recipe.
      let kept = best.borrow_mut().take();
-@@ -241,7 +264,7 @@ pub fn prepare_tuned(
+@@ -241,7 +273,7 @@ pub fn prepare_tuned(
      // 2. Fewer biomes, still with the set pieces, when no full-recipe draw was valid at all.
      for keep in (1..lap.len()).rev() {
          for draw in 0..SHORTER_DRAWS.min(draws) {
