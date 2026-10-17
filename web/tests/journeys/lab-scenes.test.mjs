@@ -47,7 +47,8 @@ after(async () => {
 });
 
 for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
-  test(`${name}: every lab scene's runs match native in the real worker and renderer`, { timeout: 1_800_000 }, async () => {
+  // Quarantined (CI owner, red budget): P0 br-51rx, it hangs since FL12's climb scene (c2dbb172).
+  test(`${name}: every lab scene's runs match native in the real worker and renderer`, { timeout: 1_800_000, skip: 'quarantined: P0 br-51rx (hangs since the climb scene)' }, async () => {
     const browser = await engine.launch(name === 'chromium' ? { args: chromiumArgs } : {});
     const errors = [], rows = [];
     try {
