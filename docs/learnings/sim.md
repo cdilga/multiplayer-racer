@@ -443,12 +443,14 @@ not feel targets.
   normal, so a tail-first landing read 0°. Ray-cast down from the body for the ground's normal instead.
 - **The flip assist's torque can't right a crashed car in time.** `Race::assist_torque` rolled a nose-first crash onto
   its roof; the crash righting drives a rate toward upright through the car's inertia (`air::righting_change`).
-- **parry 0.31.1 drops a vertical ray on a heightfield cell edge, and patching it broke native/WASM parity.** A ray
-  straight down exactly on a grid line can miss the ground: rounding picks a neighbouring cell's triangles, and a ray with
-  no x or z never steps to another cell. A level bike placed on a 10 m grid line (x = 20 on the flat strips) lost both
-  suspension rays and fell onto its hull. A car's wheels at ±0.85 m straddle the line.
-  - A vendored repair (5c7fc473) guarded on `dir.x == 0.0 && dir.z == 0.0`, and that broke parity. In WASM a level
-    car's wheel ray is exactly vertical; natively the rotation maths leaves an ulp in x or z. The repair ran in WASM only,
-    and boost-line's hash split (br-lekz).
-  - The repair is reverted. The flat banks sit half a metre off the grid lines. A cross-platform repair is br-zrat.
-  - **Never branch on exact float equality of anything derived from a rotation.**
+- **parry 0.31.1 drops a vertical ray on a heightfield cell edge.** A ray straight down exactly on a grid line can miss
+  the ground: rounding picks a neighbouring cell's triangles, and a ray with no x or z never steps to another cell. A
+  level bike placed on a 10 m grid line (x = 20 on the flat strips) lost both suspension rays and fell onto its hull. A
+  car's wheels at ±0.85 m straddle the line. The flat banks sit half a metre off the grid lines. A vendored repair
+  (5c7fc473) was reverted (cbb0e148) on a confounded measurement during br-lekz, and returns under br-zrat once the WASM
+  parity lanes pass with it. With the actual br-lekz fix in, it left boost-line's native and WASM hashes equal and
+  unchanged.
+- **An A/B in the shared tree can be confounded by someone else's edit.** br-lekz's real cause was a hashed `usize`
+  (32-bit in WASM; never hash a usize). Another session's fix for it landed in the working tree between the two builds
+  of a parry on/off A/B, and the A/B blamed parry. Record `git status` and `git diff --stat` of what each side builds,
+  or measure on eris, where the tree can't move.
