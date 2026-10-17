@@ -88,7 +88,9 @@ test('every roster atlas: paint is (0,0,0,0), non-paint texels keep their colour
       // premultiplied in linear light: no channel brighter than its coverage (one sRGB step of rounding)
       else { edge++; for (let k = 0; k < 3; k++) assert.ok(lin(Math.max(0, keyed.base[o + k] - 1)) <= a / 255, `${id}: edge texel rgb ${keyed.base[o + k]} over alpha ${a}`); }
     }
-    assert.ok(paint > 0 && edge > 0, `${id}: has paint (${paint}) and filtered paint edges (${edge})`);
+    assert.ok(paint > 0, `${id}: has paint`);
+    // The bikes' swatch atlases are pixel-aligned cells (no edges); the cars' liveries have filtered paint edges.
+    if (!['pig-catcher', 'postie-bike'].includes(id)) assert.ok(edge > 0, `${id}: has filtered paint edges`);
   }
 });
 
