@@ -85,6 +85,8 @@ def style(t: dict) -> str:
   .wide {{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; }}
   .id {{ font:900 italic 26px/1 var(--display); }}
   .meta {{ font-size:14px; color:var(--ink-soft); }}
+  .ci {{ margin-left:auto; padding:2px 8px; border-radius:6px; font:800 13px/1.4 var(--body); }} .ci.ok {{ background:var(--teal); }} .ci.bad {{ background:var(--red-earth); color:var(--paper); }} .ci.muted {{ background:var(--paper-shade); }}
+  .ci + .stamp {{ margin-left:10px; }} .play .green {{ grid-column:1 / -1; margin:0; color:var(--paper-shade); }} .play .green a.ev, .play .green code {{ color:var(--saffron); }}
   .stamp {{ margin-left:auto; padding:2px 10px; border:3px solid currentColor; border-radius:6px; font:900 italic 15px/1.4 var(--display); text-transform:uppercase; transform:rotate(2deg); }}
   code {{ font-size:.9em; }}
   .ok {{ color:var(--success); font-weight:700; }} .bad {{ color:var(--danger); font-weight:700; }}
@@ -206,6 +208,16 @@ def title_text(t: str) -> str:
     return t
 
 
+# A preview's CI verdict (owner 2026-10-17: "why doesn't [the page] have the build that was green on CI?"): every built
+# run publishes, red or green, so each card says which it was, refreshed from Gitea on every poll (publish.refresh_ci).
+CI_CHIP = {"green": ("ok", "CI green"), "red": ("bad", "CI red"), "running": ("muted", "CI running")}
+
+
+def ci_chip(p: dict) -> str:
+    kind, text = CI_CHIP.get(p.get("ci", ""), ("muted", "CI unknown"))
+    return f'<span class="ci {kind}">{text}</span>'
+
+
 def stamp(p: dict) -> str:
     if p.get("retired"):
         return '<span class="stamp muted">Retired</span>'
@@ -228,23 +240,30 @@ def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], newest:
     branch = html.escape(p.get("branch", ""))
     sha = html.escape(p.get("sha", "")[:12])
     return (f'<article class="{cls}" id="{html.escape(p["id"])}">'
-            f'<div class="wide">{tags}<span class="id">{html.escape(p["id"])}</span>{stamp(p)}</div>'
+            f'<div class="wide">{tags}<span class="id">{html.escape(p["id"])}</span>{ci_chip(p)}{stamp(p)}</div>'
             f'<div><h3>What it is</h3>{html.escape(title_text(p.get("title", ""))) or "<span class=muted>No title</span>"}{changed_html(p)}'
             f'<p class="meta">{branch + " " if branch else ""}<code>{sha}</code> · {time_tag(p.get("publishedAt"))}</p></div>'
             f'<div><h3>Status</h3>{status_html(p)}<h3 style="margin-top:10px">Keep</h3>{keep_html(p, pinned_by, is_latest, keep, newest, now)}</div>'
             f'<div class="wide acts">{open_html(p)}</div></article>')
 
 
-def jump_in(p: dict | None) -> str:
-    """The Latest playable build, up front: the one most people opening this page want."""
+def jump_in(p: dict | None, green: dict | None = None) -> str:
+    """The Latest playable build, up front: the one most people opening this page want; when it isn't CI-green yet, the
+    newest playable green build is offered beside it."""
     if not p or p.get("status") != "playable" or p.get("retired"):
         return ""
     base = f"/p/{html.escape(p['id'])}/"
+    also = ""
+    if p.get("ci") != "green" and green and green["id"] != p["id"]:
+        gb = f"/p/{html.escape(green['id'])}/"
+        also = (f'<p class="green">This build is {CI_CHIP.get(p.get("ci", ""), ("", "not yet green on CI"))[1].replace("CI ", "")} on CI. '
+                f'Last green build: <code>{html.escape(green["id"])}</code> '
+                f'<a class="ev" href="{gb}host">Host</a> <a class="ev" href="{gb}">Join</a> <a class="ev" href="#{html.escape(green["id"])}">card</a></p>')
     return (f'<section class="play" aria-label="Play the latest build"><span class="tag t">Latest build</span>'
             f'<div><h2>Jump in</h2><p class="ttl">{html.escape(title_text(p.get("title", "")))}</p></div>'
             f'<div class="acts"><a class="btn" href="{base}host">Host a room</a><a class="btn alt" href="{base}">Join</a></div>'
             f'<ol class="steps"><li><b>1</b>Open Host on the TV or laptop</li><li><b>2</b>Scan its QR with your phones</li>'
-            f'<li><b>3</b>Race, wreck, repeat</li></ol>{debug_html(base)}</section>')
+            f'<li><b>3</b>Race, wreck, repeat</li></ol>{also}{debug_html(base)}</section>')
 
 
 SCRIPT = """
@@ -281,14 +300,15 @@ def render(reg: dict, now: datetime | None = None) -> str:
     rest = [p for p in live if p not in top]
     body = "".join(card(p, pinned_by(p), p["id"] == latest, keep, newest, now) for p in top + rest)
     if not body:
-        body = '<article class="card"><div class="wide"><strong>No previews yet.</strong> Every 0.2 build that passes CI lands here.</div></article>'
+        body = '<article class="card"><div class="wide"><strong>No previews yet.</strong> Every 0.2 build CI builds lands here, green or not.</div></article>'
     if gone:
         # One line per retired build, not a full card: the whole page rides in the edge app's config, and TrueNAS's
         # middleware refuses messages over 64 kB (the publish failed from 28 retired cards, runs 5087-5091).
         body += (f'<details class="gone"><summary>Retired ({len(gone)})</summary><ul class="gone-list">'
                  + "".join(gone_row(p) for p in gone) + "</ul></details>")
     hero_p = next((p for p in live if p["id"] == latest), None)
-    desc = "Every Joystick Jammers 0.2 build that passes CI, live and playable: host on the big screen, steer from your phone."
+    green_p = next((p for p in live if p.get("ci") == "green" and p.get("status") == "playable"), None)
+    desc = "Every Joystick Jammers 0.2 build, live and playable, each marked green or red on CI: host on the big screen, steer from your phone."
     share = ""
     if hero_p:
         # The share card ships in every build (web/public/assets/og-card.png); the index names the Latest one's.
@@ -304,9 +324,9 @@ def render(reg: dict, now: datetime | None = None) -> str:
 <link rel="icon" href="/brand/favicon.svg"><style>{style(tokens())}</style></head>
 <body><main><header class="hero"><span class="tag">Rainbow previews · 0.2</span>
 <img class="word" src="/brand/wordmark.svg" alt="Joystick Jammers" width="720" height="292">
-<p>Every 0.2 build that passes CI, live and playable. Host on the big screen, steer from your phone.</p>
+<p>Every 0.2 build, live and playable; each card says if CI passed. Host on the big screen, steer from your phone.</p>
 <span class="dust" aria-hidden="true"></span><img class="car" src="/brand/renders/cruz-missile-hero.png" alt="" width="956" height="490"></header>
-{jump_in(hero_p)}<h2 class="sec">All builds</h2>
+{jump_in(hero_p, green_p)}<h2 class="sec">All builds</h2>
 <p class="foot rules">Newest first, pinned builds on top. A build that fails its smoke test is listed as not playable, with the reason. The {retention.NEWEST_KEPT} newest builds always stay up, and so does anything under 24 hours old; pinned builds stay until unpinned.</p>
 {body}
 <p class="foot"><small>The game you can play today is 0.1 at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>.</small></p>

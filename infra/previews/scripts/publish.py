@@ -97,6 +97,32 @@ def green_runs(token: str) -> list[dict]:
     return out[:RECENT]
 
 
+def ci_states(token: str) -> dict[str, str]:
+    """Each commit's CI verdict from its newest non-cancelled ci.yml run: green, red or running (the index shows it on
+    every card, since every built run publishes whatever its verdict; owner 2026-10-17)."""
+    _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/workflows/ci.yml/runs?branch={BRANCH}&limit=50", token)
+    runs = [r for r in json.loads(body).get("workflow_runs", []) if r.get("path", "").split("@")[0].rsplit("/", 1)[-1] == "ci.yml"]
+    out: dict[str, str] = {}
+    for r in sorted(runs, key=lambda r: r["id"], reverse=True):
+        if r["head_sha"] in out or r.get("conclusion") == "cancelled":
+            continue
+        out[r["head_sha"]] = ("running" if r.get("status") != "completed"
+                              else "green" if r.get("conclusion") == "success" else "red")
+    return out
+
+
+def refresh_ci(reg: dict, token: str) -> None:
+    """Sets each preview row's `ci` from Gitea (rows whose run fell out of the window keep what they had)."""
+    try:
+        states = ci_states(token)
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        print(f"publish: CI states unavailable ({e}); cards keep their last verdict")
+        return
+    for p in reg["previews"]:
+        if p.get("sha") in states:
+            p["ci"] = states[p["sha"]]
+
+
 class RegistryAuthError(SystemExit):
     """The registry refused our credentials: never confuse this with "no image for that commit"."""
 
@@ -316,7 +342,7 @@ async def ensure_network(nas: TrueNAS):
 def edge_key(reg: dict) -> str:
     """What the edge's index shows: the rows' ids, statuses and retirement, the labels and pins, and the renderer and
     edge files themselves (a change to the page's code or the Caddyfile re-applies the edge on the next poll)."""
-    rows = [(p["id"], p.get("status"), bool(p.get("retired"))) for p in reg["previews"]]
+    rows = [(p["id"], p.get("status"), bool(p.get("retired")), p.get("ci")) for p in reg["previews"]]
     code = [hashlib.sha256(f.read_bytes()).hexdigest() for f in (ROOT / "scripts" / "index_page.py", ROOT / "edge" / "tokens.json",
                                                                    ROOT / "edge" / "Caddyfile")]
     return hashlib.sha256(json.dumps([rows, reg.get("labels", {}), reg.get("pins", []), code], sort_keys=True).encode()).hexdigest()[:16]
@@ -420,6 +446,7 @@ def needs_work() -> bool:
     Checked before the slow tool install (Playwright and its libraries took ~7 of every 8 minutes, so the 5-minute
     poll ran back to back and replaced every waiting dispatch)."""
     reg = load_register()
+    refresh_ci(reg, env("SOURCE_READ_TOKEN"))
     published = {p["sha"] for p in reg["previews"]}
     new = [r for r, _, why in candidates(env("SOURCE_READ_TOKEN"), published) if why == "NEW"]
     stale = not edge_current(reg)
@@ -438,6 +465,7 @@ async def main():
     if os.environ.get("JJ_BROKER_KEY"):
         secrets["JJ_BROKER_KEY"] = os.environ["JJ_BROKER_KEY"]
     reg = load_register()
+    refresh_ci(reg, secrets["SOURCE_READ_TOKEN"])
     published = {p["sha"] for p in reg["previews"]}
     if arg("--from-run"):
         # Owner 2026-10-17: a preview from a CI run whose image is built even while its tests are red or still running,

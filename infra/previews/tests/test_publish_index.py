@@ -180,6 +180,20 @@ class Index(unittest.TestCase):
         self.assertIn('content="https://jammers-preview.dilger.dev/p/v02-dddddddd/assets/og-card.png"', h)
         self.assertIn('src="/brand/wordmark.svg"', h)
 
+    def test_cards_say_their_ci_verdict_and_jump_in_offers_the_last_green_build(self):
+        reg = self.reg()
+        reg["previews"][0]["ci"] = "running"
+        reg["previews"][2]["ci"] = "green"
+        h = index_page.render(reg, NOW)
+        self.assertIn('<span class="ci muted">CI running</span>', h)
+        self.assertIn('<span class="ci ok">CI green</span>', h)
+        panel = h[h.index('class="play"'):h.index("</section>")]
+        self.assertIn("Last green build: <code>v02-bbbbbbbb</code>", panel)
+        self.assertIn('href="/p/v02-bbbbbbbb/host">Host</a>', panel)
+        reg["previews"][0]["ci"] = "green"
+        panel = (h := index_page.render(reg, NOW))[h.index('class="play"'):h.index("</section>")]
+        self.assertNotIn("Last green build", panel)
+
     def test_jump_in_lists_the_debug_features_and_cards_link_tune(self):
         h = index_page.render(self.reg(), NOW)
         panel = h[h.index('class="play"'):h.index("</section>")]
