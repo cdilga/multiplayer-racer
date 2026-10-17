@@ -40,7 +40,7 @@ const offsetIn = (pts, d) => pts.map(([x, y], i) => [x + (i < 3 ? d : i > 6 ? 0 
 function sideShapes(c) {
   const [u0, v0, u1, v1] = REGION.side, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
   const m = (pts) => pts.map(([x, y]) => [ox + (x / SPAN.side[0]) * px, oy + (1 - y / SPAN.side[1]) * py]);
-  const pin0 = offsetIn(C_IN, 0.018), pin1 = offsetIn(C_IN, 0.03);
+  const pin0 = offsetIn(C_IN, 0.035), pin1 = offsetIn(C_IN, 0.058); // a gap wide enough to keep pure-white (paint-keyed) texels between its filtered edges
   return [
     { rect: [ox, oy, px, py], fill: c.paint },
     { poly: m([...C_OUT, ...C_IN.slice().reverse()]), fill: c.stripe },
