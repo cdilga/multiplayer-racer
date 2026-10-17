@@ -668,8 +668,24 @@ fn diag_prepare_cost() {
 #[ignore]
 fn diag_prepare_rejects() {
     let mut why: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    // Rejected attempts by whether a set-piece/relief check right after set-piece placement could have caught them.
+    let (mut early, mut late) = (0usize, 0usize);
     for seed in 0..24u64 {
         for a in jj_procgen::playtest::prepare(seed).attempts {
+            if !a.rejected.is_empty() {
+                let pieces = |r: &String| {
+                    r.starts_with("set pieces:")
+                        || r.starts_with("terrain: the road spans")
+                        || r.starts_with("rhythm:")
+                            && r.ends_with(')')
+                            && r.contains("set pieces (want")
+                };
+                if a.rejected.iter().any(pieces) {
+                    early += 1;
+                } else {
+                    late += 1;
+                }
+            }
             for r in a.rejected {
                 let key: String = r.chars().take(70).collect();
                 *why.entry(key).or_default() += 1;
@@ -681,6 +697,7 @@ fn diag_prepare_rejects() {
     for (k, n) in v {
         eprintln!("{n:4}  {k}");
     }
+    eprintln!("rejected attempts: {early} with a set-piece/relief reason, {late} without");
 }
 
 /// One guard seed's whole ladder (`JJ_SEEDS`, default 10): each attempt's recipe, draw and rejections.
@@ -696,4 +713,44 @@ fn diag_prepare_ladder() {
     for a in &p.attempts {
         eprintln!("  {:?} draw {} {:?}", a.recipe, a.draw, a.rejected);
     }
+}
+
+/// Why set pieces don't place on the guard sample's full-recipe draws (br-cxqk): each draw's pieces and the placement's
+/// reject counts, summed over the draws that came up short of two.
+#[test]
+#[ignore]
+fn diag_piece_rejects() {
+    let data = jj_procgen::tuning::GeneratorData::shipped();
+    let mut why: std::collections::BTreeMap<String, u32> = std::collections::BTreeMap::new();
+    let (mut short, mut all) = (0, 0);
+    for seed in 0..24u64 {
+        let recipe = data.draw_mix(seed);
+        for draw in 0..jj_procgen::playtest::PLAYTEST_DRAWS {
+            let derived = if draw == 0 {
+                seed
+            } else {
+                seed ^ u64::from(draw).wrapping_mul(0x9E37_79B9_7F4A_7C15)
+            };
+            let mut st = jj_procgen::seed::Streams::new(derived);
+            st.seed = seed;
+            let Ok((map, rep)) = jj_procgen::generate_tuned_from(st, &recipe, data) else {
+                continue;
+            };
+            all += 1;
+            if jj_procgen::setpieces::check_minimum(&map).is_empty() {
+                continue;
+            }
+            short += 1;
+            eprintln!(
+                "seed {seed} draw {draw} {recipe:?} lap {:.0} m: {:?} {:?}",
+                jj_procgen::rhythm::of(&map).lap_m,
+                rep.set_pieces,
+                rep.set_piece_rejects
+            );
+            for (k, v) in rep.set_piece_rejects {
+                *why.entry(k).or_default() += v;
+            }
+        }
+    }
+    eprintln!("{short} of {all} draws short of their set pieces; rejects summed: {why:?}");
 }

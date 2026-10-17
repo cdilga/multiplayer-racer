@@ -113,10 +113,34 @@ pub fn generate_recipe_from(
 /// [`generate_recipe_from`] with explicit generator data (the owner tuning menu's regenerate): the course's length band
 /// and straights, each biome's terrain and feature mix. With the shipped data this is the untuned generator.
 pub fn generate_tuned_from(
-    mut st: Streams,
+    st: Streams,
     recipe: &[Biome],
     data: &tuning::GeneratorData,
 ) -> Result<(Map, Report), biome::SelectError> {
+    Ok(generate_gated(st, recipe, data, false)?.expect("an ungated generation runs to the end"))
+}
+
+/// A generation the prepare ladder stopped early: the draw is already short of its set pieces or its relief once the
+/// set pieces are placed, so it is redrawn without paying for the rest of the pipeline (br-cxqk).
+#[derive(Clone, Debug)]
+pub struct Short {
+    /// Why it stopped, worded as the full checks word it.
+    pub rejected: Vec<String>,
+    /// The set pieces it had (loops and loop-overs included), so the ladder can keep the best as its fallback.
+    pub set_pieces: usize,
+    /// The course's report (corners, beats): its set pieces and the rest are left empty.
+    pub report: Report,
+}
+
+/// [`generate_tuned_from`], stopping after the set pieces with [`Short`] when `gate` is set and the lap is already short
+/// of its set-piece minimum ([`setpieces::check_minimum`]) or of the rhythm's relief. Ungated, it never stops early and
+/// the output is [`generate_tuned_from`]'s.
+pub fn generate_gated(
+    mut st: Streams,
+    recipe: &[Biome],
+    data: &tuning::GeneratorData,
+    gate: bool,
+) -> Result<Result<(Map, Report), Short>, biome::SelectError> {
     // A lap of only biomes whose own corners are the technical beat (Town) gets its own technical spacing, and a lap of
     // only biomes that rule a family out never draws it.
     let name = |b: &Biome| {
@@ -152,18 +176,32 @@ pub fn generate_tuned_from(
         c.presets.set_weight(tuning::PresetName::Twisty, 1.0);
     }
     let course = course::design_with(&mut st.structure, &c);
-    generate_course(st, course, recipe, data, setpieces::shipped())
+    generate_course_gated(st, course, recipe, data, setpieces::shipped(), gate)
 }
 
 /// The generator from a designed course on: biomes, terrain, crossings, set pieces (from `pieces`), features, dressing.
 /// [`generate_tuned_from`] designs the course; a Feel Lab scene ([`lab`]) hands in its own.
 pub fn generate_course(
-    mut st: Streams,
+    st: Streams,
     course: Course,
     recipe: &[Biome],
     data: &tuning::GeneratorData,
     pieces: &setpieces::Data,
 ) -> Result<(Map, Report), biome::SelectError> {
+    Ok(
+        generate_course_gated(st, course, recipe, data, pieces, false)?
+            .expect("an ungated generation runs to the end"),
+    )
+}
+
+fn generate_course_gated(
+    mut st: Streams,
+    course: Course,
+    recipe: &[Biome],
+    data: &tuning::GeneratorData,
+    pieces: &setpieces::Data,
+    gate: bool,
+) -> Result<Result<(Map, Report), Short>, biome::SelectError> {
     let mut centerline = centred(&resample(&course.points));
     // Loops (br-xlvx.6.4) take a set-piece beat straight: the centreline jogs under and after each before anything is
     // laid on it, from their own stream (seeded off the structure stream's state, a clone: nothing else moves). The
@@ -308,6 +346,34 @@ pub fn generate_course(
             )
         }
     };
+    // The prepare ladder's gate (br-cxqk): a lap already short of its set pieces or its relief is redrawn now. Forks,
+    // features and dressing never add a set piece, and the relief is the terrain's.
+    if gate && data.set_pieces {
+        let mut rejected = setpieces::check_minimum(&map);
+        let relief = {
+            let ys = map.route.points.iter().map(|p| f64::from(p.y) / 1000.0);
+            ys.clone().fold(f64::NEG_INFINITY, f64::max) - ys.fold(f64::INFINITY, f64::min)
+        };
+        let min_relief = rhythm::shipped().min_relief_m;
+        if relief < min_relief {
+            rejected.push(format!(
+                "terrain: the road spans {relief:.1} m of height (want >= {min_relief})"
+            ));
+        }
+        if !rejected.is_empty() {
+            let mut rep = report(&course);
+            rep.set_pieces = pieces.iter().map(|p| p.kind.name()).collect();
+            rep.set_piece_rejects = piece_rejects;
+            rep.loops = loop_spans.len() as u32;
+            rep.loop_rejects = loop_rejects;
+            rep.beat_spans = beat_spans;
+            return Ok(Err(Short {
+                rejected,
+                set_pieces: pieces.len() + loop_spans.len() + rhythm::loop_overs(&map).len(),
+                report: rep,
+            }));
+        }
+    }
     let ranges = setpieces::clear_of(&ranges, &pieces);
     // Route forks (R134, P1-FL16) on the sweepers left, from their own stream; the small features keep clear of them.
     let fork_seed = st.structure.clone().next_u64() ^ 0xF0_4C;
@@ -407,7 +473,7 @@ pub fn generate_course(
     rep.loops = loop_spans.len() as u32;
     rep.loop_rejects = loop_rejects;
     rep.beat_spans = beat_spans;
-    Ok((map, rep))
+    Ok(Ok((map, rep)))
 }
 
 /// The registry generated maps validate against: the generic kit plus the wayfinding family.

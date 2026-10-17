@@ -135,17 +135,62 @@ pub fn prepare_tuned(
     // draws that had more than it allows (br-cxqk: retrying one that had none to drop was a whole wasted generation).
     let loop_overs: std::cell::RefCell<std::collections::BTreeMap<u32, u32>> =
         std::cell::RefCell::new(std::collections::BTreeMap::new());
+    // The draw a gated generation stopped early with the most set pieces (br-cxqk): it never ran to the end, so it is
+    // generated in full only if the ladder falls back on it (no draw passed the gate, `fallback` below).
+    struct ShortBest {
+        set_pieces: usize,
+        recipe: Vec<Biome>,
+        draw: u32,
+        data: crate::tuning::GeneratorData,
+    }
+    let short_best: std::cell::RefCell<Option<ShortBest>> = std::cell::RefCell::new(None);
+    let plan_of = |rec: &[Biome], draw: u32| {
+        if rec.len() == lap.len() {
+            if draw == 0 {
+                Plan::Requested
+            } else {
+                Plan::Redrawn(draw)
+            }
+        } else {
+            Plan::Shorter(rec.len())
+        }
+    };
     let mut try_one = |rec: &[Biome],
                        draw: u32,
                        need_pieces: bool,
                        data: &crate::tuning::GeneratorData|
      -> Option<(Map, Report)> {
-        let (map, course) = match crate::generate_tuned_from(streams(seed, draw), rec, data) {
-            Ok(m) => {
+        let gate = need_pieces && data.set_pieces;
+        let (map, course) = match crate::generate_gated(streams(seed, draw), rec, data, gate) {
+            Ok(Ok(m)) => {
                 loop_overs
                     .borrow_mut()
                     .insert(draw, m.1.corners.get("loop-over").copied().unwrap_or(0));
                 m
+            }
+            Ok(Err(short)) => {
+                loop_overs.borrow_mut().insert(
+                    draw,
+                    short.report.corners.get("loop-over").copied().unwrap_or(0),
+                );
+                let mut kept = short_best.borrow_mut();
+                if kept
+                    .as_ref()
+                    .is_none_or(|k: &ShortBest| short.set_pieces > k.set_pieces)
+                {
+                    *kept = Some(ShortBest {
+                        set_pieces: short.set_pieces,
+                        recipe: rec.to_vec(),
+                        draw,
+                        data: data.clone(),
+                    });
+                }
+                attempts.push(Attempt {
+                    recipe: rec.to_vec(),
+                    draw,
+                    rejected: short.rejected,
+                });
+                return None;
             }
             Err(e) => {
                 attempts.push(Attempt {
@@ -189,15 +234,7 @@ pub fn prepare_tuned(
                         draw,
                         map: map.clone(),
                         course: course.clone(),
-                        plan: if rec.len() == lap.len() {
-                            if draw == 0 {
-                                Plan::Requested
-                            } else {
-                                Plan::Redrawn(draw)
-                            }
-                        } else {
-                            Plan::Shorter(rec.len())
-                        },
+                        plan: plan_of(rec, draw),
                     });
                 }
             }
@@ -269,7 +306,34 @@ pub fn prepare_tuned(
     }
     // The requested biomes come first (a dropped biome is a broken request): the best full-recipe draw that missed
     // only the set pieces or the rhythm, before any shorter recipe.
+    // The best valid draw that missed only the set pieces or the rhythm; else the gate's best short draw, generated in
+    // full now and kept if valid.
+    let fallback = |best: Option<Best>| -> Option<Best> {
+        best.or_else(|| {
+            let k = short_best.borrow_mut().take()?;
+            let (map, course) =
+                crate::generate_tuned_from(streams(seed, k.draw), &k.recipe, &k.data).ok()?;
+            check(&map, &registry).is_empty().then(|| Best {
+                score: (k.set_pieces, 0),
+                plan: plan_of(&k.recipe, k.draw),
+                recipe: k.recipe,
+                draw: k.draw,
+                map,
+                course,
+            })
+        })
+    };
     let kept = best.borrow_mut().take();
+    let kept = if kept.is_none()
+        && short_best
+            .borrow()
+            .as_ref()
+            .is_some_and(|k| k.recipe.len() == lap.len())
+    {
+        fallback(None)
+    } else {
+        kept
+    };
     if let Some(b) = kept {
         drop(try_one);
         // The log ends on the accepted map (it missed only the set-piece minimum or the rhythm, which its draw's row
@@ -304,7 +368,7 @@ pub fn prepare_tuned(
     // 3. Without the set-piece minimum: the best valid draw so far (the most set pieces, the fewest rhythm problems),
     //    else the full recipe's last draw, then fewer biomes on the seed's own course.
     drop(try_one);
-    if let Some(b) = best.into_inner() {
+    if let Some(b) = fallback(best.into_inner()) {
         attempts.push(Attempt {
             recipe: b.recipe,
             draw: b.draw,

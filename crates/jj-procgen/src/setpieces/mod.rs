@@ -1386,28 +1386,43 @@ pub fn sight_seconds(map: &Map, f: &Feature, data: &Data) -> f64 {
 
 /// [`sight_seconds`] for landmarks with these tops and radii, seen from the road before route point `from`.
 fn sight_of(map: &Map, line: &Line, from: usize, targets: &[([f64; 3], f64)], data: &Data) -> f64 {
-    let n = line.n();
-    // Every route point in the window before the commitment point, back to `sightWindowS` at the sight speed: the
-    // road it covers while a landmark is in the chase camera's view.
-    let window = data.sight_window_s * data.sight_speed_mps;
-    let (mut i, mut back, mut seen) = (from, 0.0, 0.0);
-    while back < window {
-        let j = (i + n - 1) % n;
-        let step = libm::hypot(line.pts[i].0 - line.pts[j].0, line.pts[i].1 - line.pts[j].1);
-        let (eye, heading) = chase_eye(map, line, i, data);
+    let mut seen = 0.0;
+    for (eye, heading, step) in sight_eyes(map, line, from, data) {
         if targets
             .iter()
             .any(|&(target, radius)| in_view(map, eye, heading, target, radius, data))
         {
             seen += step;
         }
+    }
+    seen / data.sight_speed_mps
+}
+
+/// The chase camera's eye and heading at every route point in the window before the commitment point `from`, back to
+/// `sightWindowS` at the sight speed (the road it covers while a landmark is in view), nearest first, each with the
+/// road it stands for (m).
+fn sight_eyes(
+    map: &Map,
+    line: &Line,
+    from: usize,
+    data: &Data,
+) -> Vec<([f64; 3], (f64, f64), f64)> {
+    let n = line.n();
+    let window = data.sight_window_s * data.sight_speed_mps;
+    let (mut i, mut back) = (from, 0.0);
+    let mut eyes = Vec::new();
+    while back < window {
+        let j = (i + n - 1) % n;
+        let step = libm::hypot(line.pts[i].0 - line.pts[j].0, line.pts[i].1 - line.pts[j].1);
+        let (eye, heading) = chase_eye(map, line, i, data);
+        eyes.push((eye, heading, step));
         back += step;
         i = j;
         if i == from {
             break;
         }
     }
-    seen / data.sight_speed_mps
+    eyes
 }
 
 /// Where the landmark goes (u, lat from the kicker's base): of the spots beside and beyond the landing, on either side
@@ -1467,23 +1482,42 @@ fn choose_landmark(
             Some(((u, lat), [x, prof.road(d, u) + d.landmark_h, z]))
         })
         .collect();
-    // A candidate landmark: its (along, lateral) spot and its top in the world.
-    type Spot = ((f64, f64), [f64; 3]);
-    let mut chosen: Vec<Spot> = Vec::new();
+    // Each spot's view from each eye, judged once (br-cxqk: the second dome's pass judged the first again for every
+    // candidate); a set's sight is [`sight_of`]'s sum over the eyes that see any of it, in the same order.
+    let eyes = sight_eyes(map, line, from, data);
+    let views: Vec<Vec<bool>> = tops
+        .iter()
+        .map(|&(_, top)| {
+            eyes.iter()
+                .map(|&(eye, heading, _)| in_view(map, eye, heading, top, r, data))
+                .collect()
+        })
+        .collect();
+    let sight = |set: &[usize]| {
+        let mut seen = 0.0;
+        for (k, &(_, _, step)) in eyes.iter().enumerate() {
+            if set.iter().any(|&t| views[t][k]) {
+                seen += step;
+            }
+        }
+        seen / data.sight_speed_mps
+    };
+    // The chosen spots, as indices into `tops`.
+    let mut chosen: Vec<usize> = Vec::new();
     for _ in 0..2 {
-        let mut best: Option<(Spot, f64)> = None;
-        for &(spot, top) in &tops {
-            if chosen
-                .iter()
-                .any(|(c, _)| libm::hypot(c.0 - spot.0, c.1 - spot.1) < 1.5 * r)
-            {
+        let mut best: Option<(usize, f64)> = None;
+        for (t, &(spot, _)) in tops.iter().enumerate() {
+            if chosen.iter().any(|&c| {
+                let c = tops[c].0;
+                libm::hypot(c.0 - spot.0, c.1 - spot.1) < 1.5 * r
+            }) {
                 continue;
             }
-            let mut set: Vec<([f64; 3], f64)> = chosen.iter().map(|&(_, t)| (t, r)).collect();
-            set.push((top, r));
-            let seen = sight_of(map, line, from, &set, data);
+            let mut set = chosen.clone();
+            set.push(t);
+            let seen = sight(&set);
             if best.is_none_or(|(_, b)| seen > b + 0.25) {
-                best = Some(((spot, top), seen));
+                best = Some((t, seen));
             }
         }
         if let Some((pick, _)) = best {
@@ -1493,7 +1527,7 @@ fn choose_landmark(
     if chosen.is_empty() {
         vec![default]
     } else {
-        chosen.into_iter().map(|(spot, _)| spot).collect()
+        chosen.into_iter().map(|t| tops[t].0).collect()
     }
 }
 

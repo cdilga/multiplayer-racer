@@ -839,33 +839,61 @@ fn ramp(mut g: Vec<f64>, ds: &[f64], limit: &[f64]) -> Vec<f64> {
 /// it changed anything.
 fn smooth_curvature(h: &mut [f64], ds: &[f64], limit: &[f64]) -> bool {
     let n = h.len();
+    let bad_at = |h: &[f64], i: usize| {
+        let p = (i + n - 1) % n;
+        let k = ((h[(i + 1) % n] - h[i]) / ds[i] - (h[i] - h[p]) / ds[p]).abs()
+            / ((ds[i] + ds[p]) / 2.0);
+        k > limit[i]
+    };
+    // Each iteration moves only the points near a bad one, and a point's curvature reads only its neighbours, so only
+    // those points and their neighbours are judged again (br-cxqk: a full scan per iteration was most of the terrain's
+    // time). The same points move to the same values as a full scan's.
+    let mut bad_list: Vec<usize> = (0..n).filter(|&i| bad_at(h, i)).collect();
     let mut changed = false;
+    let (mut near, mut seen) = (vec![false; n], vec![false; n]);
+    let (mut near_list, mut moved, mut judged) = (Vec::new(), Vec::new(), Vec::new());
     for iteration in 0..SMOOTH_ITERATIONS {
-        let bad: Vec<bool> = (0..n)
-            .map(|i| {
-                let p = (i + n - 1) % n;
-                let k = ((h[(i + 1) % n] - h[i]) / ds[i] - (h[i] - h[p]) / ds[p]).abs()
-                    / ((ds[i] + ds[p]) / 2.0);
-                k > limit[i]
-            })
-            .collect();
-        if !bad.iter().any(|&b| b) {
+        if bad_list.is_empty() {
             return changed;
         }
         changed = true;
-        let old = h.to_vec();
         // A wide violation (a deep cutting's shoulders) relaxes slowly point by point: the neighbourhood that is
         // relaxed with each bad point widens as the iterations go on.
         let reach = 1 + iteration / SMOOTH_WIDEN_EVERY;
-        let mut near = vec![false; n];
-        for (i, _) in bad.iter().enumerate().filter(|(_, b)| **b) {
+        near_list.clear();
+        for &i in &bad_list {
             for k in 0..=2 * reach {
-                near[(i + n + k - reach) % n] = true;
+                let j = (i + n + k - reach) % n;
+                if !near[j] {
+                    near[j] = true;
+                    near_list.push(j);
+                }
             }
         }
-        for i in 0..n {
-            if near[i] {
-                h[i] = (old[(i + n - 1) % n] + 2.0 * old[i] + old[(i + 1) % n]) / 4.0;
+        moved.clear();
+        moved.extend(
+            near_list
+                .iter()
+                .map(|&i| (i, (h[(i + n - 1) % n] + 2.0 * h[i] + h[(i + 1) % n]) / 4.0)),
+        );
+        for &(i, v) in &moved {
+            h[i] = v;
+            near[i] = false;
+        }
+        judged.clear();
+        for &i in bad_list.iter().chain(&near_list) {
+            for j in [(i + n - 1) % n, i, (i + 1) % n] {
+                if !seen[j] {
+                    seen[j] = true;
+                    judged.push(j);
+                }
+            }
+        }
+        bad_list.clear();
+        for &j in &judged {
+            seen[j] = false;
+            if bad_at(h, j) {
+                bad_list.push(j);
             }
         }
     }

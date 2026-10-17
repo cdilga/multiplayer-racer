@@ -369,3 +369,14 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
 - **Judge a leap's landing with the air input a player uses.** Since br-bbki.24 a throttle pinned in the air raises the
   nose on purpose; a bank that flies flat out lands nose-high. Fly neutral (it holds the take-off pitch) and judge the
   first second after touchdown, not where an unsteered car ends up on a curving road.
+- **Profile the whole draw, and count early returns (br-cxqk).** On the 24-seed guard sample the time went: set-piece
+  placement ~45% (each refused candidate stamps a trial map; most stamps are refused for sight), validate ~20%, terrain
+  undulation ~25% (almost all of it `smooth_curvature` rescanning every point every iteration). A checkpoint timer that
+  sits after an early `return` silently drops those draws' cost: time each call site, not just the straight path.
+- **Redraws dominate, and most are set pieces.** 44 of 59 rejected draws were short of their set pieces. Short and
+  many-biome laps fail because the course's beat straights leave only ~40 m of kicker positions (40 m straight run-up +
+  kicker to landing end must sit on the straight), and those then fail run-out terrain or sight. Longer beats (180-220 m)
+  and a wider biome-boundary margin did not help; trying beat sites first did (mean draws 3.46 -> 2.92).
+- **Bit-exact speed-ups are cheap to land: prove them on the goldens.** The prepare gate (stop a gated draw after
+  set-piece placement when `check_minimum` or the relief fails), caching each landmark spot's view per eye in
+  `choose_landmark`, and incremental `smooth_curvature` changed no golden: native mean 857 -> ~600 ms, no version bump.
