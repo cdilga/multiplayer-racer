@@ -222,8 +222,7 @@ test('?tune: an input threshold changed mid-drive reaches a connected phone with
 // Part 3 (br-2sdu.3): the generator data in the same panel. Length band and relief are changed, a value the generator's
 // validator refuses is shown and kept out, Regenerate builds the same seed again with them, and the measured track
 // matches; a second Regenerate with the same values builds the identical track (the journalled values replay it).
-// Quarantined (CI owner, red budget): P0 br-uf5n, a generator value no longer moves the course length (generator 24).
-test('?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export', { timeout: 300_000, skip: 'quarantined: P0 br-uf5n (generator 24 length)' }, async () => {
+test('?tune: generator values change the measured length and relief on Regenerate; refused values; replay; export', { timeout: 300_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
@@ -265,7 +264,10 @@ test('?tune: generator values change the measured length and relief on Regenerat
   const taller = await regenerate();
   assert.equal(taller.seed, first.seed, 'Regenerate builds the current seed again');
   assert.ok(taller.generator, 'the preparer records the generator document it used');
-  assert.equal(taller.lengthM, first.lengthM, 'the same course: the length did not move');
+  // The same course unless the validator redrew it (generator 24, P1-FL15c: on the new heights a draw may miss its set
+  // pieces or rhythm, and the ladder takes the next draw); a redraw says so in its plan.
+  if (taller.plan === first.plan) assert.equal(taller.lengthM, first.lengthM, 'the same draw: the length did not move');
+  else assert.notEqual(taller.plan, 'requested', `a new length (${first.lengthM} -> ${taller.lengthM} m) comes from a redraw: ${first.plan} -> ${taller.plan}`);
   assert.ok(taller.reliefM > first.reliefM * 1.3, `measured relief ${first.reliefM} -> ${taller.reliefM} m`);
 
   // Then the length classes: only standard tracks, in a narrower band. A band whose minimum is above its maximum is
@@ -285,7 +287,7 @@ test('?tune: generator values change the measured length and relief on Regenerat
   const tuned = await regenerate();
   assert.equal(tuned.seed, first.seed);
   assert.ok(tuned.lengthM >= 1100 && tuned.lengthM <= 1250, `measured length ${tuned.lengthM} m is inside the tuned band 1100-1250`);
-  console.log(`# seed ${first.seed}: length ${first.lengthM} -> ${tuned.lengthM} m, relief ${first.reliefM} -> ${taller.reliefM} m (same course) -> ${tuned.reliefM} m`);
+  console.log(`# seed ${first.seed}: length ${first.lengthM} -> ${tuned.lengthM} m, relief ${first.reliefM} -> ${taller.reliefM} m (${first.plan} -> ${taller.plan}) -> ${tuned.reliefM} m`);
   await host.locator('[data-tune-built]').getByText(`${tuned.lengthM} m long`).waitFor({ timeout: 5000 });
   if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/tuning-generator-built-1920x1080.png` });
 
