@@ -279,7 +279,8 @@ function makeSoups(P, lod) {
     const E = [], Ep = [], O = [], Ei = [];
     for (let i = 0; i < n; i++) {
       const th = Math.PI * i / (n - 1), z = zc + P.archR * Math.cos(th), y = P.archBase + ht * Math.sin(th);
-      const zo = zc + (P.archR + Fw) * Math.cos(th), yo = P.archBase + (ht + Fw) * Math.sin(th);
+      // the outer edge stops at the part's cut line, so the front (back) part ends at its hinge at every LOD
+      const zo0 = zc + (P.archR + Fw) * Math.cos(th), zo = id === 'front' ? Math.max(zo0, zA) : Math.min(zo0, zC), yo = P.archBase + (ht + Fw) * Math.sin(th);
       const x = skinX(z, Math.max(y, lerpCurve(P.yBot, z) + P.skirt), s);
       E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo, P.track + P.wheelW / 2 + 0.02), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
     }
