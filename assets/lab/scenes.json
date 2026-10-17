@@ -104,6 +104,59 @@
           ]
         }
       ]
+    },
+    "hairpin-cut": {
+      "what": "P1-FL10 (R131, R134): a tarmac hairpin with a packed-dirt cut-through across its apex. The cut is shorter and saves time, but it's loose: it has to be driven on less grip, and it reads on the TV as a dirt track across the infield. The generator lays it (forks.cut): a short chord inside the bend, paved looser than the road it skips.",
+      "biome": "outback-bitumen",
+      "seed": 1,
+      "straightM": 200,
+      "radiusM": 40,
+      "setPieces": [],
+      "cuts": { "perKm": 20, "bendDeg": 150, "leadM": [5, 40], "splitDeg": [55, 80], "mergeDeg": [55, 80], "tension": [0.4, 0.7], "widthM": [9, 10], "gainS": [1, 9], "branchPace": 0.62 },
+      "runs": [
+        {
+          "run": "hairpin-cut-lap",
+          "what": "The autopilot drives a full lap of the scene (cut or road, as its branch choice falls), with no wreck or recovery.",
+          "spawnBeforeM": 150,
+          "speedMps": 15,
+          "autopilot": true,
+          "ticks": 6000,
+          "until": { "metric": "progressM", "min": 700 },
+          "expect": [
+            { "metric": "progressM", "min": 700, "max": 100000 },
+            { "metric": "wrecks", "min": 0, "max": 0 },
+            { "metric": "recoveries", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "hairpin-cut-take",
+          "what": "The cut: from 150 m before its split at 15 m/s, the autopilot takes it (sim seed 1). After 1500 ticks it is about 80 m of road further on than the car that went round, and it slides on the dirt (8 degrees of slip or more).",
+          "spawnBeforeM": 150,
+          "simSeed": 1,
+          "speedMps": 15,
+          "autopilot": true,
+          "ticks": 1500,
+          "expect": [
+            { "metric": "progressM", "min": 260, "max": 320 },
+            { "metric": "maxSlipDeg", "min": 8, "max": 30 },
+            { "metric": "wrecks", "min": 0, "max": 0 }
+          ]
+        },
+        {
+          "run": "hairpin-cut-road",
+          "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip).",
+          "spawnBeforeM": 150,
+          "simSeed": 4,
+          "speedMps": 15,
+          "autopilot": true,
+          "ticks": 1500,
+          "expect": [
+            { "metric": "progressM", "min": 180, "max": 230 },
+            { "metric": "maxSlipDeg", "min": 0, "max": 4 },
+            { "metric": "wrecks", "min": 0, "max": 0 }
+          ]
+        }
+      ]
     }
   }
 }

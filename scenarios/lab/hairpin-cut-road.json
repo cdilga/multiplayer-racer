@@ -1,0 +1,49 @@
+{
+  "autopilot": [
+    {
+      "car": 0,
+      "on": true,
+      "tick": 0
+    }
+  ],
+  "cars": [
+    {
+      "linvel": [
+        15.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": 90.0,
+        "x": -57.858,
+        "y": 28.792,
+        "z": -40.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 230,
+      "metric": "progressM",
+      "min": 180
+    },
+    {
+      "car": 0,
+      "max": 4,
+      "metric": "maxSlipDeg",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wrecks",
+      "min": 0
+    }
+  ],
+  "map": "maps/lab/hairpin-cut.json",
+  "scenario": "hairpin-cut-road",
+  "seed": 4,
+  "ticks": 1500,
+  "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip)."
+}

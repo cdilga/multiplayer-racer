@@ -35,6 +35,10 @@ pub struct Scene {
     pub radius_m: f64,
     /// The set pieces the scene carries, in the order they're asked for (repeats ask for more).
     pub set_pieces: Vec<String>,
+    /// Cuts across the oval's tight bends (P1-FL10, the generator's `forks.cut`). Asked for, the scene carries cuts
+    /// and no meander forks, and a run without a set piece starts before the first cut's split.
+    #[serde(default)]
+    pub cuts: Option<crate::forks::CutData>,
     pub runs: Vec<Run>,
 }
 
@@ -54,6 +58,9 @@ pub struct Run {
     /// The roster vehicle that drives the run (the fixture's `vehicle`); the Cruz without one.
     #[serde(default)]
     pub vehicle: Option<String>,
+    /// The fixture's sim seed, when it isn't the scene's (the autopilot's branch choice at a fork draws on it).
+    #[serde(default)]
+    pub sim_seed: Option<u64>,
     pub speed_mps: f64,
     pub autopilot: bool,
     /// A steady throttle (0..1) for a run without the autopilot.
@@ -153,11 +160,16 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
     // The scene asks for its pieces by name: they're placed whether or not a short lab oval shows them from afar.
     pieces.fill_unseen = true;
     let course = course::lab_oval(scene.straight_m, scene.radius_m);
+    let mut data = GeneratorData::shipped().clone();
+    if let Some(cut) = scene.cuts {
+        data.forks.per_km = 0.0;
+        data.forks.cut = cut;
+    }
     let (map, report) = crate::generate_course(
         Streams::new(scene.seed),
         course,
         &[scene.biome],
-        GeneratorData::shipped(),
+        &data,
         &pieces,
     )
     .map_err(|e| vec![format!("{id}: {e:?}")])?;
@@ -177,6 +189,17 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
     if first.is_none() && !scene.set_pieces.is_empty() {
         return Err(vec![format!("{id}: no set piece on the map")]);
     }
+    let cut = map
+        .features
+        .iter()
+        .filter_map(jj_map::fork::Fork::of)
+        .find(|d| d.cut);
+    if scene.cuts.is_some() && cut.is_none() {
+        return Err(vec![format!(
+            "{id}: no cut on the map (rejects {:?})",
+            report.fork_rejects
+        )]);
+    }
     let mut fixtures = Vec::new();
     for r in &scene.runs {
         let mut expect: Vec<Value> = r.expect.clone();
@@ -186,12 +209,13 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
             expect.push(json!({ "metric": "height", "min": round3(y + v.rise_m[0]), "max": round3(y + v.rise_m[1]) }));
             (at, [nx, nz], y + 0.3)
         } else {
-            let (at, t) = match first {
-                Some(f) => {
+            let (at, t) = match (first, cut) {
+                (Some(f), _) => {
                     let lip = jj_map::setpiece::GapLeap::of(f).map_or(0.0, |d| d.lip_u());
                     jj_map::jump::route_along(&map, f, lip - r.spawn_before_m)
                 }
-                None => route_start(&map),
+                (None, Some(d)) => route_before(&map, d.from as usize, r.spawn_before_m),
+                (None, None) => route_start(&map),
             };
             let y = jj_map::jump::ground_height_m(&map.terrain, at[0], at[1]) + 0.3;
             (at, t, y)
@@ -201,7 +225,7 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
             "scenario": r.run,
             "what": r.what,
             "map": map_path,
-            "seed": scene.seed,
+            "seed": r.sim_seed.unwrap_or(scene.seed),
             "ticks": r.ticks,
             "cars": [{
                 "pose": { "x": round3(x), "y": round3(y), "z": round3(z), "headingDeg": round3(heading) },
@@ -229,6 +253,27 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
         fixtures.push((r.run.clone(), fx));
     }
     Ok(Built { map, fixtures })
+}
+
+/// The point `metres` back along the route from point `idx`, and the route's direction there.
+fn route_before(map: &Map, idx: usize, metres: f64) -> ([f64; 2], [f64; 2]) {
+    let pts = &map.route.points;
+    let n = pts.len();
+    let p = |i: usize| {
+        let q = &pts[i % n];
+        [f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0]
+    };
+    let (mut i, mut left) = (idx % n, metres);
+    loop {
+        let (a, b) = (p(i + n - 1), p(i));
+        let len = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
+        let t = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+        if left <= len {
+            return ([b[0] - t[0] * left, b[1] - t[1] * left], t);
+        }
+        left -= len;
+        i = (i + n - 1) % n;
+    }
 }
 
 /// The route's first point and its direction.

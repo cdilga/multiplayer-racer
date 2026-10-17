@@ -49,6 +49,33 @@ pub struct ForkData {
     /// Flat ground beside the branch's bed, and the distance over which its bed blends into the landscape, m.
     pub shoulder_m: f64,
     pub fade_m: f64,
+    /// Cuts across tight bends (P1-FL10); off unless asked for.
+    #[serde(default, skip_serializing_if = "CutData::is_off")]
+    pub cut: CutData,
+}
+
+/// The cut family's data (`forks.cut`, P1-FL10): a short loose chord across the inside of a bend that turns at least
+/// `bendDeg`. It splits `leadM` before the bend and rejoins `leadM` after it, and saves `gainS` driven at `branchPace` of
+/// the road's pace (the loose surface's grip), estimated as forks are ([`drive_s`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CutData {
+    /// Cuts per kilometre of road eligible for one (0 turns them off).
+    pub per_km: f64,
+    pub bend_deg: f64,
+    pub lead_m: [f64; 2],
+    pub split_deg: [f64; 2],
+    pub merge_deg: [f64; 2],
+    pub tension: [f64; 2],
+    pub width_m: [f64; 2],
+    pub gain_s: [f64; 2],
+    pub branch_pace: f64,
+}
+
+impl CutData {
+    fn is_off(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 impl ForkData {
@@ -91,6 +118,31 @@ impl ForkData {
         for (n, v) in [("shoulderM", self.shoulder_m), ("fadeM", self.fade_m)] {
             if !(v > 0.0 && v.is_finite()) {
                 bad.push(format!("forks.{n}: must be positive"));
+            }
+        }
+        let c = &self.cut;
+        if !(c.per_km >= 0.0 && c.per_km.is_finite()) {
+            bad.push("forks.cut.perKm: must not be negative".into());
+        }
+        if c.per_km > 0.0 {
+            if !(90.0..=270.0).contains(&c.bend_deg) {
+                bad.push("forks.cut.bendDeg: needs 90-270".into());
+            }
+            range("cut.leadM", c.lead_m, 0.0, 200.0, &mut bad);
+            let (s0, s1) = fork::cut_limits::SPLIT_DEG;
+            range("cut.splitDeg", c.split_deg, s0, s1, &mut bad);
+            range(
+                "cut.mergeDeg",
+                c.merge_deg,
+                1.0,
+                fork::cut_limits::MERGE_DEG_MAX,
+                &mut bad,
+            );
+            range("cut.tension", c.tension, 0.05, 2.0, &mut bad);
+            range("cut.widthM", c.width_m, 9.0, 40.0, &mut bad);
+            range("cut.gainS", c.gain_s, -5.0, 30.0, &mut bad);
+            if !(c.branch_pace > 0.0 && c.branch_pace <= 1.5) {
+                bad.push("forks.cut.branchPace: must be positive, at most 1.5".into());
             }
         }
         bad
@@ -173,7 +225,7 @@ pub fn place<T: Copy>(
     data: &ForkData,
 ) -> (Vec<Placed>, BTreeMap<String, u32>) {
     let n = map.route.points.len();
-    if data.per_km <= 0.0 || n < 16 {
+    if (data.per_km <= 0.0 && data.cut.per_km <= 0.0) || n < 16 {
         return Default::default();
     }
     let xz: Vec<[f64; 2]> = map
@@ -185,7 +237,7 @@ pub fn place<T: Copy>(
     let (s, _) = arc_lengths(&xz.iter().map(|p| (p[0], p[1])).collect::<Vec<_>>());
     let eligible: f64 = ranges.iter().map(|(a, b, _)| (b - a).max(0.0)).sum();
     let wanted = libm::round(data.per_km * eligible / 1000.0) as usize;
-    if wanted == 0 {
+    if wanted == 0 && data.cut.per_km <= 0.0 {
         return Default::default();
     }
     let half = f64::from(map.route.points[0].width) / 2000.0;
@@ -206,7 +258,7 @@ pub fn place<T: Copy>(
     let wave = rng.range(data.wave_m[0], data.wave_m[1]);
     let mut placed: Vec<Placed> = Vec::new();
     let mut rejects: BTreeMap<String, u32> = BTreeMap::new();
-    let mut reject = |why: &str| *rejects.entry(why.to_string()).or_default() += 1;
+
     for (_, a) in starts {
         if placed.len() >= wanted {
             break;
@@ -245,7 +297,7 @@ pub fn place<T: Copy>(
                 .iter()
                 .any(|g| g.finish && (a..=b).contains(&(g.at as usize)))
             {
-                reject("finish");
+                bump(&mut rejects, "finish");
                 continue;
             }
             let (pa, pb) = (xz[a], xz[b]);
@@ -255,7 +307,10 @@ pub fn place<T: Copy>(
             let side_a = (chord[0] * la[0] + chord[1] * la[1]).signum();
             let side_b = (-chord[0] * lb[0] - chord[1] * lb[1]).signum();
             if side_a != side_b || chord_len < fork::limits::BRANCH_M.0 * 0.6 {
-                reject(if side_a != side_b { "side" } else { "chord" });
+                bump(
+                    &mut rejects,
+                    if side_a != side_b { "side" } else { "chord" },
+                );
                 continue;
             }
             let mut d = Fork {
@@ -270,6 +325,7 @@ pub fn place<T: Copy>(
                 surface: Surface::PackedDirt,
                 wiggle_m: 0.0,
                 wave_m: wave,
+                cut: false,
             };
             let road: Vec<[f64; 2]> = xz[a..=b].to_vec();
             let road_s = drive_s(&road, data, 1.0);
@@ -291,7 +347,7 @@ pub fn place<T: Copy>(
                 })
                 .1 > data.gain_s[1]
                 {
-                    reject("gain>hi");
+                    bump(&mut rejects, "gain>hi");
                     continue;
                 }
                 for _ in 0..12 {
@@ -311,15 +367,23 @@ pub fn place<T: Copy>(
                 Some("len")
             } else if !(data.gain_s[0]..=data.gain_s[1]).contains(&gain) {
                 Some("gain<lo")
-            } else if !holds_radius(&path) {
+            } else if !holds_radius(&path, fork::limits::MIN_RADIUS_M) {
                 Some("radius")
-            } else if !clear_of_road(&grid, &path, len, half, width, a, b, n) {
+            } else if !clear_of_road(
+                &grid,
+                &path,
+                len,
+                half,
+                width,
+                (a, b, n),
+                fork::limits::END_M,
+            ) {
                 Some("clear")
             } else {
                 None
             };
             if let Some(why) = why {
-                reject(why);
+                bump(&mut rejects, why);
                 continue;
             }
             // The branch whose saving sits nearest the middle of the band from this split.
@@ -328,67 +392,277 @@ pub fn place<T: Copy>(
                 best = Some((off, d, path, s_to));
             }
         }
-        let Some((_, mut d, path, s_to)) = best else {
+        let Some((_, d, path, s_to)) = best else {
             continue;
         };
-        d.surface = match map.route.points[a].surface {
-            Surface::Tarmac => Surface::PackedDirt,
-            _ => Surface::Gravel,
-        };
-        if !on_grid(map, &path, &d, data) {
-            continue;
+        if commit(map, &xz, d, &path, data, width, &mut rejects) {
+            placed.push(Placed {
+                from_s: s_from,
+                to_s: s_to,
+            });
         }
-        let feature = feature_of(map, &d);
-        // The set pieces' landmarks are domes in the terrain: whether the lap's set pieces are seen from afar before
-        // this stamp (it may cut a dome or raise ground in the line of sight), so the stamp can't spoil them.
-        let sighted = crate::setpieces::check_minimum(map).is_empty();
-        let before = (map.terrain.heights.clone(), map.terrain.surfaces.clone());
-        stamp(map, &xz, &d, &path, data);
-        // The new fork, every one before it and every set piece (whose ground this stamp may have touched) hold their
-        // contracts, and the branch keeps clear of the set pieces' detours.
-        let probe = Map {
-            features: map
-                .features
-                .iter()
-                .filter(|f| matches!(f.kind, FeatureKind::Fork | FeatureKind::SetPiece))
-                .chain([&feature])
-                .cloned()
-                .collect(),
-            ..map.clone()
-        };
-        let detours: Vec<[f64; 2]> = probe
-            .features
-            .iter()
-            .filter(|f| f.kind == FeatureKind::SetPiece)
-            .flat_map(|f| jj_map::setpiece::detour_path(&probe, f))
-            .collect();
-        let crosses_detour = path.iter().any(|p| {
-            detours
-                .iter()
-                .any(|q| libm::hypot(p[0] - q[0], p[1] - q[1]) < width / 2.0 + DETOUR_CLEAR_M)
-        });
-        if crosses_detour
-            || sighted && !crate::setpieces::check_minimum(&probe).is_empty()
-            || probe.features.iter().any(|f| match f.kind {
-                FeatureKind::Fork => !fork::problems(&probe, f).is_empty(),
-                _ => !jj_map::setpiece::problems(&probe, f).is_empty(),
-            })
-        {
-            (map.terrain.heights, map.terrain.surfaces) = before;
-            reject("ground");
-            continue;
-        }
-        map.features.push(feature);
-        placed.push(Placed {
-            from_s: s_from,
-            to_s: s_to,
-        });
     }
+    place_cuts(
+        map,
+        rng,
+        ranges,
+        data,
+        &xz,
+        &s,
+        &grid,
+        half,
+        &mut placed,
+        &mut rejects,
+    );
     if !placed.is_empty() {
         move_gates(map);
         regrounded(map);
     }
     (placed, rejects)
+}
+
+/// Lays cuts (P1-FL10) at `cut.perKm` of eligible road: a short chord across the inside of each bend that turns at least
+/// `cut.bendDeg`, splitting `cut.leadM` before the bend and rejoining after it, saving `cut.gainS` at `cut.branchPace`.
+/// The bends are tried in a seeded order; each takes the lead whose saving sits nearest the middle of the band. Every
+/// chosen cut goes through the same paving, stamp and contract checks as a fork ([`commit`]).
+#[allow(clippy::too_many_arguments)]
+fn place_cuts<T: Copy>(
+    map: &mut Map,
+    rng: &mut Rng,
+    ranges: &[(f64, f64, T)],
+    data: &ForkData,
+    xz: &[[f64; 2]],
+    s: &[f64],
+    grid: &RoadGrid,
+    half: f64,
+    placed: &mut Vec<Placed>,
+    rejects: &mut BTreeMap<String, u32>,
+) {
+    let c = &data.cut;
+    let n = xz.len();
+    if c.per_km <= 0.0 || n < 16 {
+        return;
+    }
+    let eligible: f64 = ranges.iter().map(|(a, b, _)| (b - a).max(0.0)).sum();
+    let wanted = libm::round(c.per_km * eligible / 1000.0) as usize;
+    if wanted == 0 {
+        return;
+    }
+    let tangent = |i: usize| {
+        let (a, b) = (xz[(i + n - 1) % n], xz[(i + 1) % n]);
+        let l = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
+        [(b[0] - a[0]) / l, (b[1] - a[1]) / l]
+    };
+    let turn: Vec<f64> = (0..n)
+        .map(|i| {
+            let (t0, t1) = (tangent(i), tangent((i + 1) % n));
+            libm::atan2(t0[0] * t1[1] - t0[1] * t1[0], t0[0] * t1[0] + t0[1] * t1[1])
+        })
+        .collect();
+    // The bends: runs of route points curving tighter than BEND_RADIUS_M (never across the lap's seam) whose turn adds
+    // up to `bendDeg`.
+    const BEND_RADIUS_M: f64 = 120.0;
+    let need = c.bend_deg.to_radians();
+    let bent: Vec<bool> = (0..n)
+        .map(|i| {
+            let ds = libm::hypot(xz[(i + 1) % n][0] - xz[i][0], xz[(i + 1) % n][1] - xz[i][1]);
+            libm::fabs(turn[i]) * BEND_RADIUS_M > ds
+        })
+        .collect();
+    let mut bends = Vec::new();
+    let mut i = 0;
+    while i < n {
+        if !bent[i] {
+            i += 1;
+            continue;
+        }
+        let a0 = i;
+        let mut acc = 0.0;
+        while i < n && bent[i] {
+            acc += turn[i];
+            i += 1;
+        }
+        if libm::fabs(acc) >= need {
+            bends.push((rng.unit(), a0, i - 1));
+        }
+    }
+    bends.sort_by(|x, y| x.0.total_cmp(&y.0));
+    let left = |t: [f64; 2]| [-t[1], t[0]];
+    let mut cuts = 0;
+    for (_, a0, b0) in bends {
+        if cuts >= wanted {
+            break;
+        }
+        let (split, merge) = (
+            rng.range(c.split_deg[0], c.split_deg[1]),
+            rng.range(c.merge_deg[0], c.merge_deg[1]),
+        );
+        let (tension, width) = (
+            rng.range(c.tension[0], c.tension[1]),
+            rng.range(c.width_m[0], c.width_m[1]),
+        );
+        let mid = (c.gain_s[0] + c.gain_s[1]) / 2.0;
+        let mut best: Option<(f64, Fork, Vec<[f64; 2]>)> = None;
+        for k in 0..=4 {
+            let lead = c.lead_m[0] + (c.lead_m[1] - c.lead_m[0]) * f64::from(k) / 4.0;
+            let a = (0..=a0).rev().find(|&p| s[a0] - s[p] >= lead);
+            let b = (b0..n).find(|&p| s[p] - s[b0] >= lead);
+            let (Some(a), Some(b)) = (a, b) else {
+                bump(rejects, "cut:seam");
+                continue;
+            };
+            let (s_from, s_to) = (s[a], s[b]);
+            if !ranges
+                .iter()
+                .any(|&(lo, hi, _)| s_from - CLEAR_M >= lo && s_to + CLEAR_M <= hi)
+                || placed
+                    .iter()
+                    .any(|p| s_to + BETWEEN_M > p.from_s && s_from < p.to_s + BETWEEN_M)
+            {
+                bump(rejects, "cut:range");
+                continue;
+            }
+            if map
+                .route
+                .gates
+                .iter()
+                .any(|g| g.finish && (a..=b).contains(&(g.at as usize)))
+            {
+                bump(rejects, "cut:finish");
+                continue;
+            }
+            let (pa, pb) = (xz[a], xz[b]);
+            let chord = [pb[0] - pa[0], pb[1] - pa[1]];
+            let chord_len = libm::hypot(chord[0], chord[1]);
+            let la = left(tangent(a));
+            let d = Fork {
+                from: a as u32,
+                to: b as u32,
+                side: (chord[0] * la[0] + chord[1] * la[1]).signum(),
+                split_deg: split,
+                merge_deg: merge,
+                in_m: tension * chord_len,
+                out_m: tension * chord_len,
+                width_m: width,
+                surface: Surface::PackedDirt,
+                wiggle_m: 0.0,
+                wave_m: 0.0,
+                cut: true,
+            };
+            let path = fork::path_of(map, &d);
+            let len = fork::length_m(&path);
+            let gain = drive_s(&xz[a..=b], data, 1.0) - drive_s(&path, data, c.branch_pace);
+            let why =
+                if !(fork::cut_limits::BRANCH_M.0..=fork::cut_limits::BRANCH_M.1).contains(&len) {
+                    Some("cut:len")
+                } else if !(c.gain_s[0]..=c.gain_s[1]).contains(&gain) {
+                    Some(if gain < c.gain_s[0] {
+                        "cut:gain<lo"
+                    } else {
+                        "cut:gain>hi"
+                    })
+                } else if !holds_radius(&path, fork::cut_limits::MIN_RADIUS_M) {
+                    Some("cut:radius")
+                } else if !clear_of_road(
+                    grid,
+                    &path,
+                    len,
+                    half,
+                    width,
+                    (a, b, n),
+                    fork::cut_limits::END_M,
+                ) {
+                    Some("cut:clear")
+                } else {
+                    None
+                };
+            if let Some(why) = why {
+                bump(rejects, why);
+                continue;
+            }
+            let off = (gain - mid).abs();
+            if best.as_ref().is_none_or(|(o, ..)| off < *o) {
+                best = Some((off, d, path));
+            }
+        }
+        let Some((_, d, path)) = best else {
+            continue;
+        };
+        if commit(map, xz, d, &path, data, d.width_m, rejects) {
+            placed.push(Placed {
+                from_s: s[d.from as usize],
+                to_s: s[d.to as usize],
+            });
+            cuts += 1;
+        }
+    }
+}
+
+fn bump(rejects: &mut BTreeMap<String, u32>, why: &str) {
+    *rejects.entry(why.to_string()).or_default() += 1;
+}
+
+/// Paves a chosen branch looser than the road it leaves, stamps its ground and keeps it if it, every fork before it and
+/// every set piece still hold their contracts; otherwise puts the ground back.
+fn commit(
+    map: &mut Map,
+    xz: &[[f64; 2]],
+    mut d: Fork,
+    path: &[[f64; 2]],
+    data: &ForkData,
+    width: f64,
+    rejects: &mut BTreeMap<String, u32>,
+) -> bool {
+    let a = d.from as usize;
+    d.surface = match map.route.points[a].surface {
+        Surface::Tarmac => Surface::PackedDirt,
+        _ => Surface::Gravel,
+    };
+    if !on_grid(map, path, &d, data) {
+        return false;
+    }
+    let feature = feature_of(map, &d);
+    // The set pieces' landmarks are domes in the terrain: whether the lap's set pieces are seen from afar before
+    // this stamp (it may cut a dome or raise ground in the line of sight), so the stamp can't spoil them.
+    let sighted = crate::setpieces::check_minimum(map).is_empty();
+    let before = (map.terrain.heights.clone(), map.terrain.surfaces.clone());
+    stamp(map, xz, &d, path, data);
+    // The new fork, every one before it and every set piece (whose ground this stamp may have touched) hold their
+    // contracts, and the branch keeps clear of the set pieces' detours.
+    let probe = Map {
+        features: map
+            .features
+            .iter()
+            .filter(|f| matches!(f.kind, FeatureKind::Fork | FeatureKind::SetPiece))
+            .chain([&feature])
+            .cloned()
+            .collect(),
+        ..map.clone()
+    };
+    let detours: Vec<[f64; 2]> = probe
+        .features
+        .iter()
+        .filter(|f| f.kind == FeatureKind::SetPiece)
+        .flat_map(|f| jj_map::setpiece::detour_path(&probe, f))
+        .collect();
+    let crosses_detour = path.iter().any(|p| {
+        detours
+            .iter()
+            .any(|q| libm::hypot(p[0] - q[0], p[1] - q[1]) < width / 2.0 + DETOUR_CLEAR_M)
+    });
+    if crosses_detour
+        || sighted && !crate::setpieces::check_minimum(&probe).is_empty()
+        || probe.features.iter().any(|f| match f.kind {
+            FeatureKind::Fork => !fork::problems(&probe, f).is_empty(),
+            _ => !jj_map::setpiece::problems(&probe, f).is_empty(),
+        })
+    {
+        (map.terrain.heights, map.terrain.surfaces) = before;
+        bump(rejects, "ground");
+        return false;
+    }
+    map.features.push(feature);
+    true
 }
 
 fn feature_of(map: &Map, d: &Fork) -> Feature {
@@ -415,6 +689,8 @@ fn feature_of(map: &Map, d: &Fork) -> Feature {
             ("waveMm", i64::from(mm(d.wave_m))),
         ]
         .into_iter()
+        // A cut says so; a fork's params are as they were before cuts existed.
+        .chain(d.cut.then_some(("cut", 1)))
         .map(|(k, v)| (k.to_string(), v))
         .collect(),
     }
@@ -470,7 +746,7 @@ pub fn drive_s(line: &[[f64; 2]], data: &ForkData, pace: f64) -> f64 {
 }
 
 /// The branch's tightest radius (over 10 m) stays above the contract's minimum.
-fn holds_radius(path: &[[f64; 2]]) -> bool {
+fn holds_radius(path: &[[f64; 2]], min_radius_m: f64) -> bool {
     (4..path.len()).all(|k| {
         let (a, m, b) = (path[k - 4], path[k - 2], path[k]);
         let cross = (m[0] - a[0]) * (b[1] - m[1]) - (m[1] - a[1]) * (b[0] - m[0]);
@@ -478,7 +754,7 @@ fn holds_radius(path: &[[f64; 2]]) -> bool {
             * libm::hypot(m[0] - a[0], m[1] - a[1])
             * libm::hypot(b[0] - m[0], b[1] - m[1])
             / (2.0 * cross.abs()).max(1e-12);
-        r >= fork::limits::MIN_RADIUS_M + 3.0
+        r >= min_radius_m + 3.0
     })
 }
 
@@ -490,13 +766,13 @@ fn clear_of_road(
     len: f64,
     half: f64,
     width: f64,
-    a: usize,
-    b: usize,
-    n: usize,
+    (a, b, n): (usize, usize, usize),
+    end_m: f64,
 ) -> bool {
     let reach = half + width / 2.0 + fork::limits::ROAD_GAP_M;
-    // The route near the split and the merge is where the branch meets it by design.
-    let guard = 16;
+    // The route near the split and the merge is where the branch meets it by design: as many route points as the
+    // branch's ends span (16 for a fork's 40 m).
+    let guard = libm::ceil(end_m / 2.5) as usize;
     let near_end = |i: usize| {
         let d = |e: usize| {
             let k = (i + n - e) % n;
@@ -509,7 +785,7 @@ fn clear_of_road(
         if k > 0 {
             u += libm::hypot(p[0] - path[k - 1][0], p[1] - path[k - 1][1]);
         }
-        if u < fork::limits::END_M || len - u < fork::limits::END_M {
+        if u < end_m || len - u < end_m {
             continue;
         }
         if grid.near(*p, reach + 1.0, &near_end) {

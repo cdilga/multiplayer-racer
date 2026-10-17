@@ -1,0 +1,54 @@
+{
+  "autopilot": [
+    {
+      "car": 0,
+      "on": true,
+      "tick": 0
+    }
+  ],
+  "cars": [
+    {
+      "linvel": [
+        15.0,
+        0.0,
+        0.0
+      ],
+      "pose": {
+        "headingDeg": 90.0,
+        "x": -57.858,
+        "y": 28.792,
+        "z": -40.0
+      }
+    }
+  ],
+  "expect": [
+    {
+      "car": 0,
+      "max": 100000,
+      "metric": "progressM",
+      "min": 700
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wrecks",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "recoveries",
+      "min": 0
+    }
+  ],
+  "map": "maps/lab/hairpin-cut.json",
+  "scenario": "hairpin-cut-lap",
+  "seed": 1,
+  "ticks": 6000,
+  "until": {
+    "car": 0,
+    "metric": "progressM",
+    "min": 700
+  },
+  "what": "The autopilot drives a full lap of the scene (cut or road, as its branch choice falls), with no wreck or recovery."
+}

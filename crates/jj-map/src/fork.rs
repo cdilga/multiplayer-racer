@@ -11,6 +11,10 @@
 //!
 //! Shape rules (docs/research/fun-tracks.md R3): it splits at 15-35° and rejoins at no more than 25°; it is at least 9 m
 //! wide; it runs 150-600 m; no other part of the road comes near it.
+//!
+//! A **cut** (`cut` 1; P1-FL10, R134's "dirt cut-throughs") is the second family: a short chord across the inside of one
+//! tight bend (a hairpin's apex), so it splits and rejoins steeply, runs 25-160 m, turns tighter and only its own ends
+//! meet the road ([`cut_limits`]). Everything else is a fork's: the same line, bed, paving and checks.
 
 use crate::model::{Feature, FeatureKind, Map, Surface};
 
@@ -33,6 +37,27 @@ pub mod limits {
     pub const PIT_CLEAR_M: f64 = 3.0;
 }
 
+/// A cut's shape rules (P1-FL10): where they differ from [`limits`].
+pub mod cut_limits {
+    pub const SPLIT_DEG: (f64, f64) = (30.0, 80.0);
+    pub const MERGE_DEG_MAX: f64 = 80.0;
+    pub const BRANCH_M: (f64, f64) = (25.0, 160.0);
+    /// Driven slowly on loose ground, a cut turns tighter than a fork.
+    pub const MIN_RADIUS_M: f64 = 9.0;
+    /// Far enough along a steep split (25 m at 45°: 18 m out) to clear the road beside it.
+    pub const END_M: f64 = 25.0;
+}
+
+/// One family's shape rules.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Limits {
+    pub split_deg: (f64, f64),
+    pub merge_deg_max: f64,
+    pub branch_m: (f64, f64),
+    pub min_radius_m: f64,
+    pub end_m: f64,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Fork {
     pub from: u32,
@@ -48,6 +73,8 @@ pub struct Fork {
     /// winding).
     pub wiggle_m: f64,
     pub wave_m: f64,
+    /// A cut across one tight bend rather than a shortcut across a meander ([`cut_limits`]).
+    pub cut: bool,
 }
 
 /// The surface a branch is paved with, as a param: 0 tarmac, 1 packed dirt, 2 gravel.
@@ -87,7 +114,29 @@ impl Fork {
             surface: surface_of(p("surface")?)?,
             wiggle_m: mm("wiggleMm").unwrap_or(0.0),
             wave_m: mm("waveMm").unwrap_or(0.0),
+            cut: p("cut").is_some_and(|v| v == 1),
         })
+    }
+
+    /// The shape rules of this fork's family.
+    pub fn limits(&self) -> Limits {
+        if self.cut {
+            Limits {
+                split_deg: cut_limits::SPLIT_DEG,
+                merge_deg_max: cut_limits::MERGE_DEG_MAX,
+                branch_m: cut_limits::BRANCH_M,
+                min_radius_m: cut_limits::MIN_RADIUS_M,
+                end_m: cut_limits::END_M,
+            }
+        } else {
+            Limits {
+                split_deg: limits::SPLIT_DEG,
+                merge_deg_max: limits::MERGE_DEG_MAX,
+                branch_m: limits::BRANCH_M,
+                min_radius_m: limits::MIN_RADIUS_M,
+                end_m: limits::END_M,
+            }
+        }
     }
 }
 
@@ -267,15 +316,15 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
     if d.side.abs() != 1.0 {
         bad.push(format!("side {} is not +1 or -1", d.side));
     }
-    let (lo, hi) = limits::SPLIT_DEG;
+    let lim = d.limits();
+    let (lo, hi) = lim.split_deg;
     if !(lo..=hi).contains(&d.split_deg) {
         bad.push(format!("splits at {:.1}°, outside {lo}-{hi}°", d.split_deg));
     }
-    if !(0.0..=limits::MERGE_DEG_MAX).contains(&d.merge_deg) {
+    if !(0.0..=lim.merge_deg_max).contains(&d.merge_deg) {
         bad.push(format!(
             "rejoins at {:.1}°, outside 0-{}°",
-            d.merge_deg,
-            limits::MERGE_DEG_MAX
+            d.merge_deg, lim.merge_deg_max
         ));
     }
     if ((d.width_m * 1000.0).round() as i64) < limits::MIN_WIDTH_MM {
@@ -292,7 +341,7 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
         return bad;
     }
     let len = length_m(&line);
-    let (b0, b1) = limits::BRANCH_M;
+    let (b0, b1) = lim.branch_m;
     if !(b0..=b1).contains(&len) {
         bad.push(format!("branch {len:.0} m long, outside {b0}-{b1} m"));
     }
@@ -337,7 +386,7 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
             libm::hypot(b[0] - m[0], b[1] - m[1]),
         );
         let radius = ab * am * mb / (2.0 * cross.abs()).max(1e-12);
-        if radius < limits::MIN_RADIUS_M {
+        if radius < lim.min_radius_m {
             bad.push(format!("branch radius {radius:.1} m at point {k}"));
             break;
         }
@@ -374,7 +423,7 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
         if k > 0 {
             u += libm::hypot(p[0] - line[k - 1][0], p[1] - line[k - 1][1]);
         }
-        if u < limits::END_M || len - u < limits::END_M {
+        if u < lim.end_m || len - u < lim.end_m {
             continue;
         }
         if let Some(q) = pts.iter().find(|q| {

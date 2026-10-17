@@ -82,3 +82,47 @@ fn the_canyon_leaps_detour_is_the_slower_line() {
         d.min_speed
     );
 }
+
+/// P1-FL10 (R134): the hairpin's cut-through is shorter than the road round the hairpin and paved looser (packed dirt off
+/// the tarmac), a cut (`forks.cut`), not a meander fork; its runs (scenarios/lab/hairpin-cut-*.json) show it pays and
+/// slides.
+#[test]
+fn the_hairpin_cut_is_shorter_and_looser_than_the_road_it_skips() {
+    let built = lab::build("hairpin-cut", "maps/lab/hairpin-cut.json").unwrap();
+    let cuts: Vec<_> = built
+        .map
+        .features
+        .iter()
+        .filter_map(jj_map::fork::Fork::of)
+        .collect();
+    assert_eq!(cuts.len(), 1, "one cut, no other fork: {cuts:?}");
+    let d = cuts[0];
+    assert!(d.cut);
+    let road = &built.map.route.points;
+    let xz = |i: usize| (f64::from(road[i].x) / 1000.0, f64::from(road[i].z) / 1000.0);
+    let road_m: f64 = (d.from as usize..d.to as usize)
+        .map(|i| {
+            let (a, b) = (xz(i), xz(i + 1));
+            (b.0 - a.0).hypot(b.1 - a.1)
+        })
+        .sum();
+    let cut_m = jj_map::fork::length_m(&jj_map::fork::path_of(&built.map, &d));
+    assert!(
+        cut_m < road_m * 0.6,
+        "the cut ({cut_m:.0} m) is much shorter than the road it skips ({road_m:.0} m)"
+    );
+    assert_eq!(road[d.from as usize].surface, jj_map::Surface::Tarmac);
+    assert_eq!(d.surface, jj_map::Surface::PackedDirt);
+    assert!(
+        jj_map::fork::problems(
+            &built.map,
+            built
+                .map
+                .features
+                .iter()
+                .find(|f| jj_map::fork::Fork::of(f).is_some())
+                .unwrap()
+        )
+        .is_empty()
+    );
+}
