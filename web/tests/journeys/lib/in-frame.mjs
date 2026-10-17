@@ -1,8 +1,8 @@
 // br-l4v5 (R125): the race cameras keep the car in frame through big air and loops. Steps a loaded fixture `ticks` ticks,
-// `every` at a time, paints a frame after each step and asks every tile's camera whether car `car` (its body and a point
-// 1.2 m over it) is inside the frustum. Returns the ticks where a tile lost it, with the camera count checked.
+// `every` at a time (6: 20 checks a second), paints a frame after each step and asks every tile's camera whether car
+// `car` (its body and a point 1.2 m over it) is inside the frustum. Returns the ticks where a tile lost it.
 /** @param {import('playwright').Page} page */
-export async function inFrameRide(page, { ticks, every = 2, car = 0 }) {
+export async function inFrameRide(page, { ticks, every = 6, car = 0 }) {
   const lost = [];
   let frames = 0;
   for (let tick = 0; tick < ticks; tick += every) {

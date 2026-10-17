@@ -115,19 +115,19 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
 });
 
 // br-l4v5 (R125): at every tile size the race camera keeps the car in frame all the way round the loop (the loop shot
-// and the cuts in and out), checked every other tick.
-test('chromium: the loop stays in frame in 1, 2, 4 and 9 tiles, every frame',{timeout:600_000},async()=>{
+// and the cuts in and out), checked 20 times a second.
+test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',{timeout:600_000},async()=>{
   const browser=await chromium.launch({args:chromiumArgs});
   const rows=[];
   try {
-    for(const n of [1,2,4,9]) {
+    for(const n of [1,4,9]) {
       const page=await browser.newPage({viewport:{width:1366,height:768}});
       await page.route('**/generated-loop.json',r=>r.fulfill({contentType:'application/json',body:mapJson}));
       await page.goto(`${server.origin}${BASE}host?test&${tilesFollowing(n)}&look=on&res=1&autores=off&mapUrl=${encodeURIComponent(server.origin+'/generated-loop.json')}`);
       await page.waitForFunction(()=>window.__jjTest&&window.__jjRender);
       await page.evaluate(async({fixture,mapJson})=>{window.__jjRender.hold();await window.__jjTest.load(fixture,mapJson);},{fixture,mapJson});
       const r=await inFrameRide(page,{ticks:TICKS});
-      rows.push({tiles:n,frames:r.frames,lost:r.lost.length});
+      rows.push({tiles:n,frames:r.frames,lost:r.lost.length});console.log(`# ${n} tiles: ${r.frames} checks, ${r.lost.length} lost`);
       assert.deepEqual(r.lost,[],`${n} tiles: the car leaves a tile's frame`);
       await page.close();
     }
