@@ -44,7 +44,9 @@ async function open(path, viewport = { width: 1920, height: 1080 }) {
   return { page, errors, mode };
 }
 
-const frames = (page, n) => page.waitForFunction((k) => (window.__jjRender?.stats().frames ?? 0) >= k, n, { timeout: 30_000 });
+// 12 software-GL tiles of 24 cars on a busy runner draw 30 frames in more than 30 s (CI run 5544): the wait is for the frames,
+// the test asserts what they show.
+const frames = (page, n) => page.waitForFunction((k) => (window.__jjRender?.stats().frames ?? 0) >= k, n, { timeout: 120_000 });
 
 test('captures first-person-4 and mixed-fp-tp-12', async () => {
   const shots = {
