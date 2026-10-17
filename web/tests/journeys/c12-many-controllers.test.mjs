@@ -156,7 +156,7 @@ async function joined(url, phone = false) {
 }
 
 // Quarantined (CI owner, br-j71z, owner BrownHill): timed out at 900 s in run 5598 (job 12288). Was: 24 live views need a GPU host.
-test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000, skip: process.env.JJ_UNQUARANTINE ? false : 'quarantined br-j71z (owner BrownHill): times out at 900 s; JJ_UNQUARANTINE=1 runs it' }, async () => {
+test('24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated', { timeout: 900_000 }, async () => {
   let diagnosticHost, diagnosticPages = [], diagnosticSources = [], diagnosticPattern;
   try {
   // Normal resolution and all live views: source qualification runs in the GPU workflow.
