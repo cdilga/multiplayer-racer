@@ -176,6 +176,15 @@ whole. The owner saw yesterday's build and concluded nothing had happened.
    GPU runner for GL-heavy journeys), and records per-lane timings in `docs/evidence/P1-CI-speed/`.
 7. **Watch the spend.** The coordinator scales workers down when CI churn outweighs feature work, and reports usage to the
    owner rather than letting it run silently.
+8. **Nobody waits on CI; every session moves the game forward** (owner, 2026-10-17). Finish a bead locally (every
+   acceptance item with its focused test or evidence, visual self-review committed), push, hand it off with
+   `close.sh <id> --tests "…" --pending`, and start the next bead straight away. Never sit on `ci-status.sh --wait`,
+   poll a run, or hold a bead open for a batch. The deploy worker closes `batch_pending` beads when their batch is green
+   and hands any red back to the bead's author with the cause; the author fixes it forward as their next task. An idle
+   session, or one waiting on CI, is the coordinator's bug to fix that tick.
+9. **Two sessions** (owner, 2026-10-17): one Opus worker churns beads to done, one light Haiku deploy worker owns CI,
+   previews and `batch_pending` closes; the coordinator only nudges. More sessions need the owner. Every session, and
+   every coordinator loop tick, rereads this file (`AGENTS.md`) before acting.
 
 ## Beads (Physical Soccer's model)
 
@@ -194,7 +203,7 @@ whole. The owner saw yesterday's build and concluded nothing had happened.
   `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`. It pushes the commit and its LFS
   objects, waits for green CI (`scripts/ci-status.sh --wait`), ticks the acceptance boxes, records the
   `batch_verify` gate and closes with the run as the receipt. A red lane on your change is yours to fix.
-  `--pending` hands off to the verifier instead (`batch_pending`). `--receipt docs/evidence/<P1-ID>/<file>`
+  `--pending` hands off to the deploy worker instead (`batch_pending`) and is **the default** (CI rule 8: don't wait). `--receipt docs/evidence/<P1-ID>/<file>`
   covers owner, deploy-repo and hardware evidence, and every close before CI exists (P1-D01, P1-F02):
   the receipt is a committed record of the commands and their output.
 - `br sync --flush-only` exports the DB to `.beads/issues.jsonl` (mutations usually auto-flush). More
