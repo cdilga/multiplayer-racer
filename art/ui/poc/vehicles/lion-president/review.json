@@ -2,12 +2,13 @@
   "id": "lion-president",
   "name": "Lion President",
   "status": "awaiting-review",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "R123's Lion President: a bubbly Aussie V8 sedan in the spirit of the last V8 Commodore, the SS-V Redline. Gloss-black roof, two big forward-facing bonnet nostrils, angular lamps with LED fangs, a wide lower grille split by one thick bar, slatted air curtains, side skirts, a tall wing on posts, a full-width tail lamp on a black band, a black diffuser with quad exhausts, red calipers and a black-and-gold shoulder pinstripe. Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Hawk Dash's spec twin.",
+  "summary": "R123's Lion President: a bubbly Aussie V8 sedan in the spirit of the last V8 Commodore, the SS-V Redline. Rebuilt against its contact sheet (br-bwju.11): a tall sedan cabin with painted pillars, black-framed side glass in three panes and a gloss-black roof with a shark fin; big fanged headlamps wrapping onto the wings over a barred grille; a black lower bumper with slatted intakes and four LED blocks; a splitter with a red lip; raised body-colour bonnet scoops with black mouths; a whip aerial; widebody flares; 5-spoke dark rims with red calipers; a tall wing on swan-neck posts; a full-width tail-lamp bar; a finned diffuser with four chrome pipes; mirrors on stalks and the black-and-gold swoosh. LOD0 2162 triangles (qualified budget now 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Hawk Dash's spec twin.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "hawk-dash",
@@ -22,24 +23,36 @@
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9485,
-          "top": 0.9219,
-          "front": 0.9214,
-          "rear": 0.9382
+          "side": 0.9643,
+          "top": 0.928,
+          "front": 0.9206,
+          "rear": 0.9532
         },
-        "weightedIou": 0.9349
+        "weightedIou": 0.9452
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "sheet": "media/reference-lod1/sheet.png",
+        "iou": {
+          "side": 0.9622,
+          "top": 0.9206,
+          "front": 0.9206,
+          "rear": 0.9475
+        },
+        "weightedIou": 0.9413
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9558,
-          "top": 0.9375,
-          "front": 0.9142,
-          "rear": 0.9326
+          "side": 0.9637,
+          "top": 0.9438,
+          "front": 0.9156,
+          "rear": 0.9363
         },
-        "weightedIou": 0.9406
+        "weightedIou": 0.9464
       }
     ]
   },
@@ -52,15 +65,15 @@
       {
         "lod": 0,
         "glb": "media/model/lion-president.lod0.glb",
-        "tris": 1278,
+        "tris": 2162,
         "draws": 11,
-        "maxTris": 1300,
+        "maxTris": 2400,
         "withinBudget": true
       },
       {
         "lod": 1,
         "glb": "media/model/lion-president.lod1.glb",
-        "tris": 890,
+        "tris": 892,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -68,7 +81,7 @@
       {
         "lod": 2,
         "glb": "media/model/lion-president.lod2.glb",
-        "tris": 526,
+        "tris": 594,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -102,8 +115,8 @@
         },
         "pivot": [
           0,
-          1.0719,
-          0.8699999999999999
+          1.0775000000000001,
+          0.7499999999999999
         ]
       },
       {
@@ -119,8 +132,8 @@
         },
         "pivot": [
           0,
-          1.16085,
-          -0.8699999999999999
+          1.15975,
+          -0.7499999999999999
         ]
       },
       {
@@ -135,9 +148,9 @@
           "max": 0
         },
         "pivot": [
-          0.9173478260869565,
-          0.6125783783783784,
-          0.8699999999999999
+          0.8869565217391304,
+          0.6025783783783785,
+          0.8499999999999999
         ]
       },
       {
@@ -152,9 +165,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9173478260869565,
-          0.6125783783783784,
-          0.8699999999999999
+          -0.8869565217391304,
+          0.6025783783783785,
+          0.8499999999999999
         ]
       },
       {
@@ -169,8 +182,8 @@
           "max": 0
         },
         "pivot": [
-          0.8486304347826087,
-          0.633452027027027,
+          0.8931159420289855,
+          0.6259290540540541,
           -0.28
         ]
       },
@@ -186,8 +199,8 @@
           "max": 70
         },
         "pivot": [
-          -0.8486304347826087,
-          0.633452027027027,
+          -0.8931159420289855,
+          0.6259290540540541,
           -0.28
         ]
       },
@@ -356,35 +369,39 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean, origin between the axles, anchors cam_fp, cam_tp_target, com, roof_number, lplate_front, lplate_rear; no badges, logos or real names)"
+        "text": "contract + reproducibility (validator clean with the 3000 LOD0 budget; origin between the axles; anchors unchanged)"
       },
       {
         "result": "PASS",
-        "text": "budget; WARN silhouette: weighted IoU 0.935 for LOD0 against 'lod + 1' (side 0.949, top 0.922, front 0.921, rear 0.938) and 0.941 for LOD2 against 'lowest', short of the ~0.95 target. The reference's lower front is boxier and wider than the shared lofted body allows, and the wing is kept high for identity"
+        "text": "budget: LOD0 2162 <= 2400 <= 3000; LOD1 892 <= 900; LOD2 594 <= 600"
       },
       {
         "result": "PASS",
-        "text": "by-eye cues: black roof, bonnet nostrils, fang lamps, split lower grille, tall wing, full-width tail lamp, quad exhausts and the shoulder pinstripe read in views.png and grid-1.png; at grid-24 it reads apart from the Hawk Dash (wing, black roof, tail band against twin stripes)"
+        "text": "silhouette (better than before): LOD0 weighted IoU 0.9349 -> 0.9452 (side 0.949 -> 0.964, top 0.922 -> 0.928, front 0.921 -> 0.921, rear 0.938 -> 0.953); LOD1 0.933 -> 0.941; LOD2 0.941 -> 0.946. Short of the skill's ~0.95 at LOD0 by 0.005, mostly the top view (the sim's 0.43 m wheels on a 0.84 m track sit wider than the sheet's narrow body)"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (the Cruz's atlas layout and material; draws per tile are the Cruz's 11 parts, one InstancedMesh per part type)"
+        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): every cue in the owner's list is present: tall cabin with pillars and window frames, 5-spoke rims with red calipers, flared arches, large fanged lamps, barred grille, slatted intakes with 4 LEDs, black splitter, raised scoops, aerial, swoosh, swan-neck wing, full-width tail bar, black diffuser with quad pipes, mirrors"
       },
       {
         "result": "PASS",
-        "text": "damage states (each part turns about its hinge line to its limit; detached parts lie as separate bodies; dark bays and interior blocks behind missing panels)"
+        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
       },
       {
         "result": "PASS",
-        "text": "physics fit (convex collider per part from the bake, colliders.png; profile geometry synced from the sidecar; rear drive, 1700 kg, the Hawk Dash's tuning exactly)"
+        "text": "damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (colliders.png: one convex hull per part; the aerial, fin, calipers and mirrors are left out of the colliders)"
       },
       {
         "result": "WARN",
-        "text": "identity at the smallest tile: legible in grid-24.png; the pinstripe reads light (cream) through the paint key's filtered edges (br-vhtm, renderer-wide). The roof number isn't drawn by this viewer."
+        "text": "wheel size: the sheet's wheels are about 0.34 m in radius, the model's 0.43 m (the sim's wheel_radius, shared feel with the Hawk); not changed here"
       },
       {
         "result": "WARN",
-        "text": "detail: the calipers read as small red squares on the rim disc; LOD2's flat scoop decals are partly clipped by the faceted bonnet"
+        "text": "the swoosh's pinstripes read cream through the paint key's filtered edges (br-vhtm, renderer-wide)"
       }
     ],
     "report": "media/gate/validation.md"

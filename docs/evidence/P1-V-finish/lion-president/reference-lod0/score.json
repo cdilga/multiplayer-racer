@@ -1,0 +1,53 @@
+{
+ "car": "lion-president",
+ "lod": 0,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 2254,
+  "draws": 14,
+  "breakdown": {
+   "front": 516,
+   "core": 306,
+   "door_FL": 26,
+   "door_RL": 14,
+   "back": 580,
+   "door_FR": 26,
+   "door_RR": 14,
+   "wheel_FL": 170,
+   "wheel_FR": 170,
+   "wheel_RL": 170,
+   "wheel_RR": 170,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 32
+  },
+  "stations": 29
+ },
+ "views": {
+  "side": {
+   "iou": 0.9643,
+   "aspect": 1.004,
+   "miss": 0.0105,
+   "extra": 0.0252
+  },
+  "top": {
+   "iou": 0.928,
+   "aspect": 1.014,
+   "miss": 0.0126,
+   "extra": 0.0594
+  },
+  "front": {
+   "iou": 0.9206,
+   "aspect": 0.937,
+   "miss": 0.0742,
+   "extra": 0.0052
+  },
+  "rear": {
+   "iou": 0.9532,
+   "aspect": 0.982,
+   "miss": 0.03,
+   "extra": 0.0168
+  }
+ },
+ "score": 0.9452
+}

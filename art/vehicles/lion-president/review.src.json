@@ -2,12 +2,13 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Lion President",
   "status": "awaiting-review",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "R123's Lion President: a bubbly Aussie V8 sedan in the spirit of the last V8 Commodore, the SS-V Redline. Gloss-black roof, two big forward-facing bonnet nostrils, angular lamps with LED fangs, a wide lower grille split by one thick bar, slatted air curtains, side skirts, a tall wing on posts, a full-width tail lamp on a black band, a black diffuser with quad exhausts, red calipers and a black-and-gold shoulder pinstripe. Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Hawk Dash's spec twin.",
+  "summary": "R123's Lion President: a bubbly Aussie V8 sedan in the spirit of the last V8 Commodore, the SS-V Redline. Rebuilt against its contact sheet (br-bwju.11): a tall sedan cabin with painted pillars, black-framed side glass in three panes and a gloss-black roof with a shark fin; big fanged headlamps wrapping onto the wings over a barred grille; a black lower bumper with slatted intakes and four LED blocks; a splitter with a red lip; raised body-colour bonnet scoops with black mouths; a whip aerial; widebody flares; 5-spoke dark rims with red calipers; a tall wing on swan-neck posts; a full-width tail-lamp bar; a finned diffuser with four chrome pipes; mirrors on stalks and the black-and-gold swoosh. LOD0 2162 triangles (qualified budget now 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Hawk Dash's spec twin.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "hawk-dash",
@@ -19,27 +20,32 @@
       {
         "lod": 0,
         "label": "LOD0 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/br-bwju.3/lion-president/reference-lod0"
+        "dir": "docs/evidence/P1-V-finish/lion-president/reference-lod0"
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "dir": "docs/evidence/P1-V-finish/lion-president/reference-lod1"
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
-        "dir": "docs/evidence/br-bwju.3/lion-president/reference-lod2"
+        "dir": "docs/evidence/P1-V-finish/lion-president/reference-lod2"
       }
     ],
     "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/lion-president/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out)."
   },
   "turntable": {
-    "sheet": "docs/evidence/br-bwju.3/lion-president/lods.png",
-    "validation": "docs/evidence/br-bwju.3/lion-president/validation.md"
+    "sheet": "docs/evidence/P1-V-finish/lion-president/lods.png",
+    "validation": "docs/evidence/P1-V-finish/lion-president/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/br-bwju.3/lion-president/damage-strip.png",
-    "overview": "docs/evidence/br-bwju.3/lion-president/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-finish/lion-president/damage-strip.png",
+    "overview": "docs/evidence/P1-V-finish/lion-president/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
   },
   "paints": {
-    "sheet": "docs/evidence/br-bwju.3/lion-president/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-finish/lion-president/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. Known defect br-vhtm: filtered livery edges are untinted grey."
   },
@@ -47,26 +53,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/br-bwju.3/lion-president/grid-1.png"
+      "path": "docs/evidence/P1-V-finish/lion-president/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/br-bwju.3/lion-president/grid-4.png"
+      "path": "docs/evidence/P1-V-finish/lion-president/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/br-bwju.3/lion-president/grid-24.png"
+      "path": "docs/evidence/P1-V-finish/lion-president/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/br-bwju.3/lion-president/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-finish/lion-president/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/br-bwju.3/lion-president/validation.md"
+    "report": "docs/evidence/P1-V-finish/lion-president/validation.md"
   },
   "profile": "assets/profiles/lion-president.json",
   "handling": {

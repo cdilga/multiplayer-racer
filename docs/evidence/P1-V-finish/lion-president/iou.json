@@ -1,0 +1,74 @@
+{
+ "what": "Weighted silhouette IoU of the Lion President against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). before = the br-bwju.3 bake: LOD0 and LOD2 from its committed score.json (before-br-bwju.3/); LOD1 was never scored then, so its number comes from the same evaluator ported to the CPU (agreed with the browser within 0.0005 on LOD0). after = reference-lod<N>/score.json, this commit, Playwright Chromium on eris. tris exclude the interior blocks (drawn only when exposed).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9349,
+   "views": {
+    "side": 0.9485,
+    "top": 0.9219,
+    "front": 0.9214,
+    "rear": 0.9382
+   },
+   "tris": 1278
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.9328,
+   "views": {
+    "side": 0.948,
+    "top": 0.9211,
+    "front": 0.9139,
+    "rear": 0.9345
+   },
+   "tris": 890,
+   "source": "CPU port of the evaluator"
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9406,
+   "views": {
+    "side": 0.9558,
+    "top": 0.9375,
+    "front": 0.9142,
+    "rear": 0.9326
+   },
+   "tris": 526
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9452,
+   "views": {
+    "side": 0.9643,
+    "top": 0.928,
+    "front": 0.9206,
+    "rear": 0.9532
+   },
+   "tris": 2162
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.9413,
+   "views": {
+    "side": 0.9622,
+    "top": 0.9206,
+    "front": 0.9206,
+    "rear": 0.9475
+   },
+   "tris": 892
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9464,
+   "views": {
+    "side": 0.9637,
+    "top": 0.9438,
+    "front": 0.9156,
+    "rear": 0.9363
+   },
+   "tris": 594
+  }
+ }
+}

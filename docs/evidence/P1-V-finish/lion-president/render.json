@@ -1,0 +1,2060 @@
+[
+ {
+  "which": "old",
+  "tiles": 1,
+  "drawCalls": 136,
+  "triangles": 86222,
+  "frames": 167,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 4,
+  "drawCalls": 412,
+  "triangles": 190256,
+  "frames": 167,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 24,
+  "drawCalls": 2252,
+  "triangles": 1036296,
+  "frames": 176,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 1408,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 1360,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 1208,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 960,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 848,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 832,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 800,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 680,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 448,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 440,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 96,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 96,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 48,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 1,
+  "drawCalls": 136,
+  "triangles": 96830,
+  "frames": 171,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 4,
+  "drawCalls": 412,
+  "triangles": 190328,
+  "frames": 169,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 24,
+  "drawCalls": 2252,
+  "triangles": 1036688,
+  "frames": 171,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "lionGroups": [
+   {
+    "name": "Scene/lion-president.wheel.lod0",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod0.ink",
+    "triangles": 2720,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod0.ink",
+    "triangles": 2320,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.front.lod0.ink",
+    "triangles": 2064,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.core.lod0.ink",
+    "triangles": 1224,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.back.lod1",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.back.lod1.ink",
+    "triangles": 928,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.front.lod1.ink",
+    "triangles": 912,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.core.lod1.ink",
+    "triangles": 816,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod1.ink",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.wheel.lod2.ink",
+    "triangles": 608,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.core.lod2.ink",
+    "triangles": 576,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.front.lod2.ink",
+    "triangles": 552,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.back.lod2.ink",
+    "triangles": 544,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod0.ink",
+    "triangles": 104,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod1.ink",
+    "triangles": 72,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod0.ink",
+    "triangles": 56,
+    "layers": 2
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod1.ink",
+    "triangles": 48,
+    "layers": 4
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_FR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/lion-president.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "lionTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "door_FL",
+    4
+   ],
+   [
+    "door_FR",
+    4
+   ],
+   [
+    "door_RL",
+    4
+   ],
+   [
+    "door_RR",
+    4
+   ],
+   [
+    "wheel",
+    16
+   ]
+  ],
+  "errors": []
+ }
+]
