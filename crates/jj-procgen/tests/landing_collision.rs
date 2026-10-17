@@ -98,16 +98,16 @@ fn fly(parked: Option<[f32; 3]>) -> Flight {
         if flying && !air && out.touchdown.is_none() {
             out.touchdown = Some((st.position, t));
         }
-        if let Some((_, at)) = out.touchdown {
-            if t > at {
-                out.max_up_after = out.max_up_after.max(st.linvel[1]);
-                if air {
-                    out.air_after_ticks += 1;
-                    run += 1;
-                    out.longest_air_after = out.longest_air_after.max(run);
-                } else {
-                    run = 0;
-                }
+        if let Some((_, at)) = out.touchdown
+            && t > at
+        {
+            out.max_up_after = out.max_up_after.max(st.linvel[1]);
+            if air {
+                out.air_after_ticks += 1;
+                run += 1;
+                out.longest_air_after = out.longest_air_after.max(run);
+            } else {
+                run = 0;
             }
         }
         was_air = air;
