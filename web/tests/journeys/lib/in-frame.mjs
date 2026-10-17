@@ -29,3 +29,17 @@ export async function inFrameRide(page, { ticks, every = 6, car = 0 }) {
 
 /** `tiles=N&follow=0,0,…`: N tiles, every one following car `car`, so each tile size sees the same ride. */
 export const tilesFollowing = (n, car = 0) => `tiles=${n}&follow=${Array(n).fill(car).join(',')}`;
+
+/** br-gw74.13.1.1.1: in the overview, car `car`'s label box (2 px margin) covers neither the car nor its road 8 m ahead of
+ *  or behind it along its travel (where the jump or loop it is on lies). Returns the points it covers, and the box. */
+export async function labelClear(page, car = 0) {
+  return page.evaluate((car) => (async () => {
+    const c = (await window.__jjTest.observe()).cars.find((x) => x.car === car);
+    const r = document.querySelector(`.identity-nameplate[data-car="${car}"]`)?.getBoundingClientRect();
+    if (!r) return { labelled: false };
+    const v = c.linvel, sp = Math.hypot(...v) || 1;
+    const pts = [0, 8, -8].map((m) => window.__jjRender.project(...c.position.map((p, i) => p + (v[i] / sp) * m)));
+    const covered = pts.filter(([x, y]) => x > r.left - 2 && x < r.right + 2 && y > r.top - 2 && y < r.bottom + 2);
+    return { labelled: true, covered, box: [r.left, r.top, r.right, r.bottom].map(Math.round), pts: pts.map((p) => p.map(Math.round)) };
+  })(), car);
+}

@@ -11,7 +11,7 @@ import {chromium} from 'playwright';
 import {build,serve} from '../../landing/tests/lib/site.mjs';
 import {chromiumArgs} from './lib/chromium.mjs';
 import {evidencePath} from '../lib/evidence.mjs';
-import {inFrameRide,tilesFollowing} from './lib/in-frame.mjs';
+import {inFrameRide,labelClear,tilesFollowing} from './lib/in-frame.mjs';
 
 const BASE='/p/genloop/';
 const out=process.env.JJ_CAPTURE_DIR ?? evidencePath('br-xlvx.6.4');
@@ -84,14 +84,10 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
             });
             if(view==='chase')assert.ok(sees.length&&sees[0].sees.every(Boolean),'the car at the top is in the tile camera frustum');
             if(view==='overview'){
-              // br-gw74.13.1.1.1: at whole-lap scale the car's label stands above the car (and the loop it is on), not over it.
-              const lab=await page.evaluate(async()=>{
-                const c=(await window.__jjTest.observe()).cars[0],[x,y]=window.__jjRender.project(...c.position);
-                const r=document.querySelector('.identity-nameplate[data-car="0"]')?.getBoundingClientRect();
-                return r&&{x,y,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
-              });
-              assert.ok(lab,'the overview labels the car');
-              assert.ok(lab.bottom<lab.y-8,`${width}x${height}: the label stands clear above the car: ${JSON.stringify(lab)}`);
+              // br-gw74.13.1.1.1: at whole-lap scale the car's label stands beside the car, over neither it nor the loop it is on.
+              const lab=await labelClear(page);
+              assert.ok(lab.labelled,'the overview labels the car');
+              assert.deepEqual(lab.covered,[],`${width}x${height}: the label covers neither the car nor the loop around it: ${JSON.stringify(lab)}`);
             }
             const file=`top-${view}-${width}x${height}.jpg`;
             if(process.env.JJ_CAPTURE_DIR)await page.screenshot({path:join(out,file),type:'jpeg',quality:85});

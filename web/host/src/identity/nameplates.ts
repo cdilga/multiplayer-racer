@@ -27,7 +27,8 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       const v = world.vehicles!;
       const number = v.numberOf(point.id);
       mark.dataset.number = String(number); mark.dataset.car = String(point.car); mark.dataset.tile = String(point.tile);
-      const text = `#${number}${point.font >= 18 ? ` ${v.nameOf(point.id)}` : ''}`;
+      // The overview (no tiles) shows the number alone: its cars are specks and a name label would cover the course.
+      const text = `#${number}${point.font >= 18 && !point.side ? ` ${v.nameOf(point.id)}` : ''}`;
       const keyStyle = `${number}:${v.paintOf(point.id)}:${text}:${point.font}:${point.clip.right - point.clip.left}`;
       let box = sizes.get(mark);
       if (box?.key !== keyStyle) {
@@ -38,7 +39,14 @@ export function mountNameplates(root: HTMLElement, world: World): void {
         box = { key: keyStyle, width: mark.offsetWidth, height: mark.offsetHeight }; sizes.set(mark, box);
       }
       // Stable labels require no layout reads or SVG work per frame.
-      pending.push({ point, mark, width: box.width, height: box.height, x: point.x, y: point.y });
+      let { x, y } = point;
+      if (point.side) {
+        // Beside the car in the overview: the label's near edge a line's height off it, along `side` (up the screen).
+        const [ux, uy] = point.side, gap = point.font * 1.2;
+        x = point.carX + ux * (gap + box.width / 2);
+        y = point.carY + uy * (gap + box.height / 2) + box.height / 2;
+      }
+      pending.push({ point, mark, width: box.width, height: box.height, x, y });
     }
     // Reflow intersecting nameplates within their own viewport. All remain present; dense projected fields scale to fit.
     for (const [tile, group] of groups) {
@@ -69,7 +77,10 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       for (const item of items) {
         item.mark.style.transform = `translate(-50%, -100%) scale(${scale})`;
         item.mark.style.left = `${item.x}px`; item.mark.style.top = `${item.y}px`;
-        item.mark.style.setProperty('--lead', `${Math.max(0, item.point.carY - item.y) / scale}px`);
+        // The leader runs from the label's bottom centre to the car, at whatever angle that is.
+        const dx = item.point.carX - item.x, dy = item.point.carY - item.y;
+        item.mark.style.setProperty('--lead', `${Math.max(0, Math.hypot(dx, dy) - 2) / scale}px`);
+        item.mark.style.setProperty('--lead-angle', `${Math.atan2(-dx, dy)}rad`);
       }
     }
     for (const [key, mark] of marks) if (!live.has(key)) { mark.remove(); marks.delete(key); }

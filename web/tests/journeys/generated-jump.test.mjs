@@ -10,7 +10,7 @@ import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 import { evidencePath } from '../lib/evidence.mjs';
-import { inFrameRide, tilesFollowing } from './lib/in-frame.mjs';
+import { inFrameRide, labelClear, tilesFollowing } from './lib/in-frame.mjs';
 
 const deployed = process.env.JJ_PREVIEW_URL ? new URL(process.env.JJ_PREVIEW_URL) : null;
 const BASE = deployed ? deployed.pathname.replace(/\/?$/, '/') : '/p/jump/';
@@ -148,7 +148,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         await page.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
         rows.push({ file, state: 'side-air', width: 1366, height: 768, tick: air.tick });
         // br-gw74.13.1.1.1: the host's own overview (whole-lap scale): the jump reads as a jump and the car's label stands
-        // above the car in the air, not over it or the jump.
+        // beside the car in the air, not over it or the jump.
         const over = new URL(page.url());
         over.searchParams.delete('orbit'); over.searchParams.delete('tiles'); over.searchParams.delete('camdist');
         await page.goto(over.href);
@@ -161,13 +161,9 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         for (const [width, height] of [[1920, 1080], [1366, 768]]) {
           await page.setViewportSize({ width, height });
           await paint(20);
-          const lab = await page.evaluate(async () => {
-            const c = (await window.__jjTest.observe()).cars[0], [x, y] = window.__jjRender.project(...c.position);
-            const r = document.querySelector('.identity-nameplate[data-car="0"]')?.getBoundingClientRect();
-            return r && { x, y, left: r.left, right: r.right, top: r.top, bottom: r.bottom };
-          });
-          assert.ok(lab, 'the overview labels the car');
-          assert.ok(lab.bottom < lab.y - 8, `${width}x${height}: the label stands clear above the car: ${JSON.stringify(lab)}`);
+          const lab = await labelClear(page);
+          assert.ok(lab.labelled, 'the overview labels the car');
+          assert.deepEqual(lab.covered, [], `${width}x${height}: the label covers neither the car nor the jump around it: ${JSON.stringify(lab)}`);
           const file = `${name}-overview-air-${width}x${height}.jpg`;
           await page.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
           rows.push({ file, state: 'overview-air', width, height, tick: air.tick });

@@ -34,8 +34,12 @@ import { LaunchCallouts } from './launch-callout';
 
 export interface NameplatePoint {
   tile: number; car: number; id: number; x: number; y: number; font: number;
-  /** Where the car itself is (CSS px): the label's leader line points down to it. */
+  /** Where the car itself is (CSS px): the label's leader line points to it. */
+  carX: number;
   carY: number;
+  /** The overview only: the screen direction (unit, y down) beside the car, away from the road it is on, that the label
+   *  stands off in. Null in a tile (the label stands above the car). */
+  side: [number, number] | null;
   clip: { left: number; right: number; top: number; bottom: number };
 }
 
@@ -620,7 +624,19 @@ export class World {
       // br-gw74.13.1.1.1: 2.2 m above the car is a pixel or two at whole-lap scale (the overview), so the label sat on the
       // car and the jump or loop it was on. It stands at least a line's height above the car, with a leader down to it.
       const y = Math.min((rect.y + (1 - p.y) * rect.h / 2) / scale, carY - font * 1.2);
-      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale, y, carY, font, clip });
+      const carX = (rect.x + (c.x + 1) * rect.w / 2) / scale;
+      // In the overview a label above the car can sit on the road ahead of it (the jump or loop it is on, when the road
+      // runs up the screen), so it stands off to the side of the car's travel, on whichever side faces up the screen.
+      let side: [number, number] | null = null;
+      if (tile === 0) {
+        this.q.set(s.rot[car * 4]!, s.rot[car * 4 + 1]!, s.rot[car * 4 + 2]!, s.rot[car * 4 + 3]!);
+        const f = new Vector3(0, 0, 4).applyQuaternion(this.q).add(new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]!, s.pos[car * 3 + 2]!)).project(camera);
+        let dx = (f.x - c.x) * rect.w, dy = -(f.y - c.y) * rect.h;
+        const len = Math.hypot(dx, dy);
+        [dx, dy] = len > 1e-6 ? [dx / len, dy / len] : [1, 0];
+        side = dx >= 0 ? [dy, -dx] : [-dy, dx];
+      }
+      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale, y, carX, carY, side, font, clip });
     }
   }
 
