@@ -400,12 +400,21 @@ pub fn undulate_along_crossing(
         for &(a, b, mid, (half_lo, half_hi)) in &deck_span {
             let top = h[nearest(mid)];
             let (start, end) = (h[a], h[b]);
+            // Each foot meets the road outside at that road's grade ([`deck_foot`]), as `crossings::place` builds it.
+            let (pa, pa2) = ((a + n - 1) % n, (a + n - 2) % n);
+            let (nb, nb2) = ((b + 1) % n, (b + 2) % n);
+            let g_lo = (h[a] - h[pa2]) / (ds[pa2] + ds[pa]).max(1e-6);
+            let g_hi = (h[nb2] - h[b]) / (ds[b] + ds[nb]).max(1e-6);
             for i in a..=b {
                 let half_span = if s[i] < mid { half_lo } else { half_hi };
                 let u = ((s[i] - mid).abs() - deck.plateau_half_m).max(0.0)
                     / (half_span - deck.plateau_half_m).max(1.0);
                 let blend = (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0;
-                let foot = if s[i] < mid { start } else { end };
+                let foot = if s[i] < mid {
+                    start + deck_foot(g_lo, s[i] - s[a])
+                } else {
+                    end + deck_foot(g_hi, s[i] - s[b])
+                };
                 h[i] = foot + (top - foot) * blend;
             }
         }
@@ -833,6 +842,16 @@ fn ramp(mut g: Vec<f64>, ds: &[f64], limit: &[f64]) -> Vec<f64> {
         }
     }
     g
+}
+
+/// How far a deck's foot carries the outside road's grade, m.
+pub const DECK_FOOT_M: f64 = 30.0;
+
+/// A deck foot's line `d` m from the foot (negative before it): the outside road's grade `grade` carried on from the
+/// foot, fading out over [`DECK_FOOT_M`], so the deck leaves its foot at the road's grade and its cosine does the rest.
+pub fn deck_foot(grade: f64, d: f64) -> f64 {
+    let t = (libm::fabs(d) / DECK_FOOT_M).min(1.0);
+    grade * d * (1.0 - t * t * (3.0 - 2.0 * t))
 }
 
 /// Relaxes the points whose vertical curvature exceeds `limit` (and their neighbours) until none does. Returns whether

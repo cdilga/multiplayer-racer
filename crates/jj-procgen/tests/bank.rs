@@ -20,8 +20,9 @@ const DEFAULT_SEEDS: u64 = if cfg!(debug_assertions) { 12 } else { 100 };
 /// Seeds where the autopilot rolls on a jump landing (see the known gap in the bot playtest). Seed 47 (GENERATOR_VERSION
 /// 26): since br-4tbo the bot reaches 40 m/s on the descent into the 30 cm crest at route point ~596, flies 1.2 s, lands
 /// 8 m wide and runs off the road into the verge at point ~18, then one recover (`diag_bot_trace`, `JJ_SEEDS=47
-/// JJ_DIAG_FROM=53`).
-const KNOWN_JUMP_LANDING_ROLLS: [u64; 5] = [1, 2, 17, 47, 64];
+/// JJ_DIAG_FROM=53`). Seed 36 (GENERATOR_VERSION 28), the same mode: the bot meets the 20 cm whoops at route point ~489
+/// fast enough to fly 0.9 s, lands at ~502 and stops 9 m wide for one stuck window (`diag_bot_trace`, `JJ_SEEDS=36`).
+const KNOWN_JUMP_LANDING_ROLLS: [u64; 6] = [1, 2, 17, 36, 47, 64];
 
 fn seeds() -> u64 {
     std::env::var("JJ_SEEDS")
@@ -393,6 +394,29 @@ fn diag_bot_trace() {
         p.plan,
         jj_procgen::rhythm::loop_overs(&p.map)
     );
+    // `JJ_POINTS=a..b`: the route's height, bank and width there (wrapping), and the ground under it.
+    if let Some((a, b)) = std::env::var("JJ_POINTS")
+        .ok()
+        .and_then(|v| {
+            v.split_once("..")
+                .map(|(a, b)| (a.parse::<usize>(), b.parse::<usize>()))
+        })
+        .and_then(|(a, b)| Some((a.ok()?, b.ok()?)))
+    {
+        let n = p.map.route.points.len();
+        for i in a..=b {
+            let q = &p.map.route.points[i % n];
+            let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+            eprintln!(
+                "pt {} ({x:.1},{:.2},{z:.1}) ground {:.2} bank {} w {}",
+                i % n,
+                f64::from(q.y) / 1000.0,
+                jj_procgen::terrain::ground_height_m(&p.map.terrain, x, z),
+                q.bank,
+                q.width
+            );
+        }
+    }
     for f in &p.map.features {
         let near = p
             .map

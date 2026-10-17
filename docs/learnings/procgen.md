@@ -380,3 +380,11 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
 - **Bit-exact speed-ups are cheap to land: prove them on the goldens.** The prepare gate (stop a gated draw after
   set-piece placement when `check_minimum` or the relief fails), caching each landmark spot's view per eye in
   `choose_landmark`, and incremental `smooth_curvature` changed no golden: native mean 857 -> ~600 ms, no version bump.
+- **A deck's cosine leaves its foot level (br-xlvx.10).** Where the road outside a bridge climbs at 10%, the foot was a
+  10% crease that threw a 39 m/s bot 0.9 s (seed 98, v28). `terrain::deck_foot` carries the outside grade 30 m into the
+  deck; the crossing bank now fails any foot that changes grade by more than 5% (worst 2.4%).
+- **Every reshuffle of the maps surfaces latent seeds.** A change that only moves set pieces (v28) re-rolled the bank's
+  seeds and exposed a whoops launch (36), the deck crease (98) and the Lion's nose strike after a sag rebound
+  (four-biome seed 0). Trace each with the env-driven diagnostics before blaming the change: `diag_bot_trace`
+  (`JJ_POINTS`), `diag_postie_rocks_wreck` (`JJ_DIAG_VEHICLE`, `JJ_DIAG_SEED`, `JJ_DIAG_FOUR`, `JJ_NEAR`, `JJ_TICKS`,
+  `JJ_NO_BRIDGE/DRESSING/PROPS`).

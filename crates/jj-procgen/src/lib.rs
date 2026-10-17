@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "27";
+pub const GENERATOR_VERSION: &str = "28";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;
@@ -315,11 +315,12 @@ fn generate_course_gated(
     let (pieces, piece_rejects) = if !data.set_pieces {
         Default::default()
     } else if loop_spans.is_empty() {
-        setpieces::place_counted(
+        setpieces::place_on_beats(
             &mut map,
             &mut seed::Rng::stream(piece_seed, "set-pieces"),
             &piece_ranges,
             pieces,
+            &beat_spans,
         )
     } else {
         // A loop is one of the lap's set pieces (R132): the gap-leaps make up the rest, a rhythm's spacing from it
@@ -328,21 +329,23 @@ fn generate_course_gated(
         let beside = loops::pieces_beside(pieces, loop_spans.len(), lap_m);
         let want = setpieces::min_for(&beside, lap_m, &sel.biomes()) as usize;
         let before = map.clone();
-        let spaced = setpieces::place_counted(
+        let spaced = setpieces::place_on_beats(
             &mut map,
             &mut seed::Rng::stream(piece_seed, "set-pieces"),
             &loops::clear_of(&piece_ranges, &loop_spans, loops::piece_gap_m()),
             &beside,
+            &beat_spans,
         );
         if spaced.0.len() >= want {
             spaced
         } else {
             map = before;
-            setpieces::place_counted(
+            setpieces::place_on_beats(
                 &mut map,
                 &mut seed::Rng::stream(piece_seed, "set-pieces"),
                 &loops::clear_of(&piece_ranges, &loop_spans, setpieces::CLEAR_M),
                 &beside,
+                &beat_spans,
             )
         }
     };

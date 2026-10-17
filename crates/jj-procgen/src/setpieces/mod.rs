@@ -607,6 +607,19 @@ pub fn place_counted(
     ranges: &[(f64, f64, Biome)],
     data: &Data,
 ) -> (Vec<Placed>, BTreeMap<String, u32>) {
+    place_on_beats(map, rng, ranges, data, &[])
+}
+
+/// [`place_counted`] trying the course's set-piece beats first (`beats`: the straights the course laid for set pieces,
+/// arc lengths on the route, P1-FL15b): a piece goes where the lap was built for one before anywhere else (br-cxqk: on
+/// short and many-biome laps the seeded order often ran out of sites before it reached a beat, and the draw was redrawn).
+pub fn place_on_beats(
+    map: &mut Map,
+    rng: &mut Rng,
+    ranges: &[(f64, f64, Biome)],
+    data: &Data,
+    beats: &[(f64, f64)],
+) -> (Vec<Placed>, BTreeMap<String, u32>) {
     let mut rejects: BTreeMap<String, u32> = BTreeMap::new();
     let line = Line::new(map);
     let n = line.n();
@@ -670,7 +683,9 @@ pub fn place_counted(
             )
         })
         .collect();
-    keyed.sort_by_key(|(band, _)| *band);
+    // A candidate on one of the course's set-piece beats goes first, whatever its band.
+    let on_beat = |i: usize| beats.iter().any(|&(a, b)| line.s[i] >= a && line.s[i] <= b);
+    keyed.sort_by_key(|&(band, (i, _))| (!on_beat(i), band));
     let candidates: Vec<(usize, Biome)> = keyed.into_iter().map(|(_, c)| c).collect();
     // A first pass takes only sites whose landmark is in view long enough before the commitment point; with
     // `fillUnseen` a second pass fills any minimum the first couldn't.
@@ -745,9 +760,16 @@ pub fn place_counted(
                     }
                 };
                 let mut trial = map.clone();
-                let Some(f) = stamp(&mut trial, &line, base, from, to, &d, data) else {
-                    *rejects.entry("run-out too steep".into()).or_default() += 1;
-                    continue;
+                // The first round's sight is judged before the stamp too (br-cxqk): a landmark the unstamped ground
+                // hides for most of the window is almost never seen once stamped (5 in 474 on the guard sample), and
+                // the stamp is placement's dearest step.
+                let need = (round == 0).then_some(data.min_sight_s);
+                let f = match stamp(&mut trial, &line, base, from, to, &d, data, need) {
+                    Ok(f) => f,
+                    Err(why) => {
+                        *rejects.entry(why.into()).or_default() += 1;
+                        continue;
+                    }
                 };
                 if let Some(p) = setpiece::problems(&trial, &f).first() {
                     let key: String = p.chars().take_while(|c| !c.is_ascii_digit()).collect();
@@ -1029,8 +1051,10 @@ fn span_contains(line: &Line, from: usize, to: usize, i: usize) -> bool {
 /// The cells a stamp handles together (see the nearest-segment note in `stamp`).
 const BLOCK: usize = 4;
 
-/// Sculpts the piece into `map` and returns its feature, or `None` when the terrain can't take it (the run-out back to
-/// the terrain would be too steep).
+/// Sculpts the piece into `map` and returns its feature, or why not: the terrain can't take it (the run-out back to the
+/// terrain would be too steep), or, with `min_sight_s`, its landmarks are in view for less than that on the ground
+/// before the stamp.
+#[allow(clippy::too_many_arguments)]
 fn stamp(
     map: &mut Map,
     line: &Line,
@@ -1039,11 +1063,12 @@ fn stamp(
     to: usize,
     d: &Draw,
     data: &Data,
-) -> Option<Feature> {
+    min_sight_s: Option<f64>,
+) -> Result<Feature, &'static str> {
     let n = line.n();
     let (h0, g0) = terrain_road(map, line, from);
     let (h1, g1) = terrain_road(map, line, to);
-    let prof = Profile::new(d, h0, g0, h1, g1)?;
+    let prof = Profile::new(d, h0, g0, h1, g1).ok_or("run-out too steep")?;
     let span = span_indices(line, from, to);
     let hw = f64::from(map.route.points[base].width) / 2000.0;
     let t = &map.terrain;
@@ -1099,7 +1124,10 @@ fn stamp(
     } else {
         pit_right
     };
-    let landmarks = choose_landmark(map, line, base, from, to, d, &prof, hw, data);
+    let (landmarks, seen) = choose_landmark(map, line, base, from, to, d, &prof, hw, data);
+    if min_sight_s.is_some_and(|m| seen < m) {
+        return Err("not seen from afar");
+    }
     // The canyon's flank dome: the Olgas rock the channel cuts past, beside the kicker (the reference's left dome).
     let flank = (d.kind == PieceKind::CanyonLeap).then(|| {
         let (c, r) = flank_at(hw, &d.p, d.lip_u(), side);
@@ -1411,7 +1439,7 @@ fn stamp(
     .into_iter()
     .map(|(k, v)| (k.to_string(), v))
     .collect();
-    Some(Feature {
+    Ok(Feature {
         kind: FeatureKind::SetPiece,
         pose: Pose {
             x: mm(x) as i32,
@@ -1476,7 +1504,8 @@ fn sight_eyes(
 
 /// Where the landmark goes (u, lat from the kicker's base): of the spots beside and beyond the landing, on either side
 /// clear of the detour and of any other road, the one seen longest before the commitment point (ties keep the default
-/// spot), judged against the terrain before the stamp, with the dome's top where the stamp will raise it.
+/// spot), judged against the terrain before the stamp, with the dome's top where the stamp will raise it. Also how long
+/// the chosen landmarks are in view on that ground, s (infinite when no spot is clear of other roads).
 #[allow(clippy::too_many_arguments)]
 fn choose_landmark(
     map: &Map,
@@ -1488,7 +1517,7 @@ fn choose_landmark(
     prof: &Profile,
     hw: f64,
     data: &Data,
-) -> Vec<(f64, f64)> {
+) -> (Vec<(f64, f64)>, f64) {
     let r = d.p.landmark_radius_m;
     let default = landmark_at(hw, r, d.rim_u(), d.landing, d.side);
     let near = -d.side * (hw + 6.0 + r);
@@ -1553,6 +1582,7 @@ fn choose_landmark(
     };
     // The chosen spots, as indices into `tops`.
     let mut chosen: Vec<usize> = Vec::new();
+    let mut seen_s = f64::INFINITY;
     for _ in 0..2 {
         let mut best: Option<(usize, f64)> = None;
         for (t, &(spot, _)) in tops.iter().enumerate() {
@@ -1569,14 +1599,15 @@ fn choose_landmark(
                 best = Some((t, seen));
             }
         }
-        if let Some((pick, _)) = best {
+        if let Some((pick, seen)) = best {
             chosen.push(pick);
+            seen_s = seen;
         }
     }
     if chosen.is_empty() {
-        vec![default]
+        (vec![default], seen_s)
     } else {
-        chosen.into_iter().map(|t| tops[t].0).collect()
+        (chosen.into_iter().map(|t| tops[t].0).collect(), seen_s)
     }
 }
 

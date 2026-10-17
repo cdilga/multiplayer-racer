@@ -58,6 +58,26 @@ fn place_one(map: &mut Map, crossing: &Crossing, data: &CrossingData) {
             ((distance - mid).abs() - data.plateau_half_m).max(0.0) / (half - data.plateau_half_m);
         (1.0 + libm::cos(u.clamp(0.0, 1.0) * core::f64::consts::PI)) / 2.0
     };
+    // The cosine leaves each foot level, but the road outside meets it at its own grade: a foot on a 10% climb was a
+    // crease a car at speed took off from (seed 98's bot flew 0.9 s off a bridge's foot, br-cxqk/v28). Each foot's line
+    // carries the outside road's grade inward, fading out over `DECK_FOOT_M` (`crate::terrain::deck_foot`).
+    let n = pts.len();
+    let y = |i: usize| map.route.points[i % n].y as f64 / 1000.0;
+    let run = |i: usize, j: usize| {
+        let (p, q) = (pts[i % n], pts[j % n]);
+        libm::hypot(q.0 - p.0, q.1 - p.1).max(1e-6)
+    };
+    let (g_lo, g_hi) = (
+        (y(a) - y(a + n - 2)) / (run(a + n - 2, a + n - 1) + run(a + n - 1, a)),
+        (y(b + 2) - y(b)) / (run(b, b + 1) + run(b + 1, b + 2)),
+    );
+    let foot_line = |foot: f64, distance: f64| {
+        if distance < mid {
+            foot + crate::terrain::deck_foot(g_lo, distance - s[a])
+        } else {
+            foot + crate::terrain::deck_foot(g_hi, distance - s[b])
+        }
+    };
     // Where the deck passes over the lower road (its points within both half-widths and a margin of a lower point), its
     // underside clears that road by the deck's height less its thickness, ramp included: at a shallow crossing angle
     // the overlap runs past the plateau onto the cosine. Solve the cosine's top for each such point.
@@ -78,7 +98,10 @@ fn place_one(map: &mut Map, crossing: &Crossing, data: &CrossingData) {
                 return None;
             }
             let foot_edges = if s[i] < mid { ground[0] } else { ground[b - a] };
-            let foot = foot_edges.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+            let foot = foot_line(
+                foot_edges.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+                s[i],
+            );
             let need = under + data.deck_height_m;
             let k = blend_at(s[i]);
             Some(if k > 1e-6 {
@@ -107,7 +130,8 @@ fn place_one(map: &mut Map, crossing: &Crossing, data: &CrossingData) {
         // height-aware gates. Keep the smooth raised profile wherever it clears the ground, and follow the actual
         // road edges where they are higher. The same grade validator and physical lap bank qualify this envelope.
         let [left, right] = std::array::from_fn(|edge| {
-            (end[edge] + (top - end[edge]) * blend).max(ground[i - a][edge])
+            let foot = foot_line(end[edge], distance);
+            (foot + (top - foot) * blend).max(ground[i - a][edge])
         });
         let p = &mut map.route.points[i];
         p.y = mm((left + right) / 2.0);

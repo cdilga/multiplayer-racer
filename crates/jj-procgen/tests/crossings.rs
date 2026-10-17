@@ -194,6 +194,7 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
     let d = data();
     let reg = jj_procgen::registry();
     let mut rows = Vec::new();
+    let mut worst_crease: f64 = 0.0;
     for recipe in [
         vec![Biome::Town],
         vec![Biome::Rocks],
@@ -233,6 +234,31 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
                 jj_map::load_canonical(&jj_map::canonical_bytes(&prepared.map), &reg).unwrap();
             let bad = jj_procgen::validate::check(&loaded.map, &reg);
             assert!(bad.is_empty(), "seed {seed} {recipe:?}: {bad:?}");
+            // Each deck meets the road outside at that road's grade: no crease at a foot for a car at speed to take off
+            // from (seed 98's bot flew 0.9 s off a level foot on a 10% climb, br-cxqk).
+            let pts = &loaded.map.route.points;
+            let n = pts.len();
+            let grade = |i: usize, j: usize| {
+                let (p, q) = (&pts[i % n], &pts[j % n]);
+                let run = f64::from(q.x - p.x).hypot(f64::from(q.z - p.z)).max(1.0);
+                f64::from(q.y - p.y) / run
+            };
+            for f in loaded
+                .map
+                .features
+                .iter()
+                .filter(|f| f.kind == FeatureKind::Bridge)
+            {
+                for foot in [f.params["upperFrom"] as usize, f.params["upperTo"] as usize] {
+                    let crease = (grade(foot, foot + 2) - grade(foot + n - 2, foot)).abs();
+                    worst_crease = worst_crease.max(crease);
+                    assert!(
+                        crease <= 0.05,
+                        "seed {seed} {recipe:?}: the deck's foot at point {foot} changes grade by {:.1}%",
+                        crease * 100.0
+                    );
+                }
+            }
             rows.push(serde_json::json!({"seed":seed,"biomes":recipe,"lengthM":prepared.course.length_m,"plan":format!("{:?}",prepared.plan),"hash":jj_map::hex(&jj_map::gameplay_hash(&loaded.map))}));
             if seed == 0
                 && recipe == vec![Biome::Town]
@@ -247,6 +273,7 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
             }
         }
     }
+    eprintln!("worst deck-foot crease: {:.2}%", worst_crease * 100.0);
     if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
@@ -679,18 +706,31 @@ fn diag_postie_rocks_wreck() {
         &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."),
     )
     .expect("the roster loads");
+    // `JJ_DIAG_VEHICLE` (default the postie bike), `JJ_DIAG_SEED` (1), `JJ_DIAG_FOUR` (the four-biome recipe) or
+    // `JJ_DIAG_DIRT` (Outback dirt) instead of Rocks.
+    let want = std::env::var("JJ_DIAG_VEHICLE").unwrap_or_else(|_| "postie-bike".into());
     let (vehicle, profile) = roster
         .iter()
-        .find(|(v, _)| v.as_str() == "postie-bike")
-        .expect("postie")
+        .find(|(v, _)| *v == want)
+        .expect("a roster vehicle")
         .clone();
-    let seed = 1u64;
-    let biome = if std::env::var("JJ_DIAG_DIRT").is_ok() {
-        Biome::OutbackDirt
+    let seed: u64 = std::env::var("JJ_DIAG_SEED")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1);
+    let recipe = if std::env::var("JJ_DIAG_FOUR").is_ok() {
+        vec![
+            Biome::Town,
+            Biome::Rocks,
+            Biome::OutbackDirt,
+            Biome::OutbackBitumen,
+        ]
+    } else if std::env::var("JJ_DIAG_DIRT").is_ok() {
+        vec![Biome::OutbackDirt]
     } else {
-        Biome::Rocks
+        vec![Biome::Rocks]
     };
-    let prepared = jj_procgen::prepare_tuned(seed, &[biome], 8, &data());
+    let prepared = jj_procgen::prepare_tuned(seed, &recipe, 8, &data());
     for f in &prepared.map.features {
         if let Some(b) = jj_map::bridge::BridgeDesign::of(f) {
             let up = jj_map::bridge::indices(&prepared.map, b.upper).unwrap();
@@ -718,7 +758,115 @@ fn diag_postie_rocks_wreck() {
             near.map(|(i, _)| i)
         );
     }
-    let map = jj_map::load_canonical(&jj_map::canonical_bytes(&prepared.map), &reg).unwrap();
+    // `JJ_NEAR=x,z`: dressing and features within 12 m of that spot.
+    if let Some((x, z)) = std::env::var("JJ_NEAR")
+        .ok()
+        .and_then(|v| {
+            v.split_once(',')
+                .map(|(a, b)| (a.parse::<f64>(), b.parse::<f64>()))
+        })
+        .and_then(|(a, b)| Some((a.ok()?, b.ok()?)))
+    {
+        let d = |px: i32, pz: i32| (f64::from(px) / 1000.0 - x).hypot(f64::from(pz) / 1000.0 - z);
+        for o in &prepared.map.dressing {
+            if d(o.pose.x, o.pose.z) < 40.0 && o.collides {
+                eprintln!(
+                    "near: dressing {} collides {} at {:.1} m, y {:.2}",
+                    o.kit_piece,
+                    o.collides,
+                    d(o.pose.x, o.pose.z),
+                    f64::from(o.pose.y) / 1000.0
+                );
+            }
+        }
+        for k in -16..=16 {
+            let px = x + f64::from(k) * 0.25;
+            eprintln!(
+                "near: ground at ({px:.2},{z:.2}) {:.3}",
+                jj_procgen::terrain::ground_height_m(&prepared.map.terrain, px, z)
+            );
+        }
+        let t = &prepared.map.terrain;
+        eprintln!(
+            "near: terrain spacing {} origin ({}, {})",
+            t.spacing, t.origin_x, t.origin_z
+        );
+        eprintln!(
+            "near: segments {:?}",
+            prepared
+                .map
+                .route
+                .segments
+                .iter()
+                .map(|g| format!("{} {:?}", g.name, g.span))
+                .collect::<Vec<_>>()
+        );
+        let rp = &prepared.map.route.points;
+        for f in prepared
+            .map
+            .features
+            .iter()
+            .filter(|f| f.kind == FeatureKind::Bridge)
+        {
+            for k in ["upperFrom", "upperTo", "lowerFrom", "lowerTo"] {
+                let q = &rp[f.params[k] as usize];
+                eprintln!(
+                    "near: bridge {k} {} at ({:.1},{:.2},{:.1}), {:.1} m away",
+                    f.params[k],
+                    f64::from(q.x) / 1000.0,
+                    f64::from(q.y) / 1000.0,
+                    f64::from(q.z) / 1000.0,
+                    d(q.x, q.z)
+                );
+            }
+        }
+        for f in &prepared.map.features {
+            if d(f.pose.x, f.pose.z) < 60.0 {
+                eprintln!(
+                    "near: feature {:?} at {:.1} m",
+                    f.kind,
+                    d(f.pose.x, f.pose.z)
+                );
+            }
+        }
+        for p in &prepared.map.props {
+            if d(p.pose.x, p.pose.z) < 12.0 {
+                eprintln!("near: prop {:?} at {:.1} m", p, d(p.pose.x, p.pose.z));
+            }
+        }
+    }
+    // `JJ_POINTS=a..b`: the route's height and the ground there.
+    if let Some((a, b)) = std::env::var("JJ_POINTS")
+        .ok()
+        .and_then(|v| {
+            v.split_once("..")
+                .map(|(a, b)| (a.parse::<usize>(), b.parse::<usize>()))
+        })
+        .and_then(|(a, b)| Some((a.ok()?, b.ok()?)))
+    {
+        let n = prepared.map.route.points.len();
+        for i in a..=b {
+            let q = &prepared.map.route.points[i % n];
+            let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+            eprintln!(
+                "pt {} ({x:.1},{:.2},{z:.1}) ground {:.2}",
+                i % n,
+                f64::from(q.y) / 1000.0,
+                jj_procgen::terrain::ground_height_m(&prepared.map.terrain, x, z)
+            );
+        }
+    }
+    let mut map = jj_map::load_canonical(&jj_map::canonical_bytes(&prepared.map), &reg).unwrap();
+    // `JJ_NO_BRIDGE`: the bridge's colliders left out (is it what the car hits?).
+    if std::env::var("JJ_NO_BRIDGE").is_ok() {
+        map.map.features.retain(|f| f.kind != FeatureKind::Bridge);
+    }
+    if std::env::var("JJ_NO_DRESSING").is_ok() {
+        map.map.dressing.clear();
+    }
+    if std::env::var("JJ_NO_PROPS").is_ok() {
+        map.map.props.clear();
+    }
     let mut sim = jj_sim::Sim::new(&map, &reg, seed, profile);
     let car = sim.spawn_grid(1)[0];
     sim.start_race(1);
@@ -734,6 +882,34 @@ fn diag_postie_rocks_wreck() {
             st.position[1] as f64,
             st.position[2] as f64,
         );
+        // `JJ_TICKS=a..b`: every tick in that window, with position and velocity.
+        if let Some((a, b)) = std::env::var("JJ_TICKS")
+            .ok()
+            .and_then(|v| {
+                v.split_once("..")
+                    .map(|(a, b)| (a.parse::<u64>(), b.parse::<u64>()))
+            })
+            .and_then(|(a, b)| Some((a.ok()?, b.ok()?)))
+            && (a..=b).contains(&sim.tick())
+        {
+            eprintln!(
+                "tick {} pt {} lat {:.2} pos ({:.2},{:.2},{:.2}) vel ({:.1},{:.1},{:.1}) ang ({:.1},{:.1},{:.1}) up {:.2} wheels {}",
+                sim.tick(),
+                p.route_point,
+                p.lateral_m,
+                st.position[0],
+                st.position[1],
+                st.position[2],
+                st.linvel[0],
+                st.linvel[1],
+                st.linvel[2],
+                st.angvel[0],
+                st.angvel[1],
+                st.angvel[2],
+                st.up_y,
+                st.wheels_in_contact
+            );
+        }
         if sim.tick().is_multiple_of(u64::from(jj_sim::TICK_HZ / 4)) {
             trail.push_back(format!(
                 "  t {:.2} point {} lateral {:.1} y {:.2} speed {:.1} up {:.2} wheels {}",
