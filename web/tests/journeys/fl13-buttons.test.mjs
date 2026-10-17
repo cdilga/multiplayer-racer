@@ -270,7 +270,7 @@ for (const [engine, type] of [['chromium', chromium], ['webkit', webkit]]) {
   test(`${engine}: the Buttons layout looks finished in every state, landscape and portrait`, { timeout: 300_000 }, async () => {
     const browser = await type.launch(engine === 'chromium' ? { args: chromiumArgs } : {});
     try {
-      for (const [w, h] of [[915, 412], [412, 915], [667, 375], [375, 667]]) {
+      for (const [w, h] of [[915, 412], [412, 915], [667, 375], [375, 667], [673, 841], [841, 673]]) {
         const tag = `${engine}-${w}x${h}`;
         const open = async (frag) => {
           const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true, isMobile: engine === 'chromium' });

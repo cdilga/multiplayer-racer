@@ -98,7 +98,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await wait(host,()=>window.__jjRoom.view().seats.find(s=>s.name==='Davo')?.choosing===false);
     await shot(phone,`${engine.name()}-phone-ready`);
     await shot(host,`${engine.name()}-lobby-three`);
-    for(const [width,height] of [[412,915],[915,412],[375,667],[1920,1080],[1366,768]]) {
+    for(const [width,height] of [[412,915],[915,412],[375,667],[673,841],[841,673],[1920,1080],[1366,768]]) {
       await host.setViewportSize({width,height});
       await shot(host,`${engine.name()}-lobby-${width}x${height}`);
       // br-zhuw: every picker and legend under the roster is reachable (inside the strip, which scrolls), never under the

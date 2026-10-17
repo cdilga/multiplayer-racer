@@ -27,7 +27,7 @@ for (const [engine, launcher] of [['chromium', chromium], ['webkit', webkit]]) {
   test(`${engine}: the tutorial card leaves the sticks' homes and the pad in sight on a portrait phone`, { timeout: 180_000 }, async () => {
     const browser = await launcher.launch(engine === 'chromium' ? { args: chromiumArgs } : {});
     try {
-      for (const [width, height] of [[375, 667], [412, 915]]) {
+      for (const [width, height] of [[375, 667], [412, 915], [673, 841]]) {
         for (const controls of ['dual', 'buttons']) {
           const tag = `${engine} ${width}x${height} ${controls}`;
           const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: engine === 'chromium' });
