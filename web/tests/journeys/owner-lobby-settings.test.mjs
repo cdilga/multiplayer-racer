@@ -115,10 +115,15 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
           const s=box(strip);
           if(foot) out.stripUnderFoot=s.bottom>box(foot).top+1;
           if(go&&getComputedStyle(go).display!=='none') out.stripIntoGo=meet(s,box(go));
+          // Reachable: scrolling the strip brings each card's top into view, and its bottom (a card can be taller than
+          // the strip on a short landscape screen).
           for(const cc of strip.querySelectorAll('.lb-cc')){
-            cc.scrollIntoView({block:'nearest'});
-            const r=box(cc), v=box(strip);
-            if(r.top<v.top-1||r.bottom>v.bottom+1) out.unreachable.push(cc.textContent.trim().slice(0,30));
+            const v=box(strip);
+            cc.scrollIntoView({block:'start'});
+            const top=box(cc).top>=v.top-1&&box(cc).top<v.bottom;
+            cc.scrollIntoView({block:'end'});
+            const bottom=box(cc).bottom<=v.bottom+1&&box(cc).bottom>v.top;
+            if(!(top&&bottom)) out.unreachable.push(cc.textContent.trim().slice(0,30));
           }
         }
         if(cap&&box(cap).height>0) for(const e of document.querySelectorAll('.lobby .lb-hint, .lobby .lb-cc, .lobby .lcard')) if(meet(box(e),box(cap))) out.captionOver.push(e.className);
