@@ -82,6 +82,16 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
               return window.__jjRender.tilesSee(s.cars.map(c=>[c.position[0],c.position[1],c.position[2]]));
             });
             if(view==='chase')assert.ok(sees.length&&sees[0].sees.every(Boolean),'the car at the top is in the tile camera frustum');
+            if(view==='overview'){
+              // br-gw74.13.1.1.1: at whole-lap scale the car's label stands above the car (and the loop it is on), not over it.
+              const lab=await page.evaluate(async()=>{
+                const c=(await window.__jjTest.observe()).cars[0],[x,y]=window.__jjRender.project(...c.position);
+                const r=document.querySelector('.identity-nameplate[data-car="0"]')?.getBoundingClientRect();
+                return r&&{x,y,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+              });
+              assert.ok(lab,'the overview labels the car');
+              assert.ok(lab.bottom<lab.y-8,`${width}x${height}: the label stands clear above the car: ${JSON.stringify(lab)}`);
+            }
             const file=`top-${view}-${width}x${height}.jpg`;
             if(process.env.JJ_CAPTURE_DIR)await page.screenshot({path:join(out,file),type:'jpeg',quality:85});
             rows.push({file,width,height,view});

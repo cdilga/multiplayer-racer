@@ -146,6 +146,31 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         const file = `${name}-side-air-1366x768.jpg`;
         await page.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
         rows.push({ file, state: 'side-air', width: 1366, height: 768, tick: air.tick });
+        // br-gw74.13.1.1.1: the host's own overview (whole-lap scale): the jump reads as a jump and the car's label stands
+        // above the car in the air, not over it or the jump.
+        const over = new URL(page.url());
+        over.searchParams.delete('orbit'); over.searchParams.delete('tiles'); over.searchParams.delete('camdist');
+        await page.goto(over.href);
+        await page.waitForFunction(() => window.__jjTest && window.__jjRender);
+        await page.evaluate(async ({ fixture, mapJson }) => {
+          await window.__jjTest.load(fixture, mapJson);
+          await window.__jjTest.step(180);
+        }, { fixture, mapJson });
+        await page.waitForFunction(() => !document.querySelector('#jj-caption')?.textContent, undefined, { timeout: 20_000 });
+        for (const [width, height] of [[1920, 1080], [1366, 768]]) {
+          await page.setViewportSize({ width, height });
+          await paint(20);
+          const lab = await page.evaluate(async () => {
+            const c = (await window.__jjTest.observe()).cars[0], [x, y] = window.__jjRender.project(...c.position);
+            const r = document.querySelector('.identity-nameplate[data-car="0"]')?.getBoundingClientRect();
+            return r && { x, y, left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+          });
+          assert.ok(lab, 'the overview labels the car');
+          assert.ok(lab.bottom < lab.y - 8, `${width}x${height}: the label stands clear above the car: ${JSON.stringify(lab)}`);
+          const file = `${name}-overview-air-${width}x${height}.jpg`;
+          await page.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
+          rows.push({ file, state: 'overview-air', width, height, tick: air.tick });
+        }
       }
       assert.deepEqual(errors, []);
       writeFileSync(join(out, `${name}-jump.json`), JSON.stringify({ browser: name, source: `${deployed ? deployed.href : 'local real jj-server'}, generated seed ${fixture.seed} Rocks, frame-stepped WASM fixture; no connected phone`, rows, native: native.stateHash, air, final, errors }, null, 2) + '\n');

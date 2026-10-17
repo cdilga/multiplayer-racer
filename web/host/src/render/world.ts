@@ -34,6 +34,8 @@ import { LaunchCallouts } from './launch-callout';
 
 export interface NameplatePoint {
   tile: number; car: number; id: number; x: number; y: number; font: number;
+  /** Where the car itself is (CSS px): the label's leader line points down to it. */
+  carY: number;
   clip: { left: number; right: number; top: number; bottom: number };
 }
 
@@ -612,8 +614,13 @@ export class World {
       if (car === own) continue;
       const p = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]! + 2.2, s.pos[car * 3 + 2]!).project(camera);
       if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z < -1 || p.z > 1) continue;
-      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale,
-        y: (rect.y + (1 - p.y) * rect.h / 2) / scale, font: Math.max(14, Math.min(28, rect.h / scale * .07)), clip });
+      const c = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]!, s.pos[car * 3 + 2]!).project(camera);
+      const font = Math.max(14, Math.min(28, rect.h / scale * .07));
+      const carY = (rect.y + (1 - c.y) * rect.h / 2) / scale;
+      // br-gw74.13.1.1.1: 2.2 m above the car is a pixel or two at whole-lap scale (the overview), so the label sat on the
+      // car and the jump or loop it was on. It stands at least a line's height above the car, with a leader down to it.
+      const y = Math.min((rect.y + (1 - p.y) * rect.h / 2) / scale, carY - font * 1.2);
+      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale, y, carY, font, clip });
     }
   }
 

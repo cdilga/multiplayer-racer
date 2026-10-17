@@ -1,3 +1,5 @@
 .jj-nameplates { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
 .identity-nameplate { position: absolute; transform: translate(-50%, -100%); box-sizing: border-box; padding: 5px; border: 2px solid var(--c-ink); border-radius: 6px; background: var(--identity-pattern) 0 0 / 24px 24px repeat, var(--seat); color: var(--on); font: 900 italic 18px/1 var(--font-display); white-space: nowrap; }
 .identity-nameplate > span { display: block; padding: 2px 5px; overflow: hidden; text-overflow: ellipsis; background: var(--seat); border-radius: 2px; }
+/* br-gw74.13.1.1.1: a leader from the label down to its car (the label stands clear of the car and its set piece). */
+.identity-nameplate::after { content: ''; position: absolute; left: calc(50% - 1px); top: 100%; width: 2px; height: var(--lead, 0px); background: var(--c-ink); }

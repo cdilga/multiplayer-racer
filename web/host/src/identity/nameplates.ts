@@ -69,6 +69,7 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       for (const item of items) {
         item.mark.style.transform = `translate(-50%, -100%) scale(${scale})`;
         item.mark.style.left = `${item.x}px`; item.mark.style.top = `${item.y}px`;
+        item.mark.style.setProperty('--lead', `${Math.max(0, item.point.carY - item.y) / scale}px`);
       }
     }
     for (const [key, mark] of marks) if (!live.has(key)) { mark.remove(); marks.delete(key); }
