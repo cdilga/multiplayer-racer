@@ -48,6 +48,10 @@ body:has(.screen.play) .hub-tray .hub-row[data-state=connected] .hub-state { dis
 body:has(.screen.play) .hub-tray .hub-kind { font-size: 14px; }
 body:has(.screen.play) .hub-tray .hub-kind .ic, body:has(.screen.play) .hub-tray .hub-state .ic { display: none; }
 @media (orientation: portrait) { body:has(.screen.play) .hub-tray { width: min(360px, 94%); bottom: 12px; } }
+/* br-nbn2: while the tutorial card is up, a tray of just this device (the strip already shows its badge) steps aside; with
+   other players on the device the card stops above the tray instead (the Launch step's dots sat on it at 844x390). */
+body:has(.coaching) .hub-tray:not(:has(.hub-row + .hub-row)) { display: none; }
+body:has(.coaching):has(.hub-tray .hub-row + .hub-row) .coach { max-height: calc(100% - 16px - var(--jj-source-tray-height, 0px)); }
 @media (max-width: 520px) {
   .hub { padding: var(--sp-3); }
   .hub-panel { padding: var(--sp-2); }

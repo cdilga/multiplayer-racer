@@ -91,6 +91,13 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await sticks(page, { x: 0, y: 1 }, z);
   await waitStep(page, 2);
   await shot(page, 'phone-tutorial-step3-launch');
+  // br-nbn2: the Launch step's longer card keeps clear of the device's tray (its dots sat on '#1 This device' at 844x390).
+  const clash = await page.evaluate(() => {
+    const c = document.querySelector('.coach').getBoundingClientRect();
+    return [...document.querySelectorAll('.hub-tray .hub-row')].filter((e) => e.offsetParent).map((e) => e.getBoundingClientRect())
+      .filter((r) => r.left < c.right && c.left < r.right && r.top < c.bottom && c.top < r.bottom).length;
+  });
+  assert.equal(clash, 0, 'the tutorial card overlaps no tray row');
   await launch(page);
   await shot(page, 'phone-launch-cooldown-ring-844x390'); // the ring on the left stick knob while the launch cools down
   await waitStep(page, 3);
