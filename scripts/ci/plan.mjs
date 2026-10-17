@@ -39,8 +39,9 @@ const TRANSPORT = list('web/shared/transport/tests');
 const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // Hardware fact (R93): these measure host frame time or render latency (FL17) or need 24-120 GPU-rendered tiles, so they run on a `gpu` runner
 // with JJ_CHROMIUM_GPU=1 (on SwiftShader R06 skips itself and C06's 150 ms identify bound is loose).
-// FL02 is back on the software lanes (br-bcuy): its host renders 960x540 there, so the phone pages keep sending on time.
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency)\.test\.mjs$/.test(f));
+// FL02 needs a GPU runner: on a CI SwiftShader runner its four phone pages and host still starve each other (CI 5722,
+// br-bcuy), even with the host at 960x540.
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';
