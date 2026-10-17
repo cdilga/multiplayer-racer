@@ -44,18 +44,18 @@ fn two_biome_recipes_in_wasm_match_the_native_hashes() {
     assert!(n > 0, "no recipe goldens");
 }
 
-/// Generate + validate in WASM (P1-M03g, `ev:hardware`): the four-biome lap through the whole fallback ladder, per seed.
-/// The target is the 1.5 s laptop budget (master §11.2a); the receipt in `docs/evidence/P1-M03g/` names the hardware and
-/// the Chromium numbers. Since FL15b/c's set-piece and rhythm gates the ladder redraws up to ~11 times (CI run 5283:
-/// worst 16 s, mean 1.9 s at CI's opt-level 1; run 5302: worst 26.9 s), so until br-cxqk brings `prepare` back under the
-/// target this test guards the cause, deterministically: the generations the ladder runs per seed (the same on every
-/// machine and target), worst <= GUARD_WORST_DRAWS and mean <= GUARD_MEAN_DRAWS. It prints the times for the receipt.
+/// Generate + validate in WASM (P1-M03g, `ev:hardware`): the four-biome lap through the whole fallback ladder, per seed,
+/// inside the 1.5 s laptop budget (master §11.2a); the receipt in `docs/evidence/P1-M03g/` names the hardware and the
+/// Chromium numbers. FL15b/c's gates had the ladder redraw up to ~11 times (CI run 5283: worst 16 s at CI's opt-level 1);
+/// br-cxqk brought it back (eris, CI's profile, GENERATOR_VERSION 28: worst 865 ms, mean 460 ms). The redraws, the cause
+/// last time and the same on every machine and target, are guarded too: worst <= GUARD_WORST_DRAWS and mean <=
+/// GUARD_MEAN_DRAWS (measured 8 / 3.12).
 const TARGET_MS: f64 = 1500.0;
-const GUARD_WORST_DRAWS: usize = 12;
-const GUARD_MEAN_DRAWS: f64 = 5.0;
+const GUARD_WORST_DRAWS: usize = 9;
+const GUARD_MEAN_DRAWS: f64 = 3.5;
 
 #[wasm_bindgen_test]
-fn generate_and_validate_in_wasm_stays_inside_the_regression_guard() {
+fn generate_and_validate_in_wasm_stays_inside_the_laptop_budget() {
     #[wasm_bindgen::prelude::wasm_bindgen]
     extern "C" {
         #[wasm_bindgen::prelude::wasm_bindgen(js_namespace = Date, js_name = now)]
@@ -84,6 +84,7 @@ fn generate_and_validate_in_wasm_stays_inside_the_regression_guard() {
         worst_draws <= GUARD_WORST_DRAWS && mean_draws <= GUARD_MEAN_DRAWS,
         "{line}"
     );
+    assert!(worst <= TARGET_MS, "{line}");
 }
 
 const ARENAS: &str = include_str!("goldens/arena.txt");
