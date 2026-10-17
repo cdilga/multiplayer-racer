@@ -550,9 +550,27 @@ export class HostHub {
   private readonly triggers = new Map<string, FallbackTrigger>();
   relay: RelayFallback = { state: 'idle', reason: null, requests: 0 };
 
-  private servers(): IceServer[] {
+  /** Each controller's own initial list (br-uize): its TURN username is `host-<endpoint>`, so coturn's per-username
+   *  user-quota never caps how many controllers a relayed host takes. The room's shared list stands in when it's missing. */
+  private readonly peerIce = new Map<string, { servers: IceServer[]; expiresAt: number }>();
+
+  private servers(endpointId?: string): IceServer[] {
+    const own = endpointId ? this.peerIce.get(endpointId) : undefined;
+    const base = own && own.expiresAt > Date.now() + FALLBACK_MARGIN_MS ? own.servers : this.iceServers;
     const held = this.fallbackServers.length > 0 && this.fallbackExpiresAt > Date.now() + FALLBACK_MARGIN_MS;
-    return canonicalIceServers(held ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers);
+    return canonicalIceServers(held ? mergeServers(base, this.fallbackServers) : base);
+  }
+
+  /** Fetches (or renews) one controller's list; a failure leaves the shared list in use, never blocks the connection. */
+  private async peerList(endpointId: string, force = false): Promise<void> {
+    const own = this.peerIce.get(endpointId);
+    if (!force && own && own.expiresAt > Date.now() + FALLBACK_MARGIN_MS) return;
+    try {
+      const list = await api.ice(this.roomId, HOST, this.secret, endpointId);
+      this.peerIce.set(endpointId, { servers: list.iceServers, expiresAt: list.expiresAt });
+    } catch {
+      // The shared list stands in.
+    }
   }
 
   /** A trigger fired for `peer`: merge the shared fallback credential into that peer's configuration. (The host
@@ -583,7 +601,7 @@ export class HostHub {
     }
     const got = await this.fallbackInflight;
     this.relay.state = got ? 'merged' : this.relay.state === 'finding' ? 'unavailable' : this.relay.state;
-    if (got && peer.pc.connectionState !== 'closed') peer.pc.setConfiguration({ ...peer.pc.getConfiguration(), iceServers: this.servers() });
+    if (got && peer.pc.connectionState !== 'closed') peer.pc.setConfiguration({ ...peer.pc.getConfiguration(), iceServers: this.servers(peer.endpointId) });
   }
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly signals = new Map<string, Promise<void>>();
@@ -665,11 +683,13 @@ export class HostHub {
       const list = await api.ice(this.roomId, HOST, this.secret);
       this.iceServers = list.iceServers;
       expiresAt = list.expiresAt;
-      for (const p of this.peers.values())
+      for (const p of this.peers.values()) {
+        await this.peerList(p.endpointId, true);
         p.pc.setConfiguration({
           ...p.pc.getConfiguration(),
-          iceServers: this.servers(),
+          iceServers: this.servers(p.endpointId),
         });
+      }
     } catch {
       // Retry soon.
     }
@@ -685,7 +705,7 @@ export class HostHub {
     this.peers.get(endpointId)?.pc.close();
     this.triggers.get(endpointId)?.dispose();
     const pc = new RTCPeerConnection({
-      iceServers: this.servers(),
+      iceServers: this.servers(endpointId),
       iceTransportPolicy: this.opts.iceTransportPolicy ?? 'all',
     });
     const peer: HostPeer = {
@@ -728,6 +748,7 @@ export class HostHub {
     if (m.kind === 'bye') {
       peer?.pc.close();
       this.peers.delete(ep);
+      this.peerIce.delete(ep);
       // Closing locally raises no connectionstatechange: tell the host page the peer is gone (no phantom markers, P1-F10).
       if (peer) this.events.onPeerState?.(peer, 'closed');
       return;
@@ -756,7 +777,8 @@ export class HostHub {
       }
       const held = peer?.pending ?? new Map<number, RTCIceCandidateInit[]>();
       if (!peer || m.kind === 'offer' || peer.pc.connectionState === 'closed') {
-        // A new connection (first contact or the controller's rebuild).
+        // A new connection (first contact or the controller's rebuild), with this controller's own list (br-uize).
+        await this.peerList(ep);
         peer = this.newPeer(ep, m.gen);
       }
       peer.gen = m.gen;

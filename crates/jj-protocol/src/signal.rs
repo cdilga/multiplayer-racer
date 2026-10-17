@@ -150,6 +150,10 @@ pub struct SignalMessage {
 pub struct IceRefresh {
     pub room_id: RoomId,
     pub endpoint_id: EndpointId,
+    /// The host asks for the list it uses towards one controller (br-uize): its TURN username is then per peer
+    /// (`host-<peer>`), so coturn's per-username `user-quota` never caps how many controllers a relayed host takes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer: Option<EndpointId>,
 }
 
 /// `POST B/api/v1/ice/fallback` (both): ask for Cloudflare TURN (R92).

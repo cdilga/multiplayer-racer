@@ -680,7 +680,7 @@ fn signal_samples() -> Vec<(&'static str, Vec<u8>)> {
             "signal-candidate",
             to_json(&SignalMessage { from: "host".into(), to: "c-9f2a".into(), kind: SignalKind::Candidate, generation: 1, payload: r#"{"candidate":"candidate:1 1 udp 2122260223 192.168.11.20 54400 typ host","sdpMid":"0"}"#.into() }),
         ),
-        ("ice-refresh", to_json(&IceRefresh { room_id: "rm-5d1c".into(), endpoint_id: "c-9f2a".into() })),
+        ("ice-refresh", to_json(&IceRefresh { room_id: "rm-5d1c".into(), endpoint_id: "c-9f2a".into(), peer: None })),
         ("ice-fallback", to_json(&IceFallback { room_id: "rm-5d1c".into(), endpoint_id: "c-9f2a".into(), reason: "no-route".into() })),
         ("ice-list", to_json(&IceList { ice_servers: ice, expires_at: 1_791_003_600_000 })),
         ("retry-after", to_json(&RetryAfter { retry_after_ms: 1_500 })),

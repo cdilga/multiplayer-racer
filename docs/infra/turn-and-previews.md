@@ -34,7 +34,11 @@ builders; the TURN one reads its secret from `~/.config/jammers/turn.env`).
   per authorised endpoint. No static users.
 - **Abuse limits are not player caps.** `user-quota=12`, `total-quota=1200`, `max-bps=131072` per
   allocation and the FortiGate DoS thresholds protect the house; a client that hits them still has
-  direct paths and the Cloudflare fallback (R66).
+  direct paths and the Cloudflare fallback (R66). `user-quota` counts allocations per TURN username, and every
+  endpoint has its own username, the host included once per controller: `<expiry>:host-<endpoint>`, asked for
+  with `POST /api/v1/ice {peer}` (br-uize). So a relayed host's peers never share one quota, and 12 is how many
+  relays one controller's connection may hold, never how many controllers a room takes
+  (`web/shared/transport/tests/transport.test.mjs`: 16 relayed controllers through `user-quota=12`).
 - **Dynamic WAN IP.** The container's run script detects the public IPv4 by DNS every 5 minutes and
   restarts `turnserver` with the new `external-ip` when it changes; DNS follows via triton's DDNS.
 

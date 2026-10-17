@@ -101,7 +101,9 @@ export const api = {
       endpointSecretHash,
     }),
   signal: (roomId: string, msg: SignalMessage, secret: string) => call<unknown>('POST', `api/v1/rooms/${roomId}/signal`, msg, secret),
-  ice: (roomId: string, endpointId: string, secret: string) => call<IceList>('POST', 'api/v1/ice', { roomId, endpointId }, secret),
+  /** `peer` (host only, br-uize): the list the host uses towards that controller, with its own TURN username. */
+  ice: (roomId: string, endpointId: string, secret: string, peer?: string) =>
+    call<IceList>('POST', 'api/v1/ice', peer ? { roomId, endpointId, peer } : { roomId, endpointId }, secret),
   iceFallback: (roomId: string, endpointId: string, reason: string, secret: string) =>
     call<IceList>('POST', 'api/v1/ice/fallback', { roomId, endpointId, reason }, secret),
   end: (roomId: string, secret: string) => call<unknown>('POST', `api/v1/rooms/${roomId}/end`, undefined, secret),

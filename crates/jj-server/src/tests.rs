@@ -686,6 +686,57 @@ fn codes_use_the_alphabet_skip_the_deny_list_and_retry_on_collision() {
     assert!(is_denied("WANK") && is_denied("ARSE"));
 }
 
+// br-uize: every peer the host opens used to share the host's one TURN username, and coturn's per-username user-quota
+// (12) then capped a relayed host at 12 controllers. The host now asks for its list per controller.
+#[test]
+fn the_hosts_turn_username_is_its_own_per_controller_and_hmac_valid() {
+    let app = app();
+    let room = create(&app, "r-1", "hs", T0);
+    let ask = |endpoint: &str, bearer: &str, peer: &str| {
+        let body = format!(
+            r#"{{"roomId":"{}","endpointId":"{endpoint}","peer":"{peer}"}}"#,
+            room.room_id.0
+        );
+        app.handle(
+            &post("/api/v1/ice", body).with_header("authorization", &format!("Bearer {bearer}")),
+            T0 + 1000,
+        )
+    };
+    let turn = |r: &Response| {
+        json::<IceList>(r)
+            .ice_servers
+            .into_iter()
+            .find(|s| s.username.is_some())
+            .expect("a TURN entry")
+    };
+    let mut names = std::collections::BTreeSet::new();
+    for k in 0..16 {
+        let peer = format!("c-{k}");
+        let r = ask(HOST_ENDPOINT, "hs", &peer);
+        assert_eq!(r.status, 200);
+        let t = turn(&r);
+        let user = t.username.unwrap();
+        let (expiry, label) = user.split_once(':').unwrap();
+        assert_eq!(label, format!("host-{peer}"));
+        let (_, want) = crate::ice::mint_turn_credential(b"k", expiry.parse().unwrap(), label);
+        assert_eq!(
+            t.credential.unwrap(),
+            want,
+            "coturn's use-auth-secret HMAC holds for {user}"
+        );
+        names.insert(user);
+    }
+    assert_eq!(
+        names.len(),
+        16,
+        "16 controllers, 16 host usernames: user-quota 12 never caps the room"
+    );
+    // Only the host asks per peer, and a peer must be a controller.
+    register(&app, &room.room_id.0, "c-1", "cs", T0);
+    assert_eq!(ask("c-1", "cs", "c-2").status, 400);
+    assert_eq!(ask(HOST_ENDPOINT, "hs", HOST_ENDPOINT).status, 400);
+}
+
 #[test]
 fn ice_refresh_needs_the_endpoint_bearer_and_fallback_is_relay_unavailable() {
     let app = app();

@@ -365,6 +365,29 @@ const haveCoturn = (() => {
 })();
 
 describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_COTURN_REQUIRED && 'coturn not installed' }, () => {
+  // br-uize: production coturn runs user-quota=12 (allocations per username). The host used one TURN username for every
+  // peer, so a relayed host stopped at 12 controllers; each host peer now has its own (host-<endpoint>).
+  test('a relayed host takes 16 controllers through a coturn with user-quota=12, every one connected and driving', { timeout: 180_000 }, async () => {
+    const turnPort = await freePort('udp'), secret = 'quota-12';
+    const coturn = startCoturn(turnPort, secret, ['--user-quota=12']);
+    let server, host;
+    const ctls = [];
+    try {
+      await waitForStun(turnPort);
+      server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: secret, JJ_TURN_URLS: `turn:127.0.0.1:${turnPort}?transport=udp` });
+      host = await startHost(server.origin, '&ice=relay');
+      for (let k = 0; k < 16; k++) ctls.push(await startController(server.origin, host.code, '&ice=relay', 30_000));
+      for (const [k, c] of ctls.entries()) await moveAndSee(host, c, -0.8 + k * 0.1, 0.5);
+      const paths = await Promise.all(ctls.map((c) => c.page.evaluate(() => window.__jjHello.path())));
+      assert.ok(paths.every((p) => p.local === 'relay'), JSON.stringify(paths));
+      const users = new Set([...coturn.log().matchAll(/username=<?([0-9]+:host-[^>\s,]+)/g)].map((m) => m[1]));
+      console.log(`# user-quota 12: 16 controllers relayed; host TURN usernames seen in coturn's log: ${users.size}`);
+    } finally {
+      for (const c of ctls) await c.ctx.close().catch(() => {});
+      await host?.ctx.close(); await server?.close(); coturn.stop();
+    }
+  });
+
   test('a lost initial TURN Allocate transaction recovers without a fresh controller or test retry', { timeout: 40_000 }, async () => {
     const turnPort = await freePort('udp'), secret = 'lost-allocate';
     const coturn = startCoturn(turnPort, secret);
@@ -566,11 +589,11 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
 });
 
 /** A real coturn with captured diagnostics for the injected-loss receipt. */
-function startCoturn(port, secret) {
+function startCoturn(port, secret, extra = []) {
   const child = spawn('turnserver', ['-n', '--listening-ip=127.0.0.1', '--relay-ip=127.0.0.1',
     `--listening-port=${port}`, '--use-auth-secret', `--static-auth-secret=${secret}`, '--realm=jj.test',
     '--no-tls', '--no-cli', '--allow-loopback-peers', '--fingerprint', '--log-file=stdout',
-    '--min-port=49152', '--max-port=65535'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    '--min-port=49152', '--max-port=65535', ...extra], { stdio: ['ignore', 'pipe', 'pipe'] });
   let log = '';
   for (const stream of [child.stdout, child.stderr]) stream.on('data', (chunk) => { log += chunk; });
   return { log: () => log, stop: () => child.kill() };

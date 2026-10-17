@@ -572,7 +572,18 @@ impl App {
         if let Err(r) = self.endpoint_bearer_ok(req, &body.room_id.0, &body.endpoint_id.0) {
             return r;
         }
-        let (ice_servers, expires_at) = self.ice.initial(&body.endpoint_id.0, now);
+        // A host's list towards one controller carries its own TURN username (br-uize); only the host asks per peer.
+        let label = match &body.peer {
+            Some(peer) if body.endpoint_id.0 == HOST_ENDPOINT => {
+                if peer.0.is_empty() || peer.0.len() > 64 || peer.0 == HOST_ENDPOINT {
+                    return err(400, "bad-peer");
+                }
+                format!("{HOST_ENDPOINT}-{}", peer.0)
+            }
+            Some(_) => return err(400, "bad-peer"),
+            None => body.endpoint_id.0.clone(),
+        };
+        let (ice_servers, expires_at) = self.ice.initial(&label, now);
         Response::json(
             200,
             to_json(&IceList {
