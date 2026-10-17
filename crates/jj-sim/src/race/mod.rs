@@ -51,6 +51,17 @@ pub const RECOVER_SLOW_TICKS: u64 = SECOND;
 pub const RESPAWN_HOLD_TICKS: u64 = SECOND;
 /// A respawned car rolls off at this fraction of the autopilot's planned speed there (R125).
 pub const RESPAWN_ROLL_FRACTION: f32 = 0.6;
+/// The plan a respawn's roll-off speed is a fraction of: a gentle start (R125), not the bots' pace (br-4tbo plans bots to
+/// each car's top speed, which rolled a respawned car off at ~26 m/s).
+pub const RESPAWN_ROLL_PLAN: crate::autopilot::SpeedPlan = crate::autopilot::SpeedPlan {
+    lateral_grip: 7.0,
+    skill: 0.7,
+    plan_brake: 6.0,
+    min_speed: 4.0,
+    max_speed: 26.0,
+    takeoff_mps: 26.0,
+    scale: 1.0,
+};
 /// An anchor has at least this much recovery span ahead of it, m (R125: never on, or just before, a hazard).
 pub const ANCHOR_CLEAR_M: f32 = 15.0;
 pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;

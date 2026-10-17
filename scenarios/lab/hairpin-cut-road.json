@@ -24,9 +24,9 @@
   "expect": [
     {
       "car": 0,
-      "max": 230,
+      "max": 315,
       "metric": "progressM",
-      "min": 180
+      "min": 260
     },
     {
       "car": 0,
@@ -45,5 +45,5 @@
   "scenario": "hairpin-cut-road",
   "seed": 4,
   "ticks": 1500,
-  "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip)."
+  "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip). br-4tbo (2026-10-18): 287 m at the new autopilot pace (was 180-230)."
 }

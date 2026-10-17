@@ -1631,15 +1631,12 @@ impl Sim {
             // its spawn protection (ghosted for cars) runs again from now.
             Effect::Roll { car } => {
                 if let Some(st) = self.car_state(CarId(car)) {
-                    let plan = self
-                        .assist_profile
-                        .speed_plan(&self.profiles[self.cars[car as usize].model]);
                     let v = crate::race::RESPAWN_ROLL_FRACTION
                         * self.path.planned_speed(
                             st.position[0],
                             st.position[1],
                             st.position[2],
-                            &plan,
+                            &crate::race::RESPAWN_ROLL_PLAN,
                         );
                     // `heading` is libm's (car_state): it feeds the physics here, so native and WASM step bit for bit.
                     let heading = st.heading;

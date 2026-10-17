@@ -130,28 +130,28 @@
         },
         {
           "run": "hairpin-cut-take",
-          "what": "The cut: from 150 m before its split at 15 m/s, the autopilot takes it (sim seed 1). After 1500 ticks it is about 80 m of road further on than the car that went round, and it slides on the dirt (8 degrees of slip or more).",
+          "what": "The cut: from 150 m before its split at 15 m/s, the autopilot takes it (sim seed 1). After 1500 ticks it is about 100 m of road further on than the car that went round, and it slides on the dirt (more slip than the road allows). br-4tbo (2026-10-18): the autopilot plans to the car's own pace and turn and brakes on a curve, so it takes the cut faster and cleaner: 390 m (was 260-320), slip 5.2 degrees (min 8 -> 4.5).",
           "spawnBeforeM": 150,
           "simSeed": 1,
           "speedMps": 15,
           "autopilot": true,
           "ticks": 1500,
           "expect": [
-            { "metric": "progressM", "min": 260, "max": 320 },
-            { "metric": "maxSlipDeg", "min": 8, "max": 30 },
+            { "metric": "progressM", "min": 360, "max": 420 },
+            { "metric": "maxSlipDeg", "min": 4.5, "max": 30 },
             { "metric": "wrecks", "min": 0, "max": 0 }
           ]
         },
         {
           "run": "hairpin-cut-road",
-          "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip).",
+          "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip). br-4tbo (2026-10-18): 287 m at the new autopilot pace (was 180-230).",
           "spawnBeforeM": 150,
           "simSeed": 4,
           "speedMps": 15,
           "autopilot": true,
           "ticks": 1500,
           "expect": [
-            { "metric": "progressM", "min": 180, "max": 230 },
+            { "metric": "progressM", "min": 260, "max": 315 },
             { "metric": "maxSlipDeg", "min": 0, "max": 4 },
             { "metric": "wrecks", "min": 0, "max": 0 }
           ]

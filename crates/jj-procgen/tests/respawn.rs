@@ -151,9 +151,7 @@ fn a_respawn_holds_then_rolls_off_and_two_at_once_never_overlap() {
         }
         for &c in &cars {
             let st = sim.car_state(c).unwrap();
-            // br-4tbo: the autopilot's plan is data, up to a share of each car's top speed.
-            let plan = jj_sim::assist::AssistProfile::standard()
-                .speed_plan(&jj_sim::VehicleProfile::cruz());
+            let plan = jj_sim::race::RESPAWN_ROLL_PLAN;
             let (lo, hi) = (
                 RESPAWN_ROLL_FRACTION * plan.min_speed * 0.8,
                 RESPAWN_ROLL_FRACTION * plan.max_speed + 1.0,

@@ -53,9 +53,7 @@ fn leap(approach_mps: f32, throttle_ticks: u64, air: (i16, i16)) -> Leap {
     let (mut flying, mut touchdown, mut before, mut after) = (false, None, 0.0f32, 0.0f32);
     for t in 0..(6 * TICK_HZ as u64) {
         // On the run-up the throttle; in the air the stick under test; once down, back on the throttle.
-        let (throttle, brake) = if touchdown.is_some() {
-            (i16::MAX, 0)
-        } else if t < throttle_ticks {
+        let (throttle, brake) = if touchdown.is_some() || t < throttle_ticks {
             (i16::MAX, 0)
         } else {
             air
@@ -131,6 +129,10 @@ fn the_same_jump_lands_clean_bad_crashed_or_short_by_the_players_approach_and_st
         "every flight at speed clears the gap"
     );
     // Skill pays: half a second after touchdown, back on the throttle.
+    assert!(
+        clean.after_mps > clean.before_mps,
+        "the clean landing comes out faster than it went in: {clean:?}"
+    );
     assert!(
         clean.after_mps > ok.after_mps + 2.0,
         "the clean landing's boost: {clean:?} vs {ok:?}"

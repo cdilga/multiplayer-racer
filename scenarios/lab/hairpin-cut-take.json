@@ -24,15 +24,15 @@
   "expect": [
     {
       "car": 0,
-      "max": 320,
+      "max": 420,
       "metric": "progressM",
-      "min": 260
+      "min": 360
     },
     {
       "car": 0,
       "max": 30,
       "metric": "maxSlipDeg",
-      "min": 8
+      "min": 4.5
     },
     {
       "car": 0,
@@ -45,5 +45,5 @@
   "scenario": "hairpin-cut-take",
   "seed": 1,
   "ticks": 1500,
-  "what": "The cut: from 150 m before its split at 15 m/s, the autopilot takes it (sim seed 1). After 1500 ticks it is about 80 m of road further on than the car that went round, and it slides on the dirt (8 degrees of slip or more)."
+  "what": "The cut: from 150 m before its split at 15 m/s, the autopilot takes it (sim seed 1). After 1500 ticks it is about 100 m of road further on than the car that went round, and it slides on the dirt (more slip than the road allows). br-4tbo (2026-10-18): the autopilot plans to the car's own pace and turn and brakes on a curve, so it takes the cut faster and cleaner: 390 m (was 260-320), slip 5.2 degrees (min 8 -> 4.5)."
 }
