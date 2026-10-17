@@ -1,6 +1,7 @@
 // P1-FL19 (R134): a takedown in a real round. A real phone (the attacker) and a synthetic seat (the victim) race on the
-// flat greybox loop; the sim is held and the two cars set up as jj-sim's rear-quarter fixture (crates/jj-sim/tests/
-// takedown.rs REAR_QUARTER: the victim still, the attacker across its rear quarter at 22 m/s). The ram spins the victim:
+// flat greybox loop; the sim is held and the two cars set up as jj-sim's T-bone fixture (crates/jj-sim/tests/takedown.rs
+// T_BONE: the victim still, the attacker across its front axle at 40 m/s; the 22 m/s rear-quarter ram only swung the
+// victim 73 degrees on the greybox, under the spin bar). The ram spins the victim:
 // the host gets the Takedown event, the TV pops TAKEDOWN over the attacker's car, and the attacker's phone shows it.
 // `JJ_CAPTURE_DIR=<dir>` saves the visual self-review captures (TV 1920x1080, phone 915x412).
 //   node --test web/tests/journeys/fl19-takedown.test.mjs
@@ -60,14 +61,14 @@ test('FL19: a ram that spins another car in a real round pops TAKEDOWN on the TV
   const cars = await host.evaluate(() => Object.fromEntries(window.__jjRoom.view().seats.map((s) => [s.name, s.car])));
   const attacker = cars.Davo, victim = cars.Shazza;
   assert.ok(Number.isInteger(attacker) && Number.isInteger(victim), JSON.stringify(cars));
-  // Held, then set up as the sim fixture's rear-quarter ram (relative to the victim at the origin) and stepped 4 s.
+  // Held, then set up as the sim fixture's T-bone (relative to the victim at the origin) and stepped 4 s.
   const before = await host.evaluate(async ({ attacker, victim }) => {
     const s = window.__jjTest;
     await s.hold(true);
     await s.command({ cmd: 'autopilot', on: false });
     await s.step(240); // out of spawn protection, as the fixture does
     await s.command({ cmd: 'place', car: victim, pose: { x: 0, y: 0.05, z: 0, headingDeg: 0 }, linvel: [0, 0, 0] });
-    await s.command({ cmd: 'place', car: attacker, pose: { x: -10, y: 0.05, z: -2, headingDeg: 90 }, linvel: [22, 0, 0] });
+    await s.command({ cmd: 'place', car: attacker, pose: { x: -14, y: 0.05, z: 1.5, headingDeg: 90 }, linvel: [40, 0, 0] });
     await s.step(1);
     return (await s.observe()).cars.length;
   }, { attacker, victim });
