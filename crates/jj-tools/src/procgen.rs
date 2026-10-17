@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--class <sprint|standard|epic>] [--recipe <biome,biome,..> | --mix] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first\n  --mix prepares the seed as a race does: its own biome mix and draws";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--preset <twisty|flowing|speedway|figureEight>] [--class <sprint|standard|epic>] [--recipe <biome,biome,..> | --mix] [--loops <n>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--preset <name>] [--recipe <biome,..>] [--json] [--out <dir>]\n  without --preset, the data's weights mix course families per seed\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first\n  --mix prepares the seed as a race does: its own biome mix and draws";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
@@ -189,6 +189,14 @@ pub fn command(args: &[String]) -> ExitCode {
                     }
                 }
             }
+            // Loop-the-loops per lap (br-xlvx.6.4: they ship at 0 until br-xlvx.6.5).
+            "--loops" => match it.next().and_then(|s| s.parse().ok()) {
+                Some(n) => data.loops_per_lap = n,
+                None => {
+                    eprintln!("jj procgen: --loops needs a count per lap\n{USAGE}");
+                    return ExitCode::from(2);
+                }
+            },
             "--mix" => mix = true,
             "--recipe" => match it.next().and_then(|l| parse_recipe(l)) {
                 Some(r) => recipe = r,

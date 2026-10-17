@@ -15,7 +15,7 @@ import {evidencePath} from '../lib/evidence.mjs';
 const BASE='/p/genloop/';
 const out=process.env.JJ_CAPTURE_DIR ?? evidencePath('br-xlvx.6.4');
 const TICKS=420;
-// Rocks seed 1 gets a loop at the shipped loopsPerLap (crates/jj-procgen/tests/loops.rs prints the bank).
+// Rocks seed 1 gets a loop at loopsPerLap 1 (crates/jj-procgen/tests/loops.rs prints the bank).
 const SEED='1',RECIPE='rocks';
 // The chase is a grid tile following the car; the overview is the host's own overview camera (no `tiles`).
 const VIEWS=[['chase','tiles=1&follow=0'],['overview','']];
@@ -26,7 +26,8 @@ before(async()=>{
   symlinkSync(resolve('assets'),join(scratch,'assets'),'dir');
   const [bin,...args]=process.env.JJ_BIN ? [process.env.JJ_BIN] : ['cargo','run','--locked','-q','-p','jj-tools','--bin','jj','--'];
   const dir=join(scratch,'map');
-  execFileSync(bin,[...args,'procgen','--seed',SEED,'--recipe',RECIPE,'--out',dir,'--json']);
+  // Loops ship at loopsPerLap 0 until br-xlvx.6.5; `--loops 1` asks for one a lap.
+  execFileSync(bin,[...args,'procgen','--seed',SEED,'--recipe',RECIPE,'--loops','1','--out',dir,'--json']);
   mapJson=readFileSync(join(dir,'map.json'),'utf8');
   const map=JSON.parse(mapJson),loop=map.features.find(f=>f.kind==='loop');
   assert.ok(loop,`${RECIPE} seed ${SEED} has a generated loop`);
