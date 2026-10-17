@@ -5,7 +5,7 @@ Owner, 2026-10-17: "We can try loop the loops if the work was basically done jus
 ## What it is
 
 - The generator places loops as one of a lap's set pieces (GENERATOR_VERSION 26). How many a lap takes is
-  `generator.loopsPerLap` (default 1; 0 turns them off), a row in the `?tune` panel's generator values; Regenerate
+  `generator.loopsPerLap` (ships at 0 since CI 5687, see below; 1 puts one on each lap), a row in the `?tune` panel's generator values; Regenerate
   track applies it. The loop's shape (radius, run-in, minimum speed) stays in `assets/profiles/loops.json`.
 - A course that crosses itself (figure-8s, br-xlvx.10) takes no loop: the loop's jog moved a lower road under a bridge
   (seed 49, -0.42 m clearance).
@@ -44,3 +44,11 @@ Owner, 2026-10-17: "We can try loop the loops if the work was basically done jus
 
 - WebKit; a real round with several cars through the loop (the jj-sim loop banks cover bots, br-xlvx.6.3).
 - Loops on figure-8 courses (deliberately off, above).
+
+## Update after CI 5687 (2026-10-17)
+
+At loopsPerLap 1 by default, CI found a race gate inside a loop, a bot softlock on bank seed 11, lap banks that read a
+loop's top as a rollover, changed lab-scene maps and stale recipe goldens. Loops now ship at loopsPerLap 0 (generator
+output and GENERATOR_VERSION 25 as before loops); the owner plays them by setting loops per lap to 1 in `?tune` and
+Regenerate track. Default-on, with those fixed, is br-xlvx.6.5.
+
