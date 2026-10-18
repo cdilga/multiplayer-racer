@@ -8,7 +8,9 @@ import * as THREE from 'three';
 
 /** Triangle soup (non-indexed, so flat-shaded): positions, UVs. `uv` is a swatch resolver: name → [u, v]. */
 export class Soup {
-  constructor(uv) { this.p = []; this.uv = []; this.sw = uv; }
+  constructor(uv) { this.p = []; this.uv = []; this.nc = []; this.sw = uv; }
+  /** Draws fn's triangles as decoration the bake leaves out of the part's collider (hand guards, lamps, spokes). */
+  decor(fn) { const a = this.p.length / 3; fn(); this.nc.push([a, this.p.length / 3]); }
   tri(a, b, c, sw) {
     const t = this.sw(sw);
     for (const v of [a, b, c]) { this.p.push(v[0], v[1], v[2]); this.uv.push(t[0], t[1]); }
@@ -134,6 +136,7 @@ export function exportsFor(name, makeSoups) {
     for (const [id, so] of Object.entries(raw)) {
       const pivot = pv[id];
       parts[id] = { pivot, positions: so.p.map((v, i) => v - pivot[i % 3]), uvs: so.uv.slice(), tris: so.tris };
+      if (so.nc.length) parts[id].noCollide = so.nc;
     }
     return { parts, stations: 0 };
   };

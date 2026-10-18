@@ -21,7 +21,7 @@ const add = (path, step, dev) => spec.push({ path, step, dev });
 const BIKE = !P0.ySh;
 if (BIKE) (function leaves(o, path) {
   for (const [k, v] of Object.entries(o)) {
-    if (k === 'what') continue;
+    if (k === 'what' || (path.length === 0 && P0.pinned?.includes(k))) continue;
     if (typeof v === 'number' && v === 0) continue; // centreline values (the rider's spine, the hubs' x) stay put
     if (typeof v === 'number') add([...path, k], 0.02, /^(r|rF|rR|headR|w|t|h|tyreW)$/.test(k) ? 0.04 : 0.15);
     else if (v && typeof v === 'object') leaves(v, [...path, k]);

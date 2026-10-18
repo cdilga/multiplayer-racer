@@ -3,7 +3,7 @@
  "what": "Contract data the geometry doesn't carry (br-bwju.5, the bike part set of jj.vehicle.v1): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots(), the bike kit's hinge lines); the bake joins the two into pig-catcher.asset.json. front (forks, beaked mudguard, number-plate shroud, light bar and spots) hangs about its rear top edge 0-25 degrees, back (rear mudguard, rack, rope and sack) about its front top edge, the rider pitches about the hip (R121: a crash throws the rider), wheels +-6 degrees camber. +X is the bike's left. No interior blocks: a bike has no bays behind its panels.",
  "lods": [
   {
-   "maxTris": 1300
+   "maxTris": 2800
   },
   {
    "maxTris": 900
