@@ -160,7 +160,10 @@ fn each_preset_autopilot_laps_each_biome_across_seeds_and_replays() {
                     && sim.tick() < 400 * u64::from(jj_sim::TICK_HZ)
                 {
                     sim.step();
-                    min_up = min_up.min(sim.car_state(car).unwrap().up_y);
+                    // Upside down on a loop's deck is the ride, not a roll (br-xlvx.6.5).
+                    if !sim.riding_loop(car) {
+                        min_up = min_up.min(sim.car_state(car).unwrap().up_y);
+                    }
                 }
                 let race = sim.race().car(car.0).unwrap();
                 eprintln!(

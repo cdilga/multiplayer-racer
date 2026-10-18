@@ -3772,6 +3772,14 @@ impl Sim {
             .map(|(_, toi)| from_y - toi)
     }
 
+    /// Whether the car is riding a loop this tick (carried round its deck, upside down at the top by design): a lap bank's
+    /// rollover check skips those ticks (br-xlvx.6.5).
+    pub fn riding_loop(&self, car: CarId) -> bool {
+        self.cars
+            .get(car.0 as usize)
+            .is_some_and(|c| c.loop_ride.is_some())
+    }
+
     pub fn car_state(&self, car: CarId) -> Option<CarState> {
         let c = self.cars.get(car.0 as usize)?;
         let b = self.world.bodies.get(c.body)?;

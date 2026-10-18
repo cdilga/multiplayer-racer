@@ -160,17 +160,52 @@ pub fn jog(
             continue;
         };
         let run_out = along[x - e];
-        let lateral = |u: f64| {
-            if u <= run_out {
-                side * shift * u / run_out
+        let jogged = |side: f64| -> Vec<(f64, f64)> {
+            let lateral = |u: f64| {
+                if u <= run_out {
+                    side * shift * u / run_out
+                } else {
+                    let t = ((u - run_out) / data.back_m).min(1.0);
+                    side * shift * (1.0 + libm::cos(core::f64::consts::PI * t)) / 2.0
+                }
+            };
+            along
+                .iter()
+                .map(|&u| {
+                    let l = lateral(u);
+                    (pe.0 + f.0 * u + left.0 * l, pe.1 + f.1 * u + left.1 * l)
+                })
+                .collect()
+        };
+        // The jog keeps the course's own clearance from every other part of the lap (`course::CLEARANCE_M`): shifted
+        // toward a stretch the course passed at 20 m, its corner's rails and chevrons stood on that road (twisty seed
+        // 93, br-xlvx.6.5). The other side, else no loop here.
+        let clear = |pts: &[(f64, f64)]| {
+            pts.iter().enumerate().all(|(o, &p)| {
+                let k = e + o;
+                (0..n).all(|j| {
+                    let along = (s[k] - s[j]).abs().min(total - (s[k] - s[j]).abs());
+                    along <= crate::course::NEIGHBOUR_WINDOW_M
+                        || libm::hypot(p.0 - centerline[j].0, p.1 - centerline[j].1)
+                            >= crate::course::CLEARANCE_M
+                })
+            })
+        };
+        let (side, pts) = {
+            let first = jogged(side);
+            if clear(&first) {
+                (side, first)
             } else {
-                let t = ((u - run_out) / data.back_m).min(1.0);
-                side * shift * (1.0 + libm::cos(core::f64::consts::PI * t)) / 2.0
+                let other = jogged(-side);
+                if !clear(&other) {
+                    reject("too close to the lap");
+                    continue;
+                }
+                (-side, other)
             }
         };
-        for (k, &u) in (e..=b).zip(&along) {
-            let l = lateral(u);
-            centerline[k] = (pe.0 + f.0 * u + left.0 * l, pe.1 + f.1 * u + left.1 * l);
+        for (o, p) in pts.into_iter().enumerate() {
+            centerline[e + o] = p;
         }
         sites.push(Site {
             entry: e,

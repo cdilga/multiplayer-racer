@@ -24,7 +24,10 @@ fn bike_laps_every_generated_biome_upright_and_replays() {
             let mut min_up = 1.0f32;
             while !sim.race().is_finished(car.0) && sim.tick() < 400 * u64::from(TICK_HZ) {
                 sim.step();
-                min_up = min_up.min(sim.car_state(car).unwrap().up_y);
+                // Upside down on a loop's deck is the ride, not a roll (br-xlvx.6.5).
+                if !sim.riding_loop(car) {
+                    min_up = min_up.min(sim.car_state(car).unwrap().up_y);
+                }
             }
             let rc = sim.race().car(car.0).unwrap();
             eprintln!(

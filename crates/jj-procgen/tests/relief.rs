@@ -126,7 +126,10 @@ fn rocks_autopilot_laps_without_stall_rollover_or_recovery_and_replays() {
             while !sim.race().is_finished(car.0) && sim.tick() < 400 * u64::from(TICK_HZ) {
                 sim.step();
                 let st = sim.car_state(car).unwrap();
-                min_up = min_up.min(st.up_y);
+                // Upside down on a loop's deck is the ride, not a roll (br-xlvx.6.5).
+                if !sim.riding_loop(car) {
+                    min_up = min_up.min(st.up_y);
+                }
                 if sim.tick() > 3 * u64::from(TICK_HZ)
                     && !sim.race().is_held(car.0, sim.tick())
                     && st.forward_speed.abs() < 1.0
