@@ -89,8 +89,7 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
   }
 });
 
-// Quarantined (CI owner, br-q8i4): failed at 106 s in batch 6158 (job 14254).
-test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000, skip: 'quarantined br-q8i4: mid-race removal failed at 106 s' }, async () => {
+test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000 }, async () => {
   const host = await openHost(1920, 1080);
   try {
     await join(host, 1, 4);
@@ -103,7 +102,10 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await host.evaluate((car) => window.__jjTest.command({ cmd: 'damage', car, part: 'front', health: 0 }), car2);
     await wait(host, async () => (await window.__jjTest.observe()).debris.some((d) => d.kind === 'Part'), null, 20_000);
     const debrisBefore = (await host.evaluate(() => window.__jjTest.observe())).debris.filter((d) => d.kind === 'Part').length;
-    await host.locator('[data-act=menu]').click();
+    // br-q8i4/br-dqzf: on a loaded SwiftShader runner the racing (or results-reel) host's frames run seconds apart, and
+    // Playwright's "stable" check (two animation frames) timed out on a visible, still button. These presses are real
+    // mouse clicks at the button without that check; the menu's own presses are covered in chrome.test.mjs.
+    await host.locator('[data-act=menu]').click({ force: true });
     await host.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
     assert.match(await host.locator('[data-confirm=remove]').innerText(), /debris stays/i);
     await host.screenshot({ path: `${CAPTURE}/race-confirm-remove@1080p.png` });
@@ -131,8 +133,7 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
   }
 });
 
-// Quarantined (CI owner, br-dqzf): failed at 87 s in batch 6158 (job 14254).
-test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay', { timeout: 420_000, skip: 'quarantined br-dqzf: autopilot-seat removal failed at 87 s' }, async () => {
+test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay', { timeout: 420_000 }, async () => {
   const host = await openHost(1920, 1080);
   try {
     await join(host, 1, 3);
@@ -147,7 +148,7 @@ test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: i
     const rows = await host.evaluate(() => window.__jjRoom.view().standings.map((r) => r.seat).sort());
     assert.equal(rows.length, 3, 'the round gave every seat a standings row');
     assert.ok(rows.includes(seat3));
-    await host.getByRole('button', { name: 'Return to lobby' }).click();
+    await host.getByRole('button', { name: 'Return to lobby' }).click({ force: true }); // see br-q8i4 above
     await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
     assert.equal(await host.locator('.lcard').count(), 3);
     await host.locator('[data-act=menu]').click();
