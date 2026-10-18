@@ -301,7 +301,7 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
         &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."),
     )
     .expect("the roster loads");
-    let mut rows = Vec::new();
+    let (mut rows, mut bad) = (Vec::new(), Vec::new());
     let all = vec![
         Biome::Town,
         Biome::Rocks,
@@ -406,19 +406,21 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
                     sim.autopilot_state(car)
                 );
             }
-            assert!(
-                race.finished_at.is_some(),
-                "{vehicle} {recipe:?} {seed} stalled"
-            );
-            assert_eq!(
-                (race.recoveries, race.wrecks),
-                (0, 0),
-                "{vehicle} {recipe:?} {seed}"
-            );
-            assert!(
-                seen.iter().all(|s| *s == [true, true]),
-                "{vehicle} {recipe:?} {seed}: every crossing's both levels physically driven: {seen:?}"
-            );
+            // Every vehicle and lap is judged and the failures reported together (one failing car hid the rest).
+            if race.finished_at.is_none() {
+                bad.push(format!("{vehicle} {recipe:?} {seed} stalled"));
+            }
+            if (race.recoveries, race.wrecks) != (0, 0) {
+                bad.push(format!(
+                    "{vehicle} {recipe:?} {seed}: {} recoveries, {} wrecks",
+                    race.recoveries, race.wrecks
+                ));
+            }
+            if !seen.iter().all(|s| *s == [true, true]) {
+                bad.push(format!(
+                    "{vehicle} {recipe:?} {seed}: every crossing's both levels physically driven: {seen:?}"
+                ));
+            }
             let replay = jj_sim::Sim::replay(&map, &reg, profile, sim.journal(), sim.tick());
             assert_eq!(sim.state_hash(), replay.state_hash());
             rows.push(serde_json::json!({"vehicle":vehicle,"seed":seed,"biomes":recipe,"ticks":sim.tick(),"seen":seen,"recoveries":race.recoveries,"wrecks":race.wrecks,"hash":jj_map::hex(&sim.state_hash())}));
@@ -432,6 +434,7 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
         )
         .unwrap();
     }
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
 }
 
 /// br-xlvx.10 (P1-M-crossover-b): every course family crosses itself. Across 20 seeds per family (the four-biome
@@ -775,7 +778,19 @@ fn diag_postie_rocks_wreck() {
     } else {
         vec![Biome::Rocks]
     };
-    let prepared = jj_procgen::prepare_tuned(seed, &recipe, 8, &data());
+    // `JJ_DIAG_FLOWING`: the flowing family's data (the bot bank's loop-over laps) instead of the figure eight's.
+    let d = if std::env::var("JJ_DIAG_FLOWING").is_ok() {
+        let mut f = GeneratorData::shipped().clone();
+        for p in PresetName::ALL {
+            f.course
+                .presets
+                .set_weight(p, f64::from(p == PresetName::Flowing));
+        }
+        f
+    } else {
+        data()
+    };
+    let prepared = jj_procgen::prepare_tuned(seed, &recipe, 8, &d);
     for f in &prepared.map.features {
         if let Some(b) = jj_map::bridge::BridgeDesign::of(f) {
             let up = jj_map::bridge::indices(&prepared.map, b.upper).unwrap();
@@ -905,6 +920,27 @@ fn diag_postie_rocks_wreck() {
     // `JJ_NO_BRIDGE`: the bridge's colliders left out (is it what the car hits?).
     if std::env::var("JJ_NO_BRIDGE").is_ok() {
         map.map.features.retain(|f| f.kind != FeatureKind::Bridge);
+    }
+    // `JJ_HALF_CELL`: the heightfield resampled half a cell over (same ground, the grid's lines and vertices moved off
+    // the road): does a hit at road level come from the grid?
+    if std::env::var("JJ_HALF_CELL").is_ok() {
+        let t = map.map.terrain.clone();
+        let sp = f64::from(t.spacing) / 1000.0;
+        let (ox, oz) = (
+            f64::from(t.origin_x) / 1000.0,
+            f64::from(t.origin_z) / 1000.0,
+        );
+        let half = sp / 2.0;
+        let terrain = &mut map.map.terrain;
+        terrain.origin_x += (half * 1000.0) as i32;
+        terrain.origin_z += (half * 1000.0) as i32;
+        for r in 0..t.rows as usize {
+            for c in 0..t.cols as usize {
+                let (x, z) = (ox + c as f64 * sp + half, oz + r as f64 * sp + half);
+                terrain.heights[r * t.cols as usize + c] =
+                    (jj_procgen::terrain::ground_height_m(&t, x, z) * 100.0).round() as i16;
+            }
+        }
     }
     if std::env::var("JJ_NO_DRESSING").is_ok() {
         map.map.dressing.clear();
