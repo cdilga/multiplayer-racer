@@ -32,7 +32,8 @@ test('a bike (br-bwju.5) has every item, and fails item 3 without its rider', ()
   const r = structuredClone(bike); r.damage.parts = r.damage.parts.filter((p) => p.name !== 'rider');
   assert.ok(checkReview(r, all).some((b) => b.startsWith('item 3')));
 });
-test('a missing image fails', () => assert.ok(checkReview(cruz, (f) => !f.endsWith('grid-1.jpg')).length > 0));
+// The large in-world capture, whatever its format (br-bwju.11 made the Cruz's PNG).
+test('a missing image fails', () => assert.ok(checkReview(cruz, (f) => !/grid-1\.(png|jpe?g)$/.test(f)).length > 0));
 test('missing handling fails', () => { const r = structuredClone(cruz); r.handling = null; assert.ok(checkReview(r, all).length > 0); });
 test('a spec twin without its partner fails', () => {
   const r = structuredClone(cruz); r.specTwin = { id: 'lion-president', sharedSpec: 'x' };
