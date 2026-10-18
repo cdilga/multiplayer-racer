@@ -990,6 +990,9 @@ fn diag_postie_rocks_wreck() {
                 st.up_y,
                 st.wheels_in_contact
             );
+            if sim.tick().is_multiple_of(24) {
+                eprintln!("    autopilot {:?}", sim.autopilot_state(car));
+            }
         }
         if sim.tick().is_multiple_of(u64::from(jj_sim::TICK_HZ / 4)) {
             trail.push_back(format!(
