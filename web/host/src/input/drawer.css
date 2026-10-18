@@ -51,3 +51,10 @@ html [data-controllers-panel] [data-jj-input-drawer] .dr-options { max-width: no
 html[data-jj-phase][data-jj-menu] [data-controllers-panel] [data-jj-input-drawer] ul {
   width: auto; max-height: none; overflow: visible;
 }
+
+/* The native input helper's block (P1-C12.1). */
+[data-jj-input-drawer] [data-input-helper] .dr-install { font-weight: 800; }
+[data-jj-input-drawer] [data-input-helper] .dr-note { font-size: 12px; font-weight: 600; }
+[data-jj-input-drawer] [data-input-helper] input { font: inherit; width: 9ch; padding: 1px 4px; border: 2px solid var(--c-ink, #15203a); border-radius: 4px; background: var(--c-white, #fff); color: var(--c-ink, #15203a); letter-spacing: .12em; }
+[data-jj-input-drawer] [data-input-helper] .dr-error { color: var(--c-danger, #b3261e); }
+[data-jj-input-drawer] .dr-helper-devices { padding-left: 18px; font-size: 12px; margin: 4px 0; }

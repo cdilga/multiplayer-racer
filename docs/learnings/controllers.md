@@ -72,3 +72,13 @@ omits that header. A host-freshness age also omits upstream transport delay.
 - Page resume must cancel an outstanding deferred recovery timer and recover immediately; otherwise a shown phone waits behind its background watchdog. The strict C03 same-seat 3-second envelope stays in place.
 - Full local transport bank passes (including coturn packet-loss injection); JN5 grows to 12 and shrinks to 2 at 8× CPU throttle without widening waits. These are browser emulation measurements, not physical-device results.
 
+
+## Native input helper (P1-C12.1)
+
+- uinput virtual keyboards on eris type into its Hyprland desktop (whatever window has focus) unless something grabs
+  them. The helper's real-device journey runs it with `--only <prefix> --grab`: it reads only the rig's devices and
+  takes them exclusively (EVIOCGRAB), so no key reaches the desktop. Never feed uinput keys to an ungrabbed device there.
+- A page re-renders its drawer from `innerHTML`: a text field in it (the pairing code) must carry its value and focus
+  across renders, or typing is lost on the next state change.
+- The helper's device list arrives before `LocalInput`'s next poll creates the sources: wait for drawer rows, don't
+  assert them on the devices message.

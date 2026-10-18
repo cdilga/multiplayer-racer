@@ -1,0 +1,11 @@
+{
+  "//": "P1-C12.1: the native input helper (crates/jj-input-helper). It listens on 127.0.0.1:port; its devices become local sources sourceBase + id. Downloads are served by our own server under B/downloads/ (R70).",
+  "port": 47123,
+  "sourceBase": 1000,
+  "retryMs": 3000,
+  "downloads": {
+    "windows": { "label": "Windows (x64)", "file": "jj-input-helper-windows-x86_64.exe" },
+    "macos": { "label": "macOS (Apple silicon)", "file": "jj-input-helper-macos-arm64" },
+    "linux": { "label": "Linux (x64)", "file": "jj-input-helper-linux-x86_64" }
+  }
+}

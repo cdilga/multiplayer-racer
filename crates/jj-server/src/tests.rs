@@ -10,7 +10,7 @@ use jj_types::{EndpointId, ROOM_CODE_ALPHABET};
 
 use crate::app::{App, Config};
 use crate::crypto::{SeededEntropy, secret_hash};
-use crate::http::{Body, IMMUTABLE, Request, Response};
+use crate::http::{Body, IMMUTABLE, NO_CACHE, Request, Response};
 use crate::ice::CoturnProvider;
 use crate::rooms::{HOST_ENDPOINT, is_denied};
 use crate::statics::{Bundle, Page};
@@ -21,6 +21,7 @@ fn bundle(base: &str) -> Bundle {
     let mut b = Bundle::empty();
     b.insert("assets/host-abc.js", b"console.log(1)");
     b.insert("test/hooks-testing-1.js", b"//t");
+    b.insert("downloads/jj-input-helper-linux-x86_64", b"\x7fELF");
     let page = |name: &str| {
         format!("<html><head><script src=\"../assets/{name}-abc.js\"></script></head></html>")
     };
@@ -827,4 +828,32 @@ fn sse_wait_wakes_on_a_message_and_when_the_room_ends() {
         Poll::Ready(())
     );
     assert!(app.sse_take(&s, 0).is_none());
+}
+
+/// P1-C12.1: the input helper's builds are ours to serve (R70): a download under every base, never cached as immutable
+/// (the name stays, the bytes change per build), and a real 404 for a build that isn't there.
+#[test]
+fn serves_the_input_helper_downloads() {
+    for base in ["/", "/p/x/"] {
+        let app = app_with(base, "preview", 1);
+        let r = app.handle(
+            &Request::new(
+                "GET",
+                &format!("{base}downloads/jj-input-helper-linux-x86_64"),
+            ),
+            T0,
+        );
+        assert_eq!(r.status, 200);
+        assert_eq!(r.header("cache-control"), Some(NO_CACHE));
+        assert_eq!(
+            r.header("content-disposition"),
+            Some("attachment; filename=\"jj-input-helper-linux-x86_64\"")
+        );
+        assert_eq!(r.body_bytes(), b"\x7fELF");
+        let missing = app.handle(
+            &Request::new("GET", &format!("{base}downloads/jj-input-helper-plan9")),
+            T0,
+        );
+        assert_eq!(missing.status, 404);
+    }
 }

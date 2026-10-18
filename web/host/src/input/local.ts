@@ -12,10 +12,15 @@
 //   with its brake on. While a source calibrates, its seat gets neutral input.
 // - An unplugged pad sends one `LOCAL_UNAVAILABLE` sample and goes quiet: neutral at once, its car to the autopilot
 //   after the worker's dropout time, and back when it's plugged in and pressed again.
+// - The native input helper (P1-C12.1, `helper.ts`) adds one source per keyboard and per pad on this computer: each helper
+//   keyboard plays the first cluster's layout (Keys A), so two keyboards are two players with the same keys. While the
+//   helper has a keyboard (a pad), the browser's own clusters (Gamepad API pads) stand down, so nothing is read twice;
+//   host UI keys (clusters.json `reserved`) are never cluster keys and keep working.
 import map from './clusters.json';
 import roster from '../../../shared/src/roster.json';
 import type { SimClient } from '../worker/client';
 import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_UNAVAILABLE } from '../worker/messages';
+import { HelperClient, type HelperDevice, helperSourceBase } from './helper';
 import { CAL_PROMPTS, Calibration, type PadLike, type WheelProfile, pedal, profileFor, saveProfile, savedProfiles, wheelSample } from './wheel';
 
 type Axes = [number, number, number, number];
@@ -41,6 +46,10 @@ export interface LocalSourceView {
   left: boolean;
   /** Its seat is sitting out (from the drawer). */
   sittingOut: boolean;
+  /** A device read by the native input helper (P1-C12.1). */
+  helper?: boolean;
+  /** A browser cluster or pad standing down while the helper reads every keyboard (pad) on this computer. */
+  helperOwned?: boolean;
   /** Its Identify button is down now (P1-C14: holding it shows the controls card on the seat's tile). */
   identifyHeld: boolean;
   /** The controls this seat has used since it joined (P1-C14): the lobby's controls card folds away once all six are. */
@@ -111,11 +120,21 @@ export class LocalInput {
     clusters.flatMap((c) => [...Object.values(c.drive), ...Object.values(c.action), c.identify, c.ready]),
   );
 
+  /** The native input helper (P1-C12.1). `?helperPort=` points it at another port (tests). */
+  readonly helper: HelperClient;
+
   constructor(
     private readonly client: SimClient,
     private readonly win: Window = window,
   ) {
     for (const c of clusters) this.add(c.id, 'keys', c.label);
+    this.helper = new HelperClient(Number(new URLSearchParams(win.location?.search ?? '').get('helperPort')) || undefined);
+    this.helper.onKeys = (id, down, before) => this.onHelperKeys(id, down, before);
+  }
+
+  /** The cluster a keys source plays: its own, or Keys A for a helper keyboard. */
+  clusterOf(source: number): Cluster | undefined {
+    return clusters.find((c) => c.id === source) ?? (this.sources.get(source)?.view.helper ? clusters[0] : undefined);
   }
 
   /** The input drawer's list: every known source, connected or not. */
@@ -304,6 +323,8 @@ export class LocalInput {
   private readonly onKey = (e: KeyboardEvent): void => {
     if (!this.keysOn || e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
     e.preventDefault();
+    // The helper reads this keyboard by device: the browser's copy of the same keys must not drive a cluster too.
+    if (this.helper.owns('keyboard')) return void this.keys.clear();
     if (e.type === 'keydown') this.keys.add(e.code);
     else this.keys.delete(e.code);
     const cluster = clusters.find(c => c.ready === e.code);
@@ -336,13 +357,22 @@ export class LocalInput {
   poll(now = performance.now()): void {
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
-    for (const c of clusters) this.sampleCluster(c, dt, now);
+    const helperKeys = this.helper.owns('keyboard');
+    const helperPads = this.helper.owns('pad');
+    for (const c of clusters) {
+      const s = this.sources.get(c.id);
+      if (s) s.view.helperOwned = helperKeys || undefined;
+      if (!helperKeys) this.sampleCluster(c, dt, now);
+    }
+    this.pollHelper(dt, now);
     const pads = this.win.navigator.getGamepads?.() ?? [];
     for (const pad of pads) {
       if (!pad?.connected) continue;
       const source = map.padSourceBase + pad.index;
       const s = this.sources.get(source) ?? this.add(source, 'pad', `Pad ${pad.index + 1}`);
       if (!s.view.connected) continue;
+      s.view.helperOwned = helperPads || undefined;
+      if (helperPads) continue;
       s.padId = pad.id;
       if (s.cal) {
         const step = s.cal.sample(pad.axes, pad.buttons, now);
@@ -390,10 +420,71 @@ export class LocalInput {
     }
   }
 
+  /** The helper's devices (P1-C12.1): keyboards through Keys A's layout, pads like the browser's standard pads. */
+  private pollHelper(dt: number, now: number): void {
+    const devices = this.helper.capturing() ? this.helper.devices() : [];
+    const live = new Set<number>();
+    let keyboards = 0;
+    let padsSeen = 0;
+    for (const d of devices) {
+      const source = helperSourceBase + d.id;
+      live.add(source);
+      const label = d.kind === 'keyboard' ? `Keyboard ${++keyboards}` : `Pad ${++padsSeen}`;
+      const s = this.sources.get(source) ?? this.add(source, d.kind === 'keyboard' ? 'keys' : 'pad', label);
+      s.view.helper = true;
+      s.view.label = `${label} · ${d.name}`;
+      if (!d.connected) {
+        this.unplug(s);
+        continue;
+      }
+      s.view.connected = true;
+      this.sampleHelper(s, d, dt, now);
+    }
+    for (const s of this.sources.values()) if (s.view.helper && !live.has(s.view.source)) this.unplug(s);
+  }
+
+  private sampleHelper(s: Source, d: HelperDevice, dt: number, now: number): void {
+    if (d.kind === 'keyboard') {
+      if (this.keysOn) this.sampleKeys(s, clusters[0]!, this.helper.heldKeys(d.id), dt, now);
+      return;
+    }
+    const p = this.helper.pad(d.id);
+    if (!p) return;
+    const [dx, dy] = deadzone(p.axes[0], -p.axes[1], map.padDeadzone);
+    const [ax, ay] = deadzone(p.axes[2], -p.axes[3], map.padDeadzone);
+    this.update(s, [dx, dy, ax, ay], (p.buttons & (1 << 8)) !== 0, (p.buttons & (1 << 9)) !== 0, now);
+  }
+
+  /** A source that went away: neutral at once and its car to the autopilot after the dropout time (as a pad unplug). */
+  private unplug(s: Source): void {
+    if (!s.view.connected) return;
+    s.view.connected = false;
+    if (s.view.claimed) this.send(s, [0, 0, 0, 0], LOCAL_UNAVAILABLE);
+  }
+
+  /** A helper keyboard's Ready key in the Lobby goes out on its edge (as the browser cluster's keydown does). */
+  private onHelperKeys(id: number, down: Set<string>, before: Set<string>): void {
+    const source = helperSourceBase + id;
+    const c = clusters[0]!;
+    const s = this.sources.get(source);
+    const was = before.has(c.ready);
+    const is = down.has(c.ready);
+    if (was && !is) this.readyEvents.delete(source);
+    if (!s || !this.keysOn || was === is || this.client.room?.phase !== 'Lobby') return;
+    const confirmed = this.lobbyPicks.get(source)?.confirmed === true;
+    if (is && confirmed) this.readyEvents.add(source);
+    this.sampleKeys(s, c, down, 0, performance.now());
+    if (is && confirmed) this.ready(source);
+  }
+
   private sampleCluster(c: Cluster, dt: number, now: number): void {
     const s = this.sources.get(c.id);
     if (!s) return;
-    const k = (code: string) => (this.keys.has(code) ? 1 : 0);
+    this.sampleKeys(s, c, this.keys, dt, now);
+  }
+
+  private sampleKeys(s: Source, c: Cluster, keys: Set<string>, dt: number, now: number): void {
+    const k = (code: string) => (keys.has(code) ? 1 : 0);
     // R116 (P1-C11): the cluster's "drive" keys are throttle and brake (up, down) and STEER (left, right, on the right stick's x
     // axis); its "action" keys are the forward and back flick (up,
     // down, on the right stick's y axis); the left stick's x axis is nothing (R128, no drift). Steering is rate-shaped: the axis ramps toward the keys, full lock in
@@ -403,7 +494,7 @@ export class LocalInput {
     const steer = s.axes[2] + Math.max(-step, Math.min(step, target - s.axes[2]));
     const y = k(c.drive.up) - k(c.drive.down);
     const flick = k(c.action.up) - k(c.action.down);
-    this.update(s, [0, y, steer, flick], this.keys.has(c.identify), this.keys.has(c.ready), now);
+    this.update(s, [0, y, steer, flick], keys.has(c.identify), keys.has(c.ready), now);
   }
 
   private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number): void {

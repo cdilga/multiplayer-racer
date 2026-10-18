@@ -38,7 +38,7 @@ struct File {
 }
 
 pub struct Bundle {
-    /// `assets/…` and `test/…`, keyed by their path under `dist/`.
+    /// `assets/…`, `test/…` and `downloads/…`, keyed by their path under `dist/`.
     files: HashMap<String, File>,
     pages: HashMap<Page, Vec<u8>>,
 }
@@ -109,7 +109,7 @@ impl Bundle {
     /// Loads `dist/` into memory (the bundle is immutable for the server's life).
     pub fn load(dist: &Path, base: &str, origin: Option<&str>) -> std::io::Result<Self> {
         let mut bundle = Self::empty();
-        for dir in ["assets", "test"] {
+        for dir in ["assets", "test", "downloads"] {
             let root = dist.join(dir);
             if root.is_dir() {
                 walk(&root, &mut |p| {
@@ -171,6 +171,24 @@ impl Bundle {
             Some(f) => Response::bytes(200, f.content_type, f.bytes.clone())
                 .cache(IMMUTABLE)
                 .with_header("x-content-type-options", "nosniff"),
+            None => Response::not_found(),
+        }
+    }
+
+    /// `downloads/…` (the native input helper's builds, P1-C12.1, placed by the image build): saved, not shown, and
+    /// revalidated each time (the names don't change between builds, the bytes do).
+    pub fn download(&self, rel: &str) -> Response {
+        match self.files.get(rel) {
+            Some(f) => {
+                let name = rel.rsplit('/').next().unwrap_or("download");
+                Response::bytes(200, "application/octet-stream", f.bytes.clone())
+                    .cache(NO_CACHE)
+                    .with_header(
+                        "content-disposition",
+                        &format!("attachment; filename=\"{name}\""),
+                    )
+                    .with_header("x-content-type-options", "nosniff")
+            }
             None => Response::not_found(),
         }
     }

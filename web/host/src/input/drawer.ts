@@ -5,6 +5,7 @@
 import { controlsCard, keyLabel, paperQrCard } from '../../../shared/ui';
 import { morePadsHint } from '../../../shared/ui/controller-options';
 import { controlsData } from './controls-data';
+import { downloads, loadDownloads } from './helper';
 import type { LocalInput } from './local';
 import './drawer.css';
 
@@ -29,7 +30,9 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
       const idle = !s.claimed || s.left;
       const state = s.left
         ? 'left'
-        : !s.connected
+        : s.helperOwned
+          ? 'the input helper has these'
+          : !s.connected
           ? 'unplugged'
           : !s.claimed
             ? keysOff
@@ -39,8 +42,10 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
               ? 'sitting out'
               : 'playing';
       // A seated key cluster stays leavable while the keyboard is off; an unplugged pad's held seat gets Remove instead.
-      const seated = s.claimed && !s.left && (s.connected || s.kind === 'keys');
-      const held = s.claimed && !s.left && !s.connected && s.kind !== 'keys';
+      // A helper keyboard is a device that can be unplugged, like a pad.
+      const cluster = s.kind === 'keys' && !s.helper;
+      const seated = s.claimed && !s.left && (s.connected || cluster);
+      const held = s.claimed && !s.left && !s.connected && !cluster;
       const btn = (act: string, text: string) => ` <button type="button" data-act="${act}" data-source="${s.source}">${text}</button>`;
       if (s.calibrating) {
         return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="calibrating" data-step="${s.calibrating.step}">${s.label}: ${s.calibrating.prompt}${btn('skip', 'Skip')}${btn('cancel', 'Cancel')}</li>`;
@@ -49,9 +54,9 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
       if (held) controls += btn('remove', 'Remove');
       let hint = '';
       if (s.kind === 'keys' && idle) {
-        const c = input.clusters().find((k) => k.id === s.source);
-        hint = c && !keysOff ? ` · press ${key(c.drive.up)} to join` : '';
-        controls += `<button type="button" data-act="add" data-source="${s.source}"${keysOff ? ' disabled' : ''}>Add</button>`;
+        const c = input.clusterOf(s.source);
+        hint = c && !keysOff && !s.helperOwned ? ` · press ${key(c.drive.up)} to join` : '';
+        if (!s.helperOwned) controls += `<button type="button" data-act="add" data-source="${s.source}"${keysOff ? ' disabled' : ''}>Add</button>`;
       }
       let detail = '';
       if (s.kind === 'wheel' && s.wheel) {
@@ -61,10 +66,11 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
       } else if (s.needsMapping) {
         detail = ' · needs mapping';
         controls += btn('calibrate', 'Map as a wheel');
-      } else if (s.kind === 'pad' && s.connected) {
+      } else if (s.kind === 'pad' && s.connected && !s.helper && !s.helperOwned) {
         controls += btn('calibrate', 'Map as a wheel');
       }
-      return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}${hint && state === 'press to join' ? '' : `: ${state}`}${hint}${detail}${controls}</li>`;
+      const via = s.helper ? ' data-helper' : '';
+      return `<li data-source="${s.source}" data-kind="${s.kind}"${via} data-state="${state}">${s.label}${hint && state === 'press to join' ? '' : `: ${state}`}${hint}${detail}${controls}</li>`;
     });
     // The head is what shows while a race collapses the drawer (it expands on hover or keyboard focus).
     const seated = input.list().filter((s) => s.connected && s.claimed && !s.left).length;
@@ -74,7 +80,8 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
     const legends = input.clusters().map((c) => `<li><b>${esc(c.label)}</b>: drive ${Object.values(c.drive).map(key).join(' / ')}, action ${Object.values(c.action).map(key).join(' / ')}, Identify ${key(c.identify)}, Ready ${key(c.ready)}</li>`).join('');
     const html = `<div class="drawer-head" tabindex="0">Keys &amp; pads${seated ? ` · ${seated} playing` : ''}</div>
       <div class="dr-bar"><button type="button" data-act="keys-toggle" aria-pressed="${on}">Keyboard players: ${on ? 'on' : 'off'}</button><button type="button" data-act="controls">Controls</button></div>
-      ${padsHint ? `<p class="dr-options" data-more-pads>${padsHint}</p>` : ''}
+      ${padsHint && !input.helper.owns('pad') ? `<p class="dr-options" data-more-pads>${padsHint}</p>` : ''}
+      ${helperPanel(input)}
       <details class="dr-options" data-keyboard-options><summary>Add another keyboard</summary>
         <p>Use a different cluster on each keyboard:</p><ul class="dr-legends">${legends}</ul>
         ${o.joinUrl ? `<p>Or plug it into a phone or laptop and <a href="${esc(o.joinUrl)}" target="_blank" rel="noopener">join this room there</a>.</p>${qr}` : ''}
@@ -87,8 +94,17 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
     // Playwright click) on a host whose frames are slow.
     if (html !== last) {
       const open = el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')?.open ?? false;
+      // The pairing code being typed survives a re-render.
+      const code = el.querySelector<HTMLInputElement>('[data-helper-code]');
+      const typed = code?.value ?? '';
+      const focused = !!code && document.activeElement === code;
       scroll.innerHTML = last = html;
       el.querySelector<HTMLDetailsElement>('[data-keyboard-options]')!.open = open;
+      const again = el.querySelector<HTMLInputElement>('[data-helper-code]');
+      if (again) {
+        again.value = typed;
+        if (focused) again.focus();
+      }
     }
   };
   let last = '';
@@ -108,9 +124,53 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
     else if (act === 'skip') input.skipStep(source);
     else if (act === 'cancel') input.cancelCalibration(source);
     else if (act === 'confirm') input.confirmWheel(source);
+    else if (act === 'helper-connect') input.helper.connect();
+    else if (act === 'helper-pair') pairTyped();
+    else if (act === 'helper-off') input.helper.disconnect();
     render();
   });
+  const pairTyped = () => {
+    const code = el.querySelector<HTMLInputElement>('[data-helper-code]');
+    if (code?.value.trim()) input.helper.pair(code.value);
+  };
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).matches('[data-helper-code]')) pairTyped();
+  });
+  input.helper.onChange = render;
+  void loadDownloads().then(render);
   render();
   const t = setInterval(render, o.everyMs ?? 500);
   return () => clearInterval(t);
+}
+
+/** The native input helper's block (P1-C12.1): install it, connect, pair with its code, and its devices once paired. */
+function helperPanel(input: LocalInput): string {
+  const h = input.helper;
+  const links = downloads();
+  const mine = links[0]!;
+  const others = links.slice(1).filter((d) => d.available).map((d) => `<a href="${esc(d.href)}" download data-helper-download="${d.os}">${esc(d.label)}</a>`).join(' · ');
+  const also = others ? `; also ${others}` : '';
+  const install = mine.available
+    ? `<a class="dr-install" href="${esc(mine.href)}" download data-helper-download="${mine.os}" data-mine>Install the input helper</a> <span class="dr-note">(${esc(mine.label)}${also})</span>`
+    : `<span class="dr-note" data-helper-unbuilt="${mine.os}">The ${esc(mine.label)} build isn't on this server yet${also}.</span>`;
+  const btn = (act: string, text: string) => `<button type="button" data-act="${act}">${text}</button>`;
+  let body: string;
+  if (h.state === 'off') {
+    body = `<p>One player per keyboard on this computer, and pads past the browser's four: ${install}</p>
+      <p>Run it, then ${btn('helper-connect', 'Connect')}</p>`;
+  } else if (h.state === 'connecting' || h.state === 'absent') {
+    body = `<p>Looking for the input helper on this computer. Start it and it connects by itself. ${btn('helper-off', 'Stop looking')}</p><p>${install}</p>`;
+  } else if (h.state === 'pairing') {
+    body = `<p>Input helper found. Type the code its window shows:
+      <input data-helper-code inputmode="numeric" autocomplete="off" maxlength="6" size="7" aria-label="Pairing code" placeholder="000000"> ${btn('helper-pair', 'Pair')}</p>
+      ${h.error ? `<p class="dr-error" role="alert">${esc(h.error)}</p>` : ''}`;
+  } else {
+    const devices = h.devices();
+    const kb = devices.filter((d) => d.kind === 'keyboard' && d.connected).length;
+    const pads = devices.filter((d) => d.kind === 'pad' && d.connected).length;
+    const list = devices.map((d) => `<li data-helper-device="${d.id}" data-kind="${d.kind}" data-connected="${d.connected}">${esc(d.name)}${d.connected ? '' : ': unplugged'}</li>`).join('');
+    body = `<p>Connected: ${kb} keyboard${kb === 1 ? '' : 's'} and ${pads} pad${pads === 1 ? '' : 's'}, each its own player. Every keyboard plays W A S D, T / G, Q and E. ${btn('helper-off', 'Disconnect')}</p>
+      ${list ? `<ul class="dr-helper-devices">${list}</ul>` : '<p>Plug in a keyboard or pad.</p>'}`;
+  }
+  return `<div class="dr-options" data-input-helper data-helper-state="${h.state}"><b>Input helper</b> ${body}</div>`;
 }

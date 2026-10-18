@@ -13,7 +13,8 @@ ARG NODE_VERSION=26.10.0
 # ---- Rust: the server and the browser WASM (sim worker, controller input, procgen worker) ----
 FROM rust:${RUST_VERSION}-slim-trixie AS rust
 ARG WASM_BINDGEN=0.2.129
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/* \
+# gcc-mingw-w64-x86-64: the Windows build of the native input helper (P1-C12.1) links with MinGW.
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates gcc-mingw-w64-x86-64 &&rm -rf /var/lib/apt/lists/* \
  && curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WASM_BINDGEN}/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl.tar.gz \
     | tar xz -C /tmp && cp /tmp/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl/wasm-bindgen /usr/local/bin/
 WORKDIR /src
@@ -30,6 +31,17 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
  && cargo build --locked --release -p jj-server --bin jj-server \
  && scripts/build-host-wasm.sh \
  && mkdir -p /out && cp target/release/jj-server /out/
+# The native input helper (P1-C12.1), served by our own server under B/downloads/ (R70): Linux as a static musl binary,
+# Windows through MinGW. macOS needs Apple's SDK to link IOKit, so its build is made on a Mac (docs/evidence/P1-C12.1).
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/target \
+    rustup target add x86_64-unknown-linux-musl x86_64-pc-windows-gnu \
+ && cargo build --locked --release -p jj-input-helper --target x86_64-unknown-linux-musl \
+ && cargo build --locked --release -p jj-input-helper --target x86_64-pc-windows-gnu \
+ && mkdir -p /out/downloads \
+ && cp target/x86_64-unknown-linux-musl/release/jj-input-helper /out/downloads/jj-input-helper-linux-x86_64 \
+ && cp target/x86_64-pc-windows-gnu/release/jj-input-helper.exe /out/downloads/jj-input-helper-windows-x86_64.exe \
+ && printf '{"files":["jj-input-helper-linux-x86_64","jj-input-helper-windows-x86_64.exe"]}\n' > /out/downloads/index.json
 
 # ---- Web: the landing, host and controller pages (one relative-base build, placed by jj-server) ----
 FROM node:${NODE_VERSION}-trixie-slim AS web
@@ -63,6 +75,7 @@ RUN useradd --system --uid 10001 --home /app --shell /usr/sbin/nologin jj
 WORKDIR /app
 COPY --from=rust /out/jj-server /app/jj-server
 COPY --from=web /src/web/dist /app/web
+COPY --from=rust /out/downloads /app/web/downloads
 ENV JJ_BIND=0.0.0.0:8080 JJ_DIST=/app/web JJ_BASE_PATH=/ JJ_REALM=preview JJ_BUILD=${JJ_BUILD}
 USER 10001
 EXPOSE 8080

@@ -181,6 +181,7 @@ impl App {
                 self.bundle.page(Page::Controller)
             }
             (_, r) if get && r.starts_with("assets/") => self.bundle.file(r),
+            (_, r) if get && r.starts_with("downloads/") => self.bundle.download(r),
             (_, r) if get && r.starts_with("test/") => {
                 if self.cfg.realm == "production" {
                     Response::not_found()

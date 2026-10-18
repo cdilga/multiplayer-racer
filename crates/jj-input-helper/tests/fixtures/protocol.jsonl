@@ -1,0 +1,8 @@
+page< {"t":"hello","v":1,"os":"linux","version":"0.2.0"}
+page> {"t":"pair","code":"482913"}
+page> {"t":"pair","token":"5o0V0n3sQxJk1vZr0t6c3w"}
+page< {"t":"paired","token":"5o0V0n3sQxJk1vZr0t6c3w"}
+page< {"t":"unpaired","reason":"wrong code"}
+page< {"t":"devices","devices":[{"id":1,"kind":"keyboard","name":"Keyboard one","connected":true},{"id":2,"kind":"pad","name":"Pad one","connected":false}]}
+page< {"t":"keys","id":1,"down":["KeyW","KeyD"]}
+page< {"t":"pad","id":2,"axes":[0.5,-1.0,0.0,0.25],"buttons":768}

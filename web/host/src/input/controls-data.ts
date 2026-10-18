@@ -26,7 +26,8 @@ export const localView = (source: number | null | undefined): LocalSourceView | 
 export function sourceOf(source: number | null | undefined): ControlsSource | undefined {
   const v = localView(source);
   if (!v) return undefined;
-  if (v.kind === 'keys') return { kind: 'keys', cluster: v.source };
+  // A helper keyboard (P1-C12.1) plays Keys A's layout.
+  if (v.kind === 'keys') return { kind: 'keys', cluster: v.helper ? 1 : v.source };
   if (v.kind === 'wheel') return { kind: 'wheel', profile: v.wheel?.profile };
   return { kind: 'pad' };
 }

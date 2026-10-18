@@ -6,7 +6,7 @@
 //
 // Usage: node scripts/ci/run-slot.mjs <slot> '<slots JSON from plan>'   (env: JJ_SOAK_S for the SSE soak)
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileOf, nodeArgs } from './targets.mjs';
 
@@ -21,7 +21,7 @@ try {
   durations = JSON.parse(readFileSync(join(import.meta.dirname, 'durations.json'), 'utf8'));
 } catch {}
 const bin = resolve('.ci-bin');
-const base = { ...process.env, JJ_BIN: `${bin}/jj`, JJ_SERVER_BIN: `${bin}/jj-server` };
+const base = { ...process.env, JJ_BIN: `${bin}/jj`, JJ_SERVER_BIN: `${bin}/jj-server`, ...(existsSync(`${bin}/jj-input-helper`) ? { JJ_INPUT_HELPER_BIN: `${bin}/jj-input-helper` } : {}) };
 const envFor = (f) => {
   if (f.startsWith('web/host/tests/')) return { JJ_NO_WEBKIT: '1', JJ_NO_CAPTURES: '1' };
   if (f.startsWith('web/shared/transport/tests/')) return { JJ_COTURN_REQUIRED: '1' };
