@@ -21,28 +21,28 @@
   "sheet": "lod1",
   "view": "front",
   "x": 109,
-  "y": 846,
+  "y": 806,
   "w": 342,
-  "h": 408,
-  "aspect": 0.8382
+  "h": 448,
+  "aspect": 0.7634
  },
  "lod1_side": {
   "sheet": "lod1",
   "view": "side",
   "x": 595,
-  "y": 850,
+  "y": 806,
   "w": 678,
-  "h": 402,
-  "aspect": 1.6866
+  "h": 446,
+  "aspect": 1.5202
  },
  "lod1_rear": {
   "sheet": "lod1",
   "view": "rear",
   "x": 1446,
-  "y": 809,
+  "y": 807,
   "w": 348,
-  "h": 445,
-  "aspect": 0.782
+  "h": 447,
+  "aspect": 0.7785
  },
  "lowest_hero": {
   "sheet": "lowest",
@@ -66,10 +66,10 @@
   "sheet": "lowest",
   "view": "front",
   "x": 111,
-  "y": 844,
+  "y": 803,
   "w": 342,
-  "h": 411,
-  "aspect": 0.8321
+  "h": 452,
+  "aspect": 0.7566
  },
  "lowest_side": {
   "sheet": "lowest",

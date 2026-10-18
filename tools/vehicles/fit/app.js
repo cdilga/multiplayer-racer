@@ -18,13 +18,14 @@ const SHEETS = await (await fetch(`${base}refs/sheets.json`, { cache: 'no-store'
 // The same opening radius as extract.mjs used on the reference (sheets.json `open`), so thin parts count alike.
 const OPEN = SHEETS.open ?? 5, KEEP = SHEETS.keep ?? 0, GROUND_BAND = 0.125;
 // The sheets are perspective renders; CAM_D is the camera distance from the car centre (Spike J calibrated 10 m).
-let CAM_D = 10;
+let CAM_D = SHEETS.camD ?? 10; // sheets.json `camD`: a bike's sheet is rendered from much further away (br-bwju.11)
 export const VIEWS = {
   side: { dir: [1, 0, 0], up: [0, 1, 0], weight: 0.4 }, // lengths and heights
   top: { dir: [0, 1, 0], up: [0, 0, -1], weight: 0.3 }, // widths
-  front: { dir: [0, Math.sin(0.14), Math.cos(0.14)], up: [0, 1, 0], weight: 0.15 },
-  rear: { dir: [0, Math.sin(0.12), -Math.cos(0.12)], up: [0, 1, 0], weight: 0.15 },
+  front: { dir: [0, Math.sin(SHEETS.tilt?.front ?? 0.14), Math.cos(SHEETS.tilt?.front ?? 0.14)], up: [0, 1, 0], weight: 0.15 },
+  rear: { dir: [0, Math.sin(SHEETS.tilt?.rear ?? 0.12), -Math.cos(SHEETS.tilt?.rear ?? 0.12)], up: [0, 1, 0], weight: 0.15 },
 };
+export const setTilt = (f, r) => { VIEWS.front.dir = [0, Math.sin(f), Math.cos(f)]; VIEWS.rear.dir = [0, Math.sin(r), -Math.cos(r)]; };
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1);
@@ -170,6 +171,7 @@ window.__fit = {
   setP(p) { P = structuredClone(p); return rebuild(); },
   setLod(l) { lod = l; return rebuild(); },
   setCamD(d) { CAM_D = d; },
+  setTilt,
   evaluate, shaded,
 };
 document.title = 'READY';

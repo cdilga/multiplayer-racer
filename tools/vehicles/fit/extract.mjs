@@ -16,7 +16,7 @@ import { segment, openMask, largest, bbox, cropMask } from './mask.js';
 const id = process.argv[2];
 if (!id) { console.error('usage: extract.mjs <vehicle id>'); process.exit(2); }
 const dir = path.join('art/vehicles', id, 'refs');
-const { sheets, views, segment: seg = {}, open: OPEN = 5, keep: KEEP = 0 } = JSON.parse(fs.readFileSync(path.join(dir, 'sheets.json'), 'utf8'));
+const { sheets, views, segment: seg = {}, open: OPEN = 5, keep: KEEP = 0, patch = {} } = JSON.parse(fs.readFileSync(path.join(dir, 'sheets.json'), 'utf8'));
 const write = (file, png) => fs.writeFileSync(path.join(dir, 'masks', file), PNG.sync.write(png));
 
 fs.mkdirSync(path.join(dir, 'masks'), { recursive: true });
@@ -26,7 +26,10 @@ for (const [sheet, file] of Object.entries(sheets)) {
   for (const [view, [x0, y0, x1, y1]] of Object.entries(views)) {
     const w = x1 - x0, h = y1 - y0, rgba = new Uint8Array(w * h * 4);
     for (let y = 0; y < h; y++) rgba.set(png.data.subarray(((y0 + y) * png.width + x0) * 4, ((y0 + y) * png.width + x1) * 4), y * w * 4);
-    const m = largest(openMask(segment(rgba, w, h, seg), w, h, OPEN), w, h, KEEP), b = bbox(m, w, h), cm = cropMask(m, w, b);
+    const seg0 = segment(rgba, w, h, seg);
+    // `patch`: { view: [[cx, cy, rx, ry]] } ellipses in sheet pixels added to the mask (a white helmet the grey backdrop swallows; br-bwju.11)
+    for (const [cx, cy, rx, ry] of patch[view] ?? []) for (let y = Math.max(0, Math.floor(cy - ry - y0)); y < Math.min(h, Math.ceil(cy + ry - y0)); y++) for (let x = Math.max(0, Math.floor(cx - rx - x0)); x < Math.min(w, Math.ceil(cx + rx - x0)); x++) if (((x + x0 - cx) / rx) ** 2 + ((y + y0 - cy) / ry) ** 2 <= 1) seg0[y * w + x] = 1;
+    const m = largest(openMask(seg0, w, h, OPEN), w, h, KEEP), b = bbox(m, w, h), cm = cropMask(m, w, b);
     const mask = new PNG({ width: b.w, height: b.h }), crop = new PNG({ width: b.w, height: b.h });
     for (let i = 0; i < b.w * b.h; i++) { const v = cm[i] ? 255 : 0; mask.data.set([v, v, v, 255], i * 4); }
     for (let y = 0; y < b.h; y++) crop.data.set(rgba.subarray(((b.y + y) * w + b.x) * 4, ((b.y + y) * w + b.x + b.w) * 4), y * b.w * 4);

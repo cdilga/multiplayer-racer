@@ -1,9 +1,9 @@
 {
  "id": "postie-bike",
- "what": "Contract data the geometry doesn't carry (br-bwju.5, the bike part set of jj.vehicle.v1): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots(), the bike kit's hinge lines); the bake joins the two into postie-bike.asset.json. front (fork, basket, lamp, mudguard) hangs about its rear top edge 0-25 degrees, back (rack and panniers) about its front top edge, the rider pitches about the hip (R121: a crash throws the rider), wheels +-6 degrees camber. +X is the bike's left. No interior blocks: a bike has no bays behind its panels.",
+ "what": "Contract data the geometry doesn't carry (br-bwju.5, the bike part set of jj.vehicle.v1): mass split, hinges, collider kinds, anchors and LOD budgets. The physics hulls are frozen at the br-bwju.5 bake (colliderPoints -> colliders.json), so the br-bwju.11 visual rebuild (wider panniers and bars, a rider with a bigger helmet) leaves the bike's scenarios as they were. Pivots come from the model (model.js pivots(), the bike kit's hinge lines); the bake joins the two into postie-bike.asset.json. front (fork, basket, lamp, mudguard) hangs about its rear top edge 0-25 degrees, back (rack and panniers) about its front top edge, the rider pitches about the hip (R121: a crash throws the rider), wheels +-6 degrees camber. +X is the bike's left. No interior blocks: a bike has no bays behind its panels.",
  "lods": [
   {
-   "maxTris": 1300
+   "maxTris": 2900
   },
   {
    "maxTris": 900
@@ -121,5 +121,6 @@
   "roof_number": "On the rider's back (the vest), where the number reads from the chase camera and from above.",
   "lplate_front": "On the front of the mail tub.",
   "lplate_rear": "On the rear rack's tail, between the panniers."
- }
+ },
+ "colliderPoints": "colliders.json"
 }

@@ -3,8 +3,8 @@
   "vehicle": "postie-bike",
   "source": {
     "sidecar": "art/vehicles/postie-bike/postie-bike.asset.json",
-    "sidecar_sha256": "3571c919e046527f37e3264d5f91c34159b8bd311fbdcc11868f1fb68c75f071",
-    "lod0_sha256": "c42554e1f34c45070af55e46f64c2daecf54cfd4f5a9085b31d0afe6765144ee"
+    "sidecar_sha256": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
+    "lod0_sha256": "d279328ee04a19fbfcc72f9715082390eb5410539d4ff5acaeaecb51959690f7"
   },
   "geometry": {
     "hull": [
@@ -34,7 +34,7 @@
         -1.2074
       ],
       [
-        -0.5952,
+        -0.5953,
         1.11,
         -1.033
       ],
@@ -64,7 +64,7 @@
         -0.0174
       ],
       [
-        -0.4152,
+        -0.4153,
         1.11,
         -1.447
       ],
@@ -75,7 +75,7 @@
       ],
       [
         -0.39,
-        0.2437,
+        0.2438,
         0.2199
       ],
       [
@@ -139,7 +139,7 @@
         0.51
       ],
       [
-        -0.3048,
+        -0.3047,
         1.11,
         -0.833
       ],
@@ -239,12 +239,12 @@
         0.74
       ],
       [
-        -0.2397,
+        -0.2396,
         1.3789,
         -0.2817
       ],
       [
-        -0.2397,
+        -0.2396,
         1.4759,
         -0.2574
       ],
@@ -316,7 +316,7 @@
       [
         -0.125,
         0.9877,
-        0.6782
+        0.6783
       ],
       [
         -0.12,
@@ -352,11 +352,6 @@
         -0.0831,
         1.1144,
         0.68
-      ],
-      [
-        -0.075,
-        0.9877,
-        0.6782
       ],
       [
         -0.0671,
@@ -399,12 +394,12 @@
         0.81
       ],
       [
-        -0.0,
+        0.0,
         1.6725,
         -0.3098
       ],
       [
-        -0.0,
+        0.0,
         1.7575,
         -0.2449
       ],
@@ -447,11 +442,6 @@
         0.0671,
         1.7575,
         -0.0658
-      ],
-      [
-        0.075,
-        0.9877,
-        0.6782
       ],
       [
         0.0831,
@@ -501,7 +491,7 @@
       [
         0.125,
         0.9877,
-        0.6782
+        0.6783
       ],
       [
         0.15,
@@ -544,12 +534,12 @@
         -1.01
       ],
       [
-        0.2397,
+        0.2396,
         1.3789,
         -0.2817
       ],
       [
-        0.2397,
+        0.2396,
         1.4759,
         -0.2574
       ],
@@ -629,7 +619,7 @@
         0.42
       ],
       [
-        0.3048,
+        0.3047,
         1.11,
         -1.447
       ],
@@ -700,11 +690,11 @@
       ],
       [
         0.39,
-        0.2437,
+        0.2438,
         0.2199
       ],
       [
-        0.4152,
+        0.4153,
         1.11,
         -0.833
       ],
@@ -734,7 +724,7 @@
         -1.4074
       ],
       [
-        0.5952,
+        0.5953,
         1.11,
         -1.247
       ],
@@ -1014,8 +1004,8 @@
         "name": "front",
         "pivot": [
           0.0,
-          1.1631,
-          0.6782
+          1.4438,
+          0.48
         ],
         "hinge": [
           [
@@ -1091,7 +1081,7 @@
           [
             -0.125,
             0.9877,
-            0.6782
+            0.6783
           ],
           [
             -0.1,
@@ -1102,11 +1092,6 @@
             -0.0831,
             1.1144,
             0.68
-          ],
-          [
-            -0.075,
-            0.9877,
-            0.6782
           ],
           [
             -0.0344,
@@ -1139,11 +1124,6 @@
             0.78
           ],
           [
-            0.075,
-            0.9877,
-            0.6782
-          ],
-          [
             0.0831,
             1.1144,
             0.68
@@ -1166,7 +1146,7 @@
           [
             0.125,
             0.9877,
-            0.6782
+            0.6783
           ],
           [
             0.24,
@@ -1224,8 +1204,8 @@
         "name": "back",
         "pivot": [
           0.0,
-          1.11,
-          -0.6154
+          1.254,
+          -0.52
         ],
         "hinge": [
           [
@@ -1264,7 +1244,7 @@
             -1.2074
           ],
           [
-            -0.5952,
+            -0.5953,
             1.11,
             -1.033
           ],
@@ -1274,12 +1254,12 @@
             -0.8726
           ],
           [
-            -0.4152,
+            -0.4153,
             1.11,
             -1.447
           ],
           [
-            -0.3048,
+            -0.3047,
             1.11,
             -0.833
           ],
@@ -1304,12 +1284,12 @@
             -0.6246
           ],
           [
-            0.3048,
+            0.3047,
             1.11,
             -1.447
           ],
           [
-            0.4152,
+            0.4153,
             1.11,
             -0.833
           ],
@@ -1319,7 +1299,7 @@
             -1.4074
           ],
           [
-            0.5952,
+            0.5953,
             1.11,
             -1.247
           ],
@@ -1354,8 +1334,8 @@
         "name": "rider",
         "pivot": [
           0.0,
-          0.92,
-          -0.22
+          1.14,
+          -0.27
         ],
         "hinge": [
           [
@@ -1395,7 +1375,7 @@
           ],
           [
             -0.39,
-            0.2437,
+            0.2438,
             0.2199
           ],
           [
@@ -1429,12 +1409,12 @@
             0.485
           ],
           [
-            -0.2397,
+            -0.2396,
             1.3789,
             -0.2817
           ],
           [
-            -0.2397,
+            -0.2396,
             1.4759,
             -0.2574
           ],
@@ -1479,12 +1459,12 @@
             -0.0658
           ],
           [
-            -0.0,
+            0.0,
             1.6725,
             -0.3098
           ],
           [
-            -0.0,
+            0.0,
             1.7575,
             -0.2449
           ],
@@ -1539,12 +1519,12 @@
             -0.36
           ],
           [
-            0.2397,
+            0.2396,
             1.3789,
             -0.2817
           ],
           [
-            0.2397,
+            0.2396,
             1.4759,
             -0.2574
           ],
@@ -1585,7 +1565,7 @@
           ],
           [
             0.39,
-            0.2437,
+            0.2438,
             0.2199
           ],
           [
@@ -1676,7 +1656,7 @@
           [
             -0.115,
             0.2722,
-            1.2433
+            1.2434
           ],
           [
             -0.115,
@@ -1706,7 +1686,7 @@
           [
             -0.115,
             0.5278,
-            1.2433
+            1.2434
           ],
           [
             -0.115,
@@ -1720,7 +1700,7 @@
           ],
           [
             -0.1,
-            -0.0,
+            0.0,
             0.9328
           ],
           [
@@ -1780,7 +1760,7 @@
           ],
           [
             0.1,
-            -0.0,
+            0.0,
             0.9328
           ],
           [
@@ -1856,7 +1836,7 @@
           [
             0.115,
             0.2722,
-            1.2433
+            1.2434
           ],
           [
             0.115,
@@ -1886,7 +1866,7 @@
           [
             0.115,
             0.5278,
-            1.2433
+            1.2434
           ],
           [
             0.115,
@@ -2040,7 +2020,7 @@
           ],
           [
             -0.1,
-            -0.0,
+            0.0,
             -1.1365
           ],
           [
@@ -2100,7 +2080,7 @@
           ],
           [
             0.1,
-            -0.0,
+            0.0,
             -1.1365
           ],
           [
@@ -2254,80 +2234,83 @@
   },
   "tuning": {
     "bike_balance": {
-      "torque_per_rad": 5250,
-      "damping": 1344,
+      "torque_per_rad": 5250.0,
+      "damping": 1344.0,
       "max_lean_rad": 0.2,
-      "lean_speed_mps": 8
+      "lean_speed_mps": 8.0
     },
     "mass": 200.0,
-    "inertia_scale": 1,
+    "inertia_scale": 1.0,
     "suspension_rest": 0.25,
-    "suspension_stiffness": 35,
-    "suspension_compression": 5,
-    "suspension_damping": 6,
+    "suspension_stiffness": 35.0,
+    "suspension_compression": 5.0,
+    "suspension_damping": 6.0,
     "max_suspension_travel": 0.2,
-    "max_suspension_force": 10909,
-    "friction_slip": 2,
-    "side_friction_stiffness": 1,
-    "max_engine_force": 4400,
+    "max_suspension_force": 10909.0,
+    "friction_slip": 2.0,
+    "side_friction_stiffness": 1.0,
+    "max_engine_force": 4400.0,
     "max_engine_power_w": 60000.0,
-    "max_reverse_force": 818,
-    "reverse_below_mps": 1,
-    "max_brake_force": 3182,
+    "max_reverse_force": 818.0,
+    "reverse_below_mps": 1.0,
+    "max_brake_force": 3182.0,
     "max_steer_rad": 0.6,
-    "steer_falloff_mps": 14,
+    "steer_falloff_mps": 14.0,
     "drive": "Rear",
     "linear_damping": 0.15,
     "angular_damping": 0.8,
-    "roll_influence": 0,
+    "roll_influence": 0.0,
     "boost_start": 0.5,
     "boost_min_start": 0.25,
     "boost_engine_gain": 0.6,
     "boost_drain_per_s": 0.35,
     "boost_recharge_per_s": 0.12,
     "slide_charge_per_s": 0.25,
-    "slide_charge_min_mps": 5,
-    "wheelie_full_preload_ms": 400,
-    "wheelie_good_min_ms": 350,
-    "wheelie_lift_impulse": 965,
+    "slide_charge_min_mps": 5.0,
+    "wheelie_full_preload_ms": 400.0,
+    "wheelie_good_min_ms": 350.0,
+    "wheelie_lift_impulse": 965.0,
     "wheelie_drive_gain": 0.15,
     "wheelie_drive_s": 0.8,
     "wheelie_launch_reward": 1.5,
-    "wheelie_cooldown_s": 4,
+    "wheelie_cooldown_s": 4.0,
     "wheelie_max_launch_mps": 2.0,
     "start_perfect_s": 0.25,
     "start_perfect_bonus": 0.5,
     "start_forfeit_s": 3.0,
-    "air_pitch_torque": 129,
-    "air_roll_torque": 58,
-    "air_level_torque": 12388,
-    "air_level_damping": 3097,
+    "air_pitch_torque": 129.0,
+    "air_roll_torque": 58.0,
+    "air_level_torque": 12388.0,
+    "air_level_damping": 3097.0,
+    "support_level_tilt_rad": 0.17453292,
+    "body_friction": 0.6,
+    "com_lower_m": 0.0,
     "surfaces": {
-      "tarmac": 1,
+      "tarmac": 1.0,
       "packed_dirt": 0.7,
       "gravel": 0.62,
       "rock": 0.9,
       "off_track": 0.45
     },
     "damage": {
-      "health_front": 100,
-      "health_back": 100,
-      "health_door": 60,
-      "health_wheel": 80,
+      "health_front": 100.0,
+      "health_back": 100.0,
+      "health_door": 60.0,
+      "health_wheel": 80.0,
       "k_front": 0.007,
       "k_back": 0.007,
       "k_door": 0.014,
       "k_wheel": 0.0055,
       "loose_fraction": 0.5,
-      "window_ms": 50,
-      "min_closing_mps": 4,
+      "window_ms": 50.0,
+      "min_closing_mps": 4.0,
       "attribution_margin_m": 0.3,
-      "spring_stiffness": 25,
-      "spring_damping": 4,
-      "loose_wheel_grip_loss": 0,
-      "wheel_loss_respawn_s": 2,
+      "spring_stiffness": 25.0,
+      "spring_damping": 4.0,
+      "loose_wheel_grip_loss": 0.0,
+      "wheel_loss_respawn_s": 2.0,
       "detach_kick_mps": 1.5,
-      "detach_clear_ms": 250
+      "detach_clear_ms": 250.0
     }
   }
 }
