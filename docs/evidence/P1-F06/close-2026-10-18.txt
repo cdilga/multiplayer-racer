@@ -1,0 +1,54 @@
+# P1-F06 close receipt, 2026-10-18 04:40 UTC (AmberSpring, Mac -> eris), game commit 19affcc2
+
+## rch workers list
+
+Configured Workers
+------------------
+
+  ● devbox ubuntu@devbox
+    Slots : 0  Priority : 100
+    Disk: 24.1 GiB free (5.3% free, daemon); pressure: CRITICAL (cached daemon)
+
+  ● eris cdilga@eris
+    Slots : 6  Priority : 200
+    Disk: 1225.6 GiB free (65.9% free, daemon); pressure: healthy (cached daemon)
+
+Total: 2 worker(s)
+
+## A build 23 h after the Mac RCH daemon's last restart (no manual steps): lands on eris
+$ RCH_VERBOSE=1 rch exec -- cargo --color never check -q -p jj-types
+  2026-10-18T04:40:59.413903Z  INFO rch::hook: Selected worker: eris at cdilga@eris (2 slots remaining after reservation, speed 78.0)
+
+## rch status (excerpt)
+  Daemon : Running (PID 57771)
+  Uptime : 23h 49m
+  Version : 2.1.15
+  Workers : 2/2 healthy, 4/6 slots available
+  ● [warning] 222 local fallback build(s) on this host in the last 24h (145× no admissible workers: critical_pressure=1,active_project_exclusion=1; 74× no admissible workers: insufficient_total_slots=1,active_project_exclusion=1; 2× project /private/tmp/claude-fl01/bank is outside canonical root /Users/<redacted>/Documents/dev (input resolves outside canonical root (input: /private/tmp/claude-fl01/bank, detail: resolved=/private/tmp/claude-fl01/bank root=/Users/<redacted>/Documents/dev)); set [path_topology] canonical_root or RCH_CANONICAL_PROJECT_ROOT to offload it)
+
+## Local fallback off (owner 2026-10-17: no tests on the Mac): busy builds queue for eris
+$ rch config get compilation.allow_local_fallback
+false
+$ rch diagnose -- cargo check -p jj-types (excerpt)
+  Selected: eris
+  Queue policy: queue_when_busy
+
+## eris: playwright and ru (05:1x UTC, after pushing)
+$ scripts/remote/eris.sh npx playwright --version
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs e25caa4471e7.
+Version 1.62.1
+$ ssh eris ru status | grep multiplayer
+cdilga/multiplayer-racer  current      v0.2-revamp     0/0
+(An earlier attempt in this receipt waited for runs on eris, then refused while the Mac was behind origin: the refusal
+AC4 asks for.)
+
+## AC map after the split (owner 2026-10-10: "all good, just use eris"; devbox moved to P1-F06.1)
+- AC1 eris: rch workers lists both; builds land on eris (above). Devbox's slots and the two-workers proof: P1-F06.1.
+- AC2 devbox storage: P1-F06.1 (triton's tank pool still DEGRADED).
+- AC3 met (above). AC4 met (ru 0/0; refusal in eris-sync-and-runs.txt and above). AC5 met (eris-sync-and-runs.txt).
+- AC6 met (pruning.txt).
+- AC7 met: the Mac's RCH daemon has run 23 h since its last restart with no manual steps and builds land on eris
+  (above); rch-wkr on eris is started per job over ssh, so there's no worker service to wedge.
+- AC8: the devbox fallback is P1-F06.1. The Mac's per-crate fallback worked (rch-workers.txt: 90 local fallbacks in
+  24 h) and is switched off on purpose while the owner uses the Mac (allow_local_fallback = false; builds queue for
+  eris instead). Turn it back on with `rch config set compilation.allow_local_fallback true`.
