@@ -55,30 +55,30 @@ the game, and those images were thrown away.
 
 ### Looked at (all in `deployed/`)
 
-**Lobby hint:** `lobby-hint-tv-1920x1080.jpg`, `lobby-hint-laptop-1366x768.jpg`, `lobby-hint-phonehost-412x915.jpg`.
+**Lobby hint:** `deployed/lobby-hint-tv-1920x1080.jpg`, `deployed/lobby-hint-laptop-1366x768.jpg`, `deployed/lobby-hint-phonehost-412x915.jpg`.
 - The empty lobby carries the one quiet line, "Got a pad or keyboard? Press any button to join · Host menu → Controllers".
 - No panel; the QR, Race/Derby and Start are clear.
 
-**Host menu → Controllers:** `host-menu-controllers-tv-1920x1080.jpg`, `host-menu-controllers-laptop-1366x768.jpg`,
-`host-menu-controllers-phonehost-412x915.jpg`.
+**Host menu → Controllers:** `deployed/host-menu-controllers-tv-1920x1080.jpg`, `deployed/host-menu-controllers-laptop-1366x768.jpg`,
+`deployed/host-menu-controllers-phonehost-412x915.jpg`.
 - "Keyboard players: on" and "Controls".
 - Keys A, Keys B and Keys C each listed with "press … to join" and **Add**, before anyone joins.
 - "Control mappings" and "Back".
 
-**After Add on Keys A:** `host-menu-controllers-added-tv-1920x1080.jpg`, `host-menu-controllers-added-laptop-1366x768.jpg`,
-`host-menu-controllers-added-phonehost-412x915.jpg`.
+**After Add on Keys A:** `deployed/host-menu-controllers-added-tv-1920x1080.jpg`, `deployed/host-menu-controllers-added-laptop-1366x768.jpg`,
+`deployed/host-menu-controllers-added-phonehost-412x915.jpg`.
 - "Keys A: playing" with Sit out and Leave, and the lobby shows Player 1.
 - Behind the menu, the host keyboard's car chooser and its Keys A card sit in the lobby's left column.
 
-**Control mappings:** `host-menu-mappings-tv-1920x1080.jpg`, `host-menu-mappings-laptop-1366x768.jpg`,
-`host-menu-mappings-phonehost-412x915.jpg`.
+**Control mappings:** `deployed/host-menu-mappings-tv-1920x1080.jpg`, `deployed/host-menu-mappings-laptop-1366x768.jpg`,
+`deployed/host-menu-mappings-phonehost-412x915.jpg`.
 - One card per source kind: phone, pad, wheel, Keys A, Keys B, Keys C (numpad).
 - On the phone-sized host the cards stack in one column and Back stays on screen.
 
-**Resized with the menu open:** `host-menu-resized-from-tv.jpg`, `host-menu-resized-from-laptop.jpg`,
-`host-menu-resized-from-phonehost.jpg`. The panel refits; nothing is clipped.
+**Resized with the menu open:** `deployed/host-menu-resized-from-tv.jpg`, `deployed/host-menu-resized-from-laptop.jpg`,
+`deployed/host-menu-resized-from-phonehost.jpg`. The panel refits; nothing is clipped.
 
-**Joined phone:** `phone-help-steps-844x390.jpg`, `phone-help-controls-844x390.jpg`.
+**Joined phone:** `deployed/phone-help-steps-844x390.jpg`, `deployed/phone-help-controls-844x390.jpg`.
 - The tutorial's first step with Controls, Identify and Skip tutorial.
 - Its Controls page has the same six cards, scrolling under "Back to Help".
 
