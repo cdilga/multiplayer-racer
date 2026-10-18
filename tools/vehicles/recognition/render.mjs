@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // render.mjs (br-bwju.12): the recognition renders of a roster car: every LOD x front, front 3/4 left and right, side, rear 3/4,
 // rear and top, one PNG each, from the baked GLBs through the game's paint-key material.
-//   node tools/vehicles/recognition/render.mjs <vehicle id> --out <dir> [--paint '#f06a1a'] [--size 640]
+//   node tools/vehicles/recognition/render.mjs <vehicle id> --out <dir> [--paint '#f06a1a'] [--size 640] [--zoom 1.0]
 //   → <dir>/lod<N>-<view>.png
 import fs from 'node:fs';
 import http from 'node:http';
@@ -28,7 +28,7 @@ try {
   page.on('pageerror', (e) => console.log('PAGEERR', e.message));
   const paint = opt('--paint') ? `&paint=${encodeURIComponent(opt('--paint'))}` : '';
   const asset = encodeURIComponent(`/art/vehicles/${id}/${id}.asset.json`);
-  await page.goto(`http://127.0.0.1:${server.address().port}/tools/vehicles/recognition/index.html?asset=${asset}&size=${opt('--size', '640')}${paint}`);
+  await page.goto(`http://127.0.0.1:${server.address().port}/tools/vehicles/recognition/index.html?asset=${asset}&size=${opt('--size', '640')}&zoom=${opt('--zoom', '1')}${paint}`);
   await page.waitForFunction(() => document.title === 'READY', null, { timeout: 60000 });
   for (const lod of [0, 1, 2]) for (const view of ['front', 'front-left', 'front-right', 'side', 'rear-left', 'rear', 'top']) {
     const url = await page.evaluate(([l, v]) => window.__render(l, v), [lod, view]);

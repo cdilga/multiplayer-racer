@@ -1,0 +1,25 @@
+chase-1.png	Most like a 2001–2004 Holden Monaro (CV8), though low confidence given the low-poly render. 
+chase-2.png	Looks like a late-1990s Holden Commodore (VT–VX generation) sedan, going by the round lamps and slatted grille, though the low-poly detail makes that a loose match. 
+chase-3.png	Closest match is a late-1990s to early-2000s Holden VT–VX Commodore sedan, but this is a low-confidence guess from a stylised, low-poly front view. 
+chase-4.png	Looks like a Holden Commodore VE sedan (2006–2013), though the low-poly render is too coarse to confirm the generation. 
+lod0-front-left.png	Closest match is an early-2000s Holden Commodore (VT–VX) sedan, though it's generic enough to also read as a Ford Falcon (BA/BF). 
+lod0-front-right.png	Looks like a late-1990s/early-2000s Holden VT–VZ Commodore sedan, though the low-poly simplification makes it a loose match. 
+lod0-front.png	It doesn't clearly match one real car. The closest impression is a generic early-2000s small sedan or hatch, with no make, model or generation I can identify confidently from this front view. 
+lod0-rear-left.png	It looks like a first-generation Holden Commodore (VE/VF-era sedan), though the low-poly form makes it a loose match. 
+lod0-rear.png	Rear view of an orange sedan that most resembles a Holden VE Commodore (2006–2013), a best guess with low confidence, since the low-poly model is generic. 
+lod0-side.png	Closest match is a boxy 1980s–early-'90s notchback sedan like a Mitsubishi Lancer (Mk3/4) or Nissan Pulsar/Sunny, though the low-poly form makes the exact generation uncertain. 
+lod0-top.png	Probably a boxy 1980s hatchback, roughly Ford Escort Mk3 or Mazda 323 territory, but a top-down plan view can't pin down make, model or generation, so treat that as a loose guess. 
+lod1-front-left.png	Closest match is a 2000s compact sedan such as a Subaru Impreza (GD/GG generation), though the low-poly simplification makes the exact model uncertain. 
+lod1-front-right.png	Best guess: a 2000s Australian sedan, most like a Holden Commodore VY/VZ, though the low-poly model is too coarse to pin the generation with confidence. 
+lod1-front.png	It looks like a generic early-2000s Australian-style sedan, closest to a Holden VX/VY Commodore, but I can't pin down make, model or generation from this front-only view, so treat that as a loose resemblance. 
+lod1-rear-left.png	It's a generic low-poly mid-size four-door sedan, roughly 2010s Toyota Camry-like, but the geometry is too abstract to pin to a specific make, model or generation. 
+lod1-rear.png	Closest match: a Holden Commodore VE sedan, seen from the rear (low confidence; the low-poly form is too abstract to pin down the exact generation). 
+lod1-side.png	Closest match is a 1980s wedge-shaped hatch/coupe, roughly in the Toyota Celica or Mitsubishi Starion vein, but I can't pin a specific make, model and generation from this low-poly render. 
+lod1-top.png	Likely a 1970s–80s Australian hatchback or coupe, such as a Holden Torana or Gemini, though a plan view is too ambiguous to pin the exact make, model and generation. 
+lod2-front-left.png	Nothing specific: it's a generic low-poly sedan/hatchback that loosely resembles a 2000s compact like a Mazda3 or Ford Focus, but it's too abstract to name a make, model or generation. 
+lod2-front-right.png	It looks most like a **Subaru Impreza WRX sedan (around the 2002–2007 GD generation)**, going by the sedan body, the single round headlamp and the slatted lower grille. It's a low-poly approximation, so this is a best match, not a certain ID. 
+lod2-front.png	Closest guess is a 2000s-era Mitsubishi Lancer, but this is low confidence: the front view is too generic to pin the make, model and generation. 
+lod2-rear-left.png	It most resembles a 2000s-era Holden Monaro coupe (VZ generation), but that's a low-confidence guess: the low-poly model is too generic to pin to one make and generation. 
+lod2-rear.png	Rear view of a low-poly orange sedan with wide red tail lamps and a small lip spoiler. It most resembles a **Holden Commodore VE/VF sedan**, though the match is loose. 
+lod2-side.png	It doesn't match one specific production car. It reads as a generic 1980s wedge sports coupe, closest to a Lotus Esprit (S2/S3 era) or a Mazda RX-7 (FC). 
+lod2-top.png	Can't pin it to a specific make, model and generation from a plan view alone. It reads as a boxy 1970s–80s coupe or hatch, roughly in the Holden Torana or Ford XB Falcon family, but that's a low-confidence guess. 

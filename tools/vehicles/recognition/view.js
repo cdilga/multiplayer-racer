@@ -6,7 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { paintKeyGlsl } from '/web/shared/render/paint-key.js';
 
 const q = new URLSearchParams(location.search);
-const assetUrl = q.get('asset'), paint = q.get('paint') ?? '#f06a1a', SIZE = +(q.get('size') ?? 640);
+const assetUrl = q.get('asset'), paint = q.get('paint') ?? '#f06a1a', SIZE = +(q.get('size') ?? 640), ZOOM = +(q.get('zoom') ?? 1);
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.setSize(SIZE, SIZE); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.shadowMap.enabled = true;
 
@@ -40,7 +40,7 @@ window.__render = (lod, view) => {
   cars.forEach((c, i) => { c.visible = i === lod; });
   const car = cars[lod], box = new THREE.Box3().setFromObject(car), mid = box.getCenter(new THREE.Vector3());
   const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 100), d = new THREE.Vector3(...DIRS[view]).normalize();
-  cam.position.copy(mid).addScaledVector(d, view === 'top' || view === 'side' ? 9.2 : 8.4);
+  cam.position.copy(mid).addScaledVector(d, (view === 'top' || view === 'side' ? 9.2 : 8.4) * ZOOM);
   if (view === 'top') cam.up.set(0, 0, -1);
   cam.lookAt(mid);
   renderer.render(scene, cam);
