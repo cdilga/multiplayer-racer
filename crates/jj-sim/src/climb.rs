@@ -11,6 +11,11 @@
 //! speed, or off the throttle, contacts are Rapier's own, so a car that hits a bank at speed doesn't launch off it (the
 //! R122 bank).
 //!
+//! The tail is the other end of the same problem: as the nose goes up a bank the rear overhang (bumper corners, tow hitch)
+//! swings down onto the foot's gentle slope behind the rear axle, and a body with friction there props the rear tyres off
+//! the ground (br-bbki.12: the rebuilt Ute's lower step-bumper corners stalled it 2.6 m up). A bumper skids; so a climber's
+//! contacts with a bank face that lie wholly behind the rear axle have no friction.
+//!
 //! The work a belt does is authorised in the energy ledger (`Sim::step`).
 
 use rapier3d::prelude::*;
@@ -34,6 +39,8 @@ pub struct NoseClimb {
 pub(crate) struct Climber {
     pub body: RigidBodyHandle,
     pub front_axle_z: f32,
+    /// Its rear axle (vehicle space, z).
+    pub rear_axle_z: f32,
     pub belt_mps: f32,
     pub grip: f32,
 }
@@ -133,6 +140,11 @@ impl PhysicsHooks for Hooks<'_> {
         }
         if climbing {
             *m.friction = m.friction.max(climber.grip);
+        } else if m.solver_contacts.iter().all(|c| {
+            let at = if car_first { c.anchor1 } else { c.anchor2 };
+            pose.inverse_transform_point(at).z < climber.rear_axle_z
+        }) {
+            *m.friction = 0.0;
         }
     }
 }

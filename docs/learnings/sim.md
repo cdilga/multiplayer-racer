@@ -454,3 +454,9 @@ not feel targets.
   (32-bit in WASM; never hash a usize). Another session's fix for it landed in the working tree between the two builds
   of a parry on/off A/B, and the A/B blamed parry. Record `git status` and `git diff --stat` of what each side builds,
   or measure on eris, where the tree can't move.
+- **The off-road climb is marginal, so two harmless changes stacked into a stall (br-bbki.12).** The Ute rebuild (48a28076:
+  lower step-bumper corners, departure angle 20.6 -> 18.8 degrees) and the terrain's FIX_INTERNAL_EDGES (8495c317) each
+  cost ~3 m of the climb (42.8 -> 38-40 m); the nose belt tips the car up the bank while its tail is still on the foot's
+  gentle slope, the tail digs in and props the rear tyres off the ground. A climber's contacts wholly behind the rear axle
+  now have no friction (`climb.rs`). Bisecting on eris: `git archive` files keep old mtimes, so `touch` the tree before
+  `cargo` or a shared target dir hands you a stale build.

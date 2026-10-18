@@ -1831,6 +1831,7 @@ impl Sim {
                     crate::climb::Climber {
                         body: car.body,
                         front_axle_z: p.axle_front_z(),
+                        rear_axle_z: p.axle_rear_z(),
                         belt_mps: nc.belt_mps,
                         grip: nc.grip,
                     }
