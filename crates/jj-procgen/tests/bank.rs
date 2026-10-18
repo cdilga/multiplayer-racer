@@ -382,7 +382,15 @@ fn diag_bot_trace() {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(78);
-    let p = jj_procgen::playtest::prepare(seed);
+    // `JJ_BIOME=rocks` (any biome's map name): that one-biome lap from the shipped data, as forks.rs prepares it.
+    let p = match std::env::var("JJ_BIOME") {
+        Ok(name) => {
+            let biome: Biome =
+                serde_json::from_value(serde_json::Value::String(name)).expect("a biome");
+            jj_procgen::prepare(seed, &[biome])
+        }
+        Err(_) => jj_procgen::playtest::prepare(seed),
+    };
     let kinds: Vec<_> = p
         .map
         .features

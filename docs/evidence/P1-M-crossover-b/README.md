@@ -41,3 +41,32 @@ crossings appear. Every lap validates.
     (quarantined br-qwn9 in CI; red at HEAD on OutbackDirt seed 1 until the level check's window, fixed here);
   - the bot playtest's seed 47 (fast bot off a 30 cm crest at 40 m/s), listed as a known landing gap in `tests/bank.rs`.
 - Goldens re-blessed for GENERATOR_VERSION 26 (seeds.txt, recipes.txt, lab map headers) with `JJ_BLESS=1` on RCH.
+
+## GENERATOR_VERSION 29: leaps lay at crossings (br-xlvx.10.3, BrownHill 2026-10-18)
+
+`every_family_crosses_itself_on_one_lap_in_two_or_more`, same sample (20 seeds per family, four-biome recipe, rch):
+
+| family | laps | crossing | mean per lap | bridges | leaps |
+|---|---|---|---|---|---|
+| twisty | 20 | 4 | 0.20 | 3 | 1 |
+| flowing | 20 | 8 | 0.40 | 5 | 3 |
+| speedway | 20 | 13 | 0.70 | 8 | 6 |
+| figure eight | 20 | 20 | 1.00 | 20 | 0 |
+
+45 of 80 laps cross themselves (one twice); 36 bridges and 10 leaps (was 1 leap at v26 and none at v27-28). The bank's
+"a leap appears" assertion runs again (its quarantine guard is gone).
+
+What made leaps lay (`overpass.rs`):
+- The leap rises from the bridge deck's own heights, and every span point it doesn't sculpt is embanked (the ground
+  laid under the road, side slopes out to the land), so nothing drops onto the ground that stood under a deck ramp.
+- Only the approach, flight and landing need the straight; the run-out follows the road by arc length (`runOutTo`
+  records where it rejoins). The piece's span ends at its landing, so a gate or the finish can stand on the run-out.
+- The run-in lengthens until its steepest metre is inside `climbGrade` (a deck climbing under it made 25%).
+- The reshape check refuses only ground that moves away from a road the leap didn't set.
+
+Checks added: the crossing bank and the family test fail any leap whose run-in, or road from its landing's end to
+`runOutTo`, stands more than 0.3 m off its ground; the rail check keeps a leap's pit open (the lower road's rail under
+the flight comes off by design).
+
+Open item of the AC (bots of every roster vehicle lap both levels without recovery): the Lion President wrecks twice on
+the four-biome figure eight, seed 0, a bridge lap (sag rebound under the deck, nose strike): br-qwn9.

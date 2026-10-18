@@ -176,19 +176,23 @@ fn run_recipe(recipe: &[Biome], label: &str, table: &mut String) -> usize {
                         .is_some_and(|ix| ix.contains(&i));
                 }
                 // A set piece owns its span's road profile (R132): its approach, gap, landing and run-out. An overpass
-                // leap's upper road also climbs to its take-off before the kicker, as a bridge's deck ramps do
-                // (br-xlvx.10.3): up to 160 m of run-in.
+                // leap's upper road also climbs to its take-off before the kicker, as a bridge's deck ramps do, and
+                // its run-out after the landing follows the road back to its own height at the leap's `maxGrade`
+                // (br-xlvx.10.3): up to 160 m of run-in, and the run-out to `runOutTo`.
                 if let Some(d) = jj_map::setpiece::GapLeap::of(f) {
-                    let (mut from, to) = (d.from as usize, d.to as usize);
+                    let (mut from, mut to) = (d.from as usize, d.to as usize);
                     if d.lower.is_some() {
+                        let step = |i: usize, j: usize| {
+                            let (a, b) = (&map.route.points[i], &map.route.points[j]);
+                            f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0
+                        };
                         let mut run = 0.0;
                         while run < 160.0 {
-                            let (a, b) = (
-                                &map.route.points[(from + n - 1) % n],
-                                &map.route.points[from],
-                            );
-                            run += f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0;
+                            run += step((from + n - 1) % n, from);
                             from = (from + n - 1) % n;
+                        }
+                        if let Some(&end) = f.params.get("runOutTo") {
+                            to = end as usize;
                         }
                     }
                     return (i + n - from) % n <= (to + n - from) % n;

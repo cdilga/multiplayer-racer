@@ -243,6 +243,7 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
                 let run = f64::from(q.x - p.x).hypot(f64::from(q.z - p.z)).max(1.0);
                 f64::from(q.y - p.y) / run
             };
+            leaps_stand_on_their_ground(&loaded.map, &format!("seed {seed} {recipe:?}"));
             for f in loaded
                 .map
                 .features
@@ -436,6 +437,47 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
 /// br-xlvx.10 (P1-M-crossover-b): every course family crosses itself. Across 20 seeds per family (the four-biome
 /// recipe), the share of laps with a crossing and the mean crossings per lap are reported; at least one lap in two crosses
 /// itself, some twice or more, and every one validates.
+/// An overpass leap's road stands on its ground on its run-in and from its landing's end to where its run-out rejoins: a
+/// point left at the deck's old height stood 3.75 m over the ground (seed 12, br-xlvx.10.3).
+fn leaps_stand_on_their_ground(map: &jj_map::Map, label: &str) {
+    let pts = &map.route.points;
+    let n = pts.len();
+    for f in &map.features {
+        let Some(g) = jj_map::setpiece::GapLeap::of(f).filter(|g| g.lower.is_some()) else {
+            continue;
+        };
+        let gap = jj_map::setpiece::gap_points(map, f);
+        let end = f
+            .params
+            .get("runOutTo")
+            .map_or(g.to as usize, |&e| e as usize);
+        let from = g.from as usize;
+        for k in 0..=(end + n - from) % n {
+            let i = (from + k) % n;
+            if gap.contains(&i) {
+                continue;
+            }
+            let q = &pts[i];
+            let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+            let off =
+                f64::from(q.y) / 1000.0 - jj_procgen::terrain::ground_height_m(&map.terrain, x, z);
+            let (lip, t, _) = jj_map::setpiece::take_off(map, f, &g);
+            let u = (x - lip[0]) * t[0] + (z - lip[2]) * t[1];
+            // The kicker (with its foot blend) and the landing are surfaces of their own over the ground (a landing
+            // stands up to `LANDING_LIFT_M` over it); the road to them and from them lies on the ground.
+            if u > -(g.kicker.ramp_m + g.kicker.blend_m) && u < g.gap_m + g.landing_m - 2.0 {
+                continue;
+            }
+            assert!(
+                off.abs() <= 0.3,
+                "{label}: the leap's road at point {i} ({u:.1} m past the lip; gap {:.1}, landing {:.1}) stands {off:.2} m off its ground",
+                g.gap_m,
+                g.landing_m
+            );
+        }
+    }
+}
+
 #[test]
 fn every_family_crosses_itself_on_one_lap_in_two_or_more() {
     let reg = jj_procgen::registry();
@@ -457,6 +499,7 @@ fn every_family_crosses_itself_on_one_lap_in_two_or_more() {
         let per: Vec<(usize, usize)> = (0..seeds)
             .map(|seed| {
                 let prepared = jj_procgen::prepare_tuned(seed, &recipe, 8, &d);
+                leaps_stand_on_their_ground(&prepared.map, &format!("{family:?} seed {seed}"));
                 let report = jj_map::validate::validate(&prepared.map, &reg);
                 assert!(
                     prepared.valid && report.ok,
@@ -506,13 +549,8 @@ fn every_family_crosses_itself_on_one_lap_in_two_or_more() {
         assert!(multi > 0, "no lap crosses itself twice or more\n{table}");
         assert!(bridges > 0, "no bridge\n{table}");
         // Both kinds appear (br-xlvx.10.3): a bridge where the roads cross shallow or a leap is refused, a leap where
-        // they cross square enough. Quarantined (CI owner red budget, 2026-10-18; P0 br-xlvx.10.3, owner BrownHill):
-        // the leap-ready loop-overs' exit straights are too short for the leap's landing and run-out, and lengthening
-        // them (leapClearM 320) leaves road over ground that was under a bridge ramp too steep to drive. Remove the
-        // guard when br-xlvx.10.3 lands.
-        if std::env::var_os("JJ_RUN_QUARANTINED").is_some() {
-            assert!(leaps > 0, "{bridges} bridges and {leaps} leaps\n{table}");
-        }
+        // they cross square enough.
+        assert!(leaps > 0, "{bridges} bridges and {leaps} leaps\n{table}");
     }
 }
 
@@ -559,6 +597,13 @@ fn diag_leap_refusals() {
                     span(b.lower),
                     r.as_ref().map(|_| "leap").map_err(|e| format!("{e:?}"))
                 );
+                // A laid leap: what the full checks say of the map with it.
+                if let Ok(f) = r {
+                    let mut with = map.clone();
+                    with.features.insert(k, f);
+                    let bad = jj_procgen::validate::check(&with, &jj_procgen::registry());
+                    eprintln!("    checks: {:?}", bad.iter().take(4).collect::<Vec<_>>());
+                }
                 map.features.insert(k, bridge);
             }
         }

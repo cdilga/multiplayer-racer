@@ -131,6 +131,11 @@ fn take(map: &LoadedMap, k: usize, speed: f32, pilot: bool, back: usize, launch:
     let start = (base + n - back) % n;
     let mut sim = Sim::new(map, &jj_procgen::registry(), 7, VehicleProfile::cruz());
     let car = sim.spawn_grid(1)[0];
+    // Racing, with the gates up to `start` passed: an overpass leap's pit counts only for a car racing its stretch
+    // (cars on the lower road beneath drive through, br-xlvx.10.3), as overpass.rs sets its cars up.
+    sim.start_race(1);
+    let gate = sim.race().next_gate_after(start);
+    sim.set_gates_passed(car, gate as u32 + sim.race().course.gate_count() as u32);
     let mut pose = route_spawn(map, start, 0.0, 0.3);
     let (lip0, t0, _) = jj_map::setpiece::take_off(&map.map, f, &d);
     if launch {

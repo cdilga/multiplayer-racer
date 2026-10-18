@@ -1846,24 +1846,51 @@ fn local(map: &Map, line: &Line, f: &Feature, x: f64, z: f64) -> Option<(f64, f6
     let d = GapLeap::of(f)?;
     let base = jj_map::jump::feature_base(map, f);
     let span = span_indices(line, d.from as usize, d.to as usize);
-    let (mut best, mut out) = (f64::INFINITY, (0.0, 0.0));
+    let (mut best, mut out, mut past) = (f64::INFINITY, (0.0, 0.0), false);
+    let last = span.len() - 2;
     for k in 0..span.len() - 1 {
         let (a, b) = (line.pts[span[k]], line.pts[span[k + 1]]);
         let (dx, dz) = (b.0 - a.0, b.1 - a.1);
         let l2 = (dx * dx + dz * dz).max(1e-12);
-        let t = (((x - a.0) * dx + (z - a.1) * dz) / l2).clamp(0.0, 1.0);
+        let raw = ((x - a.0) * dx + (z - a.1) * dz) / l2;
+        let t = raw.clamp(0.0, 1.0);
         let dd = libm::hypot(x - a.0 - t * dx, z - a.1 - t * dz);
         if dd < best {
             best = dd;
             let u = line.du(base, span[k]) + t * libm::sqrt(l2);
             out = (u, (-(x - a.0) * dz + (z - a.1) * dx) / libm::sqrt(l2));
+            past = k == 0 && raw < 0.0 || k == last && raw > 1.0;
         }
+    }
+    // Past the span's open ends the lateral is the segment line's, not the distance (a point far ahead of the span's
+    // end read as beside it: an overpass leap's span ends at its landing, and its landing verge took a corner's rails
+    // 300 m on, br-xlvx.10.3). Such a point isn't on the piece.
+    if past && best > libm::fabs(out.1) + 1.0 {
+        return None;
     }
     Some((out.0, out.1, best))
 }
 
 /// Takes every dressing piece and prop off a placed piece's play space: the road from the kicker to the landing's end,
 /// the pit, and the detour's corridor (lineside and scatter run after placement; nothing may sit on a landing).
+/// Whether a thing reaching `r` m from (x, z) stands in an overpass leap's pit, where [`clear_footprints`] takes it off
+/// (the lower road's furniture under the flight goes with it: the wayfinding check keeps that open, br-xlvx.10.3).
+pub fn in_overpass_pit(map: &Map, x: f64, z: f64, r: f64) -> bool {
+    let line = Line::new(map);
+    map.features.iter().any(|f| {
+        let Some(d) = GapLeap::of(f).filter(|d| d.lower.is_some()) else {
+            return false;
+        };
+        let Some((u, lat, _)) = local(map, &line, f, x, z) else {
+            return false;
+        };
+        u > d.lip_u() - 2.0 - r
+            && u < d.rim_u() + 2.0 + r
+            && lat < d.pit_left_m + 2.0 + r
+            && lat > -d.pit_right_m - 2.0 - r
+    })
+}
+
 pub fn clear_footprints(map: &mut Map, registry: &jj_map::Registry) {
     let line = Line::new(map);
     let pieces: Vec<Feature> = map

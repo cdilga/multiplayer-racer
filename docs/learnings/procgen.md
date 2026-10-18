@@ -388,3 +388,12 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
   (four-biome seed 0). Trace each with the env-driven diagnostics before blaming the change: `diag_bot_trace`
   (`JJ_POINTS`), `diag_postie_rocks_wreck` (`JJ_DIAG_VEHICLE`, `JJ_DIAG_SEED`, `JJ_DIAG_FOUR`, `JJ_NEAR`, `JJ_TICKS`,
   `JJ_NO_BRIDGE/DRESSING/PROPS`).
+- **An overpass leap owns its whole bridge span (br-xlvx.10.3).** Rise from the deck's own heights (they are a validated
+  road line), sculpt only the approach, flight and landing on the straight, let the run-out follow the road by arc
+  length, and embank the ground under every span point the piece didn't sculpt. Resetting the deck to raw ground left
+  steps; demanding a straight run-out refused every loop-over leap as "Bent" (the exit straight ends 90-180 m on).
+- **`setpieces::local` read far points as beside a piece.** Its lateral is the nearest segment's line, so a point 300 m
+  straight ahead of a span's open end had a small lateral and a `u` at the span's end. Harmless while every span ran
+  far past `end_u()`; a leap's span ending at its landing made its landing verge take another corner's rails. Points
+  past an open end are now off the piece. When a check only fails on maps with one feature, count the thing that's
+  missing after every pipeline stage (`setpieces::clear_footprints` here) before reasoning about geometry.

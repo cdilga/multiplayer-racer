@@ -244,13 +244,28 @@ pub fn of_with(map: &Map, d: &Data) -> Rhythm {
     // crossing point, over the deck's crest and under it, is a set-piece beat.
     let reach = (libm::round(d.crossing_beat_m / mean_ds) as usize).min(n / 4);
     for f in &map.features {
-        let Some(design) = jj_map::bridge::BridgeDesign::of(f) else {
+        // So is an overpass leap's crossing (br-xlvx.10.3): the lower road passes under the flight as it would under a
+        // deck.
+        let spans = if let Some(design) = jj_map::bridge::BridgeDesign::of(f) {
+            (design.upper, design.lower)
+        } else if let Some((g, lower)) = GapLeap::of(f).and_then(|g| g.lower.map(|l| (g, l))) {
+            (
+                jj_map::Span {
+                    from: g.from,
+                    to: g.to,
+                },
+                jj_map::Span {
+                    from: lower.0,
+                    to: lower.1,
+                },
+            )
+        } else {
             continue;
         };
         // Either side of where the two roads actually cross (not the spans' middles: a crossing may sit anywhere).
         let (Some(upper), Some(lower)) = (
-            jj_map::bridge::indices(map, design.upper),
-            jj_map::bridge::indices(map, design.lower),
+            jj_map::bridge::indices(map, spans.0),
+            jj_map::bridge::indices(map, spans.1),
         ) else {
             continue;
         };

@@ -343,10 +343,22 @@ pub fn check(map: &Map) -> Vec<String> {
             RAIL_SECTION_M,
         )
     };
+    // And the road under an overpass leap's flight (br-xlvx.10.3): its pit takes the furniture off
+    // (`setpieces::clear_footprints`), a lower corner's rail with it.
+    let on_leap = |i: usize, outside: f64| {
+        let (p, _) = pose_at(map, &pts, i, outside * (half + RAIL_OFFSET_M));
+        crate::setpieces::in_overpass_pit(
+            map,
+            f64::from(p.x) / 1000.0,
+            f64::from(p.z) / 1000.0,
+            RAIL_SECTION_M,
+        )
+    };
     for (k, c) in corners(&pts).iter().enumerate() {
         let (mid, first, last) = ((c.from + c.to) / 2, c.from, c.to);
         let side = if c.left { 1.0 } else { -1.0 };
-        let open = |i: usize| mouth(i) || on_detour(i, side) || on_loop(i, side);
+        let open =
+            |i: usize| mouth(i) || on_detour(i, side) || on_loop(i, side) || on_leap(i, side);
         for &i in [first, mid, last].iter().filter(|&&i| !open(i)) {
             if !near(CHEVRON, i, CHEVRON_OFFSET_M + CHEVRON_SPACING_M) {
                 bad.push(format!(

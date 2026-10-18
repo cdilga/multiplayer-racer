@@ -62,8 +62,12 @@ pub fn shipped() -> &'static OverpassData {
 /// Why a crossing kept its bridge.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Refused {
-    /// The upper road isn't straight enough around the crossing for the approach, flight and landing.
-    Bent,
+    /// The upper road isn't straight enough around the crossing for the approach, flight and landing: the piece needs
+    /// `need` (u from the crossing, m: its start and stop) and the straight runs over `straight` (R90: why, not just no).
+    Bent {
+        need: (f64, f64),
+        straight: (f64, f64),
+    },
     /// The lower road doesn't pass under the upper one's straight.
     NoCrossing,
     /// The slowest landable speed (m/s; infinite when none is) is above the band floor allowed, for this gap (m).
@@ -162,6 +166,11 @@ impl Profile {
             return Some(land);
         }
         let end_y = self.rim_y - self.slope * (self.land_end - self.rim);
+        // Sculpted only a couple of cells past the landing (the run-out follows the road, [`run_out`]): the landing's
+        // end height, which the run-out starts from.
+        if self.stop - self.land_end <= 2.0 * self.pad + 1e-9 {
+            return Some(end_y);
+        }
         let t = (u - self.land_end) / (self.stop - self.land_end);
         let n = self.natural(u);
         Some(end_y + (n - end_y) * Self::smooth(t))
@@ -193,14 +202,10 @@ pub fn leap_crossings(map: &mut Map, data: &OverpassData) -> usize {
             continue;
         }
         let bridge = map.features.remove(k);
-        // The deck's heights go with it: the upper road lies on its ground again before the leap reshapes it (a ramp
-        // the leap's run-in doesn't reach would otherwise float over the ground).
+        // The deck's heights stay: the leap rises from them, and the ground is laid under the rest of the span
+        // ([`place`]'s embankment). Dropping the road onto the ground that stood under the deck's ramp left a 2.4 m step
+        // past the run-out (four-biome seed 0).
         let route = map.route.clone();
-        let n = map.route.points.len();
-        for i in (0..=(upper.1 + n - upper.0) % n).map(|k| (upper.0 + k) % n) {
-            let p = xz(map, i);
-            map.route.points[i].y = mm(ground_height_m(&map.terrain, p[0], p[1]));
-        }
         match place(map, upper, lower, data) {
             Ok(f) => {
                 map.features.insert(k, f);
@@ -299,15 +304,15 @@ pub fn place(
     let rim = hi_u + (rim_y - y_lower) / data.face_slope + pad;
     let base = lip - data.ramp_m;
     let level_from = base - data.level_m;
-    // The upper road's own heights along u (before the piece).
+    // The upper road's own heights along u (before the piece): a bridge's deck where it had one, so the leap rises from
+    // the deck's own line and the rest of the span keeps it (on an embankment, [`embank`]).
     let mut natural: Vec<(f64, f64)> = up
         .iter()
         .map(|&i| {
             let p = xz(map, i);
-            // The ground under the road (a bridge's deck heights, if the map had one, aren't the road's own).
             (
                 fr.uv(p[0], p[1]).0,
-                ground_height_m(&map.terrain, p[0], p[1]),
+                f64::from(map.route.points[i].y) / 1000.0,
             )
         })
         .collect();
@@ -331,6 +336,24 @@ pub fn place(
         / data.climb_grade.unwrap_or(data.max_grade)
         * 1.5;
     prof.start = level_from - climb.max(30.0);
+    // The road it rises from has its own grade (a bridge deck climbing toward the crossing): lengthen the run-in until
+    // its steepest metre is inside the climb grade (seed 0 Rocks climbed at 25% into a crest that threw a car).
+    let climb_grade = data.climb_grade.unwrap_or(data.max_grade);
+    let steepest = |prof: &Profile| {
+        let mut worst: f64 = 0.0;
+        let mut u = prof.start;
+        while u < prof.level_from {
+            let (a, b) = (prof.road(u), prof.road((u + 1.0).min(prof.level_from)));
+            if let (Some(a), Some(b)) = (a, b) {
+                worst = worst.max((b - a).abs() / (1.0f64).min(prof.level_from - u).max(1e-6));
+            }
+            u += 1.0;
+        }
+        worst
+    };
+    while steepest(&prof) > climb_grade && prof.start > prof.natural[0].0 {
+        prof.start -= 5.0;
+    }
     let original = (map.terrain.clone(), map.route.clone());
     let refuse = |map: &mut Map, why: Refused| {
         (map.terrain, map.route) = original.clone();
@@ -340,32 +363,80 @@ pub fn place(
     // landing's length barely moves the flight, so this settles in a pass or two).
     for _ in 0..10 {
         (map.terrain, map.route) = original.clone();
-        let end_y = rim_y - prof.slope * (prof.land_end - rim);
-        let back =
-            (prof.natural(prof.land_end + data.runout_m) - end_y).abs() / data.max_grade * 1.5;
-        prof.stop = prof.land_end + data.runout_m.max(back);
+        // The approach, flight and landing are sculpted on the straight; the run-out after the landing follows the
+        // road, around its bend if it has one ([`run_out`], br-xlvx.10.3: a loop-over's exit straight is too short for
+        // the landing and a straight run-out both).
+        // Two terrain cells past the landing's end stay sculpted at its end height, so the landing's last points stand
+        // on sculpted ground (a cell just past them held the deck-era ground: a 3.75 m spike, seed 12).
+        prof.stop = prof.land_end + 2.0 * pad;
         // The piece stays on the upper road's straight.
         let (u_min, u_max) = (prof.natural[0].0, prof.natural[prof.natural.len() - 1].0);
+        // The straight: the span's points either side of the crossing until the road leaves the frame's line.
+        let (mut s0, mut s1) = (0.0f64, 0.0f64);
+        for &i in &up {
+            let p = xz(map, i);
+            let (u, v) = fr.uv(p[0], p[1]);
+            if v.abs() <= 1.0 {
+                continue;
+            }
+            if u < 0.0 {
+                s0 = s0.min(u);
+            } else {
+                s1 = s1.max(u);
+            }
+        }
+        let straight = (
+            if s0 < 0.0 { s0.max(u_min) } else { u_min },
+            if s1 > 0.0 { s1.min(u_max) } else { u_max },
+        );
         let bent = up.iter().any(|&i| {
             let p = xz(map, i);
             let (u, v) = fr.uv(p[0], p[1]);
             u >= prof.start && u <= prof.stop && v.abs() > 1.0
         });
         if prof.start < u_min || prof.stop > u_max || bent {
-            return refuse(map, Refused::Bent);
+            return refuse(
+                map,
+                Refused::Bent {
+                    need: (prof.start, prof.stop),
+                    straight,
+                },
+            );
         }
         let sizing = feature_of(map, &fr, &prof, &up, lower, data, 20.0, 27.0, hw);
         let d = GapLeap::of(&sizing).expect("an overpass leap");
         sculpt(map, &fr, &prof, &low, lower_hw, data, &d, base, hw);
+        let (land_to, run_end) = run_out(map, &fr, &prof, ci, data);
+        embank(map, &fr, &prof, &up, run_end, &low, lower_hw, data, hw);
+        // The road the leap owns, from its span's start to where the run-out rejoins, stands on the ground as laid
+        // (cars drive the terrain): where the sculpted and the embanked ground meet the two differ by a few tenths.
+        // Over the gap there's no ground to stand on.
+        {
+            let terrain = map.terrain.clone();
+            for k in 0..=(run_end + n - up[0]) % n {
+                let q = &mut map.route.points[(up[0] + k) % n];
+                let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+                let (u, v) = fr.uv(x, z);
+                if v.abs() <= hw + data.shoulder_m && u > prof.lip && u < prof.rim {
+                    continue;
+                }
+                q.y = mm(ground_height_m(&terrain, x, z));
+            }
+        }
         // The embankment and cutting may reach another stretch of road beside the straight (a loop-over's own arc runs
         // into it): a road whose heights the piece didn't set must keep its ground, or it floats over a cutting.
+        // Ground that moved toward such a road's own height (a deck's foot meeting the road beyond the span) is fine.
         if let Some(i) = (0..n).find(|&i| {
             let (q, q0) = (&map.route.points[i], &original.1.points[i]);
             let (x, z) = (f64::from(q.x) / 1000.0, f64::from(q.z) / 1000.0);
+            let y = f64::from(q.y) / 1000.0;
+            let (now, was) = (
+                ground_height_m(&map.terrain, x, z),
+                ground_height_m(&original.0, x, z),
+            );
             q.y == q0.y
-                && libm::fabs(
-                    ground_height_m(&map.terrain, x, z) - ground_height_m(&original.0, x, z),
-                ) > 0.1
+                && libm::fabs(now - was) > 0.1
+                && libm::fabs(now - y) > libm::fabs(was - y) + 0.1
         }) {
             return refuse(
                 map,
@@ -425,6 +496,11 @@ pub fn place(
             continue;
         }
         let mut f = feature_of(map, &fr, &prof, &up, lower, data, floor, top, hw);
+        // The piece ends where its landing does: the run-out after it is ordinary road (a gate or the finish may stand on
+        // it, and a car may respawn there).
+        f.params.insert("toAt".into(), land_to as i64);
+        // Where the run-out rejoins the road's own heights (R90: the profile the piece owns past its span).
+        f.params.insert("runOutTo".into(), run_end as i64);
         // The pit's depth as the validator measures it, on this ground (mid-gap, below the take-off ground).
         let dd = GapLeap::of(&f).expect("an overpass leap");
         let (vl, vt, vg) = setpiece::take_off(map, &f, &dd);
@@ -617,6 +693,209 @@ fn sculpt(
             q.y = mm(ground_height_m(&terrain, x, z));
             q.bank = 0;
         }
+    }
+}
+
+/// The road's heights after the landing: from the landing's end it eases back to its own heights (`natural`, the route's
+/// heights before the piece) along the road, around a bend if it has one, over at least `runoutM` at no more than
+/// `maxGrade`. Returns the last route point on the landing and the route point where the run-out rejoins.
+fn run_out(
+    map: &mut Map,
+    fr: &Frame,
+    prof: &Profile,
+    ci: usize,
+    data: &OverpassData,
+) -> (usize, usize) {
+    let n = map.route.points.len();
+    let end_y = prof.rim_y - prof.slope * (prof.land_end - prof.rim);
+    // The first route point past the landing's end (forward from the crossing).
+    let mut k = ci;
+    while {
+        let p = xz(map, k);
+        fr.uv(p[0], p[1]).0 <= prof.land_end
+    } {
+        k = (k + 1) % n;
+        if k == ci {
+            return (ci, ci);
+        }
+    }
+    let first = k;
+    // Arc length from the landing's end to each route point after it.
+    let arc_to = |map: &Map, until: f64| -> Vec<(usize, f64)> {
+        let mut out = Vec::new();
+        let mut a = {
+            let p = xz(map, first);
+            libm::hypot(
+                p[0] - fr.at(prof.land_end)[0],
+                p[1] - fr.at(prof.land_end)[1],
+            )
+        };
+        let mut i = first;
+        loop {
+            out.push((i, a));
+            if a > until {
+                return out;
+            }
+            let j = (i + 1) % n;
+            let (p, q) = (xz(map, i), xz(map, j));
+            a += libm::hypot(q[0] - p[0], q[1] - p[1]);
+            i = j;
+            if i == ci {
+                return out;
+            }
+        }
+    };
+    let y = |map: &Map, i: usize| f64::from(map.route.points[i].y) / 1000.0;
+    let far = arc_to(map, data.runout_m);
+    let y_far = y(map, far[far.len() - 1].0);
+    let len = data
+        .runout_m
+        .max((y_far - end_y).abs() / data.max_grade * 1.5);
+    let pts = arc_to(map, len);
+    for &(i, a) in &pts {
+        let t = (a / len).clamp(0.0, 1.0);
+        let natural = y(map, i);
+        // Only the height: the road keeps its bank (a run-out into a corner keeps the corner's camber and rails).
+        map.route.points[i].y = mm(end_y + (natural - end_y) * Profile::smooth(t));
+    }
+    ((first + n - 1) % n, pts[pts.len() - 1].0)
+}
+
+/// One road segment [`embank`] lays the ground under: its ends, their heights, and whether each end is the line's open
+/// end.
+#[derive(Clone, Copy)]
+struct RoadSeg {
+    a: [f64; 2],
+    b: [f64; 2],
+    ya: f64,
+    yb: f64,
+    open_a: bool,
+    open_b: bool,
+}
+
+/// Route points either side of a leap's span that [`embank`] lays the ground under at their own heights (the side slopes'
+/// reach, 40 m, at the route's 2.5 m step).
+const EMBANK_BEYOND: usize = 20;
+
+/// Lays the ground under the upper road's span where the piece didn't (its points outside the sculpted straight): the
+/// road keeps its heights (a bridge deck's ramps) and the ground meets it across the road and shoulder, with side slopes
+/// out to the land, so no part of the span floats over the ground that stood under a deck. The lower road's bed and the
+/// piece's own ground are left alone.
+#[allow(clippy::too_many_arguments)]
+fn embank(
+    map: &mut Map,
+    fr: &Frame,
+    prof: &Profile,
+    up: &[usize],
+    run_end: usize,
+    low: &[usize],
+    lower_hw: f64,
+    data: &OverpassData,
+    hw: f64,
+) {
+    let flat = hw + data.shoulder_m;
+    // The span, and the run-out past its end where it reaches further.
+    let n = map.route.points.len();
+    let last = up[up.len() - 1];
+    let mut road: Vec<usize> = up.to_vec();
+    if (run_end + n - up[0]) % n > (last + n - up[0]) % n {
+        road.extend((1..=(run_end + n - last) % n).map(|k| (last + k) % n));
+    }
+    // And the road either side at its own heights, so the side slopes beyond the ends meet that road, not the land.
+    let end = road[road.len() - 1];
+    road.extend((1..=EMBANK_BEYOND).map(|k| (end + k) % n));
+    let before: Vec<usize> = (1..=EMBANK_BEYOND)
+        .rev()
+        .map(|k| (up[0] + n - k) % n)
+        .collect();
+    road.splice(0..0, before);
+    let reach = flat + 40.0 / data.side_slope;
+    let set_by_piece = |i: usize| {
+        let p = xz(map, i);
+        let (u, v) = fr.uv(p[0], p[1]);
+        u >= prof.start && u <= prof.stop && v.abs() <= flat
+    };
+    // The road's segments along the span with an end outside the piece, and which are the line's open ends (the land
+    // past them is left alone: a cell nearest an open end's tip isn't beside this road).
+    let last_seg = road.len() - 2;
+    let segs: Vec<RoadSeg> = road
+        .windows(2)
+        .enumerate()
+        .filter(|(_, w)| !set_by_piece(w[0]) || !set_by_piece(w[1]))
+        .map(|(k, w)| {
+            let y = |i: usize| f64::from(map.route.points[i].y) / 1000.0;
+            RoadSeg {
+                a: xz(map, w[0]),
+                b: xz(map, w[1]),
+                ya: y(w[0]),
+                yb: y(w[1]),
+                open_a: k == 0,
+                open_b: k == last_seg,
+            }
+        })
+        .collect();
+    if segs.is_empty() {
+        return;
+    }
+    let lower_pts: Vec<[f64; 2]> = low.iter().map(|&j| xz(map, j)).collect();
+    let t = &mut map.terrain;
+    let (cols, rows) = (t.cols as usize, t.rows as usize);
+    let sp = f64::from(t.spacing) / 1000.0;
+    let (ox, oz) = (
+        f64::from(t.origin_x) / 1000.0,
+        f64::from(t.origin_z) / 1000.0,
+    );
+    let ci = |v: f64, o: f64, n: usize| (libm::floor((v - o) / sp).max(0.0) as usize).min(n - 1);
+    // Each cell's nearest segment (distance, the road's height there), rasterised segment by segment.
+    let mut nearest: std::collections::BTreeMap<usize, (f64, f64, bool)> =
+        std::collections::BTreeMap::new();
+    for &RoadSeg {
+        a,
+        b,
+        ya,
+        yb,
+        open_a,
+        open_b,
+    } in &segs
+    {
+        let (dx, dz) = (b[0] - a[0], b[1] - a[1]);
+        let l2 = (dx * dx + dz * dz).max(1e-12);
+        for r in ci(a[1].min(b[1]) - reach, oz, rows)..=ci(a[1].max(b[1]) + reach, oz, rows) {
+            for c in ci(a[0].min(b[0]) - reach, ox, cols)..=ci(a[0].max(b[0]) + reach, ox, cols) {
+                let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
+                let raw = ((x - a[0]) * dx + (z - a[1]) * dz) / l2;
+                let k = raw.clamp(0.0, 1.0);
+                let dist = libm::hypot(x - a[0] - k * dx, z - a[1] - k * dz);
+                if dist > reach {
+                    continue;
+                }
+                let past = open_a && raw < 0.0 || open_b && raw > 1.0;
+                let at = r * cols + c;
+                if nearest.get(&at).is_none_or(|&(d0, _, _)| dist < d0) {
+                    nearest.insert(at, (dist, ya + (yb - ya) * k, past));
+                }
+            }
+        }
+    }
+    for (at, (dist, y, past)) in nearest {
+        if past {
+            continue;
+        }
+        let (c, r) = (at % cols, at / cols);
+        let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
+        let (u, v) = fr.uv(x, z);
+        // The piece's own ground, and the lower road's bed, stay as they are.
+        if (u >= prof.start && u <= prof.stop && v.abs() <= reach)
+            || lower_pts
+                .windows(2)
+                .any(|w| seg_dist(w[0], w[1], [x, z]) < lower_hw + data.bed_clear_m)
+        {
+            continue;
+        }
+        let old = f64::from(t.heights[at]) / 100.0;
+        let out = (dist - flat).max(0.0);
+        let new = y + (old - y).clamp(-out * data.side_slope, out * data.side_slope);
+        t.heights[at] = libm::round(new * 100.0) as i16;
     }
 }
 
