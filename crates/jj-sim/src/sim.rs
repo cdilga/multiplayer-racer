@@ -342,7 +342,9 @@ impl Sim {
         world.integration_parameters.dt = DT;
         let m = &map.map;
 
-        // Terrain: Rapier's heightfield is centred on its collider, rows along z and columns along x.
+        // Terrain: Rapier's heightfield is centred on its collider, rows along z and columns along x. Its internal edges
+        // are fixed (br-zrat.1), as the trimeshes' are: without it a wheel or body crossing a grid line at speed could meet
+        // the edge between two cells as a step and jolt (a Postie lost 7.6 m/s in one tick on smooth road).
         let t = &m.terrain;
         let (cols, rows) = (t.cols as usize, t.rows as usize);
         let spacing = t.spacing as f32 / 1000.0;
@@ -350,14 +352,18 @@ impl Sim {
             f32::from(t.heights[i * cols + j]) / 100.0
         });
         let (sx, sz) = ((cols - 1) as f32 * spacing, (rows - 1) as f32 * spacing);
-        let ground = ColliderBuilder::heightfield(heights, Vector::new(sx, 1.0, sz))
-            .translation(Vector::new(
-                t.origin_x as f32 / 1000.0 + sx / 2.0,
-                0.0,
-                t.origin_z as f32 / 1000.0 + sz / 2.0,
-            ))
-            .friction(0.9)
-            .collision_groups(TERRAIN_GROUPS);
+        let ground = ColliderBuilder::heightfield_with_flags(
+            heights,
+            Vector::new(sx, 1.0, sz),
+            HeightFieldFlags::FIX_INTERNAL_EDGES,
+        )
+        .translation(Vector::new(
+            t.origin_x as f32 / 1000.0 + sx / 2.0,
+            0.0,
+            t.origin_z as f32 / 1000.0 + sz / 2.0,
+        ))
+        .friction(0.9)
+        .collision_groups(TERRAIN_GROUPS);
         world.insert_collider(ground, None);
 
         // The derby bowl (P1-M10) is a trimesh of the same kind: the bank, the wall and the lip, ground to the car.
