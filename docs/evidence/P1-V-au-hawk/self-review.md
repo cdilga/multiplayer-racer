@@ -1,54 +1,61 @@
-# P1-V-au-hawk self-review (br-bwju.12, part 1): the AU Hawk against its contact sheet and against every roster car
+# P1-V-au-hawk self-review, round 2 (br-bwju.12): the rebuilt AU Hawk against its new sheets, the roster and the recognition bar
 
-**How these images were made.** Playwright Chromium, headless, on eris (`tools/vehicles/fit`, `view`, `evidence` and the new `recognition` tools, software GL; the chase views from the real host page through ANGLE/Vulkan on the RTX 2080 Super). Not a TV or phone. Every image named below was opened and looked at. The bake is the one committed with this file (2612 / 876 / 574 triangles).
+**How these images were made.** Playwright Chromium, headless, on eris (`tools/vehicles/fit`, `view`, `evidence` and `recognition`,
+software GL; the chase views from a web build of this commit through ANGLE/Vulkan on the RTX 2080 Super). Not a TV or phone. Every
+image named below was opened and looked at. The bake is bd5b41dd's (2586 / 888 / 596 triangles).
 
-**The honest summary.** The model is a clean, contract-valid, silhouette-accurate roster car (IoU about 0.95 at every LOD) with an AU-style face. It does not read as an AU Falcon to a small unprompted vision model (0 of 25, `recognition.md`), and next to its own reference sheet it is visibly cruder: the sheet's rounded flanks and smooth bonnet become slab doors and a faceted nose. The recognition item and the "bubbly" look are NOT met; the rest of part 1 is.
+**The honest summary.** The car is now a literal, rounded AU: big swept teardrop lamps, the oval fish-mouth grille with its bar and a
+blank oval badge, a high round roof, round flanks, corner tail lamps and a boot badge. At LOD0 a minimal vision model names it an AU
+Falcon from the front, both front 3/4s, the rear 3/4 and the rear (14 of 15 calls across three runs). At LOD1, LOD2 and in the
+chase view it is named a Falcon in roughly half the views or fewer, and from the side and top rarely (`recognition.md`). The
+recognition bar is met at LOD0 and NOT met at LOD1, LOD2 or in the chase view.
 
 ## Looked at
 
-- `reference-lod0/sheet.png`, `reference-lod1/sheet.png`, `reference-lod2/sheet.png`: per view, the sheet crop, the shaded model and the silhouette diff, with the IoU numbers (`score.json` beside each).
-  - LOD0 0.9489 (side 0.956, top 0.943, front 0.925, rear 0.967); LOD1 0.9468; LOD2 0.9450.
-  - The diff shows the model matching the outline everywhere except the front view's lamp pods and mirrors (red = sheet only).
-- `views.png`, `lods.png`, `paints.png`, `paints-strip.png`, `colliders.png`.
-  - Every side at every LOD, six paints, one convex hull per part.
-  - Body, pods, bumpers, mirrors and spoiler take every paint; glass, lamps, rims and tyres keep their colour.
-- `damage-strip.png`, `damage-strip-overview.png`: all ten states, parts swing on their hinge lines with dark bays behind missing panels.
-- `grid-1.png`, `grid-4.png`, `grid-24.png` (viewer): the car at the three tile sizes.
-- `recognition/lod0-front.png` ... `recognition/lod2-top.png` (21 renders) and `chase/chase-1.png` ... `chase/chase-4.png` (the in-game chase view): the images the vision model was shown.
-  - The chase views are rear views (the camera is behind the car): in the host's comic look the car shows its wrap tail lamps, the chrome bar, the spoiler and two tail pipes.
-- `control-hawk-dash/` (the same 25 views of the Hawk Dash): the control.
-- `side-by-side-front34.png`, `side-by-side-front.png`, `side-by-side-side.png`, `side-by-side-rear34.png`: all seven roster cars, same camera and same orange.
-- `au-vs-hawk-dash.png`: the AU and the Hawk Dash it must not be mistaken for, four views each.
-- `../../../art/ui/brand/renders/picker/au-hawk.png`: the lobby picker picture (`tools/vehicles/view/capture.mjs --sheet hero`).
-
-## What tells the AU apart
-
-- **Against every roster car** (`side-by-side-front34.png`, `side-by-side-side.png`): it is the only one with no livery, no wing and no bull bar; a plain body-colour sedan with a tall greenhouse, a bonnet dome and a lip spoiler. The Cruz Missile has its paint-slash livery and big wing, the Lion President a black roof and a wing, the Tradie Ute a canopy and rack, the two bikes riders.
-- **Face** (`recognition/lod0-front.png`, `views.png` LOD0 front): a lamp pod on each guard with a big and a small round lamp, a wide black slatted grille between them, white indicator rectangles at the bumper ends and a plain black lower intake. The Hawk Dash has a hexagonal grille, swept narrow lamps, bonnet vents and twin stripes (`au-vs-hawk-dash.png`).
-- **Rear** (`recognition/lod0-rear.png`, `chase/chase-2.png`): wide wrap tail lamps with a white reverse section joined by a chrome bar, a small body-colour lip spoiler, two small tail pipes. The Hawk Dash has angular lamps, a big wing and quad pipes.
-- **Wheels and stance**: silver five-spoke rims against the Hawk Dash's black ones, and a 0.365 m sim wheel under a taller body (the Hawk Dash's is 0.40 m).
+- `reference-lod0/sheet.png`, `reference-lod1/sheet.png`, `reference-lod2/sheet.png` (with `score.json`): sheet crop, shaded model and
+  silhouette diff per view. Weighted IoU LOD0 0.9602 (side 0.963, top 0.976, front 0.916, rear 0.966), LOD1 0.9545, LOD2 0.9535.
+  - Red (sheet only) runs down both sides of the front view at every LOD: the sheet's front view is drawn about 9 % wider than its
+    plan view, and the model follows the plan.
+  - The side view's green (model only) at the boot: the wing was removed and the deck raised (recognition, below).
+- `views.png`, `lods.png`, `paints.png`, `paints-strip.png`, `colliders.png`: every side at every LOD, six paints, one hull per part.
+  - Body and bumpers take every paint; glass, lamps, grille, badges, black mirrors, silver rims and tyres keep their colour.
+  - On the white paint the pale lamps nearly vanish into the body (`paints.png`, `#f2f4f8`).
+- `damage-strip.png`, `damage-strip-overview.png`: intact, loose and detached for every part; dark bays behind missing panels.
+- `grid-1.png`, `grid-4.png`, `grid-24.png` (viewer): six paints, the lamps and tail lamps read at 24 tiles; the badges do not (too small).
+- `recognition/lod0-front.png` ... `recognition/lod2-top.png` (21) and `chase/chase-1.png` ... `chase/chase-4.png`: what the model was shown.
+- `control-hawk-dash/` (25): the control.
+- `side-by-side-front34.png`, `side-by-side-front.png`, `side-by-side-side.png`, `side-by-side-rear34.png`, `au-vs-hawk-dash.png`:
+  the AU is the only roster car with no wing, no livery, no bull bar and big pale lamps; it is the roundest body in the roster.
+- `hero/hero.png` = `art/ui/brand/renders/picker/au-hawk.png` (the lobby picker picture).
 
 ## Defects found and fixed
 
-- Headlamp decals were speckled with holes and, on the first pass, needles stuck out of the nose corners: the lamps are now real caps on half-ellipsoid pods (`recognition/lod0-front-left.png` is clean), bays moved inside the shoulder.
-- Black slivers along the shoulder (the bay walls poking through the shoulder chamfer): fixed (`views.png` shows none).
-- The spoiler floated above the boot and the pods' rims poked outside the guards: both pulled in.
-- Pivot test failure (the bonnet dome ran behind the front cut line): fixed, 47 of 47 tools/vehicles tests pass.
-- LOD1 and LOD2 were over budget after adding lamp detail: coarser decal cells, lamp rings and indicators only at LOD0.
+- The recognition camera cut the 5 m car's nose off at 3/4 views (`recognition/` round-2 first pass): `view.js` now fits each car's
+  box to the frame (the control re-rendered with it).
+- Headlamp decals were speckled with body showing through (cells sinking on the curved corner) and had black flecks from a dark rim
+  decal under them: the rim decal is gone and the lamps lift 2.4 cm.
+- A top-projected lamp tail dropped long shards down the guard's side: top decals now keep only upward-facing skin.
+- A black square in the rear-door glass at LOD0 (a planar pane sinking through the non-planar greenhouse quad): panes are cut at mid-span
+  and mid-height at LOD0, and lifted further at LOD1.
+- The sheet's wing on posts read as a ute's tray and tailgate, and the WRX's wing (recognition): removed; the boot deck raised.
+- The pivot test failed at LOD2 (the flank without the belly point was 3 cm narrower than LOD0's door skin): the flank top keeps the
+  full width at LOD2. 47 of 47 tools/vehicles tests pass.
+- LOD1/LOD2 over budget after the lamp and fog changes: coarser tail-lamp cells, six-sided wheels and no mid-door ring at LOD1, no fog
+  lamps at LOD2.
 
 ## Remaining defects
 
-- **Not recognised as an AU Falcon** by the unprompted model (`recognition.md`): 0 of 25; named a Holden Commodore in most. This is the owner's first acceptance bar and it is open.
-- **Not bubbly enough**: compare `reference-lod0/sheet.png` (smooth, rounded, a real bonnet crease) with the shaded model beside it (faceted, slab doors, a pointed nose). The generated sheet is a better car than the 3000-triangle build; a rounder body needs more lofts or a higher LOD0.
-- Lamp pods read as lumps at 3/4 views (`recognition/lod0-front-left.png`): the lamps are small beside the sheet's.
-- A faint orange spur at the front-left pod in rear 3/4 views (`recognition/lod0-rear-left.png`).
-- LOD2 drops the second lamp, slats, indicators and chrome bar (`lods.png`); the grille is a dark block.
-- Side and top views carry no make cue at all (`recognition/lod0-side.png`, `recognition/lod0-top.png`).
-- The body-colour mirrors and the roof number need a check at 24 tiles in the host (`grid-24.png` is the viewer, not the host).
+- **Recognition at LOD1, LOD2 and in the chase view is under the 90 % bar** (`recognition.md`); the measured cause is the body's
+  roundness, which needs about 1400 / 900 triangles at LOD1 / LOD2 (owner's call on the budgets).
+- Side and top views are rarely named a Falcon (`recognition/lod0-side.png`, `recognition/lod0-top.png`).
+- A thin orange sliver crosses the front-door glass near the A pillar at LOD0 (`reference-lod0/sheet.png`, shaded side).
+- LOD1 headlamps are blockier than LOD0's, with a stepped tail over the guard (`lods.png`, LOD1 3/4).
+- Pale lamps on the white paint (`paints.png`).
+- The hull grew with the body: 5.03 m long, 2.04 m wide (was 4.74 x 2.0); the profile's geometry is synced, the tuning untouched.
 
 ## Not covered
 
-- Part 2 of br-bwju.12: the burnout and doughnut tuning, the speed 5-10 % under the Cruz, the measured scenarios, the engine sound (`assets/audio/engine/au-hawk.json`; until then the car uses the Cruz Missile's engine voice). The profile is the Hawk Dash's tuning with this car's geometry.
-- The real host with the AU in a 24-seat mixed grid and on a phone or TV: only the one-tile chase (`chase/`) was captured there.
-- The AU on a real device, in WebKit, or through the lobby picker in a live room (the picker image exists, the picker itself was not opened).
+- A real device, WebKit, a TV; the 24-seat mixed grid in the real host (the grids are the viewer).
 - Any recognition model other than `claude-haiku-5-5` at low effort.
+- `cargo test -p jj-sim --test feel` fails on `roster-burnout-au-hawk declares no baselines`: the tuning commit's fixture (e25caa44),
+  independent of the geometry; handed back to the tuning work.

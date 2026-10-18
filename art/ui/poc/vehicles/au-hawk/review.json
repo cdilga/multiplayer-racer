@@ -6,7 +6,7 @@
   "beads": [
     "br-bwju.12"
   ],
-  "summary": "The AU Hawk (owner 2026-10-18): a bubbly caricature of the 1998-2002 Ford AU Falcon, the burnout and doughnut king (tuning is part 2 of br-bwju.12; the profile is the Hawk Dash's for now). What tells it apart: a lamp pod on each front guard carrying a big round headlamp and a smaller round lamp inboard of it, a wide shallow black grille with chrome slats, white bumper-end indicators, a long flat bonnet with a soft dome, a tall upright glasshouse, a short high boot with a small body-colour lip spoiler, wide wrap-around tail lamps joined by a chrome bar, body-colour mirrors, five-spoke silver rims and no livery at all. LOD0 2612 triangles (qualified budget 3000), LOD1 876, LOD2 574. Code-built from generated reference sheets (R81). Recognition by a small vision model is NOT met: see docs/evidence/P1-V-au-hawk/recognition.md.",
+  "summary": "The AU Hawk (owner 2026-10-18): a bubbly caricature of the 1998 series-1 Ford AU Falcon sedan, the burnout and doughnut king. Round 2 rebuilt it to a literal AU reference sheet (named an AU Falcon by a minimal vision model before modelling): two big swept teardrop headlamps wrapping into the guards, the oval fish-mouth grille with one body-colour bar and a plain blank oval badge (no lettering, R81), round fog lamps, a high round roof over a tall glasshouse, round tumblehome flanks and a domed bonnet and boot, rounded corner tail lamps with white reverse lamps and a plain oval on the boot lid, silver five-spoke rims, no wing. Recognition (docs/evidence/P1-V-au-hawk/recognition.md): LOD0 is named an AU Falcon from the front, both front 3/4s, the rear 3/4 and the rear; LOD1, LOD2 and the in-game chase view are named one in about half the views or fewer, and the side and top views rarely. LOD0 2586 triangles (qualified budget 3000), LOD1 888 (900), LOD2 596 (600). Code-built from generated reference sheets (R81).",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -18,36 +18,36 @@
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9559,
-          "top": 0.9426,
-          "front": 0.9246,
-          "rear": 0.9672
+          "side": 0.963,
+          "top": 0.9755,
+          "front": 0.9162,
+          "rear": 0.966
         },
-        "weightedIou": 0.9489
+        "weightedIou": 0.9602
       },
       {
         "lod": 1,
         "label": "LOD1 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.957,
-          "top": 0.9419,
-          "front": 0.9178,
-          "rear": 0.958
+          "side": 0.9605,
+          "top": 0.969,
+          "front": 0.9019,
+          "rear": 0.9618
         },
-        "weightedIou": 0.9468
+        "weightedIou": 0.9545
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9527,
-          "top": 0.948,
-          "front": 0.9152,
-          "rear": 0.9483
+          "side": 0.9521,
+          "top": 0.9725,
+          "front": 0.9144,
+          "rear": 0.9583
         },
-        "weightedIou": 0.945
+        "weightedIou": 0.9535
       }
     ]
   },
@@ -60,7 +60,7 @@
       {
         "lod": 0,
         "glb": "media/model/au-hawk.lod0.glb",
-        "tris": 2612,
+        "tris": 2586,
         "draws": 11,
         "maxTris": 3000,
         "withinBudget": true
@@ -68,7 +68,7 @@
       {
         "lod": 1,
         "glb": "media/model/au-hawk.lod1.glb",
-        "tris": 876,
+        "tris": 888,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -76,7 +76,7 @@
       {
         "lod": 2,
         "glb": "media/model/au-hawk.lod2.glb",
-        "tris": 574,
+        "tris": 596,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -110,8 +110,8 @@
         },
         "pivot": [
           0,
-          1.08475,
-          0.97
+          1.094,
+          0.96
         ]
       },
       {
@@ -127,8 +127,8 @@
         },
         "pivot": [
           0,
-          1.0974444444444444,
-          -0.97
+          1.0710000000000002,
+          -0.96
         ]
       },
       {
@@ -143,9 +143,9 @@
           "max": 0
         },
         "pivot": [
-          0.9785,
-          0.5950000000000001,
-          0.97
+          1,
+          0.647,
+          0.96
         ]
       },
       {
@@ -160,9 +160,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9785,
-          0.5950000000000001,
-          0.97
+          -1,
+          0.647,
+          0.96
         ]
       },
       {
@@ -177,9 +177,9 @@
           "max": 0
         },
         "pivot": [
-          0.9214285714285715,
-          0.6034590643274854,
-          -0.3
+          1,
+          0.6412000000000001,
+          -0.38
         ]
       },
       {
@@ -194,9 +194,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9214285714285715,
-          0.6034590643274854,
-          -0.3
+          -1,
+          0.6412000000000001,
+          -0.38
         ]
       },
       {
@@ -335,7 +335,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (white texels tint: body, pods, bumpers, mirrors, lip spoiler; the glass, lamps, grille, rims and tyres keep their colour), the number on the roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. No livery: the AU has none."
+    "pattern": "Seat colour on the paint key (white texels tint: body and bumpers; the glass, lamps, grille, badges, black mirrors, rims and tyres keep their colour), the number on the roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. No livery: the AU has none."
   },
   "inWorld": [
     {
@@ -364,47 +364,31 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean; origin between the axles; part ids and hinge layout as the Hawk Dash; mass fractions unchanged; anchors moved to this body: roof number on the roof crown, plates under the grille and on the boot)"
+        "text": "contract + reproducibility (validator clean; origin between the axles; part ids and hinges as before; anchors moved to the new body: roof number on the crown at y 1.65, plates at the new nose and tail)"
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2612 <= 3000; LOD1 876 <= 900; LOD2 574 <= 600"
+        "text": "budget: LOD0 2586 <= 3000; LOD1 888 <= 900; LOD2 596 <= 600"
       },
       {
         "result": "PASS",
-        "text": "silhouette: weighted IoU LOD0 0.9489 (side 0.956, top 0.943, front 0.925, rear 0.967), LOD1 0.9468, LOD2 0.9450 against refs/lod-plus-1.png and refs/lowest-lod.png; at the skill's ~0.95 target. The front view's 0.925 is the pods standing out of the bumper plane"
+        "text": "silhouette: weighted IoU LOD0 0.9602, LOD1 0.9545, LOD2 0.9535 (front views 0.90-0.92: the sheet's front view is drawn wider than its plan view)"
       },
       {
         "result": "PASS",
-        "text": "by-eye cues (views.png, reference-lod0/sheet.png, picker render art/ui/brand/renders/picker/au-hawk.png): lamp pods with a big and a small round lamp, slatted grille, lower intake, bumper-end indicators, body-colour mirrors, five-spoke silver rims, wrap tail lamps, chrome bar, lip spoiler"
+        "text": "by-eye cues (views.png, lods.png, reference sheets): teardrop lamps, oval grille with bar and blank badge, fog lamps at LOD0/1, corner tail lamps with reverse lamps, boot badge, black mirrors, silver rims; LOD2 keeps both lamps, the grille, the bar, both badges and the tail lamps"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (paints.png: body, pods, bumpers, mirrors and spoiler take every paint; glass, lamps, rims and tyres keep their colour); draws per tile unchanged"
+        "text": "paint key / one material; draws per tile unchanged"
       },
       {
         "result": "PASS",
-        "text": "damage states (damage-strip.png: every part swings on its hinge line, dark bays behind missing panels)"
-      },
-      {
-        "result": "PASS",
-        "text": "physics fit (colliders.png: one convex hull per part; the mirrors are decoration and stay out of the hulls)"
+        "text": "damage states; PASS physics fit (one convex hull per part, mirrors excluded)"
       },
       {
         "result": "WARN",
-        "text": "recognition (recognition.md): the unprompted vision model names it an Australian sedan (a Commodore) in 13 of 25 renders and an AU Falcon in 0 of 25. The control (Hawk Dash) passes. Open for the owner; see recognition.md for what was tried and the options"
-      },
-      {
-        "result": "WARN",
-        "text": "the body is flat-sided at LOD0: the sheet's rounded flanks are approximated by the shoulder roll-in (the sheet's body is bubbly, the model's doors are slabs)"
-      },
-      {
-        "result": "WARN",
-        "text": "LOD2 drops the pods' second lamp, the grille slats, the indicators and the chrome bar to fit 600; the grille reads as a dark block"
-      },
-      {
-        "result": "WARN",
-        "text": "the engine sound profile (assets/audio/engine/au-hawk.json) is part 2 of br-bwju.12 (generated on eris, R89); until then the host falls back to the default voice"
+        "text": "LOD1/LOD2 budgets: measured, LOD1 with LOD0's body resolution (1442 tris) is named a Falcon about three times as often; meeting the bar there needs about 1400 / 900 (owner's call)"
       }
     ],
     "report": "media/gate/validation.md"
@@ -414,7 +398,7 @@
     "massKg": 1700,
     "drive": "Rear",
     "accel": {
-      "value": 11.76,
+      "value": 11.18,
       "unit": "m/s2",
       "note": "engine force over mass at launch: an upper bound, drag and traction not included"
     },
@@ -427,7 +411,7 @@
       "turnG": 3.3,
       "gripG": 3.7,
       "punchSlide": 1,
-      "slideAngleDeg": 40,
+      "slideAngleDeg": 72,
       "rollInfluence": 0.11
     },
     "braking": {

@@ -3,51 +3,51 @@
  "lod": 1,
  "sheet": "lod1",
  "stats": {
-  "tris": 960,
+  "tris": 972,
   "draws": 14,
   "breakdown": {
-   "front": 232,
-   "core": 220,
-   "door_FL": 24,
-   "door_RL": 12,
-   "back": 200,
-   "door_FR": 24,
-   "door_RR": 12,
-   "wheel_FL": 38,
-   "wheel_FR": 38,
-   "wheel_RL": 38,
-   "wheel_RR": 38,
+   "front": 270,
+   "core": 212,
+   "door_FL": 26,
+   "door_RL": 10,
+   "back": 214,
+   "door_FR": 26,
+   "door_RR": 10,
+   "wheel_FL": 30,
+   "wheel_FR": 30,
+   "wheel_RL": 30,
+   "wheel_RR": 30,
    "interior_engine": 24,
    "interior_cabin": 36,
    "interior_boot": 24
   },
-  "stations": 19
+  "stations": 17
  },
  "views": {
   "side": {
-   "iou": 0.957,
-   "aspect": 0.967,
-   "miss": 0.0332,
-   "extra": 0.0098
+   "iou": 0.9605,
+   "aspect": 1.005,
+   "miss": 0.0099,
+   "extra": 0.0296
   },
   "top": {
-   "iou": 0.9419,
-   "aspect": 1.027,
-   "miss": 0.0114,
-   "extra": 0.0467
+   "iou": 0.969,
+   "aspect": 1.094,
+   "miss": 0.0208,
+   "extra": 0.0102
   },
   "front": {
-   "iou": 0.9178,
-   "aspect": 0.879,
-   "miss": 0.0808,
-   "extra": 0.0014
+   "iou": 0.9019,
+   "aspect": 0.891,
+   "miss": 0.0951,
+   "extra": 0.003
   },
   "rear": {
-   "iou": 0.958,
-   "aspect": 0.94,
-   "miss": 0.0397,
-   "extra": 0.0023
+   "iou": 0.9618,
+   "aspect": 0.964,
+   "miss": 0.0283,
+   "extra": 0.0099
   }
  },
- "score": 0.9468
+ "score": 0.9545
 }

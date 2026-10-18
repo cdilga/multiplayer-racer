@@ -3,14 +3,14 @@
  "lod": 2,
  "sheet": "lowest",
  "stats": {
-  "tris": 658,
+  "tris": 680,
   "draws": 14,
   "breakdown": {
-   "front": 112,
-   "core": 160,
+   "front": 150,
+   "core": 156,
    "door_FL": 6,
    "door_RL": 6,
-   "back": 126,
+   "back": 114,
    "door_FR": 6,
    "door_RR": 6,
    "wheel_FL": 38,
@@ -25,29 +25,29 @@
  },
  "views": {
   "side": {
-   "iou": 0.9527,
-   "aspect": 0.972,
-   "miss": 0.0367,
-   "extra": 0.0105
+   "iou": 0.9521,
+   "aspect": 1.026,
+   "miss": 0.0128,
+   "extra": 0.0351
   },
   "top": {
-   "iou": 0.948,
-   "aspect": 1.032,
-   "miss": 0.0053,
-   "extra": 0.0468
+   "iou": 0.9725,
+   "aspect": 1.087,
+   "miss": 0.007,
+   "extra": 0.0205
   },
   "front": {
-   "iou": 0.9152,
-   "aspect": 0.864,
+   "iou": 0.9144,
+   "aspect": 0.911,
    "miss": 0.0825,
-   "extra": 0.0023
+   "extra": 0.0031
   },
   "rear": {
-   "iou": 0.9483,
-   "aspect": 0.917,
-   "miss": 0.0484,
-   "extra": 0.0033
+   "iou": 0.9583,
+   "aspect": 0.967,
+   "miss": 0.0302,
+   "extra": 0.0115
   }
  },
- "score": 0.945
+ "score": 0.9535
 }

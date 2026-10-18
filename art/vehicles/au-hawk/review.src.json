@@ -1,76 +1,76 @@
 {
-  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
-  "name": "AU Hawk",
-  "status": "awaiting-review",
-  "date": "2026-10-18",
-  "beads": [
-    "br-bwju.12"
+ "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
+ "name": "AU Hawk",
+ "status": "awaiting-review",
+ "date": "2026-10-18",
+ "beads": [
+  "br-bwju.12"
+ ],
+ "summary": "The AU Hawk (owner 2026-10-18): a bubbly caricature of the 1998 series-1 Ford AU Falcon sedan, the burnout and doughnut king. Round 2 rebuilt it to a literal AU reference sheet (named an AU Falcon by a minimal vision model before modelling): two big swept teardrop headlamps wrapping into the guards, the oval fish-mouth grille with one body-colour bar and a plain blank oval badge (no lettering, R81), round fog lamps, a high round roof over a tall glasshouse, round tumblehome flanks and a domed bonnet and boot, rounded corner tail lamps with white reverse lamps and a plain oval on the boot lid, silver five-spoke rims, no wing. Recognition (docs/evidence/P1-V-au-hawk/recognition.md): LOD0 is named an AU Falcon from the front, both front 3/4s, the rear 3/4 and the rear; LOD1, LOD2 and the in-game chase view are named one in about half the views or fewer, and the side and top views rarely. LOD0 2586 triangles (qualified budget 3000), LOD1 888 (900), LOD2 596 (600). Code-built from generated reference sheets (R81).",
+ "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+ "reference": {
+  "sheet": "art/vehicles/au-hawk/refs/lod-plus-1.png",
+  "compare": [
+   {
+    "lod": 0,
+    "label": "LOD0 against the 'lod + 1' reference sheet",
+    "dir": "docs/evidence/P1-V-au-hawk/reference-lod0"
+   },
+   {
+    "lod": 1,
+    "label": "LOD1 against the 'lod + 1' reference sheet",
+    "dir": "docs/evidence/P1-V-au-hawk/reference-lod1"
+   },
+   {
+    "lod": 2,
+    "label": "LOD2 against the 'lowest' reference sheet",
+    "dir": "docs/evidence/P1-V-au-hawk/reference-lod2"
+   }
   ],
-  "summary": "The AU Hawk (owner 2026-10-18): a bubbly caricature of the 1998-2002 Ford AU Falcon, the burnout and doughnut king (tuning is part 2 of br-bwju.12; the profile is the Hawk Dash's for now). What tells it apart: a lamp pod on each front guard carrying a big round headlamp and a smaller round lamp inboard of it, a wide shallow black grille with chrome slats, white bumper-end indicators, a long flat bonnet with a soft dome, a tall upright glasshouse, a short high boot with a small body-colour lip spoiler, wide wrap-around tail lamps joined by a chrome bar, body-colour mirrors, five-spoke silver rims and no livery at all. LOD0 2612 triangles (qualified budget 3000), LOD1 876, LOD2 574. Code-built from generated reference sheets (R81). Recognition by a small vision model is NOT met: see docs/evidence/P1-V-au-hawk/recognition.md.",
-  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
-  "reference": {
-    "sheet": "art/vehicles/au-hawk/refs/lod-plus-1.png",
-    "compare": [
-      {
-        "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-au-hawk/reference-lod0"
-      },
-      {
-        "lod": 1,
-        "label": "LOD1 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-au-hawk/reference-lod1"
-      },
-      {
-        "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
-        "dir": "docs/evidence/P1-V-au-hawk/reference-lod2"
-      }
-    ],
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/au-hawk/refs/prompts/, the Hawk Dash's sheet as the layout example; art/ui/frames/ledger.jsonl). Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out)."
+  "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/au-hawk/refs/prompts/, the Hawk Dash's sheet as the layout example; art/ui/frames/ledger.jsonl). Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out)."
+ },
+ "turntable": {
+  "sheet": "docs/evidence/P1-V-au-hawk/lods.png",
+  "validation": "docs/evidence/P1-V-au-hawk/validation.md"
+ },
+ "damage": {
+  "strip": "docs/evidence/P1-V-au-hawk/damage-strip.png",
+  "overview": "docs/evidence/P1-V-au-hawk/damage-strip-overview.png",
+  "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
+ },
+ "paints": {
+  "sheet": "docs/evidence/P1-V-au-hawk/paints-strip.png",
+  "identity": "art/ui/tokens.json",
+  "pattern": "Seat colour on the paint key (white texels tint: body and bumpers; the glass, lamps, grille, badges, black mirrors, rims and tyres keep their colour), the number on the roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. No livery: the AU has none."
+ },
+ "inWorld": [
+  {
+   "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+   "size": "large",
+   "path": "docs/evidence/P1-V-au-hawk/grid-1.png"
   },
-  "turntable": {
-    "sheet": "docs/evidence/P1-V-au-hawk/lods.png",
-    "validation": "docs/evidence/P1-V-au-hawk/validation.md"
+  {
+   "label": "Four tiles",
+   "size": "medium",
+   "path": "docs/evidence/P1-V-au-hawk/grid-4.png"
   },
-  "damage": {
-    "strip": "docs/evidence/P1-V-au-hawk/damage-strip.png",
-    "overview": "docs/evidence/P1-V-au-hawk/damage-strip-overview.png",
-    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
+  {
+   "label": "24 tiles, small (each car about 100 px)",
+   "size": "small",
+   "path": "docs/evidence/P1-V-au-hawk/grid-24.png"
   },
-  "paints": {
-    "sheet": "docs/evidence/P1-V-au-hawk/paints-strip.png",
-    "identity": "art/ui/tokens.json",
-    "pattern": "Seat colour on the paint key (white texels tint: body, pods, bumpers, mirrors, lip spoiler; the glass, lamps, grille, rims and tyres keep their colour), the number on the roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. No livery: the AU has none."
-  },
-  "inWorld": [
-    {
-      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
-      "size": "large",
-      "path": "docs/evidence/P1-V-au-hawk/grid-1.png"
-    },
-    {
-      "label": "Four tiles",
-      "size": "medium",
-      "path": "docs/evidence/P1-V-au-hawk/grid-4.png"
-    },
-    {
-      "label": "24 tiles, small (each car about 100 px)",
-      "size": "small",
-      "path": "docs/evidence/P1-V-au-hawk/grid-24.png"
-    },
-    {
-      "label": "From the Derby overview camera (top-down damage row)",
-      "size": "overview",
-      "path": "docs/evidence/P1-V-au-hawk/damage-strip-overview.png"
-    }
-  ],
-  "gate": {
-    "report": "docs/evidence/P1-V-au-hawk/validation.md"
-  },
-  "profile": "assets/profiles/au-hawk.json",
-  "handling": {
-    "topSpeedMps": null,
-    "topSpeedNote": "Not measured yet: R123's balance bead (br-bwju.6) measures every car's top speed, launch and cornering on real maps."
+  {
+   "label": "From the Derby overview camera (top-down damage row)",
+   "size": "overview",
+   "path": "docs/evidence/P1-V-au-hawk/damage-strip-overview.png"
   }
+ ],
+ "gate": {
+  "report": "docs/evidence/P1-V-au-hawk/validation.md"
+ },
+ "profile": "assets/profiles/au-hawk.json",
+ "handling": {
+  "topSpeedMps": null,
+  "topSpeedNote": "Not measured yet: R123's balance bead (br-bwju.6) measures every car's top speed, launch and cornering on real maps."
+ }
 }
