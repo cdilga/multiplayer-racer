@@ -1,0 +1,53 @@
+{
+ "car": "au-hawk",
+ "lod": 0,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 2696,
+  "draws": 14,
+  "breakdown": {
+   "front": 934,
+   "core": 264,
+   "door_FL": 26,
+   "door_RL": 14,
+   "back": 666,
+   "door_FR": 26,
+   "door_RR": 14,
+   "wheel_FL": 167,
+   "wheel_FR": 167,
+   "wheel_RL": 167,
+   "wheel_RR": 167,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 24
+  },
+  "stations": 30
+ },
+ "views": {
+  "side": {
+   "iou": 0.9558,
+   "aspect": 0.974,
+   "miss": 0.0324,
+   "extra": 0.0118
+  },
+  "top": {
+   "iou": 0.9426,
+   "aspect": 1.024,
+   "miss": 0.0122,
+   "extra": 0.0452
+  },
+  "front": {
+   "iou": 0.9246,
+   "aspect": 0.891,
+   "miss": 0.0735,
+   "extra": 0.0019
+  },
+  "rear": {
+   "iou": 0.9672,
+   "aspect": 0.95,
+   "miss": 0.029,
+   "extra": 0.0038
+  }
+ },
+ "score": 0.9489
+}
