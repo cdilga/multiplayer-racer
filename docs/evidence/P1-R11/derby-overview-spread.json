@@ -1,0 +1,84 @@
+{
+  "frame": {
+    "left": 0,
+    "top": 43.1875,
+    "right": 1920,
+    "bottom": 1026
+  },
+  "cars": 6,
+  "medianCarPx": 51.7,
+  "targetPx": 34.4,
+  "envelope": [
+    801.5,
+    125.5,
+    1127.2,
+    801.2
+  ],
+  "unusedShare": 0.883,
+  "spread": true,
+  "frameM": 91.09,
+  "wantedM": 91.75,
+  "maxFrameM": 61.16,
+  "carBoxes": [
+    {
+      "car": 0,
+      "box": [
+        972.6,
+        144.3,
+        993.4,
+        184.2
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 1,
+      "box": [
+        1027,
+        664.2,
+        1080.1,
+        715.9
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 2,
+      "box": [
+        1006.4,
+        712.4,
+        1060,
+        746.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 3,
+      "box": [
+        965.3,
+        699,
+        1014.1,
+        754.9
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 4,
+      "box": [
+        916,
+        679.8,
+        945.1,
+        734.7
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 5,
+      "box": [
+        849.2,
+        698.4,
+        904,
+        748.6
+      ],
+      "inFrame": true
+    }
+  ]
+}

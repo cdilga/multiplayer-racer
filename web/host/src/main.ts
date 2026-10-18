@@ -32,6 +32,7 @@ import { World } from './render/world';
 import { LANDING_SHOWN_MS, landingCallout, type LandingTier } from '../../shared/src/landing';
 import { TAKEDOWN_SHOWN_MS } from '../../shared/src/takedown';
 import { mountNameplates } from './identity/nameplates';
+import { mountOverviewUi } from './ui/overview/band';
 import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
 
@@ -79,6 +80,8 @@ async function boot(): Promise<void> {
   const withMap = !params.has('synthetic') || params.has('map');
   if (withMap) world.loadMap(JSON.parse(greybox), { repeat: Number(params.get('kitx')) || 1 });
   const list = (k: string) => params.get(k)?.split(',').map(Number);
+  // `?overview=arena`: the arena Overview frames the whole bowl out to its rocks (P1-M10's harness camera), not the cars.
+  world.frameArena = params.get('overview') === 'arena';
   if (params.has('tiles')) {
     world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
     for (const key of ['orbitDistance','orbitHeight','orbitTargetHeight'] as const) {
@@ -437,8 +440,10 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   roundScreens = screens;
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);
-    screens?.place(world.tileRects(), scale);
+    // The arena Overview (P1-R11) has no tiles: the per-tile HUD goes with them.
+    screens?.place(layout ? world.tileRects() : null, scale);
   };
+  if (screens) mountOverviewUi(screens.chrome.footer.parentElement ?? app, world, client, screens.chrome.footer);
   (window as unknown as { __jjNet: unknown }).__jjNet = {
     code: () => bridge.hub.code,
     joinUrl: () => bridge.hub.joinUrl,

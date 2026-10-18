@@ -27,8 +27,9 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       const v = world.vehicles!;
       const number = v.numberOf(point.id);
       mark.dataset.number = String(number); mark.dataset.car = String(point.car); mark.dataset.tile = String(point.tile);
-      // The overview (no tiles) shows the number alone: its cars are specks and a name label would cover the course.
-      const text = `#${number}${point.font >= 18 && !point.side ? ` ${v.nameOf(point.id)}` : ''}`;
+      // The course overview shows the number alone: its cars are specks and a name label would cover the course. The arena
+      // Overview's plates (P1-R11) carry the name too.
+      const text = `#${number}${(point.named ?? (point.font >= 18 && !point.side)) ? ` ${v.nameOf(point.id)}` : ''}`;
       const keyStyle = `${number}:${v.paintOf(point.id)}:${text}:${point.font}:${point.clip.right - point.clip.left}`;
       let box = sizes.get(mark);
       if (box?.key !== keyStyle) {

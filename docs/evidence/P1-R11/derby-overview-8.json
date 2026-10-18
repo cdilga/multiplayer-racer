@@ -1,0 +1,118 @@
+{
+  "scenario": "derby-overview-8",
+  "unusedTarget": 0.35,
+  "unusedTargetMet": false,
+  "browser": "chromium (Playwright)",
+  "viewport": "1920x1080 css, dpr 1",
+  "profile": "TV at 3 m: median car height ≥ carHeightTarget (3.5 %) of the gameplay frame height",
+  "mask": "gameplay frame = canvas between the top edge band and the footer; padded envelope = screen bbox of every car extended padM (3 m) round its body; unused = 1 - envelope∩frame / frame",
+  "frame": {
+    "left": 0,
+    "top": 43.1875,
+    "right": 1920,
+    "bottom": 1026
+  },
+  "cars": 8,
+  "medianCarPx": 110.5,
+  "targetPx": 34.4,
+  "envelope": [
+    550.3,
+    125.5,
+    1465.1,
+    988.3
+  ],
+  "unusedShare": 0.582,
+  "spread": false,
+  "frameM": 34.56,
+  "wantedM": 34.82,
+  "maxFrameM": 61.16,
+  "carBoxes": [
+    {
+      "car": 0,
+      "box": [
+        896.1,
+        408.1,
+        947.8,
+        518.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 1,
+      "box": [
+        1081.1,
+        319.4,
+        1195.5,
+        424.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 2,
+      "box": [
+        944.6,
+        626.2,
+        1069.2,
+        699.7
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 3,
+      "box": [
+        818.8,
+        253,
+        920.6,
+        357.1
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 4,
+      "box": [
+        1273.7,
+        447.7,
+        1363.4,
+        566.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 5,
+      "box": [
+        665.1,
+        562,
+        794.9,
+        678.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 6,
+      "box": [
+        1041.4,
+        178.8,
+        1147.2,
+        247.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 7,
+      "box": [
+        1176.6,
+        716.9,
+        1289.4,
+        863.3
+      ],
+      "inFrame": true
+    }
+  ],
+  "band": {
+    "shown": true,
+    "clock": "Derby · 2:55 left",
+    "suggest": false,
+    "note": null,
+    "height": 43.1875
+  }
+}

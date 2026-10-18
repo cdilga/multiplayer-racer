@@ -1,5 +1,5 @@
-// P1-M10: the derby bowl in the real host, from the host's fixed overview camera (a harness camera; R11's switch is its own
-// bead), at 8 and 32 cars on the generated arenas (maps/derby-bowl-<n>.json). Every car is placed on the floor and stays in
+// P1-M10: the derby bowl in the real host, from a fixed harness camera over the whole bowl (`?overview=arena`; the game's
+// Overview frames the cars, P1-R11), at 8 and 32 cars on the generated arenas (maps/derby-bowl-<n>.json). Every car is placed on the floor and stays in
 // the bowl; the rocks dressing (domes, quarry faces) stands in frame outside the bowl and never over its floor (R107).
 // JJ_CAPTURE_DIR=<dir> keeps the stills for the self-review (docs/evidence/P1-M10/).
 //   node --test web/tests/journeys/m10-bowl.test.mjs
@@ -39,7 +39,7 @@ for (const cars of [8, 32]) {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/bowl.json', (r) => r.fulfill({ contentType: 'application/json', body: mapJson }));
-    await page.goto(`${server.origin}${BASE}host?test&look=on&res=1&autores=off&mapUrl=${encodeURIComponent(`${server.origin}/bowl.json`)}`);
+    await page.goto(`${server.origin}${BASE}host?test&look=on&res=1&autores=off&overview=arena&mapUrl=${encodeURIComponent(`${server.origin}/bowl.json`)}`);
     await page.waitForFunction(() => window.__jjTest && window.__jjRender);
     await page.evaluate(async ({ fixture, mapJson }) => {
       window.__jjRender.hold();

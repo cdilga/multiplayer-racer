@@ -32,6 +32,9 @@ import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
 import { LaunchCallouts } from './launch-callout';
+import { OVERVIEW, OverviewRig, type OverviewPose } from '../camera/overview/rig';
+import { OverviewRings } from '../ui/overview/rings';
+import { TICK_HZ } from './synthetic';
 
 export interface NameplatePoint {
   tile: number; car: number; id: number; x: number; y: number; font: number;
@@ -41,7 +44,29 @@ export interface NameplatePoint {
   /** The overview only: the screen direction (unit, y down) beside the car, away from the road it is on, that the label
    *  stands off in. Null in a tile (the label stands above the car). */
   side: [number, number] | null;
+  /** The arena Overview (P1-R11): the plate carries the name as well as the number. */
+  named?: boolean;
   clip: { left: number; right: number; top: number; bottom: number };
+}
+
+/** The host's camera choice (P1-R11): Auto is the Overview on an arena map and the Grid on a track. */
+export type ViewChoice = 'auto' | 'grid' | 'overview';
+
+/** The arena Overview's framing as data (R90): each car's screen box, the median car height against the TV target, the
+ *  padded envelope's unused share of the gameplay frame, and whether the cars are spread wider than the arena view. */
+export interface OverviewStats {
+  /** Gameplay frame, CSS px (the canvas between the HUD's edge bands). */
+  frame: { left: number; top: number; right: number; bottom: number };
+  cars: Array<{ car: number; box: [number, number, number, number]; inFrame: boolean }>;
+  medianCarPx: number;
+  targetPx: number;
+  envelope: [number, number, number, number] | null;
+  unusedShare: number;
+  /** The cars want more than the whole arena view, or read smaller than the target: offer the Grid. */
+  spread: boolean;
+  frameM: number;
+  wantedM: number;
+  maxFrameM: number;
 }
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
@@ -168,6 +193,22 @@ export class World {
   /** A derby arena's circle the overview always frames (P1-M10, R107): the bowl out to its nearest rock, so the rocks
    *  dressing stands in frame around the bowl however few cars there are. Null on a course. */
   private arena: { x: number; z: number; r: number } | null = null;
+  /** The host's camera choice (P1-R11); `setView` switches it with the transition. */
+  view: ViewChoice = 'auto';
+  /** Harness camera (`?overview=arena`, P1-M10's captures): the whole bowl out to its rocks instead of the cars. */
+  frameArena = false;
+  private overviewRig: OverviewRig | null = null;
+  private overviewRings = new OverviewRings(this.scene);
+  private overviewTick: number | null = null;
+  private overviewWas = false;
+  /** The spread condition and the tick it last changed: the suggestion follows it after a second of game time. */
+  private spreadState = { on: false, raw: false, since: 0 };
+  /** The arena Overview's last pose and framing stats (null outside it). */
+  overviewPose: OverviewPose | null = null;
+  overviewStats: OverviewStats | null = null;
+  /** Set to an array to record the arena Overview camera every frame: its tick, position, framed ground and
+   *  view-projection matrix (P1-R11's motion and look-ahead checks). */
+  overviewTrace: Array<{ tick: number; position: [number, number, number]; frame: number; vp: number[] }> | null = null;
   private sample: Sampled | undefined;
   private raf = 0;
   private observer: ResizeObserver;
@@ -308,14 +349,21 @@ export class World {
     this.invalidate();
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
     const bowl = map.features.find((f) => f.kind === 'bowl') as { pose?: { x: number; z: number }; params: Record<string, number> } | undefined;
+    const wasArena = !!this.arena;
     this.arena = null;
+    this.overviewRig = null;
+    this.overviewTick = null;
     if (bowl) {
       const [x, z] = [(bowl.pose?.x ?? 0) / 1000, (bowl.pose?.z ?? 0) / 1000];
       const p = bowl.params;
       const outer = ((p.floorRadiusMm ?? 0) + (p.bankRadiusMm ?? 0) + (p.lipWidthMm ?? 0)) / 1000;
       const rocks = (map.dressing ?? []).map((d) => Math.hypot(d.pose.x / 1000 - x, d.pose.z / 1000 - z)).filter((d) => d > outer);
       this.arena = { x, z, r: rocks.length ? Math.min(...rocks) : outer * 1.25 };
+      this.overviewRig = new OverviewRig({ x, z, r: outer, y: this.mapMid });
     }
+    // Arena maps start in the Overview and tracks in the Grid (P1-R11): the host's choice holds while the kind of map
+    // stays the same, and goes back to Auto when it changes.
+    if (wasArena !== !!this.arena) this.view = 'auto';
     return this.map;
   }
 
@@ -347,6 +395,32 @@ export class World {
       byName.set(k, e);
     }
     return [...byName.values()].sort((a, b) => b.triangles - a.triangles);
+  }
+
+  /** True while the arena Overview draws (an arena map, the host hasn't chosen the Grid, no replay camera). */
+  get overviewOn(): boolean {
+    return !!this.overviewRig && this.view !== 'grid' && !this.replayCamera;
+  }
+
+  /** The arena the Overview frames (centre, lip radius, ground height), or null on a track. */
+  get overviewArena(): { x: number; z: number; r: number; y: number } | null {
+    return this.overviewRig?.arena ?? null;
+  }
+
+  /** Whether the Overview can be chosen: only on an arena map (a track keeps every player's own tile). */
+  get overviewAvailable(): boolean {
+    return !!this.overviewRig;
+  }
+
+  /** Switches Grid ⇄ Overview (P1-R11): a ~300 ms dip through the paper backdrop, the cut at its middle. */
+  setView(view: ViewChoice): void {
+    if (view === this.view) return;
+    const ms = OVERVIEW.transitionMs;
+    this.canvas.animate?.([{ opacity: 1 }, { opacity: 0.15 }, { opacity: 1 }], { duration: ms, easing: 'ease-in-out' });
+    setTimeout(() => {
+      this.view = view;
+      this.invalidate();
+    }, ms / 2);
   }
 
   /** Where world point (x, y, z) m lands on the canvas in CSS pixels, through the overview camera. */
@@ -522,7 +596,18 @@ export class World {
     r.info.autoReset = false;
     r.info.reset();
     // An auto grid with nobody on the field (an empty room's TV) shows the whole map, not one tile chasing no car.
-    if (this.tiles && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles, now);
+    const overview = this.overviewOn;
+    if (overview !== this.overviewWas) {
+      this.overviewWas = overview;
+      // The tiles' overlays (pills, arrows) go when the Overview comes in, and come back with the grid's next layout.
+      if (overview) {
+        this.onLayout(null, this.stats.dpr * this.scale);
+        this.arrowKey = '';
+        this.onArrows([], this.stats.dpr * this.scale);
+      } else this.layoutMoving = true;
+    }
+    if (!overview) this.overviewRings.hide();
+    if (this.tiles && !overview && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles, now);
     else {
       const lod = lodForTileHeight(st.height);
       useLod(this.camera, lod);
@@ -530,7 +615,7 @@ export class World {
       r.setViewport(0, 0, st.width, st.height);
       this.launchCallouts.fit(this.camera);
       this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
-      this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0);
+      this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
       st.lods = [lod];
     }
     st.frames++;
@@ -649,15 +734,20 @@ export class World {
     return lods;
   }
 
-  private nameplates(s: Sampled, camera: Camera, rect: { x: number; y: number; w: number; h: number }, tile: number, own = -1): void {
+  private nameplates(s: Sampled, camera: Camera, rect: { x: number; y: number; w: number; h: number }, tile: number, own = -1, arena = false): void {
     const scale = this.stats.dpr * this.scale;
     const clip = { left: rect.x / scale, right: (rect.x + rect.w) / scale, top: rect.y / scale, bottom: (rect.y + rect.h) / scale };
+    if (arena && this.overviewStats) Object.assign(clip, { top: this.overviewStats.frame.top, bottom: this.overviewStats.frame.bottom });
     for (let car = 0; car < s.cars; car++) {
       if (car === own) continue;
       const p = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]! + 2.2, s.pos[car * 3 + 2]!).project(camera);
       if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z < -1 || p.z > 1) continue;
       const c = new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]!, s.pos[car * 3 + 2]!).project(camera);
-      const font = Math.max(14, Math.min(28, rect.h / scale * .07));
+      // The arena Overview's plates scale with the camera's distance: half the car's height on screen, never under 14 px
+      // at 1080p (28 device px at 4K) and never over 30.
+      const carPx = arena ? (this.overviewStats?.cars[car]?.box ?? [0, 0, 0, 0]) : null;
+      const floor = Math.max(14, (14 * rect.h) / scale / 1080);
+      const font = carPx ? Math.max(floor, Math.min(floor * 2.1, (carPx[3] - carPx[1]) * 0.5)) : Math.max(14, Math.min(28, rect.h / scale * .07));
       const carY = (rect.y + (1 - c.y) * rect.h / 2) / scale;
       // br-gw74.13.1.1.1: 2.2 m above the car is a pixel or two at whole-lap scale (the overview), so the label sat on the
       // car and the jump or loop it was on. It stands at least a line's height above the car, with a leader down to it.
@@ -666,7 +756,7 @@ export class World {
       // In the overview a label above the car can sit on the road ahead of it (the jump or loop it is on, when the road
       // runs up the screen), so it stands off to the side of the car's travel, on whichever side faces up the screen.
       let side: [number, number] | null = null;
-      if (tile === 0) {
+      if (tile === 0 && !arena) {
         this.q.set(s.rot[car * 4]!, s.rot[car * 4 + 1]!, s.rot[car * 4 + 2]!, s.rot[car * 4 + 3]!);
         const f = new Vector3(0, 0, 4).applyQuaternion(this.q).add(new Vector3(s.pos[car * 3]!, s.pos[car * 3 + 1]!, s.pos[car * 3 + 2]!)).project(camera);
         let dx = (f.x - c.x) * rect.w, dy = -(f.y - c.y) * rect.h;
@@ -674,7 +764,7 @@ export class World {
         [dx, dy] = len > 1e-6 ? [dx / len, dy / len] : [1, 0];
         side = dx >= 0 ? [dy, -dx] : [-dy, dx];
       }
-      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale, y, carX, carY, side, font, clip });
+      this.nameplatePoints.push({ tile, car, id: s.id[car]!, x: (rect.x + (p.x + 1) * rect.w / 2) / scale, y, carX, carY, side, font, clip, ...(arena ? { named: true } : {}) });
     }
   }
 
@@ -763,6 +853,9 @@ export class World {
     const f = s.frame;
     this.props.update(f);
     this.map?.updateRails(f);
+    if (this.overviewOn && !this.frameArena) return this.placeOverview(s);
+    this.overviewPose = this.overviewStats = null;
+    this.camera.fov = 50;
     // With cars on the field the camera frames them and the props; with none, the whole map (or the props).
     if (s.cars > 0 || !this.mapBox) for (let i = 0; f && i < f.debris; i++) grow(f.debrisPos[i * 3]!, f.debrisPos[i * 3 + 2]!);
     else [box[0], box[1], box[2], box[3]] = this.mapBox;
@@ -795,7 +888,145 @@ export class World {
     // chase and replay cameras pass no override and retain the accepted road-level look.
     this.overviewDepth = dist + hz * Math.cos(tilt) - (this.mapBottom - this.target.y) * Math.sin(tilt);
   }
+
+  /** A hard spread (the field wants nearly the whole arena view, or its cars read under the TV target) offers the Grid
+   *  once it has held for a second of game time, and withdraws the offer a second after it ends: no flicker. */
+  private spread(raw: boolean, tick: number): boolean {
+    const st = this.spreadState;
+    if (raw !== st.raw) Object.assign(st, { raw, since: tick });
+    if (raw !== st.on && tick - st.since >= TICK_HZ) st.on = raw;
+    return st.on;
+  }
+
+  /** The HUD's edge bands round the arena Overview's gameplay frame (CSS px) and the share of the height left to it. */
+  private overviewBands(): { css: DOMRect; cssH: number; top: number; foot: number; share: number } {
+    const css = this.canvas.getBoundingClientRect();
+    const band = (sel: string) => {
+      const el = document.querySelector<HTMLElement>(sel);
+      return el && !el.hidden && el.offsetParent !== null ? el.getBoundingClientRect().height : 0;
+    };
+    const cssH = Math.max(1, css.height);
+    const top = Math.min(cssH * 0.2, band('.jj-ov-band'));
+    const foot = Math.min(cssH * 0.3, band('.jj-foot'));
+    return { css, cssH, top, foot, share: Math.max(0.5, (cssH - top - foot) / cssH) };
+  }
+
+  /** Points `cam` along an Overview pose, its image centred on the gameplay frame between the bands; returns its
+   *  view-projection matrix. */
+  private aimOverview(cam: PerspectiveCamera, pose: OverviewPose, top: number, foot: number, cssH: number): Matrix4 {
+    cam.fov = OVERVIEW.fovDeg;
+    cam.aspect = this.camera.aspect;
+    cam.position.fromArray(pose.position);
+    this.target.fromArray(pose.target);
+    const dist = cam.position.distanceTo(this.target);
+    cam.near = Math.max(0.5, dist * 0.02);
+    cam.far = dist * 4;
+    cam.updateProjectionMatrix();
+    cam.lookAt(this.target);
+    cam.updateMatrixWorld();
+    // The camera centres on the canvas: shift the image by half the bands' difference (in NDC, their difference over the
+    // height) to centre it on the gameplay frame.
+    cam.projectionMatrix.elements[9] += (top - foot) / cssH;
+    cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+    return new Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+  }
+
+  /** Replays recorded car positions (per sample, [id, x, z, y] per car, `dtS` apart) through a fresh Overview rig for this
+   *  arena and this screen: each sample's camera position, framed ground and view-projection matrix (P1-R11's motion
+   *  and look-ahead checks, deterministic whatever the frame rate). Null off an arena. */
+  replayOverview(samples: Array<Array<[number, number, number, number?]>>, dtS: number): Array<{ position: [number, number, number]; frame: number; vp: number[] }> | null {
+    if (!this.overviewRig) return null;
+    const rig = new OverviewRig(this.overviewRig.arena);
+    const cam = new PerspectiveCamera();
+    const { cssH, top, foot, share } = this.overviewBands();
+    const { width: w, height: h } = this.stats;
+    const keep = this.target.clone();
+    const out = samples.map((cars, i) => {
+      const pose = rig.update(cars, i ? dtS : 0, w / Math.max(1, h * share), share);
+      const vp = this.aimOverview(cam, pose, top, foot, cssH);
+      return { position: [cam.position.x, cam.position.y, cam.position.z] as [number, number, number], frame: pose.frame, vp: [...vp.elements] };
+    });
+    this.target.copy(keep);
+    return out;
+  }
+
+  /** The arena Overview (P1-R11): the rig frames the cars in the gameplay frame between the HUD's edge bands, stepped
+   *  by game time (a held or paused game holds the camera too); rings under the cars; the framing measured as data. */
+  private placeOverview(s: Sampled): void {
+    const rig = this.overviewRig!;
+    const t = s.tick;
+    if (this.overviewTick !== null && t < this.overviewTick - TICK_HZ) rig.reset();
+    const dt = this.overviewTick === null ? 0 : Math.max(0, Math.min(0.1, (t - this.overviewTick) / TICK_HZ));
+    this.overviewTick = t;
+    const cars: Array<[number, number, number, number]> = [];
+    for (let i = 0; i < s.cars; i++) cars.push([s.id[i]!, s.pos[i * 3]!, s.pos[i * 3 + 2]!, s.pos[i * 3 + 1]!]);
+    const { width: w, height: h } = this.stats;
+    const { css, cssH, top, foot, share } = this.overviewBands();
+    const pose = rig.update(cars, dt, w / Math.max(1, h * share), share);
+    const cam = this.camera;
+    const vp = this.aimOverview(cam, pose, top, foot, cssH);
+    this.overviewDepth = cam.position.distanceTo(this.target) + pose.frame;
+    this.overviewPose = pose;
+    this.overviewTrace?.push({ tick: t, position: [cam.position.x, cam.position.y, cam.position.z], frame: pose.frame, vp: [...vp.elements] });
+    // The framing as data: each car's screen box (its oriented extents), the median car height and the padded envelope.
+    const kx = css.width / Math.max(1, w), frameBox = { left: 0, top, right: css.width, bottom: cssH - foot };
+    const pad = OVERVIEW.padM;
+    const boxes: OverviewStats['cars'] = [];
+    let env: [number, number, number, number] | null = null;
+    const heights: number[] = [];
+    for (let i = 0; i < s.cars; i++) {
+      this.q.fromArray(s.rot, i * 4);
+      const box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
+      const padded: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const [sx, sy, sz] of [[-1, 0, -1], [1, 0, -1], [-1, 0, 1], [1, 0, 1], [-1, 1, -1], [1, 1, -1], [-1, 1, 1], [1, 1, 1]] as const) {
+        for (const [b, extra] of [[box, 0], [padded, pad]] as const) {
+          this.v.set(sx * (CAR_HALF[0] + extra), sy * CAR_HALF[1], sz * (CAR_HALF[2] + extra)).applyQuaternion(this.q);
+          this.v.x += s.pos[i * 3]!;
+          this.v.y += s.pos[i * 3 + 1]!;
+          this.v.z += s.pos[i * 3 + 2]!;
+          this.v.applyMatrix4(vp);
+          const x = ((this.v.x + 1) / 2) * w * kx, y = ((1 - this.v.y) / 2) * h * kx;
+          b[0] = Math.min(b[0], x);
+          b[1] = Math.min(b[1], y);
+          b[2] = Math.max(b[2], x);
+          b[3] = Math.max(b[3], y);
+        }
+      }
+      const inFrame = box[0] >= frameBox.left && box[2] <= frameBox.right && box[1] >= frameBox.top && box[3] <= frameBox.bottom;
+      boxes.push({ car: s.id[i]!, box: box.map((n) => +n.toFixed(1)) as [number, number, number, number], inFrame });
+      heights.push(box[3] - box[1]);
+      env = env ? [Math.min(env[0], padded[0]), Math.min(env[1], padded[1]), Math.max(env[2], padded[2]), Math.max(env[3], padded[3])] : [...padded];
+    }
+    heights.sort((a, b) => a - b);
+    const medianCarPx = heights.length ? heights[heights.length >> 1]! : 0;
+    const frameW = frameBox.right - frameBox.left, frameH = frameBox.bottom - frameBox.top;
+    const targetPx = OVERVIEW.carHeightTarget * frameH;
+    let unused = 1;
+    if (env) {
+      const ew = Math.max(0, Math.min(env[2], frameBox.right) - Math.max(env[0], frameBox.left));
+      const eh = Math.max(0, Math.min(env[3], frameBox.bottom) - Math.max(env[1], frameBox.top));
+      unused = 1 - (ew * eh) / Math.max(1, frameW * frameH);
+    }
+    this.overviewStats = {
+      frame: frameBox,
+      cars: boxes,
+      medianCarPx: +medianCarPx.toFixed(1),
+      targetPx: +targetPx.toFixed(1),
+      envelope: env ? (env.map((n) => +n.toFixed(1)) as [number, number, number, number]) : null,
+      unusedShare: +unused.toFixed(3),
+      spread: this.spread(s.cars > 1 && (pose.wanted >= pose.maxFrame * OVERVIEW.spreadOfArena || medianCarPx < targetPx), t),
+      frameM: +pose.frame.toFixed(2),
+      wantedM: +pose.wanted.toFixed(2),
+      maxFrameM: +pose.maxFrame.toFixed(2),
+    };
+    const ringR = Math.max(OVERVIEW.ringM, pose.frame * 0.03);
+    const paint = this.vehicles ? (i: number) => this.vehicles!.paintOf(s.id[i]!) : () => '#f5c542';
+    this.overviewRings.update(s.cars, s.pos, s.rot, ringR, paint);
+  }
 }
+
+/** Each car's half extents for the Overview's screen boxes (m): half width, height, half length. */
+const CAR_HALF: [number, number, number] = [1, 1.5, 2.2];
 
 /** The grid's gutter between tiles, in device px. */
 function gutterOf(w: number, h: number): number {

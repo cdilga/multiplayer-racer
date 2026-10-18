@@ -32,5 +32,30 @@
     "maxDtS": 0.1,
     "groundClearM": 1.2,
     "losMaxLiftM": 8, "airFromM": 0.9, "airHold": 0.6, "airHoldMaxM": 4, "groundHeadroomM": 1.0, "groundRise": 6, "groundSettle": 2.5, "groundLookAheadS": 0.8, "groundAimS": 0.15
+  },
+  "overview": {
+    "//": "The Derby Overview (P1-R11, master 6.4, R22/R107; web/host/src/camera/overview/rig.ts), seeded from the accepted POC rig (art/ui/poc/shared/framing.json overview, P1-U05.4). Fixed pitch and heading. It frames each car now and lookAheadS ahead plus marginM, on critically damped springs (smooth times s, speed limits m/s; maxZoomOutMps lets the frame open fast enough that a car never leaves it), zooming out quicker than in, with where a car is heading stopped at the bowl's lip, never framing more than the whole bowl (its lip plus lipMarginM) or less than minFrameM of ground. The POC's fixed 120-165 m frame was for its fixed bowl; the game's arena scales with the car count (P1-M10), so the frame follows the cars down to minFrameM. carHeightTarget is the TV profile's median car height as a share of the gameplay frame's height (R22 initial target); padM pads each car for the unused-ground metric; ringM sizes the identity ring under each car; transitionMs is the Grid/Overview switch; spreadOfArena: when the cars want this share of the whole-arena frame (or read under the target) for a second, the Overview offers the Grid.",
+    "pitchDeg": 60,
+    "fovDeg": 48,
+    "lookAheadS": 1.6,
+    "velocitySmoothS": 0.3,
+    "goalSmoothS": 0.8,
+    "marginM": 4,
+    "deadZoneM": 2.5,
+    "deadZoneFrame": 0.06,
+    "smoothTimeS": {
+      "pan": 1.3,
+      "zoomOut": 0.8,
+      "zoomIn": 2.4
+    },
+    "maxPanMps": 14,
+    "maxZoomMps": 12,
+    "maxZoomOutMps": 20,
+    "minFrameM": 18,
+    "lipMarginM": 4,
+    "carHeightTarget": 0.035, "spreadOfArena": 0.9,
+    "padM": 3,
+    "ringM": 2.6,
+    "transitionMs": 300
   }
 }

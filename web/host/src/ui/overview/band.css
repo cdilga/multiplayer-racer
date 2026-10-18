@@ -1,0 +1,31 @@
+/* P1-R11: the Derby Overview's thin top edge band (the clock, the damage-points standings, the Grid suggestion) and the
+   switch's explanation on a track. Same ink strip and type as the footer (R96), so the gameplay frame between them is
+   one clean rectangle. */
+.jj-ov-band {
+  position: absolute; left: 0; right: 0; top: 0; height: calc(var(--foot, max(5vh, 30px)) * .8); box-sizing: border-box; z-index: 3;
+  display: flex; align-items: center; gap: calc(var(--foot, 5vh) * .35); padding: 0 max(8px, 1.4vw);
+  background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot, 5vh) * .4), 3.2vw)/1.3 var(--font-body); white-space: nowrap; overflow: hidden;
+}
+.jj-ov-band[hidden] { display: none; }
+.ov-clock { flex: none; font: 900 italic 1.05em/1 var(--font-display); color: var(--c-saffron); letter-spacing: .02em; }
+.ov-standings { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.ov-run { display: inline-flex; gap: calc(var(--foot, 5vh) * .3); transform-origin: 0 50%; }
+.ov-item { display: inline-flex; align-items: center; gap: calc(var(--foot, 5vh) * .1); }
+.ov-item b { color: var(--c-saffron); font-family: var(--font-display); font-weight: 900; }
+.ov-item .badge { font-size: .8em; height: 1.5em; padding: 0 .25em .15em; }
+.ov-item .pts { opacity: .9; font-variant-numeric: tabular-nums; }
+.ov-suggest { flex: none; font: inherit; font-size: .85em; padding: .15em .7em .2em; color: var(--c-ink); background: var(--c-paper); border: 2px solid var(--c-saffron); border-radius: .5em; cursor: pointer; }
+.ov-suggest[hidden] { display: none; }
+.jj-ov-note {
+  position: absolute; left: 50%; bottom: calc(var(--foot, 5vh) * 1.3); transform: translateX(-50%); z-index: 4; max-width: min(90vw, 40em);
+  padding: .5em 1em .6em; background: var(--c-paper); color: var(--c-ink); border: 3px solid var(--c-ink); border-radius: .6em;
+  font: 700 min(calc(var(--foot, 5vh) * .42), 4vw)/1.3 var(--font-body); text-align: center; pointer-events: none;
+}
+.jj-ov-note[hidden] { display: none; }
+.foot-btn[data-act=camera][aria-disabled=true] { opacity: .55; }
+.jj-ov-band { pointer-events: auto; }
+html[data-jj-overview] .foot-pos { display: none; }
+.ov-run.tick { animation: ov-tick var(--ov-s, 20s) linear infinite; }
+.ov-copy { display: inline-flex; gap: inherit; padding-left: calc(var(--foot, 5vh) * .6); }
+@keyframes ov-tick { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ov-run.tick { animation-duration: calc(var(--ov-s, 20s) * 3); } }

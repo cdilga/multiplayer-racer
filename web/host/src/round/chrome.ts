@@ -116,15 +116,18 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   };
   new ResizeObserver(fitTicker).observe(posEl);
   const renderPositions = () => {
-    const order = racing() && room ? room.seats.filter((s) => s.position !== null && s.presence !== 'Left').sort((a, b) => a.position! - b.position!) : [];
-    const key = order.map((s) => `${s.seat}:${s.position}`).join();
+    // A derby ranks by damage points (P1-S10), a race by position.
+    const derby = room?.mode === 'derby';
+    const placeOf = (s: Seat) => (derby ? (s.derby?.rank ?? null) : s.position);
+    const order = racing() && room ? room.seats.filter((s) => placeOf(s) !== null && s.presence !== 'Left').sort((a, b) => placeOf(a)! - placeOf(b)! || a.number - b.number) : [];
+    const key = order.map((s) => `${s.seat}:${placeOf(s)}`).join();
     if (key === posKey) return;
     posKey = key;
     // The grid's Players cell reads the same list (layout/overlay.ts).
-    setPositions(order.map((s) => ({ place: s.position!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length })));
+    setPositions(order.map((s) => ({ place: placeOf(s)!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length })));
     posEl.dataset.count = String(order.length);
     posTrack.innerHTML = order.length
-      ? `<span class="fp-run">${order.map((s) => `<span class="fp-item"><b>${s.position}</b><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s)))}</span></span>`).join('')}</span>`
+      ? `<span class="fp-run">${order.map((s) => `<span class="fp-item"><b>${placeOf(s)}</b><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s)))}</span></span>`).join('')}</span>`
       : '';
     fitTicker();
   };
