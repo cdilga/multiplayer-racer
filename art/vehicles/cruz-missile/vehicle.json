@@ -1,8 +1,10 @@
 {
  "id": "cruz-missile",
  "what": "Contract data the geometry doesn't carry (P1-V02): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into cruz-missile.asset.json. Hinges are plan §6.3's (P1-V03): doors 0–70° about the front edge, front and back hang 0–25° about their top edge, wheels ±6° camber; the pivots (model.js) sit on those hinge lines. +X is the car's left.",
+ "colliderPoints": "colliders.json",
+ "colliderNote": "The physics hulls are frozen at the P1-V02 bake (colliders.json, the per-part collision points of its LOD0 colliders): br-bwju.11 rebuilt the visuals against the contact sheet, and the Cruz is in the feel bank (flip-recover, air-level, air-pitch-crash, two-wheels-off), whose outcomes rest on this hull. Regenerate it only with the scenario baselines.",
  "lods": [
-  { "maxTris": 1300 },
+  { "maxTris": 2800 },
   { "maxTris": 900 },
   { "maxTris": 600 }
  ],

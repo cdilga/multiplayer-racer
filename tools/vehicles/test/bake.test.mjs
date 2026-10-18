@@ -1,8 +1,8 @@
 // P1-V02: the Cruz Missile bake (node --test tools/vehicles/test/).
 // - Two bakes give identical bytes, and they are exactly the committed files (an LFS pointer counts by its sha256 oid).
-// - Every LOD loads through three.js's GLTFLoader with the contract's nodes. Each part has the same bounds as Spike J's
-//   own model, except the documented changes: tyres sized to rest on the ground, LOD2 without the whip's mount block, and
-//   sides named physically (Spike J's door_FR / wheel_FR are on +X, the car's left: here door_FL / wheel_FL).
+// - Every LOD loads through three.js's GLTFLoader with the contract nodes, one shared atlas material, wheels resting on the
+//   ground and triangle counts inside the sidecar's budgets (br-bwju.11 rebuilt the body against its sheet, so the old
+//   comparison with Spike J's bounds and counts is gone; its evidence stays in spikes/art-pipeline/J-cruze-lowpoly/).
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,9 +17,6 @@ import { bake, committedSha, PARTS } from '../bake.mjs';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const DIR = path.join(REPO, 'art/vehicles/cruz-missile');
 const ANCHORS = ['cam_fp', 'cam_tp_target', 'com', 'roof_number', 'lplate_front', 'lplate_rear'];
-const P = JSON.parse(fs.readFileSync(path.join(DIR, 'params.json'), 'utf8'));
-const spike = await import(path.join(REPO, 'spikes/art-pipeline/J-cruze-lowpoly/model.js'));
-const SPIKE_NAME = (p) => (/_[FR][LR]$/.test(p) ? p.slice(0, -1) + (p.endsWith('L') ? 'R' : 'L') : p);
 
 const first = await bake(DIR);
 
@@ -44,12 +41,8 @@ function load(bytes) {
 }
 
 const box = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().setFromObject(o); };
-const near = (a, b, tol, what) => {
-  for (const k of ['x', 'y', 'z']) for (const m of ['min', 'max']) assert.ok(Math.abs(a[m][k] - b[m][k]) <= tol, `${what} ${m}.${k}: ${a[m][k]} vs spike ${b[m][k]}`);
-};
-
 for (const lod of [0, 1, 2]) {
-  test(`LOD${lod} loads in three.js with the contract nodes and Spike J's bounds`, async () => {
+  test(`LOD${lod} loads in three.js with the contract nodes`, async () => {
     const gltf = await load(first.files.get(`cruz-missile.lod${lod}.glb`));
     const root = gltf.scene.children[0];
     assert.equal(root.name, 'cruz-missile');
@@ -65,33 +58,16 @@ for (const lod of [0, 1, 2]) {
     assert.equal(mat.map?.name, 'atlas');
     assert.equal(mat.emissiveMap?.name, 'emissive');
 
-    const ref = spike.build(P, lod);
-    const tyreGrowth = P.wheelR * (1 / Math.cos(Math.PI / spike.LODS[lod].wheelSeg) - 1);
-    for (const p of PARTS) {
-      const mine = box(root.getObjectByName(p)), theirs = box(ref.parts[SPIKE_NAME(p)]);
-      if (p.startsWith('wheel')) {
-        // The same wheel, its tyre grown so the bottom flat rests on the ground.
-        assert.ok(Math.abs(mine.min.y) < 1e-5, `${p} rests on the ground (min y ${mine.min.y})`);
-        for (const k of ['x', 'y', 'z']) {
-          assert.ok(mine.min[k] <= theirs.min[k] + 1e-5 && mine.max[k] >= theirs.max[k] - 1e-5, `${p} contains Spike J's wheel`);
-          assert.ok(theirs.min[k] - mine.min[k] <= tyreGrowth + 1e-5 && mine.max[k] - theirs.max[k] <= tyreGrowth + 1e-5, `${p} grows ≤ ${tyreGrowth}`);
-        }
-        assert.ok(Math.abs(mine.min.x - theirs.min.x) < 1e-5 && Math.abs(mine.max.x - theirs.max.x) < 1e-5, `${p} keeps its width`);
-      } else {
-        near(mine, theirs, 1e-5, `LOD${lod} ${p}`);
-      }
+    for (const p of PARTS.filter((q) => q.startsWith('wheel'))) {
+      const mine = box(root.getObjectByName(p));
+      assert.ok(Math.abs(mine.min.y) < 1e-5, `${p} rests on the ground (min y ${mine.min.y})`);
     }
-    // The whole car: Spike J's bounds, except that it now sits on the ground.
     const all = new THREE.Box3();
     for (const p of PARTS) all.union(box(root.getObjectByName(p)));
-    const refAll = box(ref.group);
-    assert.ok(Math.abs(all.min.y) < 1e-5);
-    near({ min: { ...all.min, y: refAll.min.y }, max: all.max }, refAll, 1e-5, `LOD${lod} car`);
-
-    // Triangles: Spike J's counts, minus LOD2's whip mount block.
+    assert.ok(Math.abs(all.min.y) < 0.2 && all.max.y < 1.7, `the car stands ${all.min.y}..${all.max.y} m`);
     const tris = PARTS.reduce((t, p) => t + root.getObjectByName(p).geometry.attributes.position.count / 3, 0);
-    assert.equal(tris, [1264, 890, 594][lod]);
-    assert.equal(ref.stats.tris - tris, lod === 2 ? 12 : 0);
+    const budget = JSON.parse(new TextDecoder().decode(first.files.get('cruz-missile.asset.json'))).lods[lod].maxTris;
+    assert.ok(tris <= budget, `LOD${lod}: ${tris} triangles, budget ${budget}`);
   });
 }
 

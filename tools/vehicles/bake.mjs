@@ -71,6 +71,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
   const { drawAtlas } = await import(url('atlas.js'));
   const P = JSON.parse(fs.readFileSync(path.join(vehicleDir, 'params.json'), 'utf8'));
   const V = JSON.parse(fs.readFileSync(path.join(vehicleDir, 'vehicle.json'), 'utf8'));
+  const frozenColliders = V.colliderPoints ? JSON.parse(fs.readFileSync(path.join(vehicleDir, V.colliderPoints), 'utf8')) : null;
   const id = V.id, pivots = model.pivots(P), files = new Map(), report = { id, lods: [] }, SET = partSet(V);
 
   const atlas = paintKeyedAtlas(drawAtlas); // premultiplied paint coverage in alpha (br-vhtm)
@@ -139,7 +140,10 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     if (lod === 0) {
       for (const p of SET) {
         const part = parts[p], pv = pivots[p], pts = [], skip = part.noCollide ?? [];
-        for (let i = 0; i < part.positions.length; i += 3) {
+        // vehicle.json `colliderPoints`: a file of per-part collision points (vehicle space) the bake uses instead of the
+        // visual geometry, so a visual rebuild leaves the car's physics hull exactly as it was (the Cruz, br-bwju.11)
+        if (frozenColliders) pts.push(...frozenColliders[p]);
+        else for (let i = 0; i < part.positions.length; i += 3) {
           // decoration the model marks as no collision surface (soups' noCollide vertex ranges: aerials, fins, calipers)
           if (skip.some(([a, b]) => i / 3 >= a && i / 3 < b)) continue;
           const q = [part.positions[i] + pv[0], part.positions[i + 1] + pv[1], part.positions[i + 2] + pv[2]];
