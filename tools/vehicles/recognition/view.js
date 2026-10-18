@@ -35,13 +35,23 @@ for (const lod of asset.lods) {
   root.visible = false; scene.add(root); cars.push(root);
 }
 // camera directions from the car's centre (the y is the elevation)
+const FILL = 0.92;
 const DIRS = { front: [0, 0.22, 1], 'front-left': [0.75, 0.38, 0.75], 'front-right': [-0.75, 0.38, 0.75], side: [1, 0.12, 0], 'rear-left': [0.75, 0.38, -0.75], rear: [0, 0.22, -1], top: [0, 1, 0.0001] };
 window.__render = (lod, view) => {
   cars.forEach((c, i) => { c.visible = i === lod; });
   const car = cars[lod], box = new THREE.Box3().setFromObject(car), mid = box.getCenter(new THREE.Vector3());
   const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 100), d = new THREE.Vector3(...DIRS[view]).normalize();
-  cam.position.copy(mid).addScaledVector(d, (view === 'top' || view === 'side' ? 9.2 : 8.4) * ZOOM);
   if (view === 'top') cam.up.set(0, 0, -1);
+  // fit: the car's bounding box fills FILL of the frame from every view, so a longer car isn't cropped and a shorter one isn't
+  // small (round 2 of br-bwju.12: the fixed 8.4 / 9.2 m distances cut the 5 m AU's nose off); --zoom scales the result
+  const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+  let dist = 8.4;
+  for (let k = 0; k < 6; k++) {
+    cam.position.copy(mid).addScaledVector(d, dist); cam.lookAt(mid); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    const m = Math.max(...corners.map((c) => { const p = c.clone().project(cam); return Math.max(Math.abs(p.x), Math.abs(p.y)); }));
+    dist *= m / FILL;
+  }
+  cam.position.copy(mid).addScaledVector(d, dist * ZOOM);
   cam.lookAt(mid);
   renderer.render(scene, cam);
   return renderer.domElement.toDataURL('image/png');

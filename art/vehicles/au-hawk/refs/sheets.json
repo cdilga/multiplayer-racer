@@ -1,5 +1,53 @@
 {
- "what": "Reference sheets for tools/vehicles/fit (br-bwju.11): Muse Image turnarounds (art/ui/frames/generate.mjs --prompt refs/prompts/<sheet>.txt; ledger art/ui/frames/ledger.jsonl). The Tradie Ute had no contact sheet before this; lod-plus-1 was drawn from the Cruz sheet's layout and the br-bwju.8 render, lowest-lod from lod-plus-1. Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets, one view each.",
- "sheets": { "lod1": "lod-plus-1.png", "lowest": "lowest-lod.png" },
- "views": { "hero": [0, 0, 1450, 860], "top": [1460, 0, 1920, 870], "front": [0, 880, 470, 1280], "side": [480, 880, 1425, 1280], "rear": [1430, 880, 1920, 1280] }
+ "what": "Reference sheets for tools/vehicles/fit, round 2 of br-bwju.12 (2026-10-18): a literal series-1 AU Falcon, generated with Muse Image (art/ui/frames/generate.mjs; every call in art/ui/frames/ledger.jsonl) as a chain, each step's prompt in prompts/round2/: 1 a calibration photograph of a real AU (Ford badges and plates in it; used only as the next step's reference, never committed); 2 that photo redrawn as a flat-shaded orange low-poly render with the base AU face (teardrop lamps, oval fish-mouth grille, one bar, a plain blank oval badge); 3 the turnaround in the Hawk Dash sheet's layout from that redraw (the r2a sheets); 4 the rear redrawn as the AU's (rounded corner lamps, plain oval on the boot; r2c); 5 the face widened and clarified (r2d, sheet 4 of 4 = lod-plus-1.png); 6 lowest-lod.png from lod-plus-1.png. Before modelling, crops of the sheets were shown to claude-haiku-5-5 with the recognition prompt (docs/evidence/P1-V-au-hawk/recognition.md, 'Concept check'). Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets. segment.dark 0.16 keeps the soft shadow under the car out of the masks; patch adds the side view's headlamp, which the grey backdrop swallows.",
+ "sheets": {
+  "lod1": "lod-plus-1.png",
+  "lowest": "lowest-lod.png"
+ },
+ "views": {
+  "hero": [
+   0,
+   0,
+   1450,
+   860
+  ],
+  "top": [
+   1460,
+   0,
+   1920,
+   870
+  ],
+  "front": [
+   0,
+   880,
+   470,
+   1280
+  ],
+  "side": [
+   480,
+   880,
+   1425,
+   1280
+  ],
+  "rear": [
+   1430,
+   880,
+   1920,
+   1280
+  ]
+ },
+ "segment": {
+  "sat": 0.2,
+  "dark": 0.16
+ },
+ "patch": {
+  "side": [
+   [
+    532,
+    1080,
+    32,
+    24
+   ]
+  ]
+ }
 }

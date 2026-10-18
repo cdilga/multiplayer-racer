@@ -1,6 +1,6 @@
 {
  "id": "au-hawk",
- "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into au-hawk.asset.json. The Cruz Missile's hinge layout (plan \u00a76.3): doors 0-70 degrees about the front edge, front (nose, bonnet, teardrop lamps, oval grille, bumper, front flares) and back (boot, wrap-around tail lamps, lip spoiler, bumper, rear flares) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
+ "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into au-hawk.asset.json. The Cruz Missile's hinge layout (plan \u00a76.3): doors 0-70 degrees about the front edge, front (nose, bonnet, teardrop lamps, oval grille, bumper) and back (boot, wrap-around tail lamps, winged spoiler, bumper) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
  "lods": [
   {
    "maxTris": 3000
@@ -187,23 +187,23 @@
   ],
   "roof_number": [
    0,
-   1.61,
-   -0.3
+   1.65,
+   -0.4
   ],
   "lplate_front": [
    0,
    0.4,
-   2.3
+   2.36
   ],
   "lplate_rear": [
    0,
    0.55,
-   -2.3
+   -2.56
   ]
  },
  "anchorNotes": {
   "cam_fp": "Driver's eye: right-hand drive, so the car's right (-X).",
-  "roof_number": "On the roof crown, midway along the painted roof (stations z -0.1 and -0.5).",
+  "roof_number": "On the roof crown, midway along the painted roof (stations z 0.06 and -0.41, crown 1.64).",
   "lplate_front": "On the bumper below the oval grille.",
   "lplate_rear": "On the boot lid's lower edge between the tail lamps."
  },

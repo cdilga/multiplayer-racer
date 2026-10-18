@@ -13,22 +13,22 @@
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.
 
-export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator', 'roofblack', 'taildk'];
+export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'stripe', 'grille', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator', 'roofblack', 'taildk', 'barrel'];
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
 export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
 /** Metres the livery regions cover: side (along the car from the nose, height), top (along the car from the nose, width). */
-export const SPAN = { side: [4.8, 1.6], top: [4.8, 1.9] };
+export const SPAN = { side: [5.1, 1.8], top: [5.1, 2.1] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#f06a1a', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#b9bfc8', head: '#ffd98a', led: '#fff6dc', tail: '#e8311f',
+  paint: '#f06a1a', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#b9bfc8', head: '#dde2e6', led: '#fff6dc', tail: '#a8161b',
   stripe: '#16181c', grille: '#111214', white: '#f2f4f8', fog: '#ffe9b0', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', indicator: '#ff9a1a',
-  roofblack: '#141518', taildk: '#3a1412',
+  roofblack: '#141518', taildk: '#3a1412', barrel: '#7a8089',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };
-const EMIT = { head: '#ffd070', led: '#fff2d0', tail: '#c81a0c', fog: '#ffe2a0', indicator: '#ff8a10', taildk: '#1e0503' };
+const EMIT = { head: '#5a5448', led: '#fff2d0', tail: '#c81a0c', fog: '#ffe2a0', indicator: '#ff8a10', taildk: '#1e0503' };
 
 // The drawing, as data: rectangles and polygons in atlas pixels (y down from the top of the image), drawn in order.
 // Side: the sheet's black "C" graphic, measured off its side view (metres from the nose, height): a broad leg down behind

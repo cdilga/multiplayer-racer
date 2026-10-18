@@ -1,0 +1,5 @@
+Low-poly game asset turnaround sheet, 16:9, light grey seamless background, the exact same car as the attached sheet, in the same layout: large 3/4 front hero view top-left, top-down plan view in the right column (nose at the bottom), bottom row: front view, left side view (nose pointing left), rear view. Same car in every view, the same scale in the small views.
+
+The car: the attached 1998 Ford AU Falcon sedan caricature, same proportions, roofline and stance, redrawn at the lowest detail level. Keep its identifying shapes as big, simple flat decals so they survive: the two large swept teardrop headlamps wrapping up into the guards, the oval fish-mouth grille opening with its single horizontal body-colour bar and small plain blank oval badge, the big rounded tail lamps wrapping round the rear corners, the plain oval badge on the boot lid, the lip spoiler. Colours as in the attached sheet.
+
+very low poly, about 300 triangles, octagon wheels, lights as flat decals. Flat-shaded facets, clean studio light, soft shadow. No antenna, no text, no lettering, no logos, no number plates, no brand names, no people.
