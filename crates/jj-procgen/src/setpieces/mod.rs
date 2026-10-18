@@ -922,6 +922,21 @@ fn site_ok(
     {
         return Err("too close to another piece");
     }
+    // The whole span, run-out included, keeps off a loop (its core kept a beat's spacing, but a run-out ran into a
+    // loop's entry and its end gate stood inside the loop: OutbackBitumen seed 95, br-xlvx.6.5).
+    if map
+        .features
+        .iter()
+        .filter_map(jj_map::looping::LoopDesign::of)
+        .any(|l| {
+            let (entry, exit) = (l.entry, l.exit);
+            span_contains(line, from, to, entry)
+                || span_contains(line, from, to, exit)
+                || span_contains(line, entry, exit, from)
+        })
+    {
+        return Err("a loop in the span");
+    }
     // Straight core: kicker base to landing end, and the approach's last 20 m.
     // 40 m of straight before the kicker: a car (or the autopilot) settles onto the line before the ramp.
     let pre = line.offset(base, -40.0);
