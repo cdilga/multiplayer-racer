@@ -16,6 +16,8 @@ Every image below was opened and looked at.
 - `captures/tv-practice-tile-phone-landscape-915x412-1920x1080.webp`, `captures/tv-practice-tile-phone-portrait-412x915-1920x1080.webp`,
   `captures/tv-practice-tile-phone-small-375x667-1920x1080.webp`: TV 1920x1080 with 6-8 tiles, the practising phone's tile on its course with prompts,
   others racing; footer "6 racing · 1 practising · round 1".
+- `captures/tv-practice-shadows-1280x720.webp`, `captures/tv-practice-shadows-1920x1080.webp`: follow-up run with the practice
+  tile's own shadow pass: the practice car casts its sun shadow on its course, and the round's tiles keep theirs.
 - `captures/tv-practice-tile-resized-1366x768.webp`: the TV resized to 1366x768 while practising: tiles reflow, the practice
   tile keeps its course, prompt and pill.
 - `captures/phone-join-card-practise-first-landscape-915x412.webp`, `captures/phone-join-card-practise-first-portrait-412x915.webp`, `captures/phone-join-card-practise-first-small-375x667.webp`: the join
@@ -46,12 +48,12 @@ Every image below was opened and looked at.
 7. Not visual but found by the native test: Join the race after two seconds of no practice input started the round car on
    the autopilot (a stale sample read as a dropout). Fixed (fresh input state on joining).
 
+8. Follow-up (coordinator): the practice course had no sun shadows; practice tiles now get their own shadow pass. The results
+   reel recorded practice cars; it no longer does (`reel-recorder.test.mjs`, the c10 journey's reel check).
+
 ## Remaining defects
 
-- The practice course is drawn without the sun's shadows (the one shadow box stays over the round, where it belongs); the
-  car's own contact shadow shows. Acceptable for a practice course; no bead.
 - A practice car's detached parts aren't drawn (the practice trailer carries its props and cones, not part records).
-- The round's results reel (P1-R09) records practice cars like any car record, 20 km away from every replay camera.
 
 ## Not covered
 

@@ -23,6 +23,13 @@ Playwright Chromium 151 headless with the GPU flag (`JJ_CHROMIUM_GPU=1`). Emulat
   cameras its ground and obstacles. Tiles follow car ids (they used ids as snapshot indices, which only held while ids were
   0..n). Practice cars are left out of the shadow box's centre and the arena Overview's framing. Every tile camera's far plane
   is 2 km, so a tile sees only its own course.
+- **Shadows:** practice tiles draw after the round's tiles, each after moving the sun's shadow box over its car and redrawing
+  the shadow map (one extra shadow pass per practising tile, culled to the practice course; the round's tiles keep the
+  frame's one shared pass). Measured: +46 draw calls at 1280x720 with one practising tile (385 → 431), frames still at vsync.
+- **Results reel:** practice cars never reach the round's highlights: the recorder (`web/host/src/reel/recorder.ts`,
+  `roundOnly`) drops practice car records from every frame it keeps or measures for `air`, and practice actors from every
+  event and identity; a practising racer's reel identity is its round car. Bug clips and the session record carry no car
+  data from the page (clips are the round sim's journal, which never held the practice world), so nothing to exclude there.
 
 ## Cost (`journey-run.json`, native measurement below)
 
@@ -31,7 +38,7 @@ Playwright Chromium 151 headless with the GPU flag (`JJ_CHROMIUM_GPU=1`). Emulat
 | Native, release, one practice world step (greybox, one car) | **97 µs per tick** (1.2 % of the 8.33 ms tick) |
 | Native, release, the host's whole tick with 4 racing + 1 practice world | 299 µs per tick |
 | Browser worker, held clock, ms per tick (step + snapshot + messaging, median of 3) | round only 2.67 · with practice 2.51 · after join (5 racing) 2.54: inside the noise |
-| Draw calls at 1280x720, 4 racers + QR tile → + practice tile → after join (5 round tiles) | 268 → 385 → 340: the practice course adds ~45 draws over a round tile |
+| Draw calls at 1280x720, 4 racers + QR tile → + practice tile → after join (5 round tiles) | 268 → 385 → 340 before practice shadows; 268 → 431 → 344 with them (journey-run.json) |
 | Frame time (vsync-capped headless) | 16.6-16.7 ms in all three |
 
 Native: `cargo test --release -p jj-wasm-host --lib practice_cost -- --ignored --nocapture` on eris (Linux x64).

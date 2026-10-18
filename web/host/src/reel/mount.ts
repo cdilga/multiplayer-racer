@@ -4,9 +4,11 @@ import type { RoundScreens } from '../round/screens';
 import { HighlightRecorder, type Identity } from './recorder';
 import { ReelPlayer } from './player';
 
-const actorsOf = (room: RoomView | null): Identity[] => (room?.seats ?? []).flatMap(s => s.car === null ? [] : [{
-  seat:s.seat, car:s.car, number:s.number, name:s.name, rgb:[...s.rgb] as [number,number,number],
-}]);
+// P1-C10: a practising seat's identity is its round car (if it has one), never its practice car.
+const actorsOf = (room: RoomView | null): Identity[] => (room?.seats ?? []).flatMap(s => {
+  const car = s.practice ? (s.roundCar ?? null) : s.car;
+  return car === null ? [] : [{ seat:s.seat, car, number:s.number, name:s.name, rgb:[...s.rgb] as [number,number,number] }];
+});
 
 /** Additive listeners: scoring, audio and transport retain their own event feeds and pooled-buffer lifecycle. */
 export function mountReel(client: SimClient, world: World, screens: RoundScreens): void {

@@ -1,6 +1,6 @@
 // Presentation history only. Eviction never changes simulation, scores, seats or live debris.
 import defaults from './profile.json' with { type: 'json' };
-import type { Frame } from '../render/snapshot';
+import { PRACTICE_CAR_BASE, isPractice, type Frame } from '../render/snapshot';
 import { packFrame, packedFrameBytes } from './frame';
 
 export type ReplayProfile = typeof defaults;
@@ -9,6 +9,28 @@ export interface Highlight { tick: number; kind: 'detach' | 'wreck' | 'air' | 'f
 export interface StoredFrame { tick: number; bytes: ArrayBuffer }
 export interface Clip { start: number; end: number; frames: StoredFrame[]; events: Highlight[] }
 const textBytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).byteLength;
+/** A practice car's id (P1-C10): its seat's own practice world, never part of the round. */
+const practiceCar = (car: number) => car >= PRACTICE_CAR_BASE;
+
+/** The round's own cars only (P1-C10): a newcomer's practice car and course never reach the round's highlights or replay
+ *  frames. Returns `f` itself when nobody practises. */
+export function roundOnly(f: Frame): Frame {
+  let keep = 0;
+  for (let i = 0; i < f.cars; i++) if (!isPractice(f.flags[i]!)) keep++;
+  if (keep === f.cars && !f.practice?.length) return f;
+  const out: Frame = { ...f, cars: keep, practice: [], id: new Uint32Array(keep), life: new Uint32Array(keep), flags: new Uint32Array(keep),
+    pos: new Float32Array(keep * 3), vel: new Float32Array(keep * 3), boost: new Float32Array(keep), throttle: new Float32Array(keep),
+    rot: new Float32Array(keep * 4), steer: new Float32Array(keep) };
+  for (let i = 0, k = 0; i < f.cars; i++) {
+    if (isPractice(f.flags[i]!)) continue;
+    out.id[k] = f.id[i]!; out.life[k] = f.life[i]!; out.flags[k] = f.flags[i]!;
+    out.boost[k] = f.boost[i]!; out.throttle[k] = f.throttle[i]!; out.steer[k] = f.steer[i]!;
+    out.pos.set(f.pos.subarray(i * 3, i * 3 + 3), k * 3); out.vel.set(f.vel.subarray(i * 3, i * 3 + 3), k * 3);
+    out.rot.set(f.rot.subarray(i * 4, i * 4 + 4), k * 4);
+    k++;
+  }
+  return out;
+}
 
 export class HighlightRecorder {
   readonly profile: ReplayProfile;
@@ -52,8 +74,10 @@ export class HighlightRecorder {
     }
   }
 
-  private record(f: Frame, identities: Identity[]): void {
-    if (!this.context.byteLength || f.pauseMask || f.tick <= this.latest) return;
+  private record(raw: Frame, all: Identity[]): void {
+    if (!this.context.byteLength || raw.pauseMask || raw.tick <= this.latest) return;
+    const f = roundOnly(raw);
+    const identities = all.filter(id => !practiceCar(id.car));
     const p = this.profile;
     if (Number.isFinite(this.latest) && f.tick - this.latest > p.maxGapSeconds * p.tickHz) this.gap(f.tick);
     this.latest = f.tick;
@@ -88,10 +112,10 @@ export class HighlightRecorder {
   }
 
   event(e: Highlight): void {
+    // Names/paint are copied at the event, so a late leave/rename can't relabel past footage. Practice cars are never actors.
+    e = { ...structuredClone(e), actors: e.actors.filter(a => !practiceCar(a.car)) };
     if (!this.context.byteLength || !e.actors.length) return;
     const p = this.profile;
-    // Names/paint are copied at the event, so a late leave/rename can't relabel past footage.
-    e = structuredClone(e);
     if (e.kind === 'finish') {
       if (this.lastFinish && Math.abs(e.tick - this.lastFinish.tick) <= p.closeFinishSeconds * p.tickHz) {
         e.kind = 'close-finish';

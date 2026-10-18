@@ -23,6 +23,7 @@ import type { Snapshot } from '../worker/client';
 import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
 import { decodeSnapshot, isPractice, type Frame } from './snapshot';
+import { followSun } from './look';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { rosterSources } from './vehicles/registry';
@@ -131,6 +132,8 @@ export interface WorldStats {
   triangles: number;
   /** The LOD class each tile drew (one entry for the overview camera). */
   lods: number[];
+  /** P1-C10: shadow passes drawn for practice tiles since the page opened (one per practising tile per frame). */
+  practiceShadowPasses?: number;
 }
 
 /** A map built but not yet shown (`World.stageMap`). */
@@ -716,7 +719,15 @@ export class World {
     this.lastFrame = now;
     this.rig.players = view.count;
     const arrows: { x: number; y: number; w: number; h: number; angle: number }[] = [];
-    for (const t of this.tileGrid.tiles(now)) {
+    // P1-C10: tiles on a practice course draw last, each after moving the sun's shadow box over its car and redrawing the
+    // shadow map (one extra shadow pass per practising tile, of the practice course alone); the round's tiles before them
+    // share the frame's one shadow pass as always.
+    const onPractice = (seat: number) => {
+      const i = followIndex(s, view.follow?.[seat - 1] ?? seat - 1);
+      return i >= 0 && isPractice(s.flags[i]!);
+    };
+    const tiles = this.tileGrid.tiles(now);
+    for (const t of [...tiles.filter((t) => !onPractice(t.seat)), ...tiles.filter((t) => onPractice(t.seat))]) {
       const k = t.seat - 1;
       if (t.w < 1 || t.h < 1) continue;
       const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 2000));
@@ -759,6 +770,11 @@ export class World {
       r.setScissor(x, y, tw, th);
       r.setClearColor(SKY);
       r.clear();
+      if (i >= 0 && isPractice(s.flags[i]!)) {
+        followSun(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
+        r.shadowMap.needsUpdate = true;
+        this.stats.practiceShadowPasses = (this.stats.practiceShadowPasses ?? 0) + 1;
+      }
       this.launchCallouts.fit(cam);
       this.backend.render(this.scene, cam);
       this.nameplates(s, cam, t, t.seat, i);

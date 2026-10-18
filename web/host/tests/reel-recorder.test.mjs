@@ -102,3 +102,33 @@ test('a race-long overlapping event chain selects at most sixty seconds without 
   assert.ok(selected.reduce((n,c)=>n+(c.frames.at(-1).tick-c.frames[0].tick)/r.profile.tickHz,0)<=60);
   assert.deepEqual([...unpackFrame(selected[0].frames[0].bytes).id],[100,101]);
 });
+
+test('P1-C10: a practising newcomer\'s practice car never reaches the reel (frames, air events, actors)', () => {
+  const PRACTICE = 0x40000000 + 3;
+  const practiceId = { seat: 3, car: PRACTICE, number: 9, name: 'Newbie', rgb: [255, 210, 63] };
+  const all = [...identities, practiceId];
+  const withPractice = (tick, air = false) => {
+    const buf = new ArrayBuffer(snapshotBytes(3));
+    encodeSnapshot(buf, tick, [
+      { id: 100, life: 1, flags: 0, pos: [tick / 10, 1, 0], rot: [0, 0, 0, 1] },
+      { id: 101, life: 1, flags: 0, pos: [tick / 10, 1, 3], rot: [0, 0, 0, 1] },
+      // The practice car (flag bit 9) on its course far away, in the air for a while (it would make an `air` highlight).
+      { id: PRACTICE, life: 1, flags: (1 << 9) | (air ? 256 : 0), pos: [0, 2, 20000], rot: [0, 0, 0, 1] },
+    ]);
+    return decodeSnapshot(new DataView(buf));
+  };
+  const r = new HighlightRecorder(); r.reset({ map: 'fixture' });
+  for (let tick = 0; tick <= 600; tick += 2) r.capture(withPractice(tick * 2, tick > 100 && tick < 400), all);
+  event(r, { tick: 300, kind: 'detach', actors: [identities[0]] });
+  event(r, { tick: 310, kind: 'wreck', actors: [practiceId] });
+  for (let tick = 602; tick <= 800; tick += 2) r.capture(withPractice(tick * 2), all);
+  const clips = r.select();
+  assert.ok(clips.length > 0);
+  for (const c of clips) {
+    for (const f of c.frames) assert.ok(![...unpackFrame(f.bytes).id].includes(PRACTICE), 'no practice car in a replay frame');
+    for (const e of c.events) assert.ok(e.actors.every((a) => a.car !== PRACTICE), `no practice actor: ${JSON.stringify(e)}`);
+    assert.ok(!c.events.some((e) => e.kind === 'air'), 'the practice car\'s flight made no highlight');
+  }
+  assert.ok(r.actors().every((a) => a.car !== PRACTICE), 'no practice identity kept');
+  assert.deepEqual([...unpackFrame(clips[0].frames[0].bytes).id], [100, 101]);
+});

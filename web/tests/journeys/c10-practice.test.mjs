@@ -132,6 +132,8 @@ test('P1-C10: a newcomer practises in their own world while four race, then join
   await settle(host);
   await wait(host, () => [...document.querySelectorAll('.hud-tile [data-practice]')].some((e) => e.offsetParent));
   await shot(host, 'tv-practice-tile-1280x720');
+  // The practice tile draws with its own shadow pass (the sun's box over its car).
+  await wait(host, () => (window.__jjRender.stats().practiceShadowPasses ?? 0) > 0);
 
   // Practice: steer right then left (the first prompt), drive up the course and brake (the second), as a phone does.
   const sticks = (drive, action, ticks) =>
@@ -193,6 +195,11 @@ test('P1-C10: a newcomer practises in their own world while four race, then join
   assert.equal(r.ok, true, JSON.stringify(r));
   const last = r.worlds[r.worlds.length - 1];
   assert.equal(last.endHash, hash.stateHash, "the native replay ends in the browser host's full-state hash");
+  // The results reel never recorded the practice car (frames, events, actors).
+  const reel = await host.evaluate(() => window.__jjReel.inspect());
+  const practiceIn = JSON.stringify(reel).match(/"car":\s*(1073741\d{3})/);
+  assert.equal(practiceIn, null, `no practice car in the reel: ${practiceIn}`);
+  run.reel = { clips: reel.recorder.clips.length, latestTick: reel.recorder.latestTick };
   run.clip = { tick: hash.tick, browserHash: hash.stateHash, replayHash: last.endHash, worlds: r.worlds.length, checkpoints: r.worlds.map((w) => w.checkpoints?.length ?? 0), bytes: saved.bytes };
   assert.deepEqual(errors, []);
 });
