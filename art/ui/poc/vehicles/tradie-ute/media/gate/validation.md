@@ -1,65 +1,32 @@
-Vehicle Model Validation: PASS
+Vehicle Model Validation: PASS (with the WARNs below)
 
-Vehicle/part IDs: tradie-ute; core (cab, roof rack, snorkel, mirrors, steps), front (bonnet, grille, bull bar), back (tray, canopy,
-tray lamps, tow bar), door_FL/FR/RL/RR, wheel_FL/FR/RL/RR; interior blocks engine, cabin, boot
-Commit: the br-bwju.8 commit on v0.2-revamp (WhiteStream, 2026-10-16)
-Changed files: art/vehicles/tradie-ute/{model.js, atlas.js, params.json, review.src.json, tradie-ute.asset.json, tradie-ute.lod{0,1,2}.glb,
-tradie-ute.atlas.png, tradie-ute.emissive.png}; art/ui/poc/vehicles/tradie-ute/; docs/evidence/br-bwju.8/
-Requirement source: br-bwju.8 (owner review 2026-10-11: "keep the rear canopy and the actual roof rack, and dual cab ... a little too
-generic"); R123 (roster: the owner's Triton), R81 (code-built, faceted, lean budget), R86 (intact, loose, detached), R108 (identity
-paint); Playtest-1 plan 6.3 hinge lines
+Vehicle/part IDs: tradie-ute; core (cab with side glass and frames, roof rack, snorkel, mirrors, steps, bays), front (nose, bonnet scoop and vents, shield grille, lamps, bull bar, front flares), back (painted tray, canopy, tray lamps, step bumper, tow bar, rear flares), door_FL/FR/RL/RR, wheel_FL/FR/RL/RR (tyre, alloy rim, 8 spokes, hub); interior blocks engine, cabin, boot
+Commits: 48a28076 (model, refs, bake, profile sync) and the evidence commit that ships this file, on v0.2-revamp
+Changed files: art/vehicles/tradie-ute/{model.js, atlas.js, params.json, vehicle.json, review.src.json, tradie-ute.asset.json, tradie-ute.lod{0,1,2}.glb, tradie-ute.atlas.png, refs/}; assets/profiles/tradie-ute.json (geometry re-synced); tools/vehicles/view/{view.js, capture.mjs} (--ortho for a long car)
+Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), br-bwju.8 (keep the canopy, the real roof rack, the dual cab), R81, R86, R123; Playtest-1 plan 6.3 hinge lines
 
-Reference: the owner's 7 photos (eris ~/Work/dev/morayfield-house-3d/twin/site/sources/owner-inbox-2026-10-10/triton-reference.zip,
-kept private: number plate and house) and the owner's Triton mesh (morayfield-house-3d fixtures/landscape-viewer/0.9.11/vehicles/
-triton.ca0ed0aadd.glb). The side photo's outline is hand-traced into tools/evidence.js (PHOTO_SIDE).
+Method: lowpoly-model-from-refs. The Ute had no contact sheet: two Muse Image turnarounds were generated (refs/prompts/, the Cruz's layout as the example, the br-bwju.8 render as the content example; art/ui/frames/ledger.jsonl) and cut into masks (tools/vehicles/fit/extract.mjs). Structure by hand from the sheet (the Lion's construction: flares, framed glass panes, decor parts the bake leaves out of colliders, spoked tyres), then tools/vehicles/fit/opt.mjs on eris, 4 passes, numbers only, wheelR and track pinned (the sim's wheels), then a few profile heights set by hand against the sheet's taller nose and higher sill. No new LOD level.
 
-Visual evidence (Playwright Chromium headless, software GL; the bake viewer and docs/evidence/br-bwju.8/tools, not the host renderer):
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/tradie-ute/tradie-ute.asset.json --out docs/evidence/br-bwju.8`
-- reference-photo/sheet.png + score.json: LOD0 side against the owner's side photo outline (IoU 0.717)
-- reference-lod0/sheet.png + score.json: LOD0 against the Triton mesh, four views (side 0.738, top 0.804, front 0.742, rear 0.742; weighted 0.759)
-- damage-strip.png, damage-strip-overview.png: ten states (intact; doors loose; front+back loose; camber; front, door, back (tray and canopy), wheel detached; stripped shell)
-- paints-strip.png: white plus five player colours; grid-1/4/24.png: 1, 4 and 24 tiles (LOD0/1/2 mixed)
-- all by `node docs/evidence/br-bwju.8/tools/run.mjs --triton <triton.glb>`
+Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
+- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json, `node tools/vehicles/fit/capture.mjs tradie-ute --out <dir> --lod N --sheet lod1|lowest` (compose.py run on the Mac: eris has no PIL)
+- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png (the br-bwju.8 GLBs) and ladder-after-raw.png, `node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder --paint '#00adc9' --ortho 3.0`
+- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/tradie-ute/tradie-ute.asset.json --out <dir> --ortho 3.0`
+- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs tradie-ute --out <dir>`
+- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080) at 48a28076, every roster car four times, old = the br-bwju.8 GLBs routed in
 
 Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/tradie-ute: 1250 / 828 / 592 tris (budgets 1300 / 900 / 600); `--check`: byte-reproducible
-  LOD0 by part: core 368, front 310, back 256, doors 12 each, wheels 67 each, interiors 24 / 36 / 44
-- target/release/jj validate art/vehicles/tradie-ute/tradie-ute.asset.json: ok (jj.vehicle.v1, triangles per LOD [1250, 828, 592])
-- node --test tools/vehicles/test/: every tradie-ute test passes (pivots on hinge lines at LOD0/1/2, the same pivots at every LOD and in
-  the sidecar, defect injection). The two failures in the run are postie-bike's, another session's car mid-build (no sidecar yet).
-- node tools/vehicles/review/build.mjs, then check.mjs: the review page rebuilt from these files
+- node tools/vehicles/bake.mjs art/vehicles/tradie-ute: 2080 / 878 / 596 tris (asks 2400 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
+  - LOD0 per part: front 460, back 396, core 424, door_FL/FR/RL/RR 12 each, wheels 188 each
+- jj vehicle sync assets/profiles/tradie-ute.json: in sync with its sidecar. Hull +-1.19 m (mirrors and the other decoration now stay out of it; it was +-1.29 m); wheels (+-0.88 m, 0.43 m) unchanged
+- node --test tools/vehicles/test/ (eris scratch copy of the Mac tree): the Ute's pivot, sidecar, load and paint-key tests all pass; the only 4 failures are cruz-missile's, from another session's uncommitted rebuild in that copy
+- rch cargo test -p jj-sim --test tradie_ute: 5 passed
+- node tools/vehicles/review/check.mjs: every Vehicles-contract item present; review/build.mjs rebuilt the Ute's page from this evidence
 
 Findings:
-- PASS contract + reproducibility: the validator is clean, the bake is byte-reproducible, the part set is unchanged and identical at every LOD,
-  and the mass fractions and anchors are unchanged.
-- PASS budget + silhouette, with the by-eye cue pass below.
-  - The budgets hold at every LOD.
-  - IoU is 0.717 against the photo outline and 0.759 against the mesh. That is below the skill's ~0.95, on purpose: R123's roster cars
-    are caricatures, wider and lower than the real car, and the photo has perspective.
-  - The cues, each named with where it is: the canopy (back: black flat-top box over the full tray, wider than the cab, two lower doors
-    with a seam and two round locks a side); the flat tray and the checker-plate under-tray boxes (the back's flanks in the atlas); the
-    platform rack (core: rails, end slats, feet, wind deflector, rolled awning on the left); the dual cab (four doors); the MQ front
-    (front: tall trapezoid grille with six vertical chrome slats, chrome "dynamic shield" sweeps under swept headlights, on a tall
-    blunt nose); a solid black bull bar with hoop, light bar, fog lamps, plate and a yellow winch hook; the snorkel on the driver's
-    (right) A-pillar; a lift (body 8 cm higher over the wheels); black wheels with a silver lip; combination tray lamps.
-- PASS paint key / one material / draws per tile: there is still one atlas material, and two swatches were added (canopy, awning).
-  The part types haven't changed, so the draws per tile haven't either.
-- PASS damage states: front, back (now tray and canopy), the doors and the wheels each loosen and detach about their hinges, and
-  dark bays show where parts are missing.
-- PASS physics fit: `jj vehicle sync assets/profiles/tradie-ute.json` after PeachSpire's FL04.2 schema commit (27859cc5).
-  - Only `geometry` and `source` changed; `tuning` is byte-equal. The hull gains the canopy, and its bottom rises 0.275 to 0.335.
-  - Mass, the mass split and the origin are unchanged. `jj validate` says the profile is in sync with its sidecar.
-  - `rch exec -- cargo test -p jj-sim --test tradie_ute`: 5 passed. It settles at the design ride height, beats the Cruz head-on
-    with less bull-bar damage, laps the greybox under autopilot with no wreck, and responds to throttle.
-  - `--test arcade --test roster`: 1 + 5 passed.
-  - `cargo test -p jj-procgen --test jumps` fails 6, but on map checks that never involve a car, such as "a corner inside the jump
-    approach is rejected" and lip heights. The working tree has another session's uncommitted `assets/profiles/generator.json` and
-    `set-pieces.json`. That is not this bead's.
-  - The old R122 bank target `handling_ute` no longer exists after FL04.2.
-- PASS identity at the smallest tile:
-  - The first rebuild made the car read as a black box from the chase cam, because the canopy hid the seat colour.
-  - The canopy's lid now carries the seat colour; its sides and rear stay black like the owner's.
-  - In grid-24.png every car's colour reads from behind and above.
-
-Remaining blockers:
-- none (AC4, the owner's look on the review page, is ev:owner)
+- PASS contract + reproducibility (origin between the axles; anchors unchanged; part ids and hinge layout unchanged; mass fractions unchanged)
+- PASS budget: LOD0 2080 <= 2400 <= 3000; LOD1 878 <= 900; LOD2 596 <= 600
+- WARN silhouette: LOD0 weighted IoU 0.8729 -> 0.9024 (side 0.851 -> 0.867, top 0.939 -> 0.965, front 0.833 -> 0.890, rear 0.840 -> 0.884); LOD1 0.8725 -> 0.9018; LOD2 0.8847 -> 0.9162. Short of the skill's ~0.95: the sheet's body is taller and narrower than the sim's 0.43 m wheels on a 0.88 m track allow, and its tyres are bigger than the sim's
+- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): framed side glass, flares, 8-spoke rims, bonnet scoop, shield grille, swept lamps, bull bar with light bar, fog lamps, plate and winch hook, painted tray with tall lamps, step bumper with reversing lamps, canopy hardware, rack, snorkel, mirrors, J-line and shoulder line
+- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid)
+- PASS damage: intact -> loose -> detached for every part (damage-strip.png); dark bays behind the missing panels
+- WARN LOD1 and LOD2 drop the full rack, the snorkel's bends and the scoop's vents to fit their budgets; the grille's slots read as a grey block at those sizes

@@ -1,0 +1,73 @@
+{
+ "what": "Weighted silhouette IoU of the Tradie Ute against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). The Ute had no contact sheet before br-bwju.11, so 'before' is the br-bwju.8 bake scored against the new sheets (before-br-bwju.8/score-lod<N>.json, same evaluator, Playwright Chromium on eris); after = reference-lod<N>/score.json. tris as the fit page counts them (interior blocks included; the bake's own counts, interiors excluded, are 2080 / 878 / 596).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.8729,
+   "views": {
+    "side": 0.8509,
+    "top": 0.9389,
+    "front": 0.833,
+    "rear": 0.8395
+   },
+   "tris": 1354
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.8725,
+   "views": {
+    "side": 0.8527,
+    "top": 0.9347,
+    "front": 0.8293,
+    "rear": 0.8438
+   },
+   "tris": 932
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.8847,
+   "views": {
+    "side": 0.8845,
+    "top": 0.9201,
+    "front": 0.8547,
+    "rear": 0.8446
+   },
+   "tris": 696
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9024,
+   "views": {
+    "side": 0.8669,
+    "top": 0.965,
+    "front": 0.8898,
+    "rear": 0.8843
+   },
+   "tris": 2184
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.9018,
+   "views": {
+    "side": 0.8696,
+    "top": 0.9571,
+    "front": 0.8878,
+    "rear": 0.8909
+   },
+   "tris": 982
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9162,
+   "views": {
+    "side": 0.9098,
+    "top": 0.9526,
+    "front": 0.8834,
+    "rear": 0.8933
+   },
+   "tris": 700
+  }
+ }
+}

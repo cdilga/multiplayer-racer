@@ -2,64 +2,75 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Tradie Ute",
   "status": "awaiting-review",
-  "date": "2026-10-17",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "br-bwju.8",
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray with checker-plate under-tray boxes, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, black wheels with a silver lip, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed. Detail pass (2026-10-17): the canopy's real hardware (the upper doors' T-handles and gas struts, a louvred vent, the drip rail, chrome corner protectors, amber and red reflectors), its rear door with a tinted window, T-handle and third brake light, a seat-coloured lid with tie-down rails, door handles, the chrome shoulder line and the J-line where the cab meets the tray, the black rocker, and taller tray lamps; the paint stays plain, as on the owner's car. Before and after: docs/evidence/br-bwju.8/ute-before-after-views.png.",
+  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed. Rebuilt against its own contact sheet (br-bwju.11; it had none before, so Muse Image drew one from the Cruz layout and the br-bwju.8 render): 16-sided tyres on 8-spoke alloy rims in a dark barrel, widebody flares with a black lip, black-framed side glass in three panes with painted A, B and C pillars, a raised bonnet scoop with louvre vents, a chrome shield grille with seven dark slots under swept lamps, a solid bull bar with light bar, fog lamps, plate and winch hook, the tray painted in the seat colour with tall corner lamps and a black step bumper with reversing lamps and a tow ball, mirrors on stalks, and the canopy, rack and snorkel kept. LOD0 2080 triangles (qualified budget now 3000), LOD1 878, LOD2 596. The canopy's black sides, rack and awning keep their colours under every paint.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
-    "sheet": "docs/evidence/br-bwju.8/reference-photo/sheet.png",
+    "sheet": "art/vehicles/tradie-ute/refs/lod-plus-1.png",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the owner's Triton mesh (that mesh's own silhouettes, not photographs)",
-        "dir": "docs/evidence/br-bwju.8/reference-lod0"
+        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod0"
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod1"
+      },
+      {
+        "lod": 2,
+        "label": "LOD2 against the 'lowest' reference sheet",
+        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod2"
       }
     ],
-    "note": "The compare below is LOD0 against the owner's Triton mesh in four views. \"The reference sheet itself\" opens LOD0's side against the owner's side photo: a hand-traced outline of Screenshot_20240415_085850, IoU 0.717 (docs/evidence/br-bwju.8/reference-photo/score.json; the photo itself stays private: number plate and house). Left to right per view: the reference silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses), bounding-box normalised. The model is a caricature, wider and lower than the real car, and the photo has perspective, so these IoUs measure a likeness, not a scan. Front and rear three-quarter views are in the turntable."
+    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/tradie-ute/refs/prompts/), the Cruz Missile's sheet given as the layout example and the br-bwju.8 render as the content example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). The earlier comparison against the owner's Triton photo outline (IoU 0.717 at the side) stays in docs/evidence/br-bwju.8/."
   },
   "turntable": {
-    "sheet": "docs/evidence/br-bwju.8/views.png",
-    "validation": "docs/evidence/br-bwju.8/validation.md"
+    "sheet": "docs/evidence/P1-V-finish/tradie-ute/lods.png",
+    "validation": "docs/evidence/P1-V-finish/tradie-ute/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/br-bwju.8/damage-strip.png",
-    "overview": "docs/evidence/br-bwju.8/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-finish/tradie-ute/damage-strip.png",
+    "overview": "docs/evidence/P1-V-finish/tradie-ute/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray and canopy) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet."
   },
   "paints": {
-    "sheet": "docs/evidence/br-bwju.8/paints.png",
+    "sheet": "docs/evidence/P1-V-finish/tradie-ute/paints-strip.png",
     "identity": "art/ui/tokens.json",
-    "pattern": "Seat colour on the paint key (white texels tint, the canopy's lid included; the black canopy sides, tray, bull bar, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. docs/evidence/br-bwju.8/paints-strip.png shows white plus five player colours."
+    "pattern": "Seat colour on the paint key (white texels tint, the canopy's lid and the tray included; the black canopy sides, bull bar, flares, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. paints-strip.png shows white plus five player colours."
   },
   "inWorld": [
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/br-bwju.8/grid-1.png"
+      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/br-bwju.8/grid-4.png"
+      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/br-bwju.8/grid-24.png"
+      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/br-bwju.8/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-finish/tradie-ute/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/br-bwju.8/validation.md"
+    "report": "docs/evidence/P1-V-finish/tradie-ute/validation.md"
   },
   "profile": "assets/profiles/tradie-ute.json",
   "handling": {

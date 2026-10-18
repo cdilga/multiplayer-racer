@@ -1,0 +1,53 @@
+{
+ "car": "tradie-ute",
+ "lod": 1,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 982,
+  "draws": 14,
+  "breakdown": {
+   "front": 226,
+   "core": 240,
+   "door_FL": 12,
+   "door_RL": 12,
+   "back": 196,
+   "door_FR": 12,
+   "door_RR": 12,
+   "wheel_FL": 42,
+   "wheel_FR": 42,
+   "wheel_RL": 42,
+   "wheel_RR": 42,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 44
+  },
+  "stations": 16
+ },
+ "views": {
+  "side": {
+   "iou": 0.8696,
+   "aspect": 0.98,
+   "miss": 0.0777,
+   "extra": 0.0528
+  },
+  "top": {
+   "iou": 0.9571,
+   "aspect": 1.036,
+   "miss": 0.0245,
+   "extra": 0.0184
+  },
+  "front": {
+   "iou": 0.8878,
+   "aspect": 0.995,
+   "miss": 0.0611,
+   "extra": 0.0512
+  },
+  "rear": {
+   "iou": 0.8909,
+   "aspect": 1.028,
+   "miss": 0.0183,
+   "extra": 0.0908
+  }
+ },
+ "score": 0.9018
+}
