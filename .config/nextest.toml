@@ -2,9 +2,9 @@
 # skipped here, each with a P0 bead naming the test, the cause and the owner. The bead's fix removes its line in the same
 # commit. Run a quarantined test by name with `cargo nextest run --ignore-default-filter -E '<filter>'`.
 [profile.default]
-# Quarantined (CI owner, batches 5794 and 5809, owner BrownHill): br-qwn9 (crossings both-levels rock hit).
-# The bead's fix removes its line. br-oxy5 (Pig Catcher) lifted: it passes on RCH after 05fb2362 (br-bbki.25).
-default-filter = """ not ( test(=bots_lap_both_levels_without_recovery_and_replay_exactly) ) """
+# Lifted: br-qwn9 (crossings both-levels): every roster vehicle laps both levels clean (42 laps) on eris at 41c87f68 after
+# AmberSpring's heightfield internal-edge fix (8495c317, br-zrat.1). br-oxy5 (Pig Catcher) lifted: it passes on RCH after
+# 05fb2362 (br-bbki.25).
 # Lifted: br-kx4o (setpieces, biomes) and br-wrij (overpass) pass on eris at 1d2b76b5 after the generator-24 landing.
 # Lifted: br-3pwa (R122) passes for all six vehicles on eris at ee5f1619 (the Ute's nose climb replaced FL12's trim).
 # Lifted: br-8bdm: the bike-sim-fixture's generated-road bank is gone (it duplicated the roster bikes' throws in the R122
