@@ -40,6 +40,10 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] **D5 Party-ready:** QR scanner, tutorial, phone as host, voice and music, engine sound, effects (dust, smoke, sparks, fire, glows),
       extra players on any joined controller (a second laptop with pads, a keyboard-only laptop, a phone with a pad, each showing how it's connected; R119, no separate hub page), removing someone
       who left, downloading a session bundle, crash and UI sounds, and the Credits page.
+- [ ] **AU Hawk (br-bwju.12, P1-V-au-hawk): is it an AU?** In a preview, pick the AU Hawk in the lobby and race it; look at it on the
+      TV from the front 3/4 and the back, in the chase view and in a 24-tile grid. Your verdict is the bead's recognition criterion
+      (a small vision model reads LOD0's 3/4 views as an AU most of the time but not the far LODs or the chase view, and drifts run to
+      run: docs/evidence/P1-V-au-hawk/recognition.md). Review page: /poc/vehicles/au-hawk/. Comment there with what to change.
 - [ ] **Native resolution (report whenever you play, br-dim.3 hardware):** on the TCL at 4K, 1/12/24/32 tiles at Native: the
       overlay shows 3840x2160 and no auto-lowering (or names it), frame cost noted, and the cars look crisp. On your Android:
       the host overlay's render size equals the screen's physical pixels, or it says which browser limit stopped it.

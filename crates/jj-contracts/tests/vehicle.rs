@@ -26,39 +26,6 @@ fn the_hand_made_vehicle_passes() {
     assert!(report.tris.iter().all(|&t| t > 0));
 }
 
-/// br-bwju.12: a car may raise its own budgets with an explained, approved `triBudgetOverride` (up to the ceiling); the
-/// same heavy LOD2 without one fails (the `tri-budget` fixture), and so does an override without its reason or above the
-/// ceiling (the `tri-budget-override-*` fixtures, in the broken-fixture sweep below).
-#[test]
-fn a_per_vehicle_override_raises_the_budget_when_explained() {
-    let report = run(&fixtures().join("valid-tri-budget-override"));
-    assert!(report.ok, "{report:#?}");
-    assert!(
-        report.tris[2] > vehicle::TRI_BUDGETS[2],
-        "LOD2 is over the qualified budget: {}",
-        report.tris[2]
-    );
-    let sidecar = vehicle::parse_sidecar(
-        &std::fs::read(fixtures().join("valid-tri-budget-override/toy.asset.json")).unwrap(),
-    )
-    .unwrap();
-    assert_eq!(vehicle::tri_budget(&sidecar, 2), 1000);
-    let plain =
-        vehicle::parse_sidecar(&std::fs::read(fixtures().join("valid/toy.asset.json")).unwrap())
-            .unwrap();
-    assert_eq!(vehicle::tri_budget(&plain, 2), vehicle::TRI_BUDGETS[2]);
-    for broken in [
-        "tri-budget-override-unexplained",
-        "tri-budget-override-ceiling",
-    ] {
-        let r = run(&fixtures().join(broken));
-        assert!(
-            !r.ok && r.violations.iter().any(|v| v.rule.name() == "tri-budget"),
-            "{broken}: {r:#?}"
-        );
-    }
-}
-
 /// br-bwju.5: the hand-made bike (the bike part set) passes, and the sim's geometry from it has two centreline wheels,
 /// front first, and the rider among its parts.
 #[test]

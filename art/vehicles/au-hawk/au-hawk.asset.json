@@ -11,11 +11,11 @@
   },
   {
    "file": "au-hawk.lod1.glb",
-   "maxTris": 1400
+   "maxTris": 900
   },
   {
    "file": "au-hawk.lod2.glb",
-   "maxTris": 900
+   "maxTris": 600
   }
  ],
  "parts": {
@@ -287,14 +287,5 @@
  "material": {
   "count": 1,
   "atlas": "au-hawk.atlas.png"
- },
- "triBudgetOverride": {
-  "maxTris": [
-   3000,
-   1400,
-   900
-  ],
-  "why": "br-bwju.12 round 2, measured: a minimal vision model names the AU an AU Falcon from the bar views at LOD0 (14 of 15 calls) but at LOD1 (888 tris) and LOD2 (596) about 12 % of calls; LOD1 at 1442 tris with LOD0's round body was named one about three times as often. The far tiers need the tumblehome and domed deck. Host cost: docs/evidence/P1-V-au-hawk/render.json.",
-  "approvedBy": "coordinator (AmberSpring session), 2026-10-18, on the owner's recognition bar for this car only"
  }
 }

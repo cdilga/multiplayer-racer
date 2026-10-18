@@ -160,13 +160,6 @@ write('cabin-proxy-cuboid', 'cabin-proxy-cuboid', model({ colliders: { ...model(
 write('part-missing-at-lod', 'part-missing-at-lod', model({ skip: [{}, { door_RL: true }, {}] }));
 write('anchor-missing', 'anchor-missing', model({ dropAnchor: 'roof_number' }));
 write('tri-budget', 'tri-budget', model({ lodGeom: [null, null, { core: grid(350, 1.8, 2.4, 1.1) }] }));
-// br-bwju.12: a per-vehicle budget override. LOD2 at ~900 triangles passes with an explained, approved override; the same
-// override without its reason, or above the ceiling, fails tri-budget (and without any override the tri-budget case above fails).
-const heavy = () => model({ lodGeom: [null, null, { core: grid(350, 1.8, 2.4, 1.1) }] });
-const override = (s, o) => { s.lods[1].maxTris = 1400; s.lods[2].maxTris = 1000; s.triBudgetOverride = { maxTris: [1300, 1400, 1000], why: 'measured: the far LODs need the round body to be recognised', approvedBy: 'coordinator 2026-10-18', ...o }; return s; };
-write('valid-tri-budget-override', 'ok', heavy(), (s) => override(s, {}));
-write('tri-budget-override-unexplained', 'tri-budget', heavy(), (s) => override(s, { why: '' }));
-write('tri-budget-override-ceiling', 'tri-budget', heavy(), (s) => override(s, { maxTris: [1300, 1400, 1300] }));
 write('pivot', 'pivot', model({ sidecarPivot: { door_FL: [-0.92, 0.85, 0.55] } }));
 write('pivot-across-lods', 'pivot', model({ lodPivot: [null, null, { door_FR: [0.92, 0.85, 0.6] }] }));
 write('materials', 'materials', model({ materials: 2 }));

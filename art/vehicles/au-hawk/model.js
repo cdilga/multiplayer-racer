@@ -29,8 +29,8 @@ import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
   0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, reflector: 10, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 7, nose: 3, curvePts: true, merge: 0.12, doorMid: true, belly: true, dome: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.2, lampCell: 0.12, tailCell: 0.15, grilleCell: 0.2, lampOff: 0.03, oval: 14, lampRim: false, lampRing: 0.3, reflector: 6, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
-  2: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.3, lampCell: 0.18, tailCell: 0.2, grilleCell: 0.3, lampOff: 0.025, oval: 16, lampRim: false, reflector: 6, lampTop: false, fog: 0, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: true },
+  1: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 14, badge: 10, lampRim: false, reflector: 6, lampTop: true, fog: 6, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, grilleCell: 0.22, lampOff: 0.045, oval: 10, badge: 6, lampRim: false, reflector: 4, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
 };
 
 const lerpCurve = (pts, z) => {

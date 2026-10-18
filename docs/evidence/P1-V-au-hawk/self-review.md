@@ -1,20 +1,21 @@
 # P1-V-au-hawk self-review, rounds 2 and 3 (br-bwju.12): the AU Hawk against its sheets, the roster and the recognition bar
 
 **How these images were made.** Playwright Chromium, headless, on eris (`tools/vehicles/fit`, `view`, `evidence` and `recognition`,
-software GL; the chase views and `render.json` from a web build of this commit through ANGLE/Vulkan on the RTX 2080 Super). Not a TV
-or phone. Every image named below was opened and looked at. The bake is this commit's (2906 / 1396 / 892 triangles; budgets
-3000 / 1400 / 900 through the AU's own `triBudgetOverride`).
+software GL; the chase views and `render.json` from web builds through ANGLE/Vulkan on the RTX 2080 Super). Not a TV or phone. Every
+image named below was opened and looked at. The bake is this commit's: 2906 / 896 / 600 triangles on the standard 3000 / 900 / 600
+budgets (round 3's raised LOD1/LOD2 were measured and reverted).
 
-**The honest summary.** The car is a literal, rounded AU and all three tiers now carry the round body, the swept lamps, the
-fish-mouth grille and both badges. A minimal vision model names it a Falcon in a minority of calls at every LOD in the final receipt
-(LOD0 7/15, LOD1 5/15, LOD2 2/15 on the bar views, chase 0/12), and the same images swing from 33/45 to 12/45 between windows
-(`recognition.md`). The recognition bar is NOT met. Raising LOD1/LOD2 to 1400/900 did not measurably help LOD1 when asked
-interleaved against the old bake, and costs 7 % more triangles at 24 tiles.
+**The honest summary.** The car is a literal, rounded AU: big swept teardrop lamps (with grey reflector bowls), the oval fish-mouth
+grille with its bar and a blank oval badge, round fog lamps, a high round roof, round flanks, corner tail lamps and a boot badge.
+Its LOD0 front 3/4 and rear 3/4 views read as an AU Falcon to a minimal vision model most of the time in good windows; LOD1, LOD2,
+the side, the top and the in-game chase view don't reliably; and the model's answers on identical images drift from run to run
+(33/45 to 12/45). So recognisability is the owner's call (`recognition.md`; the "AU Hawk" row in
+docs/playtests/owner-checklists.md section 2).
 
 ## Looked at
 
 - `reference-lod0/sheet.png`, `reference-lod1/sheet.png`, `reference-lod2/sheet.png` (with `score.json`): sheet crop, shaded model and
-  silhouette diff per view. Weighted IoU LOD0 0.9600 (side 0.963, top 0.976, front 0.916, rear 0.964), LOD1 0.9568, LOD2 0.9493.
+  silhouette diff per view. Weighted IoU LOD0 0.9600 (side 0.963, top 0.976, front 0.916, rear 0.964), LOD1 0.9538, LOD2 0.9533.
   - Red (sheet only) runs down both sides of the front view at every LOD: the sheet's front view is drawn about 9 % wider than its
     plan view, and the model follows the plan.
   - The side view's green (model only) at the boot: the wing was removed and the deck raised (recognition, below).
@@ -28,7 +29,7 @@ interleaved against the old bake, and costs 7 % more triangles at 24 tiles.
 - `side-by-side-front34.png`, `side-by-side-front.png`, `side-by-side-side.png`, `side-by-side-rear34.png`, `au-vs-hawk-dash.png`:
   the AU is the only roster car with no wing, no livery, no bull bar and big pale lamps; it is the roundest body in the roster.
 - `hero/hero.png` = `art/ui/brand/renders/picker/au-hawk.png` (the lobby picker picture).
-- `render.json`: the host's triangles, draws and frame times at 1 / 4 / 24 tiles, three runs before and after the budget raise.
+- `render.json`: the host's triangles, draws and frame times at 1 / 4 / 24 tiles, three runs with the round-2 bake ("before") and three with round 3's raised LOD1/LOD2 ("after", since reverted).
 
 ## Defects found and fixed
 
@@ -48,16 +49,16 @@ interleaved against the old bake, and costs 7 % more triangles at 24 tiles.
   (behind the windscreen base); it now lies on the greenhouse's own two triangles per span (`reference-lod0/shade_side.png`).
 - Round 3: pale lamps vanishing on white paint: a mid-grey reflector bowl in each lamp. A blue-grey lens and a dark outline were
   tried first; both turned the front views from Falcon to Mondeo/Focus in their runs.
-- Round 3: LOD1 lamps broken into pieces with body showing through (`lods.png`): lifted 3 cm.
+- Round 3: LOD1 lamps broken into pieces with body showing through: lifted 3 cm (kept after the revert).
+- Round 3, reverted: LOD1/LOD2 raised to 1396 / 892 with LOD0's round body; interleaved, LOD1 was named a Falcon 9/35 against 15/35
+  at 888 triangles, for +7.1 % host triangles at 24 tiles. Back on 900 / 600; the per-vehicle budget override was removed.
 
 ## Remaining defects
 
-- **Recognition is under the 90 % bar at every LOD and in the chase view**, and the measure drifts between windows (`recognition.md`).
-- The LOD1/LOD2 raise isn't supported by the interleaved measurement (LOD1 9/35 at 1396 tris against 15/35 at 888); recommended
-  revert to 900 / 600 for this car (`recognition.md`, Round 3).
-- One "after" host run in three read 32 ms mean at 4 tiles (twice across six "after" runs, never in "before"); unexplained on a shared GPU.
+- **The automated recognition bar (90 % at every LOD and angle, chase included) is not met** and the measure drifts; the owner's
+  verdict decides (`recognition.md`).
+- LOD2 has no tumblehome (its flanks are flat) and a coarse grille (`lods.png`, LOD2 3/4); LOD1 keeps the round body at coarser stations.
 - Side and top views are rarely named a Falcon.
-- A small notch remains in the LOD1 headlamp's inner edge (`lods.png`, LOD1 3/4).
 - The hull is 5.03 m long, 2.04 m wide (round 1: 4.74 x 2.0); the profile's geometry is synced, the tuning untouched.
 
 ## Not covered

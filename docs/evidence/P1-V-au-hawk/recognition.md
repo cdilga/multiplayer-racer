@@ -1,20 +1,26 @@
 # P1-V-au-hawk recognition receipt (br-bwju.12): would a minimal-reasoning vision model name this car an AU Falcon?
 
-**Result: NOT MET, and the measure itself is unstable.** Round 3 raised this car's LOD1/LOD2 budgets to 1400/900 (a per-vehicle
-override, `vehicle.json` `triBudgetOverride`) to carry the round body to the far tiers. In the receipt (3 calls per image, final
-model, commit of this file) an AU Falcon or a Ford Falcon is named in **7/15 calls at LOD0, 5/15 at LOD1 and 2/15
-at LOD2** on the five bar views (front, both front 3/4s, rear 3/4, rear), and **0/12 in the in-game chase view**; side and top
-rarely. The target was 90 % across calls.
+**Result: the automated bar (90 % of renders at every LOD and angle, chase included) is NOT met, and it can't be the judge.** The
+shipped bake (2906 / 896 / 600 triangles, the standard 3000 / 900 / 600 budgets) is named a Falcon most of the time from LOD0's front
+3/4 and rear 3/4 views in good windows, but not reliably at LOD1 or LOD2, nor from the side, the top or the in-game chase view.
+And the measure itself drifts: the same images swing between runs. **Recognisability is therefore the owner's call** (the bead's
+[ev:owner] criterion, the "AU Hawk" row in docs/playtests/owner-checklists.md section 2).
 
-Two measurements below matter more than any single number:
-1. **Drift.** The same 15 bar-view images (round 3, before the final lamp change) were named a Falcon in **33 of 45** calls in one
-   window and **12 of 45** an hour later (`recognition-answers-drift.tsv`). Identical pixels; the model's answers moved. A rate
-   from one window can't be compared with another window's: every comparison below is interleaved (both variants asked in the
-   same run).
-2. **The budget raise, interleaved against the round-2 LOD1/LOD2 (888 / 596 triangles), 7 calls per image:** LOD1 at 1396
-   triangles **9/35** against 888 triangles **15/35**; LOD2 at 892 **4/35** against 596 **0/35**
-   (`recognition-answers-lod-raise-compare.tsv`). The raise buys nothing at LOD1 and a little at LOD2. The earlier, sequential
-   experiment that suggested it (LOD1 with LOD0's body: 9/21 against 3/21) ran across windows and is not evidence.
+The numbers that support that summary:
+1. **This bake's receipt** (3 calls per image, `recognition-answers-au-hawk.tsv`): a Falcon is named in 6/15 calls at LOD0,
+   3/15 at LOD1 and 1/15 at LOD2 on the five bar views, 0/12 in the chase view (table below). LOD0's rear 3/4 is 3/3 and its
+   front 3/4 right 2/3; its front 3/4 left, which was 3/3 in the round-2 receipt and 15/15 bar views in round 3's best window, is 0/3 here.
+2. **Drift.** The same 15 bar-view images were named a Falcon in **33 of 45** calls in one window and **12 of 45** about an hour later
+   (`recognition-answers-drift.tsv`). Identical pixels. Rates from different windows can't be compared; comparisons below were
+   asked interleaved.
+3. **Raising this car's far-LOD budgets was tried and measured (round 3), then reverted.** A per-vehicle override (`triBudgetOverride`
+   in vehicle.json, the sidecar and jj-contracts, with fixtures and a test; commit d87401d5) took LOD1/LOD2 to 1396 / 892 triangles
+   with LOD0's round body. Interleaved against the 888 / 596 bake, 7 calls per image: **LOD1 9/35 at 1396 against 15/35 at 888;
+   LOD2 4/35 at 892 against 0/35 at 596** (`recognition-answers-lod-raise-compare.tsv`), for **+7.1 % triangles per frame at 24 tiles**
+   (1,051,094 to 1,125,770, draws unchanged; `render.json`, `tools/vehicles/evidence/host-cost.mjs`, 3 AU Hawks in a 24-car mixed grid).
+   No gain at LOD1, so the bake is back on 900 / 600 and the override was removed (no car used it; it can come back with evidence).
+   Kept from round 3: the side glass laid on the greenhouse's own triangles (no orange sliver), grey reflector bowls in the lamps
+   (readable on white paint), the LOD1 lamp lift, and the recognition renders' fitted framing.
 
 ## How it was asked
 
@@ -25,42 +31,29 @@ Two measurements below matter more than any single number:
 - **Chase:** `tools/vehicles/recognition/chase.mjs` on a web build of this commit (eris, ANGLE/Vulkan on the RTX 2080 Super, 1280x720, the host's comic look and player colour) in `chase/`; every chase view is a rear view from behind and above.
 - **A Falcon counts** when the answer names a Ford Falcon (any generation, AU or not) as its match; `score` greps the answer for "falcon", so an answer naming one only as an alternative also counts (rare; read the TSV).
 
-## Receipt, final model (Falcon named / calls)
+## Receipt, the shipped bake (Falcon named / calls)
 
 | View | LOD0 | LOD1 | LOD2 |
 |---|---|---|---|
 | front | 0/3 | 1/3 | 0/3 |
-| front 3/4 left | 0/3 | 3/3 | 1/3 |
+| front 3/4 left | 0/3 | 1/3 | 0/3 |
 | front 3/4 right | 2/3 | 0/3 | 0/3 |
 | rear 3/4 | 3/3 | 1/3 | 1/3 |
-| rear | 2/3 | 0/3 | 0/3 |
-| side | 0/3 | 0/3 | 0/3 |
+| rear | 1/3 | 0/3 | 0/3 |
+| side | 0/3 | 1/3 | 0/3 |
 | top | 0/3 | 0/3 | 0/3 |
 | chase 1-4 | 0/3, 0/3, 0/3, 0/3 | | |
 
-## Round 3: what changed and what it cost
+## Round 3, measured and reverted
 
-- **Budgets:** LOD1 888 -> 1396, LOD2 596 -> 892 (LOD0 2586 -> 2906, under its 3000). Both far tiers now carry the tumblehome flank and the
-  domed deck, lamp tails over the guards (LOD1), fog lamps (LOD1), round grille and badges.
-- **Host cost** (`render.json`, `tools/vehicles/evidence/host-cost.mjs`: the real host page's synthetic mixed grid, 24 cars of which 3 are
-  AU Hawks, 1920x1080, WebGL2 on eris's RTX 2080 Super; before = a web build with the round-2 bake, after = this commit; three runs each):
-  triangles per frame 1 tile 171,512 -> 174,392 (+1.7 %), 4 tiles 192,974 -> 206,690 (+7.1 %), 24 tiles 1,051,094 -> 1,125,770
-  (+7.1 %, about 1,040 per AU per tile); draw calls unchanged (160 / 484 / 2,644). Mean frame time is at the 60 Hz cap at 1 tile
-  (16.7 ms) in every run; at 4 tiles 16.7 ms except one "after" run at 32.1 ms (the same reading recurred in an earlier "after"
-  run of the previous bake: 2 of 6 "after" runs, 0 of 3 "before"; not explained, the GPU is shared); at 24 tiles before 18.8 / 21.7 / 17.5 ms,
-  after 20.4 / 17.9 / 17.5 ms. The triangle counts are exact; the frame times are inside the shared GPU's run-to-run noise.
-- **The contract:** `triBudgetOverride` in `vehicle.json` is copied into the sidecar by the bake and checked by `jj-contracts`: one budget per
-  LOD, at most 3000 / 1800 / 1200, with a reason of at least ten characters and an approver; without it every car keeps 3000 / 900 / 600.
-  Tests: `a_per_vehicle_override_raises_the_budget_when_explained` plus the `tri-budget-override-unexplained` and `-ceiling` fixtures.
-- **Lamps on white paint:** a mid-grey reflector bowl inside each lamp (the pale lens alone vanished on `#f2f4f8`). Tried first: a
-  blue-grey lens (the front views went from Falcon to Mondeo/Focus in its run) and a dark outline round the lamp (Focus); the reflector
-  was asked interleaved against the plain pale lamp: 17/45 against 13/45.
-- **The orange sliver** across the LOD0 front-door glass: the side glass is now laid on the greenhouse's own two triangles per span
-  instead of a bilinear patch (the span behind the windscreen base is twisted, and the patch let the paint show through).
-
-**Recommendation:** the raise costs 7 % more car triangles at 24 tiles and the interleaved runs show no gain at LOD1 and a small one at
-LOD2; I would revert this car to 900 / 600 (the override mechanism can stay for a car that measurably needs it). Left as committed
-because it was the coordinator's call to try it.
+- Budgets LOD1 888 to 1396, LOD2 596 to 892 under `triBudgetOverride` (ceiling 3000 / 1800 / 1200, a reason and an approver required).
+- Host cost (`render.json`; 1920x1080, WebGL2 on eris's RTX 2080 Super, 24 synthetic cars of which 3 AU Hawks, three runs each):
+  triangles per frame 1 tile 171,512 to 174,392 (+1.7 %), 4 tiles 192,974 to 206,690 (+7.1 %), 24 tiles 1,051,094 to 1,125,770 (+7.1 %);
+  draw calls unchanged (160 / 484 / 2,644); frame times inside the shared GPU's run-to-run noise (24 tiles: before 18.8 / 21.7 / 17.5 ms,
+  after 20.4 / 17.9 / 17.5 ms; two of six "after" runs read 32 ms at 4 tiles, unexplained).
+- Recognition: interleaved, no gain at LOD1 (9/35 against 15/35), a small one at LOD2 (4/35 against 0/35). Reverted; override removed.
+- Lamps on white paint: a blue-grey lens and a dark outline both turned the front views to Mondeo/Focus in their runs; the grey
+  reflector bowl, asked interleaved against the plain pale lamp, scored 17/45 against 13/45 and was kept.
 
 ## Step 1: the concept, checked before modelling
 
@@ -122,8 +115,8 @@ WRX STI, a Lancer Evolution or a BMW M3. The prompt and renders don't push every
 
 ## What's left, honestly
 
-1. The 90 % bar is not met at any LOD in the final receipt; the best single windows reached 15/15 at LOD0 (bar views), but the same images fall to about a third in another window.
-2. LOD1/LOD2 budgets: raised as directed; the interleaved measurement doesn't support keeping the raise (above).
-3. The chase view (a small red car from behind and above) is rarely named.
+1. The 90 % automated bar is not met at any LOD; the best single windows reached 15/15 at LOD0 (bar views), but the same images fall to about a third in another window. The owner's verdict in a preview is the recognition criterion.
+2. LOD1/LOD2 at the standard budgets don't carry LOD0's round body (no tumblehome at LOD2); raising them was tried and didn't help LOD1 (above).
+3. The chase view (a small car from behind and above, in the player's colour) is rarely named.
 4. Side and top: a roof and a profile carry no make.
 5. Measured with one model at low effort; a more capable model, or the same model at higher effort, was not tried.

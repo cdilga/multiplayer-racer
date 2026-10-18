@@ -3,7 +3,7 @@
   "vehicle": "au-hawk",
   "source": {
     "sidecar": "art/vehicles/au-hawk/au-hawk.asset.json",
-    "sidecar_sha256": "376931d29f0ffc769c97bf150155f5d5f8e015d3629391326e8a998a8dd89b0b",
+    "sidecar_sha256": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
     "lod0_sha256": "8cc57fd33a3a9f5cbfefb968d99c41d1ec6824845cb10f7e54b937255b8e1ec8"
   },
   "geometry": {

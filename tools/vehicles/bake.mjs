@@ -179,8 +179,6 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     ...(V.interiors ? { interiors: V.interiors } : {}),
     anchors: V.anchors,
     material: { count: 1, atlas: `${id}.atlas.png` },
-    // vehicle.json `triBudgetOverride` (br-bwju.12): a per-vehicle raise of the qualified budgets, checked by the contract
-    ...(V.triBudgetOverride ? { triBudgetOverride: V.triBudgetOverride } : {}),
   };
   files.set(`${id}.asset.json`, new TextEncoder().encode(JSON.stringify(sidecar, null, 1) + '\n'));
   report.files = Object.fromEntries([...files].map(([f, b]) => [f, { bytes: b.length, sha256: sha256(b) }]));

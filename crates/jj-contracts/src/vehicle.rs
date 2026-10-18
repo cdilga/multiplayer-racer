@@ -45,9 +45,6 @@ pub const ANCHORS: [&str; 6] = [
 /// LOD0 rose from 1300 to 3000 for the sheet-matched bodies (owner 2026-10-18, br-bwju.11): it draws only in tiles at
 /// least 540 px tall (the host's lodForTileHeight), so a few cars on a TV pay for it.
 pub const TRI_BUDGETS: [usize; 3] = [3000, 900, 600];
-/// The most a per-vehicle override (`triBudgetOverride`, br-bwju.12) may raise each LOD's budget to: twice the qualified
-/// LOD1 and LOD2 budgets, LOD0 unchanged. An override names why and who approved it; without one a car gets `TRI_BUDGETS`.
-pub const TRI_BUDGET_OVERRIDE_CEILING: [usize; 3] = [3000, 1800, 1200];
 /// Distance tolerances, metres.
 pub const POSITION_TOLERANCE_M: f64 = 0.001;
 pub const GROUND_TOLERANCE_M: f64 = 0.02;
@@ -71,29 +68,6 @@ pub struct Sidecar {
     pub interiors: BTreeMap<String, Interior>,
     pub anchors: BTreeMap<String, [f64; 3]>,
     pub material: Material,
-    /// A per-vehicle raise of the qualified budgets (br-bwju.12: the AU Hawk's far LODs need its round body to be
-    /// recognised). Optional; copied from vehicle.json by the bake.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tri_budget_override: Option<TriBudgetOverride>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct TriBudgetOverride {
-    /// The budget per LOD, LOD0 first, one per LOD; each at most `TRI_BUDGET_OVERRIDE_CEILING`.
-    pub max_tris: Vec<usize>,
-    /// Why this car needs more (a measurement, not a wish).
-    pub why: String,
-    /// Who approved it, and when.
-    pub approved_by: String,
-}
-
-/// The qualified budget for LOD `li` of this sidecar: the override's when it has one, else `TRI_BUDGETS`.
-pub fn tri_budget(s: &Sidecar, li: usize) -> usize {
-    s.tri_budget_override
-        .as_ref()
-        .and_then(|o| o.max_tris.get(li).copied())
-        .unwrap_or(TRI_BUDGETS[li])
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -403,38 +377,6 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
         );
     }
 
-    if let Some(o) = &s.tri_budget_override {
-        if o.max_tris.len() != s.lods.len() {
-            add(
-                &mut v,
-                Rule::TriBudget,
-                "triBudgetOverride.maxTris",
-                format!("{} budgets for {} LODs", o.max_tris.len(), s.lods.len()),
-            );
-        }
-        for (li, &t) in o.max_tris.iter().enumerate().take(TRI_BUDGETS.len()) {
-            if t > TRI_BUDGET_OVERRIDE_CEILING[li] {
-                add(
-                    &mut v,
-                    Rule::TriBudget,
-                    "triBudgetOverride.maxTris",
-                    format!(
-                        "LOD{li}: {t}; an override may raise it to {} at most",
-                        TRI_BUDGET_OVERRIDE_CEILING[li]
-                    ),
-                );
-            }
-        }
-        if o.why.trim().len() < 10 || o.approved_by.trim().is_empty() {
-            add(
-                &mut v,
-                Rule::TriBudget,
-                "triBudgetOverride",
-                "an override names why (a measurement) and who approved it".into(),
-            );
-        }
-    }
-
     let mut tris = Vec::new();
     let mut lod0_pivots: Option<BTreeMap<String, [f64; 3]>> = None;
     for (li, lod) in s.lods.iter().enumerate().take(TRI_BUDGETS.len()) {
@@ -600,7 +542,7 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
                 format!("{draws} draws; at most one per part ({})", parts.len()),
             );
         }
-        let budget = lod.max_tris.min(tri_budget(s, li));
+        let budget = lod.max_tris.min(TRI_BUDGETS[li]);
         if lod_tris > budget {
             add(
                 &mut v,
