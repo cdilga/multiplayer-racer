@@ -69,106 +69,106 @@
   "cars": [
     {
       "pose": {
-        "headingDeg": 7.5,
-        "x": 15.6,
+        "headingDeg": 5.5,
+        "x": 26.71,
         "y": 0.2,
-        "z": -3.17
+        "z": -3.13
       }
     },
     {
       "pose": {
-        "headingDeg": 7.5,
-        "x": 12.62,
+        "headingDeg": 5.5,
+        "x": 23.72,
         "y": 0.2,
-        "z": -2.78
+        "z": -2.84
       }
     },
     {
       "pose": {
-        "headingDeg": 37.5,
-        "x": 12.88,
+        "headingDeg": 16.4,
+        "x": 25.31,
         "y": 0.2,
-        "z": -9.3
+        "z": -9.23
       }
     },
     {
       "pose": {
-        "headingDeg": 37.5,
-        "x": 10.5,
+        "headingDeg": 16.4,
+        "x": 22.43,
         "y": 0.2,
-        "z": -7.47
+        "z": -8.39
       }
     },
     {
       "pose": {
-        "headingDeg": 52.5,
-        "x": 8.27,
+        "headingDeg": 38.2,
+        "x": 22.35,
         "y": 0.2,
-        "z": -13.66
+        "z": -15.07
       }
     },
     {
       "pose": {
-        "headingDeg": 52.5,
-        "x": 6.45,
+        "headingDeg": 38.2,
+        "x": 19.99,
         "y": 0.2,
-        "z": -11.28
+        "z": -13.22
       }
     },
     {
       "pose": {
-        "headingDeg": 82.5,
-        "x": 1.89,
+        "headingDeg": 49.1,
+        "x": 18.22,
         "y": 0.2,
-        "z": -15.76
+        "z": -19.78
       }
     },
     {
       "pose": {
-        "headingDeg": 82.5,
-        "x": 1.5,
+        "headingDeg": 49.1,
+        "x": 16.26,
         "y": 0.2,
-        "z": -12.79
+        "z": -17.52
       }
     },
     {
       "pose": {
-        "headingDeg": 112.5,
-        "x": -4.79,
+        "headingDeg": 60.0,
+        "x": 13.15,
         "y": 0.2,
-        "z": -15.2
+        "z": -23.45
       }
     },
     {
       "pose": {
-        "headingDeg": 112.5,
-        "x": -3.64,
+        "headingDeg": 60.0,
+        "x": 11.65,
         "y": 0.2,
-        "z": -12.43
+        "z": -20.85
       }
     },
     {
       "pose": {
-        "headingDeg": 127.5,
-        "x": -10.32,
+        "headingDeg": 70.9,
+        "x": 7.39,
         "y": 0.2,
-        "z": -12.09
+        "z": -25.89
       }
     },
     {
       "pose": {
-        "headingDeg": 127.5,
-        "x": -8.49,
+        "headingDeg": 70.9,
+        "x": 6.4,
         "y": 0.2,
-        "z": -9.71
+        "z": -23.06
       }
     },
     {
       "pose": {
-        "headingDeg": 157.5,
-        "x": -14.38,
+        "headingDeg": 92.7,
+        "x": 0.92,
         "y": 0.2,
-        "z": -6.76
+        "z": -26.96
       }
     }
   ],
@@ -190,79 +190,79 @@
     },
     {
       "car": 0,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 1,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 2,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 3,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 4,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 5,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 6,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 7,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 8,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 9,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 10,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 11,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 12,
-      "max": 28.8,
+      "max": 39.8,
       "metric": "maxRadiusM",
       "min": 0
     }

@@ -1,0 +1,278 @@
+{
+  "scenario": "derby-overview-24",
+  "unusedTarget": 0.35,
+  "unusedTargetMet": false,
+  "browser": "chromium (Playwright)",
+  "viewport": "1920x1080 css, dpr 1",
+  "profile": "TV at 3 m: median car height ≥ carHeightTarget (3.5 %) of the gameplay frame height",
+  "mask": "gameplay frame = canvas between the top edge band and the footer; padded envelope = screen bbox of every car extended padM (3 m) round its body; unused = 1 - envelope∩frame / frame",
+  "frame": {
+    "left": 0,
+    "top": 43.1875,
+    "right": 1920,
+    "bottom": 1026
+  },
+  "cars": 24,
+  "medianCarPx": 74.7,
+  "targetPx": 34.4,
+  "envelope": [
+    515.6,
+    114.7,
+    1487.2,
+    1000.5
+  ],
+  "unusedShare": 0.544,
+  "spread": false,
+  "frameM": 51.51,
+  "wantedM": 51.85,
+  "maxFrameM": 90.6,
+  "carBoxes": [
+    {
+      "car": 0,
+      "box": [
+        920.5,
+        423,
+        960.8,
+        501.2
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 1,
+      "box": [
+        1054.7,
+        366.3,
+        1134.3,
+        441.1
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 2,
+      "box": [
+        968,
+        560.9,
+        1051.5,
+        610.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 3,
+      "box": [
+        884.1,
+        321.5,
+        955.4,
+        396.8
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 4,
+      "box": [
+        1178.1,
+        449.6,
+        1234.6,
+        531.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 5,
+      "box": [
+        795.1,
+        521,
+        881.6,
+        599.1
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 6,
+      "box": [
+        1029.4,
+        270.8,
+        1105.9,
+        321.3
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 7,
+      "box": [
+        1082,
+        658.2,
+        1155.9,
+        755.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 8,
+      "box": [
+        756.8,
+        351.2,
+        808.2,
+        429.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 9,
+      "box": [
+        1147.7,
+        322.4,
+        1229.8,
+        385.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 10,
+      "box": [
+        953.4,
+        630.5,
+        1044.9,
+        701.2
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 11,
+      "box": [
+        912.7,
+        195.3,
+        966.6,
+        260
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 12,
+      "box": [
+        1270.9,
+        556.7,
+        1352.9,
+        647.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 13,
+      "box": [
+        648.6,
+        492.5,
+        739.2,
+        553.5
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 14,
+      "box": [
+        1147.2,
+        227.9,
+        1224.8,
+        288.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 15,
+      "box": [
+        1049.9,
+        747.3,
+        1109.8,
+        848.9
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 16,
+      "box": [
+        732.2,
+        250.4,
+        794.9,
+        323.2
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 17,
+      "box": [
+        1348.9,
+        424.2,
+        1433,
+        477.9
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 18,
+      "box": [
+        610.5,
+        712.2,
+        711.1,
+        802.7
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 19,
+      "box": [
+        1006.7,
+        149.3,
+        1044.6,
+        215
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 20,
+      "box": [
+        1270.9,
+        707.6,
+        1369.5,
+        804.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 21,
+      "box": [
+        578.1,
+        395.5,
+        663.4,
+        440.9
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 22,
+      "box": [
+        1289,
+        246.7,
+        1362,
+        315.7
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 23,
+      "box": [
+        895.7,
+        833.6,
+        938.7,
+        933.5
+      ],
+      "inFrame": true
+    }
+  ],
+  "band": {
+    "shown": true,
+    "clock": "Derby · 2:54 left",
+    "suggest": false,
+    "note": null,
+    "height": 43.1875
+  }
+}

@@ -429,12 +429,72 @@ pub struct Rival {
     pub protected: bool,
 }
 
-/// The derby bowl a bot hunts in: its centre and floor radius (m).
+/// The derby bowl a bot hunts in: its centre and floor radius (m), and the solid rocks on its floor.
 #[derive(Clone, Copy, Debug)]
 pub struct Arena {
     pub x: f32,
     pub z: f32,
     pub floor_r: f32,
+    /// The arena's island or spine (P1-M-arena-features), which a bot steers round instead of grinding into it.
+    pub obstacle: Option<Obstacle>,
+}
+
+/// Solid rock on a derby floor, as a capsule: the segment `a`..`b` grown by `r` (one rock is a circle, a = b), m.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Obstacle {
+    pub a: [f32; 2],
+    pub b: [f32; 2],
+    pub r: f32,
+}
+
+/// A bot's line passes the island at least this far off its rock, m (a car's half-width and some).
+const ISLAND_CLEAR_M: f32 = 2.5;
+/// The last metres before the aim aren't checked against the island: a rival pinned against the rock is still rammed.
+const ISLAND_PREY_M: f32 = 3.0;
+/// Samples along a bot's line when checking it against the island.
+const ISLAND_SAMPLES: usize = 16;
+
+impl Obstacle {
+    /// The point of the capsule's axis nearest (x, z), and how far that is.
+    fn nearest(&self, x: f32, z: f32) -> ([f32; 2], f32) {
+        let (dx, dz) = (self.b[0] - self.a[0], self.b[1] - self.a[1]);
+        let len2 = dx * dx + dz * dz;
+        let t = if len2 > 0.0 {
+            (((x - self.a[0]) * dx + (z - self.a[1]) * dz) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        let c = [self.a[0] + dx * t, self.a[1] + dz * t];
+        (c, libm::hypotf(x - c[0], z - c[1]))
+    }
+
+    /// The aim for a car at (x, z) heading for (ax, az): unchanged when the line clears the rock, else a point beside
+    /// the rock on the side the line already passes (the tangent way round), so the bot drives round it.
+    pub fn detour(&self, x: f32, z: f32, ax: f32, az: f32) -> (f32, f32) {
+        let (lx, lz) = (ax - x, az - z);
+        let len = libm::hypotf(lx, lz);
+        if len < 1e-3 {
+            return (ax, az);
+        }
+        let span = (len - ISLAND_PREY_M).max(0.0);
+        let clear = self.r + ISLAND_CLEAR_M;
+        let mut worst: Option<([f32; 2], f32)> = None;
+        for k in 0..=ISLAND_SAMPLES {
+            let s = span * k as f32 / ISLAND_SAMPLES as f32;
+            let (c, d) = self.nearest(x + lx / len * s, z + lz / len * s);
+            if d < clear && worst.is_none_or(|w| d < w.1) {
+                worst = Some((c, d));
+            }
+        }
+        let Some((c, _)) = worst else {
+            return (ax, az);
+        };
+        // The line's left normal; go round on the side of the line away from the rock's axis.
+        let (nx, nz) = (-lz / len, lx / len);
+        let side = (c[0] - x) * nx + (c[1] - z) * nz;
+        let s = if side > 0.0 { -1.0 } else { 1.0 };
+        (c[0] + nx * s * (clear + 1.0), c[1] + nz * s * (clear + 1.0))
+    }
 }
 
 /// A hunter keeps its prey at least this long (ticks) before it looks again, unless the prey is protected or gone.
@@ -562,6 +622,10 @@ impl Autopilot {
                 arena.x + ox / out_r * keep_in,
                 arena.z + oz / out_r * keep_in,
             );
+        }
+        // Round the island, not into it.
+        if let Some(o) = arena.obstacle {
+            (ax, az) = o.detour(me.x, me.z, ax, az);
         }
         let (l, f) = local(ax, az);
         let dist = libm::hypotf(l, f).max(1.0);

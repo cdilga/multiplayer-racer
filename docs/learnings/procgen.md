@@ -397,3 +397,10 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
   far past `end_u()`; a leap's span ending at its landing made its landing verge take another corner's rails. Points
   past an open end are now off the piece. When a check only fails on maps with one feature, count the thing that's
   missing after every pipeline stage (`setpieces::clear_footprints` here) before reasoning about geometry.
+- **Derby arena field (P1-M-arena-features): a car's belly and its neutral flight set the shapes.** A cos² mound 0.7 m
+  high and 4 m in radius (crest curvature 0.22/m) high-centred a stopped car: its belly sat on the crest with two wheels
+  in the air. Mounds and dips are now held to 0.1/m at the crest or rim (9 cm under a car's half-wheelbase), and a
+  peaked kicker (11 and 19 degree faces meeting) did the same, so kickers have a short deck. A bot flies neutral (R14),
+  so it lands at the lip's pitch: a 15 degree kick onto an 11 degree down-ramp landed at 26 degrees (bad). A table-top's
+  two slopes together stay under the judge's OK band (12 + 8 = 20 degrees). `nothing_in_the_field_traps_a_stopped_car`
+  drops a car on every crease, crest, dip and beside every rock; run it after any change to the field's shapes.

@@ -1,14 +1,17 @@
 //! The derby bowl generator (P1-M10, master §11.4/§11.5a, R83 "derby is separate with rocks vibes"): a seeded bowl arena as
 //! a `jj.map.v1`, sized to the car count when the round is prepared and never reshaped afterwards.
 //!
-//! - The world geometry is the `bowl` feature (`jj_map::arena`): flat floor, a quarter-circle bank, a vertical top wall and
-//!   a flat lip, a closed shell; the floor is the map's flat heightfield. Passive containment only: nothing closes in.
+//! - The world geometry is the `bowl` feature (`jj_map::arena`): the floor, a quarter-circle bank, a vertical top wall and
+//!   a flat lip, a closed shell; the floor is the map's heightfield. Passive containment only: nothing closes in.
+//! - Inside the spawn ring the floor is the *field* ([`field`], P1-M-arena-features): table-top jumps and kickers, mounds
+//!   and dips in the heightfield, and a squat solid rock island (or a spine of three) to ram round. The floor grows by
+//!   [`FIELD_GROWTH_M`] to make room for it, so the cars' share of the floor stays a ramming crowd.
 //! - The route is the arena's *spawn ring* (the map format has one route, so the arena uses it for placement): a closed
 //!   ring on the floor, a few metres in from the foot of the bank, whose start corridor runs round nearly all of it. The
 //!   placement service fills it for any N and, once it is full, staggers the overflow inside it under spawn protection.
 //!   Gates exist only because the format wants them; the derby never reads them.
-//! - Dressing is the rocks look outside the bowl: red banded domes (the Olgas) and ledges round the rim. Nothing solid
-//!   stands inside, so every part of the floor is reachable and no corner is dead.
+//! - Dressing is the rocks look outside the bowl: red banded domes (the Olgas) and ledges round the rim. Inside, only the
+//!   field's island stands, with a lane all round it, so every part of the floor is reachable and no corner is dead.
 //! - Everything draws from a named `arena` stream and uses integers and `libm`, so the canonical bytes are identical
 //!   natively and in WASM. The bowl is centred on the world origin.
 
@@ -21,11 +24,21 @@ use jj_map::{
 
 use crate::seed::Rng;
 
+pub mod field;
+
+pub use field::{Field, Relief, ReliefKind, Rock};
+
 pub const GENERATOR_ID: &str = "jj.procgen.arena";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/arena.txt`).
-pub const GENERATOR_VERSION: &str = "2";
+/// 3: the field (jumps, relief, an island or spine), a bigger floor and 1.25 m terrain cells.
+pub const GENERATOR_VERSION: &str = "3";
 
-const TERRAIN_SPACING_M: f64 = 2.5;
+/// 1.25 m: half the race tracks' cells, so a jump's lip and a table's edge are one sharp crease at any angle.
+const TERRAIN_SPACING_M: f64 = 1.25;
+/// The floor grows this much past the cars' own share ([`floor_radius_for`]) to hold the field, m.
+pub const FIELD_GROWTH_M: f64 = 8.0;
+/// The smallest arena floor whatever N, m: a field with room for two full table-tops round the island.
+pub const MIN_FLOOR_RADIUS_M: f64 = 31.0;
 /// The spawn ring sits this far in from the foot of the bank (the ring's centreline), m.
 const RING_INSET_M: f64 = 5.5;
 const RING_WIDTH_M: f64 = 8.0;
@@ -68,15 +81,25 @@ const RINGS: [Ring; 2] = [
     },
 ];
 
+/// The floor radius of an arena for `cars` cars, m: the cars' share plus the field's, any N.
+pub fn arena_floor_radius(cars: usize) -> f64 {
+    (floor_radius_for(cars) + FIELD_GROWTH_M).max(MIN_FLOOR_RADIUS_M)
+}
+
 /// The arena for `seed` sized for `cars` cars (any N: the floor grows with it).
 pub fn generate(seed: u64, cars: usize) -> Map {
+    generate_with_field(seed, cars).0
+}
+
+/// [`generate`], with the field it laid out (what the jumps, relief and island are: for tests and fixtures).
+pub fn generate_with_field(seed: u64, cars: usize) -> (Map, Field) {
     let mut rng = Rng::stream(seed, "arena");
     // The bank's radius, the wall's height and the lip's width vary a little with the seed (whole metres).
     let bank = 8 + (rng.unit() * 4.0) as i64; // 8..=11 m
     // 10..=12 m: tall enough for the fun-pass cars (br-gw74.13), which climbed out of an 8-10 m wall at 30-55 m/s.
     let wall = 10 + (rng.unit() * 3.0) as i64; // 10..=12 m
     let lip = 2 + (rng.unit() * 2.0) as i64; // 2..=3 m
-    let floor_r = floor_radius_for(cars);
+    let floor_r = arena_floor_radius(cars);
     let params: Params = [
         ("floorRadiusMm".to_owned(), (floor_r * 1000.0) as i64),
         ("bankRadiusMm".to_owned(), bank * 1000),
@@ -92,6 +115,7 @@ pub fn generate(seed: u64, cars: usize) -> Map {
     };
     let design = BowlDesign::of(&feature).expect("the params are complete");
     let outer = design.outer_r();
+    let field = field::generate(&mut Rng::stream(seed, "arena-field"), floor_r);
 
     // Rocks outside: domes whose footprints clear the lip.
     let mut dressing = Vec::new();
@@ -129,7 +153,27 @@ pub fn generate(seed: u64, cars: usize) -> Map {
         }
     }
 
-    // Bounds: the rocks plus a margin; the terrain grid covers them, flat at the floor's height.
+    // The island's rocks: squat solid domes.
+    for rock in &field.rocks {
+        dressing.push(Dressing {
+            kit_piece: "rocks/dome".into(),
+            pose: Pose {
+                x: mm(rock.x),
+                y: 0,
+                z: mm(rock.z),
+                yaw: libm::round(rng.range(0.0, 36_000.0)) as i32,
+            },
+            params: [
+                ("radiusMm".to_owned(), mm(rock.r) as i64),
+                ("heightCm".to_owned(), libm::round(rock.h * 100.0) as i64),
+            ]
+            .into_iter()
+            .collect(),
+            collides: true,
+        });
+    }
+
+    // Bounds: the rocks plus a margin; the terrain grid covers them, flat outside the field.
     let half = reach + MARGIN_M;
     let bounds = Bounds {
         min_x: -mm(half),
@@ -146,15 +190,25 @@ pub fn generate(seed: u64, cars: usize) -> Map {
     let sp = f64::from(spacing) / 1000.0;
     let (ox, oz) = (f64::from(origin_x) / 1000.0, f64::from(origin_z) / 1000.0);
     let mut surfaces = Vec::with_capacity((cols * rows) as usize);
+    let mut heights = Vec::with_capacity((cols * rows) as usize);
     for r in 0..rows {
         for c in 0..cols {
-            let d = libm::hypot(ox + f64::from(c) * sp, oz + f64::from(r) * sp);
-            // Packed red dirt under the bowl, bare rock round the outside.
-            surfaces.push(if d <= design.wall_r() {
-                Surface::PackedDirt
+            let (x, z) = (ox + f64::from(c) * sp, oz + f64::from(r) * sp);
+            let d = libm::hypot(x, z);
+            let h = if d <= field.radius {
+                field.height_at(x, z)
             } else {
-                Surface::Rock
-            });
+                0.0
+            };
+            heights.push(libm::round(h * 100.0) as i16);
+            // Packed red dirt under the bowl, bare rock round the outside and on the jumps (they read as raised rock).
+            surfaces.push(
+                if d > design.wall_r() || (h > 0.03 && field.jump_at(x, z).is_some()) {
+                    Surface::Rock
+                } else {
+                    Surface::PackedDirt
+                },
+            );
         }
     }
 
@@ -184,7 +238,7 @@ pub fn generate(seed: u64, cars: usize) -> Map {
         .collect();
     // Rows round nearly the whole ring; the overflow stacks inside it under spawn protection (placement, S06).
     let length = libm::floor(circumference * 0.95 / ROW_SPACING_M) * ROW_SPACING_M;
-    Map {
+    let map = Map {
         header: Header {
             version: MAP_VERSION.into(),
             generator: Generator {
@@ -203,7 +257,7 @@ pub fn generate(seed: u64, cars: usize) -> Map {
             spacing: spacing as u32,
             cols,
             rows,
-            heights: vec![0; (cols * rows) as usize],
+            heights,
             surfaces,
         },
         route: Route {
@@ -226,7 +280,8 @@ pub fn generate(seed: u64, cars: usize) -> Map {
         features: vec![feature],
         dressing,
         props: Vec::new(),
-    }
+    };
+    (map, field)
 }
 
 /// A validated, canonical arena for `seed` and `cars`, or what the validators found wrong.
@@ -245,8 +300,10 @@ pub fn prepare(seed: u64, cars: usize, registry: &Registry) -> Result<LoadedMap,
     })
 }
 
-/// Every arena check (empty when sound): the format's validator, plus the arena's own: one bowl; the spawn ring and the
-/// cars' spread across it on the floor; solid rocks clear of the lip; every floor cell reachable from the ring (a flood
+/// Every arena check (empty when sound): the format's validator (which holds the floor's relief: flat near the bank, no
+/// rise that hides a car, no dip or slope that traps one), plus the arena's own: one bowl; the spawn ring and the cars'
+/// spread across it on the floor; solid rocks clear of the lip, except the island's, which stand inside the field (clear
+/// of the flat rim) and squat enough to hide nobody; every floor cell reachable from the ring round the island (a flood
 /// fill on a 2 m grid, so no dead corner and no walled-off pocket); a closed shell no car can leave.
 pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
     let mut bad: Vec<String> = validate(map, registry)
@@ -274,7 +331,9 @@ pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
             ));
         }
     }
-    // Solid dressing stands clear of the lip's outer edge.
+    // Solid dressing stands clear of the lip's outer edge, or is the island: inside the field, and squat.
+    let field_edge = d.floor_r - jj_map::arena::limits::FLAT_RIM_M;
+    let mut blocks: Vec<(f64, f64, f64)> = Vec::new();
     for (i, dr) in map
         .dressing
         .iter()
@@ -295,17 +354,42 @@ pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
             f64::from(dr.pose.x) / 1000.0 - d.cx,
             f64::from(dr.pose.z) / 1000.0 - d.cz,
         );
-        if dist - reach < d.outer_r() {
+        if dist - reach >= d.outer_r() {
+            continue;
+        }
+        if dist + reach > field_edge {
             bad.push(format!(
-                "dressing[{i}] reaches into the bowl (solid rocks stand outside the lip)"
+                "dressing[{i}] reaches into the bowl (solid rocks stand outside the lip, or inside the field as its island)"
+            ));
+            continue;
+        }
+        let tall = dr
+            .params
+            .get("heightCm")
+            .map_or(f64::INFINITY, |&h| h as f64 / 100.0);
+        if tall > field::MAX_ISLAND_H_M {
+            bad.push(format!(
+                "dressing[{i}] stands {tall} m tall on the floor, maximum {} m: it could hide a car from the Overview",
+                field::MAX_ISLAND_H_M
             ));
         }
+        blocks.push((
+            f64::from(dr.pose.x) / 1000.0 - d.cx,
+            f64::from(dr.pose.z) / 1000.0 - d.cz,
+            reach,
+        ));
     }
-    // Reachability: flood the floor disc from the ring on a 2 m grid.
+    // Reachability: flood the floor disc from the ring on a 2 m grid, round the island (a car's half-width off its rocks).
     let cell = 2.0;
     let half = (d.floor_r / cell) as i64 + 1;
     let side = (2 * half + 1) as usize;
-    let inside = |i: i64, j: i64| libm::hypot(i as f64 * cell, j as f64 * cell) <= d.floor_r - 1.0;
+    let inside = |i: i64, j: i64| {
+        let (x, z) = (i as f64 * cell, j as f64 * cell);
+        libm::hypot(x, z) <= d.floor_r - 1.0
+            && blocks
+                .iter()
+                .all(|&(bx, bz, r)| libm::hypot(x - bx, z - bz) > r + 1.0)
+    };
     let at = |i: i64, j: i64| ((i + half) as usize) * side + (j + half) as usize;
     let mut seen = vec![false; side * side];
     let start = map.route.points.first().map_or((0, 0), |p| {

@@ -1,6 +1,6 @@
 {
  "scenario": "derby-ram",
- "what": "P1-S10: damage dealt scores, damage taken from the world does not. Three cars wait apart for their 1.5 s spawn protection to end, then at tick 200 are placed for the impacts. Car 1 rams the tail of parked car 2 at 20 m/s on the open floor of the 16-car bowl: both crumple against each other, so both are credited what they dealt. Car 0 hits the bowl wall at 30 m/s with nobody near: wall damage is environmental and scores zero. Nobody has an autopilot.",
+ "what": "P1-S10: damage dealt scores, damage taken from the world does not. Three cars wait apart for their 1.5 s spawn protection to end, then at tick 200 are placed for the impacts. Car 1 rams the tail of parked car 2 at 20 m/s on the flat rim of the 16-car bowl (clear of the field's jumps and island, P1-M-arena-features): both crumple against each other, so both are credited what they dealt. Car 0 hits the bowl wall at 30 m/s with nobody near: wall damage is environmental and scores zero. Nobody has an autopilot.",
  "map": "maps/derby-bowl-16.json",
  "seed": 11,
  "ticks": 680,
@@ -10,7 +10,7 @@
  "cars": [
   {
    "pose": {
-    "x": -10,
+    "x": -22,
     "y": 0.12,
     "z": 8,
     "headingDeg": 90
@@ -18,17 +18,17 @@
   },
   {
    "pose": {
-    "x": -10,
+    "x": -6,
     "y": 0.12,
-    "z": -6,
+    "z": -24,
     "headingDeg": 90
    }
   },
   {
    "pose": {
-    "x": 10,
+    "x": 7,
     "y": 0.12,
-    "z": -6,
+    "z": -24,
     "headingDeg": 90
    }
   }
@@ -70,7 +70,7 @@
    "car": 0,
    "tick": 200,
    "pose": {
-    "x": -14,
+    "x": -22,
     "y": 0.12,
     "z": 8,
     "headingDeg": -90
@@ -85,9 +85,9 @@
    "car": 1,
    "tick": 200,
    "pose": {
-    "x": -3,
+    "x": -6,
     "y": 0.12,
-    "z": -6,
+    "z": -24,
     "headingDeg": 90
    },
    "linvel": [
@@ -100,9 +100,9 @@
    "car": 2,
    "tick": 200,
    "pose": {
-    "x": 10,
+    "x": 7,
     "y": 0.12,
-    "z": -6,
+    "z": -24,
     "headingDeg": 90
    },
    "linvel": [

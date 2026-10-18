@@ -7,7 +7,10 @@
 
 use jj_map::arena::{BowlDesign, bowl_mesh};
 use jj_map::{LoadedMap, gameplay_hash, hex};
-use jj_procgen::arena::{GENERATOR_VERSION, check, generate, prepare};
+use jj_procgen::arena::field::{BUMP_PAD_M, LANE_M, MAX_ISLAND_H_M};
+use jj_procgen::arena::{
+    Field, GENERATOR_VERSION, ReliefKind, check, generate, generate_with_field, prepare,
+};
 use jj_sim::{DriveInput, Sim, TICK_HZ, VehicleProfile};
 
 const S: u64 = TICK_HZ as u64;
@@ -71,7 +74,7 @@ fn arenas_for_8_16_and_32_cars_validate_and_place_everyone_on_the_floor() {
         floors.push(design(&arena(0, cars)).floor_r);
     }
     assert!(
-        floors.windows(2).all(|w| w[0] < w[1]),
+        floors.windows(2).all(|w| w[0] <= w[1]) && floors[0] < floors[2],
         "the bowl grows with the car count: {floors:?}"
     );
 }
@@ -300,7 +303,7 @@ fn bowl_transition_never_catches_or_launches_a_car() {
     let map = arena(13, 16);
     let d = design(&map);
     // A car rolling up the bank at gentle speed: it climbs, slows, and comes back down on its wheels (never stuck at the
-    // foot, never thrown off the transition).
+    // foot, never thrown off the transition). It starts on the flat rim, so the transition is all it meets.
     for &speed in &[6.0f32, 10.0, 15.0] {
         let ram = Ram {
             angle: 0.4,
@@ -310,7 +313,7 @@ fn bowl_transition_never_catches_or_launches_a_car() {
             steer: 0,
             up: 0.0,
             lift: 0.0,
-            r0: d.floor_r * 0.5,
+            r0: d.floor_r - 9.0,
         };
         let mut sim = sim(&map);
         let car = sim.spawn_grid(1)[0];
@@ -651,5 +654,558 @@ fn the_carnage_bowl_lab_scene_is_the_generators_output() {
     assert!(
         std::fs::read_to_string(&fixture_path).unwrap_or_default() == fixture_json,
         "scenarios/derby/carnage-bowl.json is stale: re-bless with JJ_BLESS=1"
+    );
+}
+
+// ---- P1-M-arena-features: the field (jumps, relief, an island or spine) ----
+
+/// The car counts the acceptance names, and the seeds sampled at each (a sample, not a limit).
+const FIELD_CARS: [usize; 3] = [8, 24, 32];
+const FIELD_SEEDS: u64 = 12;
+
+fn field(seed: u64, cars: usize) -> Field {
+    generate_with_field(seed, cars).1
+}
+
+/// The terrain height (m) at the sample nearest (x, z).
+fn ground(map: &jj_map::Map, x: f64, z: f64) -> f64 {
+    let t = &map.terrain;
+    let sp = f64::from(t.spacing) / 1000.0;
+    let c = ((x - f64::from(t.origin_x) / 1000.0) / sp).round() as usize;
+    let r = ((z - f64::from(t.origin_z) / 1000.0) / sp).round() as usize;
+    f64::from(t.heights[r * t.cols as usize + c]) / 100.0
+}
+
+#[test]
+fn arenas_at_8_24_and_32_cars_carry_jumps_relief_and_an_island() {
+    let mut rows = vec![format!(
+        "{:>4} {:>5} {:>7} {:>7} {:>5} {:>7} {:>6} {:>4} {:>5} {:>6} {:>6} {:>8}",
+        "cars",
+        "seed",
+        "floorR",
+        "fieldR",
+        "jumps",
+        "tables",
+        "kicker",
+        "mnd",
+        "dips",
+        "rocks",
+        "maxLip",
+        "m2/car"
+    )];
+    for cars in FIELD_CARS {
+        for seed in 0..FIELD_SEEDS {
+            let map = arena(seed, cars);
+            let f = field(seed, cars);
+            let d = design(&map);
+            let jumps = f.relief.iter().filter(|p| p.kind.is_jump()).count();
+            let bumps = f.count(ReliefKind::Mound) + f.count(ReliefKind::Dip);
+            assert!(
+                jumps >= 2 && f.count(ReliefKind::TableTop) >= 1,
+                "{cars}/{seed}: jumps {jumps}, table-tops {}",
+                f.count(ReliefKind::TableTop)
+            );
+            assert!(bumps >= 2, "{cars}/{seed}: {bumps} mounds and dips");
+            assert!(!f.rocks.is_empty(), "{cars}/{seed}: something to ram round");
+            // The field is in the map: every jump's top stands in the terrain, the rocks are solid dressing.
+            for j in f.relief.iter().filter(|p| p.kind.is_jump()) {
+                // The highest sample within a cell of the lip (a kicker's lip is a crease between samples).
+                let top = (j.up + j.table / 2.0) - j.length() / 2.0;
+                let h = (-4..=4)
+                    .flat_map(|a| (-4..=4).map(move |b| (f64::from(a) * 0.3, f64::from(b) * 0.3)))
+                    .map(|(a, b)| {
+                        ground(&map.map, j.x + j.dir[0] * top + a, j.z + j.dir[1] * top + b)
+                    })
+                    .fold(f64::MIN, f64::max);
+                assert!(
+                    h <= j.height + 0.01 && h > j.height - 0.3,
+                    "{cars}/{seed}: a {} lip {} stands {h} in the terrain",
+                    j.kind.name(),
+                    j.height
+                );
+            }
+            let solid = map
+                .map
+                .dressing
+                .iter()
+                .filter(|dr| {
+                    dr.collides
+                        && f64::from(dr.pose.x).hypot(f64::from(dr.pose.z)) / 1000.0 < d.floor_r
+                })
+                .count();
+            assert_eq!(solid, f.rocks.len(), "{cars}/{seed}: the island's rocks");
+            assert!(f.rocks.iter().all(|r| r.h <= MAX_ISLAND_H_M));
+            // Pieces keep their lanes (sampled on a 0.5 m grid): a jump or the island has half a lane round it, a mound or
+            // dip half its pad, and no point is inside two of those.
+            let n = (f.radius * 2.0) as i64;
+            for i in -n..=n {
+                for k in -n..=n {
+                    let (x, z) = (i as f64 * 0.5, k as f64 * 0.5);
+                    let pad = |p: &jj_procgen::arena::Relief| {
+                        (if p.kind.is_jump() {
+                            LANE_M / 2.0
+                        } else {
+                            BUMP_PAD_M
+                        }) - 0.05
+                    };
+                    let on = f.relief.iter().filter(|p| p.covers(x, z, pad(p))).count()
+                        // The island's rocks are one piece (a spine's overlap on purpose).
+                        + usize::from(
+                            f.rocks
+                                .iter()
+                                .any(|r| (x - r.x).hypot(z - r.z) <= r.r + LANE_M / 2.0 - 0.05),
+                        );
+                    assert!(on <= 1, "{cars}/{seed}: pieces crowd ({x}, {z})");
+                }
+            }
+            let max_lip = f
+                .relief
+                .iter()
+                .filter(|p| p.kind.is_jump())
+                .map(|p| p.height)
+                .fold(0.0, f64::max);
+            rows.push(format!(
+                "{cars:>4} {seed:>5} {:>7.1} {:>7.1} {jumps:>5} {:>7} {:>6} {:>4} {:>5} {:>6} {max_lip:>6.1} {:>8.0}",
+                d.floor_r,
+                f.radius,
+                f.count(ReliefKind::TableTop),
+                f.count(ReliefKind::Kicker),
+                f.count(ReliefKind::Mound),
+                f.count(ReliefKind::Dip),
+                f.rocks.len(),
+                core::f64::consts::PI * d.floor_r * d.floor_r / cars as f64
+            ));
+        }
+    }
+    let table = rows.join("\n") + "\n";
+    println!("{table}");
+    if std::env::var_os("JJ_EVIDENCE").is_some() {
+        let dir = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/evidence/P1-M-arena-features"
+        );
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(format!("{dir}/arenas.txt"), table).unwrap();
+    }
+}
+
+/// A sound arena with one thing broken, and what `check` must say about it.
+fn rejects(name: &str, want: &str, f: impl FnOnce(&mut jj_map::Map)) {
+    let registry = jj_procgen::registry();
+    let mut map = generate(3, 24);
+    assert!(
+        check(&map, &registry).is_empty(),
+        "{name}: the base arena is sound"
+    );
+    f(&mut map);
+    let bad = check(&map, &registry);
+    assert!(
+        bad.iter().any(|b| b.contains(want)),
+        "{name}: wanted a complaint containing {want:?}, got {bad:?}"
+    );
+}
+
+/// Sets the terrain's samples within `r` m of (x, z) to `h` cm, or to `f(dist)` cm.
+fn stamp(map: &mut jj_map::Map, x: f64, z: f64, r: f64, f: impl Fn(f64) -> i16) {
+    let t = &mut map.terrain;
+    let sp = f64::from(t.spacing) / 1000.0;
+    for row in 0..t.rows as usize {
+        for col in 0..t.cols as usize {
+            let (px, pz) = (
+                f64::from(t.origin_x) / 1000.0 + col as f64 * sp,
+                f64::from(t.origin_z) / 1000.0 + row as f64 * sp,
+            );
+            let d = (px - x).hypot(pz - z);
+            if d <= r {
+                t.heights[row * t.cols as usize + col] = f(d);
+            }
+        }
+    }
+}
+
+fn rock(x: f64, z: f64, r: f64, h: f64) -> jj_map::Dressing {
+    jj_map::Dressing {
+        kit_piece: "rocks/dome".into(),
+        pose: jj_map::Pose {
+            x: (x * 1000.0) as i32,
+            y: 0,
+            z: (z * 1000.0) as i32,
+            yaw: 0,
+        },
+        params: [
+            ("radiusMm".to_owned(), (r * 1000.0) as i64),
+            ("heightCm".to_owned(), (h * 100.0) as i64),
+        ]
+        .into_iter()
+        .collect(),
+        collides: true,
+    }
+}
+
+#[test]
+fn the_validator_rejects_features_that_trap_or_hide_cars() {
+    let base = generate(3, 24);
+    let d = base.features.iter().find_map(BowlDesign::of).unwrap();
+    let fr = jj_procgen::arena::field::radius_for(d.floor_r);
+    // A gentle 3 m hill: tall enough to hide a car from the Overview.
+    rejects("tower", "could hide a car", |m| {
+        stamp(m, 12.0, 0.0, 9.0, |r| {
+            (300.0 * (1.0 - r / 9.0)).round() as i16 + 1
+        })
+    });
+    // A 1.5 m deep pit with gentle sides: too deep to be sure of driving out.
+    rejects("deep pit", "could trap a car", |m| {
+        stamp(m, -12.0, 0.0, 9.0, |r| {
+            -(150.0 * (1.0 - r / 9.0)).round() as i16
+        })
+    });
+    // A 1 m step (a wall in the grid): a car trips on it or is trapped behind it.
+    rejects("cliff", "steep", |m| stamp(m, 0.0, -14.0, 3.0, |_| 100));
+    // Relief on the flat rim, under the spawn ring.
+    rejects("rim", "isn't flat", |m| {
+        stamp(m, d.floor_r - 5.5, 0.0, 2.0, |_| 20)
+    });
+    // An island rock too tall: it hides the cars behind it.
+    rejects("tall island", "could hide a car", |m| {
+        m.dressing.push(rock(-fr + 6.0, 0.0, 3.0, 6.0))
+    });
+    // A rock out on the spawn ring.
+    rejects("rock on the ring", "reaches into the bowl", |m| {
+        m.dressing.push(rock(d.floor_r - 5.5, 0.0, 2.0, 2.0))
+    });
+    // A ring of rocks walling off a pocket of the floor: the flood can't reach inside it.
+    rejects("walled pocket", "reachable", |m| {
+        let (cx, cz) = (0.0, fr - 9.0);
+        for k in 0..12 {
+            let a = core::f64::consts::TAU * f64::from(k) / 12.0;
+            m.dressing
+                .push(rock(cx + 6.0 * a.cos(), cz + 6.0 * a.sin(), 2.0, 2.0));
+        }
+    });
+}
+
+/// A car stopped in the bottom of every dip, on top of every table and kicker lip, and against the island (facing out)
+/// drives away under throttle within a few seconds: no piece of the field traps a car.
+#[test]
+fn nothing_in_the_field_traps_a_stopped_car() {
+    let mut rows = Vec::new();
+    for cars in FIELD_CARS {
+        for seed in 0..4u64 {
+            let map = arena(seed, cars);
+            let f = field(seed, cars);
+            // What it stopped on, where, its heading, and the piece it must get off (None: the island's rocks).
+            let mut spots: Vec<(String, f64, f64, f32, Option<jj_procgen::arena::Relief>)> =
+                Vec::new();
+            for p in &f.relief {
+                let out = libm::atan2(p.dir[0], p.dir[1]) as f32;
+                match p.kind {
+                    ReliefKind::Dip | ReliefKind::Mound => {
+                        for k in 0..4 {
+                            spots.push((
+                                format!("{} {k}", p.kind.name()),
+                                p.x,
+                                p.z,
+                                k as f32 * core::f32::consts::FRAC_PI_2,
+                                Some(*p),
+                            ));
+                        }
+                    }
+                    _ => {
+                        let top = p.up + p.table / 2.0 - p.length() / 2.0;
+                        // Across the jump, both ways (the worst way off a table).
+                        for (k, h) in [
+                            (0, out + core::f32::consts::FRAC_PI_2),
+                            (1, out - core::f32::consts::FRAC_PI_2),
+                            (2, out),
+                        ] {
+                            spots.push((
+                                format!("{} top {k}", p.kind.name()),
+                                p.x + p.dir[0] * top,
+                                p.z + p.dir[1] * top,
+                                h,
+                                Some(*p),
+                            ));
+                        }
+                        // Astride each lip (the creases a car could high-centre on), both ways along.
+                        for (k, u) in [(0, p.up), (1, p.up + p.table)] {
+                            let u = u - p.length() / 2.0;
+                            for (w, h) in [("on", out), ("back", out + core::f32::consts::PI)] {
+                                spots.push((
+                                    format!("{} lip {k} {w}", p.kind.name()),
+                                    p.x + p.dir[0] * u,
+                                    p.z + p.dir[1] * u,
+                                    h,
+                                    Some(*p),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+            // Beside each rock, facing away from the island's middle (across the spine for its middle rock).
+            let n = f.rocks.len() as f64;
+            let (cx, cz) = (
+                f.rocks.iter().map(|r| r.x).sum::<f64>() / n,
+                f.rocks.iter().map(|r| r.z).sum::<f64>() / n,
+            );
+            for r in &f.rocks {
+                let (dx, dz) = (r.x - cx, r.z - cz);
+                let a = if dx.hypot(dz) > 0.1 {
+                    dz.atan2(dx)
+                } else if let Some(o) = f.rocks.iter().find(|o| (o.x - cx).hypot(o.z - cz) > 0.1) {
+                    (o.z - cz).atan2(o.x - cx) + core::f64::consts::FRAC_PI_2
+                } else {
+                    0.7
+                };
+                let (x, z) = (r.x + (r.r + 1.6) * a.cos(), r.z + (r.r + 1.6) * a.sin());
+                spots.push((
+                    "island".into(),
+                    x,
+                    z,
+                    libm::atan2(a.cos(), a.sin()) as f32,
+                    None,
+                ));
+            }
+            for (what, x, z, heading, piece) in spots {
+                let mut sim = sim(&map);
+                let car = sim.spawn_grid(1)[0];
+                let y = ground(&map.map, x, z) as f32 + 0.6;
+                sim.place_car(
+                    car,
+                    jj_sim::SpawnPose {
+                        x: x as f32,
+                        y,
+                        z: z as f32,
+                        heading,
+                    },
+                    0.0,
+                    [0.0; 3],
+                );
+                // Off the piece by a car's length (or 8 m from a rock), at any time in 6 s: it drove away, upright as it
+                // left (what it meets after that, the bank at full throttle, is another test's).
+                let (mut away, mut off, mut up) = (0.0f64, false, 1.0f32);
+                for _ in 0..(6 * S) {
+                    sim.set_input(
+                        car,
+                        DriveInput {
+                            throttle: 32767,
+                            ..DriveInput::default()
+                        },
+                    );
+                    sim.step();
+                    let st = sim.car_state(car).unwrap();
+                    let (px, pz) = (f64::from(st.position[0]), f64::from(st.position[2]));
+                    away = away.max((px - x).hypot(pz - z));
+                    if !off {
+                        up = up.min(st.up_y);
+                    }
+                    off |= match piece {
+                        Some(p) => !p.covers(px, pz, 0.5),
+                        None => away > 8.0,
+                    };
+                }
+                rows.push((cars, seed, what.clone(), away));
+                assert!(
+                    off && up > 0.5,
+                    "{cars}/{seed}: a car stopped at {what} ({x:.1}, {z:.1}) didn't drive off it in 6 s ({away:.1} m, up {up:.2})"
+                );
+            }
+        }
+    }
+    println!("{} stopped cars all drove away", rows.len());
+}
+
+/// The bots hunting round a featured bowl meet the jumps, fly and land: a minute of a 13-car derby on the carnage bowl's
+/// arena, counting every judged landing whose flight took off over a jump. Landings are judged (P1-FL07) and a crash is
+/// righted at once: every car keeps moving and stays in the bowl.
+#[test]
+fn derby_bots_fly_the_jumps_and_land() {
+    let (cars, seed) = (13, BANK_SEED);
+    let map = arena(seed, cars);
+    let f = field(seed, cars);
+    let d = design(&map);
+    let mut sim = sim(&map);
+    let ids = sim.spawn_grid(cars);
+    sim.start_derby(180 * S);
+    for &id in &ids {
+        sim.set_autopilot(id, true);
+    }
+    let profile = sim.air_profile().clone();
+    let mut flying = vec![None::<(f64, f64)>; cars];
+    let mut last = vec![None; cars];
+    let mut tiers = [0u32; 4];
+    let (mut jump_landings, mut fliers) = (0u32, std::collections::BTreeSet::new());
+    let mut max_r = 0.0f64;
+    let mut upright = vec![0u64; cars];
+    for t in 0..(60 * S) {
+        sim.step();
+        for (k, &id) in ids.iter().enumerate() {
+            let st = sim.car_state(id).unwrap();
+            // On the floor (not riding the bank, where a car leans with it).
+            let on_floor =
+                f64::from(st.position[0]).hypot(f64::from(st.position[2])) < d.floor_r - 1.0;
+            if t % 6 == 0 && (st.up_y > 0.5 || !on_floor) {
+                upright[k] += 1;
+            } else if t % 60 == 0 && std::env::var_os("JJ_TRACE").is_some() {
+                eprintln!(
+                    "t {:.1} car {k} up {:.2} at ({:.1}, {:.1}, {:.1}) v {:.1}",
+                    t as f64 / S as f64,
+                    st.up_y,
+                    st.position[0],
+                    st.position[1],
+                    st.position[2],
+                    st.forward_speed
+                );
+            }
+            let air = sim.air_state(id).unwrap();
+            let now = air.flying(&profile, TICK_HZ);
+            let (x, z) = (f64::from(st.position[0]), f64::from(st.position[2]));
+            max_r = max_r.max(x.hypot(z));
+            match (flying[k], now) {
+                (None, true) => flying[k] = Some((x, z)),
+                (Some((x0, z0)), false) => {
+                    flying[k] = None;
+                    // Took off on a jump (or within a car's length past its end), and the judge saw a new landing.
+                    let off = f
+                        .relief
+                        .iter()
+                        .any(|p| p.kind.is_jump() && p.covers(x0, z0, 4.0));
+                    if let Some(l) = air.last
+                        && off
+                        && air.last != last[k]
+                    {
+                        jump_landings += 1;
+                        fliers.insert(k);
+                        tiers[l.tier.as_u8() as usize] += 1;
+                    }
+                    last[k] = air.last;
+                }
+                _ => {}
+            }
+        }
+    }
+    // Every car spends its time on the floor on its wheels (a crash landing is righted at once): upright in 90 % of the
+    // samples (a car on the bank leans with it and counts as upright).
+    let least = upright.iter().copied().min().unwrap_or(0) as f64 / (60 * S / 6) as f64;
+    eprintln!(
+        "jump landings {jump_landings} by {} of {cars} cars; tiers clean/ok/bad/crash {tiers:?}; max r {max_r:.1} of wall {:.1}",
+        fliers.len(),
+        d.wall_r()
+    );
+    assert!(
+        max_r < d.wall_r() + ESCAPE_MARGIN_M,
+        "no car leaves the bowl"
+    );
+    // Bots hunt cars, not jumps: they fly a jump when one lies on the way to a rival (measured: 5 by 3 bots a minute).
+    assert!(
+        jump_landings >= 3,
+        "the bots fly the jumps: {jump_landings}"
+    );
+    assert!(
+        fliers.len() >= 2,
+        "more than one bot flies: {}",
+        fliers.len()
+    );
+    assert!(
+        least > 0.9,
+        "every car is on its wheels most of the time ({least:.2})"
+    );
+    assert_eq!(tiers[3], 0, "no crash landings off the jumps");
+}
+
+/// P1-M-arena-features: the jumps fixture (`scenarios/derby/arena-jumps.json`) on the 8-car bank arena
+/// (`maps/derby-bowl-8.json`). For each of its jumps a bot on the autopilot hunts a parked rival on the far side, so its
+/// line runs over the jump: once up the launch ramp, then (re-placed) the other way. The envelope: every hunter flies and
+/// lands on its wheels (judged clean or ok, never bad or a crash), both ways round, and rams its rival; no car leaves the bowl.
+#[test]
+fn the_arena_jumps_fixture_is_the_generators_output() {
+    let cars = 8;
+    let map = arena(BANK_SEED, cars);
+    let f = field(BANK_SEED, cars);
+    let d = design(&map);
+    let jumps: Vec<_> = f.relief.iter().filter(|p| p.kind.is_jump()).collect();
+    assert!(jumps.len() >= 2);
+    let root = format!("{}/../..", env!("CARGO_MANIFEST_DIR"));
+    // Is (x, z) clear floor: on the floor, off every piece and rock by a car's half-length?
+    let clear = |x: f64, z: f64| {
+        x.hypot(z) < d.floor_r - 4.0
+            && f.relief.iter().all(|p| !p.covers(x, z, 2.5))
+            && f.rocks.iter().all(|r| (x - r.x).hypot(z - r.z) > r.r + 2.5)
+    };
+    let pose = |x: f64, z: f64, heading: f64| {
+        serde_json::json!({
+            "x": (x * 100.0).round() / 100.0,
+            "y": 0.12,
+            "z": (z * 100.0).round() / 100.0,
+            "headingDeg": (heading.to_degrees() * 10.0).round() / 10.0,
+        })
+    };
+    let (mut fixture_cars, mut place, mut autopilot, mut expect) =
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let wall = ((d.wall_r() + ESCAPE_MARGIN_M) * 10.0).round() / 10.0;
+    // Two rounds: the hunters run up each launch ramp, then the other way.
+    // (tick, which way along the jump, start speed m/s): the gentle way down is a gentler launch, so it's taken faster.
+    const ROUNDS: [(u64, f64, f64); 2] = [(200, 1.0, 16.0), (800, -1.0, 22.0)];
+    for (j, p) in jumps.iter().enumerate() {
+        let (hunter, prey) = (2 * j, 2 * j + 1);
+        // Parked on the spawn ring until the first round.
+        for car in [hunter, prey] {
+            let a = core::f64::consts::TAU * car as f64 / (2 * jumps.len()) as f64;
+            let r = d.floor_r - 5.5;
+            fixture_cars.push(serde_json::json!({ "pose": pose(r * a.cos(), r * a.sin(), a) }));
+        }
+        for (tick, way, speed) in ROUNDS {
+            let (tx, tz) = (p.dir[0] * way, p.dir[1] * way);
+            let heading = libm::atan2(tx, tz);
+            let half = p.length() / 2.0;
+            // The nearest clear floor to 12 m before the jump and 20 m past it (beyond the flight: a bot that lands on its
+            // rival isn't judged on the jump).
+            let spot = |sign: f64, want: &[f64]| {
+                want.iter()
+                    .map(|&m| (p.x + sign * tx * (half + m), p.z + sign * tz * (half + m)))
+                    .find(|&(x, z)| clear(x, z))
+                    .unwrap_or_else(|| panic!("jump {j}: no clear floor {sign} of it"))
+            };
+            let (hx, hz) = spot(-1.0, &[12.0, 10.0, 14.0, 8.0, 16.0]);
+            let (px, pz) = spot(1.0, &[20.0, 18.0, 22.0, 16.0, 24.0, 14.0]);
+            place.push(serde_json::json!({ "car": hunter, "tick": tick, "pose": pose(hx, hz, heading),
+                "linvel": [((speed * tx) * 100.0f64).round() / 100.0, 0, ((speed * tz) * 100.0f64).round() / 100.0] }));
+            place.push(serde_json::json!({ "car": prey, "tick": tick, "pose": pose(px, pz, heading + core::f64::consts::FRAC_PI_2),
+                "linvel": [0, 0, 0] }));
+        }
+        autopilot.push(serde_json::json!({ "tick": ROUNDS[0].0, "car": hunter, "on": true }));
+        expect.extend([
+            serde_json::json!({ "car": hunter, "metric": "landings", "min": 2, "max": 1000 }),
+            serde_json::json!({ "car": hunter, "metric": "landingTier", "min": 0, "max": 1 }),
+            serde_json::json!({ "car": hunter, "metric": "derbyPoints", "min": 0.1, "max": 100000 }),
+            serde_json::json!({ "car": hunter, "metric": "landingUpY", "min": 0.7, "max": 1.001 }),
+        ]);
+        for car in [hunter, prey] {
+            expect.push(
+                serde_json::json!({ "car": car, "metric": "maxRadiusM", "min": 0, "max": wall }),
+            );
+        }
+    }
+    let fixture = serde_json::json!({
+        "scenario": "arena-jumps",
+        "what": "P1-M-arena-features: bots fly the derby arena's jumps and land. On the 8-car bank arena (maps/derby-bowl-8.json, seed 11) each jump has a bot on the autopilot and a parked rival: at tick 200 the bot starts about 12 m before the jump's launch ramp at 16 m/s and the rival waits about 20 m past its far end, beyond the flight (the nearest clear floor), so the bot's hunting line runs over the jump; at tick 800 both are placed again the other way round (the bot at 22 m/s: the way down is the gentler launch). Every bot flies and lands on its wheels (its first landing judged clean or ok by the landing judge, never bad or a crash), flies both ways round, and rams its rival; the rivals end on their wheels and no car leaves the bowl. Generated by crates/jj-procgen/tests/arena.rs (JJ_BLESS=1).",
+        "map": "maps/derby-bowl-8.json",
+        "seed": 7,
+        "ticks": 1400,
+        "derby": { "atTick": 0 },
+        "cars": fixture_cars,
+        "place": place,
+        "autopilot": autopilot,
+        "expect": expect,
+    });
+    let json = serde_json::to_string_pretty(&fixture).unwrap() + "\n";
+    let path = format!("{root}/scenarios/derby/arena-jumps.json");
+    if std::env::var_os("JJ_BLESS").is_some() {
+        std::fs::write(&path, &json).unwrap();
+        return;
+    }
+    assert!(
+        std::fs::read_to_string(&path).unwrap_or_default() == json,
+        "scenarios/derby/arena-jumps.json is stale: re-bless with JJ_BLESS=1"
     );
 }

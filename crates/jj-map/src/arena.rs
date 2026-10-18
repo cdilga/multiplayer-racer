@@ -16,7 +16,10 @@
 //!
 //! The floor runs into the bank tangentially and the bank into the wall tangentially, so the profile only ever curves one
 //! way, up and over: no inverted concavity anywhere a car can reach (0.1's flat→wall join was a kink that caught cars).
-//! The floor itself is the map's flat heightfield; the mesh starts at the foot of the bank. The collider is exactly
+//! The floor itself is the map's heightfield; the mesh starts at the foot of the bank. The floor is flat for
+//! [`limits::FLAT_RIM_M`] in from the foot of the bank (the spawn ring and the run-up to the bank); inside that it may
+//! carry relief (P1-M-arena-features: table-tops, kickers, mounds and dips), held to the relief limits below so nothing
+//! traps a car or hides one from the Overview. The collider is exactly
 //! [`bowl_mesh`]'s triangles and the renderer draws the same pieces. `f64` and `libm` only, so native and WASM agree to
 //! the bit. Size follows the car count at preparation ([`floor_radius_for`]): never reshaped under cars.
 //!
@@ -55,6 +58,17 @@ pub mod limits {
     pub const FLOOR_AREA_PER_CAR_M2: f64 = 90.0;
     /// The smallest floor radius whatever N (m): eight cars still have room to run.
     pub const FLOOR_RADIUS_MIN_M: f64 = 18.0;
+    /// The floor is flat (at the bowl's base height) this far in from the foot of the bank, m: the spawn ring and the
+    /// run-up to the bank. Relief lives inside it.
+    pub const FLAT_RIM_M: f64 = 10.0;
+    /// The floor's relief stands at most this far above the base, cm: the Overview (P1-R11) looks down at about 60
+    /// degrees, so a 2 m rise shades at most 2 / tan 60 = 1.2 m behind it, less than a car's width: no car hides.
+    pub const MAX_RISE_CM: i64 = 200;
+    /// A dip goes at most this far below the base, cm (with the slope limit, a car always drives out).
+    pub const MAX_DIP_CM: i64 = 100;
+    /// The steepest the relief gets between neighbouring height samples (rise over run): about 31 degrees, which a car
+    /// drives up from rest, so no dip or pocket traps it.
+    pub const MAX_RELIEF_SLOPE: f64 = 0.6;
 }
 
 /// The floor radius (m) for `cars` cars at preparation: area per car, with a floor under it. Any N, no cap.
@@ -249,7 +263,8 @@ pub fn mesh_fingerprint(map: &Map) -> u64 {
 }
 
 /// What is wrong with a `bowl` feature's own numbers, as `(what, detail)` pairs: the arena rules the validator applies
-/// (profile shape, containment height, footprint inside the bounds and the floor flat). Empty when the bowl is sound.
+/// (profile shape, containment height, footprint inside the bounds, the floor flat near the bank and its relief inside
+/// the limits). Empty when the bowl is sound.
 pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
     use limits::*;
     let mut bad = Vec::new();
@@ -332,17 +347,62 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
     let t = &map.terrain;
     let want = (f64::from(f.pose.y) / 10.0) as i32;
     let sp = f64::from(t.spacing) / 1000.0;
-    'floor: for row in 0..t.rows as usize {
-        for col in 0..t.cols as usize {
-            let x = f64::from(t.origin_x) / 1000.0 + col as f64 * sp - d.cx;
-            let z = f64::from(t.origin_z) / 1000.0 + row as f64 * sp - d.cz;
-            if libm::hypot(x, z) <= d.floor_r + sp
-                && i32::from(t.heights[row * t.cols as usize + col]) != want
-            {
-                bad.push("the floor isn't flat at the bowl's base height".into());
-                break 'floor;
+    let cols = t.cols as usize;
+    let at = |row: usize, col: usize| {
+        let x = f64::from(t.origin_x) / 1000.0 + col as f64 * sp - d.cx;
+        let z = f64::from(t.origin_z) / 1000.0 + row as f64 * sp - d.cz;
+        libm::hypot(x, z)
+    };
+    let (mut rim, mut tall, mut deep, mut steep) = (false, None, None, None);
+    for row in 0..t.rows as usize {
+        for col in 0..cols {
+            let r = at(row, col);
+            if r > d.floor_r + sp {
+                continue;
+            }
+            let h = i32::from(t.heights[row * cols + col]);
+            if r >= d.floor_r - FLAT_RIM_M {
+                rim |= h != want;
+                continue;
+            }
+            let rel = i64::from(h - want);
+            if rel > MAX_RISE_CM {
+                tall = Some(tall.unwrap_or(0).max(rel));
+            }
+            if -rel > MAX_DIP_CM {
+                deep = Some(deep.unwrap_or(0).max(-rel));
+            }
+            // The slope to the next sample along each axis.
+            for (r2, c2) in [(row + 1, col), (row, col + 1)] {
+                if r2 >= t.rows as usize || c2 >= cols {
+                    continue;
+                }
+                let dh = f64::from((i32::from(t.heights[r2 * cols + c2]) - h).abs()) / 100.0;
+                if dh / sp > MAX_RELIEF_SLOPE {
+                    steep = Some(steep.unwrap_or(0.0f64).max(dh / sp));
+                }
             }
         }
+    }
+    if rim {
+        bad.push(format!(
+            "the floor isn't flat at the bowl's base height within {FLAT_RIM_M} m of the bank"
+        ));
+    }
+    if let Some(cm) = tall {
+        bad.push(format!(
+            "the floor rises {cm} cm, maximum {MAX_RISE_CM}: it could hide a car from the Overview"
+        ));
+    }
+    if let Some(cm) = deep {
+        bad.push(format!(
+            "the floor dips {cm} cm, maximum {MAX_DIP_CM}: a pit could trap a car"
+        ));
+    }
+    if let Some(s) = steep {
+        bad.push(format!(
+            "the floor's relief is {s:.2} steep, maximum {MAX_RELIEF_SLOPE}: a car could be trapped or tripped"
+        ));
     }
     bad
 }

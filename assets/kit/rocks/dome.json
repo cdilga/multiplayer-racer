@@ -1,7 +1,7 @@
 {
   "id": "rocks/dome",
   "version": 1,
-  "what": "A towering banded red dome (the Olgas): one parametric family, seeded height and footprint scale. Ledges and stacks are the same rule at a smaller scale, set on a bigger one.",
+  "what": "A towering banded red dome (the Olgas): one parametric family, seeded height and footprint scale. Ledges and stacks are the same rule at a smaller scale, set on a bigger one; a derby arena's island or spine is the same rule squat (P1-M-arena-features: 1.5-2.5 m tall, so it hides no car from the Overview).",
   "params": {
     "radiusMm": {
       "min": 3000,
@@ -9,7 +9,7 @@
       "default": 14000
     },
     "heightCm": {
-      "min": 1200,
+      "min": 150,
       "max": 9000,
       "default": 4000
     }

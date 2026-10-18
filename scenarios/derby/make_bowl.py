@@ -8,8 +8,8 @@ radial, 12..50 m/s, boost on alternate cars, a little steer on some) and 12 airb
 is the design envelope in jj_map::arena::limits, outward at 15..45 m/s). Each must stay within the wall's face plus 0.75 m
 (`maxRadiusM`: a car pressed to the wall has its origin inside the wall's skin; a car over the lip is metres past it).
 
-bowl-transition: three cars roll up the bank from the floor with no throttle at 6, 10 and 15 m/s: each reaches the bank,
-leaves the ground for no more than 0.15 s, never tips over (minUpY), and is back down on the floor at the end (not caught).
+bowl-transition: three cars roll up the bank from the floor's flat rim with no throttle at 6, 10 and 15 m/s: each reaches the bank,
+leaves the ground for no more than 0.15 s, never tips over (minUpY), and is back down on the floor at the end (not caught; a dip in the field counts as the floor).
 """
 import json
 import math
@@ -76,16 +76,19 @@ containment = {
 
 trans_cars, trans_inputs, trans_expect = [], [], []
 for i, (angle, speed) in enumerate([(20, 6), (140, 10), (260, 15)]):
-    trans_cars.append(car(floor_r * 0.55, angle, 0.12, 0, speed))
+    # From the flat rim (jj_map::arena::limits::FLAT_RIM_M), so the transition is all it meets (P1-M-arena-features).
+    trans_cars.append(car(floor_r - 9.0, angle, 0.12, 0, speed))
     trans_expect += [
         {"car": i, "metric": "maxRadiusM", "min": round(floor_r + 0.5, 2), "max": limit},
         {"car": i, "metric": "airtimeS", "min": 0, "max": 0.15},
         {"car": i, "metric": "minUpY", "min": 0.4, "max": 1.001},
-        {"car": i, "metric": "height", "min": -0.2, "max": 0.9},
+        # Back on the floor: a car that rolls back past the rim into one of the field's dips sits up to 1 m low
+        # (jj_map::arena::limits::MAX_DIP_CM), never caught up the bank.
+        {"car": i, "metric": "height", "min": -1.0, "max": 0.9},
     ]
 transition = {
     "scenario": "bowl-transition",
-    "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car\'s up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back).",
+    "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor's flat rim at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car\'s up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back; a dip in the field, up to 1 m deep, is floor).",
     "map": "maps/derby-bowl-16.json",
     "seed": 11,
     "ticks": 1440,

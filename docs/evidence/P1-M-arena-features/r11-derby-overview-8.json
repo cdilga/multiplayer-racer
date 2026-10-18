@@ -1,0 +1,118 @@
+{
+  "scenario": "derby-overview-8",
+  "unusedTarget": 0.35,
+  "unusedTargetMet": false,
+  "browser": "chromium (Playwright)",
+  "viewport": "1920x1080 css, dpr 1",
+  "profile": "TV at 3 m: median car height ≥ carHeightTarget (3.5 %) of the gameplay frame height",
+  "mask": "gameplay frame = canvas between the top edge band and the footer; padded envelope = screen bbox of every car extended padM (3 m) round its body; unused = 1 - envelope∩frame / frame",
+  "frame": {
+    "left": 0,
+    "top": 43.1875,
+    "right": 1920,
+    "bottom": 1026
+  },
+  "cars": 8,
+  "medianCarPx": 87.2,
+  "targetPx": 34.4,
+  "envelope": [
+    551.1,
+    122.2,
+    1484.5,
+    1022.3
+  ],
+  "unusedShare": 0.555,
+  "spread": false,
+  "frameM": 45.4,
+  "wantedM": 45.85,
+  "maxFrameM": 83.67,
+  "carBoxes": [
+    {
+      "car": 0,
+      "box": [
+        895.4,
+        434,
+        936.5,
+        521.2
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 1,
+      "box": [
+        1137.2,
+        342.5,
+        1228.8,
+        426.8
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 2,
+      "box": [
+        901.7,
+        687,
+        998.8,
+        743.6
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 3,
+      "box": [
+        817.9,
+        257.4,
+        897.5,
+        338.3
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 4,
+      "box": [
+        1331.1,
+        480.9,
+        1404.2,
+        575.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 5,
+      "box": [
+        642.2,
+        612.9,
+        746,
+        706.1
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 6,
+      "box": [
+        1083.6,
+        164.3,
+        1166.5,
+        219.4
+      ],
+      "inFrame": true
+    },
+    {
+      "car": 7,
+      "box": [
+        1231.5,
+        801.3,
+        1322.2,
+        920.6
+      ],
+      "inFrame": true
+    }
+  ],
+  "band": {
+    "shown": true,
+    "clock": "Derby · 2:54 left",
+    "suggest": false,
+    "note": null,
+    "height": 43.1875
+  }
+}

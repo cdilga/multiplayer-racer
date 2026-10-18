@@ -310,6 +310,43 @@ fn yaw_rotation(yaw_cdeg: i32) -> Vector {
     Vector::new(0.0, -(yaw_cdeg as f32 / 100.0).to_radians(), 0.0)
 }
 
+/// The solid rocks standing on a derby bowl's floor (its island or spine, P1-M-arena-features) as one capsule for the
+/// hunting bots: the axis between the two rocks farthest apart, as thick as the widest. `None` when the floor is clear.
+fn island(
+    m: &jj_map::Map,
+    registry: &Registry,
+    bowl: &jj_map::arena::BowlDesign,
+) -> Option<crate::autopilot::Obstacle> {
+    let rocks: Vec<([f32; 2], f32)> = m
+        .dressing
+        .iter()
+        .filter(|d| d.collides)
+        .filter_map(|d| {
+            let r = match registry.get(&d.kit_piece)?.footprint(&d.params)? {
+                Footprint::Circle { radius, .. } => radius / 1000.0,
+                Footprint::Rect { x, z, .. } => libm::hypot(x, z) / 2000.0,
+            };
+            let (x, z) = (f64::from(d.pose.x) / 1000.0, f64::from(d.pose.z) / 1000.0);
+            (libm::hypot(x - bowl.cx, z - bowl.cz) < bowl.floor_r)
+                .then_some(([x as f32, z as f32], r as f32))
+        })
+        .collect();
+    let r = rocks
+        .iter()
+        .map(|k| k.1)
+        .fold(None, |m: Option<f32>, r| Some(m.map_or(r, |m| m.max(r))))?;
+    let far = |p: [f32; 2], q: [f32; 2]| libm::hypotf(p[0] - q[0], p[1] - q[1]);
+    let (mut a, mut b) = (rocks[0].0, rocks[0].0);
+    for (p, _) in &rocks {
+        for (q, _) in &rocks {
+            if far(*p, *q) > far(a, b) {
+                (a, b) = (*p, *q);
+            }
+        }
+    }
+    Some(crate::autopilot::Obstacle { a, b, r })
+}
+
 fn proxy_collider(fp: Footprint) -> (ColliderBuilder, f32) {
     match fp {
         Footprint::Rect { x, z, height } => {
@@ -670,6 +707,7 @@ impl Sim {
                     x: b.cx as f32,
                     z: b.cz as f32,
                     floor_r: b.floor_r as f32,
+                    obstacle: island(m, registry, &b),
                 }),
             assist_profile: AssistProfile::standard(),
             catch_up: CatchUp::Off,

@@ -1,15 +1,15 @@
 {
  "scenario": "bowl-transition",
- "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car's up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back).",
+ "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor's flat rim at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car's up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back; a dip in the field, up to 1 m deep, is floor).",
  "map": "maps/derby-bowl-16.json",
  "seed": 11,
  "ticks": 1440,
  "cars": [
   {
    "pose": {
-    "x": 11.37,
+    "x": 20.673,
     "y": 0.12,
-    "z": 4.138,
+    "z": 7.524,
     "headingDeg": 70.0
    },
    "linvel": [
@@ -20,9 +20,9 @@
   },
   {
    "pose": {
-    "x": -9.269,
+    "x": -16.853,
     "y": 0.12,
-    "z": 7.778,
+    "z": 14.141,
     "headingDeg": -50.0
    },
    "linvel": [
@@ -33,9 +33,9 @@
   },
   {
    "pose": {
-    "x": -2.101,
+    "x": -3.82,
     "y": 0.12,
-    "z": -11.916,
+    "z": -21.666,
     "headingDeg": -170.0
    },
    "linvel": [
@@ -49,8 +49,8 @@
   {
    "car": 0,
    "metric": "maxRadiusM",
-   "min": 22.5,
-   "max": 30.75
+   "min": 31.5,
+   "max": 39.75
   },
   {
    "car": 0,
@@ -67,14 +67,14 @@
   {
    "car": 0,
    "metric": "height",
-   "min": -0.2,
+   "min": -1.0,
    "max": 0.9
   },
   {
    "car": 1,
    "metric": "maxRadiusM",
-   "min": 22.5,
-   "max": 30.75
+   "min": 31.5,
+   "max": 39.75
   },
   {
    "car": 1,
@@ -91,14 +91,14 @@
   {
    "car": 1,
    "metric": "height",
-   "min": -0.2,
+   "min": -1.0,
    "max": 0.9
   },
   {
    "car": 2,
    "metric": "maxRadiusM",
-   "min": 22.5,
-   "max": 30.75
+   "min": 31.5,
+   "max": 39.75
   },
   {
    "car": 2,
@@ -115,7 +115,7 @@
   {
    "car": 2,
    "metric": "height",
-   "min": -0.2,
+   "min": -1.0,
    "max": 0.9
   }
  ]
