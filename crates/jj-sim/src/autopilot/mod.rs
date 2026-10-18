@@ -18,6 +18,11 @@
 //!   deliberate is the session's job (G03), and [`is_deliberate`] is the test it uses: a heartbeat or a noisy axis
 //!   doesn't reclaim the car.
 //!
+//! - **Derby hunting** (br-bbki.11). In a derby there's no route to follow: the bot picks a rival (the nearest one ahead
+//!   of it that isn't under spawn protection, kept a while so it doesn't dither), drives at where that car will be when it
+//!   gets there (its velocity times the time to close, capped), flat out to ram, and holds inside the bowl: an aim past the
+//!   floor's edge is pulled back in. With nobody to hunt it circles the floor.
+//!
 //! Everything it decides is in [`AutopilotState`] for introspection (target point, look-ahead, target speed, stuck
 //! time).
 
@@ -412,6 +417,31 @@ pub struct AutopilotState {
     pub brake: f32,
 }
 
+/// A rival a derby bot can hunt (br-bbki.11): where it is and how it's moving, and whether hitting it scores (spawn
+/// protection).
+#[derive(Clone, Copy, Debug)]
+pub struct Rival {
+    pub car: u32,
+    pub x: f32,
+    pub z: f32,
+    pub vx: f32,
+    pub vz: f32,
+    pub protected: bool,
+}
+
+/// The derby bowl a bot hunts in: its centre and floor radius (m).
+#[derive(Clone, Copy, Debug)]
+pub struct Arena {
+    pub x: f32,
+    pub z: f32,
+    pub floor_r: f32,
+}
+
+/// A hunter keeps its prey at least this long (ticks) before it looks again, unless the prey is protected or gone.
+const HUNT_KEEP_TICKS: u64 = 2 * SECOND;
+/// The lead on a rival is at most this far ahead in time (s).
+const HUNT_LEAD_S: f32 = 1.2;
+
 /// One car's autopilot.
 #[derive(Clone, Debug)]
 pub struct Autopilot {
@@ -431,6 +461,8 @@ pub struct Autopilot {
     forks_met: u32,
     car: u32,
     choice_seed: u64,
+    /// The derby rival it's hunting and when it chose it (br-bbki.11).
+    prey: Option<(u32, u64)>,
 }
 
 /// A split this close ahead (m) is decided about.
@@ -463,7 +495,119 @@ impl Autopilot {
             forks_met: 0,
             car,
             choice_seed: mix(seed ^ 0xF04C),
+            prey: None,
         }
+    }
+
+    /// The controls for a derby (br-bbki.11): hunt a rival in the bowl, flat out, and whether it wants to Recover.
+    #[allow(clippy::too_many_arguments)]
+    pub fn hunt(
+        &mut self,
+        me: Pose2,
+        rivals: &[Rival],
+        arena: Arena,
+        max_steer: f32,
+        wheelbase: f32,
+        tick: u64,
+    ) -> (DriveInput, bool) {
+        let (sh, ch) = (libm::sinf(me.heading), libm::cosf(me.heading));
+        let local = |x: f32, z: f32| {
+            let (dx, dz) = (x - me.x, z - me.z);
+            (dx * ch - dz * sh, dx * sh + dz * ch)
+        };
+        let hunted = |r: &&Rival| r.car != self.car && !r.protected;
+        // Keep the prey a while; look again when it's protected, gone, or the time is up.
+        let keep = self.prey.and_then(|(car, since)| {
+            (tick < since + HUNT_KEEP_TICKS)
+                .then(|| rivals.iter().find(|r| r.car == car && !r.protected))
+                .flatten()
+        });
+        let prey = keep.or_else(|| {
+            // The nearest rival, counting one behind as farther (a bot charges what it's facing).
+            let pick = rivals.iter().filter(hunted).min_by(|a, b| {
+                let cost = |r: &Rival| {
+                    let (l, f) = local(r.x, r.z);
+                    libm::hypotf(l, f) + 12.0 * libm::atan2f(l, f).abs()
+                };
+                cost(a).total_cmp(&cost(b))
+            });
+            self.prey = pick.map(|r| (r.car, tick));
+            pick
+        });
+        let speed = me.forward_speed.max(0.0);
+        // Aim: where the prey will be when this car gets there; else round the floor ahead.
+        let (mut ax, mut az) = match prey {
+            Some(r) => {
+                let d = libm::hypotf(r.x - me.x, r.z - me.z);
+                let t = (d / speed.max(8.0)).min(HUNT_LEAD_S);
+                (r.x + r.vx * t, r.z + r.vz * t)
+            }
+            None => {
+                let (rx, rz) = (me.x - arena.x, me.z - arena.z);
+                let r = libm::hypotf(rx, rz).max(1.0);
+                let ring = arena.floor_r * 0.6;
+                // A point a quarter turn on round a ring inside the floor.
+                (
+                    arena.x + (rx / r * 0.4 - rz / r) * ring,
+                    arena.z + (rz / r * 0.4 + rx / r) * ring,
+                )
+            }
+        };
+        // Held inside the bowl: an aim past the floor's edge comes back in.
+        let (ox, oz) = (ax - arena.x, az - arena.z);
+        let out_r = libm::hypotf(ox, oz);
+        let keep_in = arena.floor_r * 0.85;
+        if out_r > keep_in {
+            (ax, az) = (
+                arena.x + ox / out_r * keep_in,
+                arena.z + oz / out_r * keep_in,
+            );
+        }
+        let (l, f) = local(ax, az);
+        let dist = libm::hypotf(l, f).max(1.0);
+        let alpha = libm::atan2f(l, f);
+        let curvature = 2.0 * libm::sinf(alpha) / dist.max(MIN_LOOK_AHEAD_M);
+        let wheel = libm::atanf(curvature * wheelbase);
+        if tick.is_multiple_of(NOISE_EVERY_TICKS) {
+            self.noise_target = (self.noise.next_f32() * 2.0 - 1.0) * NOISE_STEER;
+        }
+        self.noise_now += (self.noise_target - self.noise_now) * 0.05;
+        let steer = (wheel / max_steer + self.noise_now).clamp(-1.0, 1.0);
+        // Flat out at the prey; lifting to turn when it's well behind at speed.
+        let (throttle, brake) = if alpha.abs() > 2.0 && speed > 8.0 {
+            (0.3, 0.0)
+        } else {
+            (1.0, 0.0)
+        };
+        self.stuck = if me.forward_speed.abs() < STUCK_SPEED {
+            self.stuck + 1
+        } else {
+            0
+        };
+        let recover = self.stuck >= STUCK_TICKS;
+        if recover {
+            self.stuck = 0;
+            self.prey = None;
+        }
+        let out = DriveInput {
+            throttle: quantise_axis(throttle),
+            steer: quantise_axis(steer),
+            brake: quantise_axis(brake),
+            ..DriveInput::default()
+        };
+        self.last_out = out;
+        self.state = Some(AutopilotState {
+            mode: self.mode,
+            route_point: prey.map_or(u32::MAX, |r| r.car),
+            target: [ax, az],
+            look_ahead_m: dist,
+            target_speed: f32::MAX,
+            stuck_ticks: self.stuck,
+            steer,
+            throttle,
+            brake,
+        });
+        (out, recover)
     }
 
     pub fn mode(&self) -> Mode {
@@ -658,6 +802,10 @@ impl Autopilot {
         }
         out.extend(self.noise_now.to_bits().to_le_bytes());
         out.extend(self.noise_target.to_bits().to_le_bytes());
+        if let Some((car, since)) = self.prey {
+            out.extend(car.to_le_bytes());
+            out.extend(since.to_le_bytes());
+        }
         out.extend(self.stuck.to_le_bytes());
         out.extend(self.handback_at.to_le_bytes());
         // u64 sentinels, never `usize::MAX as u64`: usize is 32-bit in WASM, so that hashed differently from native

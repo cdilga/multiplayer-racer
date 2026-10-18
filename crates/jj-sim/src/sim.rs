@@ -297,6 +297,8 @@ pub struct Sim {
     line: RouteLine,
     slots: Vec<SpawnPose>,
     path: Path,
+    /// The derby bowl the bots hunt in (br-bbki.11): its centre and floor radius; none on a course.
+    hunt_arena: Option<crate::autopilot::Arena>,
     /// Learner-assist and catch-up data (R125) and the lobby's catch-up choice.
     assist_profile: AssistProfile,
     catch_up: CatchUp,
@@ -660,6 +662,15 @@ impl Sim {
             line: RouteLine::new(map),
             slots: corridor_slots(map, &RouteLine::new(map)),
             path: Path::new(map),
+            hunt_arena: m
+                .features
+                .iter()
+                .find_map(jj_map::arena::BowlDesign::of)
+                .map(|b| crate::autopilot::Arena {
+                    x: b.cx as f32,
+                    z: b.cz as f32,
+                    floor_r: b.floor_r as f32,
+                }),
             assist_profile: AssistProfile::standard(),
             catch_up: CatchUp::Off,
             air_profile: AirProfile::standard(),
@@ -1896,6 +1907,28 @@ impl Sim {
         let tick = self.tick;
         let mut stuck = Vec::new();
         let catch_shares = self.catch_up_shares();
+        // br-bbki.11: in a derby the bots hunt: every car's place and motion, and whether a hit on it would score.
+        let rivals: Vec<crate::autopilot::Rival> = match (self.derby.as_ref(), self.hunt_arena) {
+            (Some(l), Some(_)) => self
+                .cars
+                .iter()
+                .enumerate()
+                .filter_map(|(i, c)| {
+                    let b = self.world.bodies.get(c.body)?;
+                    let (t, v) = (b.position().translation, b.linvel());
+                    Some(crate::autopilot::Rival {
+                        car: i as u32,
+                        x: t.x,
+                        z: t.z,
+                        vx: v.x,
+                        vz: v.z,
+                        protected: l.protected_at(i as u32, tick),
+                    })
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+        let hunt_arena = self.derby.as_ref().and(self.hunt_arena);
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
             // Each car is driven by its own profile (R123).
@@ -1921,19 +1954,30 @@ impl Sim {
                     };
                     // The lock the car really has at this speed (it eases off with speed), so the pursuit's stick turns
                     // the curvature it asks for (P1-FL04.2).
-                    let (out, recover) = ap.drive(
-                        &self.path,
-                        pose,
-                        p.steer_lock(pose.forward_speed),
-                        wheelbase,
-                        tick,
-                        &crate::autopilot::SpeedPlan {
-                            scale: 1.0
-                                + self.assist_profile.catch_up.top_speed_gain
-                                    * catch_shares.get(i).copied().unwrap_or(0.0),
-                            ..self.assist_profile.speed_plan(p)
-                        },
-                    );
+                    let (out, recover) = match hunt_arena {
+                        // br-bbki.11: a derby bot hunts the other cars in the bowl.
+                        Some(arena) if ap.mode() == Mode::Driving => ap.hunt(
+                            pose,
+                            &rivals,
+                            arena,
+                            p.steer_lock(pose.forward_speed),
+                            wheelbase,
+                            tick,
+                        ),
+                        _ => ap.drive(
+                            &self.path,
+                            pose,
+                            p.steer_lock(pose.forward_speed),
+                            wheelbase,
+                            tick,
+                            &crate::autopilot::SpeedPlan {
+                                scale: 1.0
+                                    + self.assist_profile.catch_up.top_speed_gain
+                                        * catch_shares.get(i).copied().unwrap_or(0.0),
+                                ..self.assist_profile.speed_plan(p)
+                            },
+                        ),
+                    };
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost rides on the autopilot's line. Only DRIVE moving counts as taking back over.
                     // In the air the stick pitches and rolls the car (R129): the autopilot levels its nose to the road's
@@ -1948,7 +1992,12 @@ impl Sim {
                         let i = ap.state().map_or(0, |s| s.route_point as usize);
                         let v = b.linvel();
                         let ahead = libm::hypotf(v.x, v.z) * AIR_LOOK_S;
-                        let want = libm::atanf(self.path.grade_ahead(i, ahead));
+                        // (A derby bot has no road to read: it lands level on the bowl's floor.)
+                        let want = if hunt_arena.is_some() {
+                            0.0
+                        } else {
+                            libm::atanf(self.path.grade_ahead(i, ahead))
+                        };
                         let pitch = libm::asinf(fwd.y.clamp(-1.0, 1.0));
                         let stick = (AIR_PITCH_GAIN * (pitch - want)).clamp(-1.0, 1.0);
                         DriveInput {

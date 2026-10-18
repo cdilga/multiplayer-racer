@@ -538,3 +538,51 @@ fn a_derby_late_joiner_arrives_clear_on_the_edge_protected_and_upright() {
         );
     }
 }
+
+/// br-bbki.11 (the carnage bowl): a derby's bots hunt. A player's car and twelve bots on the autopilot in a 13-car bowl for
+/// a minute of derby: they ram each other (points and takedowns all round, not a few lucky brushes), keep moving (not
+/// pinned against the wall or stuck), and stay in the bowl.
+#[test]
+fn derby_bots_hunt_each_other_round_the_bowl() {
+    let map = arena(11, 13);
+    let d = design(&map);
+    let mut sim = sim(&map);
+    let ids = sim.spawn_grid(13);
+    sim.start_derby(180 * S);
+    for &id in &ids {
+        sim.set_autopilot(id, true);
+    }
+    let (mut moving, mut samples) = (0u64, 0u64);
+    let mut outside = Vec::new();
+    for t in 0..(60 * S) {
+        sim.step();
+        if t % (S / 2) == 0 {
+            for &id in &ids {
+                let st = sim.car_state(id).unwrap();
+                samples += 1;
+                if st.forward_speed.abs() > 3.0 {
+                    moving += 1;
+                }
+                let r = f64::from(st.position[0] - d.cx as f32)
+                    .hypot(f64::from(st.position[2] - d.cz as f32));
+                if r > d.wall_r() + ESCAPE_MARGIN_M {
+                    outside.push((id.0, t, r));
+                }
+            }
+        }
+    }
+    let takedowns = sim.takedowns().len();
+    let rows = sim.derby().expect("the derby is on").rows();
+    let scorers = rows.iter().filter(|r| r.units > 0).count();
+    let total: u64 = rows.iter().map(|r| r.units).sum();
+    eprintln!(
+        "scorers {scorers}/13, total units {total}, takedowns {takedowns}, moving {moving}/{samples}"
+    );
+    assert!(outside.is_empty(), "no car leaves the bowl: {outside:?}");
+    assert!(scorers >= 10, "most bots score by ramming: {scorers}/13");
+    assert!(takedowns >= 13, "takedowns all round: {takedowns}");
+    assert!(
+        moving * 10 >= samples * 7,
+        "bots keep moving: {moving}/{samples}"
+    );
+}
