@@ -806,6 +806,15 @@ impl Host {
             };
             self.sim.set_input(car, controls);
         }
+        // P1-FL08: the bots wait for GO with the grid; after it the autopilot drives them.
+        for &bot in &self.round.bot_cars {
+            let controls = if held {
+                DriveInput::grid_held()
+            } else {
+                DriveInput::default()
+            };
+            self.sim.set_input(bot, controls);
+        }
         self.sim.step();
         // P1-G06: a derby round runs on game time; the director ends it at its limit (it stops with every pause).
         if self.round.derby_now && self.phase() == jj_session::director::Phase::Running {

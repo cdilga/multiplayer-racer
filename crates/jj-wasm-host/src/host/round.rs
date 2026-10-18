@@ -68,6 +68,8 @@ pub(super) struct RoundState {
     pub favourite: Option<(u64, String)>,
     /// br-bbki.11: bots on the autopilot on each round's grid after the seats (the Feel Lab's carnage bowl).
     pub bots: u32,
+    /// This round's bot cars, held with the grid through the countdown (P1-FL08).
+    pub bot_cars: Vec<CarId>,
     /// br-m1xe: the tick each seat's laps ended this round (its lap times).
     pub lap_ticks: std::collections::BTreeMap<SeatId, Vec<u64>>,
 }
@@ -98,6 +100,7 @@ impl RoundState {
             favourite: None,
             lap_ticks: Default::default(),
             bots: 0,
+            bot_cars: Vec::new(),
             standings: Standings::default(),
             laps: None,
             free_drive: false,
@@ -331,7 +334,8 @@ impl Host {
         }
         // br-bbki.11: the bots, on the grid after the seats, each on the autopilot (no seat: they're in the world and the
         // derby ledger, not the results).
-        for bot in self.sim.spawn_grid_as(&vec![0; self.round.bots as usize]) {
+        self.round.bot_cars = self.sim.spawn_grid_as(&vec![0; self.round.bots as usize]);
+        for &bot in &self.round.bot_cars {
             self.sim.set_autopilot(bot, true);
         }
         self.session_rev += 1;
@@ -376,6 +380,7 @@ impl Host {
             input.car = None;
             input.dropped = false;
         }
+        self.round.bot_cars.clear();
         self.seen_race_events = 0;
         self.seen_utility_events = 0;
         self.seen_damage_events = 0;

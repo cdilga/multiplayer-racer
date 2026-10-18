@@ -4365,13 +4365,25 @@ fn bots_join_a_derby_round_on_the_autopilot_and_score() {
     h.handle(&ui(UiCommand::StartRound)).unwrap();
     let mut now = 0u64;
     let mut guard = 0;
+    // P1-FL08: the bots wait for GO with the grid (the countdown's hold wins over the autopilot).
+    let mut countdown_roll = 0.0f32;
     while h.phase() != Phase::Running {
         h.advance(now);
         now += 8_334;
         while h.next_message().is_some() {}
+        if h.phase() == Phase::Countdown {
+            for car in h.sim.cars().collect::<Vec<_>>() {
+                let v = h.sim.car_state(car).unwrap().linvel;
+                countdown_roll = countdown_roll.max(v[0].hypot(v[2]));
+            }
+        }
         guard += 1;
         assert!(guard < 120 * 60, "the derby starts");
     }
+    assert!(
+        countdown_roll < 0.5,
+        "nobody rolls before GO: {countdown_roll} m/s"
+    );
     assert_eq!(h.sim.cars().count(), 7, "one seat's car and six bots");
     let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
     assert_eq!(room["bots"], 6);

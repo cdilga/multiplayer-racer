@@ -771,6 +771,16 @@ impl Harness {
                 }
                 continue;
             }
+            // P1-FL08: the countdown holds every car, as the host holds its seats and bots (the hold wins over the
+            // autopilot too).
+            if fx
+                .race
+                .as_ref()
+                .is_some_and(|r| r.countdown && t < r.at_tick)
+            {
+                sim.set_input(CarId(car), DriveInput::grid_held());
+                continue;
+            }
             let input = span.map_or(DriveInput::default(), |i| DriveInput {
                 throttle: quantise_axis(i.throttle),
                 steer: quantise_axis(i.steer),

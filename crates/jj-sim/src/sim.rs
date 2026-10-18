@@ -1937,7 +1937,10 @@ impl Sim {
             // A held car (the 2 s respawn penalty) gets no controls; an autopiloted one gets the autopilot's, blending
             // to the player's during a handback.
             let mut input = car.input;
-            if let Some(ap) = car.autopilot.as_mut() {
+            // P1-FL08: the countdown's grid hold wins over the autopilot, so a bot or an autopiloted seat waits for GO.
+            if let Some(ap) = car.autopilot.as_mut()
+                && car.input != DriveInput::grid_held()
+            {
                 if ap.mode() == Mode::Handback {
                     match ap.blend(tick, car.input) {
                         Some(blended) => input = blended,

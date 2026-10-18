@@ -72,6 +72,10 @@ pub struct Run {
     pub until: Option<Value>,
     /// Outcome envelope rows for car 0 (`jj-fixture` metrics).
     pub expect: Vec<Value>,
+    /// More of the fixture (P1-FL08): keys that replace the run's own, such as a full grid (`cars`, `grid`), a `race` with
+    /// its countdown, stick `inputs` or `autopilot` for every car; its `expect` rows name their own car and follow car 0's.
+    #[serde(default)]
+    pub fixture: Option<serde_json::Map<String, Value>>,
 }
 
 /// A verge to start a run at: within `REACH_M` of the road's edge the ground rises at least `min_rise_m`, and its steepest
@@ -249,6 +253,14 @@ pub fn build(id: &str, map_path: &str) -> Result<Built, Vec<String>> {
             let mut u = u.clone();
             u["car"] = json!(0);
             fx["until"] = u;
+        }
+        for (k, v) in r.fixture.iter().flatten() {
+            if k == "expect" {
+                let rows = fx["expect"].as_array_mut().expect("expect is a list");
+                rows.extend(v.as_array().into_iter().flatten().cloned());
+            } else {
+                fx[k] = v.clone();
+            }
         }
         fixtures.push((r.run.clone(), fx));
     }

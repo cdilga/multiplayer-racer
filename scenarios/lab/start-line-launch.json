@@ -1,0 +1,208 @@
+{
+  "autopilot": [
+    {
+      "car": 2,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 3,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 4,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 5,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 6,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 7,
+      "on": true,
+      "tick": 0
+    }
+  ],
+  "cars": [],
+  "expect": [
+    {
+      "atTick": 359,
+      "car": 0,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 1,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 2,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 3,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 4,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 5,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 6,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "atTick": 359,
+      "car": 7,
+      "max": 0.2,
+      "metric": "speed",
+      "min": 0
+    },
+    {
+      "car": 0,
+      "max": 0,
+      "metric": "wheelieDriveS",
+      "min": 0
+    },
+    {
+      "car": 1,
+      "max": 0.9,
+      "metric": "wheelieDriveS",
+      "min": 0.7
+    },
+    {
+      "atTick": 540,
+      "car": 0,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 1,
+      "max": 48,
+      "metric": "progressM",
+      "min": 30
+    },
+    {
+      "atTick": 540,
+      "car": 2,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 3,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 4,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 5,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 6,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    },
+    {
+      "atTick": 540,
+      "car": 7,
+      "max": 15,
+      "metric": "progressM",
+      "min": 7
+    }
+  ],
+  "grid": 8,
+  "inputs": [
+    {
+      "car": 0,
+      "fromTick": 0,
+      "stick": [
+        0,
+        -1
+      ],
+      "toTick": 300
+    },
+    {
+      "car": 0,
+      "fromTick": 300,
+      "stick": [
+        0,
+        1
+      ]
+    },
+    {
+      "car": 1,
+      "fromTick": 0,
+      "stick": [
+        0,
+        -1
+      ],
+      "toTick": 360
+    },
+    {
+      "car": 1,
+      "fromTick": 360,
+      "stick": [
+        0,
+        1
+      ]
+    }
+  ],
+  "map": "maps/lab/start-line.json",
+  "race": {
+    "atTick": 360,
+    "countdown": true,
+    "laps": 1
+  },
+  "scenario": "start-line-launch",
+  "seed": 1,
+  "ticks": 600,
+  "what": "Eight cars on the start grid, the countdown holding them 3 s (GO at tick 360). Car 0 pulls back and snaps forward at tick 300, before GO: a false start, its launch forfeited. Car 1 pulls back through the countdown and snaps at GO: the perfect launch. The other six are on the autopilot. Nobody moves before GO (the hold wins over the autopilot); only car 1 launches, and 1.5 s after GO it is about three times as far down the straight as anyone else (39 m against 10-11 m)."
+}
