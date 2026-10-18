@@ -378,7 +378,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       <div class="rs-side">
         <div class="rs-list" data-results data-count="${rows.length}"></div>
         <div class="rs-foot"><div class="rs-join"></div>
-          <div class="rs-acts"><div class="rs-vote" data-vote role="group" aria-label="Next track"></div>
+          <div class="rs-acts"><p class="rs-thanks display" data-thanks>Cheers for ${derby ? 'the carnage' : 'racing'}!</p><div class="rs-vote" data-vote role="group" aria-label="Next track"></div>
             <div class="rs-keep" data-keep hidden><button class="btn brush" data-act="keep" type="button">Keep this track</button><span class="rs-code" data-code></span></div>
             <p class="rs-best" data-best hidden></p>
             <button class="btn brush primary big" data-act="start" type="button">Start next round now</button>

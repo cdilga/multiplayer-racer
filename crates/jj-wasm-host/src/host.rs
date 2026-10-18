@@ -211,6 +211,9 @@ pub struct Host {
     seen_utility_events: usize,
     /// How many of the sim's damage events have become seat events (P1-S04a).
     seen_damage_events: usize,
+    /// br-ennm: each car's latest wreck (the tick it was collected and why), so the tile's banner names the cause of the
+    /// respawn hold it's in.
+    wrecks_seen: BTreeMap<u32, (u64, &'static str)>,
     seen_item_events: usize,
     sent_inventory: BTreeMap<SeatId, jj_protocol::items::Inventory>,
     /// The seats' clock: every step, never reset. The sim's tick restarts at 0 with each round's new world, and the
@@ -363,6 +366,7 @@ impl Host {
             seen_race_events: 0,
             seen_utility_events: 0,
             seen_damage_events: 0,
+            wrecks_seen: BTreeMap::new(),
             seen_item_events: 0,
             sent_inventory: BTreeMap::new(),
             session_tick: 0,
@@ -1553,6 +1557,17 @@ impl Host {
     fn collect_damage_events(&mut self) {
         let fresh = self.sim.damage_events()[self.seen_damage_events..].to_vec();
         self.seen_damage_events += fresh.len();
+        // br-ennm: each car's latest wreck and why, for its tile's banner (bots too).
+        for (tick, e) in &fresh {
+            if let DamageEvent::Wrecked { car, why, .. } = e {
+                let why = match why {
+                    jj_sim::damage::WreckWhy::OutOfBounds => "outOfBounds",
+                    jj_sim::damage::WreckWhy::Flipped => "flipped",
+                    jj_sim::damage::WreckWhy::WheelLoss => "wheelLoss",
+                };
+                self.wrecks_seen.insert(*car, (*tick, why));
+            }
+        }
         let body = |o: DamageOther| match o {
             DamageOther::Car { car } => (
                 HitBody::Car {

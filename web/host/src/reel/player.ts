@@ -8,7 +8,7 @@ import { applySeatPattern, motionMode, paintKit } from '../../../shared/ui';
 import './reel.css';
 import { mountNameplates } from '../identity/nameplates';
 
-const titles = { detach: 'Parts flying', wreck: 'Wrecked!', air: 'Big air', finish: 'Across the line', 'close-finish': 'Photo finish' };
+const titles = { detach: 'Parts flying', wreck: 'Wrecked!', air: 'Big air', finish: 'Across the line', 'close-finish': 'Fair dinkum finish' };
 
 /** Receives only presentation footage. There is deliberately no SimClient or input callback here. */
 export class ReelPlayer {

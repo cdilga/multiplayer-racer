@@ -4396,3 +4396,47 @@ fn bots_join_a_derby_round_on_the_autopilot_and_score() {
     let scoring_bots = rows.iter().filter(|r| r.car >= 1 && r.units > 0).count();
     assert!(scoring_bots >= 3, "the bots hunt and score: {rows:?}");
 }
+
+/// br-ennm: a wrecked car's tile banner gets the respawn hold's time left and the wreck's cause from the room view, and
+/// the fields clear when the hold ends.
+#[test]
+fn the_room_view_carries_a_wrecked_seats_hold_and_its_cause() {
+    let mut h = driving_host();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("p1".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&net("p1", Channel::Cmd, c.encode())).unwrap();
+    }
+    let mut now = 0u64;
+    let mut step = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    step(&mut h, 240);
+    let seat = |h: &Host| {
+        let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        room["seats"][0].clone()
+    };
+    let car = seat(&h)["car"].as_u64().expect("the seat drives a car") as u32;
+    assert!(seat(&h)["wreckMs"].is_null(), "no hold before the wreck");
+    assert!(h.sim.wreck(CarId(car)), "the wreck is accepted");
+    step(&mut h, 1);
+    let s = seat(&h);
+    assert_eq!(s["wreckWhy"], "flipped", "{s}");
+    let ms = s["wreckMs"].as_u64().unwrap();
+    assert!(ms > 0 && ms <= 1_000, "the hold's time left: {ms} ms");
+    step(&mut h, 150);
+    assert!(seat(&h)["wreckMs"].is_null(), "the hold is over");
+}

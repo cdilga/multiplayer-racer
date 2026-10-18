@@ -94,6 +94,8 @@
 }
 .rs-head { display: flex; flex-direction: column; align-items: flex-start; gap: calc(12px * var(--k)); min-width: 0; }
 .rs-head .bn { background: var(--c-paper); color: var(--c-ink); font-size: calc(68px * var(--k)); }
+/* br-ennm: the round's thank-you (docs/copy/australianisms.md, cheers), above the vote. */
+.rs-thanks { margin: 0; color: var(--c-ink); font-size: calc(34px * var(--k)); line-height: 1.1; }
 .rs-head .strip { background: var(--c-saffron); color: var(--c-ink); font-size: calc(28px * var(--k)); max-width: 100%; }
 .rs-winner { align-self: center; display: flex; align-items: center; gap: calc(16px * var(--k)); flex-wrap: wrap; justify-content: center; padding: calc(14px * var(--k)) calc(26px * var(--k)); background: var(--c-paper); border: calc(4px * var(--k)) solid var(--c-ink); box-shadow: 0 calc(6px * var(--k)) 0 rgb(0 0 0 / .5); font-size: calc(52px * var(--k)); transform: rotate(-1deg); }
 .rs-winner small { flex-basis: 100%; text-align: center; font: 900 italic calc(24px * var(--k))/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; }

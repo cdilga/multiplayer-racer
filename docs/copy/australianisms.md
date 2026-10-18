@@ -150,20 +150,23 @@ names someone gets if they don't pick one (P1-C03's curated prefill list, and th
 
 Every term from the owner-supplied list that ships, with its exact line. Cue ids are `moment-variant` in
 `tools/audio/cues-playtest1.tsv`; each is also a clip `assets/audio/voice/<id>.ogg`. Terms the doc fits to places we have no copy for
-yet (scallop, cruiser, sanga) are not used. TV and host lines to follow are in `docs/evidence/P1-A06c/tv-copy-todo.md`.
+yet (scallop, cruiser, sanga) are not used. The TV and host lines once listed in `docs/evidence/P1-A06c/tv-copy-todo.md` are in the 0.2 host (2026-10-18); the lobby's blokes-and-sheilas caption was left out (the welcome cue says it).
 
 | Term | Line | Where |
 |---|---|---|
 | out past whoop whoop | "Out past whoop whoop! Drive back onto the track." | cue `off-course-1` |
 | out past whoop whoop | "You're out past whoop whoop! Steer back to the track." | cue `off-course-4` |
 | out past whoop whoop | "Out past whoop whoop" / "Drive back onto the track." | phone banner, `art/ui/poc/phone/phone.js:201` (state `#race&stick=offcourse`) |
+| out past whoop whoop | "Out past whoop whoop!" / "Back onto the track in 1 s" | TV tile banner while an out-of-bounds car's respawn hold runs, `web/host/src/round/hud.ts` (room view `wreckWhy: outOfBounds`) |
 | walkabout | "That car's gone walkabout! Back onto the track, mate." | cue `off-course-2` |
 | walkabout | "Gone walkabout! Bring that car back onto the track." | cue `off-course-3` |
 | cheers | "Yeah nah, not this time. The round's over, cheers for racing." | cue `time-up-4` |
 | cheers | "Cheers for racing, sheilas and blokes! What a round that was." | cue `winner-4` |
 | cheers | "Cheers for that one, blokes. Next round's loading, so hang tight." | cue `next-round-4` |
+| cheers | "Cheers for racing!" (a derby: "Cheers for the carnage!") | TV Round complete, above the vote, `web/host/src/round/screens.ts` |
 | cheers | "Cheers for playing! You finished 3rd." | phone state card `game-ended`, `art/ui/poc/phone/phone.js:426` |
 | fair dinkum | "A fair dinkum finish! Nobody gave an inch." | cue `photo-finish-4` |
+| fair dinkum | "Fair dinkum finish" | highlight reel title for the photo-finish clip, `web/host/src/reel/player.ts` |
 | sheila / sheilas | "Welcome, blokes and sheilas! Grab a controller, this arvo's racing is on." | cue `welcome-4` |
 | sheila / sheilas | "Cheers for racing, sheilas and blokes! What a round that was." | cue `winner-4` |
 | blokes | the `welcome-4`, `winner-4` and `next-round-4` lines above | cues |

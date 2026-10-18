@@ -384,6 +384,7 @@ impl Host {
         self.seen_race_events = 0;
         self.seen_utility_events = 0;
         self.seen_damage_events = 0;
+        self.wrecks_seen.clear();
         self.seen_item_events = 0;
         self.sent_inventory.clear();
     }
@@ -611,6 +612,20 @@ impl Host {
                 let car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
                 let race =
                     car.and_then(|c| self.sim.race().standings().into_iter().find(|r| r.car == c));
+                // br-ennm: the respawn hold's time left (ms) and its cause, for the tile's banner: a wreck's why
+                // ("outOfBounds", "flipped", "wheelLoss") when one started this hold, else "recover".
+                let tick = self.sim.tick();
+                let wreck = car
+                    .and_then(|c| Some((c, self.sim.race().car(c)?.hold_until)))
+                    .filter(|&(_, until)| tick < until)
+                    .map(|(c, until)| {
+                        let why = self
+                            .wrecks_seen
+                            .get(&c)
+                            .filter(|(t, _)| *t + jj_sim::race::RESPAWN_HOLD_TICKS >= until)
+                            .map_or("recover", |(_, why)| why);
+                        (super::tick_ms(until - tick), why)
+                    });
                 serde_json::json!({
                     "seat": s.id.0,
                     "number": s.number.0,
@@ -638,6 +653,8 @@ impl Host {
                     "finishMs": race.and_then(|r| r.finished_at).map(|t| super::tick_ms(t.saturating_sub(self.sim.race().started_at.unwrap_or(t)))),
                     // br-m1xe: each lap's time this round (ms), from GO and lap to lap.
                     "lapMs": self.lap_ms(s.id),
+                    "wreckMs": wreck.map(|w| w.0),
+                    "wreckWhy": wreck.map(|w| w.1),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.

@@ -12,8 +12,9 @@ import { promptHtml } from '../ui/prompts/steps';
 type SeatView = RoomView['seats'][number] & {
   /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
   boost?: number | null;
-  /** Wreck/respawn countdown in ms; the worker doesn't send it yet (report in docs/evidence/P1-R07), so the banner waits for it. */
+  /** From `room_json` (br-ennm): the respawn hold's time left in ms, and what started it. */
   wreckMs?: number | null;
+  wreckWhy?: 'outOfBounds' | 'flipped' | 'wheelLoss' | 'recover' | null;
   /** From `room_json`: the seat's finishing time (ms from the start) once its car has finished. */
   finishMs?: number | null;
 };
@@ -109,7 +110,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // P1-C14: a pad, wheel or key cluster seat is coached in its own glyphs, and holding its Identify shows its controls card.
       const src = sourceOf(s?.localSource);
       const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
-      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
+      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -158,7 +159,12 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       pr.innerHTML = held ? controlsCard(src!, controlsData(), { compact: true }) : prompt ? promptHtml(prompt, src, controlsData()) : '';
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
       centre.hidden = !(s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0);
-      if (!centre.hidden) box.querySelector('.cd')!.textContent = String(Math.ceil(s.wreckMs! / 1000));
+      if (!centre.hidden) {
+        // br-ennm (docs/copy/australianisms.md): a car off the course is out past whoop whoop, with the plain words beside it.
+        const oob = s.wreckWhy === 'outOfBounds';
+        box.querySelector('.wreck-word')!.textContent = oob ? 'Out past whoop whoop!' : s.wreckWhy === 'recover' ? 'Back on the road' : 'Wrecked!';
+        box.querySelector('.wreck-back')!.innerHTML = `${oob ? 'Back onto the track in' : 'Back in'} <b class="cd">${Math.ceil(s.wreckMs! / 1000)}</b> s`;
+      }
       // The seat's finish: a banner with its place and time, held to the end of the race.
       const fin = box.querySelector<HTMLElement>('[data-finished]')!;
       fin.hidden = !(started && s.finished);
