@@ -3,11 +3,11 @@
  "lod": 0,
  "sheet": "lod1",
  "stats": {
-  "tris": 2670,
+  "tris": 2990,
   "draws": 14,
   "breakdown": {
-   "front": 786,
-   "core": 392,
+   "front": 834,
+   "core": 664,
    "door_FL": 34,
    "door_RL": 18,
    "back": 636,
@@ -31,9 +31,9 @@
    "extra": 0.0292
   },
   "top": {
-   "iou": 0.9755,
+   "iou": 0.9756,
    "aspect": 1.103,
-   "miss": 0.0099,
+   "miss": 0.0098,
    "extra": 0.0146
   },
   "front": {
@@ -43,11 +43,11 @@
    "extra": 0.0029
   },
   "rear": {
-   "iou": 0.966,
+   "iou": 0.9643,
    "aspect": 0.987,
-   "miss": 0.02,
-   "extra": 0.014
+   "miss": 0.0218,
+   "extra": 0.0139
   }
  },
- "score": 0.9602
+ "score": 0.96
 }

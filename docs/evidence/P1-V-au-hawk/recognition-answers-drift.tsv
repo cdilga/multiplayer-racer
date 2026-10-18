@@ -1,0 +1,90 @@
+lod0-front-left.png	first-1	It looks like a 2000s-era Ford Falcon (BA/BF generation, four-door sedan), though I'm not certain given the low-poly simplification.
+lod0-front-left.png	first-2	Ford Falcon (AU) BA/BF-era sedan, judging by the front-end shape and grille; the low-poly build makes that a moderate-confidence call.
+lod0-front-left.png	first-3	It looks like a first-generation Ford Falcon (BA/BF-era) sedan, though the low-poly model is a loose match and I can't confirm the exact generation from this render alone.
+lod0-front-left.png	second-1	Nissan Maxima, A33 generation (about 2000–2003), though it's a low-confidence match. The swept headlights and mesh grille fit it best; a Ford Falcon BA is the next closest.
+lod0-front-left.png	second-2	Closest match: a early-2000s Holden VY/VZ Commodore sedan, though the low-poly detail is coarse, so that's a low-confidence call.
+lod0-front-left.png	second-3	It looks like a 2002–2004 Nissan Maxima (A33 generation), or possibly a Nissan Altima of similar era, with its grille and headlight shape.
+lod0-front-right.png	first-1	Looks like a Ford Falcon BA sedan (Australian-market, 2002–2005), though the low-poly simplification makes it a rough match.
+lod0-front-right.png	first-2	Ford Falcon AU series (2002–2005) four-door sedan.
+lod0-front-right.png	first-3	Roughly a 2002–2005 Ford Falcon AU sedan, though the low-poly model is loose enough that it could also pass for a Holden VY Commodore.
+lod0-front-right.png	second-1	It looks like a 2000s-era Holden VE Commodore sedan (front grille badge and headlight shape), rendered in low-poly orange.
+lod0-front-right.png	second-2	Closest match is a late-1990s/early-2000s Holden Commodore (VT–VX generation) sedan, though the low-poly model is too loose to pin the exact generation with confidence.
+lod0-front-right.png	second-3	Looks most like a **Holden VE Commodore sedan (2006–2013)**, though the low-poly form makes that a loose match.
+lod0-front.png	first-1	Looks most like a **Ford Falcon AU (2000–2002)**, judging by the oval grille and central badge, though the low-poly front view is a loose match.
+lod0-front.png	first-2	Looks like a **Ford Falcon AU (1998–2002)**, going by the oval grille and central badge, though a front-on low-poly view is only a rough match.
+lod0-front.png	first-3	Looks like a Ford Falcon AU (2002–2005), going by the oval grille and headlight shape, though a low-poly front view is ambiguous.
+lod0-front.png	second-1	Most like a late-1990s/early-2000s Ford Laser (KN/KQ) hatch, though that's a low-confidence call from a front-only view.
+lod0-front.png	second-2	It looks like a Ford Focus Mk1 (c. 1998–2004 Euro-style hatch or saloon), though the render is too low-poly to confirm the exact generation.
+lod0-front.png	second-3	Most likely a first-generation Ford Focus (2001–2004), though the low-poly front makes it a low-confidence call.
+lod0-rear-left.png	first-1	Most likely a **Ford Falcon AU-series sedan (1999–2002)**, based on the boxy notchback body and the full-width red tail-lamp bar.
+lod0-rear-left.png	first-2	Looks like a late-1990s/early-2000s Ford Falcon AU (BA/BF) four-door sedan, going by the boxy body and wide rear tail lamps. The low-poly render makes it a loose match, not an exact one.
+lod0-rear-left.png	first-3	It looks like a mid-2000s Ford Falcon/Fairmont-style four-door sedan (AU BA/BF-era Falcon), though the low-poly model makes the exact generation a best guess.
+lod0-rear-left.png	second-1	Closest match is a late-1990s Ford Falcon (AU) or Holden Commodore (VS-era) four-door sedan, though the low-poly shape is generic enough that it's a best guess.
+lod0-rear-left.png	second-2	It looks like a 1990s–early-2000s Ford Crown Victoria/Mercury Grand Marquis-style full-size sedan, or more closely a Ford Contour/Mondeo-era four-door, though the tail-lamp and body proportions most resemble a 1998–2002 Ford Crown Victoria.
+lod0-rear-left.png	second-3	Looks like a 1990s–2000s Ford Crown Victoria-style or Ford Falcon/Fairlane-era four-door sedan (the boxy trunk, the tail-light shape and the rear badge point to a Ford, though it's a low-poly approximation, so this is a best guess).
+lod0-rear.png	first-1	Rear view of a sedan that most resembles a **Ford Falcon AU-series (c. 2000–2002)**, though a Holden VT/VX Commodore is a close alternative from the same era.
+lod0-rear.png	first-2	Closest match is a 2008-2010 Ford Falcon (BF/FG series) sedan, though the low-poly rear view makes it a low-confidence guess.
+lod0-rear.png	first-3	Looks like a rear view of a 2000s-era Ford Falcon/Fairmont-style sedan (boxy trunk, horizontal tail lamps with reversing light), though the render is too low-poly to confirm the exact generation.
+lod0-rear.png	second-1	Rear view of an orange sedan that most resembles a **Holden VE Commodore sedan (2006–2013)**, though the low-poly model is loose enough that it could also pass for a Ford Falcon FG.
+lod0-rear.png	second-2	It reads as a rear view of a late-2000s/early-2010s mid-size four-door sedan, most like a Ford Fusion or Mercury Milan (the rear end is a close match for the 2010–2012 facelift).
+lod0-rear.png	second-3	Closest match is a 2000s-era mid-size sedan, most like a Holden Commodore VT–VX or Ford Falcon BA–BF, though the render is too generic to pin to one generation with confidence.
+lod1-front-left.png	first-1	Looks like a Ford Falcon BA/BF sedan (circa 2002–2008), going by the oval Ford badge in the grille, the headlight shape and the four-door profile.
+lod1-front-left.png	first-2	It looks like a 2002–2005 Ford Falcon (BA/BF generation) sedan, based on the grille, headlight shape and sedan profile.
+lod1-front-left.png	first-3	It looks like a first-generation Ford Mondeo (the Mk3 sedan, circa 2000–2007), based on the grille, headlight shape, and sedan profile.
+lod1-front-left.png	second-1	It looks like a 2000s-era Ford Mondeo sedan (Mk3-style), with the trapezoidal grille and headlight shape.
+lod1-front-left.png	second-2	It looks like a late-2000s Ford Falcon/Fairmont-style sedan, likely a Ford Mondeo (first-gen, c. 2000–2003) or Ford Falcon BA/BF, based on the grille and headlight shape and four-door notchback profile. I can't pin the exact generation from a low-poly render, so treat that as a best guess.
+lod1-front-left.png	second-3	It looks like a low-poly take on a early-2000s Ford Falcon/Fairmont-style sedan (BA–BF Falcon-like), though the front grille and headlight shape also suggest a Ford Mondeo or Falcon AU; I can't pin the exact generation from a render this rough.
+lod1-front-right.png	first-1	Looks like a Ford Falcon AU (BA/BF generation, early-2000s Australian sedan), judging by the oval grille badge, the sloping four-door sedan profile and the headlight shape. The reference-sheet work in this repo targets that same car, so the match is plausible.
+lod1-front-right.png	first-2	Looks like a Ford AU Falcon (BA/BF generation) sedan, going by the blunt nose, oval grille badge and sedan body.
+lod1-front-right.png	first-3	It looks like a 2000s-era Ford Focus sedan (first generation, ~2005–2007 facelift), judging by the grille badge, headlight shape and four-door notchback body.
+lod1-front-right.png	second-1	Most likely a **Ford Mondeo Mk3 sedan (c. 2000–2007)**, going by the oval-badged grille and sedan roofline; it could also be a Focus Mk1 sedan.
+lod1-front-right.png	second-2	Looks like a **Ford Mondeo Mk3 sedan (c. 2000–2007)**, going by the oval Ford grille badge, the sloped headlights and the four-door notchback profile. It's a low-poly model, so the match is approximate.
+lod1-front-right.png	second-3	It looks like a first-generation Ford Mondeo (Mk I/Mk II sedan), judging by the nose, oval grille badge and headlamp shape.
+lod1-front.png	first-1	Most likely an early-2000s Ford Falcon AU sedan (front view), though the low-poly front is ambiguous enough that it could also read as a BA/BF Falcon.
+lod1-front.png	first-2	It looks like a low-poly orange Ford Focus Mk1 (first generation, c. 1998–2004), judging by the grille, headlights and nose shape. I'm confident in the make and rough generation, but a low-poly front view can't confirm the exact model year.
+lod1-front.png	first-3	It looks like a first-to-second-generation Ford Focus hatch/sedan in orange, judging by the grille bar, oval badge and headlight shape, though the low-poly form makes the exact generation a low-confidence call.
+lod1-front.png	second-1	Best guess: a first-generation Ford Focus (c. 1998–2004), going by the oval Ford-style badge in the dark grille and the swept headlamps. Low confidence, since it's a low-poly front view.
+lod1-front.png	second-2	Most likely a early-2000s Ford Focus Mk1 (facelift), though the low-poly simplification makes this a low-confidence match.
+lod1-front.png	second-3	Closest match: a Ford Laser KN/KQ (1998–2002, Mazda 323 BJ-based), though that's a low-confidence guess from the oval badge-and-bar grille and the headlight shape.
+lod1-rear-left.png	first-1	Most likely an Australian-market Ford Falcon sedan, around the BA/BF generation (early-2000s), though a Holden VT–VX Commodore is a close alternative.
+lod1-rear-left.png	first-2	It looks like a 1990s–2000s Holden Commodore VS/VT-style or Ford Falcon AU-era Australian mid-size sedan (boxy four-door notchback, rear-quarter tail lights), so I'd say an AU Falcon/Commodore-type sedan, with the Ford Falcon AU as the closest match.
+lod1-rear-left.png	first-3	It looks like a generation-two (c. 1999–2002) Holden Commodore VX-style sedan, or a Ford Falcon AU/BA, given the boxy four-door profile and tail-light shape. Given how low-poly the render is, I'd call it a loose Holden VX/VY Commodore sedan.
+lod1-rear-left.png	second-1	Most like a Holden VT–VX Commodore four-door sedan (Australian, late 1990s to early 2000s), though the low-poly detail makes that a loose match.
+lod1-rear-left.png	second-2	Most like a late-1990s Holden VT Commodore sedan, though low confidence since the low-poly render is coarse.
+lod1-rear-left.png	second-3	Most like a 1990s Australian four-door sedan, roughly a Holden VR/VS Commodore, though a Ford EF Falcon is also plausible (low confidence).
+lod1-rear.png	first-1	Most likely a 2006–2013 Holden Commodore VE sedan, seen from the rear, though the low-poly detail makes this a low-confidence call.
+lod1-rear.png	first-2	Closest match: a early-2000s compact sedan, most like a Toyota Corolla (E120 generation), though the low-poly model is too coarse to confirm the make or generation.
+lod1-rear.png	first-3	Best match: a Ford Falcon AU-series sedan (c. 2000–2002), judged from the rear, so the tail-lamp and boot shape is the main evidence.
+lod1-rear.png	second-1	Most like a **Holden VE Commodore sedan (2006–2013)**, though the low-poly render is too abstract to be certain.
+lod1-rear.png	second-2	It looks like a low-poly orange 2000s-era Holden Commodore VY/VZ sedan (rear view, with the wraparound tail lamps and flat rear panel).
+lod1-rear.png	second-3	Most likely a **Holden VE Commodore sedan (2006–2013)**, though it's a low-confidence guess from a rear-only, low-poly view.
+lod2-front-left.png	first-1	Looks like a early-2000s Ford Falcon AU/BA sedan, judging by the four-door body and the dark oval grille with a centre badge. The low-poly shapes make the exact generation a guess.
+lod2-front-left.png	first-2	It looks like a Ford Falcon AU sedan (about 1999–2002), judging by the body and the dark grille with a centre badge.
+lod2-front-left.png	first-3	It looks like a 2000s-era mid-size sedan, roughly a Ford Mondeo or Falcon-style four-door, with a Ford-like grille and headlights, though I can't pin the exact generation from a low-poly render.
+lod2-front-left.png	second-1	Looks like a Ford Falcon sedan from the BA–BF era (early-to-mid 2000s Australian model), though the low-poly simplification makes this a loose guess.
+lod2-front-left.png	second-2	Looks most like a early-2000s Ford Mondeo Mk3 saloon (roughly 2000–2007), though the low-poly simplification makes it a loose match.
+lod2-front-left.png	second-3	Looks like a **Ford Falcon BA/BF (2002–2008) sedan**, going by the oval-badged grille and the sedan profile. Moderate confidence: it's a stylised low-poly model, so the grille and headlight shapes are approximate.
+lod2-front-right.png	first-1	It looks like a first-generation (GC/GD-era) Subaru Impreza WRX sedan, with the hood-line shape, the black grille with a central badge, and the sedan body; the wide wheel arches and tall stance are consistent with that.
+lod2-front-right.png	first-2	Looks like a second-generation Subaru Impreza WRX sedan (GD, 2002–2007), though the low-poly model is loose enough that the exact generation is a guess.
+lod2-front-right.png	first-3	Closest match: a 2002–2007 Subaru Impreza WRX sedan (GD generation), though it's a loose match.
+lod2-front-right.png	second-1	Looks like a 2002–2007 Subaru Impreza WRX sedan (GD generation), going by the mesh grille with the central badge and the angular headlights.
+lod2-front-right.png	second-2	It looks like a **Subaru Impreza WRX sedan, GD/GE generation (c. 2002–2007)**, based on the sedan body and the mesh grille with the centre badge. The render is low-poly, so this is a best guess.
+lod2-front-right.png	second-3	It looks like a low-poly take on a **Subaru Impreza WRX sedan, first-generation GD (2002–2007)**, going by the sedan body and the front grille with the centre badge. The render is low-poly, so the match is approximate.
+lod2-front.png	first-1	It looks like a **Ford Falcon FG (2008–2014)**, with the oval grille and swept headlights; a front-only view leaves some doubt.
+lod2-front.png	first-2	Looks most like a **Ford Falcon AU (2000–02)**, though the low-poly front is ambiguous enough that a similar Ford or Holden could fit.
+lod2-front.png	first-3	Most like a Ford Falcon (AU/BA generation), though the low-poly front is ambiguous and a Ford Focus or Mondeo of the same era fits almost as well.
+lod2-front.png	second-1	Looks most like a **Ford Mondeo Mk4 (2007–2010 facelift)**, judging by the swept headlights and oval-badged grille, though the low-poly front view makes this a low-confidence call.
+lod2-front.png	second-2	Most likely a 2008–2011 Ford Focus Mk2 (facelift), though the low-poly front view makes it a rough match.
+lod2-front.png	second-3	Most likely a Ford Falcon FG (2008–2014) from the front, though the low-poly render makes the match only moderately confident.
+lod2-rear-left.png	first-1	Looks like a Holden VT–VZ Commodore sedan (rear-quarter view, wide horizontal tail-light bar), though a low-poly model this rough could also be read as an AU Ford Falcon.
+lod2-rear-left.png	first-2	It looks like a **Ford Falcon AU-series sedan (c. 2002–2005)**, judging by the boxy notchback profile and rear light treatment, though the low-poly render makes the exact generation a best guess.
+lod2-rear-left.png	first-3	It looks like a low-poly orange 4-door sedan, similar to a 1990s–2000s Holden Commodore VS/VT or Ford Falcon (AU). The boxy trunk and the tail-light shape are closest to the Commodore VS.
+lod2-rear-left.png	second-1	It looks like a boxy, low-poly orange 1990s–2000s Holden Commodore VS/VT-style sedan, though I'm not certain of the exact generation from this render.
+lod2-rear-left.png	second-2	It looks most like a **Holden VT–VX Commodore sedan** (late-1990s to early-2000s Australian rear-drive), though the low-poly model is loose enough that it could also pass for a Ford AU Falcon.
+lod2-rear-left.png	second-3	Loosely a late-1990s Australian four-door sedan like a Holden VT/VX Commodore, though the low-poly shape is generic enough that I can't confirm a specific model.
+lod2-rear.png	first-1	Closest match: a Holden VE Commodore sedan (2006–2013), rear view. Low confidence, since the render is a rear-only view with no badging or grille to confirm it.
+lod2-rear.png	first-2	Most like a 2000–2005 Nissan Pulsar/Sentra (N16) sedan from the rear, though the low detail means I can't confirm the generation.
+lod2-rear.png	first-3	Looks like a rear view of a 2000s Nissan Pulsar/Sentra-style sedan (roughly the N16 generation), but the low-poly render makes it a loose match rather than a confident ID.
+lod2-rear.png	second-1	Rear view of an orange sedan that most resembles a first-generation **Holden Cruze (J300) sedan**, going by the wide, wrap-around tail lamps and the notchless trunk. It's a low-confidence call from a rear view alone.
+lod2-rear.png	second-2	Closest match is a 2000s compact sedan, roughly a Nissan Pulsar/Sentra (N16/B15-era) from the rear, though the low-poly render is too coarse to confirm the exact model or generation.
+lod2-rear.png	second-3	Closest guess is a late-2000s Holden VE/VF Commodore sedan, but the rear view is too generic to be sure.

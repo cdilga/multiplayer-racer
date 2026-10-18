@@ -1,0 +1,4574 @@
+[
+ {
+  "which": "before",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 171512,
+  "frameMs": 16.66,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 192974,
+  "frameMs": 16.67,
+  "p95Ms": 16.799999999999727,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1051094,
+  "frameMs": 18.75,
+  "p95Ms": 33.40000000000009,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-2",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 171512,
+  "frameMs": 16.67,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-2",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 192974,
+  "frameMs": 16.66,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-2",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1051094,
+  "frameMs": 21.66,
+  "p95Ms": 33.399999999999636,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-3",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 171512,
+  "frameMs": 16.67,
+  "p95Ms": 16.800000000000182,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-3",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 192974,
+  "frameMs": 16.66,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "before-3",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1051094,
+  "frameMs": 17.5,
+  "p95Ms": 33.29999999999973,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2358,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1176,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 810,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 642,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 636,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 468,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 456,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 450,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 360,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 342,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 78,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 30,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 18,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 18,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-1",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 174392,
+  "frameMs": 16.67,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-1",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 206690,
+  "frameMs": 16.66,
+  "p95Ms": 16.799999999999727,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-1",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1125770,
+  "frameMs": 20.41,
+  "p95Ms": 33.30000000000018,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-2",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 174392,
+  "frameMs": 16.67,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-2",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 206690,
+  "frameMs": 16.67,
+  "p95Ms": 16.799999999999727,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-2",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1125770,
+  "frameMs": 17.91,
+  "p95Ms": 33.40000000000009,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-3",
+  "car": "au-hawk",
+  "tiles": 1,
+  "cars": 24,
+  "drawCalls": 160,
+  "triangles": 174392,
+  "frameMs": 16.66,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-3",
+  "car": "au-hawk",
+  "tiles": 4,
+  "cars": 24,
+  "drawCalls": 484,
+  "triangles": 206690,
+  "frameMs": 32.08,
+  "p95Ms": 16.700000000000273,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ },
+ {
+  "which": "after-3",
+  "car": "au-hawk",
+  "tiles": 24,
+  "cars": 24,
+  "drawCalls": 2644,
+  "triangles": 1125770,
+  "frameMs": 17.5,
+  "p95Ms": 33.30000000000018,
+  "budgetMs": 50,
+  "backend": "WebGL2 (WebGLRenderer)",
+  "carGroups": [
+   {
+    "name": "Scene/au-hawk.front.lod0",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod0.ink",
+    "triangles": 2502,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod0.ink",
+    "triangles": 2004,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.core.lod0.ink",
+    "triangles": 1992,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.back.lod0.ink",
+    "triangles": 1908,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod1.ink",
+    "triangles": 1596,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod1.ink",
+    "triangles": 1116,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.front.lod2.ink",
+    "triangles": 792,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.core.lod1.ink",
+    "triangles": 708,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.back.lod2.ink",
+    "triangles": 696,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.core.lod2.ink",
+    "triangles": 636,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod1.ink",
+    "triangles": 456,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.wheel.lod2.ink",
+    "triangles": 360,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod0.ink",
+    "triangles": 102,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod1.ink",
+    "triangles": 102,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FL.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_FR.lod2.ink",
+    "triangles": 72,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod0.ink",
+    "triangles": 54,
+    "layers": 2
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod1.ink",
+    "triangles": 54,
+    "layers": 4
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RL.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2",
+    "triangles": 24,
+    "layers": 8
+   },
+   {
+    "name": "Scene/au-hawk.door_RR.lod2.ink",
+    "triangles": 24,
+    "layers": 8
+   }
+  ]
+ }
+]

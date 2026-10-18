@@ -553,7 +553,15 @@
     0.66,
     1.98
    ]
-  ]
+  ],
+  "reflector": {
+   "c": [
+    0.82,
+    0.74
+   ],
+   "rx": 0.075,
+   "ry": 0.065
+  }
  },
  "rear": {
   "what": "The tail, measured off the sheet's rear view: (x, y) in metres, +x the car's left, y up from the ground; ray-cast onto the tail along the car's axis.",

@@ -28,9 +28,9 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 7, nose: 3, curvePts: true, merge: 0.12, doorMid: true, belly: true, dome: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.2, lampCell: 0.12, tailCell: 0.15, grilleCell: 0.2, lampOff: 0.016, oval: 14, lampRim: false, lampRing: 0.3, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
-  2: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.3, lampCell: 0.18, tailCell: 0.2, grilleCell: 0.3, lampOff: 0.025, oval: 16, lampRim: false, lampTop: false, fog: 0, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: true },
+  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, reflector: 10, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
+  1: { arch: 7, nose: 3, curvePts: true, merge: 0.12, doorMid: true, belly: true, dome: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.2, lampCell: 0.12, tailCell: 0.15, grilleCell: 0.2, lampOff: 0.03, oval: 14, lampRim: false, lampRing: 0.3, reflector: 6, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
+  2: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.3, lampCell: 0.18, tailCell: 0.2, grilleCell: 0.3, lampOff: 0.025, oval: 16, lampRim: false, reflector: 6, lampTop: false, fog: 0, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: true },
 };
 
 const lerpCurve = (pts, z) => {
@@ -299,6 +299,8 @@ function makeSoups(P, lod) {
     if (T.lampRing) { const L = m(Fr.lamp), R = m(Fr.lampRim);
       for (let i = 0; i < L.length; i++) { const j = (i + 1) % L.length; decal(F, [L[i], L[j], R[j], R[i]], 'trim', 0.024 + lo, 'front', T.lampRing); } }
     decal(F, m(Fr.lamp), 'head', 0.024 + lo, 'front', lc);
+    // the reflector bowl behind the lens, mid grey at the lamp's round outer end: it keeps the pale lamp readable on white paint
+    if (T.reflector) decal(F, m(oval(Fr.reflector.c, Fr.reflector.rx, Fr.reflector.ry, T.reflector)), 'barrel', 0.03 + lo, 'front', lc);
     // the teardrop's tail, sweeping back up over the top of the guard (measured in the top view)
     if (T.lampTop) decal(F, m(Fr.lampTop), 'head', 0.026 + lo, 'top', lc);
   });

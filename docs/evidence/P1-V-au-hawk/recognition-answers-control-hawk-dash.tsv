@@ -1,25 +1,25 @@
-chase-1.png	Looks like a **Ford Mustang coupe, S197 generation (2005–2009)**, with Shelby-style stripes; low confidence, since it's a low-detail rear view. 
-chase-2.png	Looks most like a **2005–2009 Ford Mustang (S197), in Shelby GT500 livery**: red body with black centre stripes, from a rear three-quarter view. 
-chase-3.png	Most likely a 2015–2023 Ford Mustang (S550 generation) in Shelby GT350/GT500 style, judging by the red paint, twin black racing stripes and quad exhausts. It's a low-confidence call from a rear three-quarter view. 
-chase-4.png	Closest match is a 2015-2017 Ford Mustang (S550 generation), though the low-poly rear view is ambiguous and could also suggest a Holden Commodore or Ford Falcon. 
-lod0-front-left.png	Closest match is a Ford Falcon AU-series four-door sedan (2000–2002), dressed up as a performance model with a rear wing, though the stylised body makes it approximate. 
-lod0-front-right.png	It looks like a stylised 2010s Ford Mustang GT-style sedan, though it's a low-poly approximation, so the match is loose. 
-lod0-front.png	A front-on view of an orange car with twin black stripes, hood vents and a wide bar grille, most like a **Ford Mustang S550 (2018–2020 facelift)**, styled like a Shelby GT350. It's a best guess from the front alone. 
-lod0-rear-left.png	Closest match is a **Ford Falcon AU (2000–2002) four-door sedan**, though the wrap-around tail lamps and rear spoiler also suggest a Holden Commodore VX/VY. 
-lod0-rear.png	It looks like a BMW M3 (G80 generation, 2021 onward), going by the rear light shape, twin-stripe livery and quad-outlet diffuser. 
-lod0-side.png	Closest match is a **Mitsubishi Lancer Evolution VII–IX (CT9A-era) sedan**, with a Nissan Skyline R33 4-door as the runner-up. 
-lod0-top.png	Best guess: a 1970s Lamborghini Countach LP400 (low confidence, since the top-down view hides the wedge profile). 
-lod1-front-left.png	It looks loosely like a modern Ford Mustang (S550-era) in a stylised, body-kit form, with a large rear wing and racing stripes. The fastback-style roofline and the oval-ish grille suggest it's a caricature, so the match is approximate. 
-lod1-front-right.png	Loosely resembles a 2015–2017 Ford Mustang (S550) coupe, though the low-poly simplification makes it a low-confidence match. 
-lod1-front.png	Looks like a Ford Mustang S550 (2015–2017 generation), styled like a Shelby GT500 with the dual racing stripes, hood vents and front splitter. The front-end shape is the strongest clue, so treat the exact model year as a guess. 
-lod1-rear-left.png	Looks like a Ford Falcon AU-series sedan (around the 2000–2002 BA/BF generation), with a boot-lid spoiler and wrap-around tail lamps. Confidence is moderate, since the low-poly model loses fine detail. 
-lod1-rear.png	It looks like a 2021+ BMW M3 (G80) or M4 (G82), judging by the twin vertical kidney grille, angular lamps and black lower bumper with square fog lamps. 
-lod1-side.png	It looks loosely like a 1989–1994 Nissan Skyline R32 GT-R coupe, though the wide arches and blocky shapes make that a rough match. 
-lod1-top.png	Looks most like a 1970s Dodge Challenger (E-body), judging by the twin racing stripes and the top-down profile. Low confidence, since the render is top-down only. 
-lod2-front-left.png	It most resembles a 2015–2017 Ford Mustang (S550), with its racing stripes and fastback roofline, though it's a loose caricature, so the match is moderate. 
-lod2-front-right.png	It most closely resembles a 2015–2017 Ford Mustang (S550), though the match is loose: it's a stylised low-poly car, and the grille and stripes are more generic than a real Mustang's. 
-lod2-front.png	Looks like a 2015–2017 Ford Mustang (S550), judging by the front-end shape, headlights and racing stripes. The low-poly front view makes the exact generation a guess. 
-lod2-rear-left.png	It looks most like a 2010–2015 (fifth-gen) Chevrolet Camaro coupe, though the low-poly simplification makes that a loose match. 
-lod2-rear.png	Closest real-world match is a mid-2000s Ford Falcon (AU/BA generation), though it's a loose caricature and the front-view evidence is thin. 
-lod2-side.png	Closest match is a Mazda RX-7 (second generation, FC, 1986–1991), though the stylised low-poly form makes that a loose resemblance. 
-lod2-top.png	Closest match is a 1970s Ford Falcon XB GT-style muscle coupe, though a top-down view alone makes that a low-confidence call. 
+chase-1.png	Looks like a stripe-liveried **Ford Mustang, roughly the S197 (2005–2014) or S550 (2015–2023) generation**, going by the rear-view profile and twin racing stripes. I can't pin the generation from this low-detail render. 
+chase-2.png	Looks like a 2015–2020 Ford Mustang (S550, 6th generation) with twin racing stripes, though the low-poly rear view makes the exact generation a best guess. 
+chase-3.png	It looks like a red, late-2010s/2020s Ford Mustang Shelby GT500-style muscle car, with black racing stripes, a rear spoiler and quad exhausts, though the low-poly model is loose enough that the exact generation is a guess. 
+chase-4.png	It looks like a 2010s-era Holden Commodore VF/VE-style sedan or the Ford Falcon-style rear... I'd rather not guess blindly, so here's my best read.  The render is a red, low-poly car seen from behind with a black racing stripe, a wide rear light bar with red tail lamps, and a dark roof and glass. That reads most like a **Ford Mustang (S197/S550-era fastback) with a Shelby-style stripe**, though the proportions are closer to a generic muscle coupe than any single exact generation. 
+lod0-front-left.png	Looks like a 2008–2014 Subaru Impreza WRX STI (GR/GV generation) sedan, based on the four-door body, rear wing and hood-stripe styling. It's a low-poly interpretation, so the match is approximate. 
+lod0-front-right.png	It looks like a 2010s-era Subaru WRX STI-style sedan (fourth-gen-ish body), with the rear wing, hood scoop vents and front bumper intake. 
+lod0-front.png	It looks like a low-poly orange Ford Mustang (S550 generation, 2015–2017 facelift) with black racing stripes, though the stylised form makes that a best guess. 
+lod0-rear-left.png	It looks like a low-poly, Mitsubishi Lancer Evolution-style sports sedan (roughly 2008–2015 era, e.g. the Lancer Evolution X), though the body shape is generic enough that it's a loose resemblance rather than a confident match. 
+lod0-rear.png	It looks like a low-poly take on a BMW M3 (G80 generation, 2021+), based on the quad round taillights, twin exhausts in the rear bumper, and the rear-deck spoiler. 
+lod0-side.png	It most resembles a Nissan Skyline R34 GT-R (fourth-generation, R32–R34 era), with its sedan body, rear wing and five-spoke wheels, though the low-poly build makes it a loose match. 
+lod0-top.png	Closest match: a 1970s–80s mid-engine wedge like the Lamborghini Countach (LP400 generation), though a top-down view makes that a low-confidence call. 
+lod1-front-left.png	Closest match: a Mitsubishi Lancer Evolution (roughly the Evo IX/X generation), though it's a stylised model, so the match is loose. 
+lod1-front-right.png	Loosely a 2015–2017 Ford Mustang (S550) coupe, with racing stripes and a rear wing, though it's a stylised caricature rather than an exact match. 
+lod1-front.png	It looks like a **Ford Mustang S550 (2015–2020)**, probably a Shelby GT500-style car, judging by the twin hood stripes, hood scoops and front splitter. 
+lod1-rear-left.png	Closest match is a 2008-2014 Subaru Impreza WRX STI sedan (GD/GR generation), though this is a low-confidence guess from a stylised low-poly render. 
+lod1-rear.png	BMW M3 / M4 of the G80/G82 generation (2021 onward), going by the tall twin-kidney grille with vertical slats and the angular red headlights. 
+lod1-side.png	It looks most like a Nissan Skyline R32 GT-R (second generation, 1989–1994): the fastback coupe profile, short overhangs and the rear wing read as R32-era. 
+lod1-top.png	Closest match is a late-1960s American muscle coupe, such as a 1969 Dodge Charger or Chevrolet Camaro, though the top-down view makes the exact make and generation uncertain. 
+lod2-front-left.png	It most loosely resembles a 2015–2017 Ford Mustang (S550) with racing stripes, though the low-poly simplification makes the match approximate. 
+lod2-front-right.png	Looks most like a stylised **Ford Mustang** (S550-era fastback coupe, with the hood stripes and grille), though the low-poly simplification makes the exact generation a guess. 
+lod2-front.png	It looks like a **Ford Mustang (S550, 2015–2017 facelift era)**, judging by the twin racing stripes, the horizontal-bar grille and the sloped headlights, though this low-poly front view is ambiguous enough that it could also be a Shelby GT350/GT500-style variant. 
+lod2-rear-left.png	Closest match: a 1993–2002 Chevrolet Camaro (4th generation), though the low-poly simplification makes it a loose match. 
+lod2-rear.png	Closest match is a 2015–2017 Ford Mustang (S550), though the low-poly front view makes this a low-confidence guess. 
+lod2-side.png	It most closely resembles a 1980s Mazda RX-7 (FB generation), in a stylised, wedge-shaped, rear-spoiler form. 
+lod2-top.png	Most likely a 1968–70 Dodge Charger (second generation), though the top-down view makes it a low-confidence guess. 
