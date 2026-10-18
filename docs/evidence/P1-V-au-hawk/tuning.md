@@ -5,7 +5,7 @@ should kinda be similar to the AU too." The AU Falcon: a big rear-drive sedan, 4
 the rears.
 
 Everything here is data: the profile's `tuning` section (`assets/profiles/au-hawk.json`), the engine voice
-(`assets/audio/engine/au-hawk.json`) and versioned scenario fixtures (`scenarios/feel/roster-*.json`). No Rust changed.
+(`assets/audio/engine/au-hawk.json`) and versioned scenario fixtures (`scenarios/handling/roster-*.json`). No Rust changed.
 
 ## How the arcade controller makes a burnout (read first)
 
@@ -41,7 +41,7 @@ Everything else is unchanged (`drive` stays `Rear`, mass 1700 kg, `carry` 0.9, t
 made the doughnuts slightly tighter but pushed the R122 bank over its 5 mm dive tolerance (seed 3 point 200 at 25 m/s, clearance
 -0.007 m), and 0.9 already gives the tight circle, so it stays at 0.9.
 
-## The fixtures (`cargo test -p jj-tools --test scenarios` runs them; 28 files in `scenarios/feel/`)
+## The fixtures (`cargo test -p jj-tools --test scenarios` runs them; 28 files in `scenarios/handling/`)
 
 One fixture per roster vehicle (`"vehicle": id`), same map (`maps/test/skidpad.json`, flat tarmac), same inputs, so the table is
 like for like. Each fixture asserts its own car's envelope; the AU Hawk's lower bounds sit above every other car's upper bound.
@@ -111,7 +111,7 @@ The AU Hawk's top speed is 6.7% under the Cruz and 16% under the Hawk Dash; its 
 
 ## Checks run (eris, scratch clone of HEAD 28bfd20c plus these files)
 
-- `jj sim scenarios/feel/roster-*.json`: all 28 pass, replays match.
+- `jj sim scenarios/handling/roster-*.json`: all 28 pass, replays match.
 - `cargo test -p jj-procgen --test handling -- au_hawk` (the R122 thrown-about bank): passes (it failed at `carry` 0.6, see above).
 - `cargo test -p jj-procgen --test bot_pace`: passes.
 - `cargo test -p jj-wasm-host --features testing a_mixed_roster`: passes **without a re-bless**: the mixed-roster hash covers the
