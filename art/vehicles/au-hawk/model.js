@@ -28,9 +28,9 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, lampOff: 0.025, oval: 14, lampRim: false, lampTop: true, fog: 6, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, lampOff: 0.045, oval: 10, lampRim: false, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
+  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
+  1: { arch: 7, nose: 3, curvePts: true, merge: 0.12, doorMid: true, belly: true, dome: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.2, lampCell: 0.12, tailCell: 0.15, grilleCell: 0.2, lampOff: 0.016, oval: 14, lampRim: false, lampRing: 0.3, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
+  2: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.3, lampCell: 0.18, tailCell: 0.2, grilleCell: 0.3, lampOff: 0.025, oval: 16, lampRim: false, lampTop: false, fog: 0, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: true },
 };
 
 const lerpCurve = (pts, z) => {
@@ -257,23 +257,29 @@ function makeSoups(P, lod) {
   const ghPoint = (z, t, s, off) => {
     let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
     const c0 = P.cabin[i], c1 = P.cabin[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
-    const a = cring(c0, s), b = cring(c1, s), lo = mix(a[0], b[0], u), hi = mix(a[1], b[1], u), p = mix(lo, hi, t);
-    const n = cross(sub(hi, lo), [0, 0, 1]); const L = Math.hypot(...n) || 1; const sg = Math.sign(n[0]) === s ? 1 : -1;
-    return [p[0] + sg * n[0] / L * off, p[1] + sg * n[1] / L * off, z];
+    // on the mesh's own two triangles (split along the belt-front to glass-top-rear diagonal), not a bilinear patch: a span
+    // whose band closes to nothing at the windscreen base is twisted, and panes on the patch let the paint poke through
+    const a = cring(c0, s), b = cring(c1, s), [a0, a1, b0, b1] = [a[0], a[1], b[0], b[1]];
+    const tt = Math.min(1, Math.max(0, t));
+    const lower = tt <= u, p = lower ? [0, 1, 2].map((k) => a0[k] + u * (b0[k] - a0[k]) + tt * (b1[k] - b0[k])) : [0, 1, 2].map((k) => a0[k] + u * (b1[k] - a1[k]) + tt * (a1[k] - a0[k]));
+    const n = lower ? cross(sub(b0, a0), sub(b1, a0)) : cross(sub(b1, a0), sub(a1, a0)); const L = Math.hypot(...n) || 1; const sg = Math.sign(n[0]) === s ? 1 : -1;
+    return [p[0] + sg * n[0] / L * off, p[1] + sg * n[1] / L * off, p[2] + sg * n[2] / L * off];
   };
   // ── side glass: one black frame over the whole glazed band, then the three panes (front door, rear door, quarter) ──
   const W = P.windows;
   if (T.windows) for (const s of [1, -1]) {
     // each span of the greenhouse side is a non-planar quad, so a pane is cut at the span's middle (z) and at mid-height (t)
-    // to stay on top of it instead of sinking through along a diagonal (LOD0; the coarser tiers' panes are too small to show it)
+    // to stay on top of it instead of sinking through along a diagonal (T.paneCuts pieces along z, three up t; the twisted span
+    // behind the windscreen base, where the band closes to nothing, needs the finest cut)
     const poly = (pts, off, sw) => { for (let i = 0; i < nC - 1; i++) {
-      const za = P.cabin[i].z, zb = P.cabin[i + 1].z, zm = (za + zb) / 2, cut = lod === 0;
-      for (const [z0, z1] of cut ? [[za, zm], [zm, zb]] : [[za, zb]]) for (const [t0, t1] of cut ? [[-1, 0.5], [0.5, 2]] : [[-1, 2]]) {
+      const za = P.cabin[i].z, zb = P.cabin[i + 1].z, nz = T.paneCuts ?? 1, zs = Array.from({ length: nz + 1 }, (_, k) => za + (zb - za) * k / nz);
+      const nt = T.paneCuts ? 3 : 1, ts = Array.from({ length: nt + 1 }, (_, k) => (k === 0 ? -1 : k === nt ? 2 : k / nt));
+      for (let a = 0; a < nz; a++) for (let b = 0; b < nt; b++) { const [z0, z1, t0, t1] = [zs[a], zs[a + 1], ts[b], ts[b + 1]];
         const piece = clip(clip(clipZ(clipZ(pts, z0, -1), z1, 1), t0, 1, 1), t1, -1, 1);
         if (piece.length >= 3) S('core').face(piece.map(([z, t]) => ghPoint(z, t, s, off)), sw, [s, 0.3, 0]);
       }
     } };
-    if (T.windows === true) { poly(W.frame, 0.012, 'roofblack'); for (const pane of W.panes) poly(pane, lod === 0 ? 0.018 : 0.026, 'glass'); }
+    if (T.windows === true) { poly(W.frame, 0.012, 'roofblack'); for (const pane of W.panes) poly(pane, lod === 0 ? 0.018 : lod === 1 ? 0.026 : 0.034, 'glass'); }
     else { poly(W.frame, 0.008, 'glass'); poly(W.bPillar, 0.016, 'roofblack'); } // LOD2: one glazed band and the black B pillar (four doors, not a coupe)
   }
 
@@ -288,15 +294,18 @@ function makeSoups(P, lod) {
   const F = S('front'), Fr = P.front, lc = T.lampCell, lo = T.lampOff;
   // the teardrop headlamps: a dark rim (LOD0), the clear lamp
   both((s, m) => {
-    if (T.lampRim) decal(F, m(Fr.lampRim), 'trim', 0.012, 'front', lc);
+    // a thin dark outline round the lamp (so a pale lamp still reads on white paint): one quad per lamp edge, between the
+    // lamp and its rim polygon, so nothing lies under the lamp to show through it
+    if (T.lampRing) { const L = m(Fr.lamp), R = m(Fr.lampRim);
+      for (let i = 0; i < L.length; i++) { const j = (i + 1) % L.length; decal(F, [L[i], L[j], R[j], R[i]], 'trim', 0.024 + lo, 'front', T.lampRing); } }
     decal(F, m(Fr.lamp), 'head', 0.024 + lo, 'front', lc);
     // the teardrop's tail, sweeping back up over the top of the guard (measured in the top view)
     if (T.lampTop) decal(F, m(Fr.lampTop), 'head', 0.026 + lo, 'top', lc);
   });
   // the oval fish-mouth grille, its single body-colour bar and the plain oval badge on it
-  decal(F, oval(Fr.grille.c, Fr.grille.rx, Fr.grille.ry, T.oval), 'grille', 0.012 + lo, 'front', lod === 0 ? 0.1 : 0.22);
-  decal(F, Fr.bar, 'paint', 0.022 + lo, 'front', lod === 0 ? 0.1 : 0.22);
-  decal(F, oval(Fr.badge.c, Fr.badge.rx, Fr.badge.ry, Math.max(6, T.oval - 4)), 'chrome', 0.03 + lo, 'front', 0.4);
+  decal(F, oval(Fr.grille.c, Fr.grille.rx, Fr.grille.ry, T.oval), 'grille', 0.012 + lo, 'front', T.grilleCell ?? 0.1);
+  decal(F, Fr.bar, 'paint', 0.022 + lo, 'front', T.grilleCell ?? 0.1);
+  decal(F, oval(Fr.badge.c, Fr.badge.rx, Fr.badge.ry, T.badge ?? 12), 'chrome', 0.03 + lo, 'front', 0.4);
   // the bumper's thin black slot and the round fog lamps
   if (T.slot) decal(F, Fr.slot, 'grille', 0.01 + lo, 'front', lod === 0 ? 0.1 : 0.5);
   if (T.fog) both((s, m) => decal(F, m(oval(Fr.fog.c, Fr.fog.r, Fr.fog.r, T.fog)), 'fog', 0.012 + lo, 'front', 0.2));
@@ -326,7 +335,7 @@ function makeSoups(P, lod) {
     decal(Bk, m(Rr.lamp), 'tail', 0.024 + lo, 'rear', T.tailCell ?? lc);
     if (T.reverse) decal(Bk, m(Rr.reverse), 'white', 0.032 + lo, 'rear', T.tailCell ?? lc);
   });
-  decal(Bk, oval(Rr.badge.c, Rr.badge.rx, Rr.badge.ry, Math.max(6, T.oval - 4)), 'chrome', 0.014 + lo, 'rear', 0.4);
+  decal(Bk, oval(Rr.badge.c, Rr.badge.rx, Rr.badge.ry, T.badge ?? 12), 'chrome', 0.014 + lo, 'rear', 0.4);
   if (T.slot) decal(Bk, Rr.slot, 'trim', 0.01 + lo, 'rear', lod === 0 ? 0.1 : 0.5);
   // the winged spoiler: a body-colour blade on two short posts (LOD0); on the deck lip at LOD1/2
   // (round 2: the base AU has none, and a recognition run read the sheet's wing as a WRX's, so params.json leaves it out)

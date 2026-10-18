@@ -37,7 +37,7 @@
       "type": "array",
       "minItems": 1,
       "maxItems": 3,
-      "description": "One GLB per LOD, LOD0 first. maxTris may be lower than the qualified budgets (3000 / 900 / 600; LOD0 rose from 1300 in br-bwju.11), never higher.",
+      "description": "One GLB per LOD, LOD0 first. maxTris may be lower than the qualified budgets (3000 / 900 / 600; LOD0 rose from 1300 in br-bwju.11), never higher unless triBudgetOverride raises them.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -150,6 +150,35 @@
         "lplate_front",
         "lplate_rear"
       ]
+    },
+    "triBudgetOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A per-vehicle raise of the qualified budgets (br-bwju.12), copied from vehicle.json by the bake: one budget per LOD, at most 3000 / 1800 / 1200, with the measurement that justifies it and who approved it. Without it a car gets 3000 / 900 / 600.",
+      "required": [
+        "maxTris",
+        "why",
+        "approvedBy"
+      ],
+      "properties": {
+        "maxTris": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "why": {
+          "type": "string",
+          "minLength": 10
+        },
+        "approvedBy": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "material": {
       "type": "object",
