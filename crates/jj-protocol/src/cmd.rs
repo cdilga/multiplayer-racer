@@ -15,7 +15,7 @@ use crate::DecodeError;
 /// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
 /// 3: `HostCmd::StartLaunch` (R127 gated start). 4: `InputThresholds` lost the `drift_*` fields (R128, no drift input).
 /// 5: `HostCmd::Takedown` (R134, P1-FL19).
-pub const CMD_VERSION: u8 = 5;
+pub const CMD_VERSION: u8 = 6;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -132,6 +132,39 @@ pub enum ControllerCmd {
     SetAssist {
         level: AssistLevel,
     },
+    /// br-qw28 (R125): the player's vote for the next track while the vote is open between rounds. Appended: variant order
+    /// is the wire format. A later vote replaces the seat's earlier one.
+    Vote {
+        choice: NextTrack,
+    },
+}
+
+/// br-qw28 (R125): what the next race runs on, as voted between rounds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum NextTrack {
+    /// The same track again (the same seed and generator).
+    Rematch,
+    /// A new track in the same style (a new seed, the same recipe).
+    NewTrack,
+    /// A new track in a style the host draws at random.
+    Surprise,
+}
+
+/// br-qw28: between rounds, what the phone shows: the vote (open with its time left, the tally, this seat's own vote,
+/// the result once decided) and the next track's flyover on the TV (any press skips it).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub struct Between {
+    /// Ms left to vote while the vote is open.
+    pub vote_left_ms: Option<u32>,
+    /// Votes for Rematch, New track and Surprise me, in that order.
+    pub votes: [u32; 3],
+    pub mine: Option<NextTrack>,
+    /// The result once the vote has closed (or the host chose).
+    pub decided: Option<NextTrack>,
+    /// Ms left of the flyover on the TV while it runs.
+    pub flyover_left_ms: Option<u32>,
 }
 
 /// Why a claim was refused. There is no "room full": seats aren't capped (R36).
@@ -267,6 +300,8 @@ pub enum HostCmd {
     Takedown {
         wreck: bool,
     },
+    /// br-qw28: the between-rounds vote and flyover, sent when they change and to a seat that joins meanwhile.
+    Between(Between),
 }
 
 /// How a seat's start went (R127): `Early` snapped during the countdown and lost the launch for this start; `Perfect`

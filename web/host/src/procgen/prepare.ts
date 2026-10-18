@@ -34,6 +34,8 @@ export interface PrepareOptions {
   recipe?: string;
   /** The recipe after a failed preparation (the director's one conservative retry): the placeholder biome alone. */
   conservativeRecipe?: string;
+  /** The biome names Surprise me draws from (br-qw28). */
+  biomes?: readonly string[];
   /** A dev map (`?test&map=<name>`): the authored JSON replaces the generated map, through the same validator. */
   devMap?: () => Promise<string>;
   /** Runs once a map is staged and before it's offered to the sim (a frame, a shader warm-up). */
@@ -130,8 +132,8 @@ export class RoundPreparer {
 
   private onEvents(events: SimEventJson[]): void {
     for (const e of events) {
-      const r = e.PrepareRequested as { preparation: number; seed: number; arena_cars?: number | null } | undefined;
-      if (r) void this.request(Number(r.preparation), Number(r.seed), r.arena_cars ?? undefined);
+      const r = e.PrepareRequested as { preparation: number; seed: number; arena_cars?: number | null; surprise?: boolean } | undefined;
+      if (r) void this.request(Number(r.preparation), Number(r.seed), r.arena_cars ?? undefined, !!r.surprise);
     }
   }
 
@@ -140,7 +142,7 @@ export class RoundPreparer {
     this.staged = null;
   }
 
-  private async request(preparation: number, seed: number, arenaCars?: number): Promise<void> {
+  private async request(preparation: number, seed: number, arenaCars?: number, surprise = false): Promise<void> {
     this.current = preparation;
     this.stats.requested++;
     if (this.reuseSeed !== null) {
@@ -174,10 +176,11 @@ export class RoundPreparer {
         entry.plan = this.scene ? `lab:${this.scene.name}` : 'dev-map';
       } else {
         const generator = this.generator;
-        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : this.o.recipe;
+        // br-qw28: Surprise me draws the style from the seed: one to four of the biomes, in a seeded order.
+        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : surprise ? surpriseRecipe(seed, this.o.biomes ?? []) : this.o.recipe;
         const p = await this.o.procgen.prepare(seed, recipe, generator);
         if (generator) entry.generator = generator;
-        entry.plan = p.plan;
+        entry.plan = surprise ? `surprise:${recipe ?? ''}:${p.plan}` : p.plan;
         entry.ms = Math.round(p.ms);
         entry.attempts = p.log.length;
         this.stats.lastPlan = p.plan;
@@ -229,7 +232,9 @@ export class RoundPreparer {
       this.o.onFailed?.(this.stats.lastError);
     }
     if (!staged || !p) return;
-    if ((room.phase === 'Countdown' || room.phase === 'Running') && p.verdict === 'ok' && !p.prepared && staged.preparation === this.delivered) {
+    // br-qw28: the flyover between rounds shows the next track before its Countdown.
+    const flyover = room.between?.flyoverLeftMs != null && p.verdict === 'ok' && p.prepared;
+    if (((room.phase === 'Countdown' || room.phase === 'Running') && p.verdict === 'ok' && !p.prepared || flyover) && staged.preparation === this.delivered) {
       this.staged = null;
       this.o.presenter.commitMap(staged.map);
       this.committed = staged.map.map;
@@ -241,6 +246,18 @@ export class RoundPreparer {
 }
 
 class Refused extends Error {}
+
+/** Surprise me's style (br-qw28): one to four of `biomes`, drawn from the seed (an empty list: the seed's own mix). */
+export function surpriseRecipe(seed: number, biomes: readonly string[]): string | undefined {
+  if (!biomes.length) return undefined;
+  let x = (seed >>> 0) ^ 0x9e3779b9;
+  const next = () => ((x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d) ^ Math.imul(x ^ (x >>> 12), 0x297a2d39)) >>> 0) / 2 ** 32;
+  const pool = [...biomes];
+  const n = 1 + Math.floor(next() * Math.min(4, pool.length));
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) out.push(pool.splice(Math.floor(next() * pool.length), 1)[0]!);
+  return out.join(',');
+}
 
 /** A built track's route length and height range (m), from its millimetre route points. */
 function measure(map: MapJson): { lengthM: number; reliefM: number } {

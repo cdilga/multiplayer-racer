@@ -11,7 +11,7 @@ use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
 /// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19). 7: `MainToSim::PeerGone` (br-f3rz).
-pub const ABI_VERSION: u16 = 8;
+pub const ABI_VERSION: u16 = 9;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -105,6 +105,10 @@ pub enum UiCommand {
     /// P1-G06: the Intermission's length between rounds, ms (§10.8, ~60 s by default).
     SetIntermission {
         ms: u32,
+    },
+    /// br-qw28: the host's choice for the next track, overriding the vote (`None` goes back to the vote).
+    SetNextTrack {
+        choice: Option<crate::cmd::NextTrack>,
     },
 }
 
@@ -270,6 +274,8 @@ pub enum SimEvent {
         seed: u64,
         /// P1-G06: a derby round's arena for this many cars, instead of a course.
         arena_cars: Option<u32>,
+        /// br-qw28: the vote chose Surprise me: main draws the track's style (its biome recipe) from the seed.
+        surprise: bool,
     },
     /// Flash this seat's car ("Cooee #N"): its player pressed Identify, or it just joined or respawned (rate-limited
     /// by the seat reducer).

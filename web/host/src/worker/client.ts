@@ -187,6 +187,9 @@ export class SimClient {
 export type SimEventJson = Record<string, Record<string, unknown>>;
 
 /** The worker's room view (`Host::room_json`, P1-G01). */
+/** br-qw28: the next track, as voted between rounds. */
+export type NextTrack = 'rematch' | 'new' | 'surprise';
+
 export interface RoomView {
   phase: 'Lobby' | 'Preparing' | 'Countdown' | 'Running' | 'Finalising' | 'Intermission' | 'Disbanded';
   remainingMs: number | null;
@@ -202,6 +205,22 @@ export interface RoomView {
   derbyMs?: number;
   intermissionMs?: number;
   derbyLeftMs?: number | null;
+  /** br-qw28: between rounds: the results hold, the vote (tallies, the leader, the host's pick, the result) and the flyover. */
+  between?: {
+    active: boolean;
+    resultsLeftMs: number | null;
+    voteOpen: boolean;
+    voteLeftMs: number | null;
+    votes: { rematch: number; new: number; surprise: number };
+    bySeat: Record<string, NextTrack>;
+    leading: NextTrack;
+    hostChoice: NextTrack | null;
+    decided: NextTrack | null;
+    flyoverLeftMs: number | null;
+    flyoverMs: number;
+    resultsMs: number;
+    voteMs: number;
+  };
   freeDrive: boolean;
   /** The roster's vehicle ids in the host's table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123). */
   vehicles?: string[];

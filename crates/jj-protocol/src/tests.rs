@@ -205,6 +205,9 @@ fn controller_samples() -> Vec<ControllerCmd> {
         ControllerCmd::SetAssist {
             level: crate::cmd::AssistLevel::Lots,
         },
+        ControllerCmd::Vote {
+            choice: NextTrack::Surprise,
+        },
     ]
 }
 
@@ -228,9 +231,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::Tutorial { .. } => "tutorial",
         ControllerCmd::ForSource { .. } => "for-source",
         ControllerCmd::SetAssist { .. } => "set-assist",
+        ControllerCmd::Vote { .. } => "vote",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 17] = [
+const CONTROLLER_VARIANTS: [&str; 18] = [
     "hello",
     "claim",
     "action",
@@ -248,6 +252,7 @@ const CONTROLLER_VARIANTS: [&str; 17] = [
     "tutorial",
     "for-source",
     "set-assist",
+    "vote",
 ];
 
 fn host_samples() -> Vec<HostCmd> {
@@ -317,6 +322,13 @@ fn host_samples() -> Vec<HostCmd> {
             outcome: LaunchOutcome::Early,
         },
         HostCmd::Takedown { wreck: true },
+        HostCmd::Between(Between {
+            vote_left_ms: Some(6_400),
+            votes: [2, 1, 0],
+            mine: Some(NextTrack::Rematch),
+            decided: None,
+            flyover_left_ms: None,
+        }),
     ]
 }
 
@@ -336,9 +348,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::ItemEvent(_) => "item-event",
         HostCmd::StartLaunch { .. } => "start-launch",
         HostCmd::Takedown { .. } => "takedown",
+        HostCmd::Between(_) => "between",
     }
 }
-const HOST_VARIANTS: [&str; 14] = [
+const HOST_VARIANTS: [&str; 15] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -353,6 +366,7 @@ const HOST_VARIANTS: [&str; 14] = [
     "item-event",
     "start-launch",
     "takedown",
+    "between",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.
@@ -541,6 +555,9 @@ fn ui_samples() -> Vec<UiCommand> {
         UiCommand::TuneVehicle {
             vehicle: "tradie-ute".into(),
         },
+        UiCommand::SetNextTrack {
+            choice: Some(NextTrack::NewTrack),
+        },
     ]
 }
 
@@ -654,6 +671,7 @@ fn event_samples() -> Vec<SimEvent> {
             preparation: PreparationId(5),
             seed: 77,
             arena_cars: Some(6),
+            surprise: false,
         },
         SimEvent::StartLaunch {
             seat: SeatId(2),
@@ -834,7 +852,7 @@ fn every_variant_has_a_golden() {
         names(sim_samples().iter().map(sim_variant).collect()),
         SIM_VARIANTS.into_iter().collect()
     );
-    assert_eq!(ui_samples().len(), 8, "every UiCommand variant");
+    assert_eq!(ui_samples().len(), 9, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
         15,

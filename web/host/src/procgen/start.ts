@@ -34,6 +34,8 @@ export async function startPreparation(client: SimClient, world: World, params: 
     presenter: world,
     procgen,
     recipe: params.get('recipe') ?? undefined,
+    // br-qw28: Surprise me draws from the game's biomes (the greybox is the placeholder, never drawn).
+    biomes: ['town', 'rocks', 'outback-dirt', 'outback-bitumen'],
     devMap,
     // One frame between building a map and offering it, so the main thread is idle for the sim's commit.
     afterStage: () => new Promise((r) => requestAnimationFrame(() => r())),

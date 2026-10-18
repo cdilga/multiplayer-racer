@@ -34,6 +34,7 @@ import { IdentifyMarks } from './identify';
 import { LaunchCallouts } from './launch-callout';
 import { OVERVIEW, OverviewRig, type OverviewPose } from '../camera/overview/rig';
 import { OverviewRings } from '../ui/overview/rings';
+import { Flyover } from '../camera/flyover';
 import { TICK_HZ } from './synthetic';
 
 export interface NameplatePoint {
@@ -203,6 +204,12 @@ export class World {
   private overviewWas = false;
   /** The spread condition and the tick it last changed: the suggestion follows it after a second of game time. */
   private spreadState = { on: false, raw: false, since: 0 };
+  /** br-qw28: the next track's flyover between rounds (the route of the map shown now), while one runs. */
+  private routeFly: Flyover | null = null;
+  private flyover: { start: number; ms: number } | null = null;
+  /** Set to an array to record the flyover camera every drawn frame: the fraction of the route it has followed and its
+   *  position (br-qw28's journey). */
+  flyoverTrace: Array<{ at: number; along: number; position: [number, number, number] }> | null = null;
   /** The arena Overview's last pose and framing stats (null outside it). */
   overviewPose: OverviewPose | null = null;
   overviewStats: OverviewStats | null = null;
@@ -344,6 +351,7 @@ export class World {
     // The overview looks at the course's own height: terrain-first maps (P1-FL15a) sit tens of metres above zero.
     const route = map.route.points;
     this.mapMid = route.length ? route.reduce((sum, q) => sum + q.y / 1000, 0) / route.length : 0;
+    this.routeFly = route.length > 2 ? new Flyover(route) : null;
     this.ground.position.y = this.mapBottom - 0.05;
     const t = map.terrain;
     this.invalidate();
@@ -410,6 +418,22 @@ export class World {
   /** Whether the Overview can be chosen: only on an arena map (a track keeps every player's own tile). */
   get overviewAvailable(): boolean {
     return !!this.overviewRig;
+  }
+
+  /** br-qw28: flies over the route of the map shown for `ms` (the round screens start it when the host says so). */
+  startFlyover(ms: number): void {
+    if (this.flyover) return;
+    this.flyover = { start: performance.now(), ms: Math.max(1, ms) };
+    this.invalidate();
+  }
+
+  stopFlyover(): void {
+    this.flyover = null;
+    this.invalidate();
+  }
+
+  get flyoverOn(): boolean {
+    return !!this.flyover && !!this.routeFly;
   }
 
   /** Switches Grid ⇄ Overview (P1-R11): a ~300 ms dip through the paper backdrop, the cut at its middle. */
@@ -587,9 +611,25 @@ export class World {
         this.camera.updateProjectionMatrix(); this.camera.lookAt(this.target);
       }
     }
-    this.vehicles?.update(s);
-    this.identifyMarks.update(s);
-    this.launchCallouts.update(s);
+    // br-qw28: the flyover shows the new track alone: last round's cars aren't on it.
+    const fly = this.flyover && this.routeFly ? this.routeFly.pose((now - this.flyover.start) / this.flyover.ms) : null;
+    const drawn = fly ? { ...s, cars: 0 } : s;
+    if (fly) {
+      const cam = this.camera;
+      cam.fov = 55;
+      cam.position.fromArray(fly.position);
+      this.target.fromArray(fly.target);
+      cam.near = 0.5;
+      cam.far = 2000;
+      cam.updateProjectionMatrix();
+      cam.lookAt(this.target);
+      cam.updateMatrixWorld();
+      this.overviewDepth = 0;
+      this.flyoverTrace?.push({ at: now, along: fly.along, position: fly.position });
+    }
+    this.vehicles?.update(drawn);
+    this.identifyMarks.update(drawn);
+    this.launchCallouts.update(drawn);
     const r = this.backend.renderer;
     const st = this.stats;
     r.shadowMap.needsUpdate = true;
@@ -597,25 +637,27 @@ export class World {
     r.info.reset();
     // An auto grid with nobody on the field (an empty room's TV) shows the whole map, not one tile chasing no car.
     const overview = this.overviewOn;
-    if (overview !== this.overviewWas) {
-      this.overviewWas = overview;
-      // The tiles' overlays (pills, arrows) go when the Overview comes in, and come back with the grid's next layout.
-      if (overview) {
+    const noTiles = overview || !!fly;
+    if (noTiles !== this.overviewWas) {
+      this.overviewWas = noTiles;
+      // The tiles' overlays (pills, arrows) go when the Overview (or a flyover) comes in, and come back with the grid's
+      // next layout.
+      if (noTiles) {
         this.onLayout(null, this.stats.dpr * this.scale);
         this.arrowKey = '';
         this.onArrows([], this.stats.dpr * this.scale);
       } else this.layoutMoving = true;
     }
-    if (!overview) this.overviewRings.hide();
-    if (this.tiles && !overview && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles, now);
+    if (!overview || fly) this.overviewRings.hide();
+    if (this.tiles && !overview && !fly && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles, now);
     else {
       const lod = lodForTileHeight(st.height);
       useLod(this.camera, lod);
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
       this.launchCallouts.fit(this.camera);
-      this.backend.render(this.scene, this.camera, this.replayCamera ? undefined : { hazeBeyond: this.overviewDepth });
-      this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
+      this.backend.render(this.scene, this.camera, this.replayCamera || fly ? undefined : { hazeBeyond: this.overviewDepth });
+      if (!fly) this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
       st.lods = [lod];
     }
     st.frames++;

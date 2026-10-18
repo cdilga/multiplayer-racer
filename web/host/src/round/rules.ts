@@ -16,7 +16,7 @@ const KEY = 'jj.host.rules';
 /** The choices the host menu offers (a host can't type a number on a TV). */
 export const LAPS = [1, 2, 3, 5, 8];
 export const DERBY_MS = [60_000, 120_000, 180_000, 300_000];
-export const INTERMISSION_MS = [30_000, 60_000, 90_000];
+export const INTERMISSION_MS = [10_000, 30_000, 60_000];
 
 export function saved(): Rules {
   try {
@@ -56,6 +56,8 @@ export function applySaved(input: (i: SimInput) => void): void {
   const r = saved();
   for (const k of ['mode', 'laps', 'derbyMs', 'intermissionMs'] as const) {
     const v = r[k];
+    // br-qw28: the results hold's choices changed (the vote follows it): an old length is dropped.
+    if (k === 'intermissionMs' && !INTERMISSION_MS.includes(Number(v))) continue;
     if (v !== undefined) input({ type: 'ui', ui: command(k, v) });
   }
 }

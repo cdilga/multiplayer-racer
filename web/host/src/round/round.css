@@ -411,3 +411,21 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .mn-panel .jj-render-chip { position: static; font: inherit; white-space: normal; overflow-wrap: anywhere; }
 .mn-panel [data-testid=render-resolution] { display: flex; flex-wrap: wrap; align-items: center; gap: .7em; font-weight: 700; }
 .mn-panel [data-testid=render-resolution-select] { font: inherit; min-height: 40px; background: var(--c-paper); color: var(--c-ink); }
+
+/* br-qw28: the vote for the next track on the results screen, and the flyover's caption. */
+.rs-vote { display: flex; flex-direction: column; gap: calc(6px * var(--k)); pointer-events: auto; }
+.rs-vote .vhead { font: 800 var(--fs-label)/1.2 var(--font-body); color: var(--c-ink); }
+.rs-vote .vhead b { font-family: var(--font-display); font-style: italic; }
+.rs-vote .vcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(8px * var(--k)); }
+.rs-vote .vcard { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: calc(6px * var(--k)); padding: calc(8px * var(--k)) calc(10px * var(--k));
+  text-align: left; font: inherit; color: var(--c-ink); background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-radius: var(--radius); cursor: pointer; }
+.rs-vote .vcard b { font: 900 italic var(--fs-caption)/1.1 var(--font-display); }
+.rs-vote .vcard small { grid-column: 1; font: 600 calc(18px * var(--k))/1.2 var(--font-body); opacity: .8; }
+.rs-vote .vcard .vn { grid-column: 2; grid-row: 1 / span 2; font: 900 var(--fs-title)/1 var(--font-display); }
+.rs-vote .vcard.lead { background: var(--c-saffron); }
+.rs-vote .vcard.host { box-shadow: 0 0 0 calc(4px * var(--k)) var(--c-cobalt); }
+.rs-vote .vfoot { font: 600 var(--fs-caption)/1.2 var(--font-body); opacity: .8; }
+.flyover { position: absolute; left: 0; right: 0; top: calc(32px * var(--k)); display: flex; flex-direction: column; align-items: center; gap: calc(8px * var(--k)); pointer-events: none; }
+.flyover .fo-tag { padding: calc(6px * var(--k)) calc(18px * var(--k)); background: var(--c-ink); color: var(--c-saffron); font-size: var(--fs-heading); transform: rotate(-1.5deg); }
+.flyover .fo-hint { padding: calc(4px * var(--k)) calc(12px * var(--k)); background: var(--c-paper); color: var(--c-ink); border: var(--outline) solid var(--c-ink); font: 700 var(--fs-label)/1.2 var(--font-body); }
+.flyover .btn { pointer-events: auto; font-size: var(--fs-label); }

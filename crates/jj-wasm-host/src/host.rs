@@ -267,6 +267,7 @@ fn session_only(cmd: &ControllerCmd) -> bool {
         | ControllerCmd::SetCamera { .. }
         | ControllerCmd::SetCameraDistance { .. }
         | ControllerCmd::SetAssist { .. }
+        | ControllerCmd::Vote { .. }
         | ControllerCmd::Tutorial { .. } => true,
         _ => false,
     }
@@ -1119,6 +1120,10 @@ impl Host {
         };
         let src = via.unwrap_or(seats::PRIMARY_SOURCE);
         self.reply_source = via;
+        // br-qw28: any press (an action) skips the flyover between rounds; READY does too (`set_ready`).
+        if matches!(cmd, ControllerCmd::Action { .. }) && self.skip_flyover() {
+            return;
+        }
         let mut conn = self.conn_for(&endpoint);
         // Hello is the first message on a connection (plan §5.4): a Hello on an endpoint that already said one is a new
         // connection (a reloaded page, a rebuilt link), so it gets a fresh ConnId; the seat reducer then fences the old
@@ -1197,6 +1202,12 @@ impl Host {
             ControllerCmd::Ready { on } => {
                 if let Some(seat) = self.seats.seat_at(conn, src) {
                     self.set_ready(seat, on);
+                }
+                vec![]
+            }
+            ControllerCmd::Vote { choice } => {
+                if let Some(seat) = self.seats.seat_at(conn, src) {
+                    self.vote(seat, choice);
                 }
                 vec![]
             }
@@ -1960,6 +1971,7 @@ impl Writer<'_> {
     }
 }
 
+mod between;
 mod items;
 mod prompts;
 mod round;

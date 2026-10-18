@@ -96,6 +96,10 @@ export interface Stick {
   touch: boolean;
 }
 
+/** br-qw28: the next track, as voted between rounds. */
+export type NextTrack = 'rematch' | 'new' | 'surprise';
+const toNext = (w: string | null): NextTrack | null => (w === 'Rematch' ? 'rematch' : w === 'NewTrack' ? 'new' : w === 'Surprise' ? 'surprise' : null);
+
 export class Session {
   phase: Phase = 'finding';
   code = '';
@@ -117,6 +121,8 @@ export class Session {
   launchOutcome: { outcome: LaunchOutcome; at: number } | null = null;
   /** R134 (P1-FL19): when this phone's car last took another down (its boost filled), for the banner. */
   takedownAt: number | null = null;
+  /** br-qw28: between rounds, the vote (time left when it arrived, the tally, mine, the result) and the TV's flyover. */
+  between: { voteLeftMs: number | null; votes: [number, number, number]; mine: NextTrack | null; decided: NextTrack | null; flyoverLeftMs: number | null; at: number } | null = null;
   takedowns = 0;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null = null;
   persisted = true;
@@ -502,6 +508,13 @@ export class Session {
         }
       } else if (r === 'Ended') this.ended();
       else this.set('ready-to-join');
+    } else if ('Between' in cmd) {
+      const b = cmd.Between as { vote_left_ms: number | null; votes: [number, number, number]; mine: string | null; decided: string | null; flyover_left_ms: number | null };
+      const open = b.vote_left_ms != null || b.flyover_left_ms != null || b.decided != null;
+      this.between = open
+        ? { voteLeftMs: b.vote_left_ms, votes: b.votes, mine: toNext(b.mine), decided: toNext(b.decided), flyoverLeftMs: b.flyover_left_ms, at: performance.now() }
+        : null;
+      this.onChange();
     } else if ('Takedown' in cmd) {
       this.takedownAt = performance.now();
       this.takedowns += 1;
@@ -648,6 +661,18 @@ export class Session {
     this.pickOpen = open;
     this.carChoice = vehicle;
     this.send('cmd', wasm.encodePick(vehicle, open));
+  }
+
+  /** br-qw28: my vote for the next track (a later one replaces it). */
+  vote(choice: NextTrack): void {
+    if (this.between) this.between.mine = choice;
+    this.send('cmd', wasm.encodeVote(choice === 'new' ? 1 : choice === 'surprise' ? 2 : 0));
+    this.onChange();
+  }
+
+  /** br-qw28: any press skips the TV's flyover of the next track. */
+  skipFlyover(): void {
+    this.send('cmd', wasm.encodeReady(true));
   }
 
   /** The first-drive prompts are wanted (the card opened, or a newcomer joined a race) or over (skipped, finished). */

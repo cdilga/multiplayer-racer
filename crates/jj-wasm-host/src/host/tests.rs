@@ -3979,3 +3979,253 @@ fn a_thrown_boomerang_is_a_debris_record_of_its_own_kind_in_the_snapshot() {
         "{kinds:?}"
     );
 }
+
+/// br-qw28 (R125): between rounds. Three phones race, the results hold, then they vote: two for Surprise me and one for
+/// New track, so Surprise wins and the next preparation asks main to draw the style; the phones are told the vote and
+/// the result. After it, the TV flies over the new track before the countdown (the director's clock waits) and a press
+/// skips it. The next Intermission: nobody votes (a tie at zero), so it's a Rematch: the same seed again. The one after,
+/// the host chooses New track over the phones' Rematch votes: the next seed.
+#[test]
+fn phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyover_precedes_the_countdown()
+ {
+    use jj_protocol::cmd::{HostCmd, NextTrack};
+    use jj_session::director::Phase;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::PrepareMaps { on: true })).unwrap();
+    let phones = ["p1", "p2", "p3"];
+    for (k, p) in phones.iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    }
+    // Steps ticks, answering every PrepareRequested with a generated map for its seed; records the requests and what
+    // phone p1 was told between rounds.
+    #[derive(Default)]
+    struct Log {
+        requests: Vec<(jj_types::PreparationId, u64, bool)>,
+        between: Vec<jj_protocol::cmd::Between>,
+    }
+    let mut now = 0u64;
+    let mut log = Log::default();
+    let step = |h: &mut Host, ticks: u32, now: &mut u64, log: &mut Log| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            let mut answer = Vec::new();
+            while let Some(m) = h.next_message() {
+                match m {
+                    SimToMain::Events { batch } => {
+                        for e in batch {
+                            if let SimEvent::PrepareRequested {
+                                preparation,
+                                seed,
+                                surprise,
+                                ..
+                            } = e
+                            {
+                                log.requests.push((preparation, seed, surprise));
+                                answer.push((preparation, seed));
+                            }
+                        }
+                    }
+                    SimToMain::Outbound {
+                        endpoint, bytes, ..
+                    } if endpoint.0 == "p1" => {
+                        if let Ok(HostCmd::Between(b)) = HostCmd::decode(&bytes) {
+                            log.between.push(b);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            for (preparation, seed) in answer {
+                let map = jj_procgen::prepare(seed, &[jj_map::Biome::OutbackDirt]).map;
+                h.handle(
+                    &MainToSim::MapReady {
+                        preparation,
+                        map_bytes: jj_map::canonical_bytes(&map),
+                    }
+                    .encode(),
+                )
+                .unwrap();
+            }
+        }
+    };
+    let room = |h: &Host| -> serde_json::Value { serde_json::from_str(&h.room_json()).unwrap() };
+    let until = |h: &mut Host, now: &mut u64, log: &mut Log, phase: Phase, what: &str| {
+        let mut guard = 0;
+        while h.phase() != phase {
+            step(h, 1, now, log);
+            guard += 1;
+            assert!(guard < 120 * 120, "{what}: stuck in {:?}", h.phase());
+        }
+    };
+    let vote = |h: &mut Host, p: &str, choice: NextTrack| {
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Vote { choice }.encode(),
+        ))
+        .unwrap();
+    };
+    h.handle(&ui(UiCommand::SetLaps { laps: 99 })).unwrap();
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    until(&mut h, &mut now, &mut log, Phase::Running, "round 1 starts");
+    let seed1 = log.requests.last().unwrap().1;
+
+    // Round 1 ends: the results hold 10 s, a vote before then counts for nothing.
+    assert!(h.sim.end_race_now());
+    until(
+        &mut h,
+        &mut now,
+        &mut log,
+        Phase::Intermission,
+        "round 1's results",
+    );
+    vote(&mut h, "p1", NextTrack::Rematch);
+    step(&mut h, 1, &mut now, &mut log);
+    assert_eq!(
+        room(&h)["between"]["votes"]["rematch"],
+        0,
+        "the vote isn't open during the results"
+    );
+    step(&mut h, 10 * 120 + 12, &mut now, &mut log);
+    let r = room(&h);
+    assert_eq!(r["between"]["voteOpen"], true, "{}", r["between"]);
+    assert!(
+        log.between.iter().any(|b| b.vote_left_ms.is_some()),
+        "the phones are told the vote is open"
+    );
+    vote(&mut h, "p1", NextTrack::Surprise);
+    vote(&mut h, "p2", NextTrack::Surprise);
+    vote(&mut h, "p3", NextTrack::NewTrack);
+    step(&mut h, 1, &mut now, &mut log);
+    let r = room(&h);
+    assert_eq!(
+        r["between"]["votes"],
+        serde_json::json!({ "rematch": 0, "new": 1, "surprise": 2 })
+    );
+    assert_eq!(r["between"]["leading"], "surprise");
+    let told = log.between.last().unwrap();
+    assert_eq!(
+        (told.votes, told.mine),
+        ([0, 1, 2], Some(NextTrack::Surprise)),
+        "p1 sees the tally and its own vote"
+    );
+
+    // The vote closes: Surprise me asks main to draw the style, then the flyover holds the countdown, and a press skips it.
+    let mut guard = 0;
+    while room(&h)["between"]["flyoverLeftMs"].is_null() {
+        step(&mut h, 1, &mut now, &mut log);
+        guard += 1;
+        assert!(
+            guard < 30 * 120,
+            "the flyover starts: {}",
+            room(&h)["between"]
+        );
+    }
+    assert_eq!(room(&h)["between"]["decided"], "surprise");
+    let (_, seed2, surprise) = *log.requests.last().unwrap();
+    assert!(surprise, "Surprise me asks main for a drawn style");
+    assert_ne!(seed2, seed1);
+    assert!(
+        log.between.last().unwrap().flyover_left_ms.is_some(),
+        "the phones know the flyover is on"
+    );
+    step(&mut h, 3 * 120, &mut now, &mut log);
+    assert!(
+        matches!(h.phase(), Phase::Intermission | Phase::Preparing),
+        "the countdown waits for the flyover: {:?}",
+        h.phase()
+    );
+    h.handle(&net(
+        "p2",
+        Channel::Cmd,
+        ControllerCmd::Ready { on: true }.encode(),
+    ))
+    .unwrap();
+    step(&mut h, 1, &mut now, &mut log);
+    assert!(
+        room(&h)["between"]["flyoverLeftMs"].is_null(),
+        "a press skips the flyover"
+    );
+    until(
+        &mut h,
+        &mut now,
+        &mut log,
+        Phase::Running,
+        "round 2 starts after the flyover",
+    );
+
+    // Round 2 ends; nobody votes: a tie at none is a Rematch of round 2's own seed.
+    assert!(h.sim.end_race_now());
+    until(
+        &mut h,
+        &mut now,
+        &mut log,
+        Phase::Intermission,
+        "round 2's results",
+    );
+    let before = log.requests.len();
+    until(
+        &mut h,
+        &mut now,
+        &mut log,
+        Phase::Running,
+        "round 3 starts (the flyover runs out on its own)",
+    );
+    assert_eq!(room(&h)["round"], 3);
+    let rematch = log.requests[before..]
+        .iter()
+        .map(|r| r.1)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rematch.last(),
+        Some(&seed2),
+        "no votes: a Rematch on the same seed: {rematch:?}"
+    );
+
+    // Round 3: the phones vote Rematch, the host chooses New track: the session seed plus the preparation id.
+    assert!(h.sim.end_race_now());
+    until(
+        &mut h,
+        &mut now,
+        &mut log,
+        Phase::Intermission,
+        "round 3's results",
+    );
+    let first_prep = log.requests.last().unwrap().0;
+    h.handle(&ui(UiCommand::SetNextTrack {
+        choice: Some(NextTrack::NewTrack),
+    }))
+    .unwrap();
+    step(&mut h, 10 * 120 + 12, &mut now, &mut log);
+    vote(&mut h, "p1", NextTrack::Rematch);
+    vote(&mut h, "p2", NextTrack::Rematch);
+    until(&mut h, &mut now, &mut log, Phase::Running, "round 4 starts");
+    let (prep, seed4, surprise) = *log.requests.last().unwrap();
+    assert_eq!(
+        prep, first_prep,
+        "New track keeps the track prepared at the Intermission"
+    );
+    assert_eq!(seed4, 3 + u64::from(prep.0), "a new seed");
+    assert!(!surprise);
+}

@@ -52,6 +52,13 @@ pub(super) struct RoundState {
     pub derby_now: bool,
     /// A derby round's game-time length, ms (§10.12: 3 minutes).
     pub derby_ms: u32,
+    /// br-qw28: between rounds (the vote and the flyover), its timing data, and the host's results hold.
+    pub between: super::between::BetweenState,
+    pub timing: super::between::BetweenTiming,
+    pub results_ms: u32,
+    /// The seed of the track the round on now runs on (a Rematch prepares it again), and of the prepared next one.
+    pub current_seed: Option<u64>,
+    pub prepared_seed: Option<u64>,
 }
 
 /// The shortest derby round the host may set (a round of a few hits), ms.
@@ -62,8 +69,18 @@ pub(super) const START_GRACE_MS: u64 = 150;
 
 impl RoundState {
     pub fn new(seed: u64) -> Self {
+        let timing = super::between::BetweenTiming::shipped();
         Self {
-            director: Director::new(DirectorConfig::default()),
+            // br-qw28: the Intermission is the results hold plus the vote.
+            director: Director::new(DirectorConfig {
+                intermission_ms: timing.results_ms + timing.vote_ms,
+                ..DirectorConfig::default()
+            }),
+            between: Default::default(),
+            timing,
+            results_ms: timing.results_ms,
+            current_seed: None,
+            prepared_seed: None,
             standings: Standings::default(),
             laps: None,
             free_drive: false,
@@ -119,6 +136,10 @@ impl Host {
     /// Host time for the director, once per tick.
     pub(super) fn round_tick(&mut self, tick: u64) {
         let ms = (tick_ms(tick + 1) - tick_ms(tick)) as u32;
+        // br-qw28: the flyover holds the director's presentation clock (the countdown waits for it).
+        if !self.between_tick(ms) {
+            return;
+        }
         self.director_apply(DirIn::Elapsed { ms });
     }
 
@@ -135,7 +156,14 @@ impl Host {
             // Main prepares generated maps (M08a): the seed is the session seed plus the preparation id, so a bug clip
             // names the exact track. Without it the start map is always ready.
             DirOut::PrepareRequested { id, .. } if self.round.prepare_maps => {
-                let seed = self.round.seed.wrapping_add(u64::from(id.0));
+                // br-qw28: a Rematch prepares the round's own seed again; Surprise me lets main draw the style.
+                let seed = self
+                    .round
+                    .between
+                    .rematch_seed
+                    .take()
+                    .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
+                let surprise = std::mem::take(&mut self.round.between.surprise);
                 self.round.pending = Some((id, seed));
                 self.round.prepared = None;
                 // A derby round's arena is sized for everyone in the room now (late joiners still fit: no cap).
@@ -147,13 +175,20 @@ impl Host {
                     preparation: id,
                     seed,
                     arena_cars,
+                    surprise,
                 });
                 vec![]
             }
             DirOut::PrepareRequested { id, .. } => {
                 // Without main's preparation (tests, the greybox), a derby round's arena is built here.
+                let seed = self
+                    .round
+                    .between
+                    .rematch_seed
+                    .take()
+                    .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
+                self.round.prepared_seed = Some(seed);
                 if self.round.derby_next {
-                    let seed = self.round.seed.wrapping_add(u64::from(id.0));
                     let cars = self.inputs.len().max(2);
                     self.round.prepared =
                         jj_procgen::arena::prepare(seed, cars, &jj_procgen::registry()).ok();
@@ -169,6 +204,7 @@ impl Host {
                 vec![]
             }
             DirOut::CountdownStarted { cohort, .. } => {
+                self.between_countdown();
                 self.round.derby_now = self.round.derby_next;
                 self.start_grid(&cohort);
                 self.room_state_all();
@@ -218,15 +254,20 @@ impl Host {
             }
             DirOut::PhaseChanged { phase } => {
                 if phase == Phase::Lobby {
+                    self.round.between = Default::default();
                     self.enter_lobby();
                 }
                 self.session_rev += 1;
                 self.room_state_all();
                 vec![]
             }
-            DirOut::ReadyCleared { .. }
-            | DirOut::IntermissionStarted { .. }
-            | DirOut::StartCancelled { .. } => {
+            DirOut::IntermissionStarted { .. } => {
+                self.between_intermission_started();
+                self.session_rev += 1;
+                self.room_state_all();
+                vec![]
+            }
+            DirOut::ReadyCleared { .. } | DirOut::StartCancelled { .. } => {
                 self.session_rev += 1;
                 self.room_state_all();
                 vec![]
@@ -241,6 +282,9 @@ impl Host {
         self.round.start_launches.clear();
         if let Some(map) = self.round.prepared.take() {
             self.map = map;
+        }
+        if let Some(seed) = self.round.prepared_seed.take() {
+            self.round.current_seed = Some(seed);
         }
         self.reset_world();
         let seats: Vec<SeatId> = cohort
@@ -508,6 +552,10 @@ impl Host {
             channel: Channel::Cmd,
             bytes,
         });
+        // br-qw28: a phone that joins (or rejoins) between rounds sees the vote and the flyover too.
+        if self.round.between.elapsed_ms.is_some() || self.round.between.flyover_left_ms.is_some() {
+            self.send_between(seat);
+        }
     }
 
     /// The room as JSON for the host's screens (R07): phase, timer, round, laps, every seat and the standings.
@@ -581,7 +629,9 @@ impl Host {
             "mode": if self.round.derby_now { "derby" } else { "race" },
             "nextMode": if self.round.derby_next { "derby" } else { "race" },
             "derbyMs": self.round.derby_ms,
-            "intermissionMs": self.round.director.intermission_ms(),
+            // The host's results hold (br-qw28: the vote follows it), and the vote and flyover between rounds.
+            "intermissionMs": self.round.results_ms,
+            "between": self.between_json(),
             // P1-S10: a derby round's game time left (null outside a derby).
             "derbyLeftMs": self.sim.derby().map(|l| super::tick_ms(l.time_left_ticks(self.sim.tick()))),
             "freeDrive": self.round.free_drive,
@@ -593,6 +643,8 @@ impl Host {
                 "external": self.round.prepare_maps,
                 "pending": self.round.pending.map(|(p, s)| serde_json::json!({ "id": p.0, "seed": s })),
                 "prepared": self.round.prepared.is_some(),
+                // br-qw28: the seed of the track the round on now runs on (a Rematch prepares it again).
+                "current": self.round.current_seed,
                 "staleDropped": self.round.stale_dropped,
                 "verdict": self.round.verdict,
             },
@@ -642,7 +694,12 @@ impl Host {
     /// A host UI command for the round loop.
     pub(super) fn round_ui(&mut self, ui: UiCommand) {
         match ui {
-            UiCommand::StartRound => self.director_apply(DirIn::StartNow),
+            // br-qw28: Start during the flyover skips it (the countdown follows).
+            UiCommand::StartRound => {
+                if !self.skip_flyover() {
+                    self.director_apply(DirIn::StartNow)
+                }
+            }
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
             UiCommand::SetLaps { laps } => self.round.laps = Some(laps.max(1)),
@@ -660,11 +717,12 @@ impl Host {
                 self.session_rev += 1;
             }
             UiCommand::SetIntermission { ms } => {
-                self.round
-                    .director
-                    .set_intermission_ms(ms.clamp(5_000, 600_000));
+                // br-qw28: the results hold; the vote follows it.
+                self.round.results_ms = ms.clamp(5_000, 600_000);
+                self.sync_intermission();
                 self.session_rev += 1;
             }
+            UiCommand::SetNextTrack { choice } => self.set_next_track(choice),
             UiCommand::SetCatchUp { on } => {
                 self.round.catch_up = if on {
                     jj_sim::assist::CatchUp::Light
@@ -773,6 +831,7 @@ impl Host {
         let ok = match load_canonical(map_bytes, &jj_procgen::registry()) {
             Ok(map) => {
                 self.round.prepared = Some(map);
+                self.round.prepared_seed = self.round.pending.map(|(_, s)| s);
                 self.round.verdict = "ok".into();
                 true
             }
@@ -787,6 +846,22 @@ impl Host {
             }
         };
         self.round.pending = None;
+        // br-qw28: a between-rounds start flies over the new track before its countdown.
+        if self.hold_for_flyover(preparation, ok) {
+            return;
+        }
+        // The vote closed before this map arrived and the director is still in Intermission: fly over it now.
+        if ok
+            && self.round.between.decided.is_some()
+            && self.round.director.phase() == Phase::Intermission
+        {
+            self.director_apply(DirIn::PrepareFinished {
+                id: preparation,
+                ok,
+            });
+            self.round_flyover_now();
+            return;
+        }
         self.director_apply(DirIn::PrepareFinished {
             id: preparation,
             ok,
@@ -795,6 +870,10 @@ impl Host {
 
     /// READY from a controller or a host pad/key cluster, under the director's current Ready revision.
     pub(super) fn set_ready(&mut self, seat: SeatId, ready: bool) {
+        // br-qw28: a press during the flyover skips it.
+        if ready && self.skip_flyover() {
+            return;
+        }
         let revision = self.round.director.ready_revision();
         self.director_apply(DirIn::SetReady {
             seat,

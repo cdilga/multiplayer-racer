@@ -28,7 +28,7 @@ export type SimInput =
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array; arrivedAt?: number }
   /** A controller's peer closed or failed (br-f3rz): its seats read neutral at once. */
   | { type: 'net-gone'; endpoint: string }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'catch-up' | 'prepare-maps' | 'reroll' | 'mode:derby' | 'mode:race' | `derby-ms:${number}` | `intermission-ms:${number}` | `laps:${number}` | `remove-seat:${number}` | `pick-local:${number}:${string}` | `ready-local:${number}` | `join-local:${number}` | `leave-local:${number}` | `sit-out-local:${number}` | `tune:${string}` | `tune-vehicle:${string}`; on?: boolean }
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'catch-up' | 'prepare-maps' | 'reroll' | 'mode:derby' | 'mode:race' | `derby-ms:${number}` | `intermission-ms:${number}` | `next-track:${'rematch' | 'new' | 'surprise' | 'vote'}` | `laps:${number}` | `remove-seat:${number}` | `pick-local:${number}:${string}` | `ready-local:${number}` | `join-local:${number}` | `leave-local:${number}` | `sit-out-local:${number}` | `tune:${string}` | `tune-vehicle:${string}`; on?: boolean }
   /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
   | { type: 'map-ready'; preparation: number; bytes: Uint8Array };
 

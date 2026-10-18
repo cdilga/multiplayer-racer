@@ -256,6 +256,71 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     }, 900);
   };
 
+  // ---------- Between rounds (br-qw28, R125) ----------
+  // The vote on the results screen: three cards with their tallies, the leader lit while it's open, the result once it's
+  // closed. The host taps one to choose instead (tap it again to go back to the vote).
+  const CHOICES = [
+    ['rematch', 'Rematch', 'Same track'],
+    ['new', 'New track', 'Same style'],
+    ['surprise', 'Surprise me', 'Any style'],
+  ] as const;
+  const choiceName = (c: string | null | undefined) => CHOICES.find(([k]) => k === c)?.[1] ?? 'Rematch';
+  // The room view's times are as of its last change: the seconds count down here between updates.
+  let roomAt = performance.now();
+  const left = (ms: number | null) => (ms == null ? null : Math.max(0, ms - (performance.now() - roomAt)));
+  let voteTimer = 0;
+  // Built once per results screen; afterwards only its words, counts and states change, so a press on a card is never
+  // lost to a redraw (the seconds tick four times a second).
+  const paintVote = (room: RoomView) => {
+    const el = screen.querySelector<HTMLElement>('[data-vote]');
+    if (!el) return;
+    clearTimeout(voteTimer);
+    const b = room.between;
+    if (b?.active && !b.decided) voteTimer = window.setTimeout(() => lastRoom && paintVote(lastRoom), 250);
+    if (!b) {
+      el.innerHTML = `<span class="tag next" data-next>Next race in ${secs(room.remainingMs)} s</span>`;
+      return;
+    }
+    if (!el.querySelector('.vcards')) {
+      el.innerHTML = `<div class="vhead" data-vote-head></div><div class="vcards">${CHOICES.map(([k, title, sub]) => `<button class="vcard" type="button" data-act="next-track" data-choice="${k}" aria-pressed="false">
+        <b>${title}</b><small>${sub}</small><span class="vn" data-votes="${k}">0</span></button>`).join('')}</div><div class="vfoot"></div>`;
+      paintKit(el);
+    }
+    const head = b.decided
+      ? `Next: <b>${choiceName(b.decided)}</b>`
+      : b.voteOpen
+        ? `Vote on your phone · <b>${secs(left(b.voteLeftMs))} s</b>`
+        : `Vote opens in ${secs(left(b.resultsLeftMs))} s`;
+    const headEl = el.querySelector<HTMLElement>('[data-vote-head]')!;
+    if (headEl.innerHTML !== head) headEl.innerHTML = head;
+    // The card that will win: the result, else the host's pick, else the vote's leader.
+    const winning = b.decided ?? b.hostChoice ?? (b.voteOpen ? b.leading : null);
+    for (const [k] of CHOICES) {
+      const card = el.querySelector<HTMLElement>(`[data-choice=${k}]`)!;
+      const n = String(b.votes[k]);
+      const count = card.querySelector<HTMLElement>('[data-votes]')!;
+      if (count.textContent !== n) count.textContent = n;
+      card.classList.toggle('lead', winning === k);
+      card.classList.toggle('host', b.hostChoice === k);
+      card.setAttribute('aria-pressed', String(b.hostChoice === k));
+    }
+    const foot = b.hostChoice ? `Host's pick · ${choiceName(b.hostChoice)} (tap again for the vote)` : 'Most votes wins · a tie is a Rematch · host: tap to choose';
+    const footEl = el.querySelector<HTMLElement>('.vfoot')!;
+    if (footEl.textContent !== foot) footEl.textContent = foot;
+  };
+  // The flyover: the TV flies along the next track; nothing but a caption over it.
+  const flyover = (room: RoomView) => {
+    const key = `fly:${room.between?.decided}`;
+    if (shown === key) return;
+    shown = key;
+    relayout = null;
+    screen.innerHTML = `<div class="flyover" data-screen="flyover"><span class="fo-tag display">Next: ${esc(choiceName(room.between?.decided))}</span>
+      <span class="fo-hint">Any button skips · you can still change car</span>
+      <button class="btn brush" type="button" data-act="start">Skip</button></div>`;
+    paintKit(screen);
+    screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
+  };
+
   // ---------- Round complete ----------
   const results = (room: RoomView) => {
     const rows = [...(room.results ?? [])].sort((a, b) => (a.place || 1e9) - (b.place || 1e9));
@@ -267,13 +332,13 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.innerHTML = `<section class="results" data-screen="results" data-count="${rows.length}">
       <div class="rs-reel" data-reel>
         <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
-          <span class="strip">${derby ? 'Most damage dealt wins · everyone keeps their number' : 'Rematch on the same track · everyone keeps their number'}</span></header>
+          <span class="strip">${derby ? 'Most damage dealt wins · everyone keeps their number' : 'Vote for the next track · everyone keeps their number'}</span></header>
         ${winner ? `<div class="rs-winner"><small>Winner</small><span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span></div>` : ''}
       </div>
       <div class="rs-side">
         <div class="rs-list" data-results data-count="${rows.length}"></div>
         <div class="rs-foot"><div class="rs-join"></div>
-          <div class="rs-acts"><span class="tag next" data-next>Next race in ${secs(room.remainingMs)} s</span>
+          <div class="rs-acts"><div class="rs-vote" data-vote role="group" aria-label="Next track"></div>
             <button class="btn brush primary big" data-act="start" type="button">Start next round now</button>
             <button class="btn brush" data-act="lobby" type="button">Return to lobby</button></div></div>
       </div></section>`;
@@ -314,8 +379,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     };
     relayout();
     paintKit(screen);
+    paintVote(room);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
     screen.querySelector('[data-act=lobby]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'end' }));
+    screen.querySelector('[data-vote]')?.addEventListener('click', (e) => {
+      const c = (e.target as HTMLElement).closest<HTMLElement>('[data-act=next-track]')?.dataset.choice as 'rematch' | 'new' | 'surprise' | undefined;
+      if (!c) return;
+      client.input({ type: 'ui', ui: `next-track:${lastRoom?.between?.hostChoice === c ? 'vote' : c}` });
+    });
     resultsObserver?.disconnect();
     resultsObserver = new ResizeObserver(() => relayout?.());
     resultsObserver.observe(screen.querySelector('.rs-side')!);
@@ -323,6 +394,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
 
   const render = (room: RoomView) => {
     lastRoom = room;
+    roomAt = performance.now();
     hud.update(room);
     chrome.update(room);
     const phase = room.phase;
@@ -334,6 +406,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
+    if (room.between?.flyoverLeftMs != null) return flyover(room);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);
     if (phase === 'Intermission') {
       // The results screen shows the round's results and nothing of the roster's churn: it is rebuilt only when the results
@@ -343,6 +416,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       if (shown === rkey) {
         const next = screen.querySelector('[data-next]');
         if (next) next.textContent = `Next race in ${secs(room.remainingMs)} s`;
+        paintVote(room);
         return;
       }
       shown = rkey;

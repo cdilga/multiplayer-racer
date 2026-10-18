@@ -1,0 +1,7 @@
+{
+  "//": "Between rounds (br-qw28, R125): the results stay up for resultsMs (the host's 'Results on screen' setting replaces it), then the phones vote for voteMs: Rematch (the same track), New track (the same style) or Surprise me. The most votes win; a tie, or no votes, is a Rematch; the host may choose instead. Before the next countdown the TV flies along the new track for flyoverMs; any press skips it, and cars can still be changed until it ends. Starting values, tunable.",
+  "format": "jj.rounds.v1",
+  "resultsMs": 10000,
+  "voteMs": 10000,
+  "flyoverMs": 6000
+}

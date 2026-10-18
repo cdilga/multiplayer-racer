@@ -394,6 +394,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       readyBtn.disabled = session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number;
     }
     roundBanner(app, session);
+    votePanel(app, session);
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
     // the autopilot. Help shows it again.
     if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false, true);
@@ -403,13 +404,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       tutorialOffered = true;
       if (Tutorial.wanted()) session.tutorial(true);
     }
-    if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
-    if (cars?.open && session.roomPhase === 'Countdown') cars.close();
+    // br-qw28: cars can still be changed during the flyover before the countdown.
+    const flying = session.between?.flyoverLeftMs != null;
+    if (sheet?.open && session.roomPhase === 'Countdown' && !flying) sheet.close();
+    if (cars?.open && session.roomPhase === 'Countdown' && !flying) cars.close();
     // br-bwju.9: in the Lobby the car is a pick, shown by name with a worded Change car and where it sits in the roster
     // ("Car 2 of 12"), in the pod between the sticks rather than as one more icon in the tool row.
     const carBox = app.querySelector<HTMLElement>('[data-box=car]');
     if (carBox) {
-      carBox.hidden = session.roomPhase !== 'Lobby';
+      carBox.hidden = session.roomPhase !== 'Lobby' && !flying;
       const roster = lobbyRoster();
       const at = Math.max(0, roster.findIndex((r) => r.id === (session.carChoice || savedCar())));
       const words = chosenSeat === session.you?.number ? 'Change car' : 'Choose car';
@@ -547,6 +550,68 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
 
 /** The portrait 'Turn sideways' card was dismissed this visit. */
 let uprightOk = false;
+
+/** br-qw28: between rounds, the vote for the next track (three big buttons with the tally, mine lit, a countdown), its
+ *  result, and during the TV's flyover a button that skips it. Hidden the rest of the time. */
+function votePanel(app: HTMLElement, session: Session): void {
+  const screen = app.querySelector('.screen.play');
+  if (!screen) return;
+  let p = app.querySelector<HTMLElement>('[data-vote-panel]');
+  if (!p) {
+    p = document.createElement('div');
+    p.dataset.votePanel = '';
+    p.className = 'vote-panel';
+    p.setAttribute('role', 'group');
+    p.setAttribute('aria-label', 'Next track');
+    screen.append(p);
+    p.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-vote]');
+      if (b) session.vote(b.dataset.vote as 'rematch' | 'new' | 'surprise');
+      else if ((e.target as HTMLElement).closest('[data-act=skip-flyover]')) session.skipFlyover();
+    });
+  }
+  const b = session.between;
+  const names = { rematch: ['Rematch', 'Same track'], new: ['New track', 'Same style'], surprise: ['Surprise me', 'Any style'] } as const;
+  // Three states, each built once; within a state only words, counts and the lit button change, so a tap is never lost
+  // to a redraw (the seconds tick twice a second).
+  const mode = b?.flyoverLeftMs != null ? 'fly' : b?.voteLeftMs != null ? 'vote' : b?.decided ? 'done' : '';
+  if (p.dataset.mode !== mode) {
+    p.dataset.mode = mode;
+    p.innerHTML =
+      mode === 'fly' ? `<p class="vp-head"></p><button class="btn brush" type="button" data-act="skip-flyover">Skip the flyover</button>`
+      : mode === 'vote' ? `<p class="vp-head"></p><div class="vp-row">${(['rematch', 'new', 'surprise'] as const)
+          .map((k) => `<button class="btn brush" type="button" data-vote="${k}" aria-pressed="false"><b>${names[k][0]}</b><small>${names[k][1]}</small><span class="vn">0</span></button>`)
+          .join('')}</div>`
+      : mode === 'done' ? `<p class="vp-head"></p>` : '';
+    paintKit(p);
+  }
+  const head = p.querySelector<HTMLElement>('.vp-head');
+  if (b && head) {
+    const left = b.voteLeftMs == null ? 0 : Math.max(0, Math.ceil((b.voteLeftMs - (performance.now() - b.at)) / 1000));
+    const html = mode === 'fly' ? `Next: <b>${names[b.decided ?? 'rematch'][0]}</b> · watch the TV` : mode === 'vote' ? `Next track? <b>${left} s</b>` : `Next: <b>${names[b.decided ?? 'rematch'][0]}</b>`;
+    if (head.innerHTML !== html) head.innerHTML = html;
+  }
+  if (b && mode === 'vote') {
+    (['rematch', 'new', 'surprise'] as const).forEach((k, i) => {
+      const btn = p!.querySelector<HTMLElement>(`[data-vote=${k}]`)!;
+      btn.classList.toggle('primary', b.mine === k);
+      btn.setAttribute('aria-pressed', String(b.mine === k));
+      const n = btn.querySelector<HTMLElement>('.vn')!;
+      if (n.textContent !== String(b.votes[i])) n.textContent = String(b.votes[i]);
+    });
+  }
+  p.hidden = mode === '';
+  // During the flyover the panel sits low, clear of the car box (cars can still be changed).
+  p.classList.toggle('fly', mode === 'fly');
+  // The vote's seconds tick down on the phone between messages.
+  if (mode === 'vote' && !p.dataset.ticking) {
+    p.dataset.ticking = '1';
+    setTimeout(() => {
+      delete p!.dataset.ticking;
+      votePanel(app, session);
+    }, 500);
+  }
+}
 
 /** The phone's view of the round: "Get ready: 3…" in the countdown, "Race on!" at GO, and your place on the results. */
 function roundBanner(app: HTMLElement, session: Session): void {

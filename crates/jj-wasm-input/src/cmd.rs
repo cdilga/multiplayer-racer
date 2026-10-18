@@ -3,7 +3,9 @@
 //! externally tagged form, e.g. `{"Welcome":{"seat":3,…}}`) so the page needs no hand-written postcard reader.
 
 use jj_protocol::PROTOCOL_VERSION;
-use jj_protocol::cmd::{AssistLevel, CameraDistance, CameraMode, ControllerCmd, HostCmd};
+use jj_protocol::cmd::{
+    AssistLevel, CameraDistance, CameraMode, ControllerCmd, HostCmd, NextTrack,
+};
 use jj_protocol::state::HudUpdate;
 use jj_types::{BuildId, EndpointId, RequestId, SourceHandle};
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -88,6 +90,17 @@ pub fn encode_set_assist(tag: u8) -> Vec<u8> {
         _ => AssistLevel::Off,
     };
     ControllerCmd::SetAssist { level }.encode()
+}
+
+/// `Vote` (br-qw28): 0 Rematch, 1 New track, 2 Surprise me (anything else is Rematch).
+#[wasm_bindgen(js_name = encodeVote)]
+pub fn encode_vote(tag: u8) -> Vec<u8> {
+    let choice = match tag {
+        1 => NextTrack::NewTrack,
+        2 => NextTrack::Surprise,
+        _ => NextTrack::Rematch,
+    };
+    ControllerCmd::Vote { choice }.encode()
 }
 
 /// `Tutorial`: the first-drive prompts are wanted (true) or over (false).

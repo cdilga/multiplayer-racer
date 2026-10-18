@@ -233,7 +233,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const rules = choice('mode', 'Next round', [['race', 'Race'], ['derby', 'Derby']], r.nextMode ?? 'race')
         + choice('laps', 'Laps', LAPS.map((n) => [n, String(n)]), r.laps)
         + choice('derbyMs', 'Derby length', DERBY_MS.map((ms) => [ms, `${ms / 60_000} min`]), r.derbyMs ?? 180_000)
-        + choice('intermissionMs', 'Between rounds', INTERMISSION_MS.map((ms) => [ms, `${ms / 1000} s`]), r.intermissionMs ?? 60_000);
+        + choice('intermissionMs', 'Results on screen', INTERMISSION_MS.map((ms) => [ms, `${ms / 1000} s`]), r.intermissionMs ?? 10_000);
       menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>${rules}<p class="mn-hint">They apply from the next round.</p>
         <h3 class="display">Catch-up</h3><p>Give trailing racers a small speed and boost recharge advantage.</p>
         <div class="mn-acts" role="group" aria-label="Catch-up">${[false, true].map((on) => `<button class="btn brush${(room!.catchUp !== false) === on ? ' primary' : ''}" type="button" data-act="catch-up" data-on="${on}" aria-pressed="${(room!.catchUp !== false) === on}">${on ? 'Light' : 'Off'}</button>`).join('')}</div>

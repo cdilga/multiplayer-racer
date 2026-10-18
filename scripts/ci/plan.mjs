@@ -42,8 +42,9 @@ const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // FL02 needs a GPU runner: on a CI SwiftShader runner its four phone pages and host still starve each other (CI 5722,
 // br-bcuy), even with the host at 960x540.
 // generated-jump and generated-loop: their in-frame rides (br-l4v5) draw nine tiles a frame.
+// g-between-rounds: the flyover's path is measured frame by frame (br-qw28).
 // r11-overview: 24-car derbies drawn at 1080p and dpr 2 (P1-R11); SwiftShader took over half an hour.
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview)\.test\.mjs$/.test(f));
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview|g-between-rounds)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';

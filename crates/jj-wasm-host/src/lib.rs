@@ -281,6 +281,15 @@ pub mod codec {
             l if l.starts_with("derby-ms:") => UiCommand::SetDerbyLength {
                 ms: l[9..].parse().unwrap_or(180_000),
             },
+            // br-qw28: the host's choice of the next track, or back to the vote.
+            l if l.starts_with("next-track:") => UiCommand::SetNextTrack {
+                choice: match &l[11..] {
+                    "rematch" => Some(jj_protocol::cmd::NextTrack::Rematch),
+                    "new" => Some(jj_protocol::cmd::NextTrack::NewTrack),
+                    "surprise" => Some(jj_protocol::cmd::NextTrack::Surprise),
+                    _ => None,
+                },
+            },
             l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
                 ms: l[16..].parse().unwrap_or(60_000),
             },

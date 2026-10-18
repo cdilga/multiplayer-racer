@@ -133,6 +133,13 @@ async function boot(): Promise<void> {
     },
     setCamera: (seat: number, mode: 'fp' | 'tp') => world.rig.setMode(seat, mode),
     /** Latency probe (P1-FL17): `true` starts recording each drawn frame's time and render tick, `false` stops and returns them. */
+    /** br-qw28: `true` starts recording the flyover camera (route fraction and position per drawn frame); `false` stops
+     *  and returns the frames. */
+    flyoverTrace: (on: boolean) => {
+      const frames = world.flyoverTrace ?? [];
+      world.flyoverTrace = on ? [] : null;
+      return frames;
+    },
     tickTrace: (on: boolean) => {
       const frames = world.tickTrace ?? [];
       world.tickTrace = on ? [] : null;
@@ -346,6 +353,10 @@ async function boot(): Promise<void> {
   let identityRound: number | null = null;
   let painted = false;
   client.watchRoom((room) => {
+    // br-qw28: the TV flies over the next track while the host says the flyover runs.
+    const fly = room.between?.flyoverLeftMs;
+    if (fly != null) world.startFlyover(fly);
+    else if (world.flyoverOn) world.stopFlyover();
     if (identityRound !== room.round) {
       identityRound = room.round;
       seatPaint.clear(); seatNumber.clear(); seatName.clear();
