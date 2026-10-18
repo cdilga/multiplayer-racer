@@ -4229,3 +4229,106 @@ fn phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyove
     assert_eq!(seed4, 3 + u64::from(prep.0), "a new seed");
     assert!(!surprise);
 }
+
+/// br-m1xe: the host picks a kept track in the Lobby: the next preparation asks main for exactly its seed and recipe
+/// (superseding one already made), and a Rematch of it later asks for the same seed and recipe again.
+#[test]
+fn a_kept_track_is_prepared_by_its_seed_and_recipe_and_a_rematch_keeps_its_recipe() {
+    use jj_session::director::Phase;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::PrepareMaps { on: true })).unwrap();
+    for (k, p) in ["p1", "p2"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    }
+    let mut now = 0u64;
+    let mut asked: Vec<(u64, Option<String>)> = Vec::new();
+    let step = |h: &mut Host, ticks: u32, now: &mut u64, asked: &mut Vec<(u64, Option<String>)>| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            let mut answer = Vec::new();
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Events { batch } = m {
+                    for e in batch {
+                        if let SimEvent::PrepareRequested {
+                            preparation,
+                            seed,
+                            recipe,
+                            ..
+                        } = e
+                        {
+                            asked.push((seed, recipe));
+                            answer.push((preparation, seed));
+                        }
+                    }
+                }
+            }
+            for (preparation, seed) in answer {
+                let map = jj_procgen::prepare(seed, &[jj_map::Biome::OutbackDirt]).map;
+                h.handle(
+                    &MainToSim::MapReady {
+                        preparation,
+                        map_bytes: jj_map::canonical_bytes(&map),
+                    }
+                    .encode(),
+                )
+                .unwrap();
+            }
+        }
+    };
+    h.handle(&ui(UiCommand::SetLaps { laps: 99 })).unwrap();
+    h.handle(&ui(UiCommand::SetFavourite {
+        seed: Some(777_000),
+        recipe: "rocks,town".into(),
+    }))
+    .unwrap();
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    let mut guard = 0;
+    while h.phase() != Phase::Running {
+        step(&mut h, 1, &mut now, &mut asked);
+        guard += 1;
+        assert!(guard < 120 * 60, "the round starts");
+    }
+    assert_eq!(
+        asked.last(),
+        Some(&(777_000, Some("rocks,town".to_string()))),
+        "the kept track: {asked:?}"
+    );
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["preparation"]["current"], 777_000);
+    assert_eq!(room["preparation"]["currentRecipe"], "rocks,town");
+    // The race ends; nobody votes: a Rematch, which asks for the kept track's seed and recipe again.
+    assert!(h.sim.end_race_now());
+    let before = asked.len();
+    guard = 0;
+    while !(h.phase() == Phase::Running && asked.len() > before) {
+        step(&mut h, 1, &mut now, &mut asked);
+        guard += 1;
+        assert!(guard < 120 * 120, "round 2 starts: {:?}", h.phase());
+    }
+    assert_eq!(
+        asked.last(),
+        Some(&(777_000, Some("rocks,town".to_string()))),
+        "the Rematch keeps the recipe: {asked:?}"
+    );
+}

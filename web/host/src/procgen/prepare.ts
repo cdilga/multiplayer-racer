@@ -70,6 +70,8 @@ export class RoundPreparer {
     attempts?: number;
     /** The owner tuning menu's generator document this track was built with (br-2sdu.3), absent for the shipped data. */
     generator?: string;
+    /** br-m1xe: the recipe it was built with ('' is the seed's own mix); absent for an arena, a lab scene or a dev map. */
+    recipe?: string;
     /** The built track as measured: route length and height range, m. */
     lengthM?: number;
     reliefM?: number;
@@ -85,6 +87,8 @@ export class RoundPreparer {
   delivered = 0;
   /** The map now shown (the last one committed at a Countdown), for the R90 readout and the captures. */
   committed: MapJson | null = null;
+  /** br-m1xe: how the map now shown was made (its seed, recipe and generator), for keeping it; null before any. */
+  committedEntry: RoundPreparer['seeds'][number] | null = null;
   private staged: { preparation: number; map: StagedMap } | null = null;
   private failedLast = false;
   /** `stats.failed` when the host was last told a preparation failed for good (or last saw a good map). */
@@ -132,8 +136,8 @@ export class RoundPreparer {
 
   private onEvents(events: SimEventJson[]): void {
     for (const e of events) {
-      const r = e.PrepareRequested as { preparation: number; seed: number; arena_cars?: number | null; surprise?: boolean } | undefined;
-      if (r) void this.request(Number(r.preparation), Number(r.seed), r.arena_cars ?? undefined, !!r.surprise);
+      const r = e.PrepareRequested as { preparation: number; seed: number; arena_cars?: number | null; surprise?: boolean; recipe?: string | null } | undefined;
+      if (r) void this.request(Number(r.preparation), Number(r.seed), r.arena_cars ?? undefined, !!r.surprise, r.recipe ?? undefined);
     }
   }
 
@@ -142,7 +146,7 @@ export class RoundPreparer {
     this.staged = null;
   }
 
-  private async request(preparation: number, seed: number, arenaCars?: number, surprise = false): Promise<void> {
+  private async request(preparation: number, seed: number, arenaCars?: number, surprise = false, given?: string): Promise<void> {
     this.current = preparation;
     this.stats.requested++;
     if (this.reuseSeed !== null) {
@@ -177,7 +181,9 @@ export class RoundPreparer {
       } else {
         const generator = this.generator;
         // br-qw28: Surprise me draws the style from the seed: one to four of the biomes, in a seeded order.
-        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : surprise ? surpriseRecipe(seed, this.o.biomes ?? []) : this.o.recipe;
+        // br-m1xe: a kept track (or a Rematch of one) names its recipe; otherwise this host's own.
+        const recipe = this.failedLast ? this.o.conservativeRecipe ?? 'greybox' : given !== undefined ? given : surprise ? surpriseRecipe(seed, this.o.biomes ?? []) : this.o.recipe;
+        entry.recipe = recipe ?? '';
         const p = await this.o.procgen.prepare(seed, recipe, generator);
         if (generator) entry.generator = generator;
         entry.plan = surprise ? `surprise:${recipe ?? ''}:${p.plan}` : p.plan;
@@ -238,6 +244,7 @@ export class RoundPreparer {
       this.staged = null;
       this.o.presenter.commitMap(staged.map);
       this.committed = staged.map.map;
+      this.committedEntry = this.seeds.filter((e) => e.preparation === staged.preparation).at(-1) ?? null;
       this.stats.committed++;
     } else if (room.phase === 'Lobby' && !p.pending && p.verdict !== 'ok') {
       this.discard();

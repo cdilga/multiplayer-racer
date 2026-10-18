@@ -39,6 +39,9 @@ impl BetweenTiming {
     }
 }
 
+/// What the phones were told: the vote open (or none running), the tally, the result, the flyover running.
+type Sent = (Option<bool>, [u32; 3], Option<NextTrack>, bool);
+
 #[derive(Default)]
 pub(super) struct BetweenState {
     /// Ms of Intermission so far (the presentation clock), while one runs.
@@ -53,9 +56,10 @@ pub(super) struct BetweenState {
     pub flown: bool,
     /// The next preparation's seed (a Rematch) and style draw (Surprise me), taken by the next `PrepareRequested`.
     pub rematch_seed: Option<u64>,
+    pub rematch_recipe: Option<String>,
     pub surprise: bool,
     /// What the phones were last told (sent again only when it changes).
-    sent: Option<(Option<bool>, [u32; 3], Option<NextTrack>, bool)>,
+    sent: Option<Sent>,
 }
 
 /// The vote's result: the most votes, a tie (or none) is a Rematch.
@@ -161,6 +165,7 @@ impl Host {
                 NextTrack::Rematch => {
                     if let Some(seed) = self.round.current_seed {
                         self.round.between.rematch_seed = Some(seed);
+                        self.round.between.rematch_recipe = self.round.current_recipe.clone();
                         self.director_apply(DirIn::Reroll);
                     }
                 }
@@ -229,6 +234,7 @@ impl Host {
     pub(super) fn between_countdown(&mut self) {
         let b = std::mem::take(&mut self.round.between);
         self.round.between.rematch_seed = b.rematch_seed;
+        self.round.between.rematch_recipe = b.rematch_recipe;
         self.send_between_all();
     }
 

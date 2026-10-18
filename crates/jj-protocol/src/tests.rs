@@ -558,6 +558,10 @@ fn ui_samples() -> Vec<UiCommand> {
         UiCommand::SetNextTrack {
             choice: Some(NextTrack::NewTrack),
         },
+        UiCommand::SetFavourite {
+            seed: Some(424_242),
+            recipe: "rocks,town".into(),
+        },
     ]
 }
 
@@ -672,6 +676,7 @@ fn event_samples() -> Vec<SimEvent> {
             seed: 77,
             arena_cars: Some(6),
             surprise: false,
+            recipe: Some("outback-dirt".into()),
         },
         SimEvent::StartLaunch {
             seat: SeatId(2),
@@ -852,7 +857,7 @@ fn every_variant_has_a_golden() {
         names(sim_samples().iter().map(sim_variant).collect()),
         SIM_VARIANTS.into_iter().collect()
     );
-    assert_eq!(ui_samples().len(), 9, "every UiCommand variant");
+    assert_eq!(ui_samples().len(), 10, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
         15,

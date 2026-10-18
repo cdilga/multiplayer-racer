@@ -7,6 +7,33 @@ use jj_map::{Biome, load_json};
 use jj_procgen::validate::Plan;
 use wasm_bindgen::prelude::*;
 
+pub mod share;
+
+/// br-m1xe: the share code for a track this build generates (`recipe` as for [`prepare_tuned`]; empty is the seed's mix).
+#[wasm_bindgen(js_name = trackCode)]
+pub fn track_code(seed: f64, recipe: &str) -> Result<String, JsError> {
+    let recipe = parse_recipe(recipe).map_err(|e| JsError::new(&e))?;
+    Ok(share::encode(seed as u64, &recipe))
+}
+
+/// br-m1xe: reads a share code: `{"seed": n, "recipe": "rocks,town"}`, or the reason it can't be rebuilt here (a typo,
+/// or another generator version, named).
+#[wasm_bindgen(js_name = readTrackCode)]
+pub fn read_track_code(code: &str) -> Result<String, JsError> {
+    let t = share::decode(code).map_err(|e| JsError::new(&e.to_string()))?;
+    let recipe: Vec<String> = t
+        .recipe
+        .iter()
+        .map(|b| {
+            serde_json::to_value(b)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default()
+        })
+        .collect();
+    Ok(serde_json::json!({ "seed": t.seed as f64, "recipe": recipe.join(","), "version": t.version }).to_string())
+}
+
 /// The crate name and version this module was built from, for the build line in the UI.
 #[wasm_bindgen(js_name = buildInfo)]
 pub fn build_info() -> String {

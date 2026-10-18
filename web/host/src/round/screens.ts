@@ -12,6 +12,7 @@ import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
 import { onProfileChange, screenScale } from '../layout/profile';
 import { esc, raceTime, secs, shortName } from './format';
+import { bestLaps, currentKey, keepCurrent, kept, keyOf, noteLaps } from './favourites';
 import type { PathStats } from '../../../shared/transport/stats';
 import { type Chrome, type HostStats, mountChrome } from './chrome';
 import { fitGrid, type Fit, type Tier } from './fit';
@@ -178,6 +179,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     relayout?.();
   };
 
+  // br-m1xe: the lobby says when the next race is a kept track (the host chose it on the Tracks page).
+  const nextKept = (room: RoomView) => {
+    const fav = room.preparation?.favourite;
+    if (!fav) return '';
+    const k = kept().find((t) => t.seed === fav.seed && t.recipe === fav.recipe);
+    return `<p class="lb-hint lb-kept">Next track: kept ${esc(k?.code ?? 'track')}</p>`;
+  };
+
   // ---------- Lobby ----------
   const lobby = (room: RoomView) => {
     const ready = room.seats.filter((s) => stateOf(s) === 'ready').length;
@@ -192,7 +201,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
         <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>${derby ? 'Start derby' : 'Start race'}</button>
         <p class="lb-hint">${n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
-        <p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
+        ${nextKept(room)}<p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
@@ -321,6 +330,37 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
   };
 
+  // br-m1xe: a race's results offer to keep its track (with its share code) and show the track's best lap per car,
+  // this round's laps counted in first (once a round). Derbies and authored maps have no kept track.
+  let lapsNoted = '';
+  const paintKeep = async (room: RoomView) => {
+    const keep = screen.querySelector<HTMLElement>('[data-keep]');
+    const best = screen.querySelector<HTMLElement>('[data-best]');
+    if (!keep || !best || room.mode === 'derby') return;
+    const now = await currentKey();
+    if (!now) return;
+    const roundKey = `${now.key}#${room.round}`;
+    if (lapsNoted !== roundKey) {
+      lapsNoted = roundKey;
+      // A seat that never picked drives the roster's first car (the host's default).
+      const laps = room.seats
+        .filter((s) => (s.lapMs?.length ?? 0) > 0)
+        .map((s) => ({ vehicle: s.vehicle ?? room.vehicles?.[0] ?? 'car', ms: Math.min(...s.lapMs!), name: s.name || 'Player' }));
+      noteLaps(now.key, laps);
+    }
+    const isKept = kept().some((k) => keyOf(k) === now.key);
+    keep.hidden = false;
+    const btn = keep.querySelector<HTMLButtonElement>('[data-act=keep]')!;
+    btn.disabled = isKept;
+    btn.textContent = isKept ? 'Kept ✓' : 'Keep this track';
+    keep.querySelector<HTMLElement>('[data-code]')!.textContent = now.code ?? 'tuned generator: kept on this host only';
+    const rows = Object.entries(bestLaps(now.key)).sort((a, b) => a[1].ms - b[1].ms);
+    best.hidden = rows.length === 0;
+    best.innerHTML = rows.length
+      ? `<b>Best laps here</b> ${rows.map(([car, l]) => `<span class="bl">${esc(CAR_NAMES.get(car) ?? car)} ${raceTime(l.ms)} <small>${esc(shortName(l.name, 12))}</small></span>`).join(' · ')}`
+      : '';
+  };
+
   // ---------- Round complete ----------
   const results = (room: RoomView) => {
     const rows = [...(room.results ?? [])].sort((a, b) => (a.place || 1e9) - (b.place || 1e9));
@@ -339,6 +379,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         <div class="rs-list" data-results data-count="${rows.length}"></div>
         <div class="rs-foot"><div class="rs-join"></div>
           <div class="rs-acts"><div class="rs-vote" data-vote role="group" aria-label="Next track"></div>
+            <div class="rs-keep" data-keep hidden><button class="btn brush" data-act="keep" type="button">Keep this track</button><span class="rs-code" data-code></span></div>
+            <p class="rs-best" data-best hidden></p>
             <button class="btn brush primary big" data-act="start" type="button">Start next round now</button>
             <button class="btn brush" data-act="lobby" type="button">Return to lobby</button></div></div>
       </div></section>`;
@@ -380,6 +422,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     relayout();
     paintKit(screen);
     paintVote(room);
+    void paintKeep(room);
+    screen.querySelector('[data-act=keep]')?.addEventListener('click', () => void keepCurrent().then(() => lastRoom && paintKeep(lastRoom)));
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
     screen.querySelector('[data-act=lobby]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'end' }));
     screen.querySelector('[data-vote]')?.addEventListener('click', (e) => {
@@ -403,7 +447,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
     // The lobby's Race/Derby choice, its hint (laps or derby length) and the results' derby layout are part of what's drawn.
-    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (room.between?.flyoverLeftMs != null) return flyover(room);

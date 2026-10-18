@@ -15,6 +15,7 @@ import { setPositions } from '../layout/positions';
 import { controlsPage } from '../../../shared/ui';
 import { controlsData } from '../input/controls-data';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
+import { addCode, forget, kept, keyOf } from './favourites';
 
 type Seat = RoomView['seats'][number];
 type UiInput = Extract<SimInput, { type: 'ui' }>['ui'];
@@ -83,6 +84,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   const readouts = document.createElement('div');
   readouts.dataset.readouts = '';
   let paused = false;
+  // br-m1xe: what the Tracks page last did (added, refused, chosen).
+  let tracksNote = '';
   let target: number | null = null;
 
   const footer = document.createElement('footer');
@@ -188,7 +191,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
   // What the open menu shows: when this is unchanged, update() leaves the buttons alone (br-b2sv).
-  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${JSON.stringify(r.preparation?.favourite ?? null)}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
   let pressing = false;
   let redrawLater = false;
   const renderMenu = () => {
@@ -224,6 +227,36 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p>
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></div></div></section>`;
+    } else if (state.page === 'tracks') {
+      // br-m1xe: the tracks kept on this host (Round complete's "Keep this track"), any of them raced next, and another
+      // host's share code added. No limit to the list.
+      const list = kept();
+      const fav = room?.preparation?.favourite ?? null;
+      const isNext = (k: { seed: number; recipe: string }) => !!fav && fav.seed === k.seed && fav.recipe === k.recipe;
+      const rows = list.length
+        ? list.map((k) => `<li data-track="${esc(keyOf(k))}"><b class="tk-code">${esc(k.code ?? 'Kept here (tuned generator)')}</b><span class="tk-when">${new Date(k.keptAt).toLocaleDateString()}</span>
+            <button class="btn brush${isNext(k) ? ' primary' : ''}" type="button" data-act="fav-race" data-key="${esc(keyOf(k))}" aria-pressed="${isNext(k)}">${isNext(k) ? 'Racing next' : 'Race next'}</button>
+            <button class="btn brush quiet" type="button" data-act="fav-forget" data-key="${esc(keyOf(k))}">Forget</button></li>`).join('')
+        : '<li class="tk-none">No kept tracks yet: Round complete has "Keep this track".</li>';
+      menuEl.innerHTML = `<section class="mn-panel controls" data-tracks aria-labelledby="mn-t"><h2 id="mn-t" class="display">Kept <span class="acc">tracks</span></h2>
+        <ul class="mn-tracks">${rows}</ul>
+        ${fav ? '<div class="mn-acts"><button class="btn brush" type="button" data-act="fav-clear">Back to new tracks</button></div>' : ''}
+        <h3 class="display">Add a track code</h3><form class="mn-acts tk-add" data-act-form="fav-add"><input name="code" autocomplete="off" spellcheck="false" placeholder="Track code, e.g. T29-08-Z" aria-label="Track code"><button class="btn brush" type="submit">Add</button></form>
+        <p class="mn-hint" data-tracks-note>${esc(tracksNote)}</p>
+        <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
+      menuEl.querySelector<HTMLFormElement>('[data-act-form=fav-add]')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = (e.target as HTMLFormElement).elements.namedItem('code') as HTMLInputElement;
+        void addCode(input.value)
+          .then((k) => {
+            tracksNote = `Added ${k.code}.`;
+            renderMenu();
+          })
+          .catch((err: unknown) => {
+            tracksNote = err instanceof Error ? err.message : String(err);
+            renderMenu();
+          });
+      });
     } else if (state.page === 'rules') {
       // P1-G06: the next round's mode, laps, derby length and intermission, from the next round (laps never mid-race),
       // remembered on this device.
@@ -272,7 +305,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
         <h3 class="display">Host settings</h3><div class="mn-acts main">
-        <button class="btn brush" data-act="rules">Race rules</button><button class="btn brush" data-act="controllers">Controllers</button><button class="btn brush" data-act="display">Display &amp; sound</button><button class="btn brush quiet" data-act="advanced">Advanced</button></div>
+        <button class="btn brush" data-act="rules">Race rules</button><button class="btn brush" data-act="tracks">Tracks</button><button class="btn brush" data-act="controllers">Controllers</button><button class="btn brush" data-act="display">Display &amp; sound</button><button class="btn brush quiet" data-act="advanced">Advanced</button></div>
         <h3 class="display">Players <span class="acc">${seats.length}</span></h3>
         <ul class="mn-players" data-players>${
           seats.length
@@ -380,10 +413,26 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         state.page = '';
         return renderMenu();
       case 'rules':
+      case 'tracks':
       case 'controllers':
       case 'display':
       case 'advanced':
         state.page = b.dataset.act;
+        return renderMenu();
+      case 'fav-race': {
+        const k = kept().find((t) => keyOf(t) === b.dataset.key);
+        if (k) {
+          send(`favourite:${k.seed}:${k.recipe}`);
+          tracksNote = `${k.code ?? 'The kept track'} is the next round's track.`;
+        }
+        return renderMenu();
+      }
+      case 'fav-forget':
+        forget(b.dataset.key!);
+        return renderMenu();
+      case 'fav-clear':
+        send('favourite:none');
+        tracksNote = 'Back to new tracks.';
         return renderMenu();
       case 'catch-up':
         send('catch-up', b.dataset.on === 'true');

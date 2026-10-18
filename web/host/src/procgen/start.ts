@@ -1,5 +1,6 @@
 // Wires round preparation into the host page (P1-M08a): the procgen worker, the preparer, the dev-map import and the
 // R90 readout on `window.__jjPrepare`. Loaded lazily by main.ts, only on the real room path (not `?drive`, not plain `?test`).
+import { setTrackSource } from '../round/favourites';
 import type { World } from '../render/world';
 import type { SimClient } from '../worker/client';
 import { ProcgenClient } from './client';
@@ -55,9 +56,20 @@ export async function startPreparation(client: SimClient, world: World, params: 
         console.error(`jj: dev map ${name} refused:\n${message}`);
       });
   }
+  // br-m1xe: kept tracks: the round screens ask how the shown map was made, and the worker makes and reads share codes.
+  setTrackSource({
+    current: () => {
+      const e = preparer.committedEntry;
+      return e && e.recipe !== undefined ? { seed: e.seed, recipe: e.recipe, ...(e.generator ? { generator: e.generator } : {}) } : null;
+    },
+    code: (seed, recipe) => procgen.code(seed, recipe),
+    read: (code) => procgen.read(code),
+  });
   (window as unknown as { __jjPrepare: unknown }).__jjPrepare = {
     stats: () => ({ ...preparer.stats }),
     seeds: () => preparer.seeds.map((s) => ({ ...s })),
+    /** br-m1xe: how the map now shown was made (seed, recipe, generator), or null. */
+    current: () => (preparer.committedEntry ? { ...preparer.committedEntry } : null),
     room: () => client.room?.preparation ?? null,
     /** The shown map's segments, route (x, z, y in metres), features and the town pieces the captures aim at, so a capture can
      *  step the cars to a biome and to what it shows. */

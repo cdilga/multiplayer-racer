@@ -1655,7 +1655,7 @@ impl Host {
     fn collect_race_events(&mut self) {
         let race = self.sim.race().events().to_vec();
         let mut over = false;
-        for (_, e) in &race[self.seen_race_events..] {
+        for (tick, e) in &race[self.seen_race_events..] {
             match *e {
                 Event::StartLaunch { car, outcome } => {
                     if let Some(seat) = self.seat_of_car(car) {
@@ -1704,6 +1704,8 @@ impl Host {
                 }
                 Event::LapCompleted { car, laps } => {
                     if let Some(seat) = self.seat_of_car(car) {
+                        // br-m1xe: when each lap ended, for the seat's lap times (best laps per track and car).
+                        self.round.lap_ticks.entry(seat).or_default().push(*tick);
                         self.events.push(SimEvent::Lap {
                             seat,
                             lap: laps as u16,

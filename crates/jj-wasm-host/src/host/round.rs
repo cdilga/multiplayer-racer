@@ -59,6 +59,15 @@ pub(super) struct RoundState {
     /// The seed of the track the round on now runs on (a Rematch prepares it again), and of the prepared next one.
     pub current_seed: Option<u64>,
     pub prepared_seed: Option<u64>,
+    /// br-m1xe: the recipe main was asked to build with (a kept track's, or a Rematch's), for the pending preparation, the
+    /// prepared map and the round on now (`None`: main's own).
+    pub pending_recipe: Option<String>,
+    pub prepared_recipe: Option<String>,
+    pub current_recipe: Option<String>,
+    /// br-m1xe: the host chose a kept track for the next round (its seed and recipe).
+    pub favourite: Option<(u64, String)>,
+    /// br-m1xe: the tick each seat's laps ended this round (its lap times).
+    pub lap_ticks: std::collections::BTreeMap<SeatId, Vec<u64>>,
 }
 
 /// The shortest derby round the host may set (a round of a few hits), ms.
@@ -81,6 +90,11 @@ impl RoundState {
             results_ms: timing.results_ms,
             current_seed: None,
             prepared_seed: None,
+            pending_recipe: None,
+            prepared_recipe: None,
+            current_recipe: None,
+            favourite: None,
+            lap_ticks: Default::default(),
             standings: Standings::default(),
             laps: None,
             free_drive: false,
@@ -157,13 +171,21 @@ impl Host {
             // names the exact track. Without it the start map is always ready.
             DirOut::PrepareRequested { id, .. } if self.round.prepare_maps => {
                 // br-qw28: a Rematch prepares the round's own seed again; Surprise me lets main draw the style.
-                let seed = self
-                    .round
-                    .between
-                    .rematch_seed
-                    .take()
-                    .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
-                let surprise = std::mem::take(&mut self.round.between.surprise);
+                // br-m1xe: a kept track the host chose comes first; then a Rematch (its seed and recipe again).
+                // (Kept until the countdown commits it, so the room shows it and a later preparation uses it too.)
+                let (seed, recipe) = match self.round.favourite.clone() {
+                    Some((seed, recipe)) => (seed, Some(recipe)),
+                    None => (
+                        self.round
+                            .between
+                            .rematch_seed
+                            .take()
+                            .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0))),
+                        self.round.between.rematch_recipe.take(),
+                    ),
+                };
+                self.round.pending_recipe = recipe.clone();
+                let surprise = std::mem::take(&mut self.round.between.surprise) && recipe.is_none();
                 self.round.pending = Some((id, seed));
                 self.round.prepared = None;
                 // A derby round's arena is sized for everyone in the room now (late joiners still fit: no cap).
@@ -176,6 +198,7 @@ impl Host {
                     seed,
                     arena_cars,
                     surprise,
+                    recipe,
                 });
                 vec![]
             }
@@ -205,6 +228,7 @@ impl Host {
             }
             DirOut::CountdownStarted { cohort, .. } => {
                 self.between_countdown();
+                self.round.favourite = None;
                 self.round.derby_now = self.round.derby_next;
                 self.start_grid(&cohort);
                 self.room_state_all();
@@ -213,6 +237,7 @@ impl Host {
             DirOut::RoundStarted { round, seats, .. } => {
                 self.round.round = Some(round);
                 self.round.cohort = seats;
+                self.round.lap_ticks.clear();
                 self.round.late.clear();
                 let laps = self.effective_laps();
                 self.sim.set_catch_up(self.round.catch_up);
@@ -285,6 +310,7 @@ impl Host {
         }
         if let Some(seed) = self.round.prepared_seed.take() {
             self.round.current_seed = Some(seed);
+            self.round.current_recipe = self.round.prepared_recipe.take();
         }
         self.reset_world();
         let seats: Vec<SeatId> = cohort
@@ -597,6 +623,8 @@ impl Host {
                     "derby": car.and_then(|c| self.sim.derby().map(|l| serde_json::json!({ "points": l.points(c), "rank": l.rank_of(c) }))),
                     // Owner playtest 2026-10-17 (finishing gave no feedback): the finishing time, for the tile's banner.
                     "finishMs": race.and_then(|r| r.finished_at).map(|t| super::tick_ms(t.saturating_sub(self.sim.race().started_at.unwrap_or(t)))),
+                    // br-m1xe: each lap's time this round (ms), from GO and lap to lap.
+                    "lapMs": self.lap_ms(s.id),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
@@ -645,6 +673,8 @@ impl Host {
                 "prepared": self.round.prepared.is_some(),
                 // br-qw28: the seed of the track the round on now runs on (a Rematch prepares it again).
                 "current": self.round.current_seed,
+                "currentRecipe": self.round.current_recipe,
+                "favourite": self.round.favourite.as_ref().map(|(s, r)| serde_json::json!({ "seed": s, "recipe": r })),
                 "staleDropped": self.round.stale_dropped,
                 "verdict": self.round.verdict,
             },
@@ -723,6 +753,19 @@ impl Host {
                 self.session_rev += 1;
             }
             UiCommand::SetNextTrack { choice } => self.set_next_track(choice),
+            // br-m1xe: a kept track for the next round. A preparation already made for it is superseded.
+            UiCommand::SetFavourite { seed, recipe } => {
+                self.round.favourite = seed.map(|s| (s, recipe));
+                if self.round.prepare_maps
+                    && matches!(
+                        self.phase(),
+                        Phase::Lobby | Phase::Intermission | Phase::Preparing
+                    )
+                {
+                    self.director_apply(DirIn::Reroll);
+                }
+                self.session_rev += 1;
+            }
             UiCommand::SetCatchUp { on } => {
                 self.round.catch_up = if on {
                     jj_sim::assist::CatchUp::Light
@@ -820,6 +863,25 @@ impl Host {
         self.round.director.phase()
     }
 
+    /// br-m1xe: a seat's lap times this round (ms): from GO to its first lap's end, then lap to lap.
+    fn lap_ms(&self, seat: SeatId) -> Vec<u64> {
+        let mut from = self.sim.race().started_at.unwrap_or(0);
+        self.round
+            .lap_ticks
+            .get(&seat)
+            .map(|ticks| {
+                ticks
+                    .iter()
+                    .map(|&t| {
+                        let ms = super::tick_ms(t.saturating_sub(from));
+                        from = t;
+                        ms
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     /// A prepared map from main (P1-M08a): validated here (the sim owns colliders), committed at the next Countdown; a
     /// stale preparation is dropped and counted, a broken map fails the preparation (the director retries once with the
     /// conservative recipe, then settles in the Lobby).
@@ -832,6 +894,7 @@ impl Host {
             Ok(map) => {
                 self.round.prepared = Some(map);
                 self.round.prepared_seed = self.round.pending.map(|(_, s)| s);
+                self.round.prepared_recipe = self.round.pending_recipe.clone();
                 self.round.verdict = "ok".into();
                 true
             }

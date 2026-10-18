@@ -19,6 +19,10 @@ export interface Procgen {
   prepare(seed: number, recipe?: string, generator?: string, arenaCars?: number): Promise<PreparedMap>;
   /** An authored `jj.map.v1` JSON through the sim's validator; rejects with the validator's message. */
   validate(json: string): Promise<{ canonical: Uint8Array; mapJson: string }>;
+  /** br-m1xe: the share code for a track this build generates. */
+  code?(seed: number, recipe: string): Promise<string>;
+  /** br-m1xe: a share code back to its seed and recipe; rejects with why it can't be rebuilt (a typo, another version). */
+  read?(code: string): Promise<{ seed: number; recipe: string }>;
 }
 
 export class ProcgenClient implements Procgen {
@@ -41,7 +45,7 @@ export class ProcgenClient implements Procgen {
     };
   }
 
-  private call(msg: { kind: 'prepare'; seed: number; recipe?: string; generator?: string; arenaCars?: number } | { kind: 'validate'; json: string }): Promise<FromProcgen> {
+  private call(msg: { kind: 'prepare'; seed: number; recipe?: string; generator?: string; arenaCars?: number } | { kind: 'validate'; json: string } | { kind: 'code'; seed: number; recipe: string } | { kind: 'read'; code: string }): Promise<FromProcgen> {
     const job = this.next++;
     return new Promise((ok, fail) => {
       this.waiting.set(job, { ok, fail });
@@ -59,6 +63,18 @@ export class ProcgenClient implements Procgen {
     const m = await this.call({ kind: 'validate', json });
     if (m.kind !== 'validated') throw new Error('unexpected procgen reply');
     return { canonical: m.canonical, mapJson: m.mapJson };
+  }
+
+  async code(seed: number, recipe: string): Promise<string> {
+    const m = await this.call({ kind: 'code', seed, recipe });
+    if (m.kind !== 'coded') throw new Error('unexpected procgen reply');
+    return m.code;
+  }
+
+  async read(code: string): Promise<{ seed: number; recipe: string }> {
+    const m = await this.call({ kind: 'read', code });
+    if (m.kind !== 'read') throw new Error('unexpected procgen reply');
+    return { seed: m.seed, recipe: m.recipe };
   }
 
   terminate(): void {

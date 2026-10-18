@@ -290,6 +290,15 @@ pub mod codec {
                     _ => None,
                 },
             },
+            // br-m1xe: `favourite:<seed>:<recipe>` (a kept track for the next round), `favourite:none` clears it.
+            l if l.starts_with("favourite:") => {
+                let mut parts = l[10..].splitn(2, ':');
+                let seed = parts.next().and_then(|s| s.parse().ok());
+                UiCommand::SetFavourite {
+                    seed,
+                    recipe: parts.next().unwrap_or_default().into(),
+                }
+            }
             l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
                 ms: l[16..].parse().unwrap_or(60_000),
             },
