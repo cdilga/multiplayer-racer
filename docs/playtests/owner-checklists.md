@@ -56,6 +56,7 @@ Real-device rows (from P1-Q02):
 - [ ] **Lots of controllers (P1-C12):** more than four pads across the host and at least one joined laptop, plus two keyboards on one computer as two players (one per key cluster), all racing in one room; a fifth pad on a Chrome host tells you to plug it into a joined laptop or phone.
 - [ ] **Recovery:** lock a phone 30 s mid-race → same car within 3 s; its car goes to autopilot and comes back.
 - [ ] **Identity:** Identify shows on the TV within ~150 ms on the LAN.
+- [ ] **Held throttle on Wi-Fi (br-f3rz):** hold full throttle down a long straight on a phone on home Wi-Fi: the car never stutters to a coast. The session records the phone's sample-gap p99 and max (fl17 netStamps) as the hardware receipt.
 - [ ] **Hosts:** a phone hosts a 4-player race at ≥ 30 fps with sound; a weaker laptop hosts; pacing on the TCL at 4K; a quick host check from Safari on the Mac and from a Windows PC when handy.
 - [ ] **Party:** a newcomer gets through the tutorial; settings stick; a mid-race drop-in; voice, music, engines and crash sounds on the TV; remove someone who left.
 - [ ] Your **G-FEEL** verdict and repair list (the session writes the round record); if you accept the feel, say so and its traces become the baseline.
