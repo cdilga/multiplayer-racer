@@ -1,0 +1,73 @@
+{
+ "what": "Weighted silhouette IoU of the Pig Catcher against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). 'before' is the br-bwju.5 bake scored against the same sheets (before-br-bwju.5/score-lod<N>.json, same evaluator, Playwright Chromium on eris); after = reference-lod<N>/score.json. tris as the fit page counts them (interior blocks included; the bake's own counts, interiors excluded, are 2080 / 878 / 596).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.8432,
+   "views": {
+    "side": 0.9058,
+    "top": 0.8312,
+    "front": 0.8049,
+    "rear": 0.7388
+   },
+   "tris": 1056
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.8375,
+   "views": {
+    "side": 0.9004,
+    "top": 0.8257,
+    "front": 0.796,
+    "rear": 0.735
+   },
+   "tris": 900
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.827,
+   "views": {
+    "side": 0.8939,
+    "top": 0.8348,
+    "front": 0.7625,
+    "rear": 0.6975
+   },
+   "tris": 592
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.8371,
+   "views": {
+    "side": 0.894,
+    "top": 0.8271,
+    "front": 0.7772,
+    "rear": 0.765
+   },
+   "tris": 2736
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.8261,
+   "views": {
+    "side": 0.8775,
+    "top": 0.8333,
+    "front": 0.7538,
+    "rear": 0.7467
+   },
+   "tris": 884
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.7985,
+   "views": {
+    "side": 0.863,
+    "top": 0.8151,
+    "front": 0.703,
+    "rear": 0.6887
+   },
+   "tris": 588
+  }
+ }
+}

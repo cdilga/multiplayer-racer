@@ -32,7 +32,7 @@ try {
         sheet: 'hero', asset: `/art/vehicles/${c.id}/${c.id}.asset.json`, file: path.join(REPO, `art/ui/brand/renders/picker/${c.id}.png`),
       }))
     : (opt('--sheet') ? [opt('--sheet')] : ['views', 'paints', 'lods', 'colliders']).map((sheet) => ({ sheet, asset, file: path.join(out, `${sheet}.png`) }));
-  const paint = (opt('--paint') ? `&paint=${encodeURIComponent(opt('--paint'))}` : '') + (opt('--ortho') ? `&ortho=${opt('--ortho')}` : '');
+  const paint = (opt('--paint') ? `&paint=${encodeURIComponent(opt('--paint'))}` : '') + (opt('--ortho') ? `&ortho=${opt('--ortho')}` : '') + (opt('--zoom') ? `&zoom=${opt('--zoom')}` : '');
   for (const { sheet, asset, file } of jobs) {
     const page = await browser.newPage();
     page.on('pageerror', (e) => console.log('PAGEERR', e.message));

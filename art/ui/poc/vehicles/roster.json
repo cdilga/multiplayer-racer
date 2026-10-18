@@ -55,6 +55,21 @@
       }
     },
     {
+      "id": "pig-catcher",
+      "name": "Pig Catcher",
+      "status": "awaiting-review",
+      "date": "2026-10-18",
+      "beads": [
+        "br-bwju.5",
+        "br-bwju.11",
+        "br-bwju"
+      ],
+      "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R). Rebuilt against its contact sheet (br-bwju.11): a lofted tank and radiator shrouds, 20-facet knobbly tyres on spoked rims with a brake disc and sprocket, a crash bar carrying two octagon spotlights and a headlamp, big black hand guards, a silvered silencer, a rack with a rope coil and sack, and a fuller rider with a peaked helmet, goggles, soled boots and gloves. LOD0 2736 triangles (qualified budget now 3000), LOD1 884, LOD2 588.",
+      "lods": 3,
+      "parts": 6,
+      "specTwin": null
+    },
+    {
       "id": "tradie-ute",
       "name": "Tradie Ute",
       "status": "awaiting-review",
@@ -68,20 +83,6 @@
       "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed. Rebuilt against its own contact sheet (br-bwju.11; it had none before, so Muse Image drew one from the Cruz layout and the br-bwju.8 render): 16-sided tyres on 8-spoke alloy rims in a dark barrel, widebody flares with a black lip, black-framed side glass in three panes with painted A, B and C pillars, a raised bonnet scoop with louvre vents, a chrome shield grille with seven dark slots under swept lamps, a solid bull bar with light bar, fog lamps, plate and winch hook, the tray painted in the seat colour with tall corner lamps and a black step bumper with reversing lamps and a tow ball, mirrors on stalks, and the canopy, rack and snorkel kept. LOD0 2080 triangles (qualified budget now 3000), LOD1 878, LOD2 596. The canopy's black sides, rack and awning keep their colours under every paint.",
       "lods": 3,
       "parts": 11,
-      "specTwin": null
-    },
-    {
-      "id": "pig-catcher",
-      "name": "Pig Catcher",
-      "status": "awaiting-review",
-      "date": "2026-10-16",
-      "beads": [
-        "br-bwju.5",
-        "br-bwju"
-      ],
-      "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R).",
-      "lods": 3,
-      "parts": 6,
       "specTwin": null
     },
     {

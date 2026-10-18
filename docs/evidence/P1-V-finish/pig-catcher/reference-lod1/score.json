@@ -1,0 +1,45 @@
+{
+ "car": "pig-catcher",
+ "lod": 1,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 884,
+  "draws": 6,
+  "breakdown": {
+   "core": 248,
+   "front": 160,
+   "back": 144,
+   "rider": 204,
+   "wheel_F": 64,
+   "wheel_R": 64
+  },
+  "stations": 0
+ },
+ "views": {
+  "side": {
+   "iou": 0.8775,
+   "aspect": 0.996,
+   "miss": 0.0799,
+   "extra": 0.0426
+  },
+  "top": {
+   "iou": 0.8333,
+   "aspect": 1.041,
+   "miss": 0.0572,
+   "extra": 0.1095
+  },
+  "front": {
+   "iou": 0.7538,
+   "aspect": 0.875,
+   "miss": 0.1154,
+   "extra": 0.1307
+  },
+  "rear": {
+   "iou": 0.7467,
+   "aspect": 0.831,
+   "miss": 0.1873,
+   "extra": 0.0659
+  }
+ },
+ "score": 0.8261
+}

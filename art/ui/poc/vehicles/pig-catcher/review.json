@@ -2,12 +2,13 @@
   "id": "pig-catcher",
   "name": "Pig Catcher",
   "status": "awaiting-review",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "beads": [
     "br-bwju.5",
+    "br-bwju.11",
     "br-bwju"
   ],
-  "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R).",
+  "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R). Rebuilt against its contact sheet (br-bwju.11): a lofted tank and radiator shrouds, 20-facet knobbly tyres on spoked rims with a brake disc and sprocket, a crash bar carrying two octagon spotlights and a headlamp, big black hand guards, a silvered silencer, a rack with a rope coil and sack, and a fuller rider with a peaked helmet, goggles, soled boots and gloves. LOD0 2736 triangles (qualified budget now 3000), LOD1 884, LOD2 588.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -19,24 +20,24 @@
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9058,
-          "top": 0.8312,
-          "front": 0.8049,
-          "rear": 0.7388
+          "side": 0.894,
+          "top": 0.8271,
+          "front": 0.7772,
+          "rear": 0.765
         },
-        "weightedIou": 0.8432
+        "weightedIou": 0.8371
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.8939,
-          "top": 0.8348,
-          "front": 0.7625,
-          "rear": 0.6975
+          "side": 0.863,
+          "top": 0.8151,
+          "front": 0.703,
+          "rear": 0.6887
         },
-        "weightedIou": 0.827
+        "weightedIou": 0.7985
       }
     ]
   },
@@ -49,15 +50,15 @@
       {
         "lod": 0,
         "glb": "media/model/pig-catcher.lod0.glb",
-        "tris": 1056,
+        "tris": 2736,
         "draws": 6,
-        "maxTris": 1300,
+        "maxTris": 2800,
         "withinBudget": true
       },
       {
         "lod": 1,
         "glb": "media/model/pig-catcher.lod1.glb",
-        "tris": 900,
+        "tris": 884,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -65,7 +66,7 @@
       {
         "lod": 2,
         "glb": "media/model/pig-catcher.lod2.glb",
-        "tris": 592,
+        "tris": 588,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -99,8 +100,8 @@
         },
         "pivot": [
           0,
-          1.4944944617605682,
-          0.4309468922324112
+          1.46,
+          0.4
         ]
       },
       {
@@ -116,8 +117,8 @@
         },
         "pivot": [
           0,
-          1.5355,
-          -0.5834543112796193
+          1.4991,
+          -0.7227719648636579
         ]
       },
       {
@@ -133,7 +134,7 @@
         },
         "pivot": [
           0,
-          1.14,
+          1.04,
           -0.23
         ]
       },
@@ -255,35 +256,31 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean on the bike part set, origin on the ground between the axles, wheels on the centreline, anchors cam_fp, cam_tp_target, com, roof_number (the rider's back), lplate_front, lplate_rear; no badges, logos or real names)"
+        "text": "contract + reproducibility (origin between the axles; anchors, part ids, hinges, mass fractions unchanged)"
       },
       {
         "result": "PASS",
-        "text": "budget"
+        "text": "budget: LOD0 2736 <= 2800 <= 3000; LOD1 884 <= 900; LOD2 588 <= 600"
       },
       {
         "result": "WARN",
-        "text": "silhouette: weighted IoU 0.843 for LOD0 against 'lod + 1' (side 0.906, top 0.831, front 0.805, rear 0.739) and 0.827 for LOD2 against 'lowest'. The rear is weakest: the reference's torso, rope coil and boots are wider"
+        "text": "silhouette: LOD0 weighted IoU 0.8432 -> 0.8371 (side 0.906 -> 0.894, top 0.831 -> 0.827, front 0.805 -> 0.777, rear 0.739 -> 0.765); LOD1 0.8375 -> 0.8261; LOD2 0.8270 -> 0.7985. Below the skill's ~0.95, and slightly below the old bake: the sheet's detail (spokes, lugs, lamps, guards, rope) is not silhouette, and a bike's thin parts (guards, crash bar, spokes, lug dashes) cost pixels wherever they sit a centimetre off"
       },
       {
         "result": "PASS",
-        "text": "by-eye cues: tall stance on long silver forks, the beaked front mudguard, yellow plastics (the paint key), the black light bar with two spots, the sack and rope on the rack, the rider standing on the pegs; legible at grid-24"
+        "text": "by-eye cues (ladder-lod0.png): lofted tank and shrouds, two octagon spotlights and headlamp on a crash bar, hand guards, beaked mudguard, spoked rims on knobbly tyres, brake disc and sprocket, silvered silencer, rack with rope coil and sack, boots with soles, helmet peak and goggles"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (a flat swatch atlas; draws per tile are the bike's 6 parts, one InstancedMesh per part type; the renderer now keeps a bike's two wheels as their own types)"
+        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
       },
       {
         "result": "PASS",
-        "text": "damage states (front and back hang about their hinge lines, the rider pitches off about the hip and is thrown when detached, a wheel comes off; no interior bays: a bike has no panels to open)"
-      },
-      {
-        "result": "PASS",
-        "text": "physics fit (a convex proxy per part from the bake, colliders.png; the profile's geometry synced from the sidecar)"
+        "text": "damage: intact -> loose -> detached for front, back, rider, wheels (damage-strip.png)"
       },
       {
         "result": "WARN",
-        "text": "detail: the engine is a plain dark box; from the side the raked shroud plates cross the fork line as an 'X'; the beak mudguard is a single slab; the rope coil hides behind the sack in most 3/4 views; LOD2's spots are 4-gons and its tail lamp goes"
+        "text": "LOD1 and LOD2 drop spokes, lugs, the rim ring and the gaiters; LOD2's wheels are octagon discs with a flat grey face"
       }
     ],
     "report": "media/gate/validation.md"
@@ -317,6 +314,6 @@
       "drainPerS": 0.35,
       "rechargePerS": 0.12
     },
-    "wheelRadiusM": 0.4
+    "wheelRadiusM": 0.396
   }
 }

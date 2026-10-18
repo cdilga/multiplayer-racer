@@ -15,6 +15,7 @@ const sheet = q.get('sheet') ?? 'views';
 const TILE = sheet === 'ladder' ? 440 : 360;
 const ORTHO = +(q.get('ortho') ?? 2.6); // half the orthographic frame in metres; a long car (the ute) wants 3.0
 
+const ZOOM = +(q.get('zoom') ?? 1); // scales every perspective shot's distance; a small car or bike wants 0.55
 const HERO = 1100;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: sheet === 'hero' });
 renderer.setPixelRatio(1);
@@ -71,7 +72,7 @@ async function loadLod(file, paint, { colliders = false } = {}) {
 
 function shot(s, from, target = [0, 0.7, 0], ortho = false) {
   const cam = ortho ? new THREE.OrthographicCamera(-ORTHO, ORTHO, ORTHO, -ORTHO, 0.1, 50) : new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-  cam.position.set(...from); cam.lookAt(...target);
+  cam.position.set(...from.map((v, i) => (ortho ? v : target[i] + (v - target[i]) * ZOOM))); cam.lookAt(...target);
   renderer.render(s, cam);
   const c = document.createElement('canvas'); c.width = TILE; c.height = TILE;
   c.getContext('2d').drawImage(renderer.domElement, 0, 0);
