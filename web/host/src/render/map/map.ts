@@ -1,7 +1,8 @@
 // The map renderer (P1-R03): draws a `jj.map.v1` map (plan §8.1; positions in mm, heights in cm) as the sim sees it.
 // - Terrain: the heightfield, each heightfield cell split into four quarters at its edge midpoints, every quarter
 //   painted by its nearest sample's surface: exactly the sim's surface lookup (jj-sim `surface_at`), so the colour
-//   under a car is the grip it gets. One draw.
+//   under a car is the grip it gets. One draw. A derby arena's jumps are painted in their own frame instead (relief.ts):
+//   straight edges, tan ramps with ink lips, each face lit by its own plane; the triangles are the same.
 // - Route: the centerline ribbon at each point's width and surface, white edge lines and the start line. One draw.
 // - Features: route-aligned ground markings (a jump's ramp footprint and landing envelope, kerbs) until the sim drives
 //   them as shapes (P1-M03d). One draw.
@@ -33,6 +34,7 @@ import { bowlDesign, bowlQuads } from './bowl';
 import { bridgeIndices, bridgeMesh } from './bridge';
 import { forkPath, forkSurface } from './fork';
 import { loopFrame, loopMesh } from './loop';
+import { arenaRelief, type Emit, type JumpFrame, type V3 } from './relief';
 import type { LoopShot } from '../../camera/rig';
 
 export interface Pose {
@@ -72,6 +74,8 @@ const col = new Color();
 class Soup {
   pos: number[] = [];
   colour: number[] = [];
+  /** Per-triangle shading normals that replace the computed face normal (relief.ts): one for the face (3) or per corner (9). */
+  normals = new Map<number, number[]>();
   quad(a: number[], b: number[], c: number[], d: number[], colour: string): void {
     col.set(colour);
     for (const v of [a, b, c, a, c, d]) {
@@ -79,7 +83,8 @@ class Soup {
       this.colour.push(col.r, col.g, col.b);
     }
   }
-  tri(a: number[], b: number[], c: number[], colour: string): void {
+  tri(a: number[], b: number[], c: number[], colour: string, normal?: number[]): void {
+    if (normal) this.normals.set(this.pos.length / 9, normal);
     col.set(colour);
     for (const v of [a, b, c]) {
       this.pos.push(v[0]!, v[1]!, v[2]!);
@@ -91,6 +96,10 @@ class Soup {
     g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
     g.setAttribute('color', new BufferAttribute(new Float32Array(this.colour), 3));
     g.computeVertexNormals();
+    if (this.normals.size) {
+      const n = g.getAttribute('normal') as BufferAttribute;
+      for (const [t, v] of this.normals) for (let k = 0; k < 3; k++) { const o = v.length === 9 ? 3 * k : 0; n.setXYZ(t * 3 + k, v[o]!, v[o + 1]!, v[o + 2]!); }
+    }
     const m = new Mesh(g, material);
     m.receiveShadow = true;
     return m;
@@ -171,6 +180,8 @@ export interface MapStats {
   kitInstances: number;
   /** Draw calls the map adds to one view: terrain, route, features, one per kit-piece type in use. */
   draws: number;
+  /** A derby arena's jumps as its terrain paints them (relief.ts, R90): each one's frame, footprint, lips and table. */
+  relief: JumpFrame[];
 }
 
 export class MapRenderer {
@@ -186,6 +197,7 @@ export class MapRenderer {
   private faceMaterial = new MeshBasicMaterial({ vertexColors: true });
   private railInstances = new Map<number, { index: number; rest: Matrix4; normal: Vector3 }[]>();
   private railMatrix = new Matrix4();
+  private relief: JumpFrame[] = [];
   private jumpRanges: { feature: number; from: number; to: number }[] = [];
   private bridgeRanges: { feature: number; from: number; to: number }[] = [];
   private loopRanges: { feature: number; from: number; to: number }[] = [];
@@ -258,6 +270,7 @@ export class MapRenderer {
       kitTypes: this.kit.size,
       kitInstances,
       draws: 3 + this.kit.size + this.decor.size + this.hulls.length + (banner?.length ?? 0),
+      relief: this.relief,
     };
   }
 
@@ -279,7 +292,11 @@ export class MapRenderer {
     const at = (i: number, j: number) => i * t.cols + j;
     const x = (j: number) => mm(t.originX + j * t.spacing);
     const z = (i: number) => mm(t.originZ + i * t.spacing);
+    // A derby arena's relief is painted by its heights (relief.ts, br-qb0l); a track's ground keeps the nearest-sample paint.
+    const relief = arenaRelief(this.map, SURFACE_COLOURS['off-track']!, SURFACE_COLOURS.rock!);
     const h = (i: number, j: number) => t.heights[at(i, j)]! / 100;
+    this.relief = relief?.jumps ?? [];
+    const emit: Emit = (a, b, c, colour, normal) => s.tri(a, b, c, colour, normal);
     for (let i = 0; i + 1 < t.rows; i++) {
       for (let j = 0; j + 1 < t.cols; j++) {
         const [x0, x1, xm] = [x(j), x(j + 1), (x(j) + x(j + 1)) / 2];
@@ -291,10 +308,16 @@ export class MapRenderer {
         // would step at the grid's spacing on a diagonal.
         const paint = (ii: number, jj: number) => (ROAD_SURFACES.has(t.surfaces[ii * t.cols + jj]!) ? SURFACE_COLOURS['off-track']! : SURFACE_COLOURS[t.surfaces[at(ii, jj)]!] ?? SURFACE_COLOURS['off-track']!);
         // Each quarter belongs to the sample at its corner (the sim's nearest-sample rule). Wound to face +y.
-        s.quad([x0, h00, z0], [x0, e.w, zm], [xm, c, zm], [xm, e.n, z0], paint(i, j));
-        s.quad([xm, e.n, z0], [xm, c, zm], [x1, e.e, zm], [x1, h01, z0], paint(i, j + 1));
-        s.quad([x0, e.w, zm], [x0, h10, z1], [xm, e.s, z1], [xm, c, zm], paint(i + 1, j));
-        s.quad([xm, c, zm], [xm, e.s, z1], [x1, h11, z1], [x1, e.e, zm], paint(i + 1, j + 1));
+        const quad = relief
+          ? (qa: V3, qb: V3, qc: V3, qd: V3, colour: string) => {
+              relief.tri(qa, qb, qc, colour, emit);
+              relief.tri(qa, qc, qd, colour, emit);
+            }
+          : (qa: V3, qb: V3, qc: V3, qd: V3, colour: string) => s.quad(qa, qb, qc, qd, colour);
+        quad([x0, h00, z0], [x0, e.w, zm], [xm, c, zm], [xm, e.n, z0], paint(i, j));
+        quad([xm, e.n, z0], [xm, c, zm], [x1, e.e, zm], [x1, h01, z0], paint(i, j + 1));
+        quad([x0, e.w, zm], [x0, h10, z1], [xm, e.s, z1], [xm, c, zm], paint(i + 1, j));
+        quad([xm, c, zm], [xm, e.s, z1], [x1, h11, z1], [x1, e.e, zm], paint(i + 1, j + 1));
       }
     }
     const m = s.mesh(this.material);
@@ -312,13 +335,19 @@ export class MapRenderer {
     const at = (i: number, j: number) => i * t.cols + j;
     const x = (j: number) => mm(t.originX + j * t.spacing);
     const z = (i: number) => mm(t.originZ + i * t.spacing);
-    const h = (i: number, j: number) => t.heights[at(i, j)]! / 100;
     const paint = (i: number, j: number) => (ROAD_SURFACES.has(t.surfaces[at(i, j)]!) ? SURFACE_COLOURS['off-track']! : SURFACE_COLOURS[t.surfaces[at(i, j)]!] ?? SURFACE_COLOURS['off-track']!);
+    const relief = arenaRelief(this.map, SURFACE_COLOURS['off-track']!, SURFACE_COLOURS.rock!);
+    const h = (i: number, j: number) => t.heights[at(i, j)]! / 100;
+    const emit: Emit = (a, b, c, colour, normal) => s.tri(a, b, c, colour, normal);
     for (let i = 0; i + 1 < t.rows; i += k) {
       const i1 = Math.min(i + k, t.rows - 1);
       for (let j = 0; j + 1 < t.cols; j += k) {
         const j1 = Math.min(j + k, t.cols - 1);
-        s.quad([x(j), h(i, j), z(i)], [x(j), h(i1, j), z(i1)], [x(j1), h(i1, j1), z(i1)], [x(j1), h(i, j1), z(i)], paint(i, j));
+        const q: V3[] = [[x(j), h(i, j), z(i)], [x(j), h(i1, j), z(i1)], [x(j1), h(i1, j1), z(i1)], [x(j1), h(i, j1), z(i)]];
+        if (relief) {
+          relief.tri(q[0]!, q[1]!, q[2]!, paint(i, j), emit);
+          relief.tri(q[0]!, q[2]!, q[3]!, paint(i, j), emit);
+        } else s.quad(q[0]!, q[1]!, q[2]!, q[3]!, paint(i, j));
       }
     }
     const m = s.mesh(this.material);
