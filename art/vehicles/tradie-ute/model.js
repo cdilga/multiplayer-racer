@@ -21,11 +21,10 @@ import * as THREE from 'three';
 import { swatchUV, REGION } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 6, nose: 2, curvePts: true, merge: 0.10, doorMid: true, wheelSeg: 12, rim: 5, mirrors: 'shaped', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
-  1: { arch: 5, nose: 1, curvePts: true, merge: 0.2, doorMid: true, wheelSeg: 8, rim: 5, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 8, rim: 0, mirrors: 'box', bar: 'simple', grille: false, snorkel: 0, rack: 'simple', steps: false, seams: false, tow: false, tailLamps: false },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, windows: true, scoop: true, vents: true, mirrors: 'stalk', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: true, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: true, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: false, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 0, rack: 'simple', steps: false, seams: false, tow: false, tailLamps: false },
 };
-
 
 const lerpCurve = (pts, z) => {
   if (z >= pts[0][0]) return pts[0][1];
@@ -33,9 +32,26 @@ const lerpCurve = (pts, z) => {
   return pts[pts.length - 1][1];
 };
 
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+// a convex 2D polygon [[z, t]…] clipped to z ≤ k (side −1) or z ≥ k (side 1)
+const clipZ = (pts, k, side) => {
+  const inside = (p) => side * (p[0] - k) >= -1e-9, out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (inside(a)) out.push(a);
+    if (inside(a) !== inside(b)) { const t = (k - a[0]) / (b[0] - a[0]); out.push([k, a[1] + (b[1] - a[1]) * t]); }
+  }
+  return out.filter((p, i) => i === 0 || Math.hypot(p[0] - out[i - 1][0], p[1] - out[i - 1][1]) > 1e-6);
+};
+
 // ───────────────────────── triangle soup builder (non-indexed → flat shading) ─────────────────────────
 class Soup {
-  constructor() { this.p = []; this.uv = []; this.c = []; }
+  constructor() { this.p = []; this.uv = []; this.c = []; this.nc = []; }
+  /** Draws fn's triangles as decoration the bake leaves out of the part's collider (aerial, fin, calipers, mirrors). */
+  decor(fn) { const a = this.p.length / 3; fn(); this.nc.push([a, this.p.length / 3]); }
   tri(a, b, c, uv, col = 1) {
     // uv: swatch name, or a function (vertex) → [u,v]
     for (const v of [a, b, c]) {
@@ -45,6 +61,20 @@ class Soup {
     }
   }
   quad(a, b, c, d, uv, col) { this.tri(a, b, c, uv, col); this.tri(a, c, d, uv, col); }
+  /** A planar convex polygon, wound so its normal points along `out` (a direction, roughly). */
+  face(pts, uv, out) {
+    const n = cross(sub(pts[1], pts[0]), sub(pts[2], pts[0]));
+    const P = dot(n, out) >= 0 ? pts : pts.slice().reverse();
+    for (let i = 1; i < P.length - 1; i++) this.tri(P[0], P[i], P[i + 1], uv);
+  }
+  /** A convex solid given as faces (point lists): every face wound outward from the solid's centroid. */
+  solid(faces, uv) {
+    const all = faces.flat(), c = [0, 1, 2].map((k) => all.reduce((t, v) => t + v[k], 0) / all.length);
+    for (const f of faces) {
+      const fc = [0, 1, 2].map((k) => f.reduce((t, v) => t + v[k], 0) / f.length);
+      this.face(f, uv, sub(fc, c));
+    }
+  }
   // closed box with optional per-face swatch {px,nx,py,ny,pz,nz}
   box(cx, cy, cz, sx, sy, sz, sw, rot = null) {
     const h = [sx / 2, sy / 2, sz / 2], m = rot ? new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rot)) : null;
@@ -57,7 +87,20 @@ class Soup {
     this.quad(V(-1, -1, 1), V(1, -1, 1), V(1, 1, 1), V(-1, 1, 1), f('pz'));
     this.quad(V(1, -1, -1), V(-1, -1, -1), V(-1, 1, -1), V(1, 1, -1), f('nz'));
   }
-  // prism along an axis: n-gon radius r, from a to b (used for wheels, aerial, posts)
+  /** A square-section beam from a to b (four sides, open ends): struts, posts, the aerial. `up` orients its width. */
+  beam(a, b, w, t, sw, up = [0, 1, 0]) {
+    const ax = new THREE.Vector3(...sub(b, a)).normalize(), u = new THREE.Vector3(...up).cross(ax);
+    if (u.lengthSq() < 1e-6) u.set(1, 0, 0).cross(ax);
+    u.normalize(); const v = ax.clone().cross(u).normalize();
+    const off = (p, i, j) => [p[0] + u.x * i * w / 2 + v.x * j * t / 2, p[1] + u.y * i * w / 2 + v.y * j * t / 2, p[2] + u.z * i * w / 2 + v.z * j * t / 2];
+    const corners = [[1, 1], [-1, 1], [-1, -1], [1, -1]], mid = mix(a, b, 0.5);
+    for (let k = 0; k < 4; k++) {
+      const [i0, j0] = corners[k], [i1, j1] = corners[(k + 1) % 4];
+      const q = [off(a, i0, j0), off(a, i1, j1), off(b, i1, j1), off(b, i0, j0)];
+      const fc = mix(q[0], q[2], 0.5); this.face(q, sw, sub(fc, mid));
+    }
+  }
+  // prism along an axis: n-gon radius r, from a to b (used for wheels, pipes)
   prism(a, b, r, n, swSide, swCap, phase = 0, r2 = r) {
     const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), ax = B.clone().sub(A).normalize();
     const u = Math.abs(ax.y) < 0.9 ? new THREE.Vector3(0, 1, 0).cross(ax).normalize() : new THREE.Vector3(1, 0, 0).cross(ax).normalize(), w = ax.clone().cross(u);
@@ -116,6 +159,15 @@ function makeSoups(P, lod) {
     return [[0, yb, z], [s * (hw - P.floorIn), lift, z], [s * hw, y2, z], [s * hw, y3, z], [s * (hw - P.shoulderIn), ysh, z], [0, ycr, z]];
   };
 
+  // the tub's outer skin x at (z, y) on side s, and its top surface height at (x, z) (as the Lion's)
+  const skinX = (z, y, s) => {
+    const r = ring(z, s);
+    if (y >= r[3][1]) return mix(r[3], r[4], Math.min(1, (y - r[3][1]) / Math.max(1e-6, r[4][1] - r[3][1])))[0];
+    if (y >= r[2][1]) return r[2][0];
+    return mix(r[1], r[2], Math.max(0, (y - r[1][1]) / Math.max(1e-6, r[2][1] - r[1][1])))[0];
+  };
+  const topY = (x, z) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), w = lerpCurve(P.hw, z) - P.shoulderIn; return ycr + (ysh - ycr) * Math.min(1, Math.abs(x) / w); };
+
   const soups = {}; const S = (id) => (soups[id] ??= new Soup());
   const partOfTub = (zm, seg, s) => {
     if (zm > zA + 1e-6) return 'front';
@@ -145,18 +197,38 @@ function makeSoups(P, lod) {
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
-  cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'under'); // the tray's black rear frame
+  cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'paint'); // the tailgate, painted
 
-  // greenhouse (the dual cab): ring per cabin station, one side: base(belt) → glass top → roof edge → crown
-  const cring = (c, s) => { const yb = lerpCurve(P.ySh, c.z) - 0.005, collapsed = c.yr == null, yr = collapsed ? lerpCurve(P.yCr, c.z) - 0.005 : c.yr, ch = collapsed ? 0 : P.roofCh;
-    return [[s * c.wb, yb, c.z], [s * c.wt, collapsed ? yb : yr - ch, c.z], [s * (c.wt - ch * 1.2) * (collapsed ? 0.5 : 1), yr, c.z], [0, yr + (collapsed ? 0 : P.roofCrown), c.z]]; };
+  // greenhouse (the dual cab): ring per cabin station, one side: base(belt) → glass top → roof edge → crown. The sides are
+  // painted (A, B, C pillars); the side glass is laid over them below (a black frame, then a pane per door and the quarter).
+  const cring = (c, s) => {
+    const yb = lerpCurve(P.ySh, c.z) - 0.005;
+    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s * c.wb, yb, c.z], [s * c.wt, yb + 0.002, c.z], [s * (c.wt - P.roofCh), yc, c.z], [0, yc, c.z]]; }
+    return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0, c.yr + P.roofCrown, c.z]];
+  };
   const nC = P.cabin.length;
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
     const c = P.cabin[i], a = cring(c, s), b = cring(P.cabin[i + 1], s);
     for (let k = 0; k < 3; k++) {
-      const sw = k === 0 ? c.side : c.roof;
+      const sw = k === 0 ? sUV : k === 1 ? sUV : c.roof === 'paint' ? 'paint' : 'glass';
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
+  }
+  const ghPoint = (z, t, s, off) => {
+    let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
+    const c0 = P.cabin[i], c1 = P.cabin[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
+    const a = cring(c0, s), b = cring(c1, s), lo = mix(a[0], b[0], u), hi = mix(a[1], b[1], u), p = mix(lo, hi, t);
+    const n = cross(sub(hi, lo), [0, 0, 1]); const L = Math.hypot(...n) || 1; const sg = Math.sign(n[0]) === s ? 1 : -1;
+    return [p[0] + sg * n[0] / L * off, p[1] + sg * n[1] / L * off, z];
+  };
+  const W = P.windows;
+  if (T.windows) for (const s of [1, -1]) {
+    const poly = (pts, off, sw) => { for (let i = 0; i < nC - 1; i++) {
+      const piece = clipZ(clipZ(pts, P.cabin[i].z, -1), P.cabin[i + 1].z, 1);
+      if (piece.length >= 3) S('core').face(piece.map(([z, t]) => ghPoint(z, t, s, off)), sw, [s, 0.3, 0]);
+    } };
+    if (T.windows === true) { poly(W.frame, 0.006, 'trim'); for (const pane of W.panes) poly(pane, 0.011, 'glass'); }
+    else poly(W.frame, 0.008, 'glass');
   }
 
   // ── bays (dark, inside the shell; seen only when a panel is gone) ──
@@ -165,6 +237,38 @@ function makeSoups(P, lod) {
   { const hwC = lerpCurve(P.hw, zC) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zC)) / 2 - 0.02, zC - 0.03, hwC * 2, lerpCurve(P.ySh, zC) - 0.36, 0.06); }
   for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) - 0.07); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.1, zC], [x, 1.1, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.1, zA], [x, 1.1, zC]]), 'bay'); }
 
+  // ── flared wheel arches: a band round each arch cut, standing proud of the side by P.flare.out at its lip, its outer edge
+  // flush with the body P.flare.w further out (front arch: part front; rear arch: part back) ──
+  if (T.flare) for (const [zc, id] of [[P.zFA, 'front'], [P.zRA, 'back']]) for (const s of [1, -1]) {
+    const So = S(id), n = T.flare, Fw = P.flare.w, Fo = P.flare.out, ht = P.archTop - P.archBase;
+    const E = [], Ep = [], O = [], Ei = [];
+    for (let i = 0; i < n; i++) {
+      const th = Math.PI * i / (n - 1), z = zc + P.archR * Math.cos(th), y = P.archBase + ht * Math.sin(th);
+      const zo = zc + (P.archR + Fw) * Math.cos(th), yo = P.archBase + (ht + Fw) * Math.sin(th);
+      const x = skinX(z, Math.max(y, lerpCurve(P.yBot, z) + P.skirt), s);
+      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo, P.track + P.wheelW / 2 + 0.02), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
+    }
+    for (let i = 0; i < n - 1; i++) {
+      const th = Math.PI * (i + 0.5) / (n - 1);
+      So.face([Ep[i], Ep[i + 1], O[i + 1], O[i]], 'trim', [s, 0.6 * Math.sin(th), 0.6 * Math.cos(th)]); // the proud face
+      if (T.flareLip) So.face([Ei[i], Ei[i + 1], Ep[i + 1], Ep[i]], 'trim', [0, -Math.sin(th), -Math.cos(th)]); // the lip's underside
+    }
+    if (T.flareEnds) for (const i of [0, n - 1]) So.face([Ei[i], Ep[i], O[i]], 'trim', [0, -0.2, i === 0 ? 1 : -1]);
+  }
+
+  // ── bonnet: the sheet's raised scoop with a black mouth, and two louvre vents (decals) ──
+  { const N = P.scoop, F0 = S('front');
+    const xa = -N.w / 2, xb = N.w / 2, z0 = N.z, z1 = N.z - N.l, ti = N.w * 0.14;
+    const g0 = topY(0, z0) + 0.004, g1 = topY(0, z1) - 0.012;
+    if (T.scoop) {
+      const top = g0 + N.h, bfa = [xa, g0, z0], bfb = [xb, g0, z0], tfa = [xa + ti, top, z0 - 0.04], tfb = [xb - ti, top, z0 - 0.04], ra = [xa + ti * 0.5, g1, z1], rb = [xb - ti * 0.5, g1, z1];
+      F0.face([tfa, tfb, rb, ra], tUV, [0, 1, 0.1]); F0.face([bfa, tfa, ra], tUV, [-1, 0.3, 0]); F0.face([bfb, tfb, rb], tUV, [1, 0.3, 0]); F0.face([bfa, bfb, tfb, tfa], tUV, [0, 0.2, 1]);
+      const mc = mix(mix(bfa, bfb, 0.5), mix(tfa, tfb, 0.5), 0.5), m = (p) => { const q = mix(p, mc, 0.16); return [q[0], q[1] - 0.008, q[2] + 0.006]; };
+      F0.face([m(bfa), m(bfb), m(tfb), m(tfa)], 'grille', [0, 0.2, 1]);
+    } else F0.face([[xa, g0 + 0.01, z0], [xb, g0 + 0.01, z0], [xb, g1 + 0.012, z1], [xa, g1 + 0.012, z1]], 'grille', [0, 1, 0]);
+    if (T.vents) for (const s of [1, -1]) for (let k = 0; k < 3; k++) { const x0 = s * (N.ventX - 0.1), x1 = s * (N.ventX + 0.1), z = N.ventZ - k * 0.05, y = topY(s * N.ventX, z) + 0.006;
+      F0.face([[x0, y, z + 0.012], [x1, y, z + 0.012], [x1, y, z - 0.012], [x0, y, z - 0.012]], 'grille', [0, 1, 0]); }
+  }
   // ── front (part: front): bonnet cap, fascia, grille, lamps, bull bar ──
   const F = S('front'), zn = P.zNose + 0.004, hwN = lerpCurve(P.hw, P.zNose), z1 = P.zNose - 0.16;
   const fq = (x0, y0, x1, y1, sw, dz = 0) => F.quad([x0, y0, zn + dz], [x1, y0, zn + dz], [x1, y1, zn + dz], [x0, y1, zn + dz], sw);
@@ -174,10 +278,10 @@ function makeSoups(P, lod) {
   // so the grille and headlights sit on the Triton's tall blunt front (br-bwju.8), below the bonnet's edge
   const fy = lerpCurve(P.ySh, P.zNose) - 1.0;
   const slopeQuad = (pts, sw, s = 1) => { const q = pts.map(([x, y]) => onSlope(s * x, y + fy)); if (s > 0) F.quad(q[0], q[1], q[2], q[3], sw); else F.quad(q[0], q[3], q[2], q[1], sw); };
-  slopeQuad([[-0.46, 0.72], [0.46, 0.72], [0.54, 0.98], [-0.54, 0.98]], 'trim'); // grille: the MQ's tall trapezoid
+  slopeQuad([[-0.48, 0.70], [0.48, 0.70], [0.54, 0.98], [-0.54, 0.98]], 'chrome'); // grille: the MQ's tall chrome trapezoid, dark slots cut in it
   slopeQuad([[-0.54, 0.98], [0.54, 0.98], [0.55, 1.01], [-0.55, 1.01]], 'chrome'); // chrome grille header
-  if (T.grille) for (let i = 0; i < 6; i++) { const x = -0.40 + i * 0.16; slopeQuad([[x - 0.025, 0.75], [x + 0.025, 0.75], [x + 0.025, 0.96], [x - 0.025, 0.96]], 'chrome'); } // the vertical slats
-  for (const s of [1, -1]) slopeQuad([[0.58, 0.84], [0.88, 0.88], [0.89, 1.0], [0.58, 0.98]], 'head', s); // swept headlights
+  if (T.grille) for (let i = 0; i < 7; i++) { const x = -0.42 + i * 0.14; slopeQuad([[x - 0.045, 0.74], [x + 0.045, 0.74], [x + 0.045, 0.95], [x - 0.045, 0.95]], 'grille'); } // the vertical slots
+  for (const s of [1, -1]) slopeQuad([[0.58, 0.84], [0.95, 0.91], [0.97, 1.03], [0.58, 0.99]], 'head', s); // swept headlights
   // the "dynamic shield": a chrome sweep from the grille's lower corner out under each headlight
   if (T.grille) for (const s of [1, -1]) slopeQuad([[0.46, 0.72], [0.86, 0.82], [0.87, 0.86], [0.50, 0.77]], 'chrome', s);
   const ybN = lerpCurve(P.yBot, P.zNose);
@@ -206,18 +310,27 @@ function makeSoups(P, lod) {
   const cUV = canopyUV(P, deckTop);
   Bk.box(0, (deckTop + C.y1) / 2, (C.z0 + C.z1) / 2, C.hw * 2, C.y1 - deckTop, C.z0 - C.z1, { all: 'canopy', px: cUV, nx: cUV, nz: canopyRearUV(P, deckTop), py: canopyTopUV(P) }); // the canopy: black like the owner's, its lid in the seat colour so the chase cam sees whose it is
   const bq = (x0, y0, x1, y1, sw) => Bk.quad([x1, y0, zt], [x0, y0, zt], [x0, y1, zt], [x1, y1, zt], sw);
-  if (T.tailLamps) for (const s of [1, -1]) { // the tray's combination lamps: amber, white, red from the middle out
-    for (const [a, b, sw] of [[0.52, 0.62, 'indicator'], [0.62, 0.70, 'head'], [0.70, 0.94, 'tail']]) { const xa = s * hwT * a, xb = s * hwT * b; bq(Math.min(xa, xb), 0.90, Math.max(xa, xb), 1.10, sw); } // tall, as the Cruz's are (br-bwju.8)
+  // the sheet's tray lamps: a tall red bar up each corner (amber and white at the foot), a black step bumper with two reversing lamps
+  for (const s of [1, -1]) {
+    const x0 = s * hwT * 0.70, x1 = s * hwT * 0.97;
+    bq(Math.min(x0, x1), 0.88, Math.max(x0, x1), 1.34, 'tail');
+    if (T.tailLamps) { const xa = s * hwT * 0.70, xb = s * hwT * 0.80; bq(Math.min(xa, xb), 0.80, Math.max(xa, xb), 0.88, 'indicator'); }
   }
-  bq(-0.22, 0.74, 0.22, 0.86, 'white'); // number plate
+  Bk.box(0, 0.56, zt - 0.04, hwT * 2 + 0.06, 0.24, 0.16, 'trim'); // the step bumper
+  if (T.tailLamps) { for (const s of [1, -1]) bq(s * 0.55 - 0.06, 0.52, s * 0.55 + 0.06, 0.60, 'head'); // reversing lamps
+    bq(-0.22, 0.60, 0.22, 0.72, 'white'); } // number plate
   if (T.tow) { Bk.box(0, 0.42, zt - 0.06, 0.55, 0.10, 0.14, 'trim'); Bk.prism([0, 0.46, zt - 0.14], [0, 0.56, zt - 0.14], 0.04, 5, 'chrome', 'chrome'); }
 
   // ── core details: mirrors, steps, snorkel, roof rack ──
-  const M = P.mirror;
-  for (const s of [1, -1]) {
-    const x = s * (lerpCurve(P.hw, M.z) + M.out / 2 - 0.02);
-    S('core').box(x, M.y, M.z, M.out, M.h, M.l, { all: 'trim', pz: 'trim', nz: 'chrome' }, T.mirrors === 'shaped' ? [0, s * 0.12, 0] : null);
-  }
+  const M = P.mirror; // decoration: the collider stays the body's width
+  for (const s of [1, -1]) S('core').decor(() => {
+    const xb = skinX(M.z, M.y - 0.04, s), x0 = xb + s * M.stalk, x1 = x0 + s * M.out;
+    if (T.mirrors === 'box') { S('core').box((xb + x1) / 2, M.y, M.z, Math.abs(x1 - xb), M.h, M.l, 'trim'); return; }
+    S('core').beam([xb - s * 0.02, M.y - 0.06, M.z + 0.02], [x0 + s * 0.01, M.y - 0.03, M.z], 0.04, 0.06, 'trim', [0, 0, 1]);
+    const f = (x, k) => [[x, M.y - M.h / 2, M.z + M.l / 2 * k], [x, M.y + M.h / 2, M.z + M.l / 2 * k - 0.01], [x, M.y + M.h / 2, M.z - M.l / 2], [x, M.y - M.h / 2 + 0.02, M.z - M.l / 2]];
+    const a = f(x0, 1), b = f(x1, 0.5);
+    S('core').solid([a, b, ...a.map((p, i) => [p, a[(i + 1) % 4], b[(i + 1) % 4], b[i]])], 'trim');
+  });
   if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, zC + 0.012]) {
     const x = s * (lerpCurve(P.hw, z) + 0.003), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.02, y1 = lerpCurve(P.ySh, z) - 0.05;
     S('core').quad(...(s > 0 ? [[x, y0, z + 0.008], [x, y0, z - 0.008], [x, y1, z - 0.008], [x, y1, z + 0.008]] : [[x, y0, z - 0.008], [x, y0, z + 0.008], [x, y1, z + 0.008], [x, y1, z - 0.008]]), 'trim');
@@ -245,14 +358,36 @@ function makeSoups(P, lod) {
     }
   }
 
-  // ── wheels: tyre prism + rim disc (5-spoke at low res) ──
-  const tyreR = P.wheelR / Math.cos(Math.PI / T.wheelSeg);
-  for (const [id, z, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
-    const W = S(id), x = s * P.track, hw = P.wheelW / 2;
-    W.prism([x - s * hw, P.wheelR, z], [x + s * hw, P.wheelR, z], tyreR, T.wheelSeg, 'tyre', 'tyre', Math.PI / T.wheelSeg);
-    // black wheels with a machined silver lip: a silver ring (disc) under a black centre, and a silver hub cap
-    if (T.rim) { const n = T.wheelSeg; W.disc([x + s * (hw + 0.006), P.wheelR, z], s, P.wheelR * 0.70, n, 'chrome', Math.PI / n); W.disc([x + s * (hw + 0.012), P.wheelR, z], s, P.wheelR * 0.60, n, 'rim', Math.PI / n); W.disc([x + s * (hw + 0.018), P.wheelR, z], s, P.wheelR * 0.16, T.rim, 'chrome'); }
-    else W.disc([x + s * (hw + 0.006), P.wheelR, z], s, P.wheelR * 0.62, 6, 'chrome', Math.PI / 6); // LOD2: the wheel as one silver hexagon
+  // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five spokes and a hex hub;
+  // LOD1 draws the spokes flat on the barrel, LOD2 a 5-gon decal. The tyre's circumradius makes its inscribed radius
+  // wheelR, so the bottom flat (phase π/n) touches the ground. ──
+  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n), rimR = P.wheelR * P.rim.r, depth = P.rim.depth;
+  for (const [id, zc, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
+    const Wh = S(id), xw = s * P.track, xo = xw + s * P.wheelW / 2, xi = xw - s * P.wheelW / 2, yc = P.wheelR;
+    const ringAt = (x, r, k = n, ph = 1.5 * Math.PI - Math.PI / k) => Array.from({ length: k }, (_, i) => { const a = ph + (i / k) * Math.PI * 2; return [x, yc + Math.sin(a) * r, zc + Math.cos(a) * r]; });
+    const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
+    if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
+    if (T.rim === 'decal') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, P.wheelR * 0.6, 5, Math.PI / 2), 'chrome', [s, 0, 0]); continue; }
+    const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
+    if (T.rim === 'spokes') {
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'chrome', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
+      Wh.face(rd, 'under', [s, 0, 0]); // the dark barrel
+    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR), 'under', [s, 0, 0]); } // LOD1: a flat sidewall, the barrel drawn on it
+    const hubR = 0.07, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
+    for (let k = 0; k < (T.spokes ?? P.rim.spokes ?? 5); k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
+      const a = Math.PI / 2 + k * Math.PI * 2 / (T.spokes ?? P.rim.spokes ?? 5), ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
+      const P0 = (r, w, x) => [x, yc + sa * r + ps * w, zc + ca * r + pc * w];
+      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 0.7, rr = rimR - 0.004;
+      const fr = [P0(hubR * 0.8, -w0, xf), P0(rr, -w1, xf), P0(rr, w1, xf), P0(hubR * 0.8, w0, xf)];
+      Wh.face(fr, 'chrome', [s, 0, 0]);
+      if (T.rim === 'spokes') { const xb = xo - s * depth * 0.55; for (const e of [-1, 1]) Wh.face([P0(hubR * 0.8, e * w0, xf), P0(rr, e * w1, xf), P0(rr, e * w1, xb), P0(hubR * 0.8, e * w0, xb)], 'trim', [0, ps * e, pc * e]); }
+    }
+    const hub = ringAt(xf + s * 0.012, hubR, 6, 0);
+    if (T.hub) Wh.face(hub, 'chrome', [s, 0, 0]);
+    if (T.rim === 'spokes') { const hb = ringAt(xf - s * 0.01, hubR, 6, 0); for (let i = 0; i < 6; i++) { const j = (i + 1) % 6; Wh.face([hb[i], hb[j], hub[j], hub[i]], 'trim', sub(mix(hub[i], hub[j], 0.5), [hub[i][0], yc, zc])); } }
+    // the red caliper: on the core (it doesn't turn with the wheel), up and behind the axle, inside the spokes
   }
 
   // ── interior blocks (what a missing panel shows, vehicle space, the same at every LOD) ──

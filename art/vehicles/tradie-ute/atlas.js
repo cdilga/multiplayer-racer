@@ -14,7 +14,7 @@
 // No DOM: shapes rasterise into an RGBA buffer at 4×4 supersampling and box-filter down, all integer maths, so two bakes
 // give identical bytes on any machine.
 
-export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'pink', 'lime', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator', 'canopy', 'awning'];
+export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail', 'pink', 'lime', 'white', 'fog', 'under', 'bay', 'chrome', 'indicator', 'canopy', 'awning', 'grille'];
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
@@ -23,7 +23,7 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, 0.35, 0.5], canopy: [
 export const DEFAULT_COLOURS = {
   paint: '#f2f4f8', trim: '#26282c', glass: '#2b3036', tyre: '#2a2a2c', rim: '#1f2023', head: '#fff2c8', led: '#9ff6ff', tail: '#e8311f',
   pink: '#ff7a1a', lime: '#f2c81a', white: '#f2f4f8', fog: '#ffe9b0', under: '#1c1d20', bay: '#34373e', chrome: '#aab2bb', indicator: '#ff9a1a',
-  canopy: '#1d1f22', awning: '#4b4e52', checker: '#3d4046', checkerHi: '#5a5e65', canopyHi: '#2a2d31',
+  canopy: '#1d1f22', awning: '#4b4e52', checker: '#3d4046', checkerHi: '#5a5e65', canopyHi: '#2a2d31', grille: '#17181b',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };
@@ -38,10 +38,6 @@ function sideShapes(c) {
   const m = (pts) => pts.map(([x, y]) => [ox + x / LEN * px, oy + (1 - y / 1.7) * py]);
   const out = [{ rect: [ox, oy, px, py], fill: c.paint }];
   const cab = 3.48; // the cab's back (z -0.93) in metres from the nose
-  out.push({ poly: m([[cab, 0], [LEN, 0], [LEN, 1.7], [cab, 1.7]]), fill: c.under });
-  out.push({ poly: m([[cab + 0.62, 0.42], [LEN - 0.12, 0.42], [LEN - 0.12, 1.02], [cab + 0.62, 1.02]]), fill: c.checker }); // under-tray boxes
-  for (let x = cab + 0.66; x < LEN - 0.16; x += 0.08) for (let y = 0.46; y < 1.0; y += 0.08) out.push({ poly: m([[x, y], [x + 0.04, y + 0.02], [x, y + 0.04], [x - 0.04, y + 0.02]].map(([a, b]) => [a + 0.02, b])), fill: c.checkerHi });
-  out.push({ poly: m([[cab + 0.62, 0.70], [LEN - 0.12, 0.70], [LEN - 0.12, 0.72], [cab + 0.62, 0.72]]), fill: c.under }); // the boxes' lids
   // The cab's own details (br-bwju.8; the owner's Triton is plain paint, so no livery). Doors cut at 1.66, 2.55 and 3.44 m
   // from the nose; the body side runs from the sill (0.34 m) to the shoulder (1.25 m).
   out.push({ poly: m([[1.70, 0.34], [cab - 0.04, 0.34], [cab - 0.04, 0.44], [1.70, 0.44]]), fill: c.trim }); // the black rocker under the doors

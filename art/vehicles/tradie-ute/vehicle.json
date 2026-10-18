@@ -2,7 +2,7 @@
  "id": "tradie-ute",
  "what": "Contract data the geometry doesn't carry (P1-V, br-bwju.2): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into tradie-ute.asset.json. Same hinge layout as the Cruz (plan §6.3): doors 0-70 degrees about the front edge, front (bonnet and bull bar) and back (tray, tailgate and tow bar) hang about their top edges, wheels +-6 degrees camber. +X is the vehicle's left.",
  "lods": [
-  { "maxTris": 1300 },
+  { "maxTris": 2400 },
   { "maxTris": 900 },
   { "maxTris": 600 }
  ],

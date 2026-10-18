@@ -1,7 +1,7 @@
 // capture.mjs (P1-V02): renders a baked vehicle's contact sheets through view/index.html in Playwright Chromium and writes
 // them as PNGs. Serves the repo root on 127.0.0.1 only.
 //   node tools/vehicles/view/capture.mjs [--asset /art/vehicles/cruz-missile/cruz-missile.asset.json] [--out docs/evidence/P1-V02]
-//   node tools/vehicles/view/capture.mjs --asset … --out <dir> --sheet ladder [--paint '#d8231c']   one sheet only (br-bwju.11)
+//   node tools/vehicles/view/capture.mjs --asset … --out <dir> --sheet ladder [--paint '#d8231c'] [--ortho 3.0]   one sheet only (br-bwju.11; --ortho: half the side/top frame in metres, default 2.6)
 //   node tools/vehicles/view/capture.mjs --heroes    every roster car's picker render -> art/ui/brand/renders/picker/<id>.png
 //                                                   (br-bwju.10: a new roster car gets its render from this, not by hand)
 import fs from 'node:fs';
@@ -32,7 +32,7 @@ try {
         sheet: 'hero', asset: `/art/vehicles/${c.id}/${c.id}.asset.json`, file: path.join(REPO, `art/ui/brand/renders/picker/${c.id}.png`),
       }))
     : (opt('--sheet') ? [opt('--sheet')] : ['views', 'paints', 'lods', 'colliders']).map((sheet) => ({ sheet, asset, file: path.join(out, `${sheet}.png`) }));
-  const paint = opt('--paint') ? `&paint=${encodeURIComponent(opt('--paint'))}` : '';
+  const paint = (opt('--paint') ? `&paint=${encodeURIComponent(opt('--paint'))}` : '') + (opt('--ortho') ? `&ortho=${opt('--ortho')}` : '');
   for (const { sheet, asset, file } of jobs) {
     const page = await browser.newPage();
     page.on('pageerror', (e) => console.log('PAGEERR', e.message));
