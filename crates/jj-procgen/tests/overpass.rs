@@ -116,6 +116,11 @@ struct Run {
 /// lip: the ramp costs little), with the race's gate state of that point, and drives it flat out (straight) until it
 /// has been down past the rim for 2 s (R17's run-out), or 8 s.
 fn take(m: &LoadedMap, speed: f32) -> Run {
+    take_with(m, speed, false)
+}
+
+/// [`take`], boosting all the way to the lip when `boost`.
+fn take_with(m: &LoadedMap, speed: f32, boost: bool) -> Run {
     let (k, d) = piece(m);
     let f = &m.map.features[k];
     let (lip, t, _) = jj_map::setpiece::take_off(&m.map, f, &d);
@@ -144,7 +149,7 @@ fn take(m: &LoadedMap, speed: f32) -> Run {
         throttle: i16::MAX,
         steer: 0,
         brake: 0,
-        boost: false,
+        boost,
         no_reverse: false,
     };
     let mut past_rim = false;
@@ -156,6 +161,7 @@ fn take(m: &LoadedMap, speed: f32) -> Run {
     // flat out again once down past the rim.
     let neutral = DriveInput {
         throttle: 0,
+        boost: false,
         ..flat_out
     };
     let mut flying = false;
@@ -230,6 +236,29 @@ fn a_car_in_the_band_clears_the_lower_road_and_lands_upright() {
         assert!(
             in_band >= 2,
             "{biome:?} {seed}: only {in_band} runs reached the lip inside the band"
+        );
+    }
+}
+
+/// R124 (br-xlvx.5): at design speed and on boost the car clears and lands upright. A car boosting all the way to the
+/// lip from the band's top leaves it above the band and still comes down past the rim, upright, without a respawn.
+#[test]
+fn a_car_on_boost_from_the_band_top_clears_and_lands_upright() {
+    for (biome, seed) in [(Biome::OutbackDirt, 0), (Biome::Town, 1), (Biome::Rocks, 2)] {
+        let m = leap(seed, biome).expect("an overpass leap");
+        let (_, d) = piece(&m);
+        let r = take_with(&m, d.max_speed as f32, true);
+        let what = format!(
+            "{biome:?} {seed}: boosting, lip {:.1} m/s (band {:.1}..{:.1})",
+            r.lip_speed, d.min_speed, d.max_speed
+        );
+        eprintln!("{what}: landed up_y {:.2}", r.landing_up_y);
+        assert!(!r.respawned, "{what} respawned");
+        assert!(r.past_rim, "{what} never landed past the rim");
+        assert!(
+            r.landing_up_y > 0.8,
+            "{what} landed at up_y {}",
+            r.landing_up_y
         );
     }
 }

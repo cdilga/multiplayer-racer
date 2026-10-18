@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "29";
+pub const GENERATOR_VERSION: &str = "30";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;

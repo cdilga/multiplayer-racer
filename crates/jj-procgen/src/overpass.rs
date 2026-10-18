@@ -49,6 +49,10 @@ pub struct OverpassData {
     pub climb_grade: Option<f64>,
     pub shoulder_m: f64,
     pub side_slope: f64,
+    /// The landing is long enough for a car this much faster than the band's top (a boost past it, R124: "at design
+    /// speed and boost the car clears and lands upright"). Absent: none.
+    #[serde(default)]
+    pub boost_margin: f64,
 }
 
 /// The shipped data, parsed once.
@@ -488,7 +492,8 @@ pub fn place(
         let x_mid = setpiece::touchdown(map, &sizing, &d, mid).map_or(d.gap_m, |(x, _)| x);
         let slope = (9.81 * x_mid / (vh * vh) - libm::tan(a))
             .clamp(data.min_landing_slope, data.max_landing_slope);
-        let far = setpiece::touchdown(map, &sizing, &d, top).map_or(f64::INFINITY, |(x, _)| x);
+        let far = setpiece::touchdown(map, &sizing, &d, top * (1.0 + data.boost_margin))
+            .map_or(f64::INFINITY, |(x, _)| x);
         let need_end = lip + far + setpiece::limits::END_MARGIN_M + 2.0;
         if need_end > prof.land_end || (slope - prof.slope).abs() > 0.02 {
             prof.land_end = prof.land_end.max(need_end);
