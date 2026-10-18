@@ -6,6 +6,7 @@
     { "id": "tradie-ute", "name": "Tradie Ute", "cls": "Work horse", "blurb": "Heavy, torquey and tough. Hauls itself out of anything.", "shape": "ute", "stats": [4, 7, 4, 8] },
     { "id": "hawk-dash", "name": "Hawk Dash", "cls": "Aussie V8", "blurb": "Rear-drive V8 with twin stripes. Punch it and the tail steps out.", "shape": "sedan", "spec": "aussie-v8", "stats": [8, 6, 5, 6] },
     { "id": "lion-president", "name": "Lion President", "cls": "Aussie V8", "blurb": "The Hawk's old rival: the same V8 and the same grunt under a different body.", "shape": "sedan", "spec": "aussie-v8", "stats": [8, 6, 5, 6] },
+    { "id": "au-hawk", "name": "AU Hawk", "cls": "Burnout king", "blurb": "Big round family sedan with a big grin. Loves a burnout and a doughnut, and it is a touch slower.", "shape": "sedan", "stats": [6, 5, 8, 6] },
     { "id": "postie-bike", "name": "Postie Bike", "cls": "Delivery run", "blurb": "Nippy step-through with a full mail run on the back. Gets everywhere, eventually.", "shape": "bike", "stats": [3, 7, 8, 4] },
     { "id": "pig-catcher", "name": "Pig Catcher", "cls": "Outback trail bike", "blurb": "Tall, light and hungry for air. Wheelies on request.", "shape": "bike", "stats": [6, 8, 6, 3] }
   ],

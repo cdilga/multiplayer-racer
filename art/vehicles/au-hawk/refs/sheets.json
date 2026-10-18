@@ -1,0 +1,5 @@
+{
+ "what": "Reference sheets for tools/vehicles/fit (br-bwju.11): Muse Image turnarounds (art/ui/frames/generate.mjs --prompt refs/prompts/<sheet>.txt; ledger art/ui/frames/ledger.jsonl). The Tradie Ute had no contact sheet before this; lod-plus-1 was drawn from the Cruz sheet's layout and the br-bwju.8 render, lowest-lod from lod-plus-1. Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets, one view each.",
+ "sheets": { "lod1": "lod-plus-1.png", "lowest": "lowest-lod.png" },
+ "views": { "hero": [0, 0, 1450, 860], "top": [1460, 0, 1920, 870], "front": [0, 880, 470, 1280], "side": [480, 880, 1425, 1280], "rear": [1430, 880, 1920, 1280] }
+}

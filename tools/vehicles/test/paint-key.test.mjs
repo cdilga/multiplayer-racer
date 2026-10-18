@@ -78,7 +78,7 @@ test('Hawk Dash: across the black twin stripes, no filtered sample is lighter th
 });
 
 test('every roster atlas: paint is (0,0,0,0), non-paint texels keep their colour, edges are premultiplied', async () => {
-  for (const id of ['cruz-missile', 'hawk-dash', 'lion-president', 'tradie-ute', 'pig-catcher', 'postie-bike']) {
+  for (const id of ['cruz-missile', 'au-hawk', 'hawk-dash', 'lion-president', 'tradie-ute', 'pig-catcher', 'postie-bike']) {
     const { keyed, plain } = await car(id);
     let paint = 0, edge = 0;
     for (let o = 0; o < keyed.base.length; o += 4) {

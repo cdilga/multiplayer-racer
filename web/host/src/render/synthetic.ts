@@ -29,6 +29,8 @@ export interface SyntheticOptions {
   fxDemo?: boolean;
   /** Cars take the roster's vehicles in turn (R123; `?vehicles=mixed`), so a grid shows every model; otherwise all draw the first. */
   mixed?: boolean;
+  /** Every car draws this roster vehicle (`?vehicles=<id>`), so a capture can follow one model close up (br-bwju.12). */
+  only?: string;
 }
 
 const SPEED = 18; // m/s
@@ -233,6 +235,7 @@ export class SyntheticSource implements SnapshotSource {
     const strip = this.opts.strip;
     const cars = Array.from({ length: n }, (_, i) => (strip ? stripPose(i) : syntheticPose(i, n, tick)));
     if (this.opts.mixed) cars.forEach((c, i) => (c.vehicle = i % VEHICLE_IDS.length));
+    else if (this.opts.only && VEHICLE_IDS.includes(this.opts.only)) cars.forEach((c) => (c.vehicle = VEHICLE_IDS.indexOf(this.opts.only!)));
     if (this.fxDemo && !strip) cars.forEach((c, i) => Object.assign(c, fxDemoState(i, n, tick)));
     const parts = this.fxDemo && !strip
       ? [...(this.opts.damage ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat() : []), ...fxDemoParts(n, tick)]

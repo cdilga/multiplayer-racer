@@ -193,6 +193,7 @@ async function boot(): Promise<void> {
       damage: params.has('damage'),
       strip: params.get('damage') === 'strip',
       mixed: params.get('vehicles') === 'mixed',
+      only: params.get('vehicles') ?? undefined,
     });
     world.attach(source);
     if (freeze !== null) world.interp.fixedTick = Number(freeze) - 0.5;

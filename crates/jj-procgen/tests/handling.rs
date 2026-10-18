@@ -145,7 +145,8 @@ fn throw(map: &LoadedMap, profile: &VehicleProfile, at: usize, speed: f32, how: 
 /// a guard rail generator 24 placed (seed 3 point 120); the roster bikes stay upright there.
 /// One test per vehicle, so nextest runs the bank in parallel: as one test it took 2389 s and set CI's floor (run
 /// 5544). `the_r122_bank_names_every_roster_vehicle` fails when the roster gains or loses a vehicle this list misses.
-const R122_VEHICLES: [&str; 6] = [
+const R122_VEHICLES: [&str; 7] = [
+    "au-hawk",
     "cruz-missile",
     "hawk-dash",
     "lion-president",
@@ -185,6 +186,11 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_hawk_dash() {
 #[test]
 fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_lion_president() {
     r122("lion-president");
+}
+
+#[test]
+fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_au_hawk() {
+    r122("au-hawk");
 }
 
 #[test]
