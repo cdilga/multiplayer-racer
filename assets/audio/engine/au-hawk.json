@@ -1,0 +1,190 @@
+{
+  "$schema": "../../../web/shared/audio/engine-synth/profile.schema.json",
+  "format": "jj-engine-profile",
+  "version": 1,
+  "id": "au-hawk",
+  "name": "AU Hawk",
+  "description": "A big Aussie family sedan's 4.0 L inline-six with a lazy four-speed auto: a smooth, slightly hollow six-cylinder hum at idle with barely a lope, a relaxed rising wail on the throttle with long unhurried gear changes, only the odd soft pop on the lift, and a loud tyre-squeal bed for the burnouts it loves. Procedural; no samples.",
+  "engine": {
+    "cylinders": 6,
+    "idleRpm": 650,
+    "redlineRpm": 5200,
+    "limiterRpm": 5500
+  },
+  "gearbox": {
+    "ratios": [
+      2.74,
+      1.54,
+      1.0,
+      0.71
+    ],
+    "finalDrive": 4.2,
+    "wheelRadiusM": 0.34,
+    "upshiftRpm": 4300,
+    "downshiftRpm": 1800,
+    "shiftTimeS": 0.3,
+    "launchRpm": 2400,
+    "rpmRiseTauS": 0.09,
+    "rpmFallTauS": 0.22
+  },
+  "output": {
+    "level": 0.85,
+    "controlTauS": 0.03,
+    "noiseSeed": 20261003
+  },
+  "firing": {
+    "level": 0.5,
+    "offThrottleLevel": 0.35,
+    "mellow": {
+      "phase": "sine",
+      "harmonics": [
+        0.35,
+        0.6,
+        0.85,
+        1.0,
+        0.9,
+        0.7,
+        0.5,
+        0.35,
+        0.24,
+        0.16,
+        0.1,
+        0.07
+      ]
+    },
+    "bright": {
+      "phase": "cosine",
+      "harmonics": [
+        0.4,
+        0.6,
+        0.8,
+        0.9,
+        0.8,
+        0.7,
+        0.55,
+        0.45,
+        0.35,
+        0.27,
+        0.2,
+        0.15,
+        0.1,
+        0.07
+      ]
+    },
+    "brightMax": 0.6,
+    "bodyFilter": {
+      "minHz": 350,
+      "maxHz": 3000,
+      "q": 1.2,
+      "throttleOpen": 0.5
+    },
+    "lope": {
+      "depth": 0.12,
+      "fadeOutRpmN": 0.3
+    }
+  },
+  "intake": {
+    "level": 0.3,
+    "minHz": 300,
+    "maxHz": 1500,
+    "q": 1.4
+  },
+  "exhaust": {
+    "level": 0.35,
+    "minHz": 260,
+    "maxHz": 2200,
+    "q": 0.8,
+    "pulseDepth": 0.35,
+    "pulseHarmonics": [
+      1,
+      0.5,
+      0.25,
+      0.1
+    ]
+  },
+  "squeal": {
+    "level": 1.0,
+    "centerMinHz": 1350,
+    "centerMaxHz": 2250,
+    "q": 18,
+    "secondRatio": 1.51,
+    "wobbleHz": 6.5,
+    "wobbleDepth": 0.035,
+    "minSpeedMps": 3,
+    "fullSpeedMps": 18
+  },
+  "surface": {
+    "level": 0.5,
+    "fullSpeedMps": 45,
+    "speedExponent": 1.1,
+    "tarmac": {
+      "brown": 0.7,
+      "crackle": 0,
+      "cutoffHz": 240,
+      "q": 0.7,
+      "level": 0.35
+    },
+    "dirt": {
+      "brown": 0.75,
+      "crackle": 0.35,
+      "cutoffHz": 700,
+      "q": 0.8,
+      "level": 0.6
+    },
+    "gravel": {
+      "brown": 0.45,
+      "crackle": 1,
+      "cutoffHz": 3600,
+      "q": 0.6,
+      "level": 0.8
+    }
+  },
+  "rattle": {
+    "level": 0.3,
+    "baseRateHz": 11,
+    "rpmRateScale": 0.25,
+    "idleShare": 0.35,
+    "bandsHz": [
+      2300,
+      4200
+    ],
+    "q": 6,
+    "pulseHarmonics": [
+      1,
+      0.8,
+      0.5,
+      0.25,
+      0.1
+    ]
+  },
+  "pops": {
+    "level": 0.12,
+    "armThrottle": 0.6,
+    "fireThrottle": 0.18,
+    "minRpmN": 0.35,
+    "burstMin": 1,
+    "burstMax": 3,
+    "gapMinS": 0.045,
+    "gapMaxS": 0.13,
+    "bandHz": 1100,
+    "q": 1.2,
+    "upshiftShare": 0.3
+  },
+  "gearDip": {
+    "depth": 0.35,
+    "rampS": 0.02,
+    "holdS": 0.07,
+    "recoverTauS": 0.12
+  },
+  "ignition": {
+    "crankS": 0.9,
+    "crankRpm": 220,
+    "starterHz": 170,
+    "starterLevel": 0.35,
+    "crankShare": 0.3,
+    "catchS": 0.12,
+    "flareRpm": 1300,
+    "settleTauS": 0.3,
+    "stopS": 1.1
+  }
+}

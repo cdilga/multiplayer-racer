@@ -1,0 +1,58 @@
+{
+ "scenario": "roster-doughnut-roll-pig-catcher",
+ "what": "AU Hawk tuning (br-bwju.12): the doughnut from a roll. As roster-doughnut but pig-catcher starts rolling at 6 m/s, so the Hawk Dash, which can only start a power slide above 2 m/s, gets its slide too: the AU Hawk still out-circles it.",
+ "map": "maps/test/skidpad.json",
+ "seed": 3,
+ "ticks": 1020,
+ "vehicle": "pig-catcher",
+ "cars": [
+  {
+   "pose": {
+    "x": 0,
+    "y": 0.5,
+    "z": 0,
+    "headingDeg": 0
+   },
+   "linvel": [
+    0,
+    0,
+    6
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 60,
+   "throttle": 0.0,
+   "steer": 1.0
+  },
+  {
+   "car": 0,
+   "fromTick": 60,
+   "throttle": 1.0,
+   "steer": 1.0
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "maxYawRateDegS",
+   "min": 0,
+   "max": 190
+  },
+  {
+   "car": 0,
+   "metric": "maxSlipDeg",
+   "min": 0,
+   "max": 60
+  },
+  {
+   "car": 0,
+   "metric": "maxRadiusM",
+   "min": 25,
+   "max": 500
+  }
+ ]
+}

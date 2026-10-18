@@ -1,0 +1,39 @@
+{
+ "scenario": "roster-straight-tradie-ute",
+ "what": "AU Hawk tuning (br-bwju.12): straight-line pace. tradie-ute from rest, full throttle for 10 s down the skidpad (heading +z, 500 m of tarmac): top speed and distance covered. The AU Hawk is a bit slower than the Hawk Dash and the Cruz Missile; docs/evidence/P1-V-au-hawk/tuning.md has the table.",
+ "map": "maps/test/skidpad.json",
+ "seed": 3,
+ "ticks": 1200,
+ "vehicle": "tradie-ute",
+ "cars": [
+  {
+   "pose": {
+    "x": 0,
+    "y": 0.5,
+    "z": -490,
+    "headingDeg": 0
+   },
+   "linvel": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 1.0,
+   "steer": 0.0
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "maxSpeed",
+   "min": 45,
+   "max": 47
+  }
+ ]
+}

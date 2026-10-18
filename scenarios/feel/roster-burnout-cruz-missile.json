@@ -1,0 +1,58 @@
+{
+ "scenario": "roster-burnout-cruz-missile",
+ "what": "AU Hawk tuning (br-bwju.12): the burnout. cruz-missile from rest on the skidpad, throttle punched with half lock for 3 s (brake and throttle together cannot be asked: brake overrides drive, and the drive stick is one axis, so the burnout is the rear-led power slide launch). How far the tail comes round and how long it hangs out.",
+ "map": "maps/test/skidpad.json",
+ "seed": 3,
+ "ticks": 420,
+ "vehicle": "cruz-missile",
+ "cars": [
+  {
+   "pose": {
+    "x": 0,
+    "y": 0.5,
+    "z": 0,
+    "headingDeg": 0
+   },
+   "linvel": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 60,
+   "throttle": 0.0,
+   "steer": 0.5
+  },
+  {
+   "car": 0,
+   "fromTick": 60,
+   "throttle": 1.0,
+   "steer": 0.5
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "maxYawRateDegS",
+   "min": 0,
+   "max": 145
+  },
+  {
+   "car": 0,
+   "metric": "maxSlipDeg",
+   "min": 0,
+   "max": 80
+  },
+  {
+   "car": 0,
+   "metric": "maxRadiusM",
+   "min": 30,
+   "max": 500
+  }
+ ]
+}
