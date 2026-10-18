@@ -4,7 +4,8 @@
     "allowed": [
       { "host": "self", "why": "the deployment's own origin: pages, assets, API, signalling (base path aware)" },
       { "host": "stun.cloudflare.com", "why": "STUN (R79); comes from the server's iceServers, may also appear as a default" },
-      { "host": "turn.dilger.dev", "why": "self-hosted coturn (R88); comes from the server's iceServers" }
+      { "host": "turn.dilger.dev", "why": "self-hosted coturn (R88); comes from the server's iceServers" },
+      { "host": "127.0.0.1", "why": "the native input helper on the host computer (P1-C12.1, ws://127.0.0.1:47123): our own binary, served by our server, contacted only after the player presses Connect or paired before; never a third party" }
     ],
     "note": "Cloudflare TURN entries arrive only in the lazy /api/v1/ice/fallback response (R92); no bundle names them."
   },
