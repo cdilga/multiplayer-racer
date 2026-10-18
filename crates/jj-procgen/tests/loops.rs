@@ -162,7 +162,10 @@ const BIOMES: [Biome; 4] = [
     Biome::OutbackDirt,
     Biome::OutbackBitumen,
 ];
-const BANK_SEEDS: u64 = if cfg!(debug_assertions) { 2 } else { 16 };
+const BANK_SEEDS: u64 = 16;
+/// A debug build (CI's quick lane) checks this many seeds per biome, then stops at the first that shows a loop (Rocks'
+/// first two seeds draw none since set pieces keep off loops, GENERATOR_VERSION 32).
+const QUICK_SEEDS: u64 = 2;
 
 /// A seed's race-prepared map, loaded as the game loads it.
 fn prepared(seed: u64, biome: Biome) -> (LoadedMap, jj_procgen::Prepared) {
@@ -181,7 +184,12 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
     let mut lines = Vec::new();
     for biome in BIOMES {
         let mut with = 0;
+        let mut tried = 0;
         for seed in 0..BANK_SEEDS {
+            if cfg!(debug_assertions) && seed >= QUICK_SEEDS && with >= 1 {
+                break;
+            }
+            tried += 1;
             let (m, p) = prepared(seed, biome);
             assert!(p.valid, "{biome:?} seed {seed}: {:?}", p.attempts);
             let loops: Vec<_> = m
@@ -210,10 +218,10 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
             );
             with += usize::from(!loops.is_empty());
         }
-        lines.push(format!("{biome:?}: loops on {with} of {BANK_SEEDS} seeds"));
+        lines.push(format!("{biome:?}: loops on {with} of {tried} seeds"));
         assert!(
             with >= 1,
-            "{biome:?}: no loop on any of {BANK_SEEDS} seeds at loopsPerLap 1"
+            "{biome:?}: no loop on any of {tried} seeds at loopsPerLap 1"
         );
     }
     eprintln!("{}", lines.join("\n"));
