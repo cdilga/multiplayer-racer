@@ -19,6 +19,7 @@ import { controlsPage, paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
 import { mountReel } from './reel/mount';
+import { PracticeCourses } from './round/practice';
 import { HostHub } from '../../shared/transport';
 import { ClipRecorder, installHotkey } from './clips/recorder';
 import { SessionRecorder } from './clips/session';
@@ -79,6 +80,9 @@ async function boot(): Promise<void> {
   // The greybox until the round flow prepares maps (G01/M08a); `?kitx=10` repeats its dressing (a draw-count probe).
   const withMap = !params.has('synthetic') || params.has('map');
   if (withMap) world.loadMap(JSON.parse(greybox), { repeat: Number(params.get('kitx')) || 1 });
+  // P1-C10: a newcomer's practice world runs on the start map (the worker's Init map), drawn far from the round's.
+  const practice = withMap && !params.has('synthetic') ? new PracticeCourses(world.scene, JSON.parse(greybox), () => world.practiceChanged()) : null;
+  world.practice = practice;
   const list = (k: string) => params.get(k)?.split(',').map(Number);
   // `?overview=arena`: the arena Overview frames the whole bowl out to its rocks (P1-M10's harness camera), not the cars.
   world.frameArena = params.get('overview') === 'arena';
@@ -122,6 +126,8 @@ async function boot(): Promise<void> {
     loopShapes: () => world.map?.loopShapes() ?? [],
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
+    /** P1-C10: the practice courses drawn now (their slots) and how many were ever built. */
+    practice: () => ({ slots: practice?.slots() ?? [], built: practice?.built ?? 0 }),
     /** Triangles per scene group and its layers (br-jv69): what each camera pass pays. */
     sceneTriangles: () => world.sceneTriangles(),
     cameras: () => world.rig.inspect(),

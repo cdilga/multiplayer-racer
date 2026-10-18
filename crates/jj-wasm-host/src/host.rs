@@ -237,6 +237,11 @@ pub struct Host {
     session_rev: u32,
     /// The party loop (G01): director, standings, laps, free drive.
     round: round::RoundState,
+    /// P1-C10: each practising seat's own practice world, on `practice_map` (the room's start map), and the sources that
+    /// asked for Practice before their claim (it applies to the seat the claim gets).
+    practice: BTreeMap<SeatId, practice::PracticeWorld>,
+    practice_map: LoadedMap,
+    practice_pending: BTreeSet<(ConnId, SourceHandle)>,
     /// The test surface's state (P1-F05b): only in the `testing` build, never in the shipped worker.
     #[cfg(feature = "testing")]
     test: testing::TestState,
@@ -336,6 +341,9 @@ impl Host {
                 seed,
                 vec![VehicleProfile::cruz()],
             ),
+            practice: BTreeMap::new(),
+            practice_map: map.clone(),
+            practice_pending: BTreeSet::new(),
             map,
             seats: Seats::new(SeatConfig {
                 tick_hz: TICK_HZ,
@@ -745,6 +753,10 @@ impl Host {
                 self.sim.set_autopilot(car, true);
                 input.dropped = true;
             }
+            // P1-C10: a seat practising drives its practice car; its round car stays with the autopilot until it joins.
+            if self.practice.contains_key(&seat) {
+                continue;
+            }
             // Only a race hands over for a menu: on the grid nothing moves, and a menu closed before GO costs nothing.
             if input.menu_open && racing {
                 if !input.dropped {
@@ -789,7 +801,25 @@ impl Host {
         let held = self.driving() == jj_session::director::Driving::Held;
         // R125: each seat's assist level rides to its car. Catch-up is a round rule applied at GO, so a
         // free-drive or fixture world retains its own rules and journals rather than being rewritten here.
-        for input in self.inputs.values_mut() {
+        for (seat, input) in self.inputs.iter_mut() {
+            // P1-C10: a practising seat's controls go to its practice car (never held: practice isn't on the grid), and
+            // its round car, if it has one, gets none (the autopilot drives it).
+            if let Some(p) = self.practice.get_mut(seat) {
+                let fresh = input.state.age_ms(now_ms).is_some_and(|age| age <= HOLD_MS);
+                if p.sim.assist_level(p.car) != input.assist {
+                    p.sim.set_assist(p.car, input.assist);
+                }
+                let c = if fresh {
+                    controls(input.state.semantics())
+                } else {
+                    DriveInput::default()
+                };
+                p.sim.set_input(p.car, c);
+                if let Some(car) = input.car {
+                    self.sim.set_input(car, DriveInput::default());
+                }
+                continue;
+            }
             let Some(car) = input.car else { continue };
             if self.sim.assist_level(car) != input.assist {
                 self.sim.set_assist(car, input.assist);
@@ -835,6 +865,8 @@ impl Host {
         self.collect_damage_events();
         self.claim_station_offers();
         self.collect_items();
+        // P1-C10: the practice worlds step after the round's, on their own (nothing they do reaches the round's sim).
+        self.step_practice();
     }
 
     /// P1-W04: each box a car is driving through goes to that car's seat; only a successful pickup takes the box.
@@ -1163,11 +1195,20 @@ impl Host {
             } => {
                 // The secret is hashed at once and never stored; a first connection without one hashes its endpoint id.
                 let secret = resume.unwrap_or_else(|| claimed.0.clone());
-                self.seats.apply(seats::Input::Hello {
+                let outs = self.seats.apply(seats::Input::Hello {
                     conn,
                     endpoint: claimed,
                     secret_hash: sha(secret.as_bytes()),
-                })
+                });
+                // P1-C10: a phone not seated yet hears the room's phase, so its join screen can offer Practice while a
+                // round runs.
+                if !outs
+                    .iter()
+                    .any(|o| matches!(o, seats::Output::Welcome { .. }))
+                {
+                    self.room_state_unseated(&endpoint);
+                }
+                outs
             }
             ControllerCmd::Claim { request, name } => {
                 let outs = self.seats.apply(seats::Input::Claim {
@@ -1225,14 +1266,13 @@ impl Host {
                 vec![]
             }
             ControllerCmd::SetCamera { camera } => {
+                // P1-C10: a practising seat's tile follows its practice car, so the camera choice is that car's.
                 if let Some(seat) = self.seats.seat_at(conn, src)
-                    && let Some(car) = self.inputs.get(&seat).and_then(|i| i.car)
+                    && let Some(car) = self
+                        .practice_snapshot_id(seat)
+                        .or_else(|| self.inputs.get(&seat).and_then(|i| i.car).map(|c| c.0))
                 {
-                    self.events.push(SimEvent::CameraSet {
-                        seat,
-                        car: car.0,
-                        camera,
-                    });
+                    self.events.push(SimEvent::CameraSet { seat, car, camera });
                 }
                 vec![]
             }
@@ -1270,7 +1310,13 @@ impl Host {
                 vec![]
             }
             ControllerCmd::Recover => {
-                if let Some(car) = self
+                if let Some((sim, car)) = self
+                    .seats
+                    .seat_at(conn, src)
+                    .and_then(|s| self.practice_car(s))
+                {
+                    sim.recover(car);
+                } else if let Some(car) = self
                     .seats
                     .seat_at(conn, src)
                     .and_then(|s| self.inputs.get(&s))
@@ -1301,7 +1347,11 @@ impl Host {
                     }
                     input.seen_actions.push(action);
                     input.prompt.action(kind);
-                    if let Some(car) = input.car {
+                    let main_car = input.car;
+                    // P1-C10: a practising seat's actions go to its practice car.
+                    if let Some((sim, car)) = action_seat.and_then(|s| self.practice_car(s)) {
+                        outcome = practice::practice_action(sim, car, kind);
+                    } else if let Some(car) = main_car {
                         match kind {
                             ActionKind::Wheelie { preload_ms } => {
                                 launch(
@@ -1331,6 +1381,10 @@ impl Host {
                 }
                 vec![]
             }
+            ControllerCmd::Practice { on } => {
+                self.practice_cmd(conn, src, on);
+                vec![]
+            }
             // Other actions, Ready, names, cameras, menus and pings are wired by their beads (S08, G01, R05, C-beads).
             _ => vec![],
         };
@@ -1351,8 +1405,12 @@ impl Host {
         }
         let before = self.vehicle_of_seat(seat);
         self.picks.insert(seat, (vehicle, open));
-        if self.round.free_drive && self.vehicle_of_seat(seat) != before {
-            self.rebuild_for_vehicles();
+        if self.vehicle_of_seat(seat) != before {
+            // P1-C10: a practising seat's practice car follows its pick.
+            self.practice_repick(seat);
+            if self.round.free_drive {
+                self.rebuild_for_vehicles();
+            }
         }
     }
 
@@ -1456,11 +1514,16 @@ impl Host {
                     eligible: true,
                 });
                 self.room_state(seat);
+                // P1-C10: Practice asked for before the claim: the seat practises instead of dropping into the round.
+                self.practice_on_welcome(conn, source, seat);
             }
             seats::Output::CarAdded { seat } => {
                 // Through the placement service: a drop-in once a round is running, a grid slot in free drive; in the
                 // Lobby (R110) and the held phases the seat waits for the next Countdown's grid.
-                if self.inputs.get(&seat).is_some_and(|i| i.car.is_none()) {
+                // P1-C10: a practising seat enters the round when it chooses Join the race.
+                if self.inputs.get(&seat).is_some_and(|i| i.car.is_none())
+                    && !self.practice.contains_key(&seat)
+                {
                     let car = self.car_wanted(seat);
                     if let Some(input) = self.inputs.get_mut(&seat) {
                         input.car = car;
@@ -1477,6 +1540,8 @@ impl Host {
                 self.session_rev += 1;
             }
             seats::Output::CarWithdrawn { seat, .. } => {
+                // P1-C10: leaving or sitting out ends practice too.
+                self.end_practice(seat, false);
                 // The car stays where it is as debris-free scenery until S04c's withdrawal rules; it just stops driving.
                 if let Some(input) = self.inputs.get_mut(&seat)
                     && let Some(car) = input.car.take()
@@ -1784,7 +1849,7 @@ impl Host {
     /// Bytes a snapshot needs now.
     pub fn snapshot_size(&self) -> usize {
         SNAPSHOT_HEADER
-            + SNAPSHOT_CAR * self.sim.cars().count()
+            + SNAPSHOT_CAR * (self.sim.cars().count() + self.practice.len())
             + SNAPSHOT_DEBRIS
                 * (self.sim.debris_poses().len()
                     + self.sim.boomerang_poses().len()
@@ -1795,6 +1860,7 @@ impl Host {
             } else {
                 4 + 8 * self.sim.rail_count()
             }
+            + self.practice_trailer_size()
     }
 
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
@@ -1821,12 +1887,14 @@ impl Host {
         w.u16(1);
         // JJS1 flags bit 0: a rail trailer after the part records (count u32, dressing u32/offset f32 each).
         let rails = self.sim.rail_states();
-        w.u16(u16::from(!rails.is_empty()));
+        // Bit 1 (P1-C10): a practice trailer after that (each practice world's debris, see `write_practice_debris`).
+        w.u16(u16::from(!rails.is_empty()) | (u16::from(!self.practice.is_empty()) << 1));
         w.u64(self.sim.tick());
         w.u32(self.session_rev);
         w.u32(self.pause_mask());
         w.u32((self.countdown_us() / 1000) as u32);
-        w.u32(cars.len() as u32);
+        // The practice cars (P1-C10) follow the round's cars.
+        w.u32((cars.len() + self.practice.len()) as u32);
         // Boomerangs in the air (P1-W02a) follow the props as debris records of their own kind.
         let boomerangs = self.sim.boomerang_poses();
         // ... and item stations (P1-W04), each with its box there or recharging.
@@ -1869,6 +1937,7 @@ impl Host {
             w.f32(action.boost);
             w.f32(throttle);
         }
+        self.write_practice_cars(&mut w);
         for ((p, r), k) in debris.iter().zip(self.sim.prop_kinds()) {
             // Kind 2 (a detached part or a husk) is drawn from its part record, not as a box; it keeps its slot so debris
             // indices stay stable.
@@ -1938,6 +2007,7 @@ impl Host {
                 w.f32(rail.displacement_m);
             }
         }
+        self.write_practice_debris(&mut w);
         w.at
     }
 }
@@ -1999,6 +2069,7 @@ impl Writer<'_> {
 
 mod between;
 mod items;
+mod practice;
 mod prompts;
 mod round;
 

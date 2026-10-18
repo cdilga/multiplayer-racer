@@ -110,7 +110,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // P1-C14: a pad, wheel or key cluster seat is coached in its own glyphs, and holding its Identify shows its controls card.
       const src = sourceOf(s?.localSource);
       const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
-      const key = JSON.stringify([held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
+      const practising = !!s?.practice;
+      const key = JSON.stringify([practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -136,19 +137,23 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
         posEl.innerHTML = `${n}<sup>${suf}</sup>`;
       }
       posEl.dataset.pos = pos === null ? '' : String(pos);
+      // P1-C10: a practising seat's tile shows its own course: the pill says so instead of a place and lap.
+      posEl.hidden = practising;
       const lapEl = box.querySelector<HTMLElement>('.hud-lap')!;
-      lapEl.textContent = derby ? `${derbyPoints(derby.points)} pts` : s.finished ? 'Finished' : lap === null ? '' : `Lap ${lap}/${total}`;
+      lapEl.textContent = practising ? 'Practice · own course' : derby ? `${derbyPoints(derby.points)} pts` : s.finished ? 'Finished' : lap === null ? '' : `Lap ${lap}/${total}`;
+      lapEl.toggleAttribute('data-practice', practising);
       lapEl.dataset.lap = derby || lap === null ? '' : String(lap);
       lapEl.dataset.points = derby ? String(derby.points) : '';
       // Before the race there is no place or lap yet: no empty pill.
-      box.querySelector<HTMLElement>('.hud-tr')!.hidden = !started || (pos === null && lap === null && !s.finished && !derby);
+      box.querySelector<HTMLElement>('.hud-tr')!.hidden = !practising && (!started || (pos === null && lap === null && !s.finished && !derby));
       const boost = box.querySelector<HTMLElement>('.hud-boost')!;
       boost.hidden = s.boost === undefined || s.boost === null;
       boost.dataset.boost = boost.hidden ? '' : String(s.boost);
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
+      box.classList.toggle('practice', practising);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
-        (started && endsIn !== null && !s.finished ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
+        (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;

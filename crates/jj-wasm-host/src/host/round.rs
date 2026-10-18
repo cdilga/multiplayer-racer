@@ -123,7 +123,7 @@ impl RoundState {
     }
 }
 
-fn room_phase(p: Phase) -> RoomPhase {
+pub(super) fn room_phase(p: Phase) -> RoomPhase {
     match p {
         Phase::Lobby | Phase::Disbanded => RoomPhase::Lobby,
         Phase::Preparing | Phase::Countdown => RoomPhase::Countdown,
@@ -310,6 +310,8 @@ impl Host {
     /// A fresh world on the prepared map, the cohort on the start grid in seat order (held until the start), and no
     /// debris from before the round (R58 is per round).
     fn start_grid(&mut self, cohort: &[SeatId]) {
+        // P1-C10: practice is for while a round runs; the practisers are on this grid with everyone.
+        self.end_all_practice();
         self.round.start_launches.clear();
         if let Some(map) = self.round.prepared.take() {
             self.map = map;
@@ -343,6 +345,7 @@ impl Host {
 
     /// Back to the Lobby: no cars on the road (R110), unless free drive (G04's dev mode) puts every seat in a car.
     fn enter_lobby(&mut self) {
+        self.end_all_practice();
         self.round.round = None;
         self.round.cohort.clear();
         self.reset_world();
@@ -609,7 +612,10 @@ impl Host {
             .seats()
             .filter(|s| s.presence != seats::Presence::Left)
             .map(|s| {
-                let car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
+                let round_car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
+                // P1-C10: a practising seat's tile follows its practice car (its own id in the snapshot).
+                let practice = self.practice_snapshot_id(s.id);
+                let car = round_car;
                 let race =
                     car.and_then(|c| self.sim.race().standings().into_iter().find(|r| r.car == c));
                 // br-ennm: the respawn hold's time left (ms) and its cause, for the tile's banner: a wreck's why
@@ -642,7 +648,11 @@ impl Host {
                     "localSource": s.endpoint.0.strip_prefix("local:").and_then(|r| r.split('#').next()).and_then(|n| n.parse::<u32>().ok()),
                     // The transport endpoint (an id, never the secret): diagnostics match it to the peer's path.
                     "endpoint": (!s.endpoint.0.starts_with("local:")).then_some(s.endpoint.0.as_str()),
-                    "car": car,
+                    "car": practice.or(car),
+                    // P1-C10: practising in its own world (its tile shows the practice course), and its round car if it
+                    // has one (on the autopilot meanwhile).
+                    "practice": practice.is_some(),
+                    "roundCar": round_car,
                     "laps": race.map(|r| r.laps),
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),

@@ -10,6 +10,8 @@ export type ControllerFrame =
   | { identify: true }
   | { leave: true }
   | { sitOut: true }
+  /** P1-C10: Practice (`true`) or Join the race (`false`). */
+  | { practice: boolean }
   | { state: { source: number; seq: number; drive: [number, number]; action?: [number, number] } };
 export type TestInput = SimInput | { type: 'controller'; endpoint: string; frame: ControllerFrame };
 

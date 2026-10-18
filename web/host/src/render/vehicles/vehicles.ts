@@ -37,7 +37,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Fx } from '../fx';
 import type { Sampled } from '../interp';
 import { followSun, InkHull, toon } from '../look';
-import { PART_DETACHED, PART_LOOSE, PIECE_HUSK, type Frame } from '../snapshot';
+import { PART_DETACHED, PART_LOOSE, PIECE_HUSK, isPractice, type Frame } from '../snapshot';
 import type { VehicleSource } from './registry';
 import { identityPaint, numberData, patternData, patternGeometry } from './identity-paint';
 import { seatPattern } from '../../../../shared/ui/patterns';
@@ -549,12 +549,15 @@ export class VehicleRenderer {
   /** The sun's shadow box follows the cars' centre. */
   private centre(s: Sampled): void {
     if (!s.cars) return;
-    let [x, z] = [0, 0];
+    let [x, z, n] = [0, 0, 0];
     for (let i = 0; i < s.cars; i++) {
+      // Practice cars (P1-C10) are on their own course far away: the shadow box stays over the round.
+      if (isPractice(s.flags[i]!)) continue;
       x += s.pos[i * 3]!;
       z += s.pos[i * 3 + 2]!;
+      n++;
     }
-    followSun(x / s.cars, z / s.cars);
+    if (n) followSun(x / n, z / n);
   }
 
   /** Wheel roll from how far the car moved along its own forward axis since the last update. */

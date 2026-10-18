@@ -108,6 +108,8 @@ export class Session {
   you: You | null = null;
   hud: Hud | null = null;
   roomPhase: string | null = null;
+  /** P1-C10: this seat is practising in its own world (the host says so; Join the race ends it). */
+  practising = false;
   /** The round loop as the host reports it (P1-G01): this seat's Ready, the countdown or intermission timer, results. */
   isReady = false;
   countdownMs: number | null = null;
@@ -402,6 +404,22 @@ export class Session {
     return this.shared;
   }
 
+  /** P1-C10: Practice (`on`) or Join the race (`!on`). The host answers with `Practice{on}`; meanwhile the phone shows it. */
+  practice(on: boolean): void {
+    this.practising = on;
+    this.send('cmd', wasm.encodePractice(on));
+    this.onChange();
+  }
+
+  /** P1-C10, the join screen while a round runs: Practice first, then the claim, so the seat it gets practises and never
+   *  drops into the round first. */
+  claimPractising(name: string): void {
+    if (!this.stored) return;
+    this.practising = true;
+    this.send('cmd', wasm.encodePractice(true));
+    this.claim(name);
+  }
+
   /** Join the race: Claim with a stable request id (a lost reply retried gives one seat). */
   claim(name: string): void {
     if (!this.stored) return;
@@ -449,6 +467,11 @@ export class Session {
       return;
     }
     if (typeof cmd !== 'object') return;
+    if ('Practice' in cmd) {
+      this.practising = (cmd.Practice as { on: boolean }).on;
+      this.onChange();
+      return;
+    }
     if ('Inventory' in cmd) {
       this.inventory = cmd.Inventory as ItemInventory;
       this.onChange();
@@ -539,6 +562,8 @@ export class Session {
       };
       this.roomPhase = rs.phase;
       if (rs.phase !== 'Racing') this.idleCueAt = null;
+      // Practice is for while a round runs: the next countdown (or the Lobby) ends it on the host too.
+      if (rs.phase === 'Countdown' || rs.phase === 'Lobby') this.practising = false;
       this.isReady = rs.you?.ready ?? false;
       this.countdownMs = rs.countdown_ms;
       this.countdownAt = performance.now();
@@ -829,6 +854,7 @@ export class Session {
       itemUseRefusal: this.itemUseRefusal,
       lastItemEvent: this.lastItemEvent,
       roomPhase: this.roomPhase,
+      practising: this.practising,
       ready: this.isReady,
       countdownMs: this.countdownMs,
       results: this.results,

@@ -14,8 +14,9 @@ use crate::DecodeError;
 
 /// The version byte in front of every command. 2: `InputThresholds` lost `launch_reverse_delay_ms` (R127, instant reverse).
 /// 3: `HostCmd::StartLaunch` (R127 gated start). 4: `InputThresholds` lost the `drift_*` fields (R128, no drift input).
-/// 5: `HostCmd::Takedown` (R134, P1-FL19).
-pub const CMD_VERSION: u8 = 6;
+/// 5: `HostCmd::Takedown` (R134, P1-FL19). 6: `ControllerCmd::Vote`, `HostCmd::Between` (br-qw28). 7: `Practice` both ways
+/// (P1-C10).
+pub const CMD_VERSION: u8 = 7;
 
 /// First- or third-person camera for the seat's tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -136,6 +137,13 @@ pub enum ControllerCmd {
     /// is the wire format. A later vote replaces the seat's earlier one.
     Vote {
         choice: NextTrack,
+    },
+    /// P1-C10: Practice (`on`) from Help or the join screen while a round runs: the seat drives its own small practice world
+    /// in its tile instead of the round; `on: false` is "Join the race" (it enters the running round at the tail, R63). Sent
+    /// before `Claim`, it applies to the seat that claim gets, so the newcomer never drops into the round first. Appended:
+    /// variant order is the wire format.
+    Practice {
+        on: bool,
     },
 }
 
@@ -302,6 +310,11 @@ pub enum HostCmd {
     },
     /// br-qw28: the between-rounds vote and flyover, sent when they change and to a seat that joins meanwhile.
     Between(Between),
+    /// P1-C10: whether this seat is practising now (its own practice world): the answer to `Practice`, and `false` when the
+    /// host ends it (the next round's countdown, or practice refused outside a running round).
+    Practice {
+        on: bool,
+    },
 }
 
 /// How a seat's start went (R127): `Early` snapped during the countdown and lost the launch for this start; `Perfect`

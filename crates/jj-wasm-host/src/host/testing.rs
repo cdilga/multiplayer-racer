@@ -171,6 +171,20 @@ impl Host {
                     "idleForMs": input.map(|i| now_ms.saturating_sub(i.active_ms)),
                     "boosting": sem.map(|s| s.boost),
                     "fresh": age.is_some_and(|a| a <= STALE_MS),
+                    // P1-C10: the seat's practice world, while it practises: its slot, its car's snapshot id, where the
+                    // car is on the course (the world's own coordinates), how fast it goes and the world's own tick.
+                    "practice": self.practice.get(&s.id).and_then(|p| {
+                        let c = p.sim.car_state(p.car)?;
+                        Some(json!({
+                            "slot": p.slot,
+                            "car": super::practice::PRACTICE_CAR_BASE + s.id.0,
+                            "x": c.position[0],
+                            "y": c.position[1],
+                            "z": c.position[2],
+                            "speed": c.linvel[0].hypot(c.linvel[2]),
+                            "tick": p.sim.tick(),
+                        }))
+                    }),
                 })
             })
             .collect()

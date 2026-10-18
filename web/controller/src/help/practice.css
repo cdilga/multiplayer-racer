@@ -1,0 +1,38 @@
+/* P1-C10: the practice bar (play screen) and the join card's Practise first offer. */
+.practice-bar { position: absolute; z-index: 5; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; width: max-content; max-width: calc(100% - 24px); }
+.practice-bar .practice-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.practice-bar .practice-line { font-size: 15px; font-weight: 600; line-height: 1.2; max-width: 250px; }
+.practice-bar .btn { flex: none; min-height: 48px; }
+/* The round's banner says nothing while practising: the bar says what this is. */
+.screen.practising [data-round-banner] { display: none; }
+.practice-offer { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-top: 4px; }
+.practice-offer p { margin: 0; font-size: 15px; font-weight: 600; }
+/* Landscape: the bar stands in the column between the two sticks (under the launch meter), clear of both stick zones. */
+@media (orientation: landscape) {
+  .practice-bar { bottom: 12px; flex-direction: column; align-items: stretch; gap: 6px; width: 150px; padding: 8px; }
+  .practice-bar .practice-line { font-size: 13px; }
+  .practice-bar .btn { padding-inline: 8px; }
+}
+@media (orientation: portrait) {
+  .practice-bar { bottom: 8px; flex-direction: column; align-items: stretch; width: calc(100% - 24px); }
+  .practice-bar .practice-line { max-width: none; }
+}
+/* Like the tutorial card (br-nbn2): a tray of just this device (the strip already shows its badge) steps aside while
+   practising; with other players on the device the bar sits above the tray. */
+body:has(.screen.practising) .hub-tray:not(:has(.hub-row + .hub-row)) { display: none; }
+body:has(.screen.practising):has(.hub-tray .hub-row + .hub-row) .practice-bar { bottom: calc(16px + var(--jj-source-tray-height, 0px)); }
+/* A short landscape join card: Join the race and Practise first side by side, and no icon, so both stay in view. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .join-card:has(.practice-offer) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .join-card:has(.practice-offer) > * { grid-column: 1 / -1; }
+  .join-card:has(.practice-offer) > button[type=submit], .join-card:has(.practice-offer) > .practice-offer { grid-column: auto; }
+  .join-card:has(.practice-offer) .state-icon { display: none; }
+  .practice-offer { margin-top: 0; }
+  .practice-offer p { display: none; }
+  .practice-offer .btn { flex: 1; }
+}
+/* Full screen lost mid-race: its "Back to full screen" prompt keeps the bottom; the bar stands above it. */
+.screen.practising:has(.fs-prompt) .practice-bar { bottom: 76px; }
+@media (orientation: portrait) { .screen.practising:has(.fs-prompt) .practice-bar { bottom: 84px; } }
+/* A small upright phone (375x667): the bar is the tag and the button, clear of the sticks' rings. */
+@media (orientation: portrait) and (max-height: 700px) { .practice-bar { padding: 6px 10px; gap: 6px; } .practice-bar .practice-line { display: none; } }

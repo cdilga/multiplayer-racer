@@ -1,0 +1,71 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, GPU), linux/x64",
+  "takenAt": "2026-10-18T07:35:34.467Z",
+  "cost": {
+    "roundOnly": {
+      "msPerTick": 2.202,
+      "draws": {
+        "drawCalls": 268,
+        "triangles": 4471790,
+        "frameMs": 16.6,
+        "cars": 4
+      }
+    },
+    "withPractice": {
+      "msPerTick": 2.621,
+      "draws": {
+        "drawCalls": 390,
+        "triangles": 5051253,
+        "frameMs": 16.7,
+        "cars": 5
+      }
+    },
+    "afterJoin": {
+      "msPerTick": 2.502,
+      "draws": {
+        "drawCalls": 344,
+        "triangles": 5690331,
+        "frameMs": 16.7,
+        "cars": 5
+      }
+    }
+  },
+  "practice": {
+    "drivenM": 43.9,
+    "promptStep": 2,
+    "slot": 0,
+    "practiceTick": 1201
+  },
+  "join": {
+    "position": 5,
+    "car": 4
+  },
+  "clip": {
+    "tick": 2524,
+    "browserHash": "f80a827c87adf289e0c1fc8438fa54d16487dafeed8d4abefb09dca305c651b3",
+    "replayHash": "f80a827c87adf289e0c1fc8438fa54d16487dafeed8d4abefb09dca305c651b3",
+    "worlds": 1,
+    "checkpoints": [
+      5
+    ],
+    "bytes": 424253
+  },
+  "phone-landscape-915x412": {
+    "seat": 5,
+    "joinedAt": 5,
+    "of": 5,
+    "drivenM": 80.7
+  },
+  "phone-portrait-412x915": {
+    "seat": 6,
+    "joinedAt": 6,
+    "of": 6,
+    "drivenM": 66.6
+  },
+  "phone-small-375x667": {
+    "seat": 7,
+    "joinedAt": 7,
+    "of": 7,
+    "drivenM": 67.8
+  }
+}

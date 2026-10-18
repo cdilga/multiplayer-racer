@@ -32,7 +32,7 @@ export interface Observed {
   cars: Array<Json & { car: number; position: [number, number, number]; speed: number; wheels: Json[] }>;
   debris: Json[];
   session?: Json;
-  host: { seats: Array<Json & { endpoint: string; source: number; car: number | null }>; pauseMask: number; held: boolean };
+  host: { seats: Array<Json & { endpoint: string; source: number; car: number | null; practice?: { slot: number; car: number; x: number; y: number; z: number; speed: number; tick: number } | null }>; pauseMask: number; held: boolean };
 }
 
 /** The main-thread side of the testing worker's extra messages. */
@@ -235,17 +235,25 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     /** Controller state batches through the host, and the frames drawn with the tick each showed (P1-FL17). */
     netStamps: () => client.netStamps(),
 
-    /** A fake controller joins through the real controller path (Hello + Claim as cmd-channel bytes) and gets a seat. */
-    async join(name: string, opts: { lobby?: boolean } = {}) {
+    /** A fake controller joins through the real controller path (Hello + Claim as cmd-channel bytes) and gets a seat.
+     *  `practice` (P1-C10): Practice first, as the join screen's button sends it, so the seat practises instead. */
+    async join(name: string, opts: { lobby?: boolean; practice?: boolean } = {}) {
       const endpoint = `fake-${fakes.size}`;
       test.input({ type: 'controller', endpoint, frame: { hello: true } });
+      if (opts.practice) test.input({ type: 'controller', endpoint, frame: { practice: true } });
       test.input({ type: 'controller', endpoint, frame: { claim: name } });
       await step(1);
       const seat = (await observe()).host.seats.find((s) => s.endpoint === endpoint);
       // In a real room (R110) the Lobby has no cars: `lobby` accepts a seat without one (round preparation's captures).
-      if (!seat || (seat.car === null && !opts.lobby)) throw new Error(`${name} didn't get a seat and car`);
+      // A practising seat drives its practice car instead.
+      if (!seat || (seat.car === null && !opts.lobby && !(opts.practice && seat.practice))) throw new Error(`${name} didn't get a seat and car`);
       fakes.set(endpoint, { endpoint, source: seat.source, seq: 0, drive: null, action: [0, 0] });
       return { endpoint, seat: seat.seat as number, source: seat.source, car: seat.car };
+    },
+
+    /** P1-C10: a fake controller's Practice (`true`) or Join the race (`false`). */
+    practice(endpoint: string, on: boolean) {
+      test.input({ type: 'controller', endpoint, frame: { practice: on } });
     },
 
     /** Holds a fake controller's sticks (−32767..32767): `drive` is the left stick (throttle, brake, launch), `action`

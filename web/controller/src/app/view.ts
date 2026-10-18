@@ -11,6 +11,7 @@ import { buttonsArea } from './buttons';
 import { BUTTON_INPUTS, type ControllerPreferences } from './prefs-data';
 import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
+import { practiceBar, practiceOfferHtml, practiceOffered } from '../help/practice';
 import './settings.css';
 import './layout-short.css';
 import { watchBadge } from '../sources/badge';
@@ -125,7 +126,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let builtLayout = '';
 
   const render = () => {
-    const key = session.phase === 'playing' ? `play:${session.you?.number}` : `${session.phase}:${session.code}`;
+    // The join card is redrawn when a round starts or stops racing (P1-C10: it offers Practice first while one runs).
+    const key = session.phase === 'playing' ? `play:${session.you?.number}` : session.phase === 'ready-to-join' ? `${session.phase}:${session.code}:${session.roomPhase === 'Racing'}` : `${session.phase}:${session.code}`;
     if (key === shown) return void updateHud();
     shown = key;
     sticks?.drive.release();
@@ -149,7 +151,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const joinCard = () => {
-    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card card"><div class="state-icon ok"><i data-ico="users"></i></div>${session.removed ? '<h1 class="display italic" data-note="removed">The host removed you</h1><p>Join again whenever you like: you will be a new player, with a new number.</p>' : `<h1 class="display italic">You’re in ${esc(session.code)}</h1><p>Pick a name, then join the race.</p>`}<div class="field name-field"><input id="name" name="name" aria-label="Your name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button type="button" class="btn icon" data-act="dice" aria-label="New random name"><i data-ico="dices"></i></button><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn brush primary big" type="submit">${session.removed ? 'Join again' : 'Join the race'}</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    // A redraw (the round started or ended meanwhile) keeps the name being typed.
+    const typed = app.querySelector<HTMLInputElement>('form.join-card #name')?.value;
+    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card card"><div class="state-icon ok"><i data-ico="users"></i></div>${session.removed ? '<h1 class="display italic" data-note="removed">The host removed you</h1><p>Join again whenever you like: you will be a new player, with a new number.</p>' : `<h1 class="display italic">You’re in ${esc(session.code)}</h1><p>Pick a name, then join the race.</p>`}<div class="field name-field"><input id="name" name="name" aria-label="Your name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(typed ?? (session.name || prefillName()))}"><button type="button" class="btn icon" data-act="dice" aria-label="New random name"><i data-ico="dices"></i></button><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn brush primary big" type="submit">${session.removed ? 'Join again' : 'Join the race'}</button>${practiceOfferHtml(session)}${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
     dress(app);
     paintKit(app);
     app.querySelector('[data-act=dice]')!.addEventListener('click', () => {
@@ -183,6 +187,12 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       const name = app.querySelector<HTMLInputElement>('#name')!.value.trim().normalize('NFC') || prefillName();
       void requestPlayMode(prefsNow().value.keepAwake);
       session.claim(name);
+    });
+    // P1-C10: Practise first (only while a round runs): the seat practises on its own course, and joins when it chooses.
+    app.querySelector('[data-act=practise-first]')?.addEventListener('click', () => {
+      const name = app.querySelector<HTMLInputElement>('#name')!.value.trim().normalize('NFC') || prefillName();
+      void requestPlayMode(prefsNow().value.keepAwake);
+      session.claimPractising(name);
     });
   };
 
@@ -246,6 +256,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
     tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => prefsNow().value.controls, () => openSettings(screenEl));
     tutorial.buttons = () => BUTTON_INPUTS.filter((k) => prefsNow().value.buttons.slots[k] !== null);
+    // P1-C10: while a round races, Help offers Practice on the player's own course.
+    tutorial.practiceOffer = () => practiceOffered(session);
+    tutorial.onPractice = () => session.practice(true);
     if (session.roomPhase === 'Lobby' && chosenSeat === session.you?.number) {
       tutorialOffered = !app.querySelector('[data-overlay=rotate]');
       if (tutorialOffered && Tutorial.wanted()) tutorial.show();
@@ -395,6 +408,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     }
     roundBanner(app, session);
     votePanel(app, session);
+    practiceBar(app, session);
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
     // the autopilot. Help shows it again.
     if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false, true);

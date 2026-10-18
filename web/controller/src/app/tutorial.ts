@@ -150,6 +150,9 @@ export class Tutorial {
 
   /** The Buttons layout's inputs that have a button: a step needing one the player left off isn't shown. */
   buttons: () => readonly ButtonInput[] = () => [];
+  /** P1-C10: whether Help offers Practice (a round is racing), and what choosing it does. */
+  practiceOffer: () => boolean = () => false;
+  onPractice: () => void = () => {};
 
   private get steps(): Step[] {
     const c = this.layout();
@@ -211,7 +214,13 @@ export class Tutorial {
       return;
     }
     delete this.card.dataset.page;
-    const controlsBtn = `<button class="btn quiet-ink" data-act="controls" aria-label="Controls: every kind of controller">Controls</button>`;
+    // P1-C10: while a round races, Help offers the player's own practice course (the card closes; it isn't a skip).
+    const controlsBtn = `${this.practiceOffer() ? '<button class="btn quiet-ink" data-act="practice" aria-label="Practice: drive my own course while the race goes on">Practice</button>' : ''}<button class="btn quiet-ink" data-act="controls" aria-label="Controls: every kind of controller">Controls</button>`;
+    const wirePractice = () =>
+      this.card?.querySelector('[data-act=practice]')?.addEventListener('click', () => {
+        this.close(false, true);
+        this.onPractice();
+      });
     const openControls = () => {
       this.controls = true;
       this.render();
@@ -225,6 +234,7 @@ export class Tutorial {
       this.card.querySelector('[data-act=done]')!.addEventListener('click', () => this.close(true));
       this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
       this.card.querySelector('[data-act=controls]')!.addEventListener('click', openControls);
+      wirePractice();
       return;
     }
     const st = this.steps[this.step]!;
@@ -236,6 +246,7 @@ export class Tutorial {
     this.card.querySelector('[data-act=skip]')!.addEventListener('click', () => this.close(false));
     this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
     this.card.querySelector('[data-act=controls]')!.addEventListener('click', openControls);
+    wirePractice();
   }
 
   private check(): void {

@@ -10,6 +10,9 @@
 // it (the part record draws it; the debris list holds only what is drawn as debris). The header's last u32 was reserved and written 0, so a worker that sends no part records
 // still reads as "every part intact".
 // Flags bit 0 adds a trailer after all part records: count u32, then count × (dressing index u32, normal offset f32).
+// Flags bit 1 (P1-C10) adds the practice trailer after that: worlds u32, then per practice world its slot u32, its debris
+// count u32 and that many debris records (the layout above, positions already on the drawn practice course). A practice car
+// is a car record with flag SNAP_PRACTICE, its own id (PRACTICE_CAR_BASE + seat) and its position on that course.
 
 export const SNAPSHOT_MAGIC = 0x4a4a5331;
 export const SNAPSHOT_HEADER = 40;
@@ -25,6 +28,23 @@ export const DEBRIS_PART = 2;
  *  part records into the pieces, so the fresh car of the same id isn't drawn as missing the part. */
 export const PART_PIECE = 3;
 export const PIECE_HUSK = 255;
+/** Car flag (P1-C10): a practice car, on its own course far from the round's map (`jj_wasm_host::host::practice`). */
+export const SNAP_PRACTICE = 1 << 9;
+/** A practice car's id is this plus its seat id. */
+export const PRACTICE_CAR_BASE = 0x4000_0000;
+/** Where practice course `slot` is drawn (m), the worker's `practice_offset`. */
+export const practiceOffset = (slot: number): [number, number, number] => [slot * 3000, 0, 20_000];
+export const isPractice = (flags: number): boolean => (flags & SNAP_PRACTICE) !== 0;
+
+/** One practice world's debris (P1-C10): its slot (where its course is drawn) and its records, kind-2 part bodies left out
+ *  as for the round's. */
+export interface PracticeDebris {
+  slot: number;
+  debris: number;
+  debrisPos: Float32Array;
+  debrisRot: Float32Array;
+  debrisKind: Uint32Array;
+}
 
 export interface Frame {
   tick: number;
@@ -65,6 +85,8 @@ export interface Frame {
   rails: number;
   railDressing: Uint32Array;
   railOffset: Float32Array;
+  /** P1-C10: each practice world's debris (empty with nobody practising). */
+  practice: PracticeDebris[];
 }
 
 /** Copies a snapshot out of its pooled buffer (so the buffer can go straight back to the worker). */
@@ -106,6 +128,7 @@ export function decodeSnapshot(view: DataView): Frame {
     rails: 0,
     railDressing: new Uint32Array(0),
     railOffset: new Float32Array(0),
+    practice: [],
   };
   let at = SNAPSHOT_HEADER;
   for (let i = 0; i < cars; i++, at += SNAPSHOT_CAR) {
@@ -156,6 +179,25 @@ export function decodeSnapshot(view: DataView): Frame {
     for (let i = 0; i < count; i++, at += 8) {
       f.railDressing[i] = view.getUint32(at, true);
       f.railOffset[i] = view.getFloat32(at + 4, true);
+    }
+  }
+  if (view.getUint16(6, true) & 2) {
+    const worlds = view.getUint32(at, true); at += 4;
+    for (let w = 0; w < worlds; w++) {
+      const slot = view.getUint32(at, true);
+      const n = view.getUint32(at + 4, true);
+      at += 8;
+      if (n > Math.floor((view.byteLength - at) / SNAPSHOT_DEBRIS)) throw new Error('truncated practice snapshot trailer');
+      const p: PracticeDebris = { slot, debris: 0, debrisPos: new Float32Array(n * 3), debrisRot: new Float32Array(n * 4), debrisKind: new Uint32Array(n) };
+      for (let i = 0; i < n; i++, at += SNAPSHOT_DEBRIS) {
+        const kind = view.getUint32(at + 28, true);
+        if (kind === DEBRIS_PART) continue;
+        const k = p.debris++;
+        for (let j = 0; j < 3; j++) p.debrisPos[k * 3 + j] = view.getFloat32(at + j * 4, true);
+        for (let j = 0; j < 4; j++) p.debrisRot[k * 4 + j] = view.getFloat32(at + 12 + j * 4, true);
+        p.debrisKind[k] = kind;
+      }
+      f.practice.push(p);
     }
   }
   return f;

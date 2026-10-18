@@ -22,13 +22,13 @@ import {
 import type { Snapshot } from '../worker/client';
 import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
-import { decodeSnapshot, type Frame } from './snapshot';
+import { decodeSnapshot, isPractice, type Frame } from './snapshot';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { rosterSources } from './vehicles/registry';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
-import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
+import { CameraRig, PROFILE as CAMERA, type CameraMode, type Obstacle } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
 import { LaunchCallouts } from './launch-callout';
@@ -186,6 +186,10 @@ export class World {
   onNameplates: (points: NameplatePoint[]) => void = () => {};
   private nameplatePoints: NameplatePoint[] = [];
   map: MapRenderer | null = null;
+  /** P1-C10: the practice courses (`round/practice`), drawn from each snapshot's practice trailer far from the round's map.
+   *  Their ground and obstacles join the camera rig's beside the round map's (a practice tile's chase rides its course). */
+  practice: { update(f: Frame | null): void; groundAt(x: number, z: number): number | null; obstacles(): Obstacle[] } | null = null;
+  private mapObstacles: Obstacle[] = [];
   private props: PropRenderer;
   private ground: Mesh;
   private grid: GridHelper;
@@ -337,8 +341,10 @@ export class World {
     this.props?.dispose();
     this.map = staged.renderer.addTo(this.scene);
     this.props = new PropRenderer(this.scene, map);
-    this.rig.obstacles = this.map.obstacles();
-    this.rig.groundAt = this.map.groundAt;
+    this.mapObstacles = this.map.obstacles();
+    this.practiceChanged();
+    const ground = this.map.groundAt;
+    this.rig.groundAt = (x, z) => this.practice?.groundAt(x, z) ?? ground(x, z);
     this.rig.loops = this.map.loopShots();
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
@@ -373,6 +379,12 @@ export class World {
     // stays the same, and goes back to Auto when it changes.
     if (wasArena !== !!this.arena) this.view = 'auto';
     return this.map;
+  }
+
+  /** The practice courses came or went (P1-C10): the camera rig's obstacles are the round map's and theirs. */
+  practiceChanged(): void {
+    const extra = this.practice?.obstacles() ?? [];
+    this.rig.obstacles = extra.length ? [...this.mapObstacles, ...extra] : this.mapObstacles;
   }
 
   /** Instances drawn per prop type (map props, dropped cones, debris). */
@@ -710,7 +722,7 @@ export class World {
       const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 2000));
       cam.aspect = t.w / t.h;
       cam.updateProjectionMatrix();
-      const i = s.cars ? (view.follow?.[k] ?? k) % s.cars : -1;
+      const i = followIndex(s, view.follow?.[k] ?? k);
       const mode = this.rig.mode(t.seat);
       if (i >= 0) {
         this.q.fromArray(s.rot, i * 4);
@@ -854,10 +866,10 @@ export class World {
       const cam = this.tileCams[k];
       if (!cam || t.w < 1) continue;
       cam.updateMatrixWorld();
-      const self = this.tiles?.follow?.[k] ?? k;
+      const self = followIndex(s, this.tiles?.follow?.[k] ?? k);
       let [visible, minPx, maxPx, farthest] = [0, Infinity, 0, 0];
       for (let i = 0; i < s.cars; i++) {
-        if (i === self % Math.max(1, s.cars)) continue;
+        if (i === self) continue;
         q.fromArray(s.rot, i * 4);
         dir.set(0, 0, 2.2).applyQuaternion(q);
         a.fromArray(s.pos, i * 3).setY(s.pos[i * 3 + 1]! + 0.6);
@@ -886,7 +898,7 @@ export class World {
       box[2] = Math.min(box[2]!, z);
       box[3] = Math.max(box[3]!, z);
     };
-    for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
+    for (let i = 0; i < s.cars; i++) if (!isPractice(s.flags[i]!)) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
     if (this.arena) {
       const a = this.arena;
       grow(a.x - a.r, a.z - a.r);
@@ -894,6 +906,7 @@ export class World {
     }
     const f = s.frame;
     this.props.update(f);
+    this.practice?.update(f);
     this.map?.updateRails(f);
     if (this.overviewOn && !this.frameArena) return this.placeOverview(s);
     this.overviewPose = this.overviewStats = null;
@@ -1001,7 +1014,7 @@ export class World {
     const dt = this.overviewTick === null ? 0 : Math.max(0, Math.min(0.1, (t - this.overviewTick) / TICK_HZ));
     this.overviewTick = t;
     const cars: Array<[number, number, number, number]> = [];
-    for (let i = 0; i < s.cars; i++) cars.push([s.id[i]!, s.pos[i * 3]!, s.pos[i * 3 + 2]!, s.pos[i * 3 + 1]!]);
+    for (let i = 0; i < s.cars; i++) if (!isPractice(s.flags[i]!)) cars.push([s.id[i]!, s.pos[i * 3]!, s.pos[i * 3 + 2]!, s.pos[i * 3 + 1]!]);
     const { width: w, height: h } = this.stats;
     const { css, cssH, top, foot, share } = this.overviewBands();
     const pose = rig.update(cars, dt, w / Math.max(1, h * share), share);
@@ -1017,6 +1030,8 @@ export class World {
     let env: [number, number, number, number] | null = null;
     const heights: number[] = [];
     for (let i = 0; i < s.cars; i++) {
+      // A practice car (P1-C10) is on its own course, never in the arena's frame.
+      if (isPractice(s.flags[i]!)) continue;
       this.q.fromArray(s.rot, i * 4);
       const box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
       const padded: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
@@ -1065,6 +1080,14 @@ export class World {
     const paint = this.vehicles ? (i: number) => this.vehicles!.paintOf(s.id[i]!) : () => '#f5c542';
     this.overviewRings.update(s.cars, s.pos, s.rot, ringR, paint);
   }
+}
+
+/** The snapshot index of the car a tile follows: the car with that id (a room's tiles follow car ids, and a practice car's
+ *  id, P1-C10, is far past the count), else the id read as an index (the bench's `?follow=`), wrapping. -1 with no cars. */
+function followIndex(s: { cars: number; id: Uint32Array }, car: number): number {
+  if (!s.cars) return -1;
+  const at = s.id.subarray(0, s.cars).indexOf(car);
+  return at >= 0 ? at : car % s.cars;
 }
 
 /** Each car's half extents for the Overview's screen boxes (m): half width, height, half length. */

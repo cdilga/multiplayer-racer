@@ -145,6 +145,9 @@
 .hud-boost i { display: block; height: 100%; background: var(--c-saffron); }
 .hud-status { margin-left: auto; display: flex; gap: calc(var(--hud) * .3); }
 .hud-status .chip { font-size: var(--hud); min-height: 0; height: 1.5em; padding: 0 .7em .12em; }
+/* P1-C10: a practising seat's tile shows its own course: its pill says so, in teal. */
+.hud-tile.practice .hud-tr { background: var(--c-teal); }
+.hud-pos[hidden] { display: none; }
 .hud-centre { position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%) rotate(-3deg); text-align: center; }
 .hud-centre[hidden] { display: none; }
 .wreck-word { font-size: calc(var(--hud) * 2.4); color: var(--c-saffron); -webkit-text-stroke: calc(var(--hud) * .12) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(var(--hud) * .2) 0 var(--c-ink); }

@@ -475,6 +475,12 @@ pub mod test_codec {
         .encode()
     }
 
+    /// P1-C10: Practice (`on`) or Join the race (`!on`).
+    #[wasm_bindgen]
+    pub fn controller_practice(on: bool) -> Vec<u8> {
+        ControllerCmd::Practice { on }.encode()
+    }
+
     #[wasm_bindgen]
     pub fn controller_ready(on: bool) -> Vec<u8> {
         ControllerCmd::Ready { on }.encode()

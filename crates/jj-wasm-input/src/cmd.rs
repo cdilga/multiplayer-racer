@@ -109,6 +109,12 @@ pub fn encode_tutorial(on: bool) -> Vec<u8> {
     ControllerCmd::Tutorial { on }.encode()
 }
 
+/// `Practice` (P1-C10): practise in my own world (true), or Join the race (false).
+#[wasm_bindgen(js_name = encodePractice)]
+pub fn encode_practice(on: bool) -> Vec<u8> {
+    ControllerCmd::Practice { on }.encode()
+}
+
 #[wasm_bindgen(js_name = encodeReady)]
 pub fn encode_ready(on: bool) -> Vec<u8> {
     ControllerCmd::Ready { on }.encode()

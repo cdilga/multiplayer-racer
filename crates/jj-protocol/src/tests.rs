@@ -208,6 +208,7 @@ fn controller_samples() -> Vec<ControllerCmd> {
         ControllerCmd::Vote {
             choice: NextTrack::Surprise,
         },
+        ControllerCmd::Practice { on: true },
     ]
 }
 
@@ -232,9 +233,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::ForSource { .. } => "for-source",
         ControllerCmd::SetAssist { .. } => "set-assist",
         ControllerCmd::Vote { .. } => "vote",
+        ControllerCmd::Practice { .. } => "practice",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 18] = [
+const CONTROLLER_VARIANTS: [&str; 19] = [
     "hello",
     "claim",
     "action",
@@ -253,6 +255,7 @@ const CONTROLLER_VARIANTS: [&str; 18] = [
     "for-source",
     "set-assist",
     "vote",
+    "practice",
 ];
 
 fn host_samples() -> Vec<HostCmd> {
@@ -329,6 +332,7 @@ fn host_samples() -> Vec<HostCmd> {
             decided: None,
             flyover_left_ms: None,
         }),
+        HostCmd::Practice { on: true },
     ]
 }
 
@@ -349,9 +353,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::StartLaunch { .. } => "start-launch",
         HostCmd::Takedown { .. } => "takedown",
         HostCmd::Between(_) => "between",
+        HostCmd::Practice { .. } => "practice",
     }
 }
-const HOST_VARIANTS: [&str; 15] = [
+const HOST_VARIANTS: [&str; 16] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -367,6 +372,7 @@ const HOST_VARIANTS: [&str; 15] = [
     "start-launch",
     "takedown",
     "between",
+    "practice",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.

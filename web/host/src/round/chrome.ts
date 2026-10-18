@@ -582,7 +582,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       room = r;
       const n = r.seats.length;
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;
-      footer.querySelector('[data-foot-count]')!.textContent = racing() ? `${n} racing${r.round ? ` · round ${r.round}` : ''}` : r.phase === 'Intermission' ? `${n} in the room${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
+      // P1-C10: a seat practising on its own course isn't racing (yet).
+      const practising = r.seats.filter((s) => s.practice).length;
+      footer.querySelector('[data-foot-count]')!.textContent = racing() ? `${n - practising} racing${practising ? ` · ${practising} practising` : ''}${r.round ? ` · round ${r.round}` : ''}` : r.phase === 'Intermission' ? `${n} in the room${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
       // Only when the word changes: rewriting it every update replaces the button's text node under a click.
       const word = racing() ? 'Pause' : 'Host menu';
       if (menuBtn.textContent !== word) menuBtn.textContent = word;
