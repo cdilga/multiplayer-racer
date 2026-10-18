@@ -20,7 +20,7 @@ import { mountFeelLab } from './lab';
 type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 
 export interface TuningClient {
-  input(i: { type: 'ui'; ui: `tune:${string}` | `tune-vehicle:${string}` }): void;
+  input(i: { type: 'ui'; ui: `tune:${string}` | `tune-vehicle:${string}` | `bots:${number}` | 'mode:derby' }): void;
   tuning(): Promise<{ tuning: Record<string, unknown>; input?: Record<string, unknown>; air?: Record<string, unknown>; error: string | null; vehicle?: string; vehicles?: string[] }>;
 }
 
@@ -134,6 +134,7 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     <div class="rows lab" data-tune-pane="lab" hidden></div>
     ${gen ? '<p class="built" data-tune-built></p>' : ''}
     ${gen && gen.scenes.length ? `<p class="built seed" data-tune-scene-row>scene <select data-tune-scene aria-label="Feel Lab scene"><option value="">Generated tracks</option>${gen.scenes.map((n) => `<option value="${n}">${n}</option>`).join('')}</select><button type="button" data-tune-scene-go title="The next round runs on this Feel Lab scene (Generated tracks: back to the generator)">Load scene</button></p>` : ''}
+    <p class="built seed" data-tune-bots-row>bots <input type="number" min="0" step="1" value="0" data-tune-bots aria-label="Bots on the grid" style="width:4em"><button type="button" data-tune-bots-go title="Bots on the autopilot join each round's grid after the seats (br-bbki.11)">Set bots</button></p>
     <p class="built seed" data-tune-seed-row>session seed <b data-tune-seed>?</b> <input type="number" min="0" step="1" placeholder="seed" data-tune-seed-input aria-label="Seed to play"><button type="button" data-tune-seed-go title="Open a new room on this seed (tracks are this seed + preparation id)">Play seed</button></p>
     <footer>${gen ? '<button type="button" data-tune-regenerate title="Build the current seed again with the generator values">Regenerate track</button>' : ''}<button type="button" data-tune-export>Export patch</button><span data-tune-count>No changes</span></footer>`;
 
@@ -147,8 +148,18 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
   const seedInput = panel.querySelector<HTMLInputElement>('[data-tune-seed-input]')!;
   const sessionSeed = () => (window as unknown as { __jjSession?: { seed: number } }).__jjSession?.seed;
   // The Feel Lab scene picker (P1-FL03.1, br-bbki.19): the next round runs on the scene's map.
+  const setBots = (n: number) => {
+    panel.querySelector<HTMLInputElement>('[data-tune-bots]')!.value = String(n);
+    client.input({ type: 'ui', ui: `bots:${n}` });
+  };
+  panel.querySelector('[data-tune-bots-go]')!.addEventListener('click', () => setBots(Math.max(0, Math.floor(Number(panel.querySelector<HTMLInputElement>('[data-tune-bots]')!.value) || 0))));
   panel.querySelector('[data-tune-scene-go]')?.addEventListener('click', () => {
     const name = panel.querySelector<HTMLSelectElement>('[data-tune-scene]')!.value || null;
+    // br-bbki.11: the carnage bowl is a derby with a dozen bots to ram.
+    if (name === 'carnage-bowl') {
+      client.input({ type: 'ui', ui: 'mode:derby' });
+      setBots(12);
+    }
     void gen!.loadScene(name);
   });
   panel.querySelector('[data-tune-seed-go]')!.addEventListener('click', () => {

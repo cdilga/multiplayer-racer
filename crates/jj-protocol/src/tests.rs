@@ -562,6 +562,7 @@ fn ui_samples() -> Vec<UiCommand> {
             seed: Some(424_242),
             recipe: "rocks,town".into(),
         },
+        UiCommand::SetBots { n: 12 },
     ]
 }
 
@@ -857,7 +858,7 @@ fn every_variant_has_a_golden() {
         names(sim_samples().iter().map(sim_variant).collect()),
         SIM_VARIANTS.into_iter().collect()
     );
-    assert_eq!(ui_samples().len(), 10, "every UiCommand variant");
+    assert_eq!(ui_samples().len(), 11, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
         15,

@@ -1,0 +1,275 @@
+{
+  "autopilot": [
+    {
+      "car": 0,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 1,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 2,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 3,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 4,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 5,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 6,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 7,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 8,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 9,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 10,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 11,
+      "on": true,
+      "tick": 0
+    },
+    {
+      "car": 12,
+      "on": true,
+      "tick": 0
+    }
+  ],
+  "cars": [
+    {
+      "pose": {
+        "headingDeg": 7.5,
+        "x": 15.6,
+        "y": 0.2,
+        "z": -3.17
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 7.5,
+        "x": 12.62,
+        "y": 0.2,
+        "z": -2.78
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 37.5,
+        "x": 12.88,
+        "y": 0.2,
+        "z": -9.3
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 37.5,
+        "x": 10.5,
+        "y": 0.2,
+        "z": -7.47
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 52.5,
+        "x": 8.27,
+        "y": 0.2,
+        "z": -13.66
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 52.5,
+        "x": 6.45,
+        "y": 0.2,
+        "z": -11.28
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 82.5,
+        "x": 1.89,
+        "y": 0.2,
+        "z": -15.76
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 82.5,
+        "x": 1.5,
+        "y": 0.2,
+        "z": -12.79
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 112.5,
+        "x": -4.79,
+        "y": 0.2,
+        "z": -15.2
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 112.5,
+        "x": -3.64,
+        "y": 0.2,
+        "z": -12.43
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 127.5,
+        "x": -10.32,
+        "y": 0.2,
+        "z": -12.09
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 127.5,
+        "x": -8.49,
+        "y": 0.2,
+        "z": -9.71
+      }
+    },
+    {
+      "pose": {
+        "headingDeg": 157.5,
+        "x": -14.38,
+        "y": 0.2,
+        "z": -6.76
+      }
+    }
+  ],
+  "derby": {
+    "atTick": 0
+  },
+  "expect": [
+    {
+      "car": 0,
+      "max": 100000,
+      "metric": "derbyPoints",
+      "min": 0.1
+    },
+    {
+      "car": 0,
+      "max": 80,
+      "metric": "maxSpeed",
+      "min": 8
+    },
+    {
+      "car": 0,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 1,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 2,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 3,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 4,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 5,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 6,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 7,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 8,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 9,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 10,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 11,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    },
+    {
+      "car": 12,
+      "max": 28.8,
+      "metric": "maxRadiusM",
+      "min": 0
+    }
+  ],
+  "map": "maps/lab/carnage-bowl.json",
+  "scenario": "carnage-bowl",
+  "seed": 7,
+  "ticks": 7200,
+  "what": "br-bbki.11 (R131 lab scene): the carnage bowl. The player's car (0) and twelve bots on the autopilot in the 13-car bowl hunt each other for a minute of derby: the player's car scores by ramming, nobody leaves the bowl. The Feel Lab's scene of the same map (maps/lab/carnage-bowl.json) runs it live with Bots 12."
+}

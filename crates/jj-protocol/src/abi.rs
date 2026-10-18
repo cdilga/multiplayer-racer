@@ -11,7 +11,7 @@ use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
 /// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19). 7: `MainToSim::PeerGone` (br-f3rz).
-pub const ABI_VERSION: u16 = 10;
+pub const ABI_VERSION: u16 = 11;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -115,6 +115,10 @@ pub enum UiCommand {
     SetFavourite {
         seed: Option<u64>,
         recipe: String,
+    },
+    /// br-bbki.11 (the Feel Lab): this many bots on the autopilot join each round's grid after the seats (any number).
+    SetBots {
+        n: u32,
     },
 }
 

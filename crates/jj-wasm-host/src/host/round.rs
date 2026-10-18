@@ -66,6 +66,8 @@ pub(super) struct RoundState {
     pub current_recipe: Option<String>,
     /// br-m1xe: the host chose a kept track for the next round (its seed and recipe).
     pub favourite: Option<(u64, String)>,
+    /// br-bbki.11: bots on the autopilot on each round's grid after the seats (the Feel Lab's carnage bowl).
+    pub bots: u32,
     /// br-m1xe: the tick each seat's laps ended this round (its lap times).
     pub lap_ticks: std::collections::BTreeMap<SeatId, Vec<u64>>,
 }
@@ -95,6 +97,7 @@ impl RoundState {
             current_recipe: None,
             favourite: None,
             lap_ticks: Default::default(),
+            bots: 0,
             standings: Standings::default(),
             laps: None,
             free_drive: false,
@@ -192,7 +195,7 @@ impl Host {
                 let arena_cars = self
                     .round
                     .derby_next
-                    .then(|| (self.inputs.len() as u32).max(2));
+                    .then(|| (self.inputs.len() as u32 + self.round.bots).max(2));
                 self.events.push(SimEvent::PrepareRequested {
                     preparation: id,
                     seed,
@@ -212,7 +215,7 @@ impl Host {
                     .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
                 self.round.prepared_seed = Some(seed);
                 if self.round.derby_next {
-                    let cars = self.inputs.len().max(2);
+                    let cars = (self.inputs.len() + self.round.bots as usize).max(2);
                     self.round.prepared =
                         jj_procgen::arena::prepare(seed, cars, &jj_procgen::registry()).ok();
                 }
@@ -325,6 +328,11 @@ impl Host {
                 input.car = Some(car);
                 input.dropped = false;
             }
+        }
+        // br-bbki.11: the bots, on the grid after the seats, each on the autopilot (no seat: they're in the world and the
+        // derby ledger, not the results).
+        for bot in self.sim.spawn_grid_as(&vec![0; self.round.bots as usize]) {
+            self.sim.set_autopilot(bot, true);
         }
         self.session_rev += 1;
     }
@@ -663,6 +671,7 @@ impl Host {
             // P1-S10: a derby round's game time left (null outside a derby).
             "derbyLeftMs": self.sim.derby().map(|l| super::tick_ms(l.time_left_ticks(self.sim.tick()))),
             "freeDrive": self.round.free_drive,
+            "bots": self.round.bots,
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
             // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
             "vehicles": self.vehicles.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
@@ -753,6 +762,10 @@ impl Host {
                 self.session_rev += 1;
             }
             UiCommand::SetNextTrack { choice } => self.set_next_track(choice),
+            UiCommand::SetBots { n } => {
+                self.round.bots = n;
+                self.session_rev += 1;
+            }
             // br-m1xe: a kept track for the next round. A preparation already made for it is superseded.
             UiCommand::SetFavourite { seed, recipe } => {
                 self.round.favourite = seed.map(|s| (s, recipe));

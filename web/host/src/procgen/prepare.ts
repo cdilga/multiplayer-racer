@@ -162,8 +162,8 @@ export class RoundPreparer {
     try {
       let json: string;
       let canonical: Uint8Array;
-      if (arenaCars) {
-        // P1-G06: a derby round: the generated bowl for the room, whatever the lab scene or dev map.
+      if (arenaCars && !this.scene) {
+        // P1-G06: a derby round: the generated bowl for the room (a Feel Lab scene, like the carnage bowl, is its own).
         const p = await this.o.procgen.prepare(seed, undefined, undefined, arenaCars);
         entry.plan = `arena:${arenaCars}`;
         entry.ms = Math.round(p.ms);

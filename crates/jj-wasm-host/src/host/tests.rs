@@ -4332,3 +4332,55 @@ fn a_kept_track_is_prepared_by_its_seed_and_recipe_and_a_rematch_keeps_its_recip
         "the Rematch keeps the recipe: {asked:?}"
     );
 }
+
+/// br-bbki.11: the Feel Lab's bots. With Bots 6, a derby round puts six autopiloted cars on the grid after the one seat,
+/// in an arena sized for all seven, and they hunt: the bots score in the derby ledger.
+#[test]
+fn bots_join_a_derby_round_on_the_autopilot_and_score() {
+    use jj_session::director::Phase;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetMode { derby: true })).unwrap();
+    h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("p1".into()),
+        resume: Some("s".into()),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, hello)).unwrap();
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, claim)).unwrap();
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    let mut now = 0u64;
+    let mut guard = 0;
+    while h.phase() != Phase::Running {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+        guard += 1;
+        assert!(guard < 120 * 60, "the derby starts");
+    }
+    assert_eq!(h.sim.cars().count(), 7, "one seat's car and six bots");
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["bots"], 6);
+    for _ in 0..(30 * 120) {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+    }
+    let rows = h.sim.derby().expect("a derby").rows();
+    let scoring_bots = rows.iter().filter(|r| r.car >= 1 && r.units > 0).count();
+    assert!(scoring_bots >= 3, "the bots hunt and score: {rows:?}");
+}

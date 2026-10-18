@@ -586,3 +586,70 @@ fn derby_bots_hunt_each_other_round_the_bowl() {
         "bots keep moving: {moving}/{samples}"
     );
 }
+
+/// br-bbki.11: the carnage bowl, the Feel Lab's derby scene: the 13-car bowl (seed 11) as a lab map
+/// (`maps/lab/carnage-bowl.json`, so the Feel Lab's scene picker offers it) and its fixture
+/// (`scenarios/derby/carnage-bowl.json`): the player's car and twelve bots on the autopilot hunt each other for a minute of
+/// derby. Both are the generator's output (`JJ_BLESS=1` rewrites them); the fixture's envelope is in the scenario bank.
+#[test]
+fn the_carnage_bowl_lab_scene_is_the_generators_output() {
+    let cars = 13;
+    let map = arena(BANK_SEED, cars);
+    let d = design(&map);
+    let root = format!("{}/../..", env!("CARGO_MANIFEST_DIR"));
+    let json = serde_json::to_string(&map.map).unwrap() + "\n";
+    // The grid the round puts them on, as fixture poses.
+    let mut s = sim(&map);
+    let ids = s.spawn_grid(cars);
+    let poses: Vec<serde_json::Value> = ids
+        .iter()
+        .map(|&id| {
+            let st = s.car_state(id).unwrap();
+            let q = st.rotation;
+            let heading =
+                (2.0 * (q[3] * q[1] + q[0] * q[2])).atan2(1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2]));
+            serde_json::json!({ "pose": {
+                "x": (f64::from(st.position[0]) * 100.0).round() / 100.0,
+                "y": (f64::from(st.position[1]) * 100.0).round() / 100.0 + 0.1,
+                "z": (f64::from(st.position[2]) * 100.0).round() / 100.0,
+                "headingDeg": (f64::from(heading).to_degrees() * 10.0).round() / 10.0,
+            } })
+        })
+        .collect();
+    let mut expect = vec![
+        serde_json::json!({ "car": 0, "metric": "derbyPoints", "min": 0.1, "max": 100000 }),
+        serde_json::json!({ "car": 0, "metric": "maxSpeed", "min": 8, "max": 80 }),
+    ];
+    for car in 0..cars {
+        expect.push(serde_json::json!({ "car": car, "metric": "maxRadiusM", "min": 0, "max": ((d.wall_r() + ESCAPE_MARGIN_M) * 10.0).round() / 10.0 }));
+    }
+    let fixture = serde_json::json!({
+        "scenario": "carnage-bowl",
+        "what": "br-bbki.11 (R131 lab scene): the carnage bowl. The player's car (0) and twelve bots on the autopilot in the 13-car bowl hunt each other for a minute of derby: the player's car scores by ramming, nobody leaves the bowl. The Feel Lab's scene of the same map (maps/lab/carnage-bowl.json) runs it live with Bots 12.",
+        "map": "maps/lab/carnage-bowl.json",
+        "seed": 7,
+        "ticks": 60 * S,
+        "derby": { "atTick": 0 },
+        "cars": poses,
+        "autopilot": (0..cars).map(|car| serde_json::json!({ "tick": 0, "car": car, "on": true })).collect::<Vec<_>>(),
+        "expect": expect,
+    });
+    let fixture_json = serde_json::to_string_pretty(&fixture).unwrap() + "\n";
+    let (map_path, fixture_path) = (
+        format!("{root}/maps/lab/carnage-bowl.json"),
+        format!("{root}/scenarios/derby/carnage-bowl.json"),
+    );
+    if std::env::var_os("JJ_BLESS").is_some() {
+        std::fs::write(&map_path, &json).unwrap();
+        std::fs::write(&fixture_path, &fixture_json).unwrap();
+        return;
+    }
+    assert!(
+        std::fs::read_to_string(&map_path).unwrap_or_default() == json,
+        "maps/lab/carnage-bowl.json is stale: re-bless with JJ_BLESS=1"
+    );
+    assert!(
+        std::fs::read_to_string(&fixture_path).unwrap_or_default() == fixture_json,
+        "scenarios/derby/carnage-bowl.json is stale: re-bless with JJ_BLESS=1"
+    );
+}

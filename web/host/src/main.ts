@@ -386,8 +386,12 @@ async function boot(): Promise<void> {
     painted = true;
     const palette = v.paintOf;
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
-    v.numberOf = (car) => seatNumber.get(car) ?? car;
-    v.nameOf = (car) => seatName.get(car) ?? `Player ${car}`;
+    // A car no seat owns (a Feel Lab bot, br-bbki.11) is numbered after the seats' numbers and named a bot, so it never
+    // wears a player's number.
+    // (Bots take the grid after the seats' cars: the first bot is the car after the last seat's.)
+    const botNumber = (car: number) => Math.max(0, ...seatNumber.values()) + 1 + Math.max(0, car - seatNumber.size);
+    v.numberOf = (car) => seatNumber.get(car) ?? botNumber(car);
+    v.nameOf = (car) => seatName.get(car) ?? (seatNumber.has(car) ? `Player ${car}` : 'Bot');
   });
   world.attach(client);
   if (roundScreens) mountReel(client, world, roundScreens);

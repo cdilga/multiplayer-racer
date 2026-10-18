@@ -299,6 +299,9 @@ pub mod codec {
                     recipe: parts.next().unwrap_or_default().into(),
                 }
             }
+            l if l.starts_with("bots:") => UiCommand::SetBots {
+                n: l[5..].parse().unwrap_or(0),
+            },
             l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
                 ms: l[16..].parse().unwrap_or(60_000),
             },
