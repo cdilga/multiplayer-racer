@@ -2,10 +2,10 @@
 
 ## Looked at
 All in `docs/evidence/P1-A06c/captures/`:
-- `poc_phone_index_html_race_stick_offcourse_412x915.png`, `poc_phone_index_html_race_stick_offcourse_915x412.png`: the new out-of-bounds banner, "Out past whoop whoop / Drive back onto the track."
-- `poc_phone_index_html_game_ended_412x915.png`, `poc_phone_index_html_game_ended_915x412.png`: "Cheers for playing! You finished 3rd."
-- `poc_phone_index_html_join_412x915.png`, `poc_phone_index_html_join_915x412.png`: heading changed "Join a game" to "Join a room" (R112).
-- `landing-412x915.png`, `landing-915x412.png`: pitch now ends "Perfect for an arvo with the blokes and sheilas."
+- `captures/poc_phone_index_html_race_stick_offcourse_412x915.png`, `captures/poc_phone_index_html_race_stick_offcourse_915x412.png`: the new out-of-bounds banner, "Out past whoop whoop / Drive back onto the track."
+- `captures/poc_phone_index_html_game_ended_412x915.png`, `captures/poc_phone_index_html_game_ended_915x412.png`: "Cheers for playing! You finished 3rd."
+- `captures/poc_phone_index_html_join_412x915.png`, `captures/poc_phone_index_html_join_915x412.png`: heading changed "Join a game" to "Join a room" (R112).
+- `captures/landing-412x915.png`, `captures/landing-915x412.png`: pitch now ends "Perfect for an arvo with the blokes and sheilas."
 
 - `tv-oob-banner-1920x1080.jpg` (2026-10-18, the 0.2 host on eris, Chromium with GPU, two seats, Davo thrown off the
   course): Davo's tile reads "OUT PAST WHOOP WHOOP!" over "Back onto the track in 1 s" while the car waits on the line
