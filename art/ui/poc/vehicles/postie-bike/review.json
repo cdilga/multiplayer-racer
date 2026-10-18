@@ -2,41 +2,54 @@
   "id": "postie-bike",
   "name": "Postie Bike",
   "status": "awaiting-review",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "br-bwju.5",
     "br-bwju"
   ],
-  "summary": "R123's Postie Bike: a bubbly Australian step-through delivery motorbike in the spirit of the 110 cc postie (generic: no Australia Post branding). A big raked leg shield, a front carrier with a mail tub, two postal-red panniers stacked with parcels, round mirrors and chunky little knobblies. The rider is part of the model: open-face white helmet, hi-vis vest over a blue work shirt. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R).",
+  "summary": "R123's Postie Bike, rebuilt against its contact sheet in br-bwju.11: a bent leg shield with bowed facets and a floor wedge with rubber pads; lugged tyres on black four-diameter spoked wheels; an octagon headlamp with rim and lens; swept silver bars with black grips and round mirrors on stalks; twin hex mufflers with header pipes and shocks; a front mudguard with skirts; a silver wire carrier with a postal-red mail tub and parcels; open-top panniers with lid rims and parcels; a rounded rear grab rail, tail block with brake cap and hex lens. The rider is part of the model: faceted white helmet with a grey lower ring and a clear visor frame, hi-vis vest with bands and stripes, puffy blue sleeves, shorts and tall boots. LOD0 2782 triangles (qualified budget now 3000). The physics hulls are frozen at the br-bwju.5 bake.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/postie-bike/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). Bikes are thin: the masks keep pale parts (segment.bright), use a small opening and keep detached components (refs/sheets.json), the same rules on both sides.",
+    "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Scored with the helmet-patched masks and the level far camera of refs/sheets.json; thin parts (wire basket, rail, mirror stalks) vanish from the masks on both sides.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "label": "LOD0 against the lod+1 sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.8293,
-          "top": 0.8997,
-          "front": 0.7006,
-          "rear": 0.7057
+          "side": 0.8495,
+          "top": 0.8456,
+          "front": 0.8683,
+          "rear": 0.8928
         },
-        "weightedIou": 0.8126
+        "weightedIou": 0.8576
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the lod+1 sheet",
+        "sheet": "media/reference-lod1/sheet.png",
+        "iou": {
+          "side": 0.8443,
+          "top": 0.8302,
+          "front": 0.8469,
+          "rear": 0.8721
+        },
+        "weightedIou": 0.8446
       },
       {
         "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
+        "label": "LOD2 against the lowest-lod sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.5338,
-          "top": 0.8541,
-          "front": 0.6907,
-          "rear": 0.6722
+          "side": 0.7011,
+          "top": 0.7985,
+          "front": 0.8819,
+          "rear": 0.8767
         },
-        "weightedIou": 0.6742
+        "weightedIou": 0.7838
       }
     ]
   },
@@ -49,15 +62,15 @@
       {
         "lod": 0,
         "glb": "media/model/postie-bike.lod0.glb",
-        "tris": 1180,
+        "tris": 2782,
         "draws": 6,
-        "maxTris": 1300,
+        "maxTris": 2900,
         "withinBudget": true
       },
       {
         "lod": 1,
         "glb": "media/model/postie-bike.lod1.glb",
-        "tris": 882,
+        "tris": 894,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -65,7 +78,7 @@
       {
         "lod": 2,
         "glb": "media/model/postie-bike.lod2.glb",
-        "tris": 568,
+        "tris": 586,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -99,8 +112,8 @@
         },
         "pivot": [
           0,
-          1.1631491579260158,
-          0.6782494453537846
+          1.443797865477643,
+          0.48
         ]
       },
       {
@@ -116,8 +129,8 @@
         },
         "pivot": [
           0,
-          1.11,
-          -0.6153678986920943
+          1.254,
+          -0.52
         ]
       },
       {
@@ -133,8 +146,8 @@
         },
         "pivot": [
           0,
-          0.92,
-          -0.22
+          1.14,
+          -0.27
         ]
       },
       {
@@ -255,35 +268,39 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean on the bike part set, origin on the ground between the axles, wheels on the centreline, anchors cam_fp, cam_tp_target, com, roof_number (the rider's back), lplate_front, lplate_rear; no badges, logos or real names)"
+        "text": "contract + reproducibility (origin between the axles; anchors unchanged; mass fractions unchanged; part set core, front, back, rider, wheel_F, wheel_R at every LOD)"
       },
       {
         "result": "PASS",
-        "text": "budget"
+        "text": "budget: LOD0 2782 <= 2900 <= 3000; LOD1 894 <= 900; LOD2 586 <= 600"
       },
       {
         "result": "WARN",
-        "text": "silhouette: weighted IoU 0.813 for LOD0 against 'lod + 1' (side 0.829, top 0.900, front 0.701, rear 0.706); 0.674 for LOD2 against 'lowest' (side 0.534: that sheet's spoked wheels aren't filled in its mask, so the model's solid octagons count as extra). A bike's thin parts (forks, frame, arms) score lower than a car body; the cues read by eye"
+        "text": "silhouette: weighted IoU LOD0 0.7999 -> 0.8579 (side 0.757 -> 0.850, top 0.887 -> 0.846, front 0.793 -> 0.868, rear 0.747 -> 0.893); LOD1 0.7502 -> 0.8441; LOD2 0.685 -> 0.7827. Below the skill's ~0.95: thin parts (wire basket, rail, mirror stalks, spokes) vanish from the masks, the sheet's panniers and bars are wider than the sim's bike, and the top view got worse (0.887 -> 0.846) because the sheet's plan is perspective-stretched"
       },
       {
         "result": "PASS",
-        "text": "by-eye cues: leg shield, front carrier with the mail tub, the two postal-red panniers stacked with parcels, round mirrors, the hi-vis rider in a white helmet; at grid-24 it reads as a postie in every seat colour (the panniers and vest keep their colours)"
+        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): step-through shield and floor wedge, spoked lugged wheels, headlamp, swept bars with mirrors, twin mufflers, wire carrier with mail tub and parcels, open panniers with parcels, rear rail, tail lamp, hi-vis rider with helmet and visor"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material (a flat swatch atlas; draws per tile are the bike's 6 parts, one InstancedMesh per part type; the renderer now keeps a bike's two wheels as their own types)"
+        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid); the shield, floor, body, mudguards and tail block tint, the panniers, vest and parcels keep their colours"
       },
       {
         "result": "PASS",
-        "text": "damage states (front and back hang about their hinge lines, the rider pitches off about the hip and is thrown when detached, a wheel comes off; no interior bays: a bike has no panels to open)"
+        "text": "damage states (damage-strip.png: front, back and the rider swing about their hinge lines, wheels detach, the rider is thrown; no see-through holes)"
       },
       {
         "result": "PASS",
-        "text": "physics fit (a convex proxy per part from the bake, colliders.png; the profile's geometry synced from the sidecar)"
+        "text": "physics fit (colliders.png: one convex hull per part, as it was; the new panniers, bars, mirrors and helmet are not collision surfaces)"
       },
       {
         "result": "WARN",
-        "text": "detail: the leg shield reads as a thin raked plank from the side; the exhaust sits low like a skid; LOD2 drops the exhaust and grips to keep a parcel a side"
+        "text": "wheel size: the sheet's tyres are about 0.37 m in radius, the model's 0.4 m and 0.36 m (the sim's)"
+      },
+      {
+        "result": "WARN",
+        "text": "the optimiser narrowed the plan (top view IoU fell) to fit side and rear; the rail and mirrors sit narrower than the sheet's"
       }
     ],
     "report": "media/gate/validation.md"

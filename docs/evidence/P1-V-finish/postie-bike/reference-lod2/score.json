@@ -1,0 +1,45 @@
+{
+ "car": "postie-bike",
+ "lod": 2,
+ "sheet": "lowest",
+ "stats": {
+  "tris": 586,
+  "draws": 6,
+  "breakdown": {
+   "core": 154,
+   "front": 92,
+   "back": 132,
+   "rider": 120,
+   "wheel_F": 44,
+   "wheel_R": 44
+  },
+  "stations": 0
+ },
+ "views": {
+  "side": {
+   "iou": 0.7011,
+   "aspect": 1.013,
+   "miss": 0.0946,
+   "extra": 0.2043
+  },
+  "top": {
+   "iou": 0.7985,
+   "aspect": 0.984,
+   "miss": 0.1058,
+   "extra": 0.0958
+  },
+  "front": {
+   "iou": 0.8819,
+   "aspect": 0.95,
+   "miss": 0.0807,
+   "extra": 0.0375
+  },
+  "rear": {
+   "iou": 0.8767,
+   "aspect": 1.003,
+   "miss": 0.0689,
+   "extra": 0.0544
+  }
+ },
+ "score": 0.7838
+}

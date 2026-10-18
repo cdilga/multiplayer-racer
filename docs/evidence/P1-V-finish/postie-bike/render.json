@@ -1,0 +1,1112 @@
+[
+ {
+  "which": "old",
+  "tiles": 1,
+  "drawCalls": 90,
+  "triangles": 101234,
+  "frames": 39,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1072,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 1072,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 976,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 928,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 768,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 696,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 624,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 528,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 496,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 432,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 400,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 352,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 112,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 112,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 4,
+  "drawCalls": 228,
+  "triangles": 106548,
+  "frames": 40,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1072,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 1072,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 976,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 928,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 768,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 696,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 624,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 528,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 496,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 432,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 400,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 352,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 112,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 112,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "old",
+  "tiles": 24,
+  "drawCalls": 1148,
+  "triangles": 532748,
+  "frames": 36,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1072,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 1072,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 976,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 928,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 768,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 696,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 624,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 560,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 528,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 496,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 432,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 416,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 400,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 352,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 112,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 112,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 1,
+  "drawCalls": 90,
+  "triangles": 114050,
+  "frames": 41,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 2312,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 1952,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 1888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1680,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 968,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 768,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 656,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 616,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 528,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 368,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 176,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 176,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 4,
+  "drawCalls": 228,
+  "triangles": 106788,
+  "frames": 39,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 2312,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 1952,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 1888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1680,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 968,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 768,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 656,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 616,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 528,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 368,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 176,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 176,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ },
+ {
+  "which": "new",
+  "tiles": 24,
+  "drawCalls": 1148,
+  "triangles": 533948,
+  "frames": 33,
+  "statKeys": [
+   "backend",
+   "width",
+   "height",
+   "cssWidth",
+   "cssHeight",
+   "dpr",
+   "scale",
+   "userScale",
+   "resolution",
+   "nativeWidth",
+   "nativeHeight",
+   "autoEvents",
+   "frameMs",
+   "p95Ms",
+   "budgetMs",
+   "limitedBy",
+   "frames",
+   "tick",
+   "cars",
+   "debris",
+   "snapped",
+   "drawCalls",
+   "triangles",
+   "lods"
+  ],
+  "pbGroups": [
+   {
+    "name": "Scene/postie-bike.core.lod0",
+    "triangles": 2312,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.back.lod0",
+    "triangles": 1952,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.front.lod0",
+    "triangles": 1888,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod0",
+    "triangles": 1680,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod0",
+    "triangles": 1648,
+    "layers": 2
+   },
+   {
+    "name": "Scene/postie-bike.core.lod1",
+    "triangles": 968,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod1",
+    "triangles": 768,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.front.lod1",
+    "triangles": 672,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.back.lod1",
+    "triangles": 656,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.core.lod2",
+    "triangles": 616,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.back.lod2",
+    "triangles": 528,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.rider.lod2",
+    "triangles": 480,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.front.lod2",
+    "triangles": 368,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod1",
+    "triangles": 256,
+    "layers": 4
+   },
+   {
+    "name": "Scene/postie-bike.wheel_F.lod2",
+    "triangles": 176,
+    "layers": 8
+   },
+   {
+    "name": "Scene/postie-bike.wheel_R.lod2",
+    "triangles": 176,
+    "layers": 8
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "cruz-missile",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "tradie-ute",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "hawk-dash",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "lion-president",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "postie-bike",
+    "loaded": true,
+    "cars": 4
+   },
+   {
+    "id": "pig-catcher",
+    "loaded": true,
+    "cars": 4
+   }
+  ],
+  "drawsPerTile": 44,
+  "pbTypes": [
+   [
+    "core",
+    4
+   ],
+   [
+    "front",
+    4
+   ],
+   [
+    "back",
+    4
+   ],
+   [
+    "rider",
+    4
+   ],
+   [
+    "wheel_F",
+    4
+   ],
+   [
+    "wheel_R",
+    4
+   ]
+  ],
+  "errors": []
+ }
+]

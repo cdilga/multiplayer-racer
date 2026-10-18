@@ -1,0 +1,45 @@
+{
+ "car": "postie-bike-before",
+ "lod": 2,
+ "sheet": "lowest",
+ "stats": {
+  "tris": 568,
+  "draws": 6,
+  "breakdown": {
+   "core": 124,
+   "front": 88,
+   "back": 108,
+   "rider": 192,
+   "wheel_F": 28,
+   "wheel_R": 28
+  },
+  "stations": 0
+ },
+ "views": {
+  "side": {
+   "iou": 0.5478,
+   "aspect": 1.083,
+   "miss": 0.1838,
+   "extra": 0.2684
+  },
+  "top": {
+   "iou": 0.8175,
+   "aspect": 0.961,
+   "miss": 0.1286,
+   "extra": 0.0538
+  },
+  "front": {
+   "iou": 0.7548,
+   "aspect": 0.991,
+   "miss": 0.0967,
+   "extra": 0.1485
+  },
+  "rear": {
+   "iou": 0.7159,
+   "aspect": 1.043,
+   "miss": 0.0987,
+   "extra": 0.1853
+  }
+ },
+ "score": 0.685
+}

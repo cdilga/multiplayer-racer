@@ -89,12 +89,13 @@
       "id": "postie-bike",
       "name": "Postie Bike",
       "status": "awaiting-review",
-      "date": "2026-10-16",
+      "date": "2026-10-18",
       "beads": [
+        "br-bwju.11",
         "br-bwju.5",
         "br-bwju"
       ],
-      "summary": "R123's Postie Bike: a bubbly Australian step-through delivery motorbike in the spirit of the 110 cc postie (generic: no Australia Post branding). A big raked leg shield, a front carrier with a mail tub, two postal-red panniers stacked with parcels, round mirrors and chunky little knobblies. The rider is part of the model: open-face white helmet, hi-vis vest over a blue work shirt. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R).",
+      "summary": "R123's Postie Bike, rebuilt against its contact sheet in br-bwju.11: a bent leg shield with bowed facets and a floor wedge with rubber pads; lugged tyres on black four-diameter spoked wheels; an octagon headlamp with rim and lens; swept silver bars with black grips and round mirrors on stalks; twin hex mufflers with header pipes and shocks; a front mudguard with skirts; a silver wire carrier with a postal-red mail tub and parcels; open-top panniers with lid rims and parcels; a rounded rear grab rail, tail block with brake cap and hex lens. The rider is part of the model: faceted white helmet with a grey lower ring and a clear visor frame, hi-vis vest with bands and stripes, puffy blue sleeves, shorts and tall boots. LOD0 2782 triangles (qualified budget now 3000). The physics hulls are frozen at the br-bwju.5 bake.",
       "lods": 3,
       "parts": 6,
       "specTwin": null

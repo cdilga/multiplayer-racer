@@ -1,50 +1,38 @@
-Vehicle Model Validation: PASS (with the silhouette WARN below; the sim run follows with the roster row)
+Vehicle Model Validation: PASS (with the WARNs below)
 
-Vehicle/part IDs: postie-bike; core (step-through frame, leg shield, floor boards, body, seat, engine, exhaust, handlebars and mirrors), front (fork, headlamp, front mudguard, the carrier and its mail tub), back (rear rack, the two postal-red panniers and their parcels, tail lamp, rear mudguard), rider (open-face helmet, hi-vis vest, blue shirt, shorts, boots), wheel_F, wheel_R
-Commit: the br-bwju.5 commit on v0.2-revamp (this file ships in it)
-Changed files: art/vehicles/postie-bike/{model.js, atlas.js, params.json, vehicle.json, review.src.json, refs/, the bake}; art/vehicles/_kit/ (the bike kit and
-swatch atlas); crates/jj-contracts (the bike part set: BIKE_PARTS, part_set, the two-wheel axle rule, PhysicsGeometry wheels as a list);
-art/contracts/vehicle.schema.json; tools/vehicles/{bake.mjs, contract-fixtures.mjs, fit/, evidence/, test/pivots.test.mjs};
-web/host/src/render/vehicles/vehicles.ts (a bike's wheels keep their own types and aren't mirrored); assets/profiles/postie-bike.json;
-assets/audio/engine/postie-bike.json
-Requirement source: R123 (Postie Bike: the Australia Post step-through look, generic, no branding; the rider part of the model), R81 (code-built, faceted, lean budget), R86 (intact, loose, detached), R121 (a crash throws the rider);
-br-bwju.4's two-wheel sim (its part layout is the contract's bike part set); Playtest-1 plan 6.2-6.3
+Vehicle/part IDs: postie-bike; core (leg shield, floor and pads, body, seat, engine, twin mufflers, shocks, head tube, bars, mirrors), front (fork, headlamp, front mudguard, wire carrier with mail tub and parcels), back (rear grab rail, two open panniers with parcels, tail block with lamp and plate bracket, rear mudguard), rider, wheel_F, wheel_R
+Commits: 843f7d32 (model, atlas, params, bake, frozen colliders, evaluator changes) and the evidence commit that ships this file, on v0.2-revamp
+Changed files: art/vehicles/postie-bike/{model.js, atlas.js, params.json, vehicle.json, colliders.json, review.src.json, refs/sheets.json, refs/masks/, postie-bike.asset.json, postie-bike.lod{0,1,2}.glb, postie-bike.atlas.png}; assets/profiles/postie-bike.json (hashes and rounding only); tools/vehicles/fit/extract.mjs (sheets.json `patch`), tools/vehicles/fit/app.js (sheets.json `camD`, `tilt`)
+Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), R81, R86, R121, R123; Playtest-1 plan 6.3 hinge lines
 
-Method: lowpoly-model-from-refs with the bike kit. Reference sheets from Muse Image (art/ui/frames/generate.mjs --prompt
-art/vehicles/postie-bike/refs/prompts/<sheet>.txt, the Cruz's sheet as the layout example; three candidates, one kept). Bike masks: the
-segmentation also keeps pale pixels (segment.bright), a 2 px opening (thin forks survive) and components above 3% of the largest
-(refs/sheets.json), the same rules on both sides. tools/vehicles/fit/opt.mjs's bike mode tuned every numeric leaf; structure by hand.
+Method: lowpoly-model-from-refs. Structure built by hand from numbers measured off refs/lod-plus-1.png (side, front, rear and plan crops with a pixel grid; each view mapped to the model's frame separately); then tools/vehicles/fit/opt.mjs on eris, 4 passes, wheels pinned, followed by hand corrections where the optimiser bent the look (muffler height, rail width, lamp size, mirror spread; the carrier kept deep). No new LOD level.
 
-Visual evidence (Playwright Chromium headless, software GL; the bake viewer, tools/vehicles/fit and tools/vehicles/evidence):
-- reference-lod0/sheet.png + score.json, reference-lod2/sheet.png + score.json
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/postie-bike/postie-bike.asset.json --out docs/evidence/br-bwju.5/postie-bike`
-- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs postie-bike --out docs/evidence/br-bwju.5/postie-bike`
+Evaluator changes (both before and after numbers use them): the helmet is white on a grey backdrop and the segmenter dropped its top, so the mask extractor takes elliptical patches (sheets.json `patch`); the sheet is a level, far render, so refs/sheets.json sets camD 30 and tilt 0 instead of the Cruz-calibrated 10 m and 8 degree look-down (the same model scored front 0.70 and rear 0.77 under the old camera and 0.84 and 0.83 under the new).
+
+Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
+- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json (`node tools/vehicles/fit/capture.mjs postie-bike --out <dir> --lod N --sheet lod1|lowest`; compose.py run on the Mac). before-br-bwju.5/ holds the same for the br-bwju.5 bake under the same evaluator
+- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png and ladder-after-raw.png (`node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder --ortho 1.9`)
+- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/postie-bike/postie-bike.asset.json --out <dir> --ortho 1.9`
+- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs postie-bike --out <dir>`
+- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080; tile 1 follows a Postie, the four-tile capture follows four), every roster car four times; old = the br-bwju.5 Postie GLBs routed in, new = the committed ones
 
 Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/postie-bike: 1180 / 882 / 568 tris (budgets 1300 / 900 / 600); `--check`: byte-reproducible
-  - LOD0 per part: core 244, front 232, back 156, rider 268, wheel_F 140, wheel_R 140
-- jj validate art/vehicles/postie-bike/postie-bike.asset.json (jj-tools built with the bike contract): ok (jj.vehicle.v1, the bike part set); mass fractions sum 1.00
-- rch exec -- cargo test -p jj-contracts: the hand-made bike passes; the bike part set, centreline wheels and the sim's part order
-  (physics_geometry); broken bikes (off-centre axles, a car door on a bike) fail with their named rules; the car fixtures unchanged
-- node --test tools/vehicles/test/: postie-bike pivots on their hinge lines at every LOD (front and back edges, the rider at the hip),
-  the same pivots at every LOD and in the sidecar, defect injection rejected
-- engine sound: assets/audio/engine/postie-bike.json passes the synth's validateProfile; build.mjs --check up to date
-- profile: assets/profiles/postie-bike.json geometry synced from the sidecar (jj vehicle sync: the bike part order, two wheels), tuning from
-  the two-wheel sim fixture (br-bwju.4) with its balance and levelling gains rescaled to this body's inertia envelope
-  (1.40 x 1.79 x 2.90 m, 200 kg) at the fixture's response frequencies, forces scaled by mass
-- NOT run: the roster's sim tests with this bike (R122 handling bank, fun launch/speed, mixed roster). The profile is not a roster
-  row yet: the shared tree holds the R136 handling schema change uncommitted, so a local sim build tests that schema, not HEAD's.
-  The roster row and those tests follow when it lands (this bead stays open until then).
+- node tools/vehicles/bake.mjs art/vehicles/postie-bike: 2782 / 894 / 586 tris (asks 2900 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
+  - LOD0 per part: core 578, front 472, back 488, rider 420, wheel_F 412, wheel_R 412
+- jj vehicle sync: the profile is in sync with its sidecar. The hull is unchanged (colliders frozen); only hashes and 4th-decimal rounding differ
+- node --test tools/vehicles/test/ (eris): 42 passed (pivots on hinge lines at every LOD for front and back, rider pivot at the hip, sidecar pivots, paint key, spec twins)
+- scenario bank (rch cargo test -p jj-tools --test scenarios, on a clean clone of HEAD plus this change's profile and sidecar): only off-road-climb fails, as it already did at HEAD. rch cargo test -p jj-sim --test roster --test bikes: 4 and 5 passed
+- tools/vehicles/review/check.mjs and `build.mjs --check`: run by CI on the evidence commit
 
 Findings:
-- PASS contract + reproducibility (validator clean on the bike part set, origin on the ground between the axles, wheels on the centreline, anchors cam_fp, cam_tp_target, com, roof_number (the rider's back), lplate_front, lplate_rear; no badges, logos or real names)
-- PASS budget
-- WARN silhouette: weighted IoU 0.813 for LOD0 against 'lod + 1' (side 0.829, top 0.900, front 0.701, rear 0.706); 0.674 for LOD2 against 'lowest' (side 0.534: that sheet's spoked wheels aren't filled in its mask, so the model's solid octagons count as extra). A bike's thin parts (forks, frame, arms) score lower than a car body; the cues read by eye
-- PASS by-eye cues: leg shield, front carrier with the mail tub, the two postal-red panniers stacked with parcels, round mirrors, the hi-vis rider in a white helmet; at grid-24 it reads as a postie in every seat colour (the panniers and vest keep their colours)
-- PASS paint key / one material (a flat swatch atlas; draws per tile are the bike's 6 parts, one InstancedMesh per part type; the renderer now keeps a bike's two wheels as their own types)
-- PASS damage states (front and back hang about their hinge lines, the rider pitches off about the hip and is thrown when detached, a wheel comes off; no interior bays: a bike has no panels to open)
-- PASS physics fit (a convex proxy per part from the bake, colliders.png; the profile's geometry synced from the sidecar)
-- WARN detail: the leg shield reads as a thin raked plank from the side; the exhaust sits low like a skid; LOD2 drops the exhaust and grips to keep a parcel a side
+- PASS contract + reproducibility (origin between the axles; anchors unchanged; mass fractions unchanged; part set core, front, back, rider, wheel_F, wheel_R at every LOD)
+- PASS budget: LOD0 2782 <= 2900 <= 3000; LOD1 894 <= 900; LOD2 586 <= 600
+- WARN silhouette: weighted IoU LOD0 0.7999 -> 0.8579 (side 0.757 -> 0.850, top 0.887 -> 0.846, front 0.793 -> 0.868, rear 0.747 -> 0.893); LOD1 0.7502 -> 0.8441; LOD2 0.685 -> 0.7827. Below the skill's ~0.95: thin parts (wire basket, rail, mirror stalks, spokes) vanish from the masks, the sheet's panniers and bars are wider than the sim's bike, and the top view got worse (0.887 -> 0.846) because the sheet's plan is perspective-stretched
+- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): step-through shield and floor wedge, spoked lugged wheels, headlamp, swept bars with mirrors, twin mufflers, wire carrier with mail tub and parcels, open panniers with parcels, rear rail, tail lamp, hi-vis rider with helmet and visor
+- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid); the shield, floor, body, mudguards and tail block tint, the panniers, vest and parcels keep their colours
+- PASS damage states (damage-strip.png: front, back and the rider swing about their hinge lines, wheels detach, the rider is thrown; no see-through holes)
+- PASS physics fit (colliders.png: one convex hull per part, as it was; the new panniers, bars, mirrors and helmet are not collision surfaces)
+- WARN wheel size: the sheet's tyres are about 0.37 m in radius, the model's 0.4 m and 0.36 m (the sim's)
+- WARN the optimiser narrowed the plan (top view IoU fell) to fit side and rear; the rail and mirrors sit narrower than the sheet's
 
-Remaining blockers:
-- the roster row and the sim tests (R122 handling bank, fun, mixed roster) with this profile, after the R136 handling schema lands
+Remaining blockers: none for the model and the gate. The owner judges recognisability (br-bwju.11's ev:owner item).

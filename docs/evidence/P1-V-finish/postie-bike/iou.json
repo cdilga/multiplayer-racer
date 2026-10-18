@@ -1,0 +1,73 @@
+{
+ "what": "Weighted silhouette IoU of the Postie Bike against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). Before = the br-bwju.5 bake and after = this bake, both scored by the same evaluator in Playwright Chromium on eris, with the helmet-patched masks and the level far camera of refs/sheets.json (camD 30, tilt 0); under the old masks and the Cruz camera the br-bwju.5 bake scored 0.8126 / 0.7605 / 0.6742 at LOD0 / 1 / 2. before = before-br-bwju.5/score-lod<N>.json, after = reference-lod<N>/score.json. tris as the fit page counts them (the bake's own counts are 2782 / 894 / 586).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.7999,
+   "views": {
+    "side": 0.7571,
+    "top": 0.8866,
+    "front": 0.7931,
+    "rear": 0.7473
+   },
+   "tris": 1180
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.7502,
+   "views": {
+    "side": 0.6528,
+    "top": 0.8701,
+    "front": 0.7827,
+    "rear": 0.7375
+   },
+   "tris": 882
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.685,
+   "views": {
+    "side": 0.5478,
+    "top": 0.8175,
+    "front": 0.7548,
+    "rear": 0.7159
+   },
+   "tris": 568
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.8576,
+   "views": {
+    "side": 0.8495,
+    "top": 0.8456,
+    "front": 0.8683,
+    "rear": 0.8928
+   },
+   "tris": 2782
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.8446,
+   "views": {
+    "side": 0.8443,
+    "top": 0.8302,
+    "front": 0.8469,
+    "rear": 0.8721
+   },
+   "tris": 894
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.7838,
+   "views": {
+    "side": 0.7011,
+    "top": 0.7985,
+    "front": 0.8819,
+    "rear": 0.8767
+   },
+   "tris": 586
+  }
+ }
+}
