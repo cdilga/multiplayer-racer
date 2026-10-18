@@ -1,0 +1,53 @@
+{
+ "car": "cruz-missile",
+ "lod": 2,
+ "sheet": "lowest",
+ "stats": {
+  "tris": 603,
+  "draws": 14,
+  "breakdown": {
+   "front": 102,
+   "core": 148,
+   "door_FL": 6,
+   "door_RL": 6,
+   "back": 137,
+   "door_FR": 6,
+   "door_RR": 6,
+   "wheel_FL": 25,
+   "wheel_FR": 25,
+   "wheel_RL": 25,
+   "wheel_RR": 25,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 32
+  },
+  "stations": 11
+ },
+ "views": {
+  "side": {
+   "iou": 0.9354,
+   "aspect": 0.951,
+   "miss": 0.059,
+   "extra": 0.0056
+  },
+  "top": {
+   "iou": 0.943,
+   "aspect": 1.013,
+   "miss": 0.0272,
+   "extra": 0.0298
+  },
+  "front": {
+   "iou": 0.9078,
+   "aspect": 0.917,
+   "miss": 0.0775,
+   "extra": 0.0146
+  },
+  "rear": {
+   "iou": 0.9352,
+   "aspect": 0.966,
+   "miss": 0.0471,
+   "extra": 0.0177
+  }
+ },
+ "score": 0.9335
+}

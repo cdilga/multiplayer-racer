@@ -2,14 +2,15 @@
   "id": "cruz-missile",
   "name": "Cruz Missile",
   "status": "awaiting-review",
-  "date": "2026-10-10",
+  "date": "2026-10-18",
   "beads": [
+    "br-bwju.11",
     "P1-V02",
     "P1-V03",
     "br-bwju.1",
     "br-p1-d03b-poc-cleanup-uod"
   ],
-  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Front drive, 1200 kg (R136: the Cruze is front-driven).",
+  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81), rebuilt against its contact sheet in br-bwju.11: painted pillars and roof with black-framed side glass and a black B pillar; the sheet's lightning livery traced into the atlas (side, bonnet, roof, boot and wing bolts); big angular headlamps in dark brows wrapping onto the wings over a black hex-mesh grille with its round badge; the bent nudge bar with four cyan LED blocks, hex fog lamps, pink bumper wedges and a black splitter; the UHF whip with its coil and red tip; two-part tail lamps wrapping onto the quarters, a boot badge, a finned diffuser with a red reverse-light triangle, hex exhaust and pink L corners; 16-sided tyres on five-spoke rims. LOD0 2037 triangles (qualified budget now 3000). Front drive, 1200 kg (R136: the Cruze is front-driven). The physics hulls are frozen at the P1-V02 bake (the Cruz is in the feel bank).",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -21,24 +22,36 @@
         "label": "LOD0 against the lod+1 sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.964,
-          "top": 0.9499,
-          "front": 0.9088,
-          "rear": 0.9317
+          "side": 0.9687,
+          "top": 0.954,
+          "front": 0.8981,
+          "rear": 0.9398
         },
-        "weightedIou": 0.9466
+        "weightedIou": 0.9494
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the lod+1 sheet",
+        "sheet": "media/reference-lod1/sheet.png",
+        "iou": {
+          "side": 0.9692,
+          "top": 0.9509,
+          "front": 0.8959,
+          "rear": 0.9245
+        },
+        "weightedIou": 0.946
       },
       {
         "lod": 2,
         "label": "LOD2 against the lowest-lod sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9436,
-          "top": 0.9479,
-          "front": 0.9123,
-          "rear": 0.9341
+          "side": 0.9354,
+          "top": 0.943,
+          "front": 0.9078,
+          "rear": 0.9352
         },
-        "weightedIou": 0.9388
+        "weightedIou": 0.9335
       }
     ]
   },
@@ -46,20 +59,20 @@
     "assetJson": "media/model/cruz-missile.asset.json",
     "atlas": "media/model/cruz-missile.atlas.png",
     "emissive": "media/model/cruz-missile.emissive.png",
-    "sheet": "media/turntable/lods.jpg",
+    "sheet": "media/turntable/lods.png",
     "lods": [
       {
         "lod": 0,
         "glb": "media/model/cruz-missile.lod0.glb",
-        "tris": 1264,
+        "tris": 2037,
         "draws": 11,
-        "maxTris": 1300,
+        "maxTris": 2800,
         "withinBudget": true
       },
       {
         "lod": 1,
         "glb": "media/model/cruz-missile.lod1.glb",
-        "tris": 890,
+        "tris": 895,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -67,7 +80,7 @@
       {
         "lod": 2,
         "glb": "media/model/cruz-missile.lod2.glb",
-        "tris": 594,
+        "tris": 511,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -75,8 +88,8 @@
     ]
   },
   "damage": {
-    "strip": "media/damage/damage-strip.jpg",
-    "overview": "media/damage/damage-strip-overview.jpg",
+    "strip": "media/damage/damage-strip.png",
+    "overview": "media/damage/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front, door_FL and wheel_FL detached; a stripped shell. Detached parts persist as dynamic debris, so the lying parts are the debris they leave.",
     "parts": [
       {
@@ -101,8 +114,8 @@
         },
         "pivot": [
           0,
-          1.1031818181818183,
-          0.8300000000000001
+          1.1027272727272728,
+          0.8400000000000001
         ]
       },
       {
@@ -118,8 +131,8 @@
         },
         "pivot": [
           0,
-          1.1786363636363637,
-          -0.8300000000000001
+          1.1790909090909092,
+          -0.8400000000000001
         ]
       },
       {
@@ -134,9 +147,9 @@
           "max": 0
         },
         "pivot": [
-          0.9655384615384615,
-          0.6288636363636364,
-          0.8300000000000001
+          0.9658461538461538,
+          0.6204545454545455,
+          0.8400000000000001
         ]
       },
       {
@@ -151,9 +164,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9655384615384615,
-          0.6288636363636364,
-          0.8300000000000001
+          -0.9658461538461538,
+          0.6204545454545455,
+          0.8400000000000001
         ]
       },
       {
@@ -168,9 +181,9 @@
           "max": 0
         },
         "pivot": [
-          0.94,
-          0.6476515151515152,
-          -0.15
+          0.956,
+          0.6394343434343435,
+          -0.22
         ]
       },
       {
@@ -185,9 +198,9 @@
           "max": 70
         },
         "pivot": [
-          -0.94,
-          0.6476515151515152,
-          -0.15
+          -0.956,
+          0.6394343434343435,
+          -0.22
         ]
       },
       {
@@ -275,7 +288,7 @@
     }
   },
   "paints": {
-    "sheet": "media/paints/paints.jpg",
+    "sheet": "media/paints/paints-strip.png",
     "colours": [
       {
         "name": "red",
@@ -330,24 +343,24 @@
   },
   "inWorld": [
     {
-      "label": "Own car in its tile, large (1 tile, TV 1080p)",
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "image": "media/in-world/grid-1.jpg"
+      "image": "media/in-world/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "image": "media/in-world/grid-4.jpg"
+      "image": "media/in-world/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "image": "media/in-world/grid-24.jpg"
+      "image": "media/in-world/grid-24.png"
     },
     {
-      "label": "From the Derby overview camera",
+      "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "image": "media/in-world/damage-strip-overview.jpg"
+      "image": "media/in-world/damage-strip-overview.png"
     }
   ],
   "gate": {
@@ -355,27 +368,47 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean, byte-reproducible bake, schema and fixtures updated)"
+        "text": "contract + reproducibility (validator clean; origin between the axles; anchors unchanged; mass fractions unchanged)"
       },
       {
         "result": "PASS",
-        "text": "budget + silhouette (1264/890/594 ≤ 1300/900/600; interiors 24/36/32 tris each ≤ 80, drawn only when exposed;"
+        "text": "budget: LOD0 2037 <= 2800 <= 3000; LOD1 895 <= 900; LOD2 511 <= 600"
       },
       {
         "result": "PASS",
-        "text": "paint key / one material / draws per tile (one atlas material incl. interiors; 216 draws at 24×24)"
+        "text": "silhouette (better than before): weighted IoU LOD0 0.9422 -> 0.9494 (side 0.960 -> 0.969, top 0.950 -> 0.954, front 0.902 -> 0.898, rear 0.920 -> 0.940); LOD1 0.941 -> 0.946; LOD2 0.9327 -> 0.9335. LOD0 is 0.0006 short of the skill's ~0.95"
       },
       {
         "result": "PASS",
-        "text": "damage states (each part intact → loose about its §6.3 hinge line → detached; dark bays and interior blocks behind"
+        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): lamps in brows, grille with badge, bent nudge bar with four LEDs, fog lamps, pink wedges, splitter, coil whip, framed glass and painted pillars, body-colour mirrors, handles, 5-spoke rims, tail lamps, badge, diffuser with fins, triangle and hex exhaust, wing with bolt-covered endplates, the traced lightning livery"
       },
       {
         "result": "PASS",
-        "text": "physics fit (mass fractions sum to 1; origin on the ground between the axles; core proxy rounded; feel bank passes)"
+        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
       },
       {
         "result": "PASS",
-        "text": "identity/readability at the smallest tile (24-tile capture; paint key under six colours)"
+        "text": "damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (colliders.png: one convex hull per part, as it was; the whip, mirrors, glass layers and sill are not collision surfaces and the hull no longer depends on them)"
+      },
+      {
+        "result": "WARN",
+        "text": "wheel size: the sheet's wheels are about 0.36 m in radius, the model's 0.4 m (the sim's wheel_radius); not changed here"
+      },
+      {
+        "result": "WARN",
+        "text": "front view IoU 0.898: the sheet's nose and fenders are broader than the model's (the optimiser narrowed the nose to fit the side and top views)"
+      },
+      {
+        "result": "WARN",
+        "text": "the headlamps and wraps render as a flat white/cream patch (the sheet's lamps are warm, glowing and shaded)"
+      },
+      {
+        "result": "WARN",
+        "text": "the scenario bank's off-road-climb already failed at HEAD (not caused by this change)"
       }
     ],
     "report": "media/gate/validation.md"

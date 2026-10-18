@@ -1,0 +1,73 @@
+{
+ "what": "Weighted silhouette IoU of the Cruz Missile against its reference sheets (tools/vehicles/fit: side 0.4, top 0.3, front 0.15, rear 0.15). before = the P1-V02 bake (HEAD model and params before br-bwju.11), scored with the same evaluator: before-br-bwju.3/score-lod<N>.json (the directory name is kept for shape; these are the pre-br-bwju.11 numbers). after = reference-lod<N>/score.json, this commit, Playwright Chromium on eris. tris are the baked parts, without the interior blocks (drawn only when exposed).",
+ "before": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9422,
+   "views": {
+    "side": 0.96,
+    "top": 0.9501,
+    "front": 0.9016,
+    "rear": 0.9195
+   },
+   "tris": 1264
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.941,
+   "views": {
+    "side": 0.9609,
+    "top": 0.9492,
+    "front": 0.8959,
+    "rear": 0.9169
+   },
+   "tris": 890
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9327,
+   "views": {
+    "side": 0.9328,
+    "top": 0.9494,
+    "front": 0.9061,
+    "rear": 0.9254
+   },
+   "tris": 594
+  }
+ },
+ "after": {
+  "lod0": {
+   "sheet": "lod1",
+   "score": 0.9494,
+   "views": {
+    "side": 0.9687,
+    "top": 0.954,
+    "front": 0.8981,
+    "rear": 0.9398
+   },
+   "tris": 2037
+  },
+  "lod1": {
+   "sheet": "lod1",
+   "score": 0.946,
+   "views": {
+    "side": 0.9692,
+    "top": 0.9509,
+    "front": 0.8959,
+    "rear": 0.9245
+   },
+   "tris": 895
+  },
+  "lod2": {
+   "sheet": "lowest",
+   "score": 0.9335,
+   "views": {
+    "side": 0.9354,
+    "top": 0.943,
+    "front": 0.9078,
+    "rear": 0.9352
+   },
+   "tris": 511
+  }
+ }
+}
