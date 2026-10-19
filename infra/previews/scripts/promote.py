@@ -38,6 +38,8 @@ ID = "production"  # the room key and broker secret id; the server derives the s
 PORT = 30291
 LAN = os.environ.get("PROD_LAN_URL", f"http://192.168.11.12:{PORT}")
 PUBLIC = "https://jammers.dilger.dev"
+# Cloudflare answers 403 to urllib's default "Python-urllib" User-Agent (run 7062/7065).
+UA = {"User-Agent": "jammers-promote/1"}
 
 
 def compose(build: str, digest: str, secrets: dict) -> dict:
@@ -110,7 +112,7 @@ def resolve(reg: dict, which: str, rels: list[dict]) -> dict:
 
 def get_json(url: str) -> dict | None:
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=10) as r:
             return json.loads(r.read())
     except (urllib.error.URLError, OSError, ValueError):
         return None
@@ -118,7 +120,7 @@ def get_json(url: str) -> dict | None:
 
 def status(url: str) -> int:
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=10) as r:
             return r.status
     except urllib.error.HTTPError as e:
         return e.code
