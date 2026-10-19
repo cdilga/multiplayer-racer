@@ -1,0 +1,35 @@
+# Promotes a smoked preview to production, https://jammers.dilger.dev (P1-D08): on demand only, from scripts/promote.sh.
+# Code: infra/previews/scripts/promote.py. Rolling back is the same workflow with build=--rollback (or an older id).
+name: Promote to production
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: "latest (the index's Latest), a preview id v02-<sha8>, or --rollback"
+        required: false
+        default: "latest"
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: jammers-deploy
+    timeout-minutes: 15
+    env:
+      GITEA_TOKEN: ${{ github.token }}  # release/<stamp> and pin/<id> tags (the record)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: infra
+      - name: Tools
+        run: python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+      - name: Promote
+        env:
+          TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}
+          JJ_ROOM_KEY_MASTER: ${{ secrets.JJ_ROOM_KEY_MASTER }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+          JJ_BROKER_KEY: ${{ secrets.JJ_BROKER_KEY }}
+          BUILD: ${{ github.event.inputs.build }}
+        run: |
+          case "$BUILD" in latest|--rollback|v02-[a-z0-9]*) ;; *) echo "unknown build $BUILD"; exit 2 ;; esac
+          cd infra/previews/scripts && python3 promote.py "$BUILD"

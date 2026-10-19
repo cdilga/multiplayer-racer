@@ -11,6 +11,7 @@ Secrets are never in this repo; their **locations** are listed so agents know wh
 | `turn.dilger.dev` | Cloudflare DNS-only CNAME → `triton.dilger.dev` (A record kept on the WAN IP by triton's DDNS timer) | Live |
 | FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `geo-AU`), DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
 | Preview origin `jammers-preview.dilger.dev` | `homelab-tunnel` ingress → `http://192.168.11.12:30290` | Live |
+| Production `jammers.dilger.dev` (P1-D08) | 0.1's tunnel (`multiplayer-racer-cloudflared`, config `/mnt/vessel/files/multiplayer-racer/cloudflared/config.yml`) ingress → `http://192.168.11.12:30291`, the TrueNAS app `jammers-prod` (a promoted preview's image by digest, realm `production`, base `/`). `multiplayer-racer.dilger.dev` still serves 0.1 until P1-D09. A 0.1 deploy from `main` re-renders that config and would undo the cutover | Live 2026-10-19. Promote/rollback: `scripts/promote.sh [v02-<id>\|--rollback\|--status]`; record = `release/<stamp>` tags + the `Production` pin |
 | Preview edge | TrueNAS custom app `jammers-preview-edge` (Caddy 2.11.4) on `:30290` | Placeholder index; P1-D03 replaces it with `/p/<id>/` routing + generated index |
 | Cloudflare TURN | Cloudflare Realtime (fallback provider), key `jammers-fallback` | Enabled with accepted bounded risk (R92); nothing issues credentials until P1-N04b. Guard alerts at 10 %, deletes keys at 25 % |
 
