@@ -15,5 +15,5 @@ else
   sed -n '2,7p' "$0" >&2; exit 2
 fi
 tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/deploy-retention.yml/dispatches \
-  -d "{\"ref\":\"v0.2-revamp\",\"inputs\":$inputs}" >/dev/null
+  -d "{\"ref\":\"main\",\"inputs\":$inputs}" >/dev/null
 echo "dispatched Retention with $inputs; the index updates when the run finishes (about a minute)"

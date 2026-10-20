@@ -6,7 +6,7 @@ This repository uses `br` (Beads Rust) for task tracking and `bv` for graph-awar
 
 ## ⚠️ Owner direction: read first, overrides everything below
 
-Joystick Jammers is being rebuilt as **0.2** on the `v0.2-revamp` branch. Precedence:
+Joystick Jammers is being rebuilt as **0.2**, developed on `main` (the `v0.2-revamp` branch until 2026-10-21). Precedence:
 **owner ruling → master plan → Playtest-1 plan → beads → code.** A bead, old test or older doc can't
 override a ruling; flag the conflict instead of changing the ruling.
 
@@ -47,8 +47,8 @@ Most important rules:
   POC (§3a, owner-gated) settles the UI look, grid layouts and phone controller first; the UI tasks
   wait for its verdict, everything else runs in parallel.
 - **Code:** the 0.2 code doesn't exist yet. The first bead (P1-F01) creates the Rust workspace and
-  `web/` packages. The 0.1 game was **removed from this branch** (R87); it still runs in production
-  from `main`. Read old code with `git show v0.1-final:<path>`, as evidence only. Never restore it.
+  `web/` packages. The 0.1 game was **removed** (R87); production has run 0.2 since 2026-10-19 and
+  `main` carries 0.2 since 2026-10-21. Read old code with `git show v0.1-final:<path>`, as evidence only. Never restore it.
 - **Infra:** `https://jammers-preview.dilger.dev/` is live (placeholder index until P1-D03/D05);
   coturn runs on TrueNAS. Audio is generated on **eris** (GPU box: `ssh eris`, workspace
   `~/Work/dev/jammers-audio`), never in this repo (R89).

@@ -1,8 +1,9 @@
 # Where 0.2 lives and how it builds (P1-D01)
 
-**Gitea is primary** (R18): `http://192.168.11.12:3001/cdilga/multiplayer-racer` (default branch `v0.2-revamp`; the
-`v0.1-final` tag is there for reading old code). GitHub `cdilga/multiplayer-racer` is the passive mirror, and `main` and
-production 0.1 keep deploying from GitHub as before.
+**Gitea is primary** (R18): `http://192.168.11.12:3001/cdilga/multiplayer-racer` (default branch `main`; the
+`v0.1-final` tag is there for reading old code). GitHub `cdilga/multiplayer-racer` is the passive mirror. Since 2026-10-21 `main`
+carries 0.2 on both (the `v0.2-revamp` branch is frozen at the switch); production 0.2 deploys by promotion (P1-D08), not
+from GitHub.
 
 One repo since R117 (2026-10-08): the deploy code lives under `infra/` (`infra/previews/`, `infra/turn-broker/`,
 `infra/poc/`), its workflows are `.gitea/workflows/deploy-*.yml` on the `jammers-deploy` runner (TrueNAS), and the deploy
@@ -14,12 +15,12 @@ secrets are this repo's Gitea Actions secrets (names in `docs/infra/turn-and-pre
 ## Pushing
 
 `scripts/push.sh` (or `scripts/beads/close.sh`, which calls it) pushes the branch to Gitea and then GitHub, each with its
-LFS objects first. The shared tree's `v0.2-revamp` tracks `gitea/v0.2-revamp`. Remotes: `gitea` is
+LFS objects first. The shared tree's `main` tracks `gitea/main`. Remotes: `gitea` is
 `http://192.168.11.12:3001/cdilga/multiplayer-racer.git` (HTTP with the Mac keychain credential; Gitea's SSH port isn't
 open), `origin` is GitHub.
 
 There's no Gitea push mirror: Gitea push mirrors push with `--mirror`, which would prune every GitHub branch Gitea doesn't
-carry, `main` included, and production 0.1 deploys from GitHub's `main`.
+carry, and GitHub keeps old branches Gitea dropped.
 
 LFS lives on Gitea too (`art/**`, `spikes/**`, `assets/**`, evidence media): a clean clone from Gitea fetches it.
 

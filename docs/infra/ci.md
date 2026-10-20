@@ -53,7 +53,7 @@ image           jj-server image, two-preview smoke, push                        
   learned test names after a full run: `node scripts/ci/durations.mjs <run id>` (commit the JSON; it selects nothing).
 - **The full matrix** (every crate, every browser target, the 300 s SSE soak) runs on the nightly schedule (01:17 AEST)
   and on `workflow_dispatch`. A push runs the 20 s soak smoke. Run it before a batch close with
-  `tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/ci.yml/dispatches -d '{"ref":"v0.2-revamp"}'`.
+  `tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/ci.yml/dispatches -d '{"ref":"main"}'`.
 
 ## A bead's close
 

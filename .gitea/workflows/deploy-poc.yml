@@ -1,10 +1,10 @@
-# Continuous delivery of the design POC (plan §3a, R117): every push to v0.2-revamp that touches art/ui/ goes to
+# Continuous delivery of the design POC (plan §3a, R117): every push to main that touches art/ui/ goes to
 # https://jammers-preview.dilger.dev/poc/ with no manual step. Code: infra/poc/publish.sh. It writes the edge's POC
 # folder through the TrueNAS runner's Docker socket, so it needs no secret.
 name: POC deploy
 on:
   push:
-    branches: [v0.2-revamp]
+    branches: [main]
     paths: ["art/ui/**", ".gitea/workflows/deploy-poc.yml", "infra/poc/**", "art/vehicles/**", "assets/profiles/**", "tools/vehicles/review/**"]
   workflow_dispatch:
 concurrency:

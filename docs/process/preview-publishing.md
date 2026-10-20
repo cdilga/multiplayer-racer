@@ -40,6 +40,6 @@ still publish; the reminder is a nudge, not the whole rule.
 
 ## Automation target (P1-D04)
 
-The end state is that a green push to `v0.2-revamp` that touches the web or server bundle publishes by itself, with a
+The end state is that a green push to `main` that touches the web or server bundle publishes by itself, with a
 smoke check, and that the index lists the commit and the CI run. Until D04 lands, publishing is a manual step by
 whichever session closes a qualifying bead.

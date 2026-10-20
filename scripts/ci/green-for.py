@@ -19,7 +19,7 @@ import time
 args = sys.argv[1:]
 wait = "--wait" in args
 timeout = int(args[args.index("--timeout") + 1]) if "--timeout" in args else 3600
-branch = args[args.index("--branch") + 1] if "--branch" in args else "v0.2-revamp"
+branch = args[args.index("--branch") + 1] if "--branch" in args else "main"
 rev = next((a for i, a in enumerate(args) if not a.startswith("--") and (i == 0 or args[i - 1] not in ("--timeout", "--branch"))), "HEAD")
 
 

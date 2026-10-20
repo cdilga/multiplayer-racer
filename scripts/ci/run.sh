@@ -6,5 +6,5 @@
 set -euo pipefail
 full=false; [[ ${1:-} == --full ]] && full=true
 tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/ci.yml/dispatches \
-  -d "{\"ref\":\"v0.2-revamp\",\"inputs\":{\"full\":\"$full\"}}" >/dev/null
-echo "ci: dispatched (full=$full) on v0.2-revamp; watch with scripts/ci-status.sh --wait"
+  -d "{\"ref\":\"main\",\"inputs\":{\"full\":\"$full\"}}" >/dev/null
+echo "ci: dispatched (full=$full) on main; watch with scripts/ci-status.sh --wait"

@@ -17,7 +17,7 @@ SHA = "a" * 40
 
 def row(pid, hours_ago, status="playable", **kw):
     at = (NOW - timedelta(hours=hours_ago)).isoformat(timespec="seconds")
-    return {"id": pid, "branch": "v0.2-revamp", "sha": pid[-1] * 40, "publishedAt": at, "status": status, "title": f"title {pid}",
+    return {"id": pid, "branch": "main", "sha": pid[-1] * 40, "publishedAt": at, "status": status, "title": f"title {pid}",
             "smoke": ["room", "join-webrtc"] if status == "playable" else [], "reason": "" if status == "playable" else "boom", **kw}
 
 

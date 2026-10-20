@@ -1,6 +1,6 @@
 """Publishes 0.2 builds as rainbow previews (P1-D03/D04, plan §12, R85): every CI run whose image built, red or green.
 
-Polled by .gitea/workflows/deploy-previews.yml. For each new CI run (red, green or running; owner 2026-10-17) on cdilga/multiplayer-racer's v0.2-revamp whose
+Polled by .gitea/workflows/deploy-previews.yml. For each new CI run (red, green or running; owner 2026-10-17) on cdilga/multiplayer-racer's main whose
 `jj-server` image is in the registry:
 
 1. a fresh, never-reused deployment id `v02-<sha8>` (a suffix if that commit was published before);
@@ -53,7 +53,7 @@ import apply as edge  # noqa: E402  (edge/apply.py: the edge's complete compose)
 
 GITEA = os.environ.get("GITEA_URL", "http://192.168.11.12:3001")
 GAME = "cdilga/multiplayer-racer"
-BRANCH = "v0.2-revamp"
+BRANCH = "main"
 IMAGE = "127.0.0.1:3001/cdilga/jj-server"
 EDGE = os.environ.get("EDGE_URL", "http://192.168.11.12:30290")
 PUBLIC = "https://jammers-preview.dilger.dev"

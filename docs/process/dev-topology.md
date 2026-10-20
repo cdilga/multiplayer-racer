@@ -20,7 +20,7 @@ stays on the Mac: the working tree, `br`, Agent Mail and commits. Compute goes w
 
 ## eris's clone (`ru`)
 
-`ru` 1.5.0 (same script as the Mac's) keeps `~/Work/dev/multiplayer-racer` on `v0.2-revamp`:
+`ru` 1.5.0 (same script as the Mac's) keeps `~/Work/dev/multiplayer-racer` on `main`:
 `PROJECTS_DIR=~/Work/dev`, `LAYOUT=flat`, `UPDATE_STRATEGY=ff-only`, autostash off, so a dirty
 clone is skipped rather than merged. `ru status` shows it; `ru sync` fast-forwards it. Add
 `jammers-deploy` with `ru add` once P1-D01 creates it.

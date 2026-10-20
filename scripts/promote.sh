@@ -15,6 +15,6 @@ case "${1:-latest}" in
   *) sed -n '2,8p' "$0" >&2; exit 2 ;;
 esac
 tea api --login gitea-lan -X POST /repos/cdilga/multiplayer-racer/actions/workflows/deploy-prod.yml/dispatches \
-  -d "{\"ref\":\"v0.2-revamp\",\"inputs\":{\"build\":\"$build\"}}" >/dev/null
+  -d "{\"ref\":\"main\",\"inputs\":{\"build\":\"$build\"}}" >/dev/null
 echo "dispatched Promote with build=$build; production switches in a minute or two"
 echo "watch: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions?workflow=deploy-prod.yml   then: scripts/promote.sh --status"

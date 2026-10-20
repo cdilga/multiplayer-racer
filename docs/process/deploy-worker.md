@@ -12,7 +12,7 @@ then give it `/loop` with: "Reread AGENTS.md and docs/process/deploy-worker.md, 
 
 ## One deploy round (cheap; keep output small, long logs to files)
 
-1. **CI state.** `scripts/ci-status.sh` for `gitea/v0.2-revamp`. Nothing new pushed since the last run and nothing
+1. **CI state.** `scripts/ci-status.sh` for `gitea/main`. Nothing new pushed since the last run and nothing
    running: dispatch one batch with `scripts/ci/run.sh` (one at a time; it folds). A job killed by the runner (OOM,
    SIGKILL, lost runner) gets a rerun of just that job (`tea api` POST `…/actions/jobs/<id>/rerun`), not a new push.
 2. **Previews.** Every run whose image built gets a preview, red or green: dispatch the `deploy-previews.yml` workflow

@@ -3,7 +3,7 @@
 # first, because GitHub's pre-receive hook rejects LFS pointers whose objects it doesn't have (P1-D01).
 #
 # Why not a Gitea push mirror: Gitea push mirrors push with --mirror, which would prune every GitHub branch Gitea
-# doesn't carry, including main, which production 0.1 still deploys from.
+# doesn't carry (GitHub keeps old branches Gitea dropped).
 #
 # Usage: scripts/push.sh [<branch>]   (default: the current branch). Needs AGENT_NAME for the pre-push hook.
 set -euo pipefail
