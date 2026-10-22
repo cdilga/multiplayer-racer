@@ -9,7 +9,7 @@ Secrets are never in this repo; their **locations** are listed so agents know wh
 |---|---|---|
 | Self-hosted TURN (coturn 4.18.0) | TrueNAS custom app `jammers-turn`, host network, `192.168.11.12` | Running; local allocation test passed |
 | `turn.dilger.dev` | Cloudflare DNS-only CNAME → `triton.dilger.dev` (A record kept on the WAN IP by triton's DDNS timer) | Live |
-| FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `geo-AU`), DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
+| FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `all` since 2026-10-23), hairpin policy 49 `PEG-hairpin-JJ-TURN`, DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
 | Preview origin `jammers-preview.dilger.dev` | `homelab-tunnel` ingress → `http://192.168.11.12:30290` | Live |
 | Production `jammers.dilger.dev` (P1-D08) | 0.1's tunnel (`multiplayer-racer-cloudflared`, config `/mnt/vessel/files/multiplayer-racer/cloudflared/config.yml`) ingress → `http://192.168.11.12:30291`, the TrueNAS app `jammers-prod` (a promoted preview's image by digest, realm `production`, base `/`). `multiplayer-racer.dilger.dev` still serves 0.1 until P1-D09. A 0.1 deploy from `main` re-renders that config and would undo the cutover | Live 2026-10-19. Promote/rollback: `scripts/promote.sh [v02-<id>\|--rollback\|--status]`; record = `release/<stamp>` tags + the `Production` pin |
 | Preview edge | TrueNAS custom app `jammers-preview-edge` (Caddy 2.11.4) on `:30290` | Placeholder index; P1-D03 replaces it with `/p/<id>/` routing + generated index |
@@ -62,14 +62,19 @@ Mirrors the existing Minecraft pattern (`DILGERCRAFT-TCP-25565`, policy `WAN-to-
 - Service `JJ-TURN-UDP`: UDP 3479 and 49160–49359. (UDP 3478 was already forwarded to another host by the existing `codbox3` VIP, so TURN uses 3479; browsers accept any port.)
 - VIPs on the WAN interface → `192.168.11.12`: `JJ-TURN-UDP-3479` (3479→3479) and
   `JJ-TURN-UDP-RELAY` (49160–49359 → same).
-- Address `geo-AU` (type geography, AU) as the source: the parties are in Australia; remote
-  players abroad fall back to Cloudflare TURN. Easy to widen later.
-- Policy `WAN-to-JAMMERS-TURN`: WAN → `Internal_Zone`, src `geo-AU`, dst both VIPs, service
+- Source: originally `geo-AU` (type geography, AU). Widened to `all` on 2026-10-23 (owner: players
+  abroad shouldn't fall back to paid Cloudflare TURN); the `geo-AU` address object still exists.
+- Policy `WAN-to-JAMMERS-TURN`: WAN → `Internal_Zone`, src `all`, dst both VIPs, service
   `JJ-TURN-UDP`, accept, log, comment pointing here.
 - DoS policy `JJ-TURN-DOS` on the WAN interface for `JJ-TURN-UDP`: `udp_flood`,
   `udp_src_session` and `udp_dst_session` with block thresholds sized well above a party's traffic.
 - No `cfg-save revert` (on some builds the revert path is a reboot); a full config backup is taken
   first under `~/.local/state/fortigate-backups/`.
+- Hairpin (2026-10-23, from the Physical Soccer session): hosts on 192.168.11.0/24 (devbox, TrueNAS)
+  got no answer from `turn.dilger.dev` because coturn replied to them directly, bypassing the
+  FortiGate. Policy 49 `PEG-hairpin-JJ-TURN` (src `PEG Network address`, dst `truenas-11.12`, service
+  `JJ-TURN-UDP`, `nat enable`, ordered before policy 14) SNATs that traffic; a STUN binding from
+  devbox now answers. Physical Soccer's twin is policy 48. Undo: `delete 49`.
 
 **Undo:** `config firewall policy` → `edit 32` → `set status disable` closes the hole immediately. Full
 removal: `delete 32` (policy), `config firewall DoS-policy` → `delete 1`, then delete the VIPs
