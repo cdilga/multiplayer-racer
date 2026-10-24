@@ -50,7 +50,7 @@
       {
         "lod": 0,
         "glb": "media/model/pig-catcher.lod0.glb",
-        "tris": 2736,
+        "tris": 2451,
         "draws": 6,
         "maxTris": 2800,
         "withinBudget": true
@@ -58,7 +58,7 @@
       {
         "lod": 1,
         "glb": "media/model/pig-catcher.lod1.glb",
-        "tris": 884,
+        "tris": 851,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -66,7 +66,7 @@
       {
         "lod": 2,
         "glb": "media/model/pig-catcher.lod2.glb",
-        "tris": 588,
+        "tris": 579,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true

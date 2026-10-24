@@ -62,7 +62,7 @@
       {
         "lod": 0,
         "glb": "media/model/postie-bike.lod0.glb",
-        "tris": 2782,
+        "tris": 2573,
         "draws": 6,
         "maxTris": 2900,
         "withinBudget": true
@@ -70,7 +70,7 @@
       {
         "lod": 1,
         "glb": "media/model/postie-bike.lod1.glb",
-        "tris": 894,
+        "tris": 864,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -78,7 +78,7 @@
       {
         "lod": 2,
         "glb": "media/model/postie-bike.lod2.glb",
-        "tris": 586,
+        "tris": 559,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true

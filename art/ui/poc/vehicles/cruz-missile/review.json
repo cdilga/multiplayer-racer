@@ -64,7 +64,7 @@
       {
         "lod": 0,
         "glb": "media/model/cruz-missile.lod0.glb",
-        "tris": 2037,
+        "tris": 2017,
         "draws": 11,
         "maxTris": 2800,
         "withinBudget": true
@@ -72,7 +72,7 @@
       {
         "lod": 1,
         "glb": "media/model/cruz-missile.lod1.glb",
-        "tris": 895,
+        "tris": 886,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -80,7 +80,7 @@
       {
         "lod": 2,
         "glb": "media/model/cruz-missile.lod2.glb",
-        "tris": 511,
+        "tris": 507,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true

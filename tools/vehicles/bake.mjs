@@ -13,6 +13,10 @@
 // GLB layout (the contract): scene root = the vehicle; children = one node per part (named by part id, translated to its
 // pivot, one mesh with POSITION/NORMAL/TEXCOORD_0 and the single atlas material), the anchors (empty nodes), and in LOD0
 // the collider proxies (`collider_<part>`: convex hulls in vehicle space, no material, never rendered).
+//
+// Each part's render mesh goes through optimise.mjs first (br-8h3u.10): back-facing-only triangles are flipped and ones
+// its own shell hides from every direction are dropped, so the budget counts only triangles that can be seen. Collider
+// hulls still come from the model's full soup, so the physics doesn't move.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,6 +28,7 @@ import { ConvexHull } from 'three/examples/jsm/math/ConvexHull.js';
 import { GlbBuilder } from './glb.mjs';
 import { encodePNG } from './png.mjs';
 import { paintKeyedAtlas } from './paint-key.mjs';
+import { orientAndPrune } from './optimise.mjs';
 
 export const PARTS = ['core', 'front', 'back', 'door_FL', 'door_FR', 'door_RL', 'door_RR', 'wheel_FL', 'wheel_FR', 'wheel_RL', 'wheel_RR'];
 /** A motorbike's parts (br-bwju.5; jj-contracts BIKE_PARTS): a vehicle.json with a wheel_F is a bike. */
@@ -81,9 +86,15 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
   files.set(`${id}.emissive.png`, emissivePng);
 
   V.lods.forEach((lodSpec, lod) => {
-    const { parts } = model.soups(P, lod);
-    const missing = SET.filter((p) => !parts[p]);
+    const { parts: raw } = model.soups(P, lod);
+    const missing = SET.filter((p) => !raw[p]);
     if (missing.length) throw new Error(`LOD${lod} has no ${missing.join(', ')}`);
+    const parts = { ...raw }, optimised = { flipped: 0, dropped: 0 };
+    for (const p of SET) {
+      parts[p] = orientAndPrune(raw[p]);
+      optimised.flipped += parts[p].stats.flipped;
+      optimised.dropped += parts[p].stats.dropped;
+    }
     const g = new GlbBuilder(), j = g.json;
     j.images = [
       { bufferView: g.view(atlasPng), mimeType: 'image/png', name: 'atlas' },
@@ -139,7 +150,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     for (const [a, at] of Object.entries(V.anchors)) child({ name: a, translation: at });
     if (lod === 0) {
       for (const p of SET) {
-        const part = parts[p], pv = pivots[p], pts = [], skip = part.noCollide ?? [];
+        const part = raw[p], pv = pivots[p], pts = [], skip = part.noCollide ?? [];
         // vehicle.json `colliderPoints`: a file of per-part collision points (vehicle space) the bake uses instead of the
         // visual geometry, so a visual rebuild leaves the car's physics hull exactly as it was (the Cruz, br-bwju.11)
         if (frozenColliders) pts.push(...frozenColliders[p]);
@@ -160,7 +171,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
     j.scene = 0;
     const file = `${id}.lod${lod}.glb`, bytes = g.bytes();
     files.set(file, bytes);
-    report.lods.push({ file, tris, maxTris: lodSpec.maxTris, breakdown });
+    report.lods.push({ file, tris, maxTris: lodSpec.maxTris, breakdown, optimised });
   });
 
   const sidecar = {
@@ -207,7 +218,7 @@ async function main(argv) {
   }
   const vehicleDir = path.resolve(dir ?? path.join(REPO, 'art/vehicles/cruz-missile'));
   const { files, report } = await bake(vehicleDir);
-  for (const l of report.lods) console.log(`${l.file}: ${l.tris} tris (budget ${l.maxTris}) ${JSON.stringify(l.breakdown)}`);
+  for (const l of report.lods) console.log(`${l.file}: ${l.tris} tris (budget ${l.maxTris}; optimiser flipped ${l.optimised.flipped}, dropped ${l.optimised.dropped} unseen) ${JSON.stringify(l.breakdown)}`);
   if (check) {
     const changed = [];
     for (const [f, info] of Object.entries(report.files)) {

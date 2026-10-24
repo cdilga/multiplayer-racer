@@ -63,7 +63,7 @@
       {
         "lod": 0,
         "glb": "media/model/tradie-ute.lod0.glb",
-        "tris": 2080,
+        "tris": 2039,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -71,7 +71,7 @@
       {
         "lod": 1,
         "glb": "media/model/tradie-ute.lod1.glb",
-        "tris": 878,
+        "tris": 860,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -79,7 +79,7 @@
       {
         "lod": 2,
         "glb": "media/model/tradie-ute.lod2.glb",
-        "tris": 596,
+        "tris": 582,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true

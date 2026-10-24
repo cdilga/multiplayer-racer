@@ -65,7 +65,7 @@
       {
         "lod": 0,
         "glb": "media/model/hawk-dash.lod0.glb",
-        "tris": 2459,
+        "tris": 2448,
         "draws": 11,
         "maxTris": 2800,
         "withinBudget": true

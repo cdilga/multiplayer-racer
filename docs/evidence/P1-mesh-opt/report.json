@@ -1,0 +1,1691 @@
+[
+ {
+  "id": "au-hawk",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2906,
+    "maxTris": 3000,
+    "sliver": 1,
+    "selfHidden": 28,
+    "carHidden": 76,
+    "coplanarSaved": 78,
+    "coplanarRegions": 28,
+    "perPart": {
+     "core": {
+      "tris": 664,
+      "selfHidden": 26,
+      "carHidden": 53,
+      "coplanarSaved": 36
+     },
+     "front": {
+      "tris": 834,
+      "selfHidden": 2,
+      "carHidden": 2,
+      "coplanarSaved": 14
+     },
+     "back": {
+      "tris": 636,
+      "selfHidden": 0,
+      "carHidden": 21,
+      "coplanarSaved": 28
+     },
+     "door_FL": {
+      "tris": 34,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 34,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 18,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 18,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 896,
+    "maxTris": 900,
+    "sliver": 1,
+    "selfHidden": 3,
+    "carHidden": 31,
+    "coplanarSaved": 6,
+    "coplanarRegions": 3,
+    "perPart": {
+     "core": {
+      "tris": 212,
+      "selfHidden": 3,
+      "carHidden": 29,
+      "coplanarSaved": 2
+     },
+     "front": {
+      "tris": 278,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 214,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 2
+     },
+     "door_FL": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 10,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 10,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 30,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 30,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 30,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 30,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9909769414118174,
+     "depthMm": 18.834162914045997
+    },
+    "meshopt": {
+     "tris": 894,
+     "iou": 0.9942634681084837,
+     "depthMm": 10.671241529756035
+    },
+    "meshoptSeams": {
+     "tris": 894,
+     "iou": 0.9904180906199072,
+     "depthMm": 14.059510993832154
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 600,
+    "maxTris": 600,
+    "sliver": 1,
+    "selfHidden": 0,
+    "carHidden": 33,
+    "coplanarSaved": 4,
+    "coplanarRegions": 2,
+    "perPart": {
+     "core": {
+      "tris": 156,
+      "selfHidden": 0,
+      "carHidden": 15,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 154,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 114,
+      "selfHidden": 0,
+      "carHidden": 1,
+      "coplanarSaved": 2
+     },
+     "door_FL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 5,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 4,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 4,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 4,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9842425113134222,
+     "depthMm": 34.858657000711034
+    },
+    "meshopt": {
+     "tris": 597,
+     "iou": 0.9890991030867976,
+     "depthMm": 20.860811997307554
+    },
+    "meshoptSeams": {
+     "tris": 594,
+     "iou": 0.9853206253727456,
+     "depthMm": 25.705148607230903
+    }
+   }
+  ]
+ },
+ {
+  "id": "cruz-missile",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2037,
+    "maxTris": 2800,
+    "sliver": 5,
+    "selfHidden": 38,
+    "carHidden": 80,
+    "coplanarSaved": 14,
+    "coplanarRegions": 6,
+    "perPart": {
+     "core": {
+      "tris": 268,
+      "selfHidden": 13,
+      "carHidden": 29,
+      "coplanarSaved": 4
+     },
+     "front": {
+      "tris": 600,
+      "selfHidden": 23,
+      "carHidden": 25,
+      "coplanarSaved": 4
+     },
+     "back": {
+      "tris": 373,
+      "selfHidden": 2,
+      "carHidden": 18,
+      "coplanarSaved": 6
+     },
+     "door_FL": {
+      "tris": 32,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 32,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 895,
+    "maxTris": 900,
+    "sliver": 5,
+    "selfHidden": 23,
+    "carHidden": 61,
+    "coplanarSaved": 6,
+    "coplanarRegions": 3,
+    "perPart": {
+     "core": {
+      "tris": 204,
+      "selfHidden": 11,
+      "carHidden": 33,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 252,
+      "selfHidden": 10,
+      "carHidden": 10,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 223,
+      "selfHidden": 2,
+      "carHidden": 9,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 3,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9870447408639407,
+     "depthMm": 12.379840454730061
+    },
+    "meshopt": {
+     "tris": 883,
+     "iou": 0.9942767740424824,
+     "depthMm": 9.137613375090309
+    },
+    "meshoptSeams": {
+     "tris": 885,
+     "iou": 0.9942767740424824,
+     "depthMm": 9.123058980133075
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 511,
+    "maxTris": 600,
+    "sliver": 5,
+    "selfHidden": 8,
+    "carHidden": 35,
+    "coplanarSaved": 6,
+    "coplanarRegions": 3,
+    "perPart": {
+     "core": {
+      "tris": 148,
+      "selfHidden": 6,
+      "carHidden": 20,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 102,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 137,
+      "selfHidden": 2,
+      "carHidden": 5,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 25,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 25,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 25,
+      "selfHidden": 0,
+      "carHidden": 3,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 25,
+      "selfHidden": 0,
+      "carHidden": 3,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9706936946590587,
+     "depthMm": 35.14010290844123
+    },
+    "meshopt": {
+     "tris": 502,
+     "iou": 0.9811008697663764,
+     "depthMm": 28.027858720722957
+    },
+    "meshoptSeams": {
+     "tris": 505,
+     "iou": 0.9768087165025114,
+     "depthMm": 28.005849895515706
+    }
+   }
+  ]
+ },
+ {
+  "id": "hawk-dash",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2459,
+    "maxTris": 2800,
+    "sliver": 5,
+    "selfHidden": 101,
+    "carHidden": 132,
+    "coplanarSaved": 106,
+    "coplanarRegions": 18,
+    "perPart": {
+     "core": {
+      "tris": 284,
+      "selfHidden": 14,
+      "carHidden": 28,
+      "coplanarSaved": 6
+     },
+     "front": {
+      "tris": 705,
+      "selfHidden": 49,
+      "carHidden": 55,
+      "coplanarSaved": 60
+     },
+     "back": {
+      "tris": 722,
+      "selfHidden": 38,
+      "carHidden": 49,
+      "coplanarSaved": 40
+     },
+     "door_FL": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 14,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 14,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 167,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 896,
+    "maxTris": 900,
+    "sliver": 0,
+    "selfHidden": 14,
+    "carHidden": 34,
+    "coplanarSaved": 12,
+    "coplanarRegions": 5,
+    "perPart": {
+     "core": {
+      "tris": 216,
+      "selfHidden": 14,
+      "carHidden": 24,
+      "coplanarSaved": 6
+     },
+     "front": {
+      "tris": 230,
+      "selfHidden": 0,
+      "carHidden": 4,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 226,
+      "selfHidden": 0,
+      "carHidden": 6,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 24,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 24,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9920024392415252,
+     "depthMm": 13.667029211463875
+    },
+    "meshopt": {
+     "tris": 876,
+     "iou": 0.9971343804887471,
+     "depthMm": 11.585126830247356
+    },
+    "meshoptSeams": {
+     "tris": 875,
+     "iou": 0.9971245158190427,
+     "depthMm": 11.025433793647357
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 596,
+    "maxTris": 600,
+    "sliver": 0,
+    "selfHidden": 2,
+    "carHidden": 22,
+    "coplanarSaved": 6,
+    "coplanarRegions": 3,
+    "perPart": {
+     "core": {
+      "tris": 156,
+      "selfHidden": 2,
+      "carHidden": 14,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 130,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 134,
+      "selfHidden": 0,
+      "carHidden": 4,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9761295174370478,
+     "depthMm": 34.17255294111258
+    },
+    "meshopt": {
+     "tris": 591,
+     "iou": 0.9896648474344074,
+     "depthMm": 25.246129030616377
+    },
+    "meshoptSeams": {
+     "tris": 593,
+     "iou": 0.9915919493432653,
+     "depthMm": 24.185193276088892
+    }
+   }
+  ]
+ },
+ {
+  "id": "lion-president",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2162,
+    "maxTris": 2400,
+    "sliver": 0,
+    "selfHidden": 74,
+    "carHidden": 100,
+    "coplanarSaved": 16,
+    "coplanarRegions": 6,
+    "perPart": {
+     "core": {
+      "tris": 306,
+      "selfHidden": 2,
+      "carHidden": 26,
+      "coplanarSaved": 6
+     },
+     "front": {
+      "tris": 516,
+      "selfHidden": 38,
+      "carHidden": 40,
+      "coplanarSaved": 4
+     },
+     "back": {
+      "tris": 580,
+      "selfHidden": 34,
+      "carHidden": 34,
+      "coplanarSaved": 6
+     },
+     "door_FL": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 26,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 14,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 14,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 170,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 892,
+    "maxTris": 900,
+    "sliver": 0,
+    "selfHidden": 4,
+    "carHidden": 24,
+    "coplanarSaved": 10,
+    "coplanarRegions": 5,
+    "perPart": {
+     "core": {
+      "tris": 204,
+      "selfHidden": 2,
+      "carHidden": 22,
+      "coplanarSaved": 4
+     },
+     "front": {
+      "tris": 228,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 232,
+      "selfHidden": 2,
+      "carHidden": 2,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 18,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 18,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9903522141795034,
+     "depthMm": 18.200561026249247
+    },
+    "meshopt": {
+     "tris": 890,
+     "iou": 0.9950822851977318,
+     "depthMm": 13.383632400024904
+    },
+    "meshoptSeams": {
+     "tris": 891,
+     "iou": 0.9951765359046121,
+     "depthMm": 14.016332108715336
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 594,
+    "maxTris": 600,
+    "sliver": 0,
+    "selfHidden": 0,
+    "carHidden": 14,
+    "coplanarSaved": 6,
+    "coplanarRegions": 3,
+    "perPart": {
+     "core": {
+      "tris": 144,
+      "selfHidden": 0,
+      "carHidden": 14,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 138,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 2
+     },
+     "back": {
+      "tris": 136,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 38,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9773806919546282,
+     "depthMm": 41.54532229519736
+    },
+    "meshopt": {
+     "tris": 586,
+     "iou": 0.9850916855629324,
+     "depthMm": 25.715289700032525
+    },
+    "meshoptSeams": {
+     "tris": 588,
+     "iou": 0.9890785928757548,
+     "depthMm": 27.985182386547592
+    }
+   }
+  ]
+ },
+ {
+  "id": "pig-catcher",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2736,
+    "maxTris": 2800,
+    "sliver": 0,
+    "selfHidden": 330,
+    "carHidden": 384,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 604,
+      "selfHidden": 77,
+      "carHidden": 97,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 356,
+      "selfHidden": 52,
+      "carHidden": 52,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 340,
+      "selfHidden": 41,
+      "carHidden": 62,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 352,
+      "selfHidden": 48,
+      "carHidden": 54,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 552,
+      "selfHidden": 56,
+      "carHidden": 58,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 532,
+      "selfHidden": 56,
+      "carHidden": 61,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 884,
+    "maxTris": 900,
+    "sliver": 0,
+    "selfHidden": 44,
+    "carHidden": 60,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 248,
+      "selfHidden": 17,
+      "carHidden": 24,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 160,
+      "selfHidden": 6,
+      "carHidden": 6,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 144,
+      "selfHidden": 2,
+      "carHidden": 6,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 204,
+      "selfHidden": 19,
+      "carHidden": 24,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 64,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 64,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9494169332017248,
+     "depthMm": 24.714947555287885
+    },
+    "meshopt": {
+     "tris": 884,
+     "iou": 0.9274500079088807,
+     "depthMm": 25.85430020659843
+    },
+    "meshoptSeams": {
+     "tris": 884,
+     "iou": 0.9274500079088807,
+     "depthMm": 25.85430020659843
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 588,
+    "maxTris": 600,
+    "sliver": 0,
+    "selfHidden": 11,
+    "carHidden": 21,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 200,
+      "selfHidden": 8,
+      "carHidden": 12,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 120,
+      "selfHidden": 1,
+      "carHidden": 1,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 96,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 116,
+      "selfHidden": 2,
+      "carHidden": 6,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 28,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 28,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.8862078609645575,
+     "depthMm": 40.46143693085308
+    },
+    "meshopt": {
+     "tris": 587,
+     "iou": 0.8781937644569158,
+     "depthMm": 54.97715381849008
+    },
+    "meshoptSeams": {
+     "tris": 587,
+     "iou": 0.8781944620723445,
+     "depthMm": 55.110803445424835
+    }
+   }
+  ]
+ },
+ {
+  "id": "postie-bike",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2782,
+    "maxTris": 2900,
+    "sliver": 0,
+    "selfHidden": 228,
+    "carHidden": 359,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 578,
+      "selfHidden": 52,
+      "carHidden": 58,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 472,
+      "selfHidden": 50,
+      "carHidden": 50,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 488,
+      "selfHidden": 58,
+      "carHidden": 62,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 420,
+      "selfHidden": 36,
+      "carHidden": 37,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 412,
+      "selfHidden": 16,
+      "carHidden": 70,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 412,
+      "selfHidden": 16,
+      "carHidden": 82,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 894,
+    "maxTris": 900,
+    "sliver": 0,
+    "selfHidden": 35,
+    "carHidden": 41,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 242,
+      "selfHidden": 8,
+      "carHidden": 8,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 168,
+      "selfHidden": 2,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 164,
+      "selfHidden": 18,
+      "carHidden": 20,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 192,
+      "selfHidden": 7,
+      "carHidden": 8,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 64,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 64,
+      "selfHidden": 0,
+      "carHidden": 3,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9317550924290756,
+     "depthMm": 27.4996977242162
+    },
+    "meshopt": {
+     "tris": 878,
+     "iou": 0.958905039939389,
+     "depthMm": 23.224236018780207
+    },
+    "meshoptSeams": {
+     "tris": 886,
+     "iou": 0.9539360014497185,
+     "depthMm": 22.783490189056042
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 586,
+    "maxTris": 600,
+    "sliver": 0,
+    "selfHidden": 28,
+    "carHidden": 32,
+    "coplanarSaved": 0,
+    "coplanarRegions": 0,
+    "perPart": {
+     "core": {
+      "tris": 154,
+      "selfHidden": 8,
+      "carHidden": 8,
+      "coplanarSaved": 0
+     },
+     "front": {
+      "tris": 92,
+      "selfHidden": 2,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     },
+     "back": {
+      "tris": 132,
+      "selfHidden": 14,
+      "carHidden": 16,
+      "coplanarSaved": 0
+     },
+     "rider": {
+      "tris": 120,
+      "selfHidden": 4,
+      "carHidden": 4,
+      "coplanarSaved": 0
+     },
+     "wheel_F": {
+      "tris": 44,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_R": {
+      "tris": 44,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.8984337727277945,
+     "depthMm": 35.88680248983619
+    },
+    "meshopt": {
+     "tris": 553,
+     "iou": 0.9081780928365415,
+     "depthMm": 35.17050987142159
+    },
+    "meshoptSeams": {
+     "tris": 565,
+     "iou": 0.8986153653543685,
+     "depthMm": 40.38868285637446
+    }
+   }
+  ]
+ },
+ {
+  "id": "tradie-ute",
+  "lods": [
+   {
+    "lod": 0,
+    "tris": 2080,
+    "maxTris": 2400,
+    "sliver": 0,
+    "selfHidden": 102,
+    "carHidden": 122,
+    "coplanarSaved": 18,
+    "coplanarRegions": 5,
+    "perPart": {
+     "core": {
+      "tris": 424,
+      "selfHidden": 24,
+      "carHidden": 31,
+      "coplanarSaved": 6
+     },
+     "front": {
+      "tris": 460,
+      "selfHidden": 40,
+      "carHidden": 43,
+      "coplanarSaved": 6
+     },
+     "back": {
+      "tris": 396,
+      "selfHidden": 38,
+      "carHidden": 48,
+      "coplanarSaved": 6
+     },
+     "door_FL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 188,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 188,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 188,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 188,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    }
+   },
+   {
+    "lod": 1,
+    "tris": 878,
+    "maxTris": 900,
+    "sliver": 0,
+    "selfHidden": 23,
+    "carHidden": 28,
+    "coplanarSaved": 14,
+    "coplanarRegions": 5,
+    "perPart": {
+     "core": {
+      "tris": 240,
+      "selfHidden": 1,
+      "carHidden": 3,
+      "coplanarSaved": 6
+     },
+     "front": {
+      "tris": 226,
+      "selfHidden": 14,
+      "carHidden": 15,
+      "coplanarSaved": 4
+     },
+     "back": {
+      "tris": 196,
+      "selfHidden": 8,
+      "carHidden": 10,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 12,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 42,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9722991484556577,
+     "depthMm": 16.675606730775563
+    },
+    "meshopt": {
+     "tris": 877,
+     "iou": 0.9925862161803067,
+     "depthMm": 10.451691992321521
+    },
+    "meshoptSeams": {
+     "tris": 877,
+     "iou": 0.9922471995231332,
+     "depthMm": 11.184758014004396
+    }
+   },
+   {
+    "lod": 2,
+    "tris": 596,
+    "maxTris": 600,
+    "sliver": 0,
+    "selfHidden": 18,
+    "carHidden": 24,
+    "coplanarSaved": 10,
+    "coplanarRegions": 5,
+    "perPart": {
+     "core": {
+      "tris": 156,
+      "selfHidden": 0,
+      "carHidden": 2,
+      "coplanarSaved": 2
+     },
+     "front": {
+      "tris": 178,
+      "selfHidden": 14,
+      "carHidden": 15,
+      "coplanarSaved": 4
+     },
+     "back": {
+      "tris": 162,
+      "selfHidden": 4,
+      "carHidden": 6,
+      "coplanarSaved": 4
+     },
+     "door_FL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_FR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RL": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "door_RR": {
+      "tris": 6,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_FL": {
+      "tris": 19,
+      "selfHidden": 0,
+      "carHidden": 1,
+      "coplanarSaved": 0
+     },
+     "wheel_FR": {
+      "tris": 19,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RL": {
+      "tris": 19,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     },
+     "wheel_RR": {
+      "tris": 19,
+      "selfHidden": 0,
+      "carHidden": 0,
+      "coplanarSaved": 0
+     }
+    },
+    "hand": {
+     "iou": 0.9614509673356961,
+     "depthMm": 22.825270893376235
+    },
+    "meshopt": {
+     "tris": 592,
+     "iou": 0.9845624361251766,
+     "depthMm": 21.85290136906412
+    },
+    "meshoptSeams": {
+     "tris": 591,
+     "iou": 0.9793043687177103,
+     "depthMm": 22.53416945597605
+    }
+   }
+  ]
+ }
+]

@@ -65,7 +65,7 @@
       {
         "lod": 0,
         "glb": "media/model/lion-president.lod0.glb",
-        "tris": 2162,
+        "tris": 2150,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -73,7 +73,7 @@
       {
         "lod": 1,
         "glb": "media/model/lion-president.lod1.glb",
-        "tris": 892,
+        "tris": 891,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
