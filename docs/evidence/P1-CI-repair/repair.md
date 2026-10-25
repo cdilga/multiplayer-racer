@@ -408,3 +408,39 @@ Focused validation on macOS arm64, pinned Node 26.10.0 and Playwright:
 No manual eris GPU tests overlap either batch. RCH native compilation is limited to two jobs.
 Devbox is temporarily unavailable, so eris is the only admitted RCH worker. The repair remains open
 for containing green main/GPU results and the latest image's published smoke result.
+
+### GPU 9304: Docker startup consumed STUN readiness
+
+The preceding roster batch has two exact failures: JN3 Identify samples **18, 56, 45, 1609,
+5 ms** against the unchanged **150 ms** bound, and R13 Chromium's fixture reports `local STUN
+never answered` before any identity assertion. Neither failure is called a gameplay pass.
+
+Docker's retained events identify the STUN startup cause, independent of a retry:
+container `jj-journey-stun-192571-60706` is created at **08:16:39.409202941Z**, starts at
+**08:16:50.578154540Z**, and is killed at **08:16:50.615728755Z**. The container had only
+**37.6 ms** running time before the fixture killed it. The existing 15-second readiness clock
+had already been consumed by Docker's create/start lifecycle; an empty coturn log was expected.
+
+The fixture now awaits `docker run --detach` completing before starting its original 15-second
+real STUN binding-response probe. Docker launch has a separate 45-second process deadline and
+failure cleanup; container logs remain attached for diagnostics. The pinned coturn image,
+loopback networking, transaction-ID validation and teardown stay the same. No game deadline,
+latency acceptance, Ready retry or service-probe duration changes.
+
+Focused validation with pinned Node 26.10.0:
+
+- The permanent process-boundary regression delays Docker startup **15.5 seconds**, then answers
+  actual UDP STUN binding requests. The old fixture fails in **15,625 ms**, `local STUN never
+  answered`; the fixed fixture passes in **17,256 ms**, including server startup and container
+  teardown. This substitutes Docker's lifecycle and the lightweight server process only; it is
+  fixture proof, not a game or coturn claim.
+- A separate native eris probe uses the real pinned coturn Docker image and the revised fixture.
+  Its binding response arrives in **10,584 ms**, and cleanup completes. It creates no browser/GPU
+  work and does not overlap CI's GPU with a manual graphics test.
+- Public preview **v02-56252cf5** has smoke **PASS**: room **RFF6**, isolation from eleven other
+  previews, WebRTC join (host, 1 ms), input, resume, drive, HUD and round. Publisher runs 9312/9313
+  have no new image to publish; they do not establish deployment of runtime fix `9eeebccc`.
+- A full Mac native-GPU JN3 run against that public preview passes in **124,344 ms** (154,510 ms
+  total), Identify samples **47, 52, 41, 41, 38 ms**. This is a Mac Chromium receipt, not a Linux
+  pass or a diagnosis of the isolated 1609 ms Linux sample. That latency failure remains under
+  investigation; the 150 ms assertion is retained.

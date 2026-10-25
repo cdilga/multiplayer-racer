@@ -1,6 +1,7 @@
 // Same-engine WebKit journeys need real STUN in Linux CI: the container cannot resolve .local ICE names.
 // Production already supplies STUN. Reuse the transport bank's real coturn/readiness shape, with TURN disabled.
-import { spawn, spawnSync } from 'node:child_process';
+import { execFile, spawn, spawnSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import { randomBytes } from 'node:crypto';
 import { createSocket } from 'node:dgram';
 import { serve } from '../../../landing/tests/lib/site.mjs';
@@ -17,12 +18,8 @@ export async function serveWithLocalStun(dist, base) {
   // Host networking keeps the real STUN service on the same loopback as peers.
   const container = process.platform === 'linux' && spawnSync('which', ['turnserver']).status !== 0
     ? `jj-journey-stun-${process.pid}-${port}` : null;
-  const child = container
-    ? spawn('docker', ['run', '--rm', '--network=host', '--name', container, 'coturn/coturn@sha256:a00afb5b4890de4df22bbe70379c6b316685dffee297d53cac1271dcb91fab93', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
-    : spawn('turnserver', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+  let child;
   let log = '', failure;
-  child.once('error', error => { failure = error; });
-  for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { log += chunk; });
   const stop = async () => {
     if (container) {
       await new Promise(resolve => {
@@ -30,11 +27,21 @@ export async function serveWithLocalStun(dist, base) {
         remove.once('error', resolve); remove.once('close', resolve);
       });
     }
-    if (!child.pid || child.exitCode !== null || child.signalCode !== null) return;
+    if (!child?.pid || child.exitCode !== null || child.signalCode !== null) return;
     await new Promise(resolve => { child.once('close', resolve); child.kill(); });
   };
   const request = Buffer.concat([Buffer.from([0, 1, 0, 0, 0x21, 0x12, 0xa4, 0x42]), randomBytes(12)]);
   try {
+    if (container) {
+      // Docker's create/start work is separate from coturn readiness. GPU run 9304 spent 11 s between
+      // create and start, then killed coturn before it could answer the existing 15 s STUN probe.
+      // Await a started container first; retain the same real binding-response readiness check below.
+      await promisify(execFile)('docker', ['run', '--detach', '--rm', '--network=host', '--name', container,
+        'coturn/coturn@sha256:a00afb5b4890de4df22bbe70379c6b316685dffee297d53cac1271dcb91fab93', ...args], { timeout: 45_000 });
+      child = spawn('docker', ['logs', '--follow', container], { stdio: ['ignore', 'pipe', 'pipe'] });
+    } else child = spawn('turnserver', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    child.once('error', error => { failure = error; });
+    for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { log += chunk; });
     let ready = false;
     for (const start = Date.now(); Date.now() - start < 15000 && !ready;) {
       if (failure) throw failure;
