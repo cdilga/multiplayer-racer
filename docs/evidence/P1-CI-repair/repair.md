@@ -58,3 +58,9 @@ Launcher-only edits now select the always-on checks job, whose workflow regressi
 Run 9148 built its image successfully. Scheduled publisher 9150 remained in Tools: inside its deployment container, `apt-get`/`dpkg` had spent over twelve minutes installing Chromium system packages (Publish had not started). The deploy runner already has `jj-ci:d161a07c0df4`, the same pinned Ubuntu 24/Node/Playwright image as main CI. Use that image and its `/ms-playwright` headless shell, dropping per-run apt/browser installation and redundant Node setup.
 
 Verified on TrueNAS in a fresh disposable container from that exact image: pip/websockets 15.0.1 installation, Playwright 1.62.1 installation, Chromium launch, a real page title and browser close all succeed. Deploy-secret isolation check and `git diff --check` pass. This changes deployment tooling only, not the running production app.
+
+### CI 9148: Cruz profile fingerprint
+
+Native/wasm checks, both Clippy runs and cargo-deny pass. The remaining lint failure is the Cruz profile's old LOD0 SHA despite its unchanged sidecar: `702e0a…` instead of committed GLB `d98892…`. `jj vehicle sync assets/profiles/cruz-missile.json` changes **only that SHA**. Geometry, collider/mass data, model script, atlas, sidecar and GLBs are unchanged.
+
+Vehicle-validation scope: metadata synchronization **PASS**, using R81/R86, Playtest-1 §6 and master §12.3–12.5. `jj validate` passes the actual sidecar (LOD triangles 2017/886/507), synchronized profile, and surface-strips map. This is not a new whole-vehicle visual qualification; no model or rendered appearance was changed by the repair.
