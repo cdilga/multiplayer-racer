@@ -69,4 +69,37 @@
 
 ## Deployed review
 
-Deployment verification will be appended after the POC workflow publishes this commit.
+Published model e1d8a900 through successful Gitea POC deployment run 9158 (containing commit e30cf314). Public page: https://jammers-preview.dilger.dev/poc/vehicles/review.html?v=hawk-dash. deployment.json verifies ten deployed files byte-for-byte: review data, shared viewer/shader, atlas, three GLBs and three comparison sheets. Chromium laptop and WebKit phone LOD/paint/damage controls pass in live-interactions/checks.json.
+
+Every deployed screenshot below was inspected in the top/full page matrices and browser stage matrices. The model is visible and framed, bright paint and neutral wheels remain correct, all evidence sections load before and after viewport shrink/grow. Enlarged reference images are scaled up to comparable car height rather than left at their smaller native crop dimensions.
+
+The live-check still exits 1: normal viewport-bottom crossings plus Chromium’s pre-existing aborted initial LOD0 GLB request, followed by successful load/render. The independent controls probe passes both engines and all downloaded hashes match. This is recorded as a harness caveat, not a green live-check result.
+
+- live-page/poc_vehicles_review_html_v_hawk_dash_1366x768.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1366x768_after-resize.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1920x1080.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1920x1080_after-resize.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_375x667.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_375x667_after-resize.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_412x915.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_412x915_after-resize.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_915x412.png: inspected; complete deployed page, before/after viewport resize.
+- live-page/poc_vehicles_review_html_v_hawk_dash_915x412_after-resize.png: inspected; complete deployed page, before/after viewport resize.
+- live-interactions/chromium-detached.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-intact.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-lod0.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-lod1.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-lod2.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-loose.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-paint1.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-paint2.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/chromium-paint3.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-detached.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-intact.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-lod0.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-lod1.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-lod2.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-loose.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-paint1.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-paint2.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.
+- live-interactions/webkit-paint3.png: inspected; deployed LOD/paint/damage state, no blank or clipped model.

@@ -1,0 +1,80 @@
+{
+  "utc": "2026-10-25T02:48:09.360060+00:00",
+  "commit": "e1d8a900",
+  "base": "https://jammers-preview.dilger.dev/",
+  "files": [
+    {
+      "path": "poc/vehicles/hawk-dash/review.json",
+      "bytes": 13615,
+      "sha256": "bd0edfeb912f89d301770bbb36b7679b4b8ce51d6960c835242f34aa44b0cd05",
+      "expected": "bd0edfeb912f89d301770bbb36b7679b4b8ce51d6960c835242f34aa44b0cd05",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/viewer.js",
+      "bytes": 11958,
+      "sha256": "48f6f44c6cbd667a22d7f8213111841dc084db70d787c6a61067193f339adf15",
+      "expected": "48f6f44c6cbd667a22d7f8213111841dc084db70d787c6a61067193f339adf15",
+      "match": true
+    },
+    {
+      "path": "poc/shared/paint-key.js",
+      "bytes": 1224,
+      "sha256": "26bba45e37e4316d59b4e566ad1d5090362a9340cce5ade5e1a23c1961045ce3",
+      "expected": "26bba45e37e4316d59b4e566ad1d5090362a9340cce5ade5e1a23c1961045ce3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/model/hawk-dash.atlas.png",
+      "bytes": 65298,
+      "sha256": "fb64b3a3988382d2c962d98918de1b1347e897370efe7f46edd0915316cd8b86",
+      "expected": "fb64b3a3988382d2c962d98918de1b1347e897370efe7f46edd0915316cd8b86",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/model/hawk-dash.lod0.glb",
+      "bytes": 395152,
+      "sha256": "10638feb8a379d2c14273aada2422996e3f2d755babb7e29bcc6f0b0dd520281",
+      "expected": "10638feb8a379d2c14273aada2422996e3f2d755babb7e29bcc6f0b0dd520281",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/model/hawk-dash.lod1.glb",
+      "bytes": 184588,
+      "sha256": "6c20a92959d99911d6e6299ccd25ed51a9dd11b8dd2ff4dbeacc54cc6f879664",
+      "expected": "6c20a92959d99911d6e6299ccd25ed51a9dd11b8dd2ff4dbeacc54cc6f879664",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/model/hawk-dash.lod2.glb",
+      "bytes": 157340,
+      "sha256": "806949365210dcffcead8936f4b683ac2cb7007c1f37fec605b5fea561c59ae3",
+      "expected": "806949365210dcffcead8936f4b683ac2cb7007c1f37fec605b5fea561c59ae3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/reference-lod0/sheet.png",
+      "bytes": 1519160,
+      "sha256": "660382fb7a7febe4390d38d3626f2632757f4422361af00550674379655c026e",
+      "expected": "660382fb7a7febe4390d38d3626f2632757f4422361af00550674379655c026e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/reference-lod1/sheet.png",
+      "bytes": 1384811,
+      "sha256": "8399a0694687ee7b3db6789d9ad587372b887861203ed91ddb3ebfcca0f78d64",
+      "expected": "8399a0694687ee7b3db6789d9ad587372b887861203ed91ddb3ebfcca0f78d64",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/hawk-dash/media/reference-lod2/sheet.png",
+      "bytes": 1323373,
+      "sha256": "128fc3c1117301fb965fce0e574277e33ae31a6910fc480260392f9339710ff8",
+      "expected": "128fc3c1117301fb965fce0e574277e33ae31a6910fc480260392f9339710ff8",
+      "match": true
+    }
+  ],
+  "deployRun": 9158,
+  "publishCommit": "e30cf3146d10991224e99cb599579a6e8d9808a1",
+  "deployConclusion": "success"
+}

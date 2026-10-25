@@ -72,3 +72,18 @@ Published model commit 72c518500 at https://jammers-preview.dilger.dev/poc/vehic
 - New driving feel, dynamic debris lifetime and N×N host rendering benchmarks: visual geometry and the POC viewer changed; host simulation/renderer/batching did not. Frozen collision proxies give the same before/after idle-settle replay hash. Focused settle and existing Hawk straight-run fixtures pass.
 - Roof-number readability is not demonstrated by the evidence viewer's grids. The mount was moved above the new crown.
 - No claim of full CI completion. The bead is handed off as batch_pending after focused checks.
+
+
+## Front / rear follow-up, 25 October 2026
+
+The owner requested closer sloped doors/haunches, lamp shapes and the exhaust surround after reviewing this first pass. The revised model e1d8a900 is deployed through successful POC run 9158. Current triangle counts are 2697 / 837 / 553; wheels remain 176 / 112 / 112. Contract/reproducibility/geometry checks, all 42 paint/pivot/spec tests, focused settle and Hawk straight-run fixtures pass. Ten deployed hashes match and Chromium/WebKit controls pass. Full current report and honest outline tradeoffs: docs/evidence/P1-V-hawk-fascia/validation.md and docs/evidence/P1-V-hawk-fascia/self-review.md. The earlier sections above remain the receipt for the first pass, not the current model totals.
+
+Looked at the deployed follow-up:
+
+- docs/evidence/P1-V-hawk-fascia/reference-lod0/sheet.png: enlarged front/rear reference, previous and revised; all views and outline diffs.
+- docs/evidence/P1-V-hawk-fascia/live-page/page-top-matrix.jpg: every phone/laptop/TV viewport before/after resize; page assets complete.
+- docs/evidence/P1-V-hawk-fascia/live-page/page-full-matrix.jpg: full-page section continuity at all viewports.
+- docs/evidence/P1-V-hawk-fascia/live-interactions/chromium-stage-matrix.jpg: deployed LODs, paints and damage controls.
+- docs/evidence/P1-V-hawk-fascia/live-interactions/webkit-stage-matrix.jpg: same states on emulated phone; model contained.
+
+Remaining defects: owner likeness verdict pending; wider ends/wing reduce weighted silhouette scores to .9495 / .9472 / .9362, mostly in top view. Live-check’s initial GLB abort and viewport-bottom crossings remain documented, with successful independent render/controls proof. Physical devices, host identity/batching and audio were not recertified by this geometry pass.
