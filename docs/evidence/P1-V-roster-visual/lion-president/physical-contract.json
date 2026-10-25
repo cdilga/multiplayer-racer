@@ -1,0 +1,17 @@
+{
+  "colliders.json": {
+    "beforeSha256": "7eaeda8c420939f9dd2656e88d4fa9a109a2a18b00ee3486088bfda75e482965",
+    "afterSha256": "7eaeda8c420939f9dd2656e88d4fa9a109a2a18b00ee3486088bfda75e482965",
+    "unchanged": true
+  },
+  "vehicle.json": {
+    "beforeSha256": "f30b09a53bcecad519827a5e1249b69d56f3ff08e3d10a0ca444d5000e883fb9",
+    "afterSha256": "f30b09a53bcecad519827a5e1249b69d56f3ff08e3d10a0ca444d5000e883fb9",
+    "unchanged": true
+  },
+  "lion-president.asset.json": {
+    "beforeSha256": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
+    "afterSha256": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
+    "unchanged": true
+  }
+}

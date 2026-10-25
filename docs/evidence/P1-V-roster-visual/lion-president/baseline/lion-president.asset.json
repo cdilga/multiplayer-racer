@@ -1,0 +1,291 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "lion-president",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "lion-president.lod0.glb",
+   "maxTris": 2400
+  },
+  {
+   "file": "lion-president.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "lion-president.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.62,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    1.0775000000000001,
+    0.7499999999999999
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    1.15975,
+    -0.7499999999999999
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.07,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FL": {
+   "pivot": [
+    0.8869565217391304,
+    0.6025783783783785,
+    0.8499999999999999
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_FR": {
+   "pivot": [
+    -0.8869565217391304,
+    0.6025783783783785,
+    0.8499999999999999
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RL": {
+   "pivot": [
+    0.8931159420289855,
+    0.6259290540540541,
+    -0.28
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": -70,
+    "max": 0
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "door_RR": {
+   "pivot": [
+    -0.8931159420289855,
+    0.6259290540540541,
+    -0.28
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "min": 0,
+    "max": 70
+   },
+   "massFraction": 0.04,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FL": {
+   "pivot": [
+    0.84,
+    0.43,
+    1.38
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_FR": {
+   "pivot": [
+    -0.84,
+    0.43,
+    1.38
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RL": {
+   "pivot": [
+    0.84,
+    0.43,
+    -1.38
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_RR": {
+   "pivot": [
+    -0.84,
+    0.43,
+    -1.38
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.0175,
+   "collider": {
+    "type": "convex"
+   }
+  }
+ },
+ "interiors": {
+  "engine": {
+   "exposedBy": [
+    "front"
+   ]
+  },
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  },
+  "boot": {
+   "exposedBy": [
+    "back"
+   ]
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   -0.36,
+   1.2,
+   0
+  ],
+  "cam_tp_target": [
+   0,
+   1.05,
+   0.4
+  ],
+  "com": [
+   0,
+   0.55,
+   0
+  ],
+  "roof_number": [
+   0,
+   1.545,
+   -0.5
+  ],
+  "lplate_front": [
+   0,
+   0.375,
+   2.192
+  ],
+  "lplate_rear": [
+   0,
+   0.68,
+   -2.188
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "lion-president.atlas.png"
+ }
+}

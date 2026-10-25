@@ -28,8 +28,8 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 12, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: false, cell: 0.1, lampCell: 0.12, lampOff: 0, oval: 16, lampRim: false, lampRing: true, reflector: 0, lampTop: false, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 8, badge: 3, lampRim: false, reflector: 0, lampTop: false, fog: 4, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: false },
+  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 12, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.12, lampOff: 0, oval: 16, lampRim: false, lampRing: true, reflector: 0, lampTop: false, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: true, handles: true, seams: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, belly: true, dome: true, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 8, badge: 3, lampRim: false, reflector: 0, lampTop: false, fog: 4, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: false },
   2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'disc', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, grilleCell: 0.22, lampOff: 0.045, oval: 10, badge: 6, lampRim: false, reflector: 0, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
 };
 
@@ -120,7 +120,7 @@ function topUV(P) { const [u0, v0, u1, v1] = REGION.top; return (v) => [u0 + (u1
 function makeSoups(P, lod) {
   const T = LODS[lod];
   // Coarser tiers retain roof/rake breaks while dropping redundant coplanar stations.
-  const C = P.cabin.filter((c,i) => lod===0 || (lod===1 ? [0,1,3,5,6,8] : [0,3,5,6,8]).includes(i));
+  const C = P.cabin.filter((c,i) => lod===0 || (lod===1 ? [0,1,3,5,8] : [0,3,5,6,8]).includes(i));
   const zA = P.zFA - P.archR, zC = P.zRA + P.archR; // door span = between the arches; front/back cut lines
   // stations along z (descending: nose → tail)
   // protected = ends, cut lines, arch samples, the nose and tail slopes; optional = profile control points (dropped when
@@ -197,7 +197,12 @@ function makeSoups(P, lod) {
       for (let k = 0; k < NR - 1; k++) {
         const so = S(partOfTub(zm, k, s));
         // winding: outward normals. ring order goes bottom→top on side s; for s>0 use (a_k, b_k, b_k+1, a_k+1)
-        if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], segSwatch(k)); else so.quad(a[k], a[k + 1], b[k + 1], b[k], segSwatch(k));
+        if (k === 0) {
+          const floorEdge = r => [s * (archY(r[0][2]) > r[0][1]+.001 ? Math.min(Math.abs(r[1][0]), P.track-P.wheelW/2-.055) : Math.abs(r[1][0])), r[0][1], r[0][2]];
+          // The inset undertray is separate from the raised arch cut: no radial black fan.
+          const fa=floorEdge(a), fb=floorEdge(b);
+          if(s>0)so.quad(a[0],b[0],fb,fa,'under');else so.quad(a[0],fa,fb,b[0],'under');
+        } else if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], segSwatch(k)); else so.quad(a[k], a[k + 1], b[k + 1], b[k], segSwatch(k));
         hull.push([a[k], b[k], b[k + 1]], [a[k], b[k + 1], a[k + 1]]);
       }
     }
@@ -276,10 +281,17 @@ function makeSoups(P, lod) {
     return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0,c.yr+P.roofCrown,c.z+P.glassBow*Math.max(-1,Math.min(1,c.z*2))]];
   };
   const nC = C.length;
+  const glassUV = (front) => {
+    const base = front ? C[0].z : C.at(-1).z, top = front ? C.find((c) => c.roof === 'paint').z : C.find((c) => c.z < -1 && c.roof === 'glass').z;
+    const [u0, v0, u1, v1] = REGION[front ? 'windscreen' : 'backlight'];
+    return (v) => { let i = 0; while (i < nC - 2 && C[i + 1].z > v[2]) i++; const a = C[i], b = C[i + 1], t = Math.min(1, Math.max(0, (a.z - v[2]) / (a.z - b.z))), w = a.wt + (b.wt - a.wt) * t - P.roofCh * 1.2; return [u0 + (u1 - u0) * Math.min(1, Math.max(0, (v[0] / w + 1) / 2)), v0 + (v1 - v0) * Math.min(1, Math.max(0, (v[2] - base) / (top - base)))]; };
+  };
+  const frontGlassUV = glassUV(true), rearGlassUV = glassUV(false);
+
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
     const c = C[i], a = cring(c, s), b = cring(C[i + 1], s), roof = c.roof === 'paint';
     for (let k = 0; k < 3; k++) {
-      const sw = k === 0 ? sUV : roof ? tUV : k === 1 ? sUV : 'glass';
+      const sw = k === 0 ? sUV : roof ? tUV : k === 1 ? sUV : c.z > 0 ? frontGlassUV : rearGlassUV;
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
   }
@@ -341,11 +353,13 @@ function makeSoups(P, lod) {
   if (T.slot) decal(F, Fr.slot, 'grille', 0.01 + lo, 'front', lod === 0 ? 0.1 : 0.5);
   if (T.fog) both((s, m) => decal(F, m(oval(Fr.fog.c, Fr.fog.r, Fr.fog.r, T.fog)), 'fog', 0.012 + lo, 'front', 0.2));
 
-  // the body-side moulding: a thin dark line along the doors (LOD0), following the flank station by station, carried by the doors
-  if (T.seams && lod === 0 && P.moulding) for (const s of [1, -1]) for (let i = 0; i < Z.length - 1; i++) {
-    const z0 = Math.min(Z[i], zA - 0.02), z1 = Math.max(Z[i + 1], zC + 0.02); if (z0 <= z1) continue;
-    const y0 = P.moulding.y, y1 = y0 + P.moulding.h, zm = (z0 + z1) / 2, at = (z, y) => [skinX(z, y, s) + s * 0.006, y, z];
-    S(partOfTub(zm, 2, s)).face([at(z0, y0), at(z1, y0), at(z1, y1), at(z0, y1)], 'paint', [s, 0, 0]);
+  // The reference has a raised, body-colour rub strip with a shaded foot, not a painted line.
+  if (T.seams && P.moulding) for (const s of [1,-1]) for(let i=0;i<Z.length-1;i++) {
+    const z0=Math.min(Z[i],zA-.015),z1=Math.max(Z[i+1],zC+.015);if(z0<=z1)continue;
+    const y=P.moulding.y, h=P.moulding.h, zm=(z0+z1)/2;
+    const section=z=>[[y,0],[y+h*.3,.022],[y+h*.7,.022],[y+h,0]].map(([yy,off])=>[skinX(z,yy,s)+s*(off+.003),yy,z]);
+    const a=section(z0),b=section(z1),so=S(partOfTub(zm,2,s));
+    for(let j=0;j<3;j++)so.face([a[j],b[j],b[j+1],a[j+1]],'paint',[s,0,0]);
   }
   // door handles: small slots on each door
   if (T.handles) for (const s of [1, -1]) for (const [z, door] of [[P.handles.zF, 'door_F'], [P.handles.zR, 'door_R']]) {
@@ -369,9 +383,10 @@ function makeSoups(P, lod) {
   decal(Bk, oval(Rr.badge.c, Rr.badge.rx, Rr.badge.ry, T.badge ?? 12), 'chrome', 0.014 + lo, 'rear', 0.4);
   if (T.slot) decal(Bk, Rr.slot, 'trim', 0.01 + lo, 'rear', lod === 0 ? 0.1 : 0.5);
   // the winged spoiler: a body-colour blade on two short posts (LOD0); on the deck lip at LOD1/2
-  // (round 2: the base AU has none, and a recognition run read the sheet's wing as a WRX's, so params.json leaves it out)
+  // The canonical sheet shows a short painted blade; the coarse tiers retain its silhouette with one face.
   if (P.spoiler) { const SP = P.spoiler, xs = SP.span * SP.postX;
-    Bk.box(0, SP.y, SP.z, SP.span * 2, 0.035, SP.chord, { all: sUV, py: tUV, ny: 'trim' }, [SP.tilt, 0, 0]);
+    if(lod===0) Bk.box(0, SP.y, SP.z, SP.span * 2, 0.035, SP.chord, { all: sUV, py: tUV, ny: 'trim' }, [SP.tilt, 0, 0]);
+    else Bk.face([[-SP.span,SP.y,SP.z-SP.chord/2],[SP.span,SP.y,SP.z-SP.chord/2],[SP.span,SP.y,SP.z+SP.chord/2],[-SP.span,SP.y,SP.z+SP.chord/2]],'paint',[0,1,0]);
     if (T.posts) for (const s of [1, -1]) { const x = s * xs, deck = lerpCurve(P.yCr, SP.z) + (lerpCurve(P.ySh, SP.z) - lerpCurve(P.yCr, SP.z)) * Math.min(1, xs / lerpCurve(P.hw, SP.z)); Bk.beam([x, deck - 0.02, SP.z + 0.03], [x, SP.y - 0.01, SP.z], 0.04, 0.08, sUV, [1, 0, 0]); }
   }
 
@@ -386,34 +401,18 @@ function makeSoups(P, lod) {
     S('core').solid([a, b, ...a.map((p, i) => [p, a[(i + 1) % 4], b[(i + 1) % 4], b[i]])], 'trim');
   });
 
-  // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five broad spokes and a hub;
-  // LOD1/2 draw the spokes flat on the barrel. The tyre's circumradius makes its inscribed radius wheelR, so the bottom
-  // flat touches the ground. ──
-  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n), rimR = P.wheelR * P.rim.r, depth = P.rim.depth;
+  // ── wheels: closed faceted tyres; the rim lip, five spokes and hub live in the shared code-drawn atlas.
+  // Geometry pays only for the outline, tread and both sidewalls (including detached wheels' inner faces).
+  // Circumradius makes the inscribed radius wheelR, so a bottom flat touches the ground.
+  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n);
   for (const [id, zc, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
     const Wh = S(id), xw = s * P.track, xo = xw + s * P.wheelW / 2, xi = xw - s * P.wheelW / 2, yc = P.wheelR;
-    const ringAt = (x, r, k = n, ph = 1.5 * Math.PI - Math.PI / k) => Array.from({ length: k }, (_, i) => { const a = ph + (i / k) * Math.PI * 2; return [x, yc + Math.sin(a) * r, zc + Math.cos(a) * r]; });
-    const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
+    const ringAt = (x) => Array.from({ length: n }, (_, i) => { const a = 1.5 * Math.PI - Math.PI / n + i * Math.PI * 2 / n; return [x, yc + Math.sin(a) * tyreR, zc + Math.cos(a) * tyreR]; });
+    const to = ringAt(xo), ti = ringAt(xi);
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
-    if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
-    if (T.rim === 'disc') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, rimR), 'rim', [s, 0, 0]); continue; }
-    const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
-    if (T.rim === 'spokes') {
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'rim', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
-      Wh.face(rd, 'barrel', [s, 0, 0]); // the barrel, mid grey (the sheet's rims read silver)
-    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR, Math.min(n, 8)), 'trim', [s, 0, 0]); } // a flat sidewall, the barrel drawn on it
-    const hubR = P.rim.hubR, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
-    for (let k = 0; k < 5; k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
-      const a = Math.PI / 2 + k * Math.PI * 2 / 5, ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
-      const P0 = (r, w, x) => [x, yc + sa * r + ps * w, zc + ca * r + pc * w];
-      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 1.25, rr = rimR - 0.004;
-      const fr = [P0(hubR * 0.8, -w0, xf), P0(rr, -w1, xf), P0(rr, w1, xf), P0(hubR * 0.8, w0, xf)];
-      Wh.face(fr, 'rim', [s, 0, 0]);
-      if (T.rim === 'spokes') { const xb = xo - s * depth * 0.55; for (const e of [-1, 1]) Wh.face([P0(hubR * 0.8, e * w0, xf), P0(rr, e * w1, xf), P0(rr, e * w1, xb), P0(hubR * 0.8, e * w0, xb)], 'trim', [0, ps * e, pc * e]); }
-    }
-    if (T.hub) { const hub = ringAt(xf + s * 0.014, hubR, 5, Math.PI / 2); Wh.face(hub, 'rim', [s, 0, 0]);
-      const hb = ringAt(xf - s * 0.01, hubR, 5, Math.PI / 2); for (let i = 0; i < 5; i++) { const j = (i + 1) % 5; Wh.face([hb[i], hb[j], hub[j], hub[i]], 'trim', sub(mix(hub[i], hub[j], 0.5), [hub[i][0], yc, zc])); } }
+    const [u0, v0, u1, v1] = REGION.wheelFace;
+    Wh.face(ti, 'tyre', [-s, 0, 0]);
+    Wh.face(to, (p) => [u0 + (u1 - u0) * ((p[2] - zc) / tyreR + 1) / 2, v0 + (v1 - v0) * ((p[1] - yc) / tyreR + 1) / 2], [s, 0, 0]);
   }
 
   // ── interior blocks (P1-V03): what a missing panel shows, in vehicle space, the same at every LOD. Drawn only for a

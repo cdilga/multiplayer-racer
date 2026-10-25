@@ -86,8 +86,8 @@ const REST_PIVOTS = {
 
 export const LODS = {
   0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 10, rim: 'flat', spokes: 6, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, windows: true, scoop: false, vents: false, mirrors: 'stalk', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: false, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: false, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: false },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: false, flare: 4, flareLip: false, flareEnds: true, tyreCap: true, windows: true, scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: true, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -230,7 +230,9 @@ function makeSoups(P, lod) {
     } return section.at(-1)[1]; };
     const samples=lod===0?[y2,(y2+y3)/2,y3,(y3+ysh)/2]:[y2,y3];
     const ys=[lift,...samples.map((y,i)=>Math.max(lift+.010*(i+1),y))];
-    return [[0,yb,z],...ys.map(y=>[s*widthAt(y),y,z]),[s*(hw-P.shoulderIn),ysh,z],[0,ycr,z]];
+    // The arch return stops at the inner wheel-well wall. It must never span
+    // to the centreline: that would make the entire underside a curved radial fan.
+    return [[s*.62,lift,z],...ys.map(y=>[s*widthAt(y),y,z]),[s*(hw-P.shoulderIn),ysh,z],[0,ycr,z]];
   };
 
   // the tub's outer skin x at (z, y) on side s, and its top surface height at (x, z) (as the Lion's)
@@ -249,6 +251,18 @@ function makeSoups(P, lod) {
     return 'core';
   };
   const sUV = sideUV(P), tUV = topUV(P);
+  // Straight central undertray is independent of the wheel-arch cut. The open
+  // space outboard is the tyre well, not a membrane rising from the centre floor.
+  S('core').face([[-.62,lerpCurve(P.yBot,P.zNose),P.zNose],
+    [-.62,lerpCurve(P.yBot,cabBack),cabBack],
+    [.62,lerpCurve(P.yBot,cabBack),cabBack],
+    [.62,lerpCurve(P.yBot,P.zNose),P.zNose]],'under',[0,-1,0]);
+  // Dark inboard wheel-well walls close the view toward the opposite flank.
+  // Their rectangular tops are buried inside the body; no extra arch fan.
+  for(const s of [1,-1]) S('core').face([
+    [s*.62,.43,P.zFA+P.archR],[s*.62,.43,P.zFA-P.archR],
+    [s*.62,P.archTop+.02,P.zFA-P.archR],[s*.62,P.archTop+.02,P.zFA+P.archR]
+  ],'bay',[s,0,0]);
   const segSwatch = (seg, zm) => {
     if (seg === 0) return 'under';
     if (seg === 1) return 'trim';
@@ -266,7 +280,7 @@ function makeSoups(P, lod) {
     }
   }
   const cap = (z, id, sign, sw) => {
-    const R = ring(z, 1), Lr = ring(z, -1); const poly = [...R,...Lr.slice(1,-1).reverse()];
+    const R = ring(z, 1), Lr = ring(z, -1); const poly = [...R,...Lr.slice(0,-1).reverse()];
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
@@ -406,7 +420,8 @@ function makeSoups(P, lod) {
     else Bk.face([[sign*.9175,.70,TR.z1+.08],[sign*.9175,.96,TR.z1+.08],[sign*.9175,.96,P.zRA-.65],[sign*.9175,.70,P.zRA-.65]],'trim',[sign,0,0]);
     // Three adjacent amber/red/white LED blocks, never tall vertical corners.
     const x=sign*.73;
-    for (const [dx,sw] of [[-.10,'indicator'],[0,'tail'],[.10,'head']]) {
+    // Owner rear-oblique photograph: amber outside, red centre, white inside.
+    for (const [dx,sw] of [[-.10,'head'],[0,'tail'],[.10,'indicator']]) {
       const cx=x+sign*dx;
       Bk.quad([cx+.045,.945,zt],[cx-.045,.945,zt],[cx-.045,1.025,zt],[cx+.045,1.025,zt],sw);
     }
@@ -423,7 +438,21 @@ function makeSoups(P, lod) {
   const M = P.mirror; // decoration: the collider stays the body's width
   for (const s of [1, -1]) S('core').decor(() => {
     const xb = skinX(M.z, M.y - 0.04, s), x0 = xb + s * M.stalk, x1 = x0 + s * M.out;
-    if (T.mirrors === 'box') { S('core').box((xb + x1) / 2, M.y, M.z, Math.abs(x1 - xb), M.h, M.l, 'trim'); return; }
+    if (T.mirrors === 'box') {
+      // Five faces: the inboard attachment face is buried in the cab. Retain
+      // visible depth rather than spending those triangles on a hidden lid.
+      const corners=x=>[[x,M.y-M.h/2,M.z+M.l/2],[x,M.y+M.h/2,M.z+M.l/2],
+        [x,M.y+M.h/2,M.z-M.l/2],[x,M.y-M.h/2,M.z-M.l/2]];
+      const a=corners(xb),b=corners(x1),co=S('core');
+      co.face(b,'trim',[s,0,0]);
+      for(let i=0;i<4;i++) {
+        const j=(i+1)%4;
+        // Coarsest tier tapers to a closed attachment point instead of an
+        // equally thick block. Its outer face and visible depth are preserved.
+        co.face(lod===2?[[xb,M.y,M.z],b[j],b[i]]:[a[i],a[j],b[j],b[i]],'trim',sub(mix(a[i],b[j],.5),[(xb+x1)/2,M.y,M.z]));
+      }
+      return;
+    }
     S('core').beam([xb - s * 0.02, M.y - 0.06, M.z + 0.02], [x0 + s * 0.01, M.y - 0.03, M.z], 0.04, 0.06, 'trim', [0, 0, 1]);
     const f = (x, k) => [[x, M.y - M.h / 2, M.z + M.l / 2 * k], [x, M.y + M.h / 2, M.z + M.l / 2 * k - 0.01], [x, M.y + M.h / 2, M.z - M.l / 2], [x, M.y - M.h / 2 + 0.02, M.z - M.l / 2]];
     const a = f(x0, 1), b = f(x1, 0.5);
@@ -467,7 +496,9 @@ function makeSoups(P, lod) {
   }
 
   // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five spokes and a hex hub;
-  // LOD1 draws the spokes flat on the barrel, LOD2 a 5-gon decal. The tyre's circumradius makes its inscribed radius
+  // LOD1 draws flat spokes directly on the tyre face (no duplicate dark disc).
+  // LOD2 has a tiny alloy glint; every tier retains both closed sidewalls.
+  // The tyre's circumradius makes its inscribed radius
   // wheelR, so the bottom flat (phase π/n) touches the ground. ──
   const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n), rimR = P.wheelR * P.rim.r, depth = P.rim.depth;
   for (const [id, zc, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
@@ -476,13 +507,13 @@ function makeSoups(P, lod) {
     const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
     if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
-    if (T.rim === 'decal') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, P.wheelR * 0.6, 5, Math.PI / 2), 'chrome', [s, 0, 0]); continue; }
+    if (T.rim === 'decal') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, P.wheelR * 0.4, 3, Math.PI / 2), 'chrome', [s, 0, 0]); continue; }
     const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
     if (T.rim === 'spokes') {
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'chrome', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
       Wh.face(rd, 'under', [s, 0, 0]); // the dark barrel
-    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR), 'under', [s, 0, 0]); } // LOD1: a flat sidewall, the barrel drawn on it
+    } else { Wh.face(to, 'tyre', [s, 0, 0]); if(lod===0)Wh.face(ringAt(xo + s * 0.003, rimR), 'under', [s, 0, 0]); } // Coarse spokes use the dark tyre face; a second disc adds no silhouette.
     const hubR = 0.07, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
     for (let k = 0; k < (T.spokes ?? P.rim.spokes ?? 5); k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
       const a = Math.PI / 2 + k * Math.PI * 2 / (T.spokes ?? P.rim.spokes ?? 5), ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;

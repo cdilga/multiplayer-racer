@@ -1,0 +1,80 @@
+{
+ "car": "cruz-missile",
+ "lod": 0,
+ "sheet": "lod1",
+ "cameras": {
+  "camD": {
+   "front": 50,
+   "rear": 50,
+   "side": 10,
+   "top": 10
+  },
+  "projection": "perspective",
+  "tilt": {
+   "front": 0,
+   "rear": 0
+  },
+  "hero": {
+   "az": 34,
+   "elev": 2,
+   "dist": 9,
+   "fov": 26,
+   "targetY": 0.78
+  },
+  "heroRear": {
+   "az": 140,
+   "elev": 0,
+   "dist": 11,
+   "fov": 26,
+   "targetY": 0.78
+  }
+ },
+ "stats": {
+  "tris": 2146,
+  "draws": 14,
+  "breakdown": {
+   "front": 853,
+   "door_FL": 38,
+   "core": 290,
+   "door_RL": 30,
+   "back": 599,
+   "door_FR": 38,
+   "door_RR": 30,
+   "wheel_FL": 44,
+   "wheel_FR": 44,
+   "wheel_RL": 44,
+   "wheel_RR": 44,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 32
+  },
+  "stations": 29
+ },
+ "views": {
+  "side": {
+   "iou": 0.9427,
+   "aspect": 1.026,
+   "miss": 0.021,
+   "extra": 0.0363
+  },
+  "top": {
+   "iou": 0.9611,
+   "aspect": 0.99,
+   "miss": 0.0148,
+   "extra": 0.0241
+  },
+  "front": {
+   "iou": 0.9505,
+   "aspect": 1.024,
+   "miss": 0.0173,
+   "extra": 0.0321
+  },
+  "rear": {
+   "iou": 0.9264,
+   "aspect": 0.969,
+   "miss": 0.0664,
+   "extra": 0.0072
+  }
+ },
+ "score": 0.947
+}

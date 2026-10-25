@@ -27,8 +27,8 @@ import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
   0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 12, rim: 'flat', bayBoxes: true, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: false, band: true, lamps: 'full', grilleBars: 2, slats: 5, splitter: true, scoops: 'box', aerial: true, fin: true, windows: true, mirrors: 'stalk', wing: 'swan', exhaust: 'rings', diffFins: 4, handles: true, skirts: true, calipers: true, corners: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, band: false, lamps: 'full', grilleBars: 0, slats: 0, splitter: true, scoops: 'box', aerial: false, fin: false, windows: true, mirrors: 'box', wing: 'plate', exhaust: 'flat', diffFins: 0, handles: false, skirts: false, calipers: false, corners: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, flare: 3, flareLip: false, flareEnds: false, tyreCap: false, band: false, lamps: 'flat', grilleBars: 0, slats: 0, splitter: false, scoops: 'flat', aerial: false, fin: false, windows: 'flat', mirrors: 'box', wing: 'plate', exhaust: 'none', diffFins: 0, handles: false, skirts: false, calipers: false, corners: false },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, band: false, lamps: 'full', grilleBars: 0, slats: 0, splitter: true, scoops: 'box', aerial: false, fin: false, windows: true, mirrors: 'box', wing: 'plate', exhaust: 'flat', diffFins: 0, handles: false, skirts: false, calipers: false, corners: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, flare: 3, flareLip: false, flareEnds: false, tyreCap: false, band: false, lamps: 'flat', grilleBars: 0, slats: 0, splitter: false, scoops: 'flat', aerial: false, fin: false, windows: 'flat', mirrors: 'box', wing: 'plate', exhaust: 'none', diffFins: 0, handles: false, skirts: false, calipers: false, corners: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -131,7 +131,7 @@ function makeSoups(P, lod) {
   // (dropped when within T.merge of a kept station, so coarse tiers don't pay for near-duplicate rings)
   const prot = [P.zNose, P.zTail, zA, zC, P.zB, P.zNose - 0.16, 1.8, ...(lod < 2 ? [0, -1.85] : [])];
   for (let i = 1; i <= T.nose; i++) prot.push(P.zTail + 0.14 * i / T.nose);
-  if (T.doorMid) prot.push((zA + P.zB) / 2, (P.zB + zC) / 2); // a ring mid-door so a door dent has vertices to move
+  if (T.doorMid) prot.push((zA + P.zB) / 2, (P.zB + zC) / 2); // a ring mid-door to control the broad panel curvature
   for (let i = 2; i <= T.nose; i++) prot.push(P.zNose - 0.16 * (i - 1) / T.nose);
   for (const zc of [P.zFA, P.zRA]) for (let i = 0; i < T.arch; i++) prot.push(+(zc + P.archR * Math.cos(Math.PI * i / (T.arch - 1))).toFixed(4));
   const opt = T.curvePts ? [...new Set([...P.ySh, ...P.yCr, ...P.hw].map(([z]) => z))] : [];
@@ -144,15 +144,17 @@ function makeSoups(P, lod) {
     for (const zc of [P.zFA, P.zRA]) { const d = Math.abs(z - zc); if (d <= P.archR + 1e-6) y = Math.max(y, P.archBase + (P.archTop - P.archBase) * Math.sqrt(Math.max(0, 1 - (d / P.archR) ** 2))); }
     return y;
   };
-  // tub ring, one side (s = ±1), from floor centre to crown centre: 6 points
+  // Semantic sections remain at every tier; coarse tiers omit helper facets.
+  const N=lod===0?8:lod===1?7:6, DECK=N-2;
+  // tub ring, one side (s = ±1), from floor centre to crown centre
   const ring = (z, s) => {
     const yb = lerpCurve(P.yBot, z), ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), hw = lerpCurve(P.hw, z);
     const ay = archY(z), lift = ay > 0 ? Math.max(yb, ay) : yb;
     // Independent lower crease, broad lower flank and shoulder rollover. Evaluate
     // this original section at the arch cut rather than lifting the full-width belt.
-    const ys=[yb,yb+P.skirt,.52,ysh-P.sideDrop,ysh],xs=[hw-P.floorIn,hw-.025,hw,hw-.035,hw-P.shoulderIn];
+    const ys=[yb,yb+P.skirt,.36,.65,ysh-P.sideDrop,ysh],xs=[hw-P.floorIn,hw-.025,hw-.085,hw-.015,hw-.035,hw-P.shoulderIn];
     const width=y=>{for(let i=1;i<ys.length;i++)if(y<=ys[i])return xs[i-1]+(xs[i]-xs[i-1])*(y-ys[i-1])/Math.max(.001,ys[i]-ys[i-1]);return xs.at(-1);};
-    const levels=[lift,Math.max(lift+.008,ys[1]),Math.max(lift+.016,ys[2]),Math.max(lift+.024,ys[3]),ysh];
+    const levels=[lift,...(lod<2?[Math.max(lift+.008,ys[1])]:[]),Math.max(lift+.016,ys[2]),...(lod===0?[Math.max(lift+.024,ys[3])]:[]),Math.max(lift+.032,ys[4]),ysh];
     return [[0,yb,z],...levels.map(y=>[s*width(y),y,z]),[0,ycr,z]];
   };
   const skinX = (z,y,s) => {
@@ -165,25 +167,47 @@ function makeSoups(P, lod) {
   // the tub's top surface height at (x, z): the slope from the shoulder to the crown
   const deckY = (x, z) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), w = lerpCurve(P.hw, z) - P.shoulderIn; return ycr + (ysh - ycr) * Math.min(1, Math.abs(x) / w); };
 
+  const sideHull = {1:[], '-1':[]};
   const soups = {}; const S = (id) => (soups[id] ??= new Soup());
   const partOfTub = (zm, seg, s) => {
     if (zm > zA + 1e-6) return 'front';
     if (zm < zC - 1e-6) return 'back';
-    if (seg >= 1 && seg <= 4) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the car's left
+    if (seg >= 1 && seg < DECK) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the car's left
     return 'core';
   };
   const sUV = sideUV(P), tUV = topUV(P);
-  const segSwatch = (seg) => (seg === 0 ? 'under' : seg === 1 ? 'trim' : seg === 5 ? tUV : sUV); // 2, 3: side skin with livery
+  const segSwatch = (seg) => (seg === 0 ? 'under' : seg === 1 ? 'trim' : seg === DECK ? tUV : sUV); // 2, 3: side skin with livery
   for (const s of [1, -1]) {
     for (let i = 0; i < Z.length - 1; i++) {
       const a = ring(Z[i], s), b = ring(Z[i + 1], s), zm = (Z[i] + Z[i + 1]) / 2;
-      for (let k = 0; k < 6; k++) {
+      for (let k = 0; k < N-1; k++) {
         const so = S(partOfTub(zm, k, s));
         // winding: outward normals. ring order goes bottom→top on side s; for s>0 use (a_k, b_k, b_k+1, a_k+1)
-        if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], segSwatch(k)); else so.quad(a[k], a[k + 1], b[k + 1], b[k], segSwatch(k));
+        if(k>0 && k<DECK)sideHull[s].push([a[k],b[k],b[k+1]],[a[k],b[k+1],a[k+1]]);
+        if (k === 0) {
+          const floorEdge = r => [s * (archY(r[0][2]) > r[0][1]+.001 ? Math.min(Math.abs(r[1][0]), P.track-P.wheelW/2-.055) : Math.abs(r[1][0])), r[0][1], r[0][2]];
+          // The inset undertray is separate from the raised arch cut: no radial black fan.
+          const fa=floorEdge(a), fb=floorEdge(b);
+          if(s>0)so.quad(a[0],b[0],fb,fa,'under');else so.quad(a[0],fa,fb,b[0],'under');
+        } else if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], segSwatch(k)); else so.quad(a[k], a[k + 1], b[k + 1], b[k], segSwatch(k));
       }
     }
   }
+  // Side decoration clips onto each real facet, including its diagonal. A single
+  // polygon spanning the rounded guard used to alternate above/below the paint.
+  const sideDecal=(so,poly,sw,s,off=.012)=>{
+    for(const tri of sideHull[s]){
+      const uv=tri.map(p=>[p[2],p[1]]),[a,b,c]=uv,det=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      if(Math.abs(det)<1e-9)continue;
+      let q=poly;
+      for(let k=0;k<3&&q.length>=3;k++){
+        const a=uv[k],b=uv[(k+1)%3],d=p=>Math.sign(det)*((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0])),out=[];
+        for(let j=0;j<q.length;j++){const a=q[j],b=q[(j+1)%q.length],da=d(a),db=d(b);if(da>=-1e-9)out.push(a);if((da>=0)!==(db>=0))out.push(mix(a,b,da/(da-db)));}q=out;
+      }
+      if(q.length<3)continue;
+      so.face(q.map(([z,y])=>{const u=((z-a[0])*(c[1]-a[1])-(y-a[1])*(c[0]-a[0]))/det,v=((b[0]-a[0])*(y-a[1])-(b[1]-a[1])*(z-a[0]))/det;return [tri[0][0]+u*(tri[1][0]-tri[0][0])+v*(tri[2][0]-tri[0][0])+s*off,y,z];}),sw,[s,0,0]);
+    }
+  };
   // end caps: nose (front) and tail (back) — fan over both sides' rings
   const cap = (z, id, sign, sw) => {
     const R = ring(z, 1), Lr = ring(z, -1); const poly = [...R, ...Lr.slice(1,-1).reverse()];
@@ -202,10 +226,17 @@ function makeSoups(P, lod) {
     return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0,c.yr+P.roofCrown,c.z+P.glassBow*Math.max(-1,Math.min(1,c.z*2))]];
   };
   const nC = C.length;
+  const glassUV = (front) => {
+    const base = front ? C[0].z : C.at(-1).z, top = front ? C.find((c) => c.roof === 'paint').z : C.find((c) => c.z < -1 && c.roof === 'glass').z;
+    const [u0, v0, u1, v1] = REGION[front ? 'windscreen' : 'backlight'];
+    return (v) => { let i = 0; while (i < nC - 2 && C[i + 1].z > v[2]) i++; const a = C[i], b = C[i + 1], t = Math.min(1, Math.max(0, (a.z - v[2]) / (a.z - b.z))), w = a.wt + (b.wt - a.wt) * t - P.roofCh * 1.2; return [u0 + (u1 - u0) * Math.min(1, Math.max(0, (v[0] / w + 1) / 2)), v0 + (v1 - v0) * Math.min(1, Math.max(0, (v[2] - base) / (top - base)))]; };
+  };
+  const frontGlassUV = glassUV(true), rearGlassUV = glassUV(false);
+
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
     const c = C[i], a = cring(c, s), b = cring(C[i + 1], s), roof = c.roof === 'paint';
     for (let k = 0; k < 3; k++) {
-      const sw = k === 0 ? sUV : roof ? 'roofblack' : k === 1 ? sUV : 'glass';
+      const sw = k === 0 ? sUV : roof ? 'roofblack' : k === 1 ? sUV : c.z > 0 ? frontGlassUV : rearGlassUV;
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
   }
@@ -244,7 +275,7 @@ function makeSoups(P, lod) {
     for (const e of [-1, 1]) S('core').face([[cx - sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy + sy / 2, cz + e * sz / 2], [cx - sx / 2, cy + sy / 2, cz + e * sz / 2]], 'bay', [0, 0, e]); };
   { const hwA = lerpCurve(P.hw, zA) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zA)) / 2 - 0.02, zA + 0.03, hwA * 2, lerpCurve(P.ySh, zA) - 0.36, 0.06); } // firewall
   { const hwC = lerpCurve(P.hw, zC) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zC)) / 2 - 0.02, zC - 0.03, hwC * 2, lerpCurve(P.ySh, zC) - 0.36, 0.06); } // rear bulkhead
-  for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) - 0.07); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
+  for (const s of [1, -1]) { const x = s * (Math.min(Math.abs(skinX(zA,1.02,1)),Math.abs(skinX(zC,1.05,1)),Math.abs(skinX(0,1.05,1))) - 0.04); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
 
   // ── flared wheel arches: a band round each arch cut, standing proud of the side by P.flare.out at its lip, its outer edge
   // flush with the body P.flare.w further out (front arch: part front; rear arch: part back) ──
@@ -258,7 +289,7 @@ function makeSoups(P, lod) {
       // Above the tyre crown the flare rolls back towards the shoulder instead of
       // carrying the widest wheel clearance all the way up the arch.
       const roll = Math.max(0, Math.min(1, (y - .72) / .18));
-      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo * (1 - .8 * roll), P.track + P.wheelW / 2 + 0.02 - .08 * roll), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
+      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo * (1 - .8 * roll), P.track + P.wheelW / 2 + 0.02 - .08 * roll), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.025, yo, zo]);
     }
     for (let i = 0; i < n - 1; i++) {
       const th = Math.PI * (i + 0.5) / (n - 1);
@@ -320,11 +351,9 @@ function makeSoups(P, lod) {
     for (const p of Lp) fpoly(p, 'head', 0.008, s);
     for (const p of T.lamps === 'full' ? Fr.fangs : Fr.fangs.slice(0, 1)) fpoly(p, 'head', 0.008, s);
     if (T.corners) { // the wrap onto the wing, and the black bumper corner below it
-      const pts = Fr.lampWrap.map(([dz, v]) => { const z = P.zNose - dz, y = yTop - v; return [skinX(z, y, s) + s * 0.006, y, z]; });
-      F.face(pts, 'head', [s, 0, 0.2]);
+      sideDecal(F,Fr.lampWrap.map(([dz,v])=>[P.zNose-dz,yTop-v]),'head',s);
       const zb = P.zNose - Fr.cornerL, yt = yTop - Fr.bumperTop;
-      const cp = [[P.zNose, ybN + P.skirt], [zb, lerpCurve(P.yBot, zb) + P.skirt], [zb, yt - 0.04], [P.zNose, yt]].map(([z, y]) => [skinX(z, y, s) + s * 0.004, y, z]);
-      F.face(cp, 'trim', [s, 0, 0]);
+      sideDecal(F,[[P.zNose, ybN + P.skirt], [zb, lerpCurve(P.yBot, zb) + P.skirt], [zb, yt - 0.04], [P.zNose, yt]],'trim',s);
       if (T.slats) for (let i = 0; i < 3; i++) { const z = P.zNose - Fr.cornerL * (0.25 + 0.25 * i), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.05, y1 = yt - 0.08;
         F.face([[skinX(z, y0, s) + s * 0.008, y0, z + 0.012], [skinX(z, y0, s) + s * 0.008, y0, z - 0.012], [skinX(z, y1, s) + s * 0.008, y1, z - 0.012], [skinX(z, y1, s) + s * 0.008, y1, z + 0.012]], 'grille', [s, 0, 0]); }
     }
@@ -337,6 +366,12 @@ function makeSoups(P, lod) {
   // ── side skirts (core) ──
   if (T.skirts) for (const s of [1, -1]) { const za = P.zFA - P.archR - P.flare.w, zb = P.zRA + P.archR + P.flare.w, x = s * (lerpCurve(P.hw, 0) + 0.015), y0 = lerpCurve(P.yBot, 0) + 0.02;
     S('core').box(x, y0 + 0.05, (za + zb) / 2, 0.06, 0.10, za - zb, 'trim'); }
+  // The coarse tiers retain the straight sill silhouette. Without this face,
+  // the arch-base lift exposed a U-shaped lower door between the wheel openings.
+  if(!T.skirts)for(const side of [1,-1]){
+    const x=side*(lerpCurve(P.hw,0)+.015),y0=lerpCurve(P.yBot,0)-.005,y1=P.archBase+.03;
+    S('core').face([[x,y0,zA],[x,y0,zC],[x,y1,zC],[x,y1,zA]],'trim',[side,0,0]);
+  }
   // door handles: small black slots on each door
   if (T.handles) for (const s of [1, -1]) for (const [z, door] of [[P.handles.zF, 'door_F'], [P.handles.zR, 'door_R']]) {
     const y = P.handles.y, x = skinX(z, y, s) + s * 0.005;
@@ -413,42 +448,18 @@ function makeSoups(P, lod) {
     S('core').solid([a, b, ...a.map((p, i) => [p, a[(i + 1) % 4], b[(i + 1) % 4], b[i]])], 'roofblack');
   });
 
-  // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five spokes and a hex hub;
-  // LOD1 draws the spokes flat on the barrel, LOD2 a 5-gon decal. The tyre's circumradius makes its inscribed radius
-  // wheelR, so the bottom flat (phase π/n) touches the ground. ──
-  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n), rimR = P.wheelR * P.rim.r, depth = P.rim.depth;
+  // ── wheels: closed faceted tyres; the rim lip, five spokes and hub live in the shared code-drawn atlas.
+  // Geometry pays only for the outline, tread and both sidewalls (including detached wheels' inner faces).
+  // Circumradius makes the inscribed radius wheelR, so a bottom flat touches the ground.
+  const n = T.wheelSeg, tyreR = P.wheelR / Math.cos(Math.PI / n);
   for (const [id, zc, s] of [['wheel_FL', P.zFA, 1], ['wheel_FR', P.zFA, -1], ['wheel_RL', P.zRA, 1], ['wheel_RR', P.zRA, -1]]) {
     const Wh = S(id), xw = s * P.track, xo = xw + s * P.wheelW / 2, xi = xw - s * P.wheelW / 2, yc = P.wheelR;
-    const ringAt = (x, r, k = n, ph = 1.5 * Math.PI - Math.PI / k) => Array.from({ length: k }, (_, i) => { const a = ph + (i / k) * Math.PI * 2; return [x, yc + Math.sin(a) * r, zc + Math.cos(a) * r]; });
-    const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
+    const ringAt = (x) => Array.from({ length: n }, (_, i) => { const a = 1.5 * Math.PI - Math.PI / n + i * Math.PI * 2 / n; return [x, yc + Math.sin(a) * tyreR, zc + Math.cos(a) * tyreR]; });
+    const to = ringAt(xo), ti = ringAt(xi);
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
-    if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
-    if (T.rim === 'decal') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, P.wheelR * 0.6, 5, Math.PI / 2), 'rim', [s, 0, 0]); continue; }
-    const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
-    if (T.rim === 'spokes') {
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'rim', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
-      Wh.face(rd, 'under', [s, 0, 0]); // the dark barrel
-    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * (lod===0?-.018:.003), rimR,lod===2?5:n), 'under', [s, 0, 0]); } // LOD1: a flat sidewall, the barrel drawn on it
-    // A shallow dished rim lip catches light around the five-spoke wheel. The
-    // coarse tiers keep the same neutral rim as a flat face.
-    if(lod===0){const outer=ringAt(xo+s*.012,rimR,8),inner=ringAt(xo-s*.014,rimR*.83,8);
-      for(let i=0;i<8;i++){const j=(i+1)%8;Wh.face([outer[i],outer[j],inner[j],inner[i]],'rim',[s,0,0]);}}
-    const hubR = 0.07, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
-    for (let k = 0; k < 5; k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
-      const a = Math.PI / 2 + k * Math.PI * 2 / 5, ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
-      const P0 = (r, w, x) => [x, yc + sa * r + ps * w, zc + ca * r + pc * w];
-      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 0.7, rr = rimR - 0.004;
-      const fr = [P0(hubR * 0.8, -w0, xf), P0(rr, -w1, xf), P0(rr, w1, xf), P0(hubR * 0.8, w0, xf)];
-      Wh.face(lod===2?[[xf,yc,zc],fr[1],fr[2]]:fr, 'rim', [s, 0, 0]);
-      if (T.rim === 'spokes') { const xb = xo - s * depth * 0.55; for (const e of [-1, 1]) Wh.face([P0(hubR * 0.8, e * w0, xf), P0(rr, e * w1, xf), P0(rr, e * w1, xb), P0(hubR * 0.8, e * w0, xb)], 'trim', [0, ps * e, pc * e]); }
-    }
-    const hub = ringAt(xf + s * 0.012, hubR, 6, 0);
-    if (T.hub) Wh.face(hub, 'rim', [s, 0, 0]);
-    if (T.rim === 'spokes') { const hb = ringAt(xf - s * 0.01, hubR, 6, 0); for (let i = 0; i < 6; i++) { const j = (i + 1) % 6; Wh.face([hb[i], hb[j], hub[j], hub[i]], 'trim', sub(mix(hub[i], hub[j], 0.5), [hub[i][0], yc, zc])); } }
-    // the red caliper: on the core (it doesn't turn with the wheel), up and behind the axle, inside the spokes
-    if (T.calipers) { const ang = (P.rim.caliperDeg * Math.PI) / 180, r = rimR * 0.68, cz = zc - Math.cos(ang) * r, cy = yc + Math.sin(ang) * r;
-      S('core').decor(() => S('core').box(xo - s * depth * 0.62, cy, cz, 0.03, 0.08, rimR * 0.6, 'caliper', [-(Math.PI / 2 - ang), 0, 0])); }
+    const [u0, v0, u1, v1] = REGION.wheelFace;
+    Wh.face(ti, 'tyre', [-s, 0, 0]);
+    Wh.face(to, (p) => [u0 + (u1 - u0) * ((p[2] - zc) / tyreR + 1) / 2, v0 + (v1 - v0) * ((p[1] - yc) / tyreR + 1) / 2], [s, 0, 0]);
   }
 
   // ── interior blocks (P1-V03): what a missing panel shows, in vehicle space, the same at every LOD. Drawn only for a
@@ -491,11 +502,6 @@ function makeSoups(P, lod) {
     so.p=pp;so.uv=uu;
     // Whip is the only noncollision front decoration; the collision set is frozen independently.
     so.nc=[];
-  }
-  // Preserve each door's original hinge skin while refining the neighbouring shoulder.
-  if (P.physicsPivots) for (const [id, so] of Object.entries(soups)) if (id.startsWith('door')) {
-    const outer = Math.abs(P.physicsPivots[id][0]) + .015;
-    for (let i=0;i<so.p.length;i+=3) so.p[i] = Math.sign(so.p[i]) * Math.min(Math.abs(so.p[i]), outer);
   }
   return { soups, stations: Z.length };
 }

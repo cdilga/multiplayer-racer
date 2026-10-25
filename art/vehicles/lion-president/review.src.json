@@ -1,80 +1,84 @@
 {
- "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
- "name": "Lion President",
- "status": "awaiting-review",
- "date": "2026-10-25",
- "beads": [
-  "br-rgw6"
- ],
- "summary": "A new mid-flank crease and upper shoulder roll replace the broad flat side; raised arch cuts sample the original section at their actual height. Reshaped cabin stations, lower rear belt and independently annotated pane boundaries correct the high, forward glass. Window overlays clip to actual substrate triangles. The fascia bends through four broad close-view planes, with graphics sharing that transform. LOD0 wheels gain a shallow dish, lip and broader spokes. Coarse wing endplates remain explicit thin planes with crossed supports; coarse spokes are symmetric. Rear-glass foot stations follow deck height at their own x/z, including the bowed centre, closing the visible foot gap. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2296 / 900 / 592 against 2400 / 900 / 600 budgets. Weighted silhouette overlap regresses at every tier. LOD0 top IoU falls from 0.9365 to 0.9244, while side improves from 0.9467 to 0.9524. LOD1 side/rear and LOD2 side also regress. The LOD1 side-glass gate passes narrowly, 0.5066 against 0.5000. Coarse wing planes, tyre proportions and high spoiler retain the stylised reference interpretation.",
- "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
- "specTwin": {
-  "id": "hawk-dash",
-  "sharedSpec": "One spec, two bodies (R123): the Hawk Dash and the Lion President name spec 'aussie-v8' in web/shared/src/roster.json, and their profiles' handling (tuning) is identical, held by tools/vehicles/test/spec-twins.test.mjs. Rear drive, 1700 kg, Cruz-like launch, more power per kilo for a higher top speed; the bodies (hull, wheels, damage parts) are each car's own."
- },
- "reference": {
-  "sheet": "art/vehicles/lion-president/refs/lod-plus-1.png",
-  "compare": [
-   {
-    "lod": 0,
-    "label": "LOD0 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod0"
-   },
-   {
-    "lod": 1,
-    "label": "LOD1 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod1"
-   },
-   {
-    "lod": 2,
-    "label": "LOD2 against the 'lowest' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod2"
-   }
+  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
+  "name": "Lion President",
+  "status": "awaiting-review",
+  "date": "2026-10-25",
+  "beads": [
+    "br-8h3u.17"
   ],
-  "note": "Unchanged generated reference sheets. Each comparison shows reference, revised render and silhouette diff through frozen shared perspective cameras (50m front/rear, 10m side/top, horizontal optical axis). Before/after and local reference contours/lamp envelopes are recorded in validation.md. Generated views are not calibrated photographs; measured regressions are disclosed."
- },
- "turntable": {
-  "sheet": "docs/evidence/P1-V-roster-rework/lion-president/baked/lods.png",
-  "validation": "docs/evidence/P1-V-roster-rework/lion-president/validation.md"
- },
- "damage": {
-  "strip": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip.png",
-  "overview": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip-overview.png",
-  "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
- },
- "paints": {
-  "sheet": "docs/evidence/P1-V-roster-rework/lion-president/loader/paints-strip.png",
-  "identity": "art/ui/tokens.json",
-  "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours."
- },
- "inWorld": [
-  {
-   "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
-   "size": "large",
-   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-1.png"
+  "summary": "The undertray no longer fans up to the wheel arches. A lower-door return, separate shoulder rollover and inset bay liner restore panel volume; lamp and bumper-corner graphics clip to the real side facets. Coarse tiers retain a straight connected lower sill. Hawk-style atlas wheels have sealed inner sidewalls, and glass detail adds no geometry or material. Exported triangles are 2321 / 892 / 564 within unchanged 2400 / 900 / 600 budgets. Named corrective checks pass, while weighted silhouette scores 0.9461 / 0.9400 / 0.9443 remain below the approximately 0.95 target. Physical contracts, pivots, colliders, anchors and handling are unchanged. Fascia recess depth and lamp/mirror detail remain coarser than the reference; this is an awaiting-review candidate with the global likeness target unmet.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": {
+    "id": "hawk-dash",
+    "sharedSpec": "One spec, two bodies (R123): the Hawk Dash and the Lion President name spec 'aussie-v8' in web/shared/src/roster.json, and their profiles' handling (tuning) is identical, held by tools/vehicles/test/spec-twins.test.mjs. Rear drive, 1700 kg, Cruz-like launch, more power per kilo for a higher top speed; the bodies (hull, wheels, damage parts) are each car's own."
   },
-  {
-   "label": "Four tiles",
-   "size": "medium",
-   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-4.png"
+  "reference": {
+    "sheet": "art/vehicles/lion-president/refs/lod-plus-1.png",
+    "compare": [
+      {
+        "lod": 0,
+        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "dir": "docs/evidence/P1-V-roster-visual/lion-president/after"
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "dir": "docs/evidence/P1-V-roster-visual/lion-president/after-lod1"
+      },
+      {
+        "lod": 2,
+        "label": "LOD2 against the 'lowest' reference sheet",
+        "dir": "docs/evidence/P1-V-roster-visual/lion-president/after-lod2"
+      }
+    ],
+    "note": "Unchanged generated reference sheets and frozen fit cameras. The comparison directories contain reference/shaded/diff sheets at every LOD; lod-reference-review.png includes rear heroes. visual-comparison.png uses identical fixed world cameras and scale for previous/current shaded models, preserving reference aspect. Generated views are uncalibrated; the validation report separates named geometry checks, weighted silhouette results and remaining limits.",
+    "shadedComparison": {
+      "image": "docs/evidence/P1-V-roster-visual/lion-president/visual-comparison.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    }
   },
-  {
-   "label": "24 tiles, small (each car about 100 px)",
-   "size": "small",
-   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-24.png"
+  "turntable": {
+    "sheet": "docs/evidence/P1-V-roster-visual/lion-president/loader/lods.png",
+    "validation": "docs/evidence/P1-V-roster-visual/lion-president/validation.md"
   },
-  {
-   "label": "From the Derby overview camera (top-down damage row)",
-   "size": "overview",
-   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip-overview.png"
+  "damage": {
+    "strip": "docs/evidence/P1-V-roster-visual/lion-president/runtime/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-visual/lion-president/runtime/damage-strip-overview.png",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
+  },
+  "paints": {
+    "sheet": "docs/evidence/P1-V-roster-visual/lion-president/runtime/paints-strip.png",
+    "identity": "art/ui/tokens.json",
+    "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours."
+  },
+  "inWorld": [
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+      "size": "large",
+      "path": "docs/evidence/P1-V-roster-visual/lion-president/runtime/grid-1.png"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "path": "docs/evidence/P1-V-roster-visual/lion-president/runtime/grid-4.png"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "path": "docs/evidence/P1-V-roster-visual/lion-president/runtime/grid-24.png"
+    },
+    {
+      "label": "From the Derby overview camera (top-down damage row)",
+      "size": "overview",
+      "path": "docs/evidence/P1-V-roster-visual/lion-president/runtime/damage-strip-overview.png"
+    }
+  ],
+  "gate": {
+    "report": "docs/evidence/P1-V-roster-visual/lion-president/validation.md"
+  },
+  "profile": "assets/profiles/lion-president.json",
+  "handling": {
+    "topSpeedMps": null,
+    "topSpeedNote": "Not measured yet: R123's balance bead (br-bwju.6) measures every car's top speed, launch and cornering on real maps."
   }
- ],
- "gate": {
-  "report": "docs/evidence/P1-V-roster-rework/lion-president/validation.md"
- },
- "profile": "assets/profiles/lion-president.json",
- "handling": {
-  "topSpeedMps": null,
-  "topSpeedNote": "Not measured yet: R123's balance bead (br-bwju.6) measures every car's top speed, launch and cornering on real maps."
- }
 }

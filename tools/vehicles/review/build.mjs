@@ -102,6 +102,10 @@ export function buildVehicle(id, copies) {
     specTwin: src.specTwin ?? null,
   };
   r.reference = { sheet: media(src.reference.sheet, 'reference'), note: src.reference.note, compare: [] };
+  if (src.reference.shadedComparison) r.reference.shadedComparison = {
+    image: media(src.reference.shadedComparison.image, 'shaded-comparison'),
+    caption: src.reference.shadedComparison.caption,
+  };
   for (const c of src.reference.compare) {
     const score = readJson(path.join(REPO, c.dir, 'score.json'));
     r.reference.compare.push({

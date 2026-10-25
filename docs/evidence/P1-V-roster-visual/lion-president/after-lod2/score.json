@@ -1,0 +1,80 @@
+{
+ "car": "lion-president",
+ "lod": 2,
+ "sheet": "lowest",
+ "cameras": {
+  "camD": {
+   "front": 50,
+   "rear": 50,
+   "side": 10,
+   "top": 10
+  },
+  "projection": "perspective",
+  "tilt": {
+   "front": 0,
+   "rear": 0
+  },
+  "hero": {
+   "az": 52,
+   "elev": 0,
+   "dist": 11,
+   "fov": 26,
+   "targetY": 0.78
+  },
+  "heroRear": {
+   "az": 140,
+   "elev": 0,
+   "dist": 11,
+   "fov": 26,
+   "targetY": 0.78
+  }
+ },
+ "stats": {
+  "tris": 668,
+  "draws": 14,
+  "breakdown": {
+   "front": 172,
+   "core": 146,
+   "door_FL": 6,
+   "door_RL": 6,
+   "back": 122,
+   "door_FR": 6,
+   "door_RR": 6,
+   "wheel_FL": 28,
+   "wheel_FR": 28,
+   "wheel_RL": 28,
+   "wheel_RR": 28,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 32
+  },
+  "stations": 12
+ },
+ "views": {
+  "side": {
+   "iou": 0.9336,
+   "aspect": 0.973,
+   "miss": 0.0383,
+   "extra": 0.0281
+  },
+  "top": {
+   "iou": 0.9539,
+   "aspect": 1.087,
+   "miss": 0.0072,
+   "extra": 0.039
+  },
+  "front": {
+   "iou": 0.9466,
+   "aspect": 0.985,
+   "miss": 0.0227,
+   "extra": 0.0307
+  },
+  "rear": {
+   "iou": 0.9515,
+   "aspect": 0.955,
+   "miss": 0.0357,
+   "extra": 0.0128
+  }
+ },
+ "score": 0.9443
+}

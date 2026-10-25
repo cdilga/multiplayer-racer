@@ -4,9 +4,9 @@
   "status": "awaiting-review",
   "date": "2026-10-25",
   "beads": [
-    "br-rgw6"
+    "br-8h3u.17"
   ],
-  "summary": "Refined the CB50-inspired delivery motorcycle with an octagonal cylinder/cooling fins, curved single right header, rounded tank inset ends and bevelled saddle, continuous tapered arms, shaped hi-vis vest with attached bands, cheek-returning face and arched visor/chin lip. Spoked wheel openings remain real. Exported triangles: 2669 / 894 / 599 within original 2900 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. Weighted silhouette .8563 to .8501 / .8241 to .8210 / .8049 to .7932 regresses; local helmet curvature improves and its new gate rejects the actual baseline at every tier. The primary CB50 image governs one right pipe despite generated contradictions. Review candidate below the ~.95 global target.",
+  "summary": "Split both cream tank inserts on their actual finished facet diagonals; removed the spikes that escaped the red shell in the hero view. Reduced the crankcase casting, opened cooling fins, tapered shorts and shins, joined the neck to the collar/shell and removed a floating black helmet disc. Added collar/vest creases. Thin open wire spokes retain wheel daylight. Baked triangles 2611 / 899 / 599; unchanged physics/sidecar. Global silhouette scores 0.8492 / 0.8256 / 0.7944 remain below ~.95; review candidate with remaining shaded mismatches documented. Coarse tyres now retain twelve outer stations. The low-tier helmet now uses eight circumferential segments and four latitude bands; merged pannier masses and lean frame tubes funded the broad form.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -14,33 +14,37 @@
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0: current source against unchanged reference, frozen cameras",
-        "dir": "docs/evidence/P1-V-roster-rework/postie-bike/current-lod0"
+        "label": "LOD0: final shaded forms / unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-visual/postie-bike/current-lod0"
       },
       {
         "lod": 1,
-        "label": "LOD1: current source against unchanged reference, frozen cameras",
-        "dir": "docs/evidence/P1-V-roster-rework/postie-bike/current-lod1"
+        "label": "LOD1: final shaded forms / unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-visual/postie-bike/current-lod1"
       },
       {
         "lod": 2,
-        "label": "LOD2: current source against unchanged reference, frozen cameras",
-        "dir": "docs/evidence/P1-V-roster-rework/postie-bike/current-lod2"
+        "label": "LOD2: final shaded forms / unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-visual/postie-bike/current-lod2"
       }
     ],
-    "note": "Unchanged reference and masks, identical frozen diagnostic cameras for shaded/mask captures. Exact source/asset identity and baseline/current scores are in docs/evidence/P1-V-roster-rework/postie-bike/summary.json. Actual rejected baseline source is preserved under baseline/; shape checks reject its named errors. Primary source and generated-camera limitations remain applicable. Honda primary CB50 image governs the single right exhaust; generated left/rear pipe visibility is contradictory."
+    "note": "Aspect-preserved shaded reference/previous/current and enlarged exact-camera regions are in docs/evidence/P1-V-roster-visual/postie-bike/visual-comparison.png and regional-comparison.png. Per-part counts and exact identities are in triangle-receipt.json; real old source is retained in baseline/. Global likeness remains below target.",
+    "shadedComparison": {
+      "image": "docs/evidence/P1-V-roster-visual/postie-bike/visual-comparison.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    }
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-roster-rework/postie-bike/current-loader/ladder.png",
-    "validation": "docs/evidence/P1-V-roster-rework/postie-bike/validation.md"
+    "sheet": "docs/evidence/P1-V-roster-visual/postie-bike/current-loader/ladder.png",
+    "validation": "docs/evidence/P1-V-roster-visual/postie-bike/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-roster-rework/postie-bike/final/damage-strip.png",
-    "overview": "docs/evidence/P1-V-roster-rework/postie-bike/final/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-roster-visual/postie-bike/final/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-visual/postie-bike/final/damage-strip-overview.png",
     "note": "Left to right: intact; front and back loose; the rider loose; wheel_F cambered; front detached; the rider thrown (detached, R121); back detached; wheel_F detached; rider and front detached; a stripped frame. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-roster-rework/postie-bike/final/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-roster-visual/postie-bike/final/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour tints the tank panels and mudguards. The cream tank inset, postal-red panniers, hi-vis vest, parcels, mechanical metal and dark tyres retain their colours. The identity number uses the original rider-back roof_number anchor and HUD badge."
   },
@@ -48,26 +52,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-roster-rework/postie-bike/final/grid-1.png"
+      "path": "docs/evidence/P1-V-roster-visual/postie-bike/final/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-roster-rework/postie-bike/final/grid-4.png"
+      "path": "docs/evidence/P1-V-roster-visual/postie-bike/final/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-roster-rework/postie-bike/final/grid-24.png"
+      "path": "docs/evidence/P1-V-roster-visual/postie-bike/final/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-roster-rework/postie-bike/final/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-roster-visual/postie-bike/final/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-roster-rework/postie-bike/validation.md"
+    "report": "docs/evidence/P1-V-roster-visual/postie-bike/validation.md"
   },
   "profile": "assets/profiles/postie-bike.json",
   "handling": {

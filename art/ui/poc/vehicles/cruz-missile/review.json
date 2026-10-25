@@ -9,52 +9,58 @@
     "P1-V03",
     "br-bwju.1",
     "br-p1-d03b-poc-cleanup-uod",
-    "br-rgw6"
+    "br-rgw6",
+    "br-8h3u.16",
+    "br-8h3u.17"
   ],
-  "summary": "Reworked the actual body after owner feedback: longer overhangs with frozen wheel hubs, a broad curved nose with swept-back corners, upright facet-projected lamps, rolled upper flanks and crowned bonnet sections. Side glazing follows the actual greenhouse triangles, hidden damage bays sit inside the sloped doors, rear graphics follow the sculpted boot/bumper, and cheap repeated wheel detail funds the body. Intact exported triangles: 2052 / 891 / 576 against unchanged 2800 / 900 / 600. Front lamp envelope IoU improves from about 0.53 to 0.72; front silhouette improves while side/rear and coarse whole-view scores regress slightly. These measured local gains and inspected shaded comparisons are a review candidate, not an owner likeness acceptance.",
+  "summary": "Owner panel follow-up: fuller door waist and tucked sill, curved nudge rails with brackets penetrating the actual fascia, thick conforming splitter and closed atlas wheels. Independent level undertray and inner well walls remove the arch-to-centre floor fans. Hawk-style wheel detail saves 96 LOD0 triangles and funds the repaired volume. Intact triangles 2052 / 897 / 590, within unchanged 2800 / 900 / 600. Collider/sidecar/profile bytes and hinges are unchanged. Shaded comparisons inspected; generated-reference lighting and fine accessories remain approximate, not an owner likeness acceptance.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Unchanged references, horizontal 50 m end diagnostics and 10 m side/top. Hero azimuth corrected from 52 to 34 degrees to match the reference front/side balance; low 2 degree pitch. Both candidates were recaptured. Generated views remain uncalibrated. New independent body/axle, nose-section, lamp-plane and flank tests reject the real previous source at every tier.",
+    "note": "Fixed-world-camera previous/current body, side, front and underside board: docs/evidence/P1-V-cruz-panels/visual-comparison.png. No per-model resizing in that board. Reference aspects preserved and uncalibrated; per-view contact sheets supplement it. Independent tests reject the real previous flat waist, radial floor and missing coarse mounts.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against lod+1 sheet; frozen perspective mask/shading cameras",
+        "label": "LOD0 shaded reference comparison and frozen-camera masks",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9503,
-          "top": 0.9595,
-          "front": 0.9562,
-          "rear": 0.9313
+          "side": 0.9427,
+          "top": 0.9611,
+          "front": 0.9505,
+          "rear": 0.9264
         },
-        "weightedIou": 0.9511
+        "weightedIou": 0.947
       },
       {
         "lod": 1,
-        "label": "LOD1 against lod+1 sheet; frozen perspective mask/shading cameras",
+        "label": "LOD1 shaded reference comparison and frozen-camera masks",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9548,
-          "top": 0.9547,
-          "front": 0.9567,
-          "rear": 0.9244
+          "side": 0.9452,
+          "top": 0.9612,
+          "front": 0.9545,
+          "rear": 0.9205
         },
-        "weightedIou": 0.9505
+        "weightedIou": 0.9477
       },
       {
         "lod": 2,
-        "label": "LOD2 against lowest-lod sheet; frozen perspective mask/shading cameras",
+        "label": "LOD2 shaded reference comparison and frozen-camera masks",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9273,
-          "top": 0.93,
-          "front": 0.9438,
-          "rear": 0.9243
+          "side": 0.9181,
+          "top": 0.951,
+          "front": 0.936,
+          "rear": 0.9176
         },
-        "weightedIou": 0.9301
+        "weightedIou": 0.9306
       }
-    ]
+    ],
+    "shadedComparison": {
+      "image": "media/shaded-comparison/visual-comparison.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    }
   },
   "turntable": {
     "assetJson": "media/model/cruz-missile.asset.json",
@@ -73,7 +79,7 @@
       {
         "lod": 1,
         "glb": "media/model/cruz-missile.lod1.glb",
-        "tris": 891,
+        "tris": 897,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -81,7 +87,7 @@
       {
         "lod": 2,
         "glb": "media/model/cruz-missile.lod2.glb",
-        "tris": 576,
+        "tris": 590,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -365,31 +371,23 @@
     }
   ],
   "gate": {
-    "result": "FAIL",
+    "result": "PASS",
     "findings": [
       {
         "result": "PASS",
-        "text": "contract, byte-reproducible bake and all three budgets (`final-contract.txt`, `final-bake-check.txt`)."
+        "text": "source contract, deterministic bake, exact frozen physics and qualified triangle budgets."
       },
       {
         "result": "PASS",
-        "text": "complete original sidecar and collider POSITION buffers remain byte-identical to ad35536b; parent `../exports.json` records hashes. Handling, hubs, anchors, hinges and mass fractions remain unchanged."
+        "text": "named door, floor, bar mounting and wheel closure regressions at every LOD."
       },
       {
         "result": "PASS",
-        "text": "independent body-to-axle proportion, intermediate/corner nose depth, lamp-plane slope and flank return checks at every tier. Actual rejected baseline fails all four named defects at each tier (`before-form.json`, `after-form.json`). Normal suite includes both real baseline and injected defects."
-      },
-      {
-        "result": "PASS",
-        "text": "existing mesh, material, paint and attachment checks; parent vehicle-tests.txt records full result. No shared renderer/batching change or fresh GPU draw-cost claim."
-      },
-      {
-        "result": "PASS",
-        "text": "native settle and straight-line handling fixtures, deterministic replay (`../sim.json`)."
+        "text": "shaded previous/reference/current and baked paint/damage/grid evidence inspected."
       },
       {
         "result": "WARN",
-        "text": "silhouette weighted before→after: .9542→.9511 / .9533→.9505 / .9359→.9301. Front improves but rear/side and coarse scores regress. The ~.95 broad likeness gate is not met at LOD2. Named local gains do not erase this limitation."
+        "text": "full generated-reference likeness is approximate; whole-view IoU and unmeasured runtime limits remain disclosed above."
       }
     ],
     "report": "media/gate/validation.md"

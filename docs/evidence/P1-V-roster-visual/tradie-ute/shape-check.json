@@ -1,0 +1,172 @@
+{
+  "reference": "refs/shape-reference.json",
+  "referenceSha256": "6066af0ba0c9b25f7adc6f6cd789a9605c955742f4fd7a36840ceb618300a10c",
+  "sourceSha256": {
+    "model.js": "0c0108f9f49ecc7fc12106d5a6733980c5d12c5cf44eadb0c80ddd6185f83ca0",
+    "params.json": "9ef918ebc77f6605f0b64957aed260c922b57ce246263d2b169220c7244b6fc4",
+    "atlas.js": "c7f683e2f08e3e3be7133fba8f6e03dce08cbf380bf941b0e0c68cc504a155f4"
+  },
+  "sourceDir": "/Users/cdilga/Documents/dev/multiplayer-racer/art/vehicles/tradie-ute",
+  "lods": [
+    {
+      "lod": 0,
+      "widthHalfMetres": [
+        0.8419718446601943,
+        0.8844692430481654,
+        0.851344298245614,
+        0.8275723684210526
+      ],
+      "noseZMetres": [
+        2.32,
+        2.282228168588929,
+        2.197145094142654
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0.042497398387971175,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": true
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.05689687462711279,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0.12285490585734582,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0.03777183141107088,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lod": 1,
+      "widthHalfMetres": [
+        0.8419718446601943,
+        0.883540418382455,
+        0.8483552287581699,
+        0.8272441176470589
+      ],
+      "noseZMetres": [
+        2.32,
+        2.291346862540405,
+        2.195987963323984
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0.04156857372226075,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": true
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.056296300735396154,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0.12401203667601601,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0.028653137459594635,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lod": 2,
+      "widthHalfMetres": [
+        0.8419718446601943,
+        0.8835324836653091,
+        0.8494975865209472,
+        0.828386475409836
+      ],
+      "noseZMetres": [
+        2.32,
+        2.291346862540405,
+        2.195987963323984
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0.04156063900511486,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": true
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.05514600825547311,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0.12401203667601601,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": true
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0.028653137459594635,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": true
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "pass": true
+}

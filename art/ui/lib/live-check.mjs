@@ -53,6 +53,9 @@ const surfaceProblems = (vw) => {
   // Text or a control cut off by the screen edge: a page that hides its overflow (the TV mocks) can't be scrolled to it.
   // Wholly off-screen elements (parked drawers) and anything inside a scrollable box don't count.
   const clipped = [];
+  const rootStyle = getComputedStyle(document.documentElement), bodyStyle = getComputedStyle(document.body);
+  const verticalDocumentScroll = document.scrollingElement.scrollHeight > window.innerHeight + 2
+    && ![rootStyle.overflowY, bodyStyle.overflowY].some(v => /hidden|clip/.test(v));
   for (const e of document.body.querySelectorAll('*')) {
     const control = e.matches('button, a[href], input, select, [role=button]');
     if (!control && ![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
@@ -62,6 +65,15 @@ const surfaceProblems = (vw) => {
     if (!inView || (r.left >= -1 && r.right <= vw + 1 && r.top >= -1 && r.bottom <= window.innerHeight + 1)) continue;
     const cs = getComputedStyle(e);
     if (cs.visibility !== 'visible' || Number(cs.opacity) === 0) continue;
+    // A paragraph/image crossing the viewport bottom on a scrolling review page
+    // remains reachable. Horizontal overflow and fixed-screen clipping still fail.
+    if (verticalDocumentScroll && r.left >= -1 && r.right <= vw + 1) {
+      let attachedToViewport = false;
+      for (let a = e; a && a !== document.body; a = a.parentElement) {
+        if (/fixed|sticky/.test(getComputedStyle(a).position)) { attachedToViewport = true; break; }
+      }
+      if (!attachedToViewport) continue;
+    }
     let scroller = false;
     for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
       const s = getComputedStyle(a);

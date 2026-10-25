@@ -1,0 +1,18 @@
+✔ Tradie LOD0: flipped and detached tyres have inner sidewalls (11.311083ms)
+✔ Tradie LOD1: flipped and detached tyres have inner sidewalls (2.1265ms)
+✔ Tradie LOD2: flipped and detached tyres have inner sidewalls (1.565958ms)
+✔ Tradie LOD0: centre floor is independent of arch lips (5.156875ms)
+✔ Tradie LOD1: centre floor is independent of arch lips (2.497583ms)
+✔ Tradie LOD2: centre floor is independent of arch lips (1.391791ms)
+✔ Tradie LOD0: photographed rear lamp order (3.039125ms)
+✔ Tradie LOD1: photographed rear lamp order (1.4675ms)
+✔ Tradie LOD2: photographed rear lamp order (0.941833ms)
+✔ panel gate rejects saved previous radial floor (18.238458ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 138.631708

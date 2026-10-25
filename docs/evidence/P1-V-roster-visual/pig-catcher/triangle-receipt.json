@@ -1,0 +1,150 @@
+{
+  "id": "pig-catcher",
+  "baselineRevision": "a19751dcdf662728f5974e7381dd320b276a1e06",
+  "sourceHashes": {
+    "model.js": "ca97c9b9540289a0215ea7beb3ba0b87d60cefba1489f9c37c8195f61a333666",
+    "params.json": "a9713e28dff76cdbd6a8f7dd19a51df6f1e2c3bf34eae62d9eb0df7502d1d451",
+    "vehicle.json": "d81558c46842bacd853d77abd67ce783549fff3cccc389f18f428896cde9d61c",
+    "colliders.json": "b76cdc650fa094a293dc503e20dfb42a7667cd861f895599aeffa0701ae79d5c",
+    "pig-catcher.asset.json": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
+    "pig-catcher.lod0.glb": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+    "pig-catcher.lod1.glb": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+    "pig-catcher.lod2.glb": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+    "refs/lod-plus-1.png": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+    "refs/lowest-lod.png": "a4152314b68076dd9839d19b83924d6b18c1234e87e8aab8972ec53ffbeeb477"
+  },
+  "frozenContracts": {
+    "vehicle.json": {
+      "unchanged": true,
+      "sha256": "d81558c46842bacd853d77abd67ce783549fff3cccc389f18f428896cde9d61c"
+    },
+    "colliders.json": {
+      "unchanged": true,
+      "sha256": "b76cdc650fa094a293dc503e20dfb42a7667cd861f895599aeffa0701ae79d5c"
+    },
+    "pig-catcher.asset.json": {
+      "unchanged": true,
+      "sha256": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4"
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "maxTris": 2800,
+      "rawBefore": {
+        "core": 684,
+        "front": 356,
+        "back": 368,
+        "rider": 378,
+        "wheel_F": 516,
+        "wheel_R": 496
+      },
+      "rawAfter": {
+        "core": 736,
+        "front": 356,
+        "back": 368,
+        "rider": 390,
+        "wheel_F": 436,
+        "wheel_R": 416
+      },
+      "bakedBefore": {
+        "core": 656,
+        "front": 312,
+        "back": 331,
+        "rider": 360,
+        "wheel_F": 484,
+        "wheel_R": 464
+      },
+      "bakedAfter": {
+        "core": 710,
+        "front": 326,
+        "back": 331,
+        "rider": 376,
+        "wheel_F": 436,
+        "wheel_R": 416
+      },
+      "totalBefore": 2607,
+      "totalAfter": 2595,
+      "score": 0.8451
+    },
+    {
+      "lod": 1,
+      "maxTris": 900,
+      "rawBefore": {
+        "core": 228,
+        "front": 152,
+        "back": 152,
+        "rider": 210,
+        "wheel_F": 76,
+        "wheel_R": 76
+      },
+      "rawAfter": {
+        "core": 226,
+        "front": 144,
+        "back": 144,
+        "rider": 212,
+        "wheel_F": 88,
+        "wheel_R": 88
+      },
+      "bakedBefore": {
+        "core": 221,
+        "front": 152,
+        "back": 148,
+        "rider": 210,
+        "wheel_F": 76,
+        "wheel_R": 76
+      },
+      "bakedAfter": {
+        "core": 226,
+        "front": 144,
+        "back": 140,
+        "rider": 212,
+        "wheel_F": 88,
+        "wheel_R": 88
+      },
+      "totalBefore": 883,
+      "totalAfter": 898,
+      "score": 0.8226
+    },
+    {
+      "lod": 2,
+      "maxTris": 600,
+      "rawBefore": {
+        "core": 176,
+        "front": 86,
+        "back": 74,
+        "rider": 150,
+        "wheel_F": 60,
+        "wheel_R": 60
+      },
+      "rawAfter": {
+        "core": 163,
+        "front": 78,
+        "back": 62,
+        "rider": 152,
+        "wheel_F": 72,
+        "wheel_R": 72
+      },
+      "bakedBefore": {
+        "core": 170,
+        "front": 86,
+        "back": 74,
+        "rider": 150,
+        "wheel_F": 60,
+        "wheel_R": 60
+      },
+      "bakedAfter": {
+        "core": 163,
+        "front": 78,
+        "back": 62,
+        "rider": 152,
+        "wheel_F": 72,
+        "wheel_R": 72
+      },
+      "totalBefore": 600,
+      "totalAfter": 599,
+      "score": 0.7978
+    }
+  ],
+  "screenshots": "Playwright Chromium 151.0.7922.34, headless/software renderer; viewer is not the running host."
+}

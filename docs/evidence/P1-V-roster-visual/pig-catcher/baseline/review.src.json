@@ -1,0 +1,80 @@
+{
+  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
+  "name": "Pig Catcher",
+  "status": "awaiting-review",
+  "date": "2026-10-25",
+  "beads": [
+    "br-bwju.5",
+    "br-bwju.11",
+    "br-bwju",
+    "br-rgw6"
+  ],
+  "summary": "Reworked the engine as a rounded casting and narrow cylinder with curved right header, rider with nearly upright shirt and tapered shoulder/neck, faceted MX dome/brow/chin and wraparound goggles, chamfered guards, real annular rope and corrected tank/shroud/mudguard transitions. Exported triangles: 2607 / 883 / 600 within original 2800 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. LOD0 weighted silhouette .8504 to .8552; LOD1 .8497 to .8360 and LOD2 .8288 to .8026 regress. New current-geometry engine/torso gates reject the actual baseline at every tier. This remains below the ~.95 global likeness gate and is an explicit owner review candidate, not accepted parity.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": null,
+  "reference": {
+    "sheet": "art/vehicles/pig-catcher/refs/lod-plus-1.png",
+    "compare": [
+      {
+        "lod": 0,
+        "label": "LOD0: current source against unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-rework/pig-catcher/current-lod0"
+      },
+      {
+        "lod": 1,
+        "label": "LOD1: current source against unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-rework/pig-catcher/current-lod1"
+      },
+      {
+        "lod": 2,
+        "label": "LOD2: current source against unchanged reference, frozen cameras",
+        "dir": "docs/evidence/P1-V-roster-rework/pig-catcher/current-lod2"
+      }
+    ],
+    "note": "Unchanged reference and masks, identical frozen diagnostic cameras for shaded/mask captures. Exact source/asset identity and baseline/current scores are in docs/evidence/P1-V-roster-rework/pig-catcher/summary.json. Actual rejected baseline source is preserved under baseline/; shape checks reject its named errors. Primary source and generated-camera limitations remain applicable."
+  },
+  "turntable": {
+    "sheet": "docs/evidence/P1-V-roster-rework/pig-catcher/current-loader/ladder.png",
+    "validation": "docs/evidence/P1-V-roster-rework/pig-catcher/validation.md"
+  },
+  "damage": {
+    "strip": "docs/evidence/P1-V-roster-rework/pig-catcher/final/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-rework/pig-catcher/final/damage-strip-overview.png",
+    "note": "Left to right: intact; front and back loose; the rider loose; wheel_F cambered; front detached; the rider thrown (detached, R121); back detached; wheel_F detached; rider and front detached; a stripped frame. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
+  },
+  "paints": {
+    "sheet": "docs/evidence/P1-V-roster-rework/pig-catcher/final/paints-strip.png",
+    "identity": "art/ui/tokens.json",
+    "pattern": "Seat colour on the paint key (the plastics, tank and mudguards tint); the black light bar, the rope, the sack and the rider keep their colours. The number sits on the rider's back (anchor roof_number) and in the HUD badge."
+  },
+  "inWorld": [
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+      "size": "large",
+      "path": "docs/evidence/P1-V-roster-rework/pig-catcher/final/grid-1.png"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "path": "docs/evidence/P1-V-roster-rework/pig-catcher/final/grid-4.png"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "path": "docs/evidence/P1-V-roster-rework/pig-catcher/final/grid-24.png"
+    },
+    {
+      "label": "From the Derby overview camera (top-down damage row)",
+      "size": "overview",
+      "path": "docs/evidence/P1-V-roster-rework/pig-catcher/final/damage-strip-overview.png"
+    }
+  ],
+  "gate": {
+    "report": "docs/evidence/P1-V-roster-rework/pig-catcher/validation.md"
+  },
+  "profile": "assets/profiles/pig-catcher.json",
+  "handling": {
+    "topSpeedMps": null,
+    "topSpeedNote": "Not measured yet: the bike profiles join the roster (and the R122 handling bank and fun tests) once the R136 handling schema lands; R123's balance bead (br-bwju.6) measures every vehicle's speed, launch and cornering on real maps."
+  }
+}

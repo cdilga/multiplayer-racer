@@ -4,52 +4,56 @@
   "status": "awaiting-review",
   "date": "2026-10-25",
   "beads": [
-    "br-rgw6"
+    "br-8h3u.17"
   ],
-  "summary": "Refined the CB50-inspired delivery motorcycle with an octagonal cylinder/cooling fins, curved single right header, rounded tank inset ends and bevelled saddle, continuous tapered arms, shaped hi-vis vest with attached bands, cheek-returning face and arched visor/chin lip. Spoked wheel openings remain real. Exported triangles: 2669 / 894 / 599 within original 2900 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. Weighted silhouette .8563 to .8501 / .8241 to .8210 / .8049 to .7932 regresses; local helmet curvature improves and its new gate rejects the actual baseline at every tier. The primary CB50 image governs one right pipe despite generated contradictions. Review candidate below the ~.95 global target.",
+  "summary": "Split both cream tank inserts on their actual finished facet diagonals; removed the spikes that escaped the red shell in the hero view. Reduced the crankcase casting, opened cooling fins, tapered shorts and shins, joined the neck to the collar/shell and removed a floating black helmet disc. Added collar/vest creases. Thin open wire spokes retain wheel daylight. Baked triangles 2611 / 899 / 599; unchanged physics/sidecar. Global silhouette scores 0.8492 / 0.8256 / 0.7944 remain below ~.95; review candidate with remaining shaded mismatches documented. Coarse tyres now retain twelve outer stations. The low-tier helmet now uses eight circumferential segments and four latitude bands; merged pannier masses and lean frame tubes funded the broad form.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Unchanged reference and masks, identical frozen diagnostic cameras for shaded/mask captures. Exact source/asset identity and baseline/current scores are in docs/evidence/P1-V-roster-rework/postie-bike/summary.json. Actual rejected baseline source is preserved under baseline/; shape checks reject its named errors. Primary source and generated-camera limitations remain applicable. Honda primary CB50 image governs the single right exhaust; generated left/rear pipe visibility is contradictory.",
+    "note": "Aspect-preserved shaded reference/previous/current and enlarged exact-camera regions are in docs/evidence/P1-V-roster-visual/postie-bike/visual-comparison.png and regional-comparison.png. Per-part counts and exact identities are in triangle-receipt.json; real old source is retained in baseline/. Global likeness remains below target.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0: current source against unchanged reference, frozen cameras",
+        "label": "LOD0: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.8506,
-          "top": 0.8434,
-          "front": 0.8515,
-          "rear": 0.8607
+          "side": 0.8507,
+          "top": 0.843,
+          "front": 0.8475,
+          "rear": 0.8594
         },
-        "weightedIou": 0.8501
+        "weightedIou": 0.8492
       },
       {
         "lod": 1,
-        "label": "LOD1: current source against unchanged reference, frozen cameras",
+        "label": "LOD1: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.8366,
-          "top": 0.7822,
-          "front": 0.831,
-          "rear": 0.8468
+          "side": 0.8454,
+          "top": 0.7813,
+          "front": 0.834,
+          "rear": 0.8532
         },
-        "weightedIou": 0.821
+        "weightedIou": 0.8256
       },
       {
         "lod": 2,
-        "label": "LOD2: current source against unchanged reference, frozen cameras",
+        "label": "LOD2: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.82,
-          "top": 0.7461,
-          "front": 0.7932,
-          "rear": 0.8161
+          "side": 0.8297,
+          "top": 0.7324,
+          "front": 0.7966,
+          "rear": 0.8223
         },
-        "weightedIou": 0.7932
+        "weightedIou": 0.7944
       }
-    ]
+    ],
+    "shadedComparison": {
+      "image": "media/shaded-comparison/visual-comparison.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    }
   },
   "turntable": {
     "assetJson": "media/model/postie-bike.asset.json",
@@ -60,7 +64,7 @@
       {
         "lod": 0,
         "glb": "media/model/postie-bike.lod0.glb",
-        "tris": 2669,
+        "tris": 2611,
         "draws": 6,
         "maxTris": 2900,
         "withinBudget": true
@@ -68,7 +72,7 @@
       {
         "lod": 1,
         "glb": "media/model/postie-bike.lod1.glb",
-        "tris": 894,
+        "tris": 899,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -266,15 +270,15 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "reproducible bake, native contract, triangle budgets and original sidecar/collider preservation; parent exports.json records exact hashes."
+        "text": "named corrective form checks, frozen physical contracts and qualified budgets."
       },
       {
         "result": "PASS",
-        "text": "current named local form gates; real previous source fails each named defect at all tiers."
+        "text": "deterministic model bakes and inspected loader paint/damage/grid evidence."
       },
       {
         "result": "FAIL",
-        "text": "full global likeness target; see self-review.md for measured regressions."
+        "text": "global approximately0.95 outline target remains unmet; awaiting artistic review."
       }
     ],
     "report": "media/gate/validation.md"

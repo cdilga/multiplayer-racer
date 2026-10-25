@@ -1,0 +1,24 @@
+{
+  "sidecarByteIdentical": true,
+  "sidecarIdenticalIncludingPivotsHingesMassesAnchorsAndBudgets": true,
+  "lods": [
+    {
+      "lod": 0,
+      "colliderPositionsIdentical": true,
+      "colliders": {
+        "collider_core": "800b948b13b84940715b6dc08437881bf2e5fe5e8798893119e48b97e1965a87",
+        "collider_front": "74b00a3ecf71e7cc4a5b70ddb3e16d627aebf371ac2b52860ea0e6e987a32950",
+        "collider_back": "45122223d870556c8b6a07f5ac0856951d8e65667ae5f7cee08560ad42f93b38",
+        "collider_door_FL": "bfad61bb2b572c55d4b7019272a1f78fb41cba666880d15191a9c8c65588e07e",
+        "collider_door_FR": "c470b5e06e3258aa9b4554b95d9598c7d88514f0f621f4273aefb0dbfc036cdb",
+        "collider_door_RL": "f8fba73106657cc17854bf658d9717adafbc3ac22cb46a14c2d8fc7b9e29e485",
+        "collider_door_RR": "37ce62cc4168fafe7930ec5e2ec0c61f28dd2b96603c84f0ae57e79ad599ee1f",
+        "collider_wheel_FL": "ba18a396fcebf8de0f4104d59aec434a8f5b9158ebe0679d64fcda32a80ec9b1",
+        "collider_wheel_FR": "df4a54fd3d0f426724e922d3228275bb5f44aff75542d4e07ecf45e583e1b867",
+        "collider_wheel_RL": "98b36b7ba77d02d22b92509de4c65eea7233355c2a12712fcf57c4d91671d34e",
+        "collider_wheel_RR": "0cc0c653c55c01122add45dbca60b6616125626f65cd5793102f36b76e83694d"
+      }
+    }
+  ],
+  "pass": true
+}

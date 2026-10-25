@@ -1,0 +1,150 @@
+{
+  "id": "postie-bike",
+  "baselineRevision": "a19751dcdf662728f5974e7381dd320b276a1e06",
+  "sourceHashes": {
+    "model.js": "a65dc98cebfc1c93eb7ff94ebd177799a98f6e7b2aa2f60eca6eff7ed0e838b2",
+    "params.json": "6ec03ec10c7054a0a3cf4cd88f9a42d79180a782d872862eb42031a840db021b",
+    "vehicle.json": "c99eaacd16c1306e78b620ac0a20082e500488766b6612ced18a267d7fd78547",
+    "colliders.json": "6762cba13f747d80be9eb432392337cf1d086e3aff735fd14edfe82e6ad021ff",
+    "postie-bike.asset.json": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
+    "postie-bike.lod0.glb": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+    "postie-bike.lod1.glb": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+    "postie-bike.lod2.glb": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+    "refs/lod-plus-1.png": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+    "refs/lowest-lod.png": "7cf4c8cdff56ca14afd4de0e178a8eac419e95140d93a5525ec1cd71f80b9047"
+  },
+  "frozenContracts": {
+    "vehicle.json": {
+      "unchanged": true,
+      "sha256": "c99eaacd16c1306e78b620ac0a20082e500488766b6612ced18a267d7fd78547"
+    },
+    "colliders.json": {
+      "unchanged": true,
+      "sha256": "6762cba13f747d80be9eb432392337cf1d086e3aff735fd14edfe82e6ad021ff"
+    },
+    "postie-bike.asset.json": {
+      "unchanged": true,
+      "sha256": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499"
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "maxTris": 2900,
+      "rawBefore": {
+        "core": 930,
+        "front": 472,
+        "back": 488,
+        "rider": 450,
+        "wheel_F": 260,
+        "wheel_R": 260
+      },
+      "rawAfter": {
+        "core": 906,
+        "front": 466,
+        "back": 472,
+        "rider": 424,
+        "wheel_F": 244,
+        "wheel_R": 244
+      },
+      "bakedBefore": {
+        "core": 902,
+        "front": 407,
+        "back": 424,
+        "rider": 416,
+        "wheel_F": 260,
+        "wheel_R": 260
+      },
+      "bakedAfter": {
+        "core": 885,
+        "front": 404,
+        "back": 424,
+        "rider": 410,
+        "wheel_F": 244,
+        "wheel_R": 244
+      },
+      "totalBefore": 2669,
+      "totalAfter": 2611,
+      "score": 0.8492
+    },
+    {
+      "lod": 1,
+      "maxTris": 900,
+      "rawBefore": {
+        "core": 332,
+        "front": 140,
+        "back": 116,
+        "rider": 194,
+        "wheel_F": 68,
+        "wheel_R": 68
+      },
+      "rawAfter": {
+        "core": 310,
+        "front": 124,
+        "back": 88,
+        "rider": 220,
+        "wheel_F": 84,
+        "wheel_R": 84
+      },
+      "bakedBefore": {
+        "core": 331,
+        "front": 138,
+        "back": 102,
+        "rider": 187,
+        "wheel_F": 68,
+        "wheel_R": 68
+      },
+      "bakedAfter": {
+        "core": 309,
+        "front": 124,
+        "back": 86,
+        "rider": 212,
+        "wheel_F": 84,
+        "wheel_R": 84
+      },
+      "totalBefore": 894,
+      "totalAfter": 899,
+      "score": 0.8256
+    },
+    {
+      "lod": 2,
+      "maxTris": 600,
+      "rawBefore": {
+        "core": 184,
+        "front": 80,
+        "back": 108,
+        "rider": 132,
+        "wheel_F": 56,
+        "wheel_R": 56
+      },
+      "rawAfter": {
+        "core": 172,
+        "front": 72,
+        "back": 72,
+        "rider": 156,
+        "wheel_F": 64,
+        "wheel_R": 64
+      },
+      "bakedBefore": {
+        "core": 183,
+        "front": 78,
+        "back": 94,
+        "rider": 132,
+        "wheel_F": 56,
+        "wheel_R": 56
+      },
+      "bakedAfter": {
+        "core": 171,
+        "front": 72,
+        "back": 72,
+        "rider": 156,
+        "wheel_F": 64,
+        "wheel_R": 64
+      },
+      "totalBefore": 599,
+      "totalAfter": 599,
+      "score": 0.7944
+    }
+  ],
+  "screenshots": "Playwright Chromium 151.0.7922.34, headless/software renderer; viewer is not the running host."
+}

@@ -1,0 +1,1 @@
+art/vehicles/cruz-missile/cruz-missile.asset.json: ok (jj.vehicle.v1, triangles per LOD [2052, 897, 590])

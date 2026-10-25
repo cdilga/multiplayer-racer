@@ -142,9 +142,11 @@ export function drawAtlas(colours = BAKE_COLOURS) {
   const detail=[];
   const rect=(r,fill)=>detail.push({rect:r,fill});
   const poly=(p,fill)=>detail.push({poly:p,fill});
-  // Five spokes and an inset barrel at distance, without repeated spoke sidewalls.
-  {const [u0,v0,u1,v1]=REGION.wheel,x=(u0+u1)*W/2,y=(1-(v0+v1)/2)*H,rx=(u1-u0)*W*.46,ry=(v1-v0)*H*.46;
-    rect([u0*W,(1-v1)*H,(u1-u0)*W,(v1-v0)*H],c.under);
+  // Whole outer tyre face: a tyre ring, inset barrel and five spokes (Hawk-style atlas savings).
+  {const [u0,v0,u1,v1]=REGION.wheel,x=(u0+u1)*W/2,y=(1-(v0+v1)/2)*H;let rx=(u1-u0)*W*.46,ry=(v1-v0)*H*.46;
+    rect([u0*W,(1-v1)*H,(u1-u0)*W,(v1-v0)*H],c.tyre);
+    rx*=.66;ry*=.66;
+    poly(Array.from({length:24},(_,i)=>[x+rx*Math.cos(i*Math.PI/12),y+ry*Math.sin(i*Math.PI/12)]),c.under);
     for(let k=0;k<5;k++){const a=Math.PI/2+.2+k*Math.PI*2/5;
       poly([[.14,-.1],[.92,-.19],[.92,.19],[.14,.1]].map(([r,t])=>[x+rx*(Math.cos(a)*r-Math.sin(a)*t),y-ry*(Math.sin(a)*r+Math.cos(a)*t)]),c.rim);}
     poly(Array.from({length:6},(_,i)=>[x+rx*.22*Math.cos(i*Math.PI/3),y+ry*.22*Math.sin(i*Math.PI/3)]),c.trim);

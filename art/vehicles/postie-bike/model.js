@@ -13,9 +13,9 @@ import { Soup, exportsFor } from '../_kit/bike.js';
 export const LODS = {
   // n: tyre sides (24 = lugged, hollow, spoked); pann/bask: parcels per pannier / in the basket (the highest one stays at every
   // LOD: the back's and front's top edge is their hinge line); the rest drop out down the ladder
-  0: { n: 20, hollow: true, spokes: 8, hub: 8, rail: 2, cavity: true, pann: 4, bask: 3, mirrors: 2, bow: true, rider: 2, visor: true, basketBars: 2, flick: true, forkSleeve: true, header: true, shocks: 2, rimRing: true, lampRim: true, lampN: 8, fenderSeg: 6, strap: true, bands: true, pads: true, grips: true, tailLens: true, bars: 2, mufN: 8, crown: true, stem: true, mirN: 8 },
-  1: { n: 8, hollow: true, spokes: 2, hub: 4, rail: 1, cavity: false, pann: 1, bask: 1, mirrors: 1, bow: false, rider: 1, visor: false, basketBars: 1, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, fenderSeg: 2, strap: false, bands: true, pads: false, grips: true, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
-  2: { n: 8, hollow: true, spokes: 2, hub: 0, rail: 0, cavity: false, pann: 1, bask: 1, mirrors: 0, bow: false, rider: 0, visor: false, basketBars: 0, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, lampOne: true, fenderSeg: 1, strap: false, bands: false, pads: false, grips: false, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
+  0: { n: 20, hollow: true, spokes: 6, hub: 6, rail: 2, cavity: true, pann: 4, bask: 3, mirrors: 2, bow: true, rider: 2, visor: true, basketBars: 2, flick: true, forkSleeve: true, header: true, shocks: 2, rimRing: true, lampRim: true, lampN: 8, fenderSeg: 6, strap: true, bands: true, pads: true, grips: true, tailLens: true, bars: 2, mufN: 8, crown: true, stem: true, mirN: 8 },
+  1: { n: 12, hollow: true, spokes: 2, hub: 4, rail: 1, cavity: false, pann: 1, bask: 1, mirrors: 1, bow: false, rider: 1, visor: false, basketBars: 1, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, fenderSeg: 2, strap: false, bands: true, pads: false, grips: true, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
+  2: { n: 12, hollow: true, spokes: 1, hub: 0, rail: 0, cavity: false, pann: 1, bask: 1, mirrors: 0, bow: false, rider: 0, visor: false, basketBars: 0, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, lampOne: true, fenderSeg: 1, strap: false, bands: false, pads: false, grips: false, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
 };
 
 const D2R = Math.PI / 180;
@@ -45,7 +45,9 @@ function frustum(S, { z0, z1, y0, y1, hw0b, hw1b, hw0t = hw0b, hw1t = hw1b }, sw
 }
 /** A parcel: a cream box with a tape strip over the top and a small label mark; `rot` turns it about y. */
 function parcel(S, c, s, ry, lvl) {
-  S.box(c, s, { all: 'parcel', py: 'tape' }, [0, ry, 0]);
+  const begin=S.p.length,uvBegin=S.uv.length;S.box(c, s, { all: 'parcel', py: 'tape' }, [0, ry, 0]);
+  // Parcel bottoms are embedded in their carrier at every tier.
+  S.p.splice(begin+54,18);S.uv.splice(uvBegin+36,12);
   if (lvl < 1) return;
   const ca = Math.cos(ry), sa = Math.sin(ry), top = c[1] + s[1] / 2 + 0.004, R = (x, z) => [c[0] + x * ca + z * sa, top, c[2] - x * sa + z * ca];
   const w = s[0] * 0.14, hx = s[0] / 2, hz = s[2] / 2;
@@ -72,17 +74,23 @@ function wheel(S,z,R,W,T) {
   const ring=(x,r,k)=>{const a=2*Math.PI*k/n;return[x,R+Math.sin(a)*r,z+Math.cos(a)*r];};
   for(let k=0;k<n;k++) {
     const j=(k+1)%n,a=2*Math.PI*(k+.5)/n,normal=[0,Math.sin(a),Math.cos(a)];
-    if(T.n>8)for(const side of [-1,1])qd(S,normal,ring(side*hw,R*.965,k),ring(0,R,k),ring(0,R,j),ring(side*hw,R*.965,j),'tyre');else qd(S,normal,ring(-hw,R,k),ring(hw,R,k),ring(hw,R,j),ring(-hw,R,j),'tyre');
-    for(const side of [-1,1])qd(S,[side,0,0],ring(side*hw,R*(T.n>8?.965:1),k),ring(side*hw,R*(T.n>8?.965:1),j),ring(side*hw,ri,j),ring(side*hw,ri,k),'tyre');
-    if(T.n>8)qd(S,normal.map(v=>-v),ring(-hw,ri,k),ring(-hw,ri,j),ring(hw,ri,j),ring(hw,ri,k),'rim');
+    if(T.rimRing)for(const side of [-1,1])qd(S,normal,ring(side*hw,R*.965,k),ring(0,R,k),ring(0,R,j),ring(side*hw,R*.965,j),'tyre');else qd(S,normal,ring(-hw,R,k),ring(hw,R,k),ring(hw,R,j),ring(-hw,R,j),'tyre');
+    if(T.hub!==0)for(const side of [-1,1])qd(S,[side,0,0],ring(side*hw,R*(T.rimRing?.965:1),k),ring(side*hw,R*(T.rimRing?.965:1),j),ring(side*hw,ri,j),ring(side*hw,ri,k),'tyre');
+    if(T.rimRing)qd(S,normal.map(v=>-v),ring(-hw,ri,k),ring(-hw,ri,j),ring(hw,ri,j),ring(hw,ri,k),'rim');
+  }
+  // At the smallest tier the ROUND outer silhouette has twelve stations; a six-sided
+  // inner opening costs three triangles per annulus cell, funding the helmet dome.
+  if(T.hub===0)for(const side of [-1,1])for(let i=0;i<n;i+=2){
+    const a=ring(side*hw,R,i),b=ring(side*hw,R,(i+1)%n),c=ring(side*hw,R,(i+2)%n),d=ring(side*hw,ri,(i+2)%n),e=ring(side*hw,ri,i);
+    qd(S,[side,0,0],a,b,d,e,'tyre');const tri=[b,c,d];if(dot(cross(sub(c,b),sub(d,b)),[side,0,0])<0)tri.reverse();S.tri(...tri,'tyre');
   }
   // Paired planar spoke faces preserve negative space without costly filled discs or rectangular bars.
-  for(let i=0;i<Math.max(2,T.spokes);i++)for(const side of [-1,1]) {
-    const a=i*Math.PI/Math.max(2,T.spokes)+(T.n>8?Math.PI/16:0),v=[Math.cos(a),Math.sin(a)],d=[-v[1]*.012,v[0]*.012];
+  for(let i=0;i<Math.max(1,T.spokes);i++)for(const side of [-1,1]) {
+    const a=i*Math.PI/Math.max(1,T.spokes)+(T.rimRing?Math.PI/16:0),v=[Math.cos(a),Math.sin(a)],d=[-v[1]*.006,v[0]*.006];
     const p=(sign,k)=>[side*hw*.5,R+sign*v[1]*ri+d[1]*k,z+sign*v[0]*ri+d[0]*k];
     qd(S,[side,0,0],p(-1,-1),p(1,-1),p(1,1),p(-1,1),'spokes');
   }
-  if(T.hub)S.prism([-hw-.015,R,z],[hw+.015,R,z],R*.17,T.hub,'hub','hub');
+  if(T.hub){if(T.rimRing)S.prism([-hw-.015,R,z],[hw+.015,R,z],R*.17,T.hub,'hub','hub');else for(const side of [-1,1]){const r=R*.17,x=side*(hw+.015);qd(S,[side,0,0],[x,R-r,z],[x,R,z-r],[x,R+r,z],[x,R,z+r],'hub');}}
 }
 
 /** The helmet: a faceted ellipsoid, white with its lowest ring grey. */
@@ -104,6 +112,10 @@ function makeSoups(P, lod) {
     target.limb=(...args)=>{const start=target.p.length,uvStart=target.uv.length;limb(...args);target.p.splice(start+72);target.uv.splice(uvStart+48);};
   }
 
+  if(lod>0)for(const target of [C,F,B]){
+    const limb=target.limb.bind(target);
+    target.limb=(a,b,w,d,sw)=>{if((sw==='frame'||sw==='chrome')&&Math.max(w,d)<=.09)target.prism(a,b,Math.max(w,d)*.58,3,sw);else limb(a,b,w,d,sw);};
+  }
   const { floor: fl, shield: sh, body: bd, seat: st, bars: br, head: hd, pannier: pn, basket: bk, rail: rl, tail: tl } = P;
 
   // Classic small motorcycle: the tank straddles an open diamond frame. No scooter floor or leg shield.
@@ -115,9 +127,19 @@ function makeSoups(P, lod) {
     for(const [j,sign] of [[0,-1],[rs.length-1,1]])for(let k=1;k<6;k++) {
       const q=[rs[j][0],rs[j][k],rs[j][k+1]];if(sign<0)q.reverse();C.tri(...q,'paint');
     }
+    // Split the cream inset on the SAME diagonal as each completed tank facet.
+    // A single ruled quad crosses the nonplanar tank and produced the cream spikes.
     for(let j=0;j<stations.length-1;j++)for(const side of [-1,1]) {
-      const inset=(sec,t)=>{const [z,hw,y0,y1]=sec;return[side*(hw*(1-t)+hw*.78*t+.002),y0+(y1-y0)*.35+(y1-.035-y0-(y1-y0)*.35)*t,z];};
-      if(lod===2&&j!==1)continue;const range=i=>i===0||i===stations.length-1?[.40,.60]:i===1||i===stations.length-2?[.18,.80]:[.10,.90];const a=range(j),b=range(j+1);qd(C,[side,0,0],inset(stations[j],a[0]),inset(stations[j+1],b[0]),inset(stations[j+1],b[1]),inset(stations[j],a[1]),'tankInset');
+      if(lod===2&&j!==1)continue;
+      const range=i=>i===0||i===stations.length-1?[.40,.60]:i===1||i===stations.length-2?[.18,.80]:[.10,.90];
+      const a=range(j),b=range(j+1),poly=[[0,a[0]],[1,b[0]],[1,b[1]],[0,a[1]]];
+      const end=sec=>{const[z,hw,y0,y1]=sec;return[[side*hw,y0+(y1-y0)*.35,z],[side*hw*.78,y1-.035,z]];};
+      const [A,D]=end(stations[j]),[B,E]=end(stations[j+1]);
+      for(const lower of [true,false]) {
+        const cut=[];for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],dp=side<0?p[1]-p[0]:p[1]+p[0]-1,dq=side<0?q[1]-q[0]:q[1]+q[0]-1,inside=lower?dp<=0:dp>=0;if(inside)cut.push(p);if(dp*dq<0){const t=dp/(dp-dq);cut.push(lerp(p,q,t));}}
+        const point=([f,t])=>{const v=side<0?(lower?A.map((v,k)=>v*(1-f)+B[k]*(f-t)+E[k]*t):A.map((v,k)=>v*(1-t)+E[k]*f+D[k]*(t-f))):(lower?A.map((v,k)=>v*(1-f-t)+B[k]*f+D[k]*t):B.map((v,k)=>v*(1-t)+D[k]*(1-f)+E[k]*(f+t-1)));v[0]+=side*.003;return v;};
+        for(let i=1;i<cut.length-1;i++){const pts=[point(cut[0]),point(cut[i]),point(cut[i+1])];if(dot(cross(sub(pts[1],pts[0]),sub(pts[2],pts[0])),[side,0,0])<0)pts.reverse();C.tri(...pts,'tankInset');}
+      }
     }
     if(lod<2)C.box([0,tk.sections[4][3]+.012,tk.sections[4][0]],[.09,.025,.10],'chrome');
   }
@@ -144,11 +166,11 @@ function makeSoups(P, lod) {
   }
   // Exposed vertical single-cylinder engine: rounded crankcase, sloping cylinder and broad cooling fins.
   { const e=P.engine;
-    C.prism([-e.hw,e.y,e.z],[e.hw,e.y,e.z],.17,lod===0?10:lod===1?6:4,'engine','engine',Math.PI/6);
-    if(lod===0)C.prism([0,e.y+.08,e.z+.04],[0,e.y+.39,e.z+.15],.125,8,'engine','engine',0,.115);else C.limb([0,e.y+.08,e.z+.04],[0,e.y+.39,e.z+.15],.23,.22,'engine');
+    C.prism([-e.hw,e.y,e.z],[e.hw,e.y,e.z],.145,lod===0?10:lod===1?6:4,'engine','engine',Math.PI/6);
+    if(lod===0)C.prism([0,e.y+.08,e.z+.04],[0,e.y+.34,e.z+.15],.107,8,'engine','engine',0,.115);else C.limb([0,e.y+.08,e.z+.04],[0,e.y+.34,e.z+.15],.20,.19,'engine');
     if(lod===0)for(let i=0;i<4;i++) {
       const y=e.y+.15+i*(lod===0?.05:.10),z=e.z+.065+(y-e.y-.08)*.35;
-      C.prism([0,y,z],[0,y+.015,z],.145,8,'chrome','chrome',Math.PI/8);
+      C.prism([0,y,z],[0,y+.015,z],.132,8,'chrome',null,Math.PI/8);
     }
   }
   // One low right-hand exhaust, as in the primary CB50 reference.
@@ -229,6 +251,7 @@ function makeSoups(P, lod) {
   for (const s of [1, -1]) {
     const xa = Math.min(s * pn.xin, s * pn.xout), xb = Math.max(s * pn.xin, s * pn.xout), cx = (xa + xb) / 2, w = xb - xa, L = pn.z0 - pn.z1, cz = (pn.z0 + pn.z1) / 2;
     const yl = pn.y1 - 0.12, wall = 0.065, ph = P.parcels.h, top = pn.y1 + ph; // parcels' top edge is the back's hinge line at every LOD
+    if(lod===0){
     tbox(B, { x0: xa + 0.015, x1: xb - 0.015, z0: pn.z1 + 0.015, z1: pn.z0 - 0.015, y0: pn.y0, tx0: xa, tx1: xb, tz0: pn.z1, tz1: pn.z0, y1: yl }, { all: 'postred', ny: 'under' });
     if (T.cavity) {
       const yc = (yl + pn.y1) / 2, hg = pn.y1 - yl;
@@ -236,6 +259,7 @@ function makeSoups(P, lod) {
       B.box([xa + wall / 2, yc, cz], [wall, hg, L - 2 * wall], 'postred2'); B.box([xb - wall / 2, yc, cz], [wall, hg, L - 2 * wall], 'postred2');
       qd(B, [0, 1, 0], [xa + wall, yl + 0.004, pn.z1 + wall], [xa + wall, yl + 0.004, pn.z0 - wall], [xb - wall, yl + 0.004, pn.z0 - wall], [xb - wall, yl + 0.004, pn.z1 + wall], 'cavity');
     } else tbox(B, { x0: xa, x1: xb, z0: pn.z1, z1: pn.z0, y0: yl, y1: pn.y1 }, { all: 'postred2', ny: 'postred' });
+    }else tbox(B,{x0:xa+.015,x1:xb-.015,z0:pn.z1+.015,z1:pn.z0-.015,y0:pn.y0,tx0:xa,tx1:xb,tz0:pn.z1,tz1:pn.z0,y1:pn.y1},{all:'postred',py:'postred2',ny:'under'});
     const spots = [[0.2, 0.21, 0.2, 0.2, 0.2], [0.6, 0.19, 0.17, 0.18, -0.3], [0.38, 0.48, 0.17, 0.17, 0.5], [0.8, 0.39, 0.16, 0.16, -0.1]]; // z along the box (0..1 from the front), x across (0..1 from the inner wall)
     const order = T.pann >= 4 ? [0, 1, 2, 3] : T.pann === 2 ? [0, 1] : [0];
     for (const i of order) {
@@ -246,7 +270,13 @@ function makeSoups(P, lod) {
   }
   // tail block: body paint, a brake-lamp cap, the hex tail lens and the dark number-plate bracket
   tbox(B, { x0: -tl.hw, x1: tl.hw, z0: tl.z1, z1: tl.z0, y0: tl.y0, y1: tl.y1, tx0: -tl.hw + 0.03, tx1: tl.hw - 0.03, tz0: tl.z1 + 0.02, tz1: tl.z0 }, 'paint');
+  if(lod<2){
   tbox(B, { x0: -tl.hw + 0.04, x1: tl.hw - 0.04, z0: tl.z1 + 0.04, z1: tl.z0 - 0.02, y0: tl.y1 - 0.02, y1: tl.y1 + 0.09, tz0: tl.z1 + 0.06, tz1: tl.z0 - 0.06 }, { all: 'tail', ny: 'tail' });
+  }else { // distant lamp keeps its bright rear/top silhouette, buried front/bottom omitted
+    const x=tl.hw-.04,y=tl.y1+.09,z=tl.z1+.06;
+    qd(B,[0,0,-1],[-x,tl.y1-.02,z],[x,tl.y1-.02,z],[x,y,z],[-x,y,z],'tail');
+    qd(B,[0,1,0],[-x,y,z],[x,y,z],[x,y,tl.z0-.06],[-x,y,tl.z0-.06],'tail');
+  }
   if (T.tailLens) { discZ(B, [0, tl.y0 + 0.18], 0.085, tl.z1 - 0.012, tl.z1 + 0.012, 6, 'tail', 'tail'); }
   if (T.tailLens) tbox(B, { x0: -0.1, x1: 0.1, z0: tl.z1 - 0.2, z1: tl.z1 - 0.1, y0: 0.36, y1: 0.54, tz0: tl.z1 - 0.01, tz1: tl.z1 + 0.06 }, 'frame');
   // rear mudguard: an arc over the rear tyre (hidden by the pannier at the top) with the flicked tail
@@ -274,6 +304,11 @@ function makeSoups(P, lod) {
       const p=(xx,y)=>[xx,y,zc+side*(shape(y).d+.002)];
       qd(RD,[0,0,side],p(x-.022,y0),p(x+.022,y0),p(x+.022,y1),p(x-.022,y1),'band');
     }
+    if(lvl>=1) {
+      const y=to.y1-.015,z=zc+shape(y).d+.003;
+      qd(RD,[0,0,1],[-.095,y,z],[0,y-.10,zc+shape(y-.10).d+.003],[.095,y,z],[0,to.y1+.008,zc+.07],'shirt');
+      if(lvl>=2)for(const side of [-1,1]){const x=side*.085,yy=to.y0+.25,zz=zc+shape(yy).d+.003;qd(RD,[0,0,1],[x-.045,yy,zz],[x+.045,yy,zz],[x+.045,yy+.018,zz],[x-.045,yy+.018,zz],'band');}
+    }
     for (const s of [1, -1]) {
       const sh0 = [s * to.hw, J.shoulder[1] - 0.02, J.shoulder[2]], el = [s * J.elbow[0], J.elbow[1], J.elbow[2]], ha = [s * J.hand[0], J.hand[1], J.hand[2]];
       const hip = [s * 0.13, J.hip[1], J.hip[2]], kn = [s * J.knee[0], J.knee[1], J.knee[2]], ft = [s * J.foot[0], J.foot[1], J.foot[2]];
@@ -282,8 +317,8 @@ function makeSoups(P, lod) {
         RD.prism(el, ha, .049, 5, 'skin', null, 0, .035);
       }
       if (lvl >= 1) {
-        RD.limb(hip, kn, 0.19, 0.19, 'pants'); // navy shorts to the knee, a bare shin
-        RD.limb(kn, [ft[0], ft[1] + 0.2, ft[2] + 0.02], 0.1, 0.1, 'skin');
+        RD.prism(hip, kn, .108, lvl>=2?6:4, 'pants', null, Math.PI/6, .088); // navy shorts to the knee, a bare shin
+        RD.prism(kn, [ft[0], ft[1] + 0.2, ft[2] + 0.02], .061, lvl>=2?5:4, 'skin', null, 0, .045);
       } else RD.limb(hip, [ft[0], ft[1] + 0.2, ft[2]], 0.14, 0.14, 'pants');
       if(lvl<2) { RD.limb(sh0,el,.13,.13,'shirt'); RD.limb(el,ha,.075,.075,'skin'); }
       if (lvl >= 2) {
@@ -292,10 +327,10 @@ function makeSoups(P, lod) {
         RD.box([ft[0], ft[1] + 0.045, ft[2]], [0.13, 0.09, 0.27], 'boots');
       } else RD.box([ft[0], ft[1] + 0.1, ft[2]], [0.13, 0.2, 0.26], 'boots');
     }
-    if (lvl >= 2) RD.box([0, to.y1 + 0.07, hc[2] + 0.02], [0.11, 0.1, 0.11], 'skin'); // neck
+    RD.prism([0,to.y1-.025,hc[2]+.02],[0,hc[1]-hr*.62,hc[2]+.02],.061,lvl>=2?6:3,'skin'); // neck overlaps collar and shell
     // helmet: a faceted dome, grey in its lowest ring; a face behind a clear visor
-    helmetBlob(RD, hc, [hr * 0.98, hr * 0.93, hr * 1.03], lvl >= 2 ? 10 : 6, lvl >= 2 ? 6 : 3);
-    if (T.strap) RD.prism([0, hc[1] - hr * 0.95, hc[2]], [0, hc[1] - hr * 0.8, hc[2]], hr * 0.86, 8, 'frame', 'frame', Math.PI / 8); // the helmet's dark lower rim
+    helmetBlob(RD, hc, [hr * 0.98, hr * 0.93, hr * 1.03], lvl >= 2 ? 10 : 8, lvl >= 2 ? 6 : 4);
+    // The shell's own grey lower ring meets the neck; no floating broad black disc.
     // Curved visor opening: cheek edges return into the shell. An opaque wafer
     // hanging ahead of the helmet made the previous rider look like a robot.
     { const fy=hc[1]-hr*.13;

@@ -1,0 +1,126 @@
+{
+  "baseCommit": "a19751dcdf662728f5974e7381dd320b276a1e06",
+  "physicsFiles": [
+    {
+      "path": "art/vehicles/cruz-missile/cruz-missile.asset.json",
+      "sha256": "5b8cdc5befc70bc4e0f9d5fa5d0a1fa9a992289912790e5f7940e4d591cf8313",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/cruz-missile/vehicle.json",
+      "sha256": "ae908dc3cda467409b4012ba4e2940852a2e1e8bcc5308c25c073c3d301f7d04",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/cruz-missile/colliders.json",
+      "sha256": "5d84c50a6bc4e3d1c787f5b62fe624fc2aae38a1477fb9dcee05faff27febef1",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/cruz-missile.json",
+      "sha256": "596d882ef64f63a7488839e2d8de1a7ae6e4021bb77ade9d0380816758c931e2",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/au-hawk/au-hawk.asset.json",
+      "sha256": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/au-hawk/vehicle.json",
+      "sha256": "6b49f9fbb2e2be9ab6f732eb2a86de2bdacde2a462c0bf2039bb0a0008776b86",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/au-hawk/colliders.json",
+      "sha256": "4a26d9f5aec2b11ac0acbfafcb62ef7b972ac3fc8bc6f2390bb84e4d7585521d",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/au-hawk.json",
+      "sha256": "94318bf5adf6bcae5bb5e6bc5f7c1c96860af45e75b4984c526fa2bd904f7dd5",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/lion-president/lion-president.asset.json",
+      "sha256": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/lion-president/vehicle.json",
+      "sha256": "f30b09a53bcecad519827a5e1249b69d56f3ff08e3d10a0ca444d5000e883fb9",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/lion-president/colliders.json",
+      "sha256": "7eaeda8c420939f9dd2656e88d4fa9a109a2a18b00ee3486088bfda75e482965",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/lion-president.json",
+      "sha256": "8ce1a2ff3fabb4332ecb2994e5131ad2afec198140525afa2aeee6e1363c5713",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/tradie-ute/tradie-ute.asset.json",
+      "sha256": "57f65448925b21bf1a6989216d8e6044cf357c1d41ef7d8e8c86797786542032",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/tradie-ute/vehicle.json",
+      "sha256": "1aa834512846e88e685055b1f6ec949a5e964163678770d9e461722c6a837cda",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/tradie-ute/colliders.json",
+      "sha256": "8c33262ffcf33d3de90e30e0b437b9eaee9947235bd0de6ffe1cf98e17c7f74a",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/tradie-ute.json",
+      "sha256": "57ad800ee3784d16690d35a9a1c33cd97c631127ce1019b5cba9f5b51a029d7a",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/postie-bike/postie-bike.asset.json",
+      "sha256": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/postie-bike/vehicle.json",
+      "sha256": "c99eaacd16c1306e78b620ac0a20082e500488766b6612ced18a267d7fd78547",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/postie-bike/colliders.json",
+      "sha256": "6762cba13f747d80be9eb432392337cf1d086e3aff735fd14edfe82e6ad021ff",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/postie-bike.json",
+      "sha256": "372cf16678cc36997d4ae53838e37d037cc77e02bb2806d962592fbaaebd8b53",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/pig-catcher/pig-catcher.asset.json",
+      "sha256": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/pig-catcher/vehicle.json",
+      "sha256": "d81558c46842bacd853d77abd67ce783549fff3cccc389f18f428896cde9d61c",
+      "unchanged": true
+    },
+    {
+      "path": "art/vehicles/pig-catcher/colliders.json",
+      "sha256": "b76cdc650fa094a293dc503e20dfb42a7667cd861f895599aeffa0701ae79d5c",
+      "unchanged": true
+    },
+    {
+      "path": "assets/profiles/pig-catcher.json",
+      "sha256": "216275e7719534befa16184c02eb5fc14728602d9f17925f6a0e66142f0e5489",
+      "unchanged": true
+    }
+  ],
+  "hawkDashFilesUntouched": 39
+}

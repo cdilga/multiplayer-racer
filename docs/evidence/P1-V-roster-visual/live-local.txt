@@ -1,0 +1,13 @@
+ok   /poc/vehicles/review.html?v=cruz-missile 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_cruz_missile_412x915.png
+ok   /poc/vehicles/review.html?v=cruz-missile 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_cruz_missile_1920x1080.png
+ok   /poc/vehicles/review.html?v=au-hawk 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_au_hawk_412x915.png
+ok   /poc/vehicles/review.html?v=au-hawk 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_au_hawk_1920x1080.png
+ok   /poc/vehicles/review.html?v=lion-president 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_lion_president_412x915.png
+ok   /poc/vehicles/review.html?v=lion-president 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_lion_president_1920x1080.png
+ok   /poc/vehicles/review.html?v=tradie-ute 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_tradie_ute_412x915.png
+ok   /poc/vehicles/review.html?v=tradie-ute 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_tradie_ute_1920x1080.png
+ok   /poc/vehicles/review.html?v=postie-bike 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_postie_bike_412x915.png
+ok   /poc/vehicles/review.html?v=postie-bike 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_postie_bike_1920x1080.png
+ok   /poc/vehicles/review.html?v=pig-catcher 412x915 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_pig_catcher_412x915.png
+ok   /poc/vehicles/review.html?v=pig-catcher 1920x1080 -> docs/evidence/P1-V-roster-visual/live-local/poc_vehicles_review_html_v_pig_catcher_1920x1080.png
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

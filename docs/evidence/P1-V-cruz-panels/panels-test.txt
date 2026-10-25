@@ -1,0 +1,20 @@
+✔ Cruz LOD0: fuller door waist and independent floor (31.074541ms)
+✔ Cruz LOD0: actual previous flat waist and radial floor are rejected (27.382458ms)
+✔ Cruz LOD0: bar mounting bracket crosses actual bumper surface (26.601542ms)
+✔ Cruz LOD0: detached wheels retain both opaque sidewalls (14.701208ms)
+✔ Cruz LOD1: fuller door waist and independent floor (22.988125ms)
+✔ Cruz LOD1: actual previous flat waist and radial floor are rejected (11.841542ms)
+✔ Cruz LOD1: bar mounting bracket crosses actual bumper surface (10.141ms)
+✔ Cruz LOD1: detached wheels retain both opaque sidewalls (6.591667ms)
+✔ Cruz LOD2: fuller door waist and independent floor (13.905166ms)
+✔ Cruz LOD2: actual previous flat waist and radial floor are rejected (15.260917ms)
+✔ Cruz LOD2: detached wheels retain both opaque sidewalls (7.934084ms)
+✔ previous coarse bar has no bracket reaching its curved fascia (15.245958ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 435.446042

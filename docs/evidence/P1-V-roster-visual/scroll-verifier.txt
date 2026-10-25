@@ -1,0 +1,11 @@
+ok   /scroll 1600x900 -> docs/evidence/P1-V-roster-visual/verifier-fixtures/scroll_1600x900.png
+FAIL /fixed 1600x900 -> docs/evidence/P1-V-roster-visual/verifier-fixtures/fixed_1600x900.png
+     cut off by the screen edge: "Verifier regression fixt"
+FAIL /floating 1600x900 -> docs/evidence/P1-V-roster-visual/verifier-fixtures/floating_1600x900.png
+     cut off by the screen edge: "Verifier regression fixt"
+FAIL /horizontal 1600x900 -> docs/evidence/P1-V-roster-visual/verifier-fixtures/horizontal_1600x900.png
+     horizontal overflow: page is 200px wider than the viewport
+     cut off by the screen edge: "Verifier regression fixt"
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.
+
+PASS: scroll passes; fixed vertical clipping and horizontal overflow still fail.

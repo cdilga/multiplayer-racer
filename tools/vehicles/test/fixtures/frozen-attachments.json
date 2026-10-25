@@ -1,6 +1,6 @@
 {
   "sourceCommit": "d44c9093",
-  "what": "Exact original jj.vehicle.v1 sidecar attachments for the narrowly scoped 2026-10-25 visual-only Postie/ute rebuild and Cruz reference rework. Preserve gameplay pivots, axes, limits, masses and collider types even where new visual skins do not end at the old physical hinge. Collider points are separately byte-checked by each rebuild's evidence reproduction. All unlisted parts retain the visual hinge-edge test.",
+  "what": "Exact original jj.vehicle.v1 sidecar attachments for the narrowly scoped 2026-10-25 visual-only Postie/ute rebuild and Cruz reference rework. Preserve gameplay pivots, axes, limits, masses and collider types even where new visual skins do not end at the old physical hinge. Collider points are separately byte-checked by each rebuild's evidence reproduction. All unlisted parts retain the visual hinge-edge test. AU Hawk and Lion President doors also preserve their pre-pass physical attachment contracts; measured new skin bounds may differ while exact source/sidecar equality and defect injection remain mandatory.",
   "vehicles": {
     "postie-bike": {
       "source": "art/vehicles/postie-bike/postie-bike.asset.json",
@@ -282,6 +282,178 @@
             -0.956,
             0.6394343434343435,
             -0.22
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        }
+      }
+    },
+    "au-hawk": {
+      "source": "art/vehicles/au-hawk/au-hawk.asset.json",
+      "sourceCommit": "a19751dcdf662728f5974e7381dd320b276a1e06",
+      "parts": {
+        "door_FL": {
+          "pivot": [
+            1,
+            0.647,
+            0.96
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_FR": {
+          "pivot": [
+            -1,
+            0.647,
+            0.96
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RL": {
+          "pivot": [
+            1,
+            0.6412000000000001,
+            -0.38
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RR": {
+          "pivot": [
+            -1,
+            0.6412000000000001,
+            -0.38
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        }
+      }
+    },
+    "lion-president": {
+      "source": "art/vehicles/lion-president/lion-president.asset.json",
+      "sourceCommit": "a19751dcdf662728f5974e7381dd320b276a1e06",
+      "parts": {
+        "door_FL": {
+          "pivot": [
+            0.8869565217391304,
+            0.6025783783783785,
+            0.8499999999999999
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_FR": {
+          "pivot": [
+            -0.8869565217391304,
+            0.6025783783783785,
+            0.8499999999999999
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RL": {
+          "pivot": [
+            0.8931159420289855,
+            0.6259290540540541,
+            -0.28
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RR": {
+          "pivot": [
+            -0.8931159420289855,
+            0.6259290540540541,
+            -0.28
           ],
           "hinge": {
             "axis": [

@@ -1,0 +1,223 @@
+{
+  "car": "lion-president",
+  "source": {
+    "before": [
+      {
+        "front": 866,
+        "core": 412,
+        "door_FL": 34,
+        "door_RL": 18,
+        "back": 650,
+        "door_FR": 34,
+        "door_RR": 18,
+        "wheel_FL": 74,
+        "wheel_FR": 74,
+        "wheel_RL": 74,
+        "wheel_RR": 74,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 280,
+        "core": 216,
+        "door_FL": 24,
+        "door_RL": 16,
+        "back": 216,
+        "door_FR": 24,
+        "door_RR": 16,
+        "wheel_FL": 30,
+        "wheel_FR": 30,
+        "wheel_RL": 30,
+        "wheel_RR": 30,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 194,
+        "core": 142,
+        "door_FL": 8,
+        "door_RL": 8,
+        "back": 140,
+        "door_FR": 8,
+        "door_RR": 8,
+        "wheel_FL": 24,
+        "wheel_FR": 24,
+        "wheel_RL": 24,
+        "wheel_RR": 24,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    ],
+    "after": [
+      {
+        "front": 1004,
+        "core": 364,
+        "door_FL": 42,
+        "door_RL": 22,
+        "back": 700,
+        "door_FR": 42,
+        "door_RR": 22,
+        "wheel_FL": 44,
+        "wheel_FR": 44,
+        "wheel_RL": 44,
+        "wheel_RR": 44,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 338,
+        "core": 204,
+        "door_FL": 16,
+        "door_RL": 8,
+        "back": 216,
+        "door_FR": 16,
+        "door_RR": 8,
+        "wheel_FL": 28,
+        "wheel_FR": 28,
+        "wheel_RL": 28,
+        "wheel_RR": 28,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 172,
+        "core": 146,
+        "door_FL": 6,
+        "door_RL": 6,
+        "back": 122,
+        "door_FR": 6,
+        "door_RR": 6,
+        "wheel_FL": 28,
+        "wheel_FR": 28,
+        "wheel_RL": 28,
+        "wheel_RR": 28,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    ]
+  },
+  "exported": {
+    "before": [
+      {
+        "front": 862,
+        "core": 388,
+        "door_FL": 34,
+        "door_RL": 18,
+        "back": 646,
+        "door_FR": 34,
+        "door_RR": 18,
+        "wheel_FL": 74,
+        "wheel_FR": 74,
+        "wheel_RL": 74,
+        "wheel_RR": 74,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 280,
+        "core": 204,
+        "door_FL": 24,
+        "door_RL": 16,
+        "back": 216,
+        "door_FR": 24,
+        "door_RR": 16,
+        "wheel_FL": 30,
+        "wheel_FR": 30,
+        "wheel_RL": 30,
+        "wheel_RR": 30,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 194,
+        "core": 130,
+        "door_FL": 8,
+        "door_RL": 8,
+        "back": 140,
+        "door_FR": 8,
+        "door_RR": 8,
+        "wheel_FL": 24,
+        "wheel_FR": 24,
+        "wheel_RL": 24,
+        "wheel_RR": 24,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    ],
+    "after": [
+      {
+        "front": 978,
+        "core": 340,
+        "door_FL": 42,
+        "door_RL": 22,
+        "back": 699,
+        "door_FR": 42,
+        "door_RR": 22,
+        "wheel_FL": 44,
+        "wheel_FR": 44,
+        "wheel_RL": 44,
+        "wheel_RR": 44,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 324,
+        "core": 192,
+        "door_FL": 16,
+        "door_RL": 8,
+        "back": 216,
+        "door_FR": 16,
+        "door_RR": 8,
+        "wheel_FL": 28,
+        "wheel_FR": 28,
+        "wheel_RL": 28,
+        "wheel_RR": 28,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      },
+      {
+        "front": 172,
+        "core": 134,
+        "door_FL": 6,
+        "door_RL": 6,
+        "back": 122,
+        "door_FR": 6,
+        "door_RR": 6,
+        "wheel_FL": 28,
+        "wheel_FR": 28,
+        "wheel_RL": 28,
+        "wheel_RR": 28,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    ]
+  },
+  "notes": [
+    "Source counts include the hidden-on-intact interior meshes. Bake budget totals exclude interior_*; interiors are stored without orientation/pruning.",
+    "The exported counts apply the same orientAndPrune as the baker to each visible damage part. Frozen contract vehicle.json and physicsPivots are unchanged."
+  ],
+  "exportedBudgetTotals": {
+    "before": [
+      2296,
+      900,
+      592
+    ],
+    "after": [
+      2321,
+      892,
+      564
+    ]
+  }
+}

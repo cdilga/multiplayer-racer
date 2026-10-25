@@ -48,6 +48,10 @@ name it.
   ≤ ~1.3k / 0.9k / 0.6k). Report each part's count.
 - Silhouette IoU against the reference sheets meets the skill's target (~0.95 weighted), with the
   by-eye cue pass recorded (lamps, grille, livery, accessories).
+- Shaded reference/previous/current comparisons show the actual forms, not only the enclosing mask:
+  proportions, cabin/glass, door roll, fascia depth and wrap, attachments and lower-body contour.
+  Use the [shaded comparison loop](../game-asset-reference-modelling/references/shaded-comparison.md).
+  Name each remaining mismatch; numeric scores cannot waive an owner-named visual defect.
 - Mesh hygiene: finite values, valid indices, no zero-area triangles.
 
 ### 3. Paint, identity and draw cost

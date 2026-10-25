@@ -12,6 +12,8 @@ review in the target renderer. Hawk Dash is a worked example, not a template for
 
 ## Establish the comparison
 
+For a likeness or roster refinement, read [shaded comparison](references/shaded-comparison.md). This is the acceptance loop for the 25 October owner-requested rework: shaded form and internal landmarks must be compared directly; an enclosing-outline pass alone does not establish likeness.
+
 - Identify the authoritative references, asset source, export path and current baseline. Preserve
   the reference and baseline so improvements can be compared under identical conditions.
 - Read the asset's contract: units, axes, dimensions, budget per LOD, materials, rig/pose,

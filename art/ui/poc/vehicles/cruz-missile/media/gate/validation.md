@@ -1,19 +1,22 @@
-# Cruz Missile reference rework
-Vehicle Model Validation: FAIL — coarse likeness target outstanding; technical export checks pass
+Vehicle Model Validation: PASS for the owner panel-repair scope
 
-2026-10-25, br-rgw6 / P1-V roster refinement. R81/R86/R90 and the unchanged per-vehicle contract apply. This is a visual review candidate, not owner acceptance or a new driving/performance qualification.
+Cruz Missile; beads br-8h3u.16 / br-8h3u.17. Requirements: R81/R86/R90, vehicle contract §6, owner observations of flat doors, floating flat bumper and curved underside. Source, atlas, params and three bakes changed; physics declarations, sidecar, collider points, anchors and handling remain unchanged. See parent `frozen-invariants.json` for hashes/base commit.
 
-The actual body is longer around the original fixed axles, has a broad rounded front with progressively swept corners, transverse bonnet crown, inward upper flank return, upright lamps, and graphics clipped to final skin facets. Dark interior bays now sit inside the sloping doors. Rear cap, lamps and diffuser follow the curved substrate. Repeated wheel detail was reduced to fund the enclosing shape; LOD0 wheel geometry totals 272 triangles. The exported intact totals are 2052 / 891 / 576 against unchanged budgets 2800 / 900 / 600.
+Reference/previous/current evidence: `visual-comparison.png` preserves one world camera per view and one display scale for both candidates. Reference aspect is preserved and marked uncalibrated. `after-lod{0,1,2}/sheet.png` compares shaded forms plus masks; `likeness.json` records all annotated checks PASS without changing references/tolerances. Source-form and hinge gates also pass. LOD0 weighted mask IoU 0.9470 (previous0.9511), LOD1 0.9477, LOD2 0.9306. Approximate whole-outline targets are supporting evidence; the named panel defects are verified separately by geometry and shaded inspection.
 
-- PASS contract, byte-reproducible bake and all three budgets (`final-contract.txt`, `final-bake-check.txt`).
-- PASS complete original sidecar and collider POSITION buffers remain byte-identical to ad35536b; parent `../exports.json` records hashes. Handling, hubs, anchors, hinges and mass fractions remain unchanged.
-- PASS independent body-to-axle proportion, intermediate/corner nose depth, lamp-plane slope and flank return checks at every tier. Actual rejected baseline fails all four named defects at each tier (`before-form.json`, `after-form.json`). Normal suite includes both real baseline and injected defects.
-- PASS existing mesh, material, paint and attachment checks; parent vehicle-tests.txt records full result. No shared renderer/batching change or fresh GPU draw-cost claim.
-- PASS native settle and straight-line handling fixtures, deterministic replay (`../sim.json`).
-- WARN silhouette weighted before→after: .9542→.9511 / .9533→.9505 / .9359→.9301. Front improves but rear/side and coarse scores regress. The ~.95 broad likeness gate is not met at LOD2. Named local gains do not erase this limitation.
+| LOD | Intact triangles | Budget | core | front | back | each front door | each rear door | each wheel |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+|0|2052|2800|290|851|599|38|30|44|
+|1|897|900|160|329|272|6|6|28|
+|2|590|600|152|130|172|6|6|28|
 
-Front lamp envelope IoU is about .72 at LOD0, versus about .53 previously. Hero camera is now az34/elev2/dist9/fov26/targetY.78; both candidates were recaptured. Horizontal 50m end diagnostics and 10m side/top were retained. These are generated-sheet conventions, not recovered photographic calibration (`camera-correction.json`).
+Interior engine/cabin/boot retain24/36/32 separately. Hawk-style outer-face atlas and closed inner caps save96 LOD0 triangles versus stacked wheels; body sections and independent wells spend that geometry on visible form. Shared optimiser remains unchanged and checks winding/hidden triangles. Model reproducibility passes `bake --check`; `target/debug/jj validate` reports valid `jj.vehicle.v1` with2052/897/590. Twelve focused cases reject actual previous flat waist/floor and missing coarse brackets. Final combined roster suite is in the parent receipt.
 
-Final ladder, collider overlay, damage, paints and 1/4/24 tile captures use the baked GLTFLoader and shared paint-key viewer on Mac Playwright Chromium. All were personally inspected. Damage is posed for review; gameplay debris dynamics are covered by unchanged simulation, not proven by screenshots. Identity in the 24-tile viewer is visible; this is not a fresh host roof-number test.
+PASS: contract/reproducibility; qualified budgets/finite mesh; paint-key single material and neutral tyres; intact/loose/detached review poses and dark bays; exact frozen physics contracts; identity/colour visible at small tiles. Loader/rendering code and draw batching are unchanged, so no new instancing benchmark is claimed. Engine profiles are unchanged.
 
-Remaining: coarse wheel arches/lamps and rear shaping remain visibly simplified; inconsistent generated wing views require an interpretation. Coarse silhouette falls below the full likeness target. Existing unrelated engine/audio gate issues are outside this visual refinement. Awaiting owner review on /poc/.
+See `self-review.md` for remaining visual approximations and evidence limits. No blocking defect remains in this repair scope; full-reference artistic acceptance remains the owner's verdict.
+
+- PASS source contract, deterministic bake, exact frozen physics and qualified triangle budgets.
+- PASS named door, floor, bar mounting and wheel closure regressions at every LOD.
+- PASS shaded previous/reference/current and baked paint/damage/grid evidence inspected.
+- WARN full generated-reference likeness is approximate; whole-view IoU and unmeasured runtime limits remain disclosed above.

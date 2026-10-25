@@ -17,7 +17,7 @@ export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
-export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
+export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5], wheelFace: [0.852, 0.01, 0.998, 0.24], windscreen: [0.702, 0.01, 0.845, 0.35], backlight: [0.852, 0.25, 0.998, 0.35] };
 /** Metres the livery regions cover: side (along the car from the nose, height), top (along the car from the nose, width). */
 export const SPAN = { side: [5.1, 1.8], top: [5.1, 2.1] };
 
@@ -57,6 +57,41 @@ function swatchShapes(c, emissive) {
     const fill = emissive ? EMIT[n] : c[n];
     return fill ? [{ rect: [(SX + CW * (i % 4)) * W, CH * ((i / 4) | 0) * H, CW * W, CH * H], fill }] : [];
   });
+}
+
+// Glass recognisers from the sheet, kept in the existing atlas: black rubber surround, broad reflections and the
+// silhouettes of seats/mirror behind tinted glass. No transparency, interior mesh or extra material/draw call.
+function glassShapes() {
+  return ['windscreen', 'backlight'].flatMap((name) => {
+    const [u0, v0, u1, v1] = REGION[name], x = u0 * W, y = (1 - v1) * H, w = (u1 - u0) * W, h = (v1 - v0) * H;
+    const poly = (pts, fill) => ({ poly: pts.map(([a, b]) => [x + a * w, y + b * h]), fill });
+    const shapes = [{ rect: [x, y, w, h], fill: '#171e24' },
+      poly([[.04,.05],[.96,.05],[.96,.93],[.04,.93]], '#3d4c58'),
+      poly([[.04,.05],[.96,.05],[.96,.35],[.23,.22],[.04,.58]], '#4b5a65'),
+      poly([[.10,.38],[.90,.43],[.96,.85],[.04,.85]], '#35434c')];
+    for (const s of [.25, .75]) {
+      shapes.push(poly([[s-.12,.54],[s+.12,.54],[s+.17,.91],[s-.17,.91]], '#273139'));
+      shapes.push(poly([[s-.075,.40],[s+.075,.40],[s+.09,.59],[s-.09,.59]], '#29333a'));
+    }
+    shapes.push(poly([[.04,.86],[.96,.86],[.96,.94],[.04,.94]], '#263139'));
+    if (name === 'windscreen') shapes.push(poly([[.47,.06],[.53,.06],[.53,.20],[.59,.20],[.59,.27],[.41,.27],[.41,.20],[.47,.20]], '#202a30'));
+    return shapes;
+  });
+}
+
+// Radial detail belongs in the atlas, leaving the wheel's triangles for its silhouette and sealed inner face.
+function wheelShapes(c) {
+  const [u0, v0, u1, v1] = REGION.wheelFace, x = u0 * W, y = (1 - v1) * H, w = (u1 - u0) * W, h = (v1 - v0) * H;
+  const poly = (pts, fill) => ({ poly: pts.map(([a, b]) => [x + (a + 1) * w / 2, y + (b + 1) * h / 2]), fill });
+  const circle = (r, fill, n = 48) => poly(Array.from({ length: n }, (_, i) => [Math.cos(i * Math.PI * 2 / n) * r, Math.sin(i * Math.PI * 2 / n) * r]), fill);
+  const shapes = [{ rect: [x, y, w, h], fill: c.tyre }, circle(.79, c.rim), circle(.73, '#15171a'), circle(.67, '#22252a')];
+  for (let k = 0; k < 5; k++) {
+    const a = Math.PI / 2 + k * Math.PI * 2 / 5, point = (r, b) => [Math.cos(a) * r - Math.sin(a) * b, Math.sin(a) * r + Math.cos(a) * b];
+    shapes.push(poly([point(.12,-.11),point(.71,-.14),point(.71,.14),point(.12,.11)], c.rim));
+    shapes.push(poly([point(.12,-.11),point(.71,-.14),point(.71,-.025),point(.12,0)], '#e0e4e9'));
+  }
+  shapes.push(circle(.19, c.rim, 10), circle(.10, '#25282b', 10));
+  return shapes;
 }
 
 const SS = 4; // supersampling per axis
@@ -104,7 +139,7 @@ function raster(shapes, background) {
 /** The base-colour and emissive atlases as RGBA pixel buffers (`W`×`H`, rows top to bottom). */
 export function drawAtlas(colours = BAKE_COLOURS) {
   const c = { ...DEFAULT_COLOURS, ...colours };
-  const base = raster([...sideShapes(c), ...topShapes(c), ...swatchShapes(c, false)], '#000000');
+  const base = raster([...sideShapes(c), ...topShapes(c), ...swatchShapes(c, false), ...wheelShapes(c), ...glassShapes()], '#000000');
   const emissive = raster(swatchShapes(c, true), '#000000');
   return { width: W, height: H, base, emissive };
 }

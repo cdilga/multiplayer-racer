@@ -4,55 +4,56 @@
   "status": "awaiting-review",
   "date": "2026-10-25",
   "beads": [
-    "br-bwju.5",
-    "br-bwju.11",
-    "br-bwju",
-    "br-rgw6"
+    "br-8h3u.17"
   ],
-  "summary": "Reworked the engine as a rounded casting and narrow cylinder with curved right header, rider with nearly upright shirt and tapered shoulder/neck, faceted MX dome/brow/chin and wraparound goggles, chamfered guards, real annular rope and corrected tank/shroud/mudguard transitions. Exported triangles: 2607 / 883 / 600 within original 2800 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. LOD0 weighted silhouette .8504 to .8552; LOD1 .8497 to .8360 and LOD2 .8288 to .8026 regress. New current-geometry engine/torso gates reject the actual baseline at every tier. This remains below the ~.95 global likeness gate and is an explicit owner review candidate, not accepted parity.",
+  "summary": "Replaced flat radiator plates and rear leaves with convex panels and explicit crests. Raised both round spotlights above the beak instead of hiding them behind it. Split the engine into a smaller crankcase, tapered cylinder and real cooling ribs; tapered trousers with overlapping knee joints, connected the neck, added shirt collar/placket/pockets. Replaced bar spokes with narrow open wires and removed buried tread faces. Baked triangles 2595 / 898 / 599; unchanged physics/sidecar. Global silhouette scores 0.8451 / 0.8226 / 0.7978 remain below ~.95; review candidate with remaining shaded mismatches documented. Coarse tyres now retain twelve outer stations and eight vertices around the open rim hole. Hidden joined caps, buried panel backs and fender undersides funded the round silhouette without changing LOD0.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Unchanged reference and masks, identical frozen diagnostic cameras for shaded/mask captures. Exact source/asset identity and baseline/current scores are in docs/evidence/P1-V-roster-rework/pig-catcher/summary.json. Actual rejected baseline source is preserved under baseline/; shape checks reject its named errors. Primary source and generated-camera limitations remain applicable.",
+    "note": "Aspect-preserved shaded reference/previous/current and enlarged exact-camera regions are in docs/evidence/P1-V-roster-visual/pig-catcher/visual-comparison.png and regional-comparison.png. Per-part counts and exact identities are in triangle-receipt.json; real old source is retained in baseline/. Global likeness remains below target.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0: current source against unchanged reference, frozen cameras",
+        "label": "LOD0: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.8682,
-          "top": 0.8253,
-          "front": 0.8642,
-          "rear": 0.8715
+          "side": 0.8587,
+          "top": 0.8145,
+          "front": 0.8575,
+          "rear": 0.8574
         },
-        "weightedIou": 0.8552
+        "weightedIou": 0.8451
       },
       {
         "lod": 1,
-        "label": "LOD1: current source against unchanged reference, frozen cameras",
+        "label": "LOD1: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.8297,
-          "top": 0.8291,
-          "front": 0.8499,
-          "rear": 0.8528
+          "side": 0.8189,
+          "top": 0.8146,
+          "front": 0.8311,
+          "rear": 0.8401
         },
-        "weightedIou": 0.836
+        "weightedIou": 0.8226
       },
       {
         "lod": 2,
-        "label": "LOD2: current source against unchanged reference, frozen cameras",
+        "label": "LOD2: final shaded forms / unchanged reference, frozen cameras",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.7775,
-          "top": 0.8078,
-          "front": 0.8283,
-          "rear": 0.8334
+          "side": 0.7701,
+          "top": 0.8034,
+          "front": 0.8279,
+          "rear": 0.8308
         },
-        "weightedIou": 0.8026
+        "weightedIou": 0.7978
       }
-    ]
+    ],
+    "shadedComparison": {
+      "image": "media/shaded-comparison/visual-comparison.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    }
   },
   "turntable": {
     "assetJson": "media/model/pig-catcher.asset.json",
@@ -63,7 +64,7 @@
       {
         "lod": 0,
         "glb": "media/model/pig-catcher.lod0.glb",
-        "tris": 2607,
+        "tris": 2595,
         "draws": 6,
         "maxTris": 2800,
         "withinBudget": true
@@ -71,7 +72,7 @@
       {
         "lod": 1,
         "glb": "media/model/pig-catcher.lod1.glb",
-        "tris": 883,
+        "tris": 898,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -79,7 +80,7 @@
       {
         "lod": 2,
         "glb": "media/model/pig-catcher.lod2.glb",
-        "tris": 600,
+        "tris": 599,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -269,15 +270,15 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "reproducible bake, native contract, triangle budgets and original sidecar/collider preservation; parent exports.json records exact hashes."
+        "text": "named corrective form checks, frozen physical contracts and qualified budgets."
       },
       {
         "result": "PASS",
-        "text": "current named local form gates; real previous source fails each named defect at all tiers."
+        "text": "deterministic model bakes and inspected loader paint/damage/grid evidence."
       },
       {
         "result": "FAIL",
-        "text": "full global likeness target; see self-review.md for measured regressions."
+        "text": "global approximately0.95 outline target remains unmet; awaiting artistic review."
       }
     ],
     "report": "media/gate/validation.md"

@@ -10,13 +10,17 @@
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "Reference-led MQ body refinement: convex lower doors, inset shoulder and glass, crowned multi-section roof and rounded rear side glass. The nose substrate now sweeps back through intermediate facets instead of a square cap, and swept lamps share its geometry. Owner-tape tray/canopy envelopes and angular neutral accessories remain unchanged. Actual physics, hinges, pivots, anchors and collision buffers are frozen. Front styling is an estimate from the newer owner-model provenance; the local photos are rear oblique and uncalibrated.",
+  "summary": "Shaded owner-photo review retains the convex lower doors, inset shoulder/glass, crowned cab roof and owner-tape tray/canopy. The curved centre-to-arch underside membrane is replaced by an independent straight central undertray, narrow arch returns and dark inner wheel wells. Rear lamp triplets now match the photo: amber outside, red centre, white inside. Coarse mirror attachment faces buried in the cab are removed; redundant LOD1 barrel discs and tapered LOD2 mirror mounts fund fully closed tyres at every tier. Flat spokes and the faceted profile remain; coarsest rims use a tiny neutral alloy glint. Physics, hinges, pivots, anchors, collision buffers and one paint-key material are frozen. Front styling and precise cab curvature remain estimates because local photos are dark rear obliques.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
-    "sheet": "media/reference/20261021_204514.jpg",
-    "note": "Authoritative real night photos and owner tape dimensions supersede the earlier Muse sheet, whose score only measures resemblance to a generated composite. See refs/measured-reference.json, measured-check.json and the validation report. Real photos are perspective, occluded and uncalibrated: no photo silhouette IoU is claimed. New local shape gates and baseline failure receipts are recorded in the current validation report.",
+    "sheet": "media/reference/reference-previous-current.png",
+    "note": "Aspect-preserved actual owner night photo beside previous/current neutral shaded models. Both model candidates use identical cameras, size and framing; photo projection is uncalibrated. Owner photos and tape supersede the generated Muse sheet. Regional lamp/cab comparison and all-LOD negative-elevation underside boards are in the validation evidence. No photographic silhouette IoU is claimed.",
     "compare": [],
+    "shadedComparison": {
+      "image": "media/shaded-comparison/reference-previous-current.png",
+      "caption": "Shaded reference, previous and revised geometry. Previous/current share camera and display scale; reference aspect is preserved. Inspect panel volume, attachments and lower surfaces as well as the outline."
+    },
     "measured": {
       "kind": "owner-measured",
       "oracle": "media/reference/measured-reference.json",
@@ -580,7 +584,7 @@
       {
         "lod": 0,
         "glb": "media/model/tradie-ute.lod0.glb",
-        "tris": 1762,
+        "tris": 1770,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -588,7 +592,7 @@
       {
         "lod": 1,
         "glb": "media/model/tradie-ute.lod1.glb",
-        "tris": 896,
+        "tris": 895,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -596,7 +600,7 @@
       {
         "lod": 2,
         "glb": "media/model/tradie-ute.lod2.glb",
-        "tris": 600,
+        "tris": 599,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -884,15 +888,19 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "byte-reproducible export, native contract, all three triangle budgets and original collider/sidecar invariance."
+        "text": "owner photo and independent tape measurements retain the actual ute shape at every LOD."
       },
       {
         "result": "PASS",
-        "text": "independent measured and local form checks at all tiers; actual rejected body fails all 12 local form checks."
+        "text": "radial floor removed, dark inner wells and closed wheels inspected from below; rear lamp order corrected."
+      },
+      {
+        "result": "PASS",
+        "text": "qualified budgets, deterministic bakes, unchanged physics/sidecar/profile contract."
       },
       {
         "result": "WARN",
-        "text": "exact front likeness is uncertain because owner photos are dark rear obliques."
+        "text": "owner photos are uncalibrated; no new host performance or handling qualification is claimed."
       }
     ],
     "report": "media/gate/validation.md"

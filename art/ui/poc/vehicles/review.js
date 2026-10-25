@@ -32,7 +32,10 @@ const measuredBody = measured ? `
   ${measured.rows.map(row => `<tr><th>${esc(row.label)}</th><td class="num">${f2(row.target)} ${esc(row.unit)}</td>${measured.lods.map(l => `<td class="num">${f2(row.actual.find(a => a.lod === l.lod)?.value)} ${esc(row.unit)}</td>`).join('')}</tr>`).join('')}
   </tbody></table></div>
   <p><a class="btn" href="${m(measured.oracle)}">Measurements and provenance</a> <a class="btn" href="${m(measured.report)}">Current checks and defect results</a></p>` : '';
-const reference = measuredBody + r.reference.compare.map((c) => `
+const shadedComparison = r.reference.shadedComparison
+  ? img(r.reference.shadedComparison.image, esc(r.reference.shadedComparison.caption), `${r.name}: shaded reference, previous and current forms`)
+  : '';
+const reference = shadedComparison + measuredBody + r.reference.compare.map((c) => `
   <h3>${esc(c.label)}</h3>
   <div class="meta"><span class="big">${f2(c.weightedIou)}</span><span>weighted silhouette IoU</span></div>
   <div class="scroll"><table><thead><tr><th>View</th><th>Side</th><th>Top</th><th>Front</th><th>Rear</th></tr></thead><tbody>

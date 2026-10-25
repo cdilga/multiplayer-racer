@@ -1,0 +1,6 @@
+art/vehicles/cruz-missile/cruz-missile.asset.json: ok (jj.vehicle.v1, triangles per LOD [2052, 897, 590])
+art/vehicles/au-hawk/au-hawk.asset.json: ok (jj.vehicle.v1, triangles per LOD [2096, 880, 600])
+art/vehicles/lion-president/lion-president.asset.json: ok (jj.vehicle.v1, triangles per LOD [2321, 892, 564])
+art/vehicles/tradie-ute/tradie-ute.asset.json: ok (jj.vehicle.v1, triangles per LOD [1770, 895, 599])
+art/vehicles/postie-bike/postie-bike.asset.json: ok (jj.vehicle.v1, triangles per LOD [2611, 899, 599])
+art/vehicles/pig-catcher/pig-catcher.asset.json: ok (jj.vehicle.v1, triangles per LOD [2595, 898, 599])

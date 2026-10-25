@@ -1,0 +1,17 @@
+{
+  "colliders.json": {
+    "beforeSha256": "4a26d9f5aec2b11ac0acbfafcb62ef7b972ac3fc8bc6f2390bb84e4d7585521d",
+    "afterSha256": "4a26d9f5aec2b11ac0acbfafcb62ef7b972ac3fc8bc6f2390bb84e4d7585521d",
+    "unchanged": true
+  },
+  "vehicle.json": {
+    "beforeSha256": "6b49f9fbb2e2be9ab6f732eb2a86de2bdacde2a462c0bf2039bb0a0008776b86",
+    "afterSha256": "6b49f9fbb2e2be9ab6f732eb2a86de2bdacde2a462c0bf2039bb0a0008776b86",
+    "unchanged": true
+  },
+  "au-hawk.asset.json": {
+    "beforeSha256": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
+    "afterSha256": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
+    "unchanged": true
+  }
+}
