@@ -1150,3 +1150,33 @@ Focused runtime validation uses prior compiled artifacts with **only** the chang
 favourites module substituted; unrelated shared-tree WIP is excluded. Mac
 SwiftShader full journey passes **142,153 ms**. Linux SwiftShader full journey passes **117,611 ms**. Receipt: `kept-code.txt`;
 the containing CI must compile and validate the actual source.
+
+## Main 9476 and the JN7 baseline
+
+The actual compiled kept-track repair passes **259,785 ms** in main **9476**;
+all six other CPU browser shards pass except shard 7's JN7 autopilot assertion.
+The new favourites regressions pass. Preview **v02-ac6d09f2** smoke passes,
+room **WEW4**. GPU **9477** is green after its single diagnosed infrastructure
+retry: the retained core identifies GLib's fatal `getauxval() failed:
+Interrupted system call`, reproduced outside the game. The complete unchanged
+jump file passes both CPU CI and a focused eris run; no coverage/deadline/library
+changes. See `gpu-glib.txt` for the exact evidence and remaining attribution gap.
+
+JN7 cuts the server immediately after setting the phone's sticks, without
+acknowledging player control. The isolated full Linux file passes, but under
+an explicit two-CPU constraint the pre-cut readback is already **3,100 ms**
+stale and on autopilot, with an **8,099.7 ms** last software-rendered frame.
+That run recovers input during the outage and later fails joining a new phone;
+it does not reproduce the exact original CI assertion. It establishes the
+invalid startup assumption and unrelated renderer starvation. The original
+CI instance's input age is unavailable.
+
+Keep drawing on its loaded frame with the existing render hook, while the
+simulation and phone stay on their real clocks. Acknowledge fresh human input
+and actual Running/no countdown before cutting signalling. Retain the original
+three-second outage, tick advance, no-autopilot, re-registration, room-code and
+new-phone checks. Add no-held-clock/no-pause and fresh-throttle checks. No
+runtime gameplay or deadline changes; JN6 remains unchanged. Final full Linux
+file **2/2 passes, 37,234 ms**; constrained candidate JN7 passes **68,835 ms**,
+advancing **372 ticks** with input age **33→41 ms** across the outage. See
+`jn7-clock.txt` for validation scope and artifact provenance.

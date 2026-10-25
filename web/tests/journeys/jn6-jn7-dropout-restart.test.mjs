@@ -117,13 +117,27 @@ test('JN7: jj-server restarts mid-race, play continues, the host keeps its code 
     const { host, phones } = await raceWith(server.origin, ['Robbo']);
     const [a] = phones;
     const code = await host.evaluate(() => window.__jjNet.code());
+    // This measures signalling loss with live peer input, not software-renderer frame cost. A loaded SwiftShader
+    // frame can already have starved input into autopilot before the server stops. Keep the loaded world on screen,
+    // let the sim and phone run in real time, and acknowledge the player's handback before cutting signalling.
+    await host.evaluate(() => window.__jjRender.hold());
     await drive(a, -1);
+    await wait(host, async (ep) => {
+      const state = await window.__jjTest.observe();
+      const seat = state.host.seats.find((s) => s.endpoint === ep);
+      const car = seat && state.cars.find((c) => c.car === seat.car);
+      return state.host.phase === 'Running' && state.host.countdownMs === 0
+        && seat?.fresh && !seat.inputDropped && !seat.menuOpen && car?.autopilot == null && car?.input.throttle > 0.3;
+    }, a.ep);
     await server.close();
     const during = await observe(host);
+    assert.equal(during.host.held, false, 'the simulation clock remains live');
+    assert.equal(during.host.pauseMask, 0, 'the race is not paused');
     await host.waitForTimeout(3000);
     const later = await observe(host);
     assert.ok(later.tick > during.tick + 120, 'the race keeps running while the server is down');
     assert.ok(!carOf(later, a.ep).autopilot, 'the phone still drives over WebRTC');
+    assert.ok(later.host.seats.find((s) => s.endpoint === a.ep)?.fresh && carOf(later, a.ep).input.throttle > 0.3, 'fresh throttle still reaches the car without the server');
     server = await serve(dist, BASE, { JJ_BIND: `127.0.0.1:${port}`, JJ_STUN_URLS: '' });
     await wait(host, () => window.__jjNet.inspect().reRegistrations >= 1, undefined, 60_000);
     assert.equal(await host.evaluate(() => window.__jjNet.code()), code, 'the host keeps its code');

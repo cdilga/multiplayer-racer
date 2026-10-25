@@ -239,3 +239,18 @@ identity changes, and evict rejected promises so transient errors can retry. Tes
 a resolved displayed code with subsequent worker requests blocked: storage must
 update without another worker task. A passing trace proves the dependency, not
 the unavailable failed CI task's duration; keep that distinction in evidence.
+
+JN7's server-down transport check must begin with confirmed human control, as
+JN6 already does. Under a two-CPU software-rendering probe its car was already
+on autopilot before the server stopped (3.1s-old input,8.1s last frame). Hold
+only drawing of the loaded world for the transport observation; leave the sim,
+phone and real WebRTC running. Assert no clock hold/pause and fresh throttle
+across the original outage window. Keep latency/render performance on their
+existing checks; do not stretch a transport deadline to hide renderer load.
+
+For WebKit pageclosed on eris, inspect coredumpctl before touching tests. GPU9477
+retained an exact GLib getauxval fatal-error core (EINTR), and a signal/errno C
+probe reproduces it outside the game. It is an unsupported-OS browser-runtime
+failure, not a failed physics assertion. Preserve the evidence, reproduce the
+unchanged complete journey, and use at most the one permitted infrastructure
+retry. Do not disable WebKit or alter gameplay/deadlines to make it disappear.
