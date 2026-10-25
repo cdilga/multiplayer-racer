@@ -327,6 +327,10 @@ export class LocalInput {
     if (this.helper.owns('keyboard')) return void this.keys.clear();
     if (e.type === 'keydown') this.keys.add(e.code);
     else this.keys.delete(e.code);
+    // Preserve the Identify edge even when a busy renderer queues down and up before the next polling timer.
+    // Periodic samples still refresh held controls; the discrete press and release are sent when they arrive.
+    const identifyCluster = clusters.find(c => c.identify === e.code);
+    if (identifyCluster && !e.repeat) this.sampleCluster(identifyCluster, 0, performance.now());
     const cluster = clusters.find(c => c.ready === e.code);
     if (cluster && e.type === 'keyup') this.readyEvents.delete(cluster.id);
     if (cluster && this.client.room?.phase === 'Lobby' && !e.repeat) {

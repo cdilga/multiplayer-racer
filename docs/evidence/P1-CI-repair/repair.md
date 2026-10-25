@@ -148,3 +148,26 @@ GPU run passes in **10,252 ms**, takeover after **2,121 ms**; software-GL run pa
 takeover observed after **5,261 ms** within its existing 6-second software bound. An initial reproduction
 accidentally used eris's stale October-18 debug server; it is excluded. Mac real-WebRTC setup remains blocked
 before joining, so it is not counted as journey validation.
+
+### CI 9217: keyboard edges and 99-player HUD observation
+
+- Keyboard Identify: the held Q test timed out waiting for its tile pulse. Input polling can miss both
+  queued key events if down and up arrive before its next timer. A deterministic regression dispatches
+  both real DOM keyboard events in one browser task, after the existing held-key journey and cooldown.
+  This **fails before the fix** on Linux/GPU at the new pulse assertion (10-second timeout). Sample the
+  Identify press and release immediately in the key handler; periodic input refresh, helper ownership,
+  Ready routing and axis ramps remain unchanged. The held-key and queued-tap assertions both pass
+  after the fix: Linux/GPU **10,976 ms**. All three menu/settings/keyboard journeys pass on Linux
+  software GL in **37,958 ms** (keyboard case **19,904 ms**).
+- The 99-player HUD layout fixture times out at its existing **89,100 ms** bound, reproduced on the Mac
+  (case **94,434 ms**). Native-GPU introspection finds all 99 boxes/rects and **11,273,315 triangles**,
+  2,773 calls in a frame; software frames reach **90,901 ms** and starve the observation while continuing
+  to redraw. In layout-only HUD cases, observe the real renderer placing every box, stop its continuous
+  frame loop, then explicitly draw the settled layout after the existing 400 ms reflow interval.
+  Every car, tile, backing resolution and layout/text/containment assertion remains; no timeout increases.
+  All five unchanged cohort assertions (1/2/8/32/99) pass with software rendering on Mac (**36,082 ms**,
+  99 case **21,456 ms**) and Linux/eris (**30,959 ms**, 99 case **23,592 ms**).
+
+Linux checks use Node 26.10.0, Playwright Chromium, current committed web source and server. The candidate
+input module is supplied to Vite's load hook in memory, with compiled outputs in eris's run directory;
+no remote source files are edited. Test candidates run on stdin.

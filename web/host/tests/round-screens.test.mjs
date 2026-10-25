@@ -29,10 +29,20 @@ after(async () => {
   server?.close();
 });
 
-async function open(spec, [width, height] = VP['1080p']) {
+async function open(spec, [width, height] = VP['1080p'], holdHud = false) {
   const page = await browser.newPage({ viewport: { width, height } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  if (holdHud) await page.addInitScript((n) => {
+    // These assertions inspect layout, not frame rate. Stop after the real renderer places every HUD box, before
+    // another 99-view software frame blocks the observation. The test explicitly draws the settled layout below.
+    const placed = new MutationObserver(() => {
+      if (document.querySelectorAll('.hud-tile[data-seat]').length !== n) return;
+      window.__jjRender.hold();
+      placed.disconnect();
+    });
+    placed.observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-seat'] });
+  }, Number(spec.split('-')[1]));
   const mode = await openHost(page, `${server.url}/host/?roundfixture=${spec}`);
   assert.equal(mode, 'fixture');
   page.errors = errors;
@@ -254,10 +264,11 @@ test('results: 32 rows in place order, the buttons send the host commands, the t
 
 for (const n of [1, 2, 8, 32, 99]) {
   test(`per-tile HUD at N = ${n} sits inside each tile and shows that seat's number, position and lap`, async () => {
-    const page = await open(`race-${n}`);
+    const page = await open(`race-${n}`, VP['1080p'], true);
     try {
       await untilHud(page, n);
       await page.waitForTimeout(400);
+      await page.evaluate(() => window.__jjRender.frame());
       const res = await page.evaluate(() => {
         const render = window.__jjRender;
         const scale = render.stats().dpr * (render.stats().scale ?? 1);

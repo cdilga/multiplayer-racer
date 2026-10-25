@@ -103,9 +103,8 @@ test("keys A's Identify key (Q) in a race sends an Identify event and pulses tha
   await host.waitForTimeout(3300);
   const events = (await identifies(host)).length;
   const pulses = await host.evaluate(() => window.__jjRoom.identified().length);
-  // Keys are sampled once per host frame, and a software-rendered host (CI, SwiftShader) takes up to ~1 s per frame: a
-  // 150 ms tap falls between two samples and is never seen. Hold Q across several frames; Identify fires on the press
-  // edge (and is one per 3 s per seat), so the held key still sends one event.
+  // The discrete key edge sends Identify immediately; periodic polling refreshes held controls. Holding the key
+  // across several frames must still produce only one event, then the short queued tap below exercises both edges.
   await host.keyboard.down('KeyQ');
   await host.waitForTimeout(2000);
   await host.keyboard.up('KeyQ');
@@ -113,4 +112,16 @@ test("keys A's Identify key (Q) in a race sends an Identify event and pulses tha
   assert.equal((await identifies(host)).length, events + 1, 'one Identify event');
   assert.equal((await identifies(host)).at(-1), seat);
   assert.equal((await host.evaluate(() => window.__jjRoom.identified())).at(-1).seat, seat, 'that seat pulsed');
+  // A busy renderer can deliver both queued key events before the next input timer. Exercise that ordering in
+  // one browser task: neither the press nor its release may disappear between periodic samples.
+  const tick = await host.evaluate(async () => (await window.__jjTest.observe()).tick);
+  await wait(host, async (t) => (await window.__jjTest.observe()).tick >= t + 360, tick);
+  const tapped = (await identifies(host)).length;
+  const flashed = await host.evaluate(() => window.__jjRoom.identified().length);
+  await host.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyQ', key: 'q', bubbles: true }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyQ', key: 'q', bubbles: true }));
+  });
+  await wait(host, (n) => window.__jjRoom.identified().length > n, flashed, 10_000);
+  assert.equal((await identifies(host)).length, tapped + 1, 'one Identify for a press/release between timer samples');
 });
