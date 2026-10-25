@@ -15,6 +15,7 @@ Owner: CalmLynx. Source run: http://192.168.11.12:3001/cdilga/multiplayer-racer/
 - CI 9116 additionally starved JN3's phone refreshes for 2,491 ms: `fresh:false`, `inputDropped:true`, so the idle-cue assertion was observing dropout. Route JN3 to the GPU lane without changing its freshness or idle policy. The already GPU-selected three-phone voting/flyover test now skips software GL too: its real ten-second vote window was consumed by three browser interactions there. Keep the actual game deadlines and full assertions on GPU.
 - W05 observed a live boomerang in the held simulation before the renderer consumed its snapshot. Return the frame's buffers, republish the same tick, and wait for the drawn instance before its screenshot/assertion; no extra flight ticks or relaxed instance count.
 - G01 results stability also released the controlled clock before clicking, allowing the intermission to end. Keep it held through the real click, process one worker boundary, then resume. Its DOM identity checks remain unchanged.
+- G07's disconnected-seat removal had the same deadline race: the next round detached `Return to lobby` during its click (CI 9116). Hold the intermission through standings inspection and the click, then process/resume. The removal, retained standings and empty-Lobby assertions remain. Focused Chromium native Metal check **passes, 8,269 ms**.
 - The set-piece file watchdog fired at 900 seconds after Chromium alone passed in 747,834 ms, leaving WebKit unfinished. Stop automatic 1080p drawing while searching six-tick simulation checkpoints; explicitly paint and verify the airborne and landed snapshots. Native/WASM hashes, all three kinds, geometry checks and both browser engines remain.
 
 ## Validation
@@ -38,4 +39,12 @@ On eris (RTX 2080 Super), Playwright Chromium, `JJ_CHROMIUM_GPU=1`, CI 9116's ma
 - Three-phone voting, host override, tie/rematch and flyover: **pass, 93,030 ms**.
 - R09 real two-controller reel and automatic next round: **pass, 12,640 ms** in CI-equivalent mode (`unset JJ_CAPTURE_DIR`). The extra capture-mode run failed the separate 375x667 results readability assertion; that optional visual check has not been claimed as passing or weakened.
 
-Local follow-up validation: W05 boomerang flight/draw/return **pass, 10,197 ms**; G01 results DOM stability and next-round click **pass, 15,644 ms**, both Chromium native Metal on Mac. JN3/voting skip only software mode, and selection includes both on GPU. Set-piece checkpoint change is awaiting its focused browser result.
+Local follow-up validation: W05 boomerang flight/draw/return **pass, 10,197 ms**; G01 results DOM stability and next-round click **pass, 15,644 ms**, both Chromium native Metal on Mac. JN3/voting skip only software mode, and selection includes both on GPU.
+
+### Retained CPU coverage, commit 17cd2005
+
+The main CI uses software rendering and does not depend on the optional GPU workflow. Rust, builds, previews, the host page tests and most browser journeys still run without a GPU worker. GPU timing/practice checks queue separately when eris is unavailable; green main CI does not assert those queued checks passed.
+
+On eris with **JJ_CHROMIUM_GPU unset**, CI-matching native/WASM artifacts, no capture-only extras: all three set-piece kinds, airborne/landing render checkpoints, triangle fingerprints and full-state replay parity **pass in Chromium (69,556 ms) and WebKit (37,103 ms)**. Whole file: **121,027 ms**, versus the CI 9116 file watchdog at 900 seconds (Chromium alone 747,834 ms). A repeat of the old Chromium implementation was deliberately stopped after over two minutes to avoid repeating that already recorded expensive failure.
+
+On Mac with Chromium **software rendering**, G01 DOM stability and next-round click **pass, 83,316 ms**. The eight workflow/publication regressions also pass.

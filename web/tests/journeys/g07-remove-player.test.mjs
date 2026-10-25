@@ -144,11 +144,15 @@ test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: i
     await host.waitForTimeout(1500);
     await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
     await wait(host, () => window.__jjRoom.view().phase === 'Intermission', null, 120_000);
+    // Inspect the standings and return through the real button within this intermission. Software-GL scheduling
+    // otherwise lets the automatic next round detach it during the click (CI 9116).
+    await host.evaluate(() => window.__jjTest.hold(true));
     const seat3 = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.number === 3).seat);
     const rows = await host.evaluate(() => window.__jjRoom.view().standings.map((r) => r.seat).sort());
     assert.equal(rows.length, 3, 'the round gave every seat a standings row');
     assert.ok(rows.includes(seat3));
     await host.getByRole('button', { name: 'Return to lobby' }).click({ force: true }); // see br-q8i4 above
+    await host.evaluate(async () => { await window.__jjTest.step(1); window.__jjTest.hold(false); });
     await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
     assert.equal(await host.locator('.lcard').count(), 3);
     await host.locator('[data-act=menu]').click();
