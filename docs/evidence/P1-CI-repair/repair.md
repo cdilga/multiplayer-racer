@@ -762,3 +762,25 @@ GPU 9357 also misses the first WebKit Ready click in R13 (first phone **5** comm
 journey passes **13,221 ms**; the missed native event remains unreproduced, so there is no
 speculative patch, retry of an unchanged batch, or quarantine. Containing main/GPU receipts
 are still required before closing this repair.
+
+### R13: Ready press cancelled by a HUD label refresh
+
+The complete public WebKit identity journey reproduces the missed native click by
+holding Ready for 350 ms across HUD refreshes: both phones receive pointerdown/up
+and mousedown/up, but neither receives click. Both channels stay connected; both
+phones remain unready with five commands each. The renderer assigns Ready's
+`textContent` on every HUD update, replacing its text node during the active press.
+Preserve that node until the label actually changes.
+
+The candidate built from committed map code plus this controller change passes
+the complete local Chromium/WebKit R13 file: **3/3**, **35,856 ms**, including
+both real-phone journeys with 350 ms presses and all 1/4/24 pattern/draw checks.
+The earlier isolated WebKit candidate also passes **15,343 ms**; all **13**
+controller touch/orientation checks pass **19,384 ms**. The first WAN asset-route
+candidate failed during join/vehicle setup before Ready and is not a fix receipt.
+The full workspace typecheck reports seven existing errors in the other session's
+uncommitted `web/host/src/render/map/map.ts`; those edits are excluded.
+
+GPU 9367 independently reports FL17 first-touch worker-to-tick delays of
+**2600.9/2570.5/2504/2470.4/2435.9 ms**, followed by normal samples. Resume
+countdown involvement is under investigation; no timing bound is changed.

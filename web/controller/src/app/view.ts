@@ -402,7 +402,10 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const readyBtn = app.querySelector<HTMLButtonElement>('[data-act=ready]');
     if (readyBtn) {
       readyBtn.hidden = session.roomPhase !== 'Lobby' && session.roomPhase !== 'Results';
-      readyBtn.textContent = session.isReady ? 'Ready ✓' : 'Ready';
+      // WebKit cancels a native click if its text node is replaced between down and up.
+      // HUD refreshes must keep the unchanged label alive while the player is pressing it.
+      const label = session.isReady ? 'Ready ✓' : 'Ready';
+      if (readyBtn.textContent !== label) readyBtn.textContent = label;
       readyBtn.setAttribute('aria-pressed', String(session.isReady));
       readyBtn.disabled = session.roomPhase === 'Lobby' && chosenSeat !== session.you?.number;
     }

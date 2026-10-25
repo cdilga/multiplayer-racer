@@ -59,7 +59,9 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       await shot(p,`${engine.name()}-phone-${n}-landscape`);
       phones.push(p);
     }
-    for (const p of phones) await p.getByRole('button',{name:/^Ready/}).click();
+    // Hold across real HUD updates: rewriting an unchanged label during the press used to
+    // suppress WebKit's native click. Both phones must still ready through the real button.
+    for (const p of phones) await p.getByRole('button',{name:/^Ready/}).click({delay:350});
     // br-b2sv: WebKit on CI has left the room in the Lobby after both Readys; on a miss, say what each phone thinks.
     await wait(host,()=>window.__jjRoom.view().phase==='Running').catch(async (e) => {
       for (const p of phones) console.log('phone after Ready', JSON.stringify(await p.evaluate(()=>({c:window.__jjController?.inspect(), ready:document.querySelector('[data-act=ready]')?.outerHTML?.slice(0,300)})).catch((x)=>String(x))));
