@@ -1,0 +1,35 @@
+✖ lobby: roster churn preserves Start and mode buttons through a real press, while labels and cards update (2318.271875ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2596.73875
+
+✖ failing tests:
+
+test at web/host/tests/round-screens.test.mjs:155:1
+✖ lobby: roster churn preserves Start and mode buttons through a real press, while labels and cards update (2318.271875ms)
+  AssertionError [ERR_ASSERTION]: a roster update between down and up does not lose Start
+  + actual - expected
+  
+  + []
+  - [
+  -   {
+  -     type: 'ui',
+  -     ui: 'start'
+  -   }
+  - ]
+  
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/web/host/tests/round-screens.test.mjs:173:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ { type: 'ui', ui: 'start' } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

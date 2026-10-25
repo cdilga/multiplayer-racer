@@ -193,20 +193,45 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const n = room.seats.length;
     // P1-G06: the next round's mode, Race or Derby (applies from the next round; remembered on this device).
     const derby = room.nextMode === 'derby';
-    screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
+    // Ready, presence and unplugged timers change while a host is pressing Start. Keep the shell and
+    // its actions mounted throughout the Lobby; rebuilding it between pointerdown and click loses Start.
+    const fresh = !screen.querySelector('[data-screen=lobby]');
+    if (fresh) screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
       <header class="lb-head"><span class="bn display">Lob<span class="acc">by</span></span>
-        <span class="tag"><b data-count-label>${n}</b> in the room · <b>${ready}</b> ready</span>
+        <span class="tag"><b data-count-label>${n}</b> in the room · <b data-ready-label>${ready}</b> ready</span>
         <span class="strip">Join → choose your vehicle → Ready</span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
-        <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>${derby ? 'Start derby' : 'Start race'}</button>
-        <p class="lb-hint">${n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad'}</p>
+        <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}><span data-start-label>${derby ? 'Start derby' : 'Start race'}</span></button>
+        <p class="lb-hint" data-start-hint></p>
         ${nextKept(room)}<p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
-    const joinCard = qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK()));
-    joinEl.append(joinCard);
+    if (fresh) joinEl.append(qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK())));
+    const joinCard = joinEl.querySelector<HTMLElement>('.qr-card')!;
+    screen.querySelector<HTMLElement>('[data-screen=lobby]')!.dataset.count = String(n);
+    screen.querySelector('[data-count-label]')!.textContent = String(n);
+    screen.querySelector('[data-ready-label]')!.textContent = String(ready);
+    const start = screen.querySelector<HTMLButtonElement>('[data-act=start]')!;
+    start.disabled = n === 0;
+    const startText = derby ? 'Start derby' : 'Start race';
+    const startLabel = start.querySelector('[data-start-label]')!;
+    if (startLabel.textContent !== startText) startLabel.textContent = startText;
+    screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad';
+    for (const b of screen.querySelectorAll<HTMLButtonElement>('[data-act=mode]')) {
+      const selected = b.dataset.mode === (room.nextMode ?? 'race');
+      b.classList.toggle('primary', selected);
+      b.setAttribute('aria-pressed', String(selected));
+    }
+    const keptHtml = nextKept(room);
+    const keptEl = screen.querySelector('.lb-kept');
+    if (!keptHtml) keptEl?.remove();
+    else if (keptEl) {
+      const template = document.createElement('template');
+      template.innerHTML = keptHtml;
+      keptEl.textContent = template.content.textContent;
+    } else screen.querySelector('[data-start-hint]')!.insertAdjacentHTML('afterend', keptHtml);
     const cardHtml = (s: RoomView['seats'][number], tier: string) => {
       const st = stateOf(s);
       const tick = `<span class="tick ${st}" aria-label="${esc(labelOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
@@ -230,7 +255,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       paintKit(box);
     };
     relayout();
-    paintStrip(room, true);
+    paintStrip(room, fresh);
+    if (!fresh) return;
     paintKit(screen);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
     screen.querySelectorAll<HTMLButtonElement>('[data-act=mode]').forEach((b) => b.addEventListener('click', () => setRule((i) => client.input(i), 'mode', b.dataset.mode!)));

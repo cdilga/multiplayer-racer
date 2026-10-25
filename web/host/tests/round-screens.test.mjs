@@ -152,6 +152,52 @@ test('results: countdown labels keep the Start button stationary; captions leave
   }
 });
 
+test('lobby: roster churn preserves Start and mode buttons through a real press, while labels and cards update', async () => {
+  const page = await open('lobby-2', [1280, 720]);
+  try {
+    const button = page.locator('[data-act=start]');
+    const box = await button.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    const same = await page.evaluate(() => {
+      const start = document.querySelector('[data-act=start]');
+      const modes = [...document.querySelectorAll('[data-act=mode]')];
+      const room = window.__jjRoundFixture.make('lobby', 2);
+      room.seats[0].ready = true;
+      room.seats[1].ready = false;
+      room.seats[1].unpluggedMs = 5000;
+      window.__jjRoundFixture.set(room);
+      return { start: start === document.querySelector('[data-act=start]'), modes: modes.every(b => b.isConnected) };
+    });
+    await page.mouse.up();
+    assert.deepEqual(await page.evaluate(() => window.__jjRoundFixture.inputs()), [{ type: 'ui', ui: 'start' }], 'a roster update between down and up does not lose Start');
+    assert.deepEqual(same, { start: true, modes: true });
+    assert.match(await page.locator('.lb-head .tag').innerText(), /2 in the room · 1 ready/i);
+    assert.match(await page.locator('.lcard[data-seat="2"]').innerText(), /Unplugged 5s/i);
+    await page.evaluate(() => {
+      const room = window.__jjRoundFixture.make('lobby', 0);
+      room.nextMode = 'derby'; room.derbyMs = 180_000;
+      window.__jjRoundFixture.set(room);
+    });
+    assert.equal(await button.isDisabled(), true, 'an emptied lobby cannot start');
+    assert.equal(await button.textContent(), 'Start derby');
+    assert.equal(await page.locator('[data-mode=derby]').getAttribute('aria-pressed'), 'true');
+    assert.match(await page.locator('[data-start-hint]').innerText(), /Scan to join/);
+    await page.evaluate(() => {
+      const room = window.__jjRoundFixture.make('lobby', 3);
+      room.nextMode = 'derby'; room.derbyMs = 180_000;
+      window.__jjRoundFixture.set(room);
+    });
+    assert.equal(await button.isDisabled(), false);
+    assert.match(await page.locator('[data-start-hint]').innerText(), /3 min in the bowl/);
+    assert.equal(await button.locator('svg.bb').count(), 1, 'changing the label preserves the brush');
+    assert.equal(await page.locator('.lcard').count(), 3, 'new arrivals still get cards');
+    await page.locator('[data-mode=race]').click();
+    assert.deepEqual(await page.evaluate(() => window.__jjRoundFixture.inputs()), [{ type: 'ui', ui: 'start' }, { type: 'ui', ui: 'mode:race' }], 'updates do not duplicate action handlers');
+    assert.deepEqual(page.errors, []);
+  } finally { await page.close(); }
+});
+
 test('Ready states: every card says whether the player is ready; a ready player is told so in words', async () => {
   const room = await fixture('lobby-8');
   const page = await open('lobby-8');

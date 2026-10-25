@@ -526,3 +526,90 @@ now also asserting an initially empty `currentSrc` and native controls after pla
 Main 9319 now has a genuine landing-code failure as well as its disposable image checkout failure;
 the next push contains this reproduced runtime fix. Do not rerun the old unchanged batch just to
 get past WebKit. A public preview and deployed visual review follow the new image.
+
+### Main 9319 follow-up: results-screen click
+
+Browser 4/job **19627** also timed out during the real 30-second Playwright click on **Start next
+round now**, after the visible/enabled/stable checks and the results DOM-identity assertions had
+passed. The test keeps the simulation held through that click; this protection is retained.
+A focused eris Linux SwiftShader run at `23d2027e` passes the exact unchanged journey in
+**93,791 ms** (**97,297 ms** including setup). Main **9331**, browser 3/job **19691**, independently
+passes the same journey (**72.5 seconds** including its slot setup). No click deadline, synthetic
+click, resolution change or speculative production patch is introduced for this unreproduced timeout.
+
+GPU **9332** reports an FL17 latency spike; the cause is still being checked. Its input-to-tick
+maximum is **4015.2 ms**, consistent with the simulator's existing one-second performance-stall
+hold and three-second resume countdown, but the summary alone does not prove a pause reason.
+The manual software reproduction ran on eris during the GPU batch (run directory created
+**09:16:33.700 UTC**); this is a scheduling mistake and is not an isolated latency receipt.
+At **09:23 UTC**, eris has **12 logical CPUs**, load averages **13.13/21.48/18.12**, and CPU
+pressure `some avg60=15.49 avg300=25.21`. Other projects' browser jobs are also active.
+No other session's processes are stopped. An isolated FL17 probe is prepared with the original
+sample count/budgets and additional pause-transition/long-task diagnostics; the current GPU batch
+must finish before it runs. No successful containing GPU verdict is claimed yet.
+
+The isolated probe at the exact same source passes in **16,601 ms** (**18,824 ms** with setup):
+**301** samples, main-to-worker p99 **0.3 ms**, worker-to-tick p99 **8.6 ms**, tick-to-drawn p99
+**43.1 ms**, render-lag p99 **3.5 ticks**. A 25 ms diagnostic sampler records no pause reason during
+the touch run. All original sample counts and budgets are retained. This does not recover the old
+run's pause reason or prove its precise trigger; it establishes an uncontended pass beside the
+measured overloaded-host failure. GPU 9332 completes with **39 passes, one failure**, plus the two
+existing skips. Its single infrastructure retry is job **19724**, attempt **2**, requested at
+**09:30:07 UTC**; no other manual eris graphics test runs alongside it.
+
+### Public image and trailer receipt at 23d2027e
+
+Main 9331/image job **19696** passes the exact-source typecheck/build, two-base image smoke and
+registry publication. Image digest:
+`sha256:5ae9986e277b823da2a0cc5d2e3ed4401596f0c4cce760b11bbfc7d76eedffec`.
+Publisher **9337**, job **19702**, succeeds; commit status `preview/smoke/v02-23d2027e` is
+**success**: **room 5EY7**, isolated from **12** other previews, WebRTC join (**host, 0 ms**),
+input, resume, drive, HUD and round.
+
+Preview: https://jammers-preview.dilger.dev/p/v02-23d2027e/
+
+The public MP4 SHA-256 is exactly the source media's
+`14474a45ea9ef8f7fe40668cfd75e64b8a904ed6580e769a54cd63f664f7dd44`.
+Inspected all ten public phone/laptop/TV before/after-resize captures and both WebKit poster/
+playback captures. Deployed WebKit confirms zero pre-Play media requests, real click-to-play,
+native controls, seven caption cues, successful seek to 16 seconds, correct MP4 byte ranges and
+no page/media errors. The unchanged live-check reports only the known scrolling viewport-fold
+crossings; the TV check is clean. Full receipt and twelve archived captures are in
+`docs/evidence/P1-PROMO/self-review.md` and `docs/evidence/P1-PROMO/lazy-public/`.
+
+### Main 9331: preserve Lobby actions during roster updates
+
+Browser 7/job **19695** fails JN3's **End mid-round** case at line 132: the unchanged real Start
+click times out after **30 seconds**, after resolving a visible/enabled/stable button and scrolling
+it into view. The Lobby renderer keys on Ready, presence and whole seconds of unplugged time;
+each change replaces its entire `innerHTML`, including Start, mode controls and QR.
+
+A deterministic real-pointer regression against the published `23d2027e` bundle presses Start,
+applies a Ready/unplugged update, then releases. It fails in **2,318 ms**: **no Start command**
+arrives. The real full journey does not reproduce the CI timeout on the Mac (**148,512 ms**),
+but its Playwright trace records a successful Start click taking **7,339 ms** on SwiftShader.
+The deterministic lost-click defect is therefore proved separately from the precise timing of
+the old CI timeout; no claim is made that its full browser trace was recovered.
+
+Keep the Lobby shell, Start/mode buttons, roster container and QR mounted. Patch labels, counts,
+mode selection, disabled state, hints and kept-track text; update roster contents with the existing
+uncapped layout. Bind actions once. Start's label has its own span so mode changes preserve the
+button's brush SVG. The live journey and its 30-second click deadline are unchanged.
+
+- Five focused Chromium checks pass in **66,035 ms**, including the new real down/update/up
+  regression (**3,537 ms**), the existing phone/1080p/ultrawide cohorts **1/2/8/32/99**, and Ready
+  labels. The regression also checks empty-lobby disabling, newly arriving cards, Derby labels/
+  hints, preserved brush and single command delivery after repeated updates.
+- The full real **End mid-round → empty Lobby → ready again → Start → finish with results**
+  journey passes on Mac SwiftShader in **155,880 ms** (**156,668 ms** including setup).
+- WebKit at 375x667 independently passes the actual down/update/up interaction, empty Derby
+  state, re-enabled three-player Derby, label and brush checks.
+- All ten local phone/laptop/TV before/after-resize captures and three WebKit state captures
+  were inspected; live-check is clean at all five viewports. Receipt:
+  `docs/evidence/P1-R07/self-review.md`, with captures/logs in `ci-lobby/local/`.
+- Whole-web typecheck still reports only the unrelated dirty `map.ts` lines 377–387. The exact
+  committed-source CI build remains required; those WIP files are neither edited nor committed.
+
+GPU9332's single retry has passed FL17 with original budgets: **302** samples, main-to-worker
+p99 **0.2 ms**, worker-to-tick **8.7 ms**, tick-to-drawn **35.9 ms**, render lag **3 ticks**.
+The rest of that batch and the new Lobby fix's containing main/GPU runs remain required.

@@ -1,0 +1,6 @@
+ok   /host?roundfixture=lobby-2 412x915 -> docs/evidence/P1-R07/ci-lobby/local/host_roundfixture_lobby_2_412x915.png
+ok   /host?roundfixture=lobby-2 915x412 -> docs/evidence/P1-R07/ci-lobby/local/host_roundfixture_lobby_2_915x412.png
+ok   /host?roundfixture=lobby-2 375x667 -> docs/evidence/P1-R07/ci-lobby/local/host_roundfixture_lobby_2_375x667.png
+ok   /host?roundfixture=lobby-2 1366x768 -> docs/evidence/P1-R07/ci-lobby/local/host_roundfixture_lobby_2_1366x768.png
+ok   /host?roundfixture=lobby-2 1920x1080 -> docs/evidence/P1-R07/ci-lobby/local/host_roundfixture_lobby_2_1920x1080.png
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

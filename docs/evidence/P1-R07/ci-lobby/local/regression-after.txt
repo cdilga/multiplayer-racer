@@ -1,0 +1,13 @@
+✔ 1080p: the lobby lists every player at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (18019.131375ms)
+✔ 21x9: the lobby lists every player at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (26885.665458ms)
+✔ phone: the lobby lists every player at N = 1, 2, 8, 32 and 99, nothing overlapping or off screen (11398.852792ms)
+✔ lobby: roster churn preserves Start and mode buttons through a real press, while labels and cards update (3537.405708ms)
+✔ Ready states: every card says whether the player is ready; a ready player is told so in words (5923.523834ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66035.215208

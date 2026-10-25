@@ -63,3 +63,32 @@ in **6,966 ms**. The same four Mac journeys pass in **7,391 ms**. Whole-web type
 reports only the pre-existing dirty renderer `map.ts` errors; the exact committed-source CI
 build must validate the candidate. Public capture/review and preview smoke remain pending
 until the candidate image is published. No physical-device or Safari claim is added.
+
+## Deployed CI repair review — v02-23d2027e
+
+Reviewed the actual image at https://jammers-preview.dilger.dev/p/v02-23d2027e/ on Mac arm64
+with Playwright Chromium and WebKit. Inspected every full-page PNG before archiving JPEG copies:
+
+- `lazy-public/index_412x915.jpg` and `lazy-public/index_412x915_after-resize.jpg`: portrait Join/Host,
+  decoded poster and centred Play button; all sections readable through natural scrolling.
+- `lazy-public/index_915x412.jpg` and `lazy-public/index_915x412_after-resize.jpg`: landscape hero,
+  upper panel labels, trailer alignment, footer and complete controls.
+- `lazy-public/index_375x667.jpg` and `lazy-public/index_375x667_after-resize.jpg`: short-phone wrapping,
+  player width, poster and Play button; no horizontal overflow.
+- `lazy-public/index_1366x768.jpg` and `lazy-public/index_1366x768_after-resize.jpg`: laptop columns,
+  car image, player, text and footer; resize preserves the layout.
+- `lazy-public/index_1920x1080.jpg` and `lazy-public/index_1920x1080_after-resize.jpg`: TV-scale hero
+  and trailer layout, complete main actions and legible text.
+- `lazy-public/webkit-poster.jpg` and `lazy-public/webkit-playing.jpg`: actual WebKit Play click,
+  decoded frame at 16 seconds and visible English captions.
+
+No new visual defects observed. The deployed live-check reports the same viewport-fold crossings
+on the naturally scrolling page as the local run; the complete full-page images show reachable
+content, and the 1920x1080 check is clean. There are no HTTP, image-decode, script or horizontal
+overflow failures. The checker is unchanged. Its complete output is `lazy-public/matrix.txt`.
+
+The deployed WebKit probe confirms **zero MP4 requests before Play**, native controls after the
+click, duration **36.7546875 seconds**, **seven caption cues**, successful seek to **16 seconds**,
+no media or page errors, exact scraper/player URL agreement, and **206** for bytes 0–7 with the
+real MP4 `ftyp` signature. Receipt: `lazy-public/webkit-playback.json`. This is Playwright WebKit,
+not Safari or a physical phone. Physical devices and perceptual audio listening remain uncovered.

@@ -175,3 +175,18 @@ hydrate the source objects, and invalidate any archive already built from the po
 source before play. Keep the URL unattached until an explicit viewer gesture, then enable native
 controls and call play. Preserve scraper-visible `og:video` metadata separately. Test the real
 button click in both engines; evaluating `video.play()` directly can miss an unusable affordance.
+
+Software-rendering reproductions can also contaminate eris's GPU latency run through CPU
+contention. Do not assume that selecting SwiftShader isolates a manual browser from hardware CI.
+GPU9332 had a 4015 ms input-to-tick maximum while the 12-thread host's recent load exceeded 20;
+the same-source isolated FL17 probe retained all budgets and passed (8.6 ms worker-to-tick p99,
+43.1 ms tick-to-drawn p99, no sampled pauses). The four-second shape is consistent with the
+existing one-second stall hold plus three-second resume countdown; the aggregate latency receipt
+alone does not identify the pause reason. Record resource pressure and pause transitions before
+changing latency limits or gameplay. Keep manual host-browser work off eris during GPU CI.
+
+Lobby roster churn must not rebuild its action controls either. A real mouse-down, Ready/unplugged
+update, then mouse-up loses Start on the old full-`innerHTML` renderer. Keep the shell/buttons/QR
+mounted, update the roster and text in place, and bind handlers once. Preserve a brushed button's
+SVG when changing its label (update a label span). Test the actual press across the update plus
+empty/new-player/mode transitions; a DOM assertion alone misses the lost action.

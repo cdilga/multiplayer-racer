@@ -37,3 +37,29 @@ Chromium (Playwright headless, software GL) on the Mac; fixture room views (`hos
 - Round complete vs `docs/evidence/P1-U02.4/captures/1080p-results_n=8.jpg`: present: round heading, subtitle strip, placings with seat colour and points, QR, next-race chip, start-next and return buttons. Absent: highlight video (R09), podium cards (removed in br-dim.7 anyway), "Watch the highlights" button.
 - Per-tile HUD vs `docs/evidence/P1-U02/captures/1080p/hud_n=8.jpg`: present: badge + name top-left, ordinal place + lap top-right, chips bottom, seat-colour frame; absent: boost bar, wreck banner (no data); the lap and place share one pill (the POC stacks lap under place in the early capture, one line in the accepted rule).
 - Countdown vs `docs/evidence/P1-U02/captures/1080p/countdown_n=8.jpg`: full-screen number, same saffron with ink outline; GO! shown 0.9 s.
+
+## CI Lobby repair self-review — br-dsq4, 2026-10-25
+
+Mac arm64, real Rust test server at http://127.0.0.1:4178/, Playwright Chromium/WebKit.
+The Lobby now preserves its action buttons and QR across roster updates. No appearance change is intended.
+
+Looked at all ten Chromium captures, paired before/after resize:
+
+- `ci-lobby/local/host_roundfixture_lobby_2_412x915.jpg` and `ci-lobby/local/host_roundfixture_lobby_2_412x915_after-resize.jpg`: phone portrait QR, both cards, mode controls, Start and footer are complete.
+- `ci-lobby/local/host_roundfixture_lobby_2_915x412.jpg` and `ci-lobby/local/host_roundfixture_lobby_2_915x412_after-resize.jpg`: short landscape keeps the QR, hint, actions and footer visible.
+- `ci-lobby/local/host_roundfixture_lobby_2_375x667.jpg` and `ci-lobby/local/host_roundfixture_lobby_2_375x667_after-resize.jpg`: short portrait wraps hints and preserves the action stack.
+- `ci-lobby/local/host_roundfixture_lobby_2_1366x768.jpg` and `ci-lobby/local/host_roundfixture_lobby_2_1366x768_after-resize.jpg`: laptop columns, complete labels and QR; resize preserves layout.
+- `ci-lobby/local/host_roundfixture_lobby_2_1920x1080.jpg` and `ci-lobby/local/host_roundfixture_lobby_2_1920x1080_after-resize.jpg`: TV-scale cards, QR, labels and actions stay legible.
+- `ci-lobby/local/webkit-updated.jpg`: actual press survives a Ready/unplugged update; one Ready and Unplugged 5s are visible.
+- `ci-lobby/local/webkit-empty-derby.jpg`: zero cards, zero Ready, Derby selected, disabled Start derby and join hint.
+- `ci-lobby/local/webkit-derby.jpg`: three new cards, re-enabled Start derby, retained brush and three-minute hint.
+
+All PNGs were inspected before archiving these JPEGs. No visual defects observed; all five live-check
+viewports are clean before/after resize. Behavioural regression and full real round journey pass;
+their logs and the WebKit receipt are beside the captures. An intermediate label update stripped
+the button's brush; the final implementation updates a dedicated label span and the regression
+checks the brush survives. The old bundle loses the real press across a roster update; the fix
+preserves the button and sends exactly one Start command.
+
+These are local captures. Deployed review follows the new image, before repair closure. Physical
+phones/TV and Safari are not covered; the touch-sized WebKit run is Playwright WebKit.
