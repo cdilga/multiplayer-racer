@@ -80,3 +80,25 @@ test('after a hitch (a burst of ticks at once) the drawn tick jumps to the newes
   const t = ip.renderTick(now + 1);
   assert.ok(t >= 138 - DELAY_TICKS - 1, `drawn at ${t.toFixed(2)}, newest 138`);
 });
+
+test('a delayed animation callback does not project a newer snapshot backwards from its arrival', () => {
+  const ip = new Interpolator();
+  const lags = [];
+  let delivered = 0;
+  let previous = 0;
+  // rAF supplies the frame timestamp, not the time its callback runs. Snapshot messages can arrive after that
+  // timestamp but before the callback, especially while other browser tasks delay it. Replay that ordering at
+  // 60 Hz with 30 ms callback delay, retaining the real 120 Hz snapshot stream and three-tick smoothing delay.
+  for (let frameAt = 100; frameAt < 10_100; frameAt += 1000 / 60) {
+    const callbackAt = frameAt + 30;
+    const newest = Math.floor(callbackAt * TICK_HZ / 1000);
+    while (delivered < newest) ip.push({ tick: ++delivered, sessionRev: 0 }, callbackAt);
+    const shown = ip.renderTick(frameAt);
+    assert.ok(shown >= previous && shown <= newest, 'playback stays monotonic and within received state');
+    previous = shown;
+    if (frameAt > 1100) lags.push(newest - shown);
+  }
+  lags.sort((a, b) => a - b);
+  const p99 = lags[Math.floor(lags.length * 0.99)];
+  assert.ok(p99 <= DELAY_TICKS + 1, `callback scheduling must not add to interpolation delay: ${p99.toFixed(2)} ticks`);
+});

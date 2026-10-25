@@ -206,3 +206,24 @@ Main 9228 already passes checks, Rust lint, all three Rust shards, build, image 
 Preview **v02-9388bd30** smoke passes: room C3BJ, isolation from seven previews, real WebRTC join,
 input, resume, drive, HUD and round. URL: https://jammers-preview.dilger.dev/p/v02-9388bd30/ .
 Containing green CI and the next built preview remain required; neither is claimed in advance.
+
+### GPU 9248: stale animation timestamps and render lag
+
+With no concurrent manual GPU reproduction, FL02 passes (**24,748 ms**). FL17 still reports render-lag
+p99 **6.9 ticks**, while tick-to-drawn p99 is **47.2 ms**, inside its unchanged 60 ms bound. The run
+also has a settings-sheet Identify failure; its detailed assertion is still pending the job's completion.
+
+The interpolation clock projects the latest snapshot from its main-thread arrival to rAF's timestamp.
+A delayed rAF callback can have a timestamp older than snapshot messages delivered before that callback.
+The old code accepts negative elapsed time, projects the newest state backwards and adds scheduling
+delay to its configured three-tick interpolation delay. Clamp elapsed time at zero; retain the delay,
+rate steering, hitch handling, monotonic clock and latest-snapshot bound.
+
+A deterministic real-interpolator replay delivers 120 Hz snapshots before 60 Hz callbacks whose frame
+timestamps are 30 ms old. It **fails before the fix at 6.60 ticks p99 lag**, and **passes after at
+3.00 ticks**. All four existing clock/smoothness/hitch tests pass unchanged, including 99% smooth-frame
+requirements at 60/120/144 Hz. The complete live R06 24→120-seat journey passes again with the runtime
+clock correction (**30,181 ms**, macOS arm64, Playwright Chromium native Metal, same build method as
+above). Both captures inspected: populated tiles, expected badges and no blank panels. This is a
+reproduced clock defect, not an increase to any FL17 budget; the containing Linux GPU result is still
+required and not assumed.

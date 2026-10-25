@@ -118,3 +118,7 @@ Measurements and reproductions: `docs/evidence/P1-CI-repair/repair.md` and `stag
   and scheduler. This session overlapped FL02/FL17 in run 9236; those failures need isolated evidence,
   not relaxed bounds. `eris.sh --run` also enables capture-only checks via JJ_CAPTURE_DIR; explicitly
   unset it when reproducing a CI journey that does not enable captures.
+- rAF's timestamp is the frame's time, not callback execution time. A snapshot can arrive between
+  them. Never extrapolate it backwards from its arrival: negative elapsed time inflated the smoothing
+  delay from three ticks to 6.6 in a deterministic 30 ms delayed-callback replay. Clamping elapsed time
+  at zero preserves smooth playback and the original latency budget.

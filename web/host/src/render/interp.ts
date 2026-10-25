@@ -62,7 +62,9 @@ export class Interpolator {
     if (this.fixedTick !== null) return this.fixedTick;
     const last = this.frames.at(-1);
     if (!last) return 0;
-    const ahead = Math.min(((now - this.lastArrival) * TICK_HZ) / 1000, DELAY_TICKS);
+    // A delayed rAF callback's timestamp can precede snapshot messages already delivered to this task. Those
+    // snapshots are current state: do not project them backwards and add callback scheduling to the render delay.
+    const ahead = Math.min((Math.max(0, now - this.lastArrival) * TICK_HZ) / 1000, DELAY_TICKS);
     const target = last.tick + ahead - DELAY_TICKS;
     if (this.lastNow === null || Math.abs(target - this.shown) > SNAP_TICKS) {
       this.shown = Math.max(this.shown, target);
