@@ -74,3 +74,10 @@ frames over the still section, so it is sensitive. Encoded CRF 20 capped at 11 M
 
 Physical phones or Safari (WebKit is Playwright WebKit), a human listening pass on Stevo, frame-rate on real host
 hardware (this is a staged, frame-stepped capture, not a performance measurement).
+
+## Deployed
+
+Pushed 8633d219; the POC deploy published it. https://jammers-preview.dilger.dev/poc/promo/bring-everyone-stevo-a8d821e0.mp4
+serves HTTP 200 video/mp4, 61,807,616 bytes with byte ranges, SHA-256 a8d821e0c865f6ed…, matching the committed file;
+the VTT serves as text/vtt. `node docs/evidence/P1-PROMO3/check-playback.mjs --base https://jammers-preview.dilger.dev`
+passes in Chromium and WebKit at 412×915 and 1920×1080 (`deployed/playback.json`, `deployed/*.png`).

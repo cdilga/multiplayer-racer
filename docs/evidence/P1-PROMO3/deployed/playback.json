@@ -1,0 +1,234 @@
+{
+  "base": "https://jammers-preview.dilger.dev",
+  "checkedAt": "2026-10-25T23:12:21.065Z",
+  "results": [
+    {
+      "browser": "Chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "media": {
+        "duration": 58.76,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 16,
+        "error": null,
+        "cues": 11,
+        "activeCue": "Sixty-four drivers. One shared screen. And there's no player cap."
+      },
+      "videoResponses": [
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        }
+      ],
+      "vtt": [
+        {
+          "status": 200,
+          "type": "text/vtt; charset=utf-8"
+        }
+      ],
+      "noAutoload": true,
+      "pass": true
+    },
+    {
+      "browser": "Chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "media": {
+        "duration": 58.76,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 16,
+        "error": null,
+        "cues": 11,
+        "activeCue": "Sixty-four drivers. One shared screen. And there's no player cap."
+      },
+      "videoResponses": [
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        }
+      ],
+      "vtt": [
+        {
+          "status": 200,
+          "type": "text/vtt; charset=utf-8"
+        }
+      ],
+      "noAutoload": true,
+      "pass": true
+    },
+    {
+      "browser": "WebKit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "media": {
+        "duration": 58.75,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 16,
+        "error": null,
+        "cues": 11,
+        "activeCue": "Sixty-four drivers. One shared screen. And there's no player cap."
+      },
+      "videoResponses": [
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        }
+      ],
+      "vtt": [
+        {
+          "status": 200,
+          "type": "text/vtt; charset=utf-8"
+        }
+      ],
+      "noAutoload": true,
+      "pass": true
+    },
+    {
+      "browser": "WebKit",
+      "version": "26.5",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "media": {
+        "duration": 58.75,
+        "width": 1920,
+        "height": 1080,
+        "currentTime": 16,
+        "error": null,
+        "cues": 11,
+        "activeCue": "Sixty-four drivers. One shared screen. And there's no player cap."
+      },
+      "videoResponses": [
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        },
+        {
+          "status": 206,
+          "type": "video/mp4"
+        }
+      ],
+      "vtt": [
+        {
+          "status": 200,
+          "type": "text/vtt; charset=utf-8"
+        }
+      ],
+      "noAutoload": true,
+      "pass": true
+    }
+  ]
+}
