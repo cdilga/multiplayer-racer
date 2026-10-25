@@ -941,3 +941,89 @@ library symbols show a non-canonical, bit-63-set pointer dereference in
 No Rust inputs differ from the prior successful image. Hardware versus software
 corruption remains unproven; no stack/memory/toolchain patch or infrastructure
 retry is made. Focused facts are in `compiler-crashes.txt`; no core is committed.
+
+### Containing GPU and deployed paused-Identify receipts
+
+GPU **9437** at **12e575099** is **success**: **41 pass, 0 fail**,
+with the two existing environment skips unchanged. Normal Settings Identify
+passes **4,105 ms**, and the genuine renderer-loss case passes **4,202 ms**.
+Main **9436** passes all Rust partitions, lint, checks, build and image;
+its WebKit owner-lobby journey fails before joining at `ready-to-join`,
+with no route through two ICE recoveries. Main is not green; this is being
+reproduced independently of the now-passing Identify checks.
+
+The exact built **v02-12e57509** is published and
+`preview/smoke/v02-12e57509` is **success**. Its complete four-case
+public Identify file passes **4/4, 39,565 ms** on Mac native Chromium,
+using the actual deployed WASM with no substitutions. The complete
+owner-lobby WebKit journey also passes on that public build on the Mac.
+
+Preview: https://jammers-preview.dilger.dev/p/v02-12e57509/
+GPU: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9437
+
+### Quiet WebKit signalling and oversized SSE replay
+
+Main **9436** finishes with **13/14 jobs passing**; only browser2 fails,
+at the owner-lobby WebKit phone's initial `ready-to-join`, with no route
+and two ICE recoveries. GPU **9437** and the corresponding image/preview
+remain green. The same complete public Mac WebKit journey passes.
+
+Focused Linux CI-image joins show the initial offer POST accepted immediately
+(202), but its SSE event sometimes stays incomplete until the 8-second offer
+retransmission. Native description/candidate calls take milliseconds. A quiet
+stream probe removes rendering/WebRTC entirely: both the real Rust server
+and a small Node HTTP server deliver only the first **123/124 bytes** of
+a larger chunk to Linux WebKit's fetch reader, while Node receives it whole.
+The new real-server quiet-event regression fails on the old transport's
+unchanged **2-second** fast-stream deadline. Drawing holds, a nosniff header
+and pipelined fetch reads do not reliably fix it; none is published.
+
+Use progressive XHR for SSE, preserving bearer headers, Last-Event-ID,
+parsing, recovery/backoff and heartbeat semantics. Since XHR retains its
+response text, rotate a response after **1 Mi UTF-16 characters**, processing
+complete events before aborting and replaying any unfinished event from the
+last complete id. This bounds a response's retained text, with no endpoint
+or event-count cap. The Node-only join-retry fixture gets an XHR stub in
+place of its old pending-fetch stub; every retry/leak assertion is retained.
+
+The first Linux rotation trial then exposes a second real defect. The server
+concatenates all queued events into one HTTP body frame; replaying multiple
+large events exceeds Asupersync's **64 KiB frame bound** and terminates
+the stream. A direct old-binary probe queues three 48 KiB events and receives
+only the 8-byte opening comment, **0 events**, then a terminated read.
+Send each complete SSE event through **60 KiB byte slices**, as fixed HTTP
+bodies already do, retaining every event. An individual accepted 64 KiB POST
+also gains SSE framing, so it must be splittable independently of batching.
+
+Validation before publication:
+
+- Mac **Apple M1 Pro / MacBookPro18,3**: all **46 server library tests**,
+  affected-crate clippy `-D warnings`, formatting and focused TS typecheck pass.
+  Three real-server SSE cases pass, including slow-reader isolation, exact-once
+  Last-Event-ID resume, and a quiet queued replay containing an **exact 64 KiB
+  Unicode POST**, another 48 KiB event and a quiet tail (**9.74 ms**).
+- The complete four-case new browser regression passes on the Mac with both
+  final server and final client: **4/4, 8,350 ms**. It verifies quiet Unicode
+  delivery plus 24 large signals crossing the response-text bound, and the
+  first subsequent event, all exactly once in Chromium and WebKit.
+- Linux CI image `jj-ci:d161a07c0df4`, TrueNAS **Xeon E5-2650 v4**, software
+  Chromium/WebKit: the candidate client passes the full unchanged owner-lobby
+  file **2/2, 297,474 ms**, real phone joins **639/3,113 ms**; all **17**
+  existing real transport/recovery/coturn/fallback cases pass **101,348 ms**.
+- Those integration runs reuse every compiled JS/data/WASM/native-server byte
+  from main9436 except replacing the single compiled SignalStream class in
+  `takedown-ojPFjcBv.js` with the bundled candidate module. They include no
+  unrelated shared-tree landscape WIP. The native Linux server frame fix
+  still requires the containing committed-source CI build.
+- On that same Linux image, the four new browser cases pass **12/12** across
+  three repeated full files before the native frame fix. The one earlier
+  failed rotation motivated the oversized-replay reproduction and repair;
+  it is not hidden or attributed to a successful repetition. Separate quiet
+  XHR probes receive complete 1/8/32/48 KiB events.
+- All **18** existing retry/backoff/fallback/ICE unit checks pass unchanged
+  assertions. RCH refuses before compilation under critical worker pressure;
+  the permitted per-crate Mac fallback ends at **3.0 GiB target/**. No local
+  workspace-wide Cargo, timing relaxation, quarantine or diagnostic push.
+
+Focused receipts: `sse-streaming.txt`. Containing main/GPU and the next
+preview's smoke/public validation are still required; no green-main claim.

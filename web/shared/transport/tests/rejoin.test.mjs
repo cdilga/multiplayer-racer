@@ -1,7 +1,7 @@
 // br-bxsc: a phone woken or reloaded before its network is back gets a TypeError from fetch, which says nothing about the
 // room. `ControllerLink.joinRetrying` keeps trying (0.5 s doubling to 5 s, at once on `resume()`), stops the stream a
 // failed attempt opened, and still ends on a definitive answer. The real link bundled for Node with fetch and
-// RTCPeerConnection stubbed: no browser, no server.
+// RTCPeerConnection/XMLHttpRequest stubbed: no browser, no server.
 //   node --test web/shared/transport/tests/rejoin.test.mjs
 import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
@@ -50,9 +50,23 @@ before(async () => {
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 /** A fake server: `lookups` answers each room lookup in turn (a function throws, an object is the body). Counts the
- *  signal streams still open (a stream's fetch waits until it's aborted). */
+ *  signal requests still open until aborted. Real browser streaming/replay lives in sse-streaming.test.mjs. */
 function server({ lookups = [] }) {
   const s = { open: 0, streams: 0, lookups: 0 };
+  globalThis.XMLHttpRequest = class {
+    static HEADERS_RECEIVED = 2;
+    responseText = '';
+    active = false;
+    open(method, url) { assert.equal(method, 'GET'); assert.match(url, /\/signal\?/); }
+    setRequestHeader() {}
+    send() { this.active = true; s.open += 1; s.streams += 1; }
+    abort() {
+      if (!this.active) return;
+      this.active = false;
+      s.open -= 1;
+      this.onabort?.();
+    }
+  };
   globalThis.fetch = async (url, init = {}) => {
     const path = String(url);
     const method = init.method ?? 'GET';
@@ -62,16 +76,6 @@ function server({ lookups = [] }) {
       return json(a);
     }
     if (path.endsWith('/endpoints')) return json({ iceServers: [], iceExpiresAt: Date.now() + 3_600_000 });
-    if (method === 'GET' && path.includes('/signal?')) {
-      s.open += 1;
-      s.streams += 1;
-      return new Promise((_, reject) =>
-        init.signal.addEventListener('abort', () => {
-          s.open -= 1;
-          reject(new DOMException('aborted', 'AbortError'));
-        }),
-      );
-    }
     if (path.endsWith('/signal')) return json({});
     return json({ reason: 'unexpected' }, 500);
   };

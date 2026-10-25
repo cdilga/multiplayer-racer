@@ -171,3 +171,22 @@ test('Last-Event-ID resume delivers what was missed exactly once', async () => {
   b.close();
   await b.done;
 });
+
+test('a quiet replay delivers multiple large events and an exact-limit Unicode POST whole', async () => {
+  const { id, host } = await room();
+  const c = await endpoint(id, 'c-large');
+  const empty = { from: 'c-large', to: 'host', kind: 'candidate', gen: 1, payload: '' };
+  const budget = 64 * 1024 - Buffer.byteLength(JSON.stringify(empty));
+  const maximum = 'é'.repeat(Math.floor(budget / 2)) + 'x'.repeat(budget % 2);
+  assert.equal(Buffer.byteLength(JSON.stringify({ ...empty, payload: maximum })), 64 * 1024);
+  // Queue before opening: the old adapter put the entire replay in one oversized HTTP frame. Even this first
+  // individual event exceeds that frame bound after adding SSE's id/data delimiters to the accepted POST.
+  const payloads = [maximum, 'x'.repeat(48 * 1024), 'the quiet final event'];
+  for (const payload of payloads) assert.equal((await send(id, 'c-large', 'host', c, payload)).status, 202);
+  const s = stream(id, 'host', host);
+  try {
+    const received = await s.next(payloads.length);
+    assert.deepEqual(received.map(e => e.msg.payload), payloads);
+    assert.deepEqual(received.map(e => e.id), [1, 2, 3]);
+  } finally { s.close(); await s.done; }
+});

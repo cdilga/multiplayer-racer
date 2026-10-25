@@ -172,12 +172,18 @@ fn sse(app: Arc<App>, open: SseOpen, headers: Vec<(String, String)>) -> Http1Pro
             s.send_bytes(&cx, Bytes::from_static(b": open\n\n")).await?;
             while let Some(events) = app.sse_take(&open, cursor) {
                 if !events.is_empty() {
-                    let mut chunk = String::new();
                     for e in &events {
-                        chunk.push_str(&sse_event(e));
+                        // A replay can contain any number of events, and even one near-limit POST gains SSE
+                        // framing bytes. Respect the HTTP library's 64 KiB frame bound without truncating either.
+                        let bytes = Bytes::from(sse_event(e));
+                        let mut off = 0;
+                        while off < bytes.len() {
+                            let end = (off + 60 * 1024).min(bytes.len());
+                            s.send_bytes(&cx, bytes.slice(off..end)).await?;
+                            off = end;
+                        }
                         cursor = e.id;
                     }
-                    s.send_bytes(&cx, Bytes::from(chunk)).await?;
                     continue;
                 }
                 let wait = Box::pin(app.sse_wait(&open, cursor));
