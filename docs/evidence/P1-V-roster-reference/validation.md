@@ -42,6 +42,8 @@ All eighteen tiers remain within their original qualified budgets. `exports.json
 
 Final focused results: 93/93 vehicle tests, 13/13 review-page tests, seven generated review contracts, all six native asset validators/reproducible bakes, twelve native settle/straight scenarios with matching replay, and twelve local vehicle/browser combinations pass. The broader audio and viewport-edge failures described here remain explicitly outside that green set.
 
+Publication: candidate `ad35536b` is live on `/poc/vehicles/` (successful POC workflow 9240). `deployment.json` records 74/74 public files matching the reviewed local bytes. All twelve deployed vehicle/browser combinations pass; all 96 deployed stage captures were inspected in `live-interactions/`.
+
 Postie's expanded baked-mesh wheel probe checks multiple wedge angles/radii from both sides. Pale wheel interiors match the background; they are open spaces, not discs. Source projection alone could not establish this, so the exported mesh and actual rendered pixels were checked too.
 
 ## Limits

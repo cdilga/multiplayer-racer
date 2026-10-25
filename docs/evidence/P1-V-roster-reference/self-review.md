@@ -9,7 +9,7 @@
 - `local-interactions/{chromium,webkit}-matrix-0/1/2/3.jpg`: all 96 underlying stage captures across six vehicles, three LODs, two player paints and intact/loose/detached presets. All models render; tyres stay neutral, bike/mail identity remains distinct, ute canopy remains black, and parts visibly separate.
 - `local-page/page-matrix-0.jpg`: all twelve full-page Chromium captures, phone portrait 412×915 and desktop 1920×1080. Reference images, interactive stage, damage/paint strips, measurements and reports are present. Ute uses the real blurred-plate garage photo and measured table.
 - Postie `views.png` and actual-loader aperture proof: its pale wheel quadrants are visible background; expanded baked-mesh ray probes and exact backdrop pixels confirm openings.
-- Deployed checks and inspected captures are recorded in `deployment.json` and `live-interactions/` after publication.
+- `live-interactions/{chromium,webkit}-matrix-0/1/2/3.jpg`: all 96 deployed stage captures inspected after publication; all twelve vehicle/browser combinations pass. `deployment.json` verifies 74/74 public files against candidate `ad35536b`, including every LOD, texture, comparison and measured ute report. POC workflow 9240 succeeded.
 
 ## Defects found and fixed
 
