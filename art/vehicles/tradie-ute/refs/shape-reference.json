@@ -1,0 +1,44 @@
+{
+  "schema": "jj.vehicle.local-shape-reference.v1",
+  "authority": "Owner MQ night photographs and newer owner build_triton() source named in measured-reference.json; no generated sheet oracle.",
+  "source": "refs/measured-reference.json",
+  "scope": "Section-shape diagnostics for the specific boxy-flank and flat-end-cap mistakes. Limits reflect uncertain perspective and deliberate low-poly faceting, not tape measurements or calibrated photographic reconstruction.",
+  "body": {
+    "evidence": "20261021_204514.jpg: silver lower doors show a convex flank and shoulder return below inward-sloping glass. Newer source body WS=.885m with 35mm bevel supports rounded transitions. Gate limits are conservative interpretation bands.",
+    "sectionZ": -0.65,
+    "heights": [
+      0.65,
+      0.8,
+      1.2,
+      1.3
+    ],
+    "lowerTuckBand": [
+      0.02,
+      0.075
+    ],
+    "shoulderTuckBand": [
+      0.03,
+      0.09
+    ]
+  },
+  "nose": {
+    "evidence": "No front view is available in the two local night photographs. Newer build_triton() lower-body profile steps back .08/.20/.27m near the nose and taper() narrows the plan by 9%; a 35mm body bevel is representative. This gate rejects a square cap; it cannot establish exact MQ fascia likeness. The middle of the cap must remain flatter than a single centre-to-corner V chord; lateral intermediate facets are required.",
+    "xSamples": [
+      0.0,
+      0.45,
+      0.73
+    ],
+    "cornerSetbackBand": [
+      0.09,
+      0.24
+    ],
+    "midpointSetbackBand": [
+      0.015,
+      0.06
+    ]
+  },
+  "rearGlass": {
+    "evidence": "20261021_204514.jpg: rear window lower edge curves upward toward the rear cab pillar. 20261021_204532.jpg is heavily occluded and does not resolve its exact shape.",
+    "gate": "Named source panes must retain a rising rearmost lower edge; baked-loader review establishes visibility."
+  }
+}

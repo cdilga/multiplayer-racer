@@ -1,53 +1,59 @@
-# Tradie Ute reference rebuild — 2026-10-25
+# Tradie Ute — reference shape rework, 2026-10-25
 
-Vehicle Model Validation: PASS for the reference/body rebuild. Full room/host integration and profile hash refresh belong to parent bead `br-rgw6`; this receipt does not claim a new driving, device or GPU benchmark.
+Vehicle Model Validation: PASS for this visual asset refinement. Parent bead `br-rgw6` owns integration, profile hashes, publication and the owner review. This is not a fresh driving, physical-device or GPU performance qualification.
 
-Vehicle/parts: `tradie-ute`; existing eleven car part IDs plus existing interiors. Candidate is the working tree over `d44c9093`, identified by `measured-check.json` source hashes and `bake-check.log` baked hashes. Helper edits were confined to this vehicle and this evidence directory. No Asyar work.
+The authoritative material remains `art/vehicles/tradie-ute/refs/measured-reference.json`: the owner's two MQ photos, tape measurements and newer `build_triton()` provenance on eris. Both local photographs were personally inspected, and the remote code was read without editing the remote tree. Generated Muse sheets are not acceptance oracles. R81/R86/R90/R123, master-plan §§12.3–12.5 and the unchanged vehicle contract govern this scope.
 
-Requirement sources: R81/R86/R90/R123, the existing `jj.vehicle.v1` contract and vehicle budgets; game-asset-reference-modelling, lowpoly-model-from-refs and vehicle-model-validation skills. Existing collision, pivots, anchors and handling remain the contract for this visual change.
+The revised source is identified by `shape-check.json` and `measured-check.json`; baked byte hashes are in `bake-check.txt`. The captured previous source, parameters, atlas, LOD0 GLB and sidecar are retained in `baseline/`. No physics or simulation source was changed.
 
-## Authoritative evidence
+## Observed problem and correction
 
-The actual owner vehicle is the MQ dual cab, alloy tray, closed black canopy, roof rack/left awning, right snorkel and tow hitch. Read `art/vehicles/tradie-ute/refs/measured-reference.json`: it records source locations/hashes, tape measurements, frame transform and uncertainty. The two downsized owner photos alongside it were inspected; the rear plate is already blurred in the source repository's tracked copy.
+The previous body had a straight vertical lower flank, a square front end with tiny lamps on its top edge, flat roof shoulders and a rectangular rear glass envelope. Maximum width and tape envelopes passed while those recognizable shapes remained wrong.
 
-The newer `triton.glb` was read as evidence (714,440 bytes, six meshes, fourteen nodes; `newer-mesh-inspection.json`). Its `build_triton()` source and `fleet.json units.triton` supplied measured sizes and estimated cab/rack proportions. No mesh from that GLB ships in the game. The code-built faceted model remains reproducible.
+The actual lower shell now returns toward the sill and inward below the glass. LOD0 has more transverse body/roof sections, while the coarse tiers preserve the enclosing slopes. Roof crown and rear cab corner transitions have depth. Rear side glass rises and turns into the back pillar. Nose corners sweep behind the centre through intermediate facets; the first attempt's pointed V was caught by looking at the top view and corrected. Swept lamps follow the same deformed skin. The solid bar, canopy, tray and accessory silhouettes stay angular.
 
-The old Muse contact sheets are historical stylized composites, **not acceptance references for the real ute**. Their invented bonnet scoop, pickup tub, rear window and canopy hardware are removed. Their old silhouette IoU is not carried forward as a likeness claim. The actual photos are dark, occluded perspective views without calibration; no photo silhouette IoU is claimed.
+Cab glass now follows the exact diagonal of each final substrate facet. A by-eye coarse-tier check exposed a paint patch from the earlier bilinear projection; diagonal clipping/projection removed it. This is the surface-attachment pitfall described by the Hawk skill, applied to this cab rather than copied vehicle dimensions.
 
-## Measured improvement
+| Local source geometry check | Previous LOD0 | Revised LOD0 | LOD1 / LOD2 |
+|---|---:|---:|---:|
+| Lower flank tuck, half-width at y .80 minus .65 m | 0 mm | 42 mm | 42 / 42 mm |
+| Shoulder return, half-width at y .80 minus 1.30 m | 22 mm | 57 mm | 56 / 55 mm |
+| Nose corner setback at x .73 m | 0 mm | 123 mm | 124 / 124 mm |
+| Nose middle setback at x .45 m | 0 mm | 38 mm | 29 / 29 mm |
 
-| Feature | Before | Revised | Oracle |
-|---|---|---|---|
-| Canopy | too wide/tall; painted lid, invented rear glazing/hardware | 1.500 × 1.772 × .845 m, deck 1.090 m, top 1.935 m; black lid/closed rear; two low side locks | owner tape + photos |
-| Tray | painted pickup tub and tall corner lamps | separate 1.620 × 1.835 m alloy deck; under-deck space, guards/mudflaps/boxes, horizontal amber/red/white rear lamps | owner tape + photos |
-| Cab | broad square roof, steep short windscreen | narrower tapered roof, longer windshield rake and dual-cab span | newer owner-model estimates and visible cab cues |
-| Accessories | coarse tier lost awning/snorkel | left awning and right snorkel present at every tier | owner evidence |
-| Repetition cost | LOD0 wheels 752 exported triangles | wheels 240 triangles; body form receives the budget | actual baked mesh counts |
+`refs/shape-reference.json` records independent photo/source observations, sample positions and interpretation bands. These are conservative shape diagnostics, **not measured body dimensions or a calibrated photographic reconstruction**. The baseline imports successfully and fails all 12 local checks; current geometry passes all 12. `local-shape.png` illustrates the source sections. Existing independent tape envelopes and defect injections also pass at every tier. Whole-view photographic IoU is unavailable: the night views are perspective, occluded and uncalibrated, and they do not show the front.
 
-LOD totals are **1402 / 896 / 586**, within unchanged **2400 / 900 / 600** qualified budgets. Before was **2039 / 860 / 582**. The detailed body is cheaper; LOD1/2 spend a few more triangles retaining actual accessory/tray cues. Per-part counts are in `bake-check.log`; interiors remain separate from the body budget, as in the existing contract.
+## Geometry and unchanged contract
 
-## Checks
+Final exported body totals: **1762 / 896 / 600** triangles against unchanged **2400 / 900 / 600** budgets. Before: 1402 / 896 / 586. Every part count is in `bake.log`; interiors are separate from the body budget under the existing contract. Extra LOD0 triangles go to body/roof sections and the nose curvature. At coarse tiers, hidden rack/guard faces and tiny grille/hub detail pay for shape and correctly projected glass.
 
-- `node art/vehicles/tradie-ute/refs/check-measured.mjs`: PASS, current triangle geometry at all three LODs. UV-selected tray/canopy envelopes use independent owner dimensions, not candidate params. Also checks roof taper, neutral black canopy roof and accessory sides.
-- Isolated pre-rebuild source at `/tmp/evidence/tradie-ute-before`: the same gate correctly rejects canopy/tray envelopes, cab roof width and painted lid at every LOD (`previous-measured-check.json`). It imports the old model successfully; rejection is not a failed load.
-- Geometry defects: canopy raised 15 cm, tray widened 20%, cab roof widened 35%; all detected at all three LODs. These checks cover named errors, not complete likeness.
-- `node tools/vehicles/bake.mjs --check art/vehicles/tradie-ute`: PASS, fresh bake exactly matches current output. A prior fresh bake supplied the bytes being checked.
-- `target/debug/jj validate art/vehicles/tradie-ute/tradie-ute.asset.json`: PASS, `jj.vehicle.v1`, triangle budgets, no waivers (`contract-check.log`).
-- All eleven collider POSITION buffers compare byte-for-byte with pre-rebuild baked GLB. Sidecar pivots/hinges/mass fractions, anchors and LOD budgets also compare identical (`frozen-physics-check.json`). `colliders.json` freezes the old points and the model freezes old pivots. No simulation mechanics changed.
-- `node --test tools/vehicles/test/pivots.test.mjs`: PASS, 37 tests. The six refined body attachments compare source and sidecar exactly with original `d44c9093` pivot/hinge/mass/collider data. Narrower cab skins and separate tray now have different visual edges; moving the gameplay hinges to those edges would contradict this visual-only rebuild's frozen-physics scope. Defects reject centre/wrong-edge pivots, 1 mm drift on each axis, changed hinge axis and sidecar-only drift. All unlisted roster parts retain the visual hinge-edge assertions.
-- `node tools/vehicles/view/capture.mjs ... --sheet ladder --ortho 3.2`, `--sheet colliders`, and `node tools/vehicles/evidence/run.mjs tradie-ute ...`: PASS through actual baked asset loader, Playwright Chromium 151.0.7922.34 on Mac, software-rendered review viewer. Every screenshot was opened and inspected.
-- Measured-reference review page integration: the build copies the oracle/report and derives width/length/deck/canopy-height rows; item 1 now accepts this explicit evidence path and rejects missing files, nonfinite/missing rows, failed or missing LOD/check/defect data. Existing per-view IoU path is unchanged. Eight focused review tests pass, including Cruz/reference regressions.
-- `art/ui/lib/live-check.mjs --local` on the ute review page at 412×915 and 1920×1080: captured and visually inspected; no failed requests, missing images, JS errors, blank canvas or horizontal overflow. The command exits 1 because its existing screen-edge heuristic flags text/the linked photo crossing the initial viewport bottom of this normally scrollable long page. Full-page captures in `review-page/` show the content intact. This heuristic failure is disclosed, not represented as a green automated check.
+`frozen-physics.json` proves all eleven LOD0 collider POSITION buffers are byte-identical to the captured baseline. Collision proxies are carried by LOD0; visual coarse files do not duplicate them. The complete sidecar is byte-identical, including all pivots, hinges, mass fractions, anchors and budgets. Wheel locations/radius and handling remain fixed; the visual body intentionally differs from that old collision shell (`final/colliders.png`). The atlas, one material and paint-key implementation are unchanged.
 
-- PASS contract and byte-reproducible bake at unchanged budgets.
-- PASS independent owner-tape envelopes and named photo cues at all LODs; old candidate and injected defects rejected.
-- PASS frozen collider bytes, part contract and anchors unchanged.
-- PASS standalone baked-loader visual review; no new host/device or driving measurement claimed.
+- PASS byte-reproducible export, native contract, all three triangle budgets and original collider/sidecar invariance.
+- PASS independent measured and local form checks at all tiers; actual rejected body fails all 12 local form checks.
+- WARN exact front likeness is uncertain because owner photos are dark rear obliques.
 
-## Visual evidence and limits
+## Exact checks
 
-`before-ladder.png` and `ladder.png` use the same viewer/cameras and ortho half-frame 3.2 m. The ladder covers front, front 3/4, side, rear 3/4, rear and top for every LOD. `paints-strip.png` shows white and five player colours with neutral tyres/canopy/accessories. `damage-strip.png` and `damage-strip-overview.png` show intact, loose hinges, each detached part and stripped shell with the original part contract. `grid-1.png`, `grid-4.png`, `grid-24.png` show different LODs/colours at tile scale. `colliders.png` honestly displays the retained old collision shell; it intentionally differs from the refined visual shell.
+- `node art/vehicles/tradie-ute/refs/check-shape.mjs`: PASS at LOD0/1/2 (`shape-check.json`). Running with `--source docs/evidence/P1-V-roster-rework/tradie-ute/baseline` rejects the real previous candidate at all three tiers (`before-shape-check.json`).
+- `node art/vehicles/tradie-ute/refs/check-measured.mjs`: PASS tape envelopes, black lid, roof taper and accessory sides; its canopy-height/tray-width/cab-width defect injections are detected at every tier (`measured-check.json`).
+- `node tools/vehicles/bake.mjs --check art/vehicles/tradie-ute`: PASS, byte-exact reproducibility (`bake-check.txt`).
+- `target/debug/jj validate art/vehicles/tradie-ute/tradie-ute.asset.json`: PASS `jj.vehicle.v1`, exported geometry and all budgets, no waivers (`contract-check.txt`).
+- `node docs/evidence/P1-V-roster-rework/tradie-ute/check-frozen.mjs`: PASS collider bytes and complete sidecar invariance (`frozen-physics.json`).
+- `node --test --test-name-pattern='tradie-ute' tools/vehicles/test/pivots.test.mjs`: PASS, all five matching tests, including every LOD and defect rejection (`ute-pivots-test.txt`). The broad test run during concurrent work failed on Cruz visual-edge expectations; it is retained as `pivots-test.txt`, not reported as green. Parent owns shared test integration.
+- `node tools/vehicles/view/capture.mjs --asset /art/vehicles/tradie-ute/tradie-ute.asset.json --out docs/evidence/P1-V-roster-rework/tradie-ute/final --sheet ladder --ortho 3.2`, repeated with `--sheet colliders`: PASS, actual baked GLTFLoader and paint-key renderer.
+- `node tools/vehicles/evidence/run.mjs tradie-ute --out docs/evidence/P1-V-roster-rework/tradie-ute/final`: PASS six posed damage/paint/grid captures.
+- `node docs/evidence/P1-V-roster-rework/tradie-ute/capture-owner-angle.mjs`: PASS previous/revised neutral-paint left rear closeups through the same loader. Camera identity and browser are recorded in `owner-angle-camera.json`. This changes only a private HTTP presentation response, not shared viewer code.
 
-The front/cab remains an interpretation with broad facets; the night photographs do not provide a calibrated front orthographic reference. Rack/bag maximum 2.20 m was only an earlier owner estimate; the photos confirm an awning but cannot resolve a roof bag, so none was invented. Published 3 m wheelbase/.802 m tyres are evidence, while existing game wheels stay at z ±1.45 m/radius .43 m to preserve handling. These are disclosed stylization/physics constraints, not claimed exact measurements.
+All final captures use Playwright Chromium **151.0.7922.34** on the Mac, software-rendered review viewers. Every final screenshot and composite was opened and inspected. The evidence viewer poses damage; it does not prove gameplay dynamics or debris lifetime. Existing engine sound, batching and gameplay code are unchanged, so no new engine/draw-cost claim is made.
 
-The standalone evidence viewer poses damage and colours; it does not prove dynamic debris lifetime, gameplay recovery, phone controls or roof-number rendering. Existing engine profile, single material and batching code are unchanged; there is no new draw-cost or sound claim. The parent bead owns current host/scenario evidence and profile sync. Owner playtest is still the final judgment of likeness.
+## Review evidence and limits
+
+- `before/ladder.png` and `final/ladder.png`: identical comparison cameras for six views at all three tiers.
+- `comparison.png`: previous/revised LOD0 view crops.
+- `owner-reference-comparison.png`: actual night photo alongside previous/revised neutral-paint **left rear closeups**. Models share a camera; the photo camera was not recovered. Closeups concentrate on the cab/tray region and intentionally clip extremities.
+- `final/paints-strip.png`: white plus five bright paint colours; tyres, canopy, lamps and accessories remain neutral.
+- `final/damage-strip.png`, `final/damage-strip-overview.png`: intact, loose, individual part loss and stripped shell with the original articulation.
+- `final/grid-1.png`, `final/grid-4.png`, `final/grid-24.png`: LODs and coloured identity at viewer tile scales. These do not prove host roof-number rendering.
+
+Remaining uncertainty is concentrated in front styling and exact cab curvature: the two local photographs are dark rear obliques, and the newer source calls its styling representative. The front is an evidence-backed faceted interpretation, not a scan. Published wheelbase/tyre dimensions differ from frozen game wheels by design. Parent integration and owner likeness judgment remain outstanding for the overall bead.

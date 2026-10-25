@@ -1,21 +1,49 @@
 {
   "sourceCommit": "d44c9093",
-  "what": "Exact original jj.vehicle.v1 sidecar attachments for the narrowly scoped 2026-10-25 visual-only Postie/ute rebuild. Preserve gameplay pivots, axes, limits, masses and collider types even where new visual skins do not end at the old physical hinge. Collider points are separately byte-checked by each rebuild's evidence reproduction. All unlisted parts retain the visual hinge-edge test.",
+  "what": "Exact original jj.vehicle.v1 sidecar attachments for the narrowly scoped 2026-10-25 visual-only Postie/ute rebuild and Cruz reference rework. Preserve gameplay pivots, axes, limits, masses and collider types even where new visual skins do not end at the old physical hinge. Collider points are separately byte-checked by each rebuild's evidence reproduction. All unlisted parts retain the visual hinge-edge test.",
   "vehicles": {
     "postie-bike": {
       "source": "art/vehicles/postie-bike/postie-bike.asset.json",
       "parts": {
         "front": {
-          "pivot": [0, 1.443797865477643, 0.48],
-          "hinge": { "axis": [1, 0, 0], "min": 0, "max": 25 },
+          "pivot": [
+            0,
+            1.443797865477643,
+            0.48
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": 0,
+            "max": 25
+          },
           "massFraction": 0.08,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "back": {
-          "pivot": [0, 1.254, -0.52],
-          "hinge": { "axis": [1, 0, 0], "min": -25, "max": 0 },
+          "pivot": [
+            0,
+            1.254,
+            -0.52
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": -25,
+            "max": 0
+          },
           "massFraction": 0.08,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         }
       }
     },
@@ -23,40 +51,251 @@
       "source": "art/vehicles/tradie-ute/tradie-ute.asset.json",
       "parts": {
         "front": {
-          "pivot": [0, 1.31, 0.7899999999999999],
-          "hinge": { "axis": [1, 0, 0], "min": 0, "max": 25 },
+          "pivot": [
+            0,
+            1.31,
+            0.7899999999999999
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": 0,
+            "max": 25
+          },
           "massFraction": 0.09,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "back": {
-          "pivot": [0, 1.24, -0.7899999999999999],
-          "hinge": { "axis": [1, 0, 0], "min": -25, "max": 0 },
+          "pivot": [
+            0,
+            1.24,
+            -0.7899999999999999
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": -25,
+            "max": 0
+          },
           "massFraction": 0.09,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "door_FL": {
-          "pivot": [1, 0.8605, 0.8999999999999999],
-          "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 },
+          "pivot": [
+            1,
+            0.8605,
+            0.8999999999999999
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
           "massFraction": 0.04,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "door_FR": {
-          "pivot": [-1, 0.8605, 0.8999999999999999],
-          "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 },
+          "pivot": [
+            -1,
+            0.8605,
+            0.8999999999999999
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
           "massFraction": 0.04,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "door_RL": {
-          "pivot": [0.99, 0.8474999999999999, 0],
-          "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 },
+          "pivot": [
+            0.99,
+            0.8474999999999999,
+            0
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
           "massFraction": 0.04,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
         },
         "door_RR": {
-          "pivot": [-0.99, 0.8474999999999999, 0],
-          "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 },
+          "pivot": [
+            -0.99,
+            0.8474999999999999,
+            0
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
           "massFraction": 0.04,
-          "collider": { "type": "convex" }
+          "collider": {
+            "type": "convex"
+          }
+        }
+      }
+    },
+    "cruz-missile": {
+      "sourceCommit": "ad35536b",
+      "source": "art/vehicles/cruz-missile/cruz-missile.asset.json",
+      "reason": "Owner reference rework br-rgw6: visual flanks now slope inward. Original gameplay hinges, collider and masses remain exact. Snapshot from unchanged pre-rework sidecar.",
+      "parts": {
+        "front": {
+          "pivot": [
+            0,
+            1.1027272727272728,
+            0.8400000000000001
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": 0,
+            "max": 25
+          },
+          "massFraction": 0.08,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "back": {
+          "pivot": [
+            0,
+            1.1790909090909092,
+            -0.8400000000000001
+          ],
+          "hinge": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "min": -25,
+            "max": 0
+          },
+          "massFraction": 0.07,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_FL": {
+          "pivot": [
+            0.9658461538461538,
+            0.6204545454545455,
+            0.8400000000000001
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_FR": {
+          "pivot": [
+            -0.9658461538461538,
+            0.6204545454545455,
+            0.8400000000000001
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RL": {
+          "pivot": [
+            0.956,
+            0.6394343434343435,
+            -0.22
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": -70,
+            "max": 0
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
+        },
+        "door_RR": {
+          "pivot": [
+            -0.956,
+            0.6394343434343435,
+            -0.22
+          ],
+          "hinge": {
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "min": 0,
+            "max": 70
+          },
+          "massFraction": 0.04,
+          "collider": {
+            "type": "convex"
+          }
         }
       }
     }

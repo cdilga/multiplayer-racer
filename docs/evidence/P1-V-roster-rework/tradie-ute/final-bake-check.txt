@@ -1,0 +1,10 @@
+tradie-ute.lod0.glb: 1762 tris (budget 2400; optimiser flipped 63, dropped 57 unseen) {"core":531,"front":616,"back":215,"door_FL":30,"door_FR":30,"door_RL":50,"door_RR":50,"wheel_FL":60,"wheel_FR":60,"wheel_RL":60,"wheel_RR":60,"interior_engine":24,"interior_cabin":36,"interior_boot":44}
+tradie-ute.lod1.glb: 896 tris (budget 900; optimiser flipped 16, dropped 33 unseen) {"core":301,"front":218,"back":165,"door_FL":12,"door_FR":12,"door_RL":18,"door_RR":18,"wheel_FL":38,"wheel_FR":38,"wheel_RL":38,"wheel_RR":38,"interior_engine":24,"interior_cabin":36,"interior_boot":44}
+tradie-ute.lod2.glb: 600 tris (budget 600; optimiser flipped 8, dropped 23 unseen) {"core":209,"front":191,"back":88,"door_FL":6,"door_FR":6,"door_RL":12,"door_RR":12,"wheel_FL":19,"wheel_FR":19,"wheel_RL":19,"wheel_RR":19,"interior_engine":24,"interior_cabin":36,"interior_boot":44}
+same    tradie-ute.atlas.png fbde29dbd4a70c367e3854157e4314874ba9bef027d3a7d0349ab0a154b29043
+same    tradie-ute.emissive.png cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d
+same    tradie-ute.lod0.glb 448048ea86615771b8730808946292c9f6064067fc0b908cb60cbe497cff28a1
+same    tradie-ute.lod1.glb 023d6623fbc4c80ec98c9c9a6e7baff78a46a65ed22bd223bd5ae2c5f093d0c5
+same    tradie-ute.lod2.glb da6cc3978336d17d767f3d96eaa73da495ab136ba6e7fc4bdfd0aaea5e3ca0f1
+same    tradie-ute.asset.json 57f65448925b21bf1a6989216d8e6044cf357c1d41ef7d8e8c86797786542032
+bake --check: the committed files are exactly what the model script bakes

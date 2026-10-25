@@ -1,0 +1,9 @@
+pig-catcher.lod0.glb: 2607 tris (budget 2800; optimiser flipped 0, dropped 191 unseen) {"core":656,"front":312,"back":331,"rider":360,"wheel_F":484,"wheel_R":464}
+pig-catcher.lod1.glb: 883 tris (budget 900; optimiser flipped 0, dropped 11 unseen) {"core":221,"front":152,"back":148,"rider":210,"wheel_F":76,"wheel_R":76}
+pig-catcher.lod2.glb: 600 tris (budget 600; optimiser flipped 3, dropped 6 unseen) {"core":170,"front":86,"back":74,"rider":150,"wheel_F":60,"wheel_R":60}
+wrote art/vehicles/pig-catcher/pig-catcher.atlas.png 24393 B sha256 ee012ca578bc209e1436b47ce9cf93544c86f088eb2a5f8e76a7798488f7a8e3
+wrote art/vehicles/pig-catcher/pig-catcher.emissive.png 17401 B sha256 88f5a8924527ec92d6be57b92004ea7d41a882b856b5a80579c7ebe94b82615c
+wrote art/vehicles/pig-catcher/pig-catcher.lod0.glb 329228 B sha256 5f0c446691e42e1860943b09a5b07cf7c5e80db91bfa06f7c8c84285591ad7d5
+wrote art/vehicles/pig-catcher/pig-catcher.lod1.glb 131908 B sha256 7ffaa28404b7f29fe7393ee1f594f59fc7790f385c3843797794194e50f89b56
+wrote art/vehicles/pig-catcher/pig-catcher.lod2.glb 104756 B sha256 2cf412846bdb05f6de80e50562f1601b1c97527abda94df203f4b5ccbdb0c11e
+wrote art/vehicles/pig-catcher/pig-catcher.asset.json 1957 B sha256 2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4

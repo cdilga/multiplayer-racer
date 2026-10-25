@@ -11,48 +11,48 @@
     "br-p1-d03b-poc-cleanup-uod",
     "br-rgw6"
   ],
-  "summary": "Narrower greenhouse through measured cabin stations and a tapered nose tip; 12-facet LOD0 tyres retain five-spoke depth. Front lamp wraps now clip onto the actual tub triangles, eliminating diagonal occlusion slits. At LOD1 the spoiler endplates retain both visible faces and their contour; hidden thickness funds the conforming lamps. Physics pivots are stored independently of visual extrema. Exported intact triangles: 1913 / 896 / 507 against 2800 / 900 / 600. Front-view cabin widths and nose taper improve; rear-view and small side-view silhouette regressions remain. The weighted score is essentially unchanged at LOD0 and improves slightly at LOD1/2. Lamp attachment is visually continuous after the projection repair; its side/fascia seam remains a visible faceted change in shading.",
+  "summary": "Reworked the actual body after owner feedback: longer overhangs with frozen wheel hubs, a broad curved nose with swept-back corners, upright facet-projected lamps, rolled upper flanks and crowned bonnet sections. Side glazing follows the actual greenhouse triangles, hidden damage bays sit inside the sloped doors, rear graphics follow the sculpted boot/bumper, and cheap repeated wheel detail funds the body. Intact exported triangles: 2052 / 891 / 576 against unchanged 2800 / 900 / 600. Front lamp envelope IoU improves from about 0.53 to 0.72; front silhouette improves while side/rear and coarse whole-view scores regress slightly. These measured local gains and inspected shaded comparisons are a review candidate, not an owner likeness acceptance.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Frozen same-camera reference | shaded candidate | silhouette diff. Horizontal end views use a 50 m long lens; side/top 10 m. These generated sheets are not calibrated photographs. Before/after captures and local reference-derived section/cue gates are in docs/evidence/P1-V-roster-reference/cruz-missile. Reference limits and any extraction correction are documented in validation.md.",
+    "note": "Unchanged references, horizontal 50 m end diagnostics and 10 m side/top. Hero azimuth corrected from 52 to 34 degrees to match the reference front/side balance; low 2 degree pitch. Both candidates were recaptured. Generated views remain uncalibrated. New independent body/axle, nose-section, lamp-plane and flank tests reject the real previous source at every tier.",
     "compare": [
       {
         "lod": 0,
         "label": "LOD0 against lod+1 sheet; frozen perspective mask/shading cameras",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9659,
-          "top": 0.9544,
-          "front": 0.9384,
-          "rear": 0.9387
+          "side": 0.9503,
+          "top": 0.9595,
+          "front": 0.9562,
+          "rear": 0.9313
         },
-        "weightedIou": 0.9542
+        "weightedIou": 0.9511
       },
       {
         "lod": 1,
         "label": "LOD1 against lod+1 sheet; frozen perspective mask/shading cameras",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9668,
-          "top": 0.952,
-          "front": 0.9404,
-          "rear": 0.933
+          "side": 0.9548,
+          "top": 0.9547,
+          "front": 0.9567,
+          "rear": 0.9244
         },
-        "weightedIou": 0.9533
+        "weightedIou": 0.9505
       },
       {
         "lod": 2,
         "label": "LOD2 against lowest-lod sheet; frozen perspective mask/shading cameras",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9348,
-          "top": 0.943,
-          "front": 0.9285,
-          "rear": 0.9318
+          "side": 0.9273,
+          "top": 0.93,
+          "front": 0.9438,
+          "rear": 0.9243
         },
-        "weightedIou": 0.9359
+        "weightedIou": 0.9301
       }
     ]
   },
@@ -60,12 +60,12 @@
     "assetJson": "media/model/cruz-missile.asset.json",
     "atlas": "media/model/cruz-missile.atlas.png",
     "emissive": "media/model/cruz-missile.emissive.png",
-    "sheet": "media/turntable/lods.png",
+    "sheet": "media/turntable/ladder.png",
     "lods": [
       {
         "lod": 0,
         "glb": "media/model/cruz-missile.lod0.glb",
-        "tris": 1913,
+        "tris": 2052,
         "draws": 11,
         "maxTris": 2800,
         "withinBudget": true
@@ -73,7 +73,7 @@
       {
         "lod": 1,
         "glb": "media/model/cruz-missile.lod1.glb",
-        "tris": 896,
+        "tris": 891,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -81,7 +81,7 @@
       {
         "lod": 2,
         "glb": "media/model/cruz-missile.lod2.glb",
-        "tris": 507,
+        "tris": 576,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -365,23 +365,31 @@
     }
   ],
   "gate": {
-    "result": "PASS",
+    "result": "FAIL",
     "findings": [
       {
         "result": "PASS",
-        "text": "code-built export, unchanged triangle budgets and reproducible baked bytes."
+        "text": "contract, byte-reproducible bake and all three budgets (`final-contract.txt`, `final-bake-check.txt`)."
       },
       {
         "result": "PASS",
-        "text": "current local reference gates at all LODs; old candidates and meaningful injected defects rejected."
+        "text": "complete original sidecar and collider POSITION buffers remain byte-identical to ad35536b; parent `../exports.json` records hashes. Handling, hubs, anchors, hinges and mass fractions remain unchanged."
       },
       {
         "result": "PASS",
-        "text": "original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks."
+        "text": "independent body-to-axle proportion, intermediate/corner nose depth, lamp-plane slope and flank return checks at every tier. Actual rejected baseline fails all four named defects at each tier (`before-form.json`, `after-form.json`). Normal suite includes both real baseline and injected defects."
+      },
+      {
+        "result": "PASS",
+        "text": "existing mesh, material, paint and attachment checks; parent vehicle-tests.txt records full result. No shared renderer/batching change or fresh GPU draw-cost claim."
+      },
+      {
+        "result": "PASS",
+        "text": "native settle and straight-line handling fixtures, deterministic replay (`../sim.json`)."
       },
       {
         "result": "WARN",
-        "text": "whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending."
+        "text": "silhouette weighted before→after: .9542→.9511 / .9533→.9505 / .9359→.9301. Front improves but rear/side and coarse scores regress. The ~.95 broad likeness gate is not met at LOD2. Named local gains do not erase this limitation."
       }
     ],
     "report": "media/gate/validation.md"

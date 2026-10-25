@@ -1,0 +1,47 @@
+{
+  "cruz-missile": {
+    "reference": "art/vehicles/cruz-missile/refs/lod-plus-1.png",
+    "referenceSha256": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73",
+    "observations": {
+      "lengthWheelbase": "Side view: nose/bar x438, tail1170, axle centres576 and1013; ratio732/437=1.675. Allow generated view perspective and body/bar ambiguity, 0.045 either side.",
+      "noseSetbacks": "Top view's rounded front: centre versus middle and outer corner at y-band near bumper; broad centre, turn-back concentrated at corners. Metre ranges use the unchanged 2.0m front track and allow coarse facets.",
+      "lampUpForward": "Side-view lamp front is steep, not a flat hood graphic: its upper edge recedes less than its height; allow a slope ratio up to0.95 for reference uncertainty/faceting.",
+      "upperFlankReturn": "Front and hero: side returns inward below the shoulder rather than remaining upright until the belt. Return over .78\u20131.05m band is 45\u2013135mm."
+    },
+    "lampUV": [
+      0.8125,
+      0.8125
+    ],
+    "limits": {
+      "lengthWheelbase": [
+        1.63,
+        1.72
+      ],
+      "noseMidSetback": [
+        0.02,
+        0.1
+      ],
+      "noseCornerSetback": [
+        0.12,
+        0.32
+      ],
+      "lampUpForward": [
+        0,
+        0.95
+      ],
+      "upperFlankReturn": [
+        0.045,
+        0.135
+      ]
+    },
+    "bodyUV": [
+      0.7375,
+      0.9375
+    ],
+    "noseXs": [
+      0,
+      0.45,
+      0.92
+    ]
+  }
+}

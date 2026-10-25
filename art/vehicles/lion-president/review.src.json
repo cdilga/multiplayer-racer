@@ -6,7 +6,7 @@
  "beads": [
   "br-rgw6"
  ],
- "summary": "Reference refinement: the Lion President keeps its black roof, yellow fanged lamps, twin bonnet scoops, black/gold stripe and broad rear light bar. A flatter, wider fascia replaces the peaked bonnet tip; its corners recess into faceted planes. The upper arch flares roll back towards the shoulder, and the cabin tapers towards the roof. Flat five-spoke wheels replace hidden barrel and spoke-side geometry. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 1813 / 897 / 576 against 2400 / 900 / 600 budgets. The Hawk Dash spec twin remains unchanged.",
+ "summary": "A new mid-flank crease and upper shoulder roll replace the broad flat side; raised arch cuts sample the original section at their actual height. Reshaped cabin stations, lower rear belt and independently annotated pane boundaries correct the high, forward glass. Window overlays clip to actual substrate triangles. The fascia bends through four broad close-view planes, with graphics sharing that transform. LOD0 wheels gain a shallow dish, lip and broader spokes. Coarse wing endplates remain explicit thin planes with crossed supports; coarse spokes are symmetric. Rear-glass foot stations follow deck height at their own x/z, including the bowed centre, closing the visible foot gap. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2296 / 900 / 592 against 2400 / 900 / 600 budgets. Weighted silhouette overlap regresses at every tier. LOD0 top IoU falls from 0.9365 to 0.9244, while side improves from 0.9467 to 0.9524. LOD1 side/rear and LOD2 side also regress. The LOD1 side-glass gate passes narrowly, 0.5066 against 0.5000. Coarse wing planes, tyre proportions and high spoiler retain the stylised reference interpretation.",
  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
  "specTwin": {
   "id": "hawk-dash",
@@ -18,32 +18,32 @@
    {
     "lod": 0,
     "label": "LOD0 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/lion-president/after-lod0"
+    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod0"
    },
    {
     "lod": 1,
     "label": "LOD1 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/lion-president/after-lod1"
+    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod1"
    },
    {
     "lod": 2,
     "label": "LOD2 against the 'lowest' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/lion-president/after-lod2"
+    "dir": "docs/evidence/P1-V-roster-rework/lion-president/after-lod2"
    }
   ],
   "note": "Unchanged generated reference sheets. Each comparison shows reference, revised render and silhouette diff through frozen shared perspective cameras (50m front/rear, 10m side/top, horizontal optical axis). Before/after and local reference contours/lamp envelopes are recorded in validation.md. Generated views are not calibrated photographs; measured regressions are disclosed."
  },
  "turntable": {
-  "sheet": "docs/evidence/P1-V-roster-reference/lion-president/loader/lods.png",
-  "validation": "docs/evidence/P1-V-roster-reference/lion-president/validation.md"
+  "sheet": "docs/evidence/P1-V-roster-rework/lion-president/baked/lods.png",
+  "validation": "docs/evidence/P1-V-roster-rework/lion-president/validation.md"
  },
  "damage": {
-  "strip": "docs/evidence/P1-V-roster-reference/lion-president/loader/damage-strip.png",
-  "overview": "docs/evidence/P1-V-roster-reference/lion-president/loader/damage-strip-overview.png",
+  "strip": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip.png",
+  "overview": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip-overview.png",
   "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
  },
  "paints": {
-  "sheet": "docs/evidence/P1-V-roster-reference/lion-president/loader/paints-strip.png",
+  "sheet": "docs/evidence/P1-V-roster-rework/lion-president/loader/paints-strip.png",
   "identity": "art/ui/tokens.json",
   "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours."
  },
@@ -51,26 +51,26 @@
   {
    "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
    "size": "large",
-   "path": "docs/evidence/P1-V-roster-reference/lion-president/loader/grid-1.png"
+   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-1.png"
   },
   {
    "label": "Four tiles",
    "size": "medium",
-   "path": "docs/evidence/P1-V-roster-reference/lion-president/loader/grid-4.png"
+   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-4.png"
   },
   {
    "label": "24 tiles, small (each car about 100 px)",
    "size": "small",
-   "path": "docs/evidence/P1-V-roster-reference/lion-president/loader/grid-24.png"
+   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/grid-24.png"
   },
   {
    "label": "From the Derby overview camera (top-down damage row)",
    "size": "overview",
-   "path": "docs/evidence/P1-V-roster-reference/lion-president/loader/damage-strip-overview.png"
+   "path": "docs/evidence/P1-V-roster-rework/lion-president/loader/damage-strip-overview.png"
   }
  ],
  "gate": {
-  "report": "docs/evidence/P1-V-roster-reference/lion-president/validation.md"
+  "report": "docs/evidence/P1-V-roster-rework/lion-president/validation.md"
  },
  "profile": "assets/profiles/lion-president.json",
  "handling": {

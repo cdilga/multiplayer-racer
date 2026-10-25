@@ -1,0 +1,1 @@
+art/vehicles/postie-bike/postie-bike.asset.json: ok (jj.vehicle.v1, triangles per LOD [2669, 894, 599])

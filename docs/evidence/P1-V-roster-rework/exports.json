@@ -1,0 +1,397 @@
+{
+  "baseline": "ad35536b",
+  "results": [
+    {
+      "car": "au-hawk",
+      "reproducible": true,
+      "contract": "art/vehicles/au-hawk/au-hawk.asset.json: ok (jj.vehicle.v1, triangles per LOD [2308, 900, 590])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "367a20f258161445c1a7397a4cdd200684e931db4f5572b5b9656b531874eaaa"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "e6dbac6d06d70bc32d84caaca9aa2dea987d64bbfcbaa492209bb0ce237f1246"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "b9b35ae28d5fd369aeeeb1609aaa1728af13e9e6068408a2d7c67368223c0e7b"
+        },
+        {
+          "name": "collider_door_FL",
+          "sha256": "026f387633549bc0aa2988a37ec776df578b0f82d5256e8b4c694878c2f843fc"
+        },
+        {
+          "name": "collider_door_FR",
+          "sha256": "1bf76669668f43592c5e0db9b6123ea8f2d2e0783309f5d8b6ca47df9b7c63df"
+        },
+        {
+          "name": "collider_door_RL",
+          "sha256": "ecf26c846fe0a184088c199f045dbe79a9956aef828353953058d84ca36b3b04"
+        },
+        {
+          "name": "collider_door_RR",
+          "sha256": "bd13fe55c239a5244cbfd0f93c78f88546b998442d502e07374f8a4c38ed18ff"
+        },
+        {
+          "name": "collider_wheel_FL",
+          "sha256": "0a0b0d4706640259d285c01fedbf0711c586cc469d9d89e829c9ce5819199bea"
+        },
+        {
+          "name": "collider_wheel_FR",
+          "sha256": "a18e29a3660149856a59331ebb7dae98099d715f33697c3b144486d562b475d0"
+        },
+        {
+          "name": "collider_wheel_RL",
+          "sha256": "a8fa71357bf3df780f91fbd3ae418ec2e3df6206c30fb6dc4833249fad2aaad6"
+        },
+        {
+          "name": "collider_wheel_RR",
+          "sha256": "6ce3a0e4c0b71ea59e399f4d575b1f4fdba1488270475d62af6ea448f76304f2"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 2308,
+          "draws": 11,
+          "budget": 3000
+        },
+        {
+          "lod": 1,
+          "tris": 900,
+          "draws": 11,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 590,
+          "draws": 11,
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "car": "cruz-missile",
+      "reproducible": true,
+      "contract": "art/vehicles/cruz-missile/cruz-missile.asset.json: ok (jj.vehicle.v1, triangles per LOD [2052, 891, 576])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "127aae01c35e974a30b491cde69d16e8c1e85fd0b2d8ac07addd5e5b1ea1c47a"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "c8f66370eebabd35749bc9d9859ed16fdae631851dd2e699d8358230cb0697a3"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "afded7322844713bfe4d788a2515d2496d7ec4dfd5bad04d80063a99e331b9be"
+        },
+        {
+          "name": "collider_door_FL",
+          "sha256": "fcb63d56f34b567fa9b1dc7144036f97d9b2b249b00683e4ea61fc9d80c18708"
+        },
+        {
+          "name": "collider_door_FR",
+          "sha256": "4d5cc584071e85d016539fee7adac74f94dd86f26758f1bcac2c56c9921d57a2"
+        },
+        {
+          "name": "collider_door_RL",
+          "sha256": "6d16854aafcae16e81352751e5260c6e38cf17e605e4db49cb5b5ad3919ee9ba"
+        },
+        {
+          "name": "collider_door_RR",
+          "sha256": "6d3cfed38c9f20f84452ce2b2cdb46ff6cbc888bacf0a9bce0ae9f11d2b6fbc5"
+        },
+        {
+          "name": "collider_wheel_FL",
+          "sha256": "6651d83df3c3474a36dd479de34d08c00a83fa469780e8353f93b65436639686"
+        },
+        {
+          "name": "collider_wheel_FR",
+          "sha256": "0b9dc88dd9ba44d62830b37a809f9935597aff3b421efd1474478d9646a26c5d"
+        },
+        {
+          "name": "collider_wheel_RL",
+          "sha256": "4dfacbf0b7fa1a3c0af80291d0568ae26b47dd96d35c1bdbee8c13501d72ab45"
+        },
+        {
+          "name": "collider_wheel_RR",
+          "sha256": "0302413321a1f0263eacbf6214d1caae4682fa4edda565d716d663bfb1331505"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 2052,
+          "draws": 11,
+          "budget": 2800
+        },
+        {
+          "lod": 1,
+          "tris": 891,
+          "draws": 11,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 576,
+          "draws": 11,
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "car": "lion-president",
+      "reproducible": true,
+      "contract": "art/vehicles/lion-president/lion-president.asset.json: ok (jj.vehicle.v1, triangles per LOD [2296, 900, 592])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "c2666f85b646d54dc07c6dc7bc2028226552207b1c055302d3f8668d8fd52f14"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "646e197bf394e5cabfd4c97355fdab200b1879a878799a7692205835b21139c0"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "18c8be81faef76371509d5762ba1b099a0728be7efc5f83fbf5155498dfd5dd3"
+        },
+        {
+          "name": "collider_door_FL",
+          "sha256": "37cbabbebc34b28340dd6742e46b32ede33b84cae6ac57c4442717b164781ce0"
+        },
+        {
+          "name": "collider_door_FR",
+          "sha256": "85fff63115d107f18f40e237620f120f0a424ce1759253da64144635e784ee26"
+        },
+        {
+          "name": "collider_door_RL",
+          "sha256": "b456c16cbe273ea21eb9e2c7068532f0d10cf6f86cc8fa2acc1203d755c26da0"
+        },
+        {
+          "name": "collider_door_RR",
+          "sha256": "0f4b66dd1103c240bbfbb1d3560d50c15e87d89e204d9b989448d02e09f8a959"
+        },
+        {
+          "name": "collider_wheel_FL",
+          "sha256": "6dec45f28b0657cf4f18b25c5d6299288d32cdbdf92f890e98ea0e90cb63f93c"
+        },
+        {
+          "name": "collider_wheel_FR",
+          "sha256": "2771ec826919b7aaf2f45dfa13e185b90df4e0143b59a83825ab7c6c316920c0"
+        },
+        {
+          "name": "collider_wheel_RL",
+          "sha256": "25d256f42e72fbe4922e98774602392f5b0949729c2a1482f22bc10163e376d5"
+        },
+        {
+          "name": "collider_wheel_RR",
+          "sha256": "e2f5c797a6a7b3b84eb33fd75cdfdf8521ae7115b2694df187b488144fbcfbb5"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 2296,
+          "draws": 11,
+          "budget": 2400
+        },
+        {
+          "lod": 1,
+          "tris": 900,
+          "draws": 11,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 592,
+          "draws": 11,
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "car": "pig-catcher",
+      "reproducible": true,
+      "contract": "art/vehicles/pig-catcher/pig-catcher.asset.json: ok (jj.vehicle.v1, triangles per LOD [2607, 883, 600])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "65cd273d38997b889a04c5323d7bbea937969f44bfa0667ab989dc89292e1b58"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "7175fe3e98b5f04b23b74259b2451f794d567b21a0f04a434cea61f9fb9bb783"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "faaa1561fb186da4aecb815b3c992cdf19c02427698de8ecdacfbcacc0ca39a6"
+        },
+        {
+          "name": "collider_rider",
+          "sha256": "430e8276ca2ef86535d6db5f76f2bf5c8331ca14a7caee4295d92846228282e7"
+        },
+        {
+          "name": "collider_wheel_F",
+          "sha256": "4f65c7cbf402002d8807e743fa2c4f5dae40822875eab4f27801f21aaf1b91b4"
+        },
+        {
+          "name": "collider_wheel_R",
+          "sha256": "fe72ec54622d6e1d880578602577f9dd7877f9dc290050458909eb41f39e0825"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 2607,
+          "draws": 6,
+          "budget": 2800
+        },
+        {
+          "lod": 1,
+          "tris": 883,
+          "draws": 6,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 600,
+          "draws": 6,
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "car": "postie-bike",
+      "reproducible": true,
+      "contract": "art/vehicles/postie-bike/postie-bike.asset.json: ok (jj.vehicle.v1, triangles per LOD [2669, 894, 599])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "4d99ec583e28edbeae38566d47ec7159d76413716320530a7bb8a344cfa7dace"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "cbb77fff8c589694569e8f218efb3e723a51b7750d37c200b2aa8a51db5e75cb"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "3f3cf8259114b2860b9f77ba742df478812a78a5b55ebe6549f8196a95d34a75"
+        },
+        {
+          "name": "collider_rider",
+          "sha256": "5f2f8f2a75b1b4f6969f38852c57863fec7b7e9ffc5bb7ca29d006c088678ce7"
+        },
+        {
+          "name": "collider_wheel_F",
+          "sha256": "c8fe0042a36432b9b1ce6870aae65b50f9518d3b648a066d30db1a575153982b"
+        },
+        {
+          "name": "collider_wheel_R",
+          "sha256": "e8d3ebb19d91d8aef421e6fb1d56ddb6784aa6579a90770670d90645d09f490c"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 2669,
+          "draws": 6,
+          "budget": 2900
+        },
+        {
+          "lod": 1,
+          "tris": 894,
+          "draws": 6,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 599,
+          "draws": 6,
+          "budget": 600
+        }
+      ]
+    },
+    {
+      "car": "tradie-ute",
+      "reproducible": true,
+      "contract": "art/vehicles/tradie-ute/tradie-ute.asset.json: ok (jj.vehicle.v1, triangles per LOD [1762, 896, 600])",
+      "sidecarByteIdentical": true,
+      "colliders": [
+        {
+          "name": "collider_core",
+          "sha256": "800b948b13b84940715b6dc08437881bf2e5fe5e8798893119e48b97e1965a87"
+        },
+        {
+          "name": "collider_front",
+          "sha256": "74b00a3ecf71e7cc4a5b70ddb3e16d627aebf371ac2b52860ea0e6e987a32950"
+        },
+        {
+          "name": "collider_back",
+          "sha256": "45122223d870556c8b6a07f5ac0856951d8e65667ae5f7cee08560ad42f93b38"
+        },
+        {
+          "name": "collider_door_FL",
+          "sha256": "bfad61bb2b572c55d4b7019272a1f78fb41cba666880d15191a9c8c65588e07e"
+        },
+        {
+          "name": "collider_door_FR",
+          "sha256": "c470b5e06e3258aa9b4554b95d9598c7d88514f0f621f4273aefb0dbfc036cdb"
+        },
+        {
+          "name": "collider_door_RL",
+          "sha256": "f8fba73106657cc17854bf658d9717adafbc3ac22cb46a14c2d8fc7b9e29e485"
+        },
+        {
+          "name": "collider_door_RR",
+          "sha256": "37ce62cc4168fafe7930ec5e2ec0c61f28dd2b96603c84f0ae57e79ad599ee1f"
+        },
+        {
+          "name": "collider_wheel_FL",
+          "sha256": "ba18a396fcebf8de0f4104d59aec434a8f5b9158ebe0679d64fcda32a80ec9b1"
+        },
+        {
+          "name": "collider_wheel_FR",
+          "sha256": "df4a54fd3d0f426724e922d3228275bb5f44aff75542d4e07ecf45e583e1b867"
+        },
+        {
+          "name": "collider_wheel_RL",
+          "sha256": "98b36b7ba77d02d22b92509de4c65eea7233355c2a12712fcf57c4d91671d34e"
+        },
+        {
+          "name": "collider_wheel_RR",
+          "sha256": "0cc0c653c55c01122add45dbca60b6616125626f65cd5793102f36b76e83694d"
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "tris": 1762,
+          "draws": 11,
+          "budget": 2400
+        },
+        {
+          "lod": 1,
+          "tris": 896,
+          "draws": 11,
+          "budget": 900
+        },
+        {
+          "lod": 2,
+          "tris": 600,
+          "draws": 11,
+          "budget": 600
+        }
+      ]
+    }
+  ]
+}

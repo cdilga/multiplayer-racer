@@ -86,7 +86,7 @@ const REST_PIVOTS = {
 
 export const LODS = {
   0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 10, rim: 'flat', spokes: 6, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, windows: true, scoop: false, vents: false, mirrors: 'stalk', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: true, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: false, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
   2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: false, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: false },
 };
 
@@ -222,16 +222,22 @@ function makeSoups(P, lod) {
   const ring = (z, s) => {
     const yb = lerpCurve(P.yBot, z), ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), hw = lerpCurve(P.hw, z);
     const ay = archY(z), lift = ay > 0 ? Math.max(yb, ay) : yb;
-    const y2 = Math.max(lift + 0.03, yb + P.skirt), y3 = Math.max(y2 + 0.06, ysh - P.sideDrop);
-    return [[0, yb, z], [s * (hw - P.floorIn), lift, z], [s * hw, y2, z], [s * hw, y3, z], [s * (hw - P.shoulderIn), ysh, z], [0, ycr, z]];
+    // Preserve the original section when the arch clips it: lifting a cut does not lift the widest flank.
+    const y2 = yb + P.skirt, y3 = ysh - P.sideDrop;
+    const section = [[yb,hw-P.floorIn],[y2,hw],[(y2+y3)/2,hw-.004],[y3,hw-.022],[(y3+ysh)/2,hw-.037],[ysh,hw-P.shoulderIn]];
+    const widthAt = y => { for(let i=1;i<section.length;i++) if(y<=section[i][0]) {
+      const [a,wa]=section[i-1],[b,wb]=section[i]; return wa+(wb-wa)*Math.max(0,(y-a)/(b-a));
+    } return section.at(-1)[1]; };
+    const samples=lod===0?[y2,(y2+y3)/2,y3,(y3+ysh)/2]:[y2,y3];
+    const ys=[lift,...samples.map((y,i)=>Math.max(lift+.010*(i+1),y))];
+    return [[0,yb,z],...ys.map(y=>[s*widthAt(y),y,z]),[s*(hw-P.shoulderIn),ysh,z],[0,ycr,z]];
   };
 
   // the tub's outer skin x at (z, y) on side s, and its top surface height at (x, z) (as the Lion's)
-  const skinX = (z, y, s) => {
-    const r = ring(z, s);
-    if (y >= r[3][1]) return mix(r[3], r[4], Math.min(1, (y - r[3][1]) / Math.max(1e-6, r[4][1] - r[3][1])))[0];
-    if (y >= r[2][1]) return r[2][0];
-    return mix(r[1], r[2], Math.max(0, (y - r[1][1]) / Math.max(1e-6, r[2][1] - r[1][1])))[0];
+  const skinX = (z,y,s) => {
+    const r=ring(z,s);
+    for(let i=2;i<r.length-1;i++) if(y<=r[i][1]) return mix(r[i-1],r[i],Math.min(1,Math.max(0,(y-r[i-1][1])/Math.max(1e-6,r[i][1]-r[i-1][1]))))[0];
+    return r.at(-2)[0];
   };
   const topY = (x, z) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), w = lerpCurve(P.hw, z) - P.shoulderIn; return ycr + (ysh - ycr) * Math.min(1, Math.abs(x) / w); };
 
@@ -239,28 +245,28 @@ function makeSoups(P, lod) {
   const partOfTub = (zm, seg, s) => {
     if (zm > zA + 1e-6) return 'front';
     // The alloy tray is separate: no painted pickup tub behind the cab.
-    if (seg >= 1 && seg <= 3) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the vehicle's left
+    if (seg >= 1 && seg <= (lod===0?5:3)) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the vehicle's left
     return 'core';
   };
   const sUV = sideUV(P), tUV = topUV(P);
   const segSwatch = (seg, zm) => {
     if (seg === 0) return 'under';
     if (seg === 1) return 'trim';
-    if (seg === 4) return zm > zA ? tUV : zm < P.cabin.at(-1).z ? 'under' : 'paint'; // behind the cab it is under the tray deck
+    if (seg === (lod===0?6:4)) return zm > zA ? tUV : zm < P.cabin.at(-1).z ? 'under' : 'paint'; // behind the cab it is under the tray deck
     return sUV;
   };
   for (const s of [1, -1]) {
     for (let i = 0; i < Z.length - 1; i++) {
       const a = ring(Z[i], s), b = ring(Z[i + 1], s), zm = (Z[i] + Z[i + 1]) / 2;
-      for (let k = 0; k < 5; k++) {
+      for (let k = 0; k < a.length-1; k++) {
         const so = S(partOfTub(zm, k, s));
-        const uv = k === 3 ? sUV : segSwatch(k, zm);
+        const uv = k === a.length-3 ? sUV : segSwatch(k, zm);
         if (s > 0) so.quad(a[k], b[k], b[k + 1], a[k + 1], uv); else so.quad(a[k], a[k + 1], b[k + 1], b[k], uv);
       }
     }
   }
   const cap = (z, id, sign, sw) => {
-    const R = ring(z, 1), Lr = ring(z, -1); const poly = [R[0], R[1], R[2], R[3], R[4], R[5], Lr[4], Lr[3], Lr[2], Lr[1]];
+    const R = ring(z, 1), Lr = ring(z, -1); const poly = [...R,...Lr.slice(1,-1).reverse()];
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
@@ -270,33 +276,44 @@ function makeSoups(P, lod) {
   // painted (A, B, C pillars); the side glass is laid over them below (a black frame, then a pane per door and the quarter).
   const cring = (c, s) => {
     const yb = lerpCurve(P.ySh, c.z) - 0.005;
-    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s * c.wb, yb, c.z], [s * c.wt, yb + 0.002, c.z], [s * (c.wt - P.roofCh), yc, c.z], [0, yc, c.z]]; }
-    return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0, c.yr + P.roofCrown, c.z]];
+    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s * c.wb, yb, c.z], [s * c.wt, yb + 0.002, c.z], [s * (c.wt - P.roofCh), yc, c.z], ...(lod===0?[[s*c.wt*.45,yc,c.z]]:[]),[0, yc, c.z]]; }
+    return [[s*c.wb,yb,c.z],[s*c.wt,c.yr-P.roofCh,c.z],[s*(c.wt-P.roofCh*1.2),c.yr,c.z],...(lod===0?[[s*c.wt*.45,c.yr+P.roofCrown*.85,c.z]]:[]),[0,c.yr+P.roofCrown,c.z]];
   };
   const nC = P.cabin.length;
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
     const c = P.cabin[i], a = cring(c, s), b = cring(P.cabin[i + 1], s);
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < a.length-1; k++) {
       const sw = k === 0 ? sUV : k === 1 ? sUV : c.roof === 'paint' ? 'paint' : 'glass';
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
   }
   // Rear of the dual cab stays closed when the canopy/tray detaches.
   { const c=P.cabin.at(-1),a=cring(c,1),b=cring(c,-1);
-    S('core').face([a[0],a[1],a[2],a[3],b[2],b[1],b[0]],'paint',[0,0,-1]);
+    S('core').face([...a,...b.slice(0,-1).reverse()],'paint',[0,0,-1]);
   }
   const ghPoint = (z, t, s, off) => {
     let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
     const c0 = P.cabin[i], c1 = P.cabin[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
-    const a = cring(c0, s), b = cring(c1, s), lo = mix(a[0], b[0], u), hi = mix(a[1], b[1], u), p = mix(lo, hi, t);
-    const n = cross(sub(hi, lo), [0, 0, 1]); const L = Math.hypot(...n) || 1; const sg = Math.sign(n[0]) === s ? 1 : -1;
-    return [p[0] + sg * n[0] / L * off, p[1] + sg * n[1] / L * off, z];
+    const a=cring(c0,s),b=cring(c1,s);
+    // Match the substrate's exact diagonal a0→b1 instead of bilinear interpolation.
+    const pts=t<=u?[a[0],b[0],b[1]]:[a[0],b[1],a[1]], weights=t<=u?[1-u,u-t,t]:[1-t,u,t-u];
+    const p=[0,1,2].map(k=>pts.reduce((v,q,j)=>v+q[k]*weights[j],0));
+    const n=cross(sub(pts[1],pts[0]),sub(pts[2],pts[0])),L=Math.hypot(...n)||1,sg=Math.sign(n[0])===s?1:-1;
+    return p.map((v,k)=>v+sg*n[k]/L*off);
   };
   const W = P.windows;
   if (T.windows) for (const s of [1, -1]) {
     const poly = (pts, off, sw) => { for (let i = 0; i < nC - 1; i++) {
-      const piece = clipZ(clipZ(pts, P.cabin[i].z, -1), P.cabin[i + 1].z, 1);
-      if (piece.length >= 3) S('core').face(piece.map(([z, t]) => ghPoint(z, t, s, off)), sw, [s, 0.3, 0]);
+      const piece=clipZ(clipZ(pts,P.cabin[i].z,-1),P.cabin[i+1].z,1);
+      const diag=p=>p[1]-(P.cabin[i].z-p[0])/(P.cabin[i].z-P.cabin[i+1].z);
+      const half=sign=>{
+        const q=[];for(let j=0;j<piece.length;j++) {
+          const a=piece[j],b=piece[(j+1)%piece.length],da=diag(a),db=diag(b),ai=sign*da>=-1e-8,bi=sign*db>=-1e-8;
+          if(ai)q.push(a);if(ai!==bi){const t=da/(da-db);q.push(a.map((v,k)=>v+(b[k]-v)*t));}
+        }
+        if(q.length>=3)S('core').face(q.map(([z,t])=>ghPoint(z,t,s,off)),sw,[s,.3,0]);
+      };
+      half(-1);half(1);
     } };
     if (T.windows === true) { poly(W.frame, 0.006, 'trim'); for (const pane of W.panes) poly(pane, 0.011, 'glass'); }
     else poly(W.frame, 0.008, 'glass');
@@ -331,22 +348,24 @@ function makeSoups(P, lod) {
   const F = S('front'), zn = P.zNose + 0.004, hwN = lerpCurve(P.hw, P.zNose), z1 = P.zNose - 0.16;
   const fq = (x0, y0, x1, y1, sw, dz = 0) => F.quad([x0, y0, zn + dz], [x1, y0, zn + dz], [x1, y1, zn + dz], [x0, y1, zn + dz], sw);
   const yAt = (z, x) => { const ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), xi = lerpCurve(P.hw, z) - P.shoulderIn; return Math.abs(x) >= xi ? ysh : ycr + (ysh - ycr) * Math.abs(x) / xi; };
-  const onSlope = (x, y) => { const y0 = yAt(P.zNose, x), y1 = yAt(z1, x), t = Math.min(1, Math.max(0, (y - y0) / (y1 - y0))); return [x, y + 0.012, P.zNose - t * (P.zNose - z1) + 0.026]; };
-  // the fascia's details are laid out with the grille's chrome header at 0.98 m; fy puts that header at the top of the nose face,
-  // so the grille and headlights sit on the Triton's tall blunt front (br-bwju.8), below the bonnet's edge
+  // Lamps follow the hood's real longitudinal facets. The source MQ swept lens drops from the
+  // shoulder near zNose-.24 toward the grille; it is neither a top decal nor a horizontal slit.
+  const hoodPoint = (x,z,off=.009) => [x,topY(x,z)+off,z+.006];
   const fy = lerpCurve(P.ySh, P.zNose) - 1.0;
-  const slopeQuad = (pts, sw, s = 1) => { const q = pts.map(([x, y]) => onSlope(s * x, y + fy)); if (s > 0) F.quad(q[0], q[1], q[2], q[3], sw); else F.quad(q[0], q[3], q[2], q[1], sw); };
-  // Two horizontal chrome rails and a black central aperture. No manufacturer badge.
-  slopeQuad([[-0.47,0.76],[0.47,0.76],[0.51,0.98],[-0.51,0.98]], 'grille');
-  for (const y of [0.86,0.96]) slopeQuad([[-0.49,y],[0.49,y],[0.50,y+0.035],[-0.50,y+0.035]], 'chrome');
-  // Lenses follow the actual nose/bonnet transition, never above the underlying facet.
-  for (const s of [1,-1]) {
-    const lens=[[.52,1.045],[.79,1.06],[.80,1.10],[.52,1.095]].map(([x,y])=>onSlope(s*x,y+fy));
-    for(const v of lens) v[1]=Math.min(v[1],topY(v[0],v[2])+0.008);
-    F.face(lens,'head',[0,.4,1]);
+  const fascia = (pts,sw) => F.face(pts.map(([x,y])=>[x,y,zn+.009]),sw,[0,0,1]);
+  fascia(lod===2?[[-.44,.82],[.44,.82],[.44,1.065],[-.44,1.065]]:[[-.45,.82],[.45,.82],[.49,1.065],[-.49,1.065]],'grille');
+  for(const y of (lod===0?[.925,1.025]:lod===1?[1.025]:[])) {const w=lod===0?.48:.44;fascia([[-w,y],[w,y],[w,y+.026],[-w,y+.026]],'chrome');}
+  for(const sign of [1,-1]) {
+    const strips = lod===0 ? [P.zNose,P.zNose-.08,P.zNose-.24] : [P.zNose,P.zNose-.24];
+    for(let i=0;i<strips.length-1;i++) {
+      const a=strips[i],b=strips[i+1];
+      F.face([hoodPoint(sign*.50,a),hoodPoint(sign*.79,a),hoodPoint(sign*.79,b),hoodPoint(sign*.50,b)],'head',[sign*.2,.65,1]);
+    }
+    // Dark return under each swept lens gives the front face its downturned outer corner.
+    if(lod===0)fascia([[sign*.49,.96],[sign*.77,.96],[sign*.77,1.035],[sign*.49,1.035]],'grille');
   }
   const ybN = lerpCurve(P.yBot, P.zNose);
-  fq(-0.66, ybN + 0.07, 0.66, 0.62 + fy, 'trim'); // lower intake behind the bull bar
+  if(lod===0)fq(-0.66, ybN + 0.07, 0.66, 0.62 + fy, 'trim'); // lower intake behind the bull bar
   const B = P.bar, bumpT = B.y0 + 0.20, bz = B.z + 0.05; // the bar's solid bumper: B.y0 - 0.06 up to bumpT, face at bz
   F.box(0, ybN + 0.01, P.zNose - 0.06, hwN * 2 + 0.06, 0.04, 0.22, 'trim'); // bash plate
   F.box(0, (B.y0 - 0.06 + bumpT) / 2, B.z - 0.02, B.hw * 2 + 0.30, bumpT - B.y0 + 0.06, 0.14, 'trim'); // the solid black bumper
@@ -375,7 +394,11 @@ function makeSoups(P, lod) {
   for (const sign of [1,-1]) {
     const guard=[[P.zRA+.57,.62],[P.zRA+.41,1.035],[P.zRA-.42,1.035],[P.zRA-.60,.62],
       [P.zRA-.53,.62],[P.zRA-.36,.975],[P.zRA+.36,.975],[P.zRA+.50,.62]];
-    if(lod<2) Bk.slab(guard,sign>0?.65:-.9675,sign>0?.9675:-.65,'trim','chrome');
+    if(lod===0) Bk.slab(guard,sign>0?.65:-.9675,sign>0?.9675:-.65,'trim','chrome');
+    else if(lod===1) {
+      Bk.face(guard.map(([z,y])=>[sign*.9675,y,z]),'chrome',[sign,0,0]);
+      for(const [a,b] of [[0,1],[1,2],[2,3]]) Bk.face([[sign*.65,guard[a][1],guard[a][0]],[sign*.9675,guard[a][1],guard[a][0]],[sign*.9675,guard[b][1],guard[b][0]],[sign*.65,guard[b][1],guard[b][0]]],'trim',[0,1,0]);
+    }
     else Bk.face(guard.map(([z,y])=>[sign*.9675,y,z]),'chrome',[sign,0,0]);
     if(lod<2) Bk.box(sign*.80,.48,P.zRA-.58,.30,.34,.025,'tyre');
     else Bk.face([[sign*.65,.31,P.zRA-.60],[sign*.95,.31,P.zRA-.60],[sign*.95,.65,P.zRA-.60],[sign*.65,.65,P.zRA-.60]],'tyre',[0,0,-1]);
@@ -394,7 +417,7 @@ function makeSoups(P, lod) {
   else Bk.face([[-.19,.565,TR.z1],[-.19,.715,TR.z1],[.19,.715,TR.z1],[.19,.565,TR.z1]],'white',[0,0,-1]);
   if(lod===0) Bk.box(0,.50,TR.z1-.035,.55,.08,.07,'trim');
   Bk.box(0,.49,TR.z1-.085,.07,.06,.14,'trim');
-  Bk.prism([0,.49,TR.z1-.135],[0,.55,TR.z1-.135],.025,5,'chrome','chrome');
+  Bk.prism([0,.49,TR.z1-.135],[0,.55,TR.z1-.135],.025,lod===2?4:5,'chrome','chrome');
 
   // ── core details: mirrors, steps, snorkel, roof rack ──
   const M = P.mirror; // decoration: the collider stays the body's width
@@ -406,9 +429,9 @@ function makeSoups(P, lod) {
     const a = f(x0, 1), b = f(x1, 0.5);
     S('core').solid([a, b, ...a.map((p, i) => [p, a[(i + 1) % 4], b[(i + 1) % 4], b[i]])], 'trim');
   });
-  if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, zC + 0.012]) {
-    const x = s * (lerpCurve(P.hw, z) + 0.003), y0 = lerpCurve(P.yBot, z) + P.skirt + 0.02, y1 = lerpCurve(P.ySh, z) - 0.05;
-    S('core').quad(...(s > 0 ? [[x, y0, z + 0.008], [x, y0, z - 0.008], [x, y1, z - 0.008], [x, y1, z + 0.008]] : [[x, y0, z - 0.008], [x, y0, z + 0.008], [x, y1, z + 0.008], [x, y1, z - 0.008]]), 'trim');
+  if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, cabBack + 0.035]) {
+    const y0=lerpCurve(P.yBot,z)+.06,y1=lerpCurve(P.ySh,z)-.025, ym=lerpCurve(P.ySh,z)-P.sideDrop;
+    for(const [lo,hi] of [[y0,ym],[ym,y1]]) S('core').face([[skinX(z,lo,s)+s*.004,lo,z-.006],[skinX(z,lo,s)+s*.004,lo,z+.006],[skinX(z,hi,s)+s*.004,hi,z+.006],[skinX(z,hi,s)+s*.004,hi,z-.006]],'trim',[s,0,0]);
   }
   if (T.steps) for (const s of [1, -1]) S('core').box(s * (lerpCurve(P.hw, 0) + 0.07), lerpCurve(P.yBot, 0) + 0.02, (zA + zC) / 2, 0.16, 0.05, zA - zC - 0.1, { all: 'trim', py: 'chrome' }); // side steps
   if (T.snorkel) {
@@ -421,8 +444,22 @@ function makeSoups(P, lod) {
   // bunch at the ends so the seat number painted on the roof (anchor roof_number) shows through the middle.
   if (T.rack) {
     const R=P.rack,Co=S('core'), zm=(R.z0+R.z1)/2;
-    for (const sign of [1,-1]) Co.box(sign*R.hw,R.y,zm,.04,.04,R.z0-R.z1,'trim');
-    for (const z of [R.z0,R.z1]) Co.box(0,R.y,z,R.hw*2,.04,.05,'trim');
+    for (const sign of [1,-1]) {
+      if(lod===0) Co.box(sign*R.hw,R.y,zm,.04,.04,R.z0-R.z1,'trim');
+      else {
+        const xa=sign*R.hw-.02,xb=sign*R.hw+.02;
+        Co.face([[xa,R.y+.02,R.z0],[xa,R.y+.02,R.z1],[xb,R.y+.02,R.z1],[xb,R.y+.02,R.z0]],'trim',[0,1,0]);
+        Co.face([[sign*(R.hw+.02),R.y-.02,R.z0],[sign*(R.hw+.02),R.y+.02,R.z0],[sign*(R.hw+.02),R.y+.02,R.z1],[sign*(R.hw+.02),R.y-.02,R.z1]],'trim',[sign,0,0]);
+      }
+    }
+    for (const z of [R.z0,R.z1]) {
+      if(lod===0) Co.box(0,R.y,z,R.hw*2,.04,.05,'trim');
+      else {
+        Co.face([[-R.hw,R.y+.02,z-.025],[-R.hw,R.y+.02,z+.025],[R.hw,R.y+.02,z+.025],[R.hw,R.y+.02,z-.025]],'trim',[0,1,0]);
+        const ze=z+(z===R.z0?.025:-.025);
+        Co.face([[-R.hw,R.y-.02,ze],[-R.hw,R.y+.02,ze],[R.hw,R.y+.02,ze],[R.hw,R.y-.02,ze]],'trim',[0,0,z===R.z0?1:-1]);
+      }
+    }
     // Slats leave the number anchor visible between them. The awning belongs on the LEFT (+X).
     if (lod===0) for (const z of [R.z0-.14,R.z1+.14]) Co.box(0,R.y,z,R.hw*2,.025,.04,'trim');
     Co.prism([R.hw+.07,R.y+.065,R.z0+.12],[R.hw+.07,R.y+.065,R.z1-.12],.075,lod===0?6:4,'awning','awning');
@@ -470,6 +507,42 @@ function makeSoups(P, lod) {
   { const I = S('interior_boot'), zm = (zC + P.zTail) / 2; // under the tray: ladder chassis, the spare and a jerry can
     I.box(0, 0.58, zm, 0.9, 0.16, 1.5, 'trim'); I.prism([0.25, 0.46, zm + 0.1], [0.25, 0.72, zm + 0.1], 0.34, 6, 'tyre', 'rim'); I.box(-0.45, 0.78, zm - 0.1, 0.34, 0.4, 0.2, 'trim'); }
 
+  // Split the existing nose facets laterally before bending. Without these intermediate
+  // sections the centre-to-corner chord makes a pointed V, even if its extrema are correct.
+  {
+    const so=soups.front, out=new Soup(), cuts=lod===0?[-.65,-.35,.35,.65]:[-.45,.45];
+    const clip=(poly,k,sign)=>{
+      const r=[]; for(let i=0;i<poly.length;i++) {
+        const a=poly[i],b=poly[(i+1)%poly.length],ai=sign*(a.p[0]-k)>=-1e-8,bi=sign*(b.p[0]-k)>=-1e-8;
+        if(ai)r.push(a);if(ai!==bi){const t=(k-a.p[0])/(b.p[0]-a.p[0]);r.push({p:mix(a.p,b.p,t),uv:a.uv.map((v,j)=>v+(b.uv[j]-v)*t)});}
+      }return r;
+    };
+    for(let i=0;i<so.p.length;i+=9) {
+      const tri=[0,1,2].map(j=>({p:so.p.slice(i+j*3,i+j*3+3),uv:so.uv.slice(i/3*2+j*2,i/3*2+j*2+2)}));
+      const zs=tri.map(v=>v.p[2]);let polys=[tri];
+      if(Math.max(...zs)>2.30&&Math.max(...zs)<P.zNose+.015&&Math.max(...tri.map(v=>v.p[1]))>.76) {
+        for(const k of cuts) polys=polys.flatMap(poly=>{
+          const xs=poly.map(v=>v.p[0]);return Math.min(...xs)<k-1e-8&&Math.max(...xs)>k+1e-8?[clip(poly,k,-1),clip(poly,k,1)]:[poly];
+        });
+      }
+      for(const poly of polys) for(let j=1;j<poly.length-1;j++) {
+        for(const v of [poly[0],poly[j],poly[j+1]]){out.p.push(...v.p);out.uv.push(...v.uv);out.c.push(1,1,1);}
+      }
+    }
+    soups.front=out;
+  }
+  // The full nose skin and its graphics share one deformation. The centre stays forward while
+  // both front corners sweep back, unlike a flat end cap with trim covering square corners.
+  for(const id of ['front','core','door_FL','door_FR','door_RL','door_RR']) {
+    const so=soups[id];
+    for(let i=0;i<so.p.length;i+=3) {
+      const x=so.p[i],y=so.p[i+1],z=so.p[i+2];
+      // Keep the steel bar/hoop angular and fully forward of the body.
+      if(z>P.zNose+.015 || z<1.65 || y<.76) continue;
+      const t=Math.min(1,Math.max(0,(z-1.65)/(P.zNose-1.65)));
+      so.p[i+2]-=.20*Math.pow(Math.min(1,Math.abs(x)/.86),3)*t*t;
+    }
+  }
   return { soups, stations: Z.length };
 }
 
@@ -481,7 +554,7 @@ export function pivots(P) { return Object.fromEntries(Object.entries(REST_PIVOTS
 function pivotOf(P, id, positions) {
   if (id === 'core' || id.startsWith('interior_')) return [0, 0, 0];
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < positions.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], positions[i + k]); hi[k] = Math.max(hi[k], positions[i + k]); }
+  for (let i = 0; i < positions.length; i += 3) for (let k = 0; k < a.length-1; k++) { lo[k] = Math.min(lo[k], positions[i + k]); hi[k] = Math.max(hi[k], positions[i + k]); }
   if (id.startsWith('wheel')) return [Math.sign(hi[0] + lo[0]) * P.track, P.wheelR, id[6] === 'F' ? P.zFA : P.zRA];
   const mid = (k) => (lo[k] + hi[k]) / 2;
   if (id.startsWith('door')) return [mid(0) > 0 ? hi[0] : lo[0], mid(1), hi[2]];

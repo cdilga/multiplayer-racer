@@ -4,7 +4,7 @@
 // (tools/vehicles/bake.mjs); pivots(P). P is params.json, measured off refs/lod-plus-1.png (see its `what`).
 //
 // Frame: metres, +Z nose, +Y up, origin on the ground between the axles; +X is the bike's LEFT. Parts (the bike part set of
-// jj.vehicle.v1): core (leg shield, floor and pads, body, seat, engine, twin mufflers, shocks, head tube, handlebars, mirrors),
+// jj.vehicle.v1): core (open diamond frame, tank, seat, engine, single right exhaust, shocks, head tube, handlebars, mirrors),
 // front (fork, headlamp, front mudguard, front carrier with its mail tub and parcels), back (rear grab rail, the two postal-red
 // panniers with parcels, tail block and lamp, rear mudguard), rider, wheel_F, wheel_R.
 import { swatchUV } from './atlas.js';
@@ -13,7 +13,7 @@ import { Soup, exportsFor } from '../_kit/bike.js';
 export const LODS = {
   // n: tyre sides (24 = lugged, hollow, spoked); pann/bask: parcels per pannier / in the basket (the highest one stays at every
   // LOD: the back's and front's top edge is their hinge line); the rest drop out down the ladder
-  0: { n: 16, hollow: true, spokes: 4, hub: 8, rail: 2, cavity: true, pann: 4, bask: 3, mirrors: 2, bow: true, rider: 2, visor: true, basketBars: 2, flick: true, forkSleeve: true, header: true, shocks: 2, rimRing: true, lampRim: true, lampN: 8, fenderSeg: 6, strap: true, bands: true, pads: true, grips: true, tailLens: true, bars: 2, mufN: 8, crown: true, stem: true, mirN: 8 },
+  0: { n: 20, hollow: true, spokes: 8, hub: 8, rail: 2, cavity: true, pann: 4, bask: 3, mirrors: 2, bow: true, rider: 2, visor: true, basketBars: 2, flick: true, forkSleeve: true, header: true, shocks: 2, rimRing: true, lampRim: true, lampN: 8, fenderSeg: 6, strap: true, bands: true, pads: true, grips: true, tailLens: true, bars: 2, mufN: 8, crown: true, stem: true, mirN: 8 },
   1: { n: 8, hollow: true, spokes: 2, hub: 4, rail: 1, cavity: false, pann: 1, bask: 1, mirrors: 1, bow: false, rider: 1, visor: false, basketBars: 1, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, fenderSeg: 2, strap: false, bands: true, pads: false, grips: true, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
   2: { n: 8, hollow: true, spokes: 2, hub: 0, rail: 0, cavity: false, pann: 1, bask: 1, mirrors: 0, bow: false, rider: 0, visor: false, basketBars: 0, flick: false, forkSleeve: false, header: false, shocks: 0, rimRing: false, lampRim: false, lampN: 6, lampOne: true, fenderSeg: 1, strap: false, bands: false, pads: false, grips: false, tailLens: false, bars: 1, mufN: 6, crown: false, stem: false, mirN: 6 },
 };
@@ -72,13 +72,13 @@ function wheel(S,z,R,W,T) {
   const ring=(x,r,k)=>{const a=2*Math.PI*k/n;return[x,R+Math.sin(a)*r,z+Math.cos(a)*r];};
   for(let k=0;k<n;k++) {
     const j=(k+1)%n,a=2*Math.PI*(k+.5)/n,normal=[0,Math.sin(a),Math.cos(a)];
-    qd(S,normal,ring(-hw,R,k),ring(hw,R,k),ring(hw,R,j),ring(-hw,R,j),'tyre');
-    for(const side of [-1,1])qd(S,[side,0,0],ring(side*hw,R,k),ring(side*hw,R,j),ring(side*hw,ri,j),ring(side*hw,ri,k),'tyre');
-    qd(S,normal.map(v=>-v),ring(-hw,ri,k),ring(-hw,ri,j),ring(hw,ri,j),ring(hw,ri,k),'rim');
+    if(T.n>8)for(const side of [-1,1])qd(S,normal,ring(side*hw,R*.965,k),ring(0,R,k),ring(0,R,j),ring(side*hw,R*.965,j),'tyre');else qd(S,normal,ring(-hw,R,k),ring(hw,R,k),ring(hw,R,j),ring(-hw,R,j),'tyre');
+    for(const side of [-1,1])qd(S,[side,0,0],ring(side*hw,R*(T.n>8?.965:1),k),ring(side*hw,R*(T.n>8?.965:1),j),ring(side*hw,ri,j),ring(side*hw,ri,k),'tyre');
+    if(T.n>8)qd(S,normal.map(v=>-v),ring(-hw,ri,k),ring(-hw,ri,j),ring(hw,ri,j),ring(hw,ri,k),'rim');
   }
   // Paired planar spoke faces preserve negative space without costly filled discs or rectangular bars.
   for(let i=0;i<Math.max(2,T.spokes);i++)for(const side of [-1,1]) {
-    const a=i*Math.PI/Math.max(2,T.spokes),v=[Math.cos(a),Math.sin(a)],d=[-v[1]*.012,v[0]*.012];
+    const a=i*Math.PI/Math.max(2,T.spokes)+(T.n>8?Math.PI/16:0),v=[Math.cos(a),Math.sin(a)],d=[-v[1]*.012,v[0]*.012];
     const p=(sign,k)=>[side*hw*.5,R+sign*v[1]*ri+d[1]*k,z+sign*v[0]*ri+d[0]*k];
     qd(S,[side,0,0],p(-1,-1),p(1,-1),p(1,1),p(-1,1),'spokes');
   }
@@ -99,7 +99,7 @@ function makeSoups(P, lod) {
   const T = LODS[lod], soups = {}, S = (id) => (soups[id] ??= new Soup(swatchUV));
   const C = S('core'), F = S('front'), B = S('back'), RD = S('rider');
   // At small sizes tube end caps are buried at joints; retain the four side faces only.
-  if(lod>0)for(const target of [C,F,B]) {
+  if(lod>0)for(const target of [C,F,B,RD]) {
     const limb=target.limb.bind(target);
     target.limb=(...args)=>{const start=target.p.length,uvStart=target.uv.length;limb(...args);target.p.splice(start+72);target.uv.splice(uvStart+48);};
   }
@@ -117,7 +117,7 @@ function makeSoups(P, lod) {
     }
     for(let j=0;j<stations.length-1;j++)for(const side of [-1,1]) {
       const inset=(sec,t)=>{const [z,hw,y0,y1]=sec;return[side*(hw*(1-t)+hw*.78*t+.002),y0+(y1-y0)*.35+(y1-.035-y0-(y1-y0)*.35)*t,z];};
-      if(j>0&&j<stations.length-2)qd(C,[side,0,0],inset(stations[j],.12),inset(stations[j+1],.12),inset(stations[j+1],.85),inset(stations[j],.85),'tankInset');
+      if(lod===2&&j!==1)continue;const range=i=>i===0||i===stations.length-1?[.40,.60]:i===1||i===stations.length-2?[.18,.80]:[.10,.90];const a=range(j),b=range(j+1);qd(C,[side,0,0],inset(stations[j],a[0]),inset(stations[j+1],b[0]),inset(stations[j+1],b[1]),inset(stations[j],a[1]),'tankInset');
     }
     if(lod<2)C.box([0,tk.sections[4][3]+.012,tk.sections[4][0]],[.09,.025,.10],'chrome');
   }
@@ -135,22 +135,27 @@ function makeSoups(P, lod) {
     else tbox(C,{x0:side>0?.13:-.23,x1:side>0?.23:-.13,z0:-.57,z1:-.42,y0:.70,y1:.96,tz0:-.76,tz1:-.18},'cover');
     if(lod<2)C.limb([side*.16,.39,-.24],[side*.31,.39,-.24],.055,.055,'frame');
   }
-  // seat
-  frustum(C, { z0: st.z1, z1: st.z0, y0: st.y0, y1: st.y1, hw0b: st.hw1 - 0.02, hw1b: st.hw0 - 0.02, hw0t: st.hw1, hw1t: st.hw0 }, 'seat');
+  // Saddle has rounded shoulders and tapered ends, not one long rectangular slab.
+  { const station=(z,w,top)=>({z,w,top}), length=st.z0-st.z1;
+    const all=[station(st.z1,.12,st.y1-.045),station(st.z1+length*.13,st.hw1,st.y1),station(st.z0-length*.15,st.hw0,st.y1+.025),station(st.z0,.13,st.y1+.005)];
+    const sections=lod===0?all:lod===1?[all[0],all[2],all[3]]:[all[0],all[3]],ring=({z,w,top})=>[[-w*.7,st.y0,z],[-w,top-.035,z],[-w*.74,top,z],[w*.74,top,z],[w,top-.035,z],[w*.7,st.y0,z]];
+    const rs=sections.map(ring);for(let j=0;j<rs.length-1;j++)for(let k=0;k<6;k++)qd(C,[k<2?-1:1,k===2?1:0,0],rs[j][k],rs[j][(k+1)%6],rs[j+1][(k+1)%6],rs[j+1][k],'seat');
+    for(const [j,sign]of [[0,-1],[rs.length-1,1]])for(let k=1;k<5;k++){const q=[rs[j][0],rs[j][k],rs[j][k+1]];if(sign<0)q.reverse();C.tri(...q,'seat');}
+  }
   // Exposed vertical single-cylinder engine: rounded crankcase, sloping cylinder and broad cooling fins.
   { const e=P.engine;
     C.prism([-e.hw,e.y,e.z],[e.hw,e.y,e.z],.17,lod===0?10:lod===1?6:4,'engine','engine',Math.PI/6);
-    C.limb([0,e.y+.08,e.z+.04],[0,e.y+.39,e.z+.15],.23,.22,'engine');
+    if(lod===0)C.prism([0,e.y+.08,e.z+.04],[0,e.y+.39,e.z+.15],.125,8,'engine','engine',0,.115);else C.limb([0,e.y+.08,e.z+.04],[0,e.y+.39,e.z+.15],.23,.22,'engine');
     if(lod===0)for(let i=0;i<4;i++) {
       const y=e.y+.15+i*(lod===0?.05:.10),z=e.z+.065+(y-e.y-.08)*.35;
-      C.box([0,y,z],[.26,.015,.24],'chrome');
+      C.prism([0,y,z],[0,y+.015,z],.145,8,'chrome','chrome',Math.PI/8);
     }
   }
   // One low right-hand exhaust, as in the primary CB50 reference.
   for (const s of [-1]) { const e = P.exhaust;
     C.prism([s * e.x, e.y, e.z0], [s * e.x, e.y, e.z1], e.r, lod===2?4:T.mufN, 'chrome', 'chrome', Math.PI / T.mufN);
     if (T.header) discZ(C, [s * e.x, e.y], e.r * 0.55, e.z1 - 0.012, e.z1 - 0.004, 8, 'under', 'under');
-    if (T.header) { C.limb([s * 0.2, e.y - 0.02, 0.16], [s * e.x, e.y, e.z0 + 0.04], 0.05, 0.05, 'chrome'); C.limb([s * e.x, e.y + 0.06, -0.78], [s * 0.2, 0.52, -0.78], 0.035, 0.035, 'frame'); }
+    if(T.header){const path=[[s*.18,.79,.19],[s*.23,.65,.34],[s*.25,.39,.32],[s*.27,.29,.10],[s*e.x,e.y,e.z0-.20]];for(let i=0;i<path.length-1;i++)C.prism(path[i],path[i+1],.027,8,'chrome');C.limb([s*e.x,e.y+.06,-.78],[s*.2,.52,-.78],.035,.035,'frame');}
   }
   // Both rear suspension struts remain, independently of the single exhaust.
   for(const s of [-1,1]) { const top=[s*.22,.86,-.86],bot=[s*.20,.4,-1.03];
@@ -252,27 +257,35 @@ function makeSoups(P, lod) {
 
   // ───────────────────────── rider ─────────────────────────
   { const J = P.rider, to = J.torso, hr = J.headR, hc = J.head, lvl = T.rider;
-    // torso: the hi-vis vest, narrower at the waist, with its reflective bands
-    tbox(RD, { x0: -to.hw + 0.02, x1: to.hw - 0.02, z0: to.z1 + 0.01, z1: to.z0 - 0.01, y0: to.y0, tx0: -to.hw, tx1: to.hw, tz0: to.z1, tz1: to.z0, y1: to.y1 }, 'vest');
-    if (T.bands) { const y0 = to.y0 + 0.07, y1 = y0 + 0.05, w = to.hw + 0.006, zf = to.z0 + 0.006, zb = to.z1 - 0.006;
-      tbox(RD, { x0: -w, x1: w, z0: zb, z1: zf, y0, y1 }, 'band');
-      if (lvl >= 2) for (const s of [-1, 1]) for (const x of [s * 0.12, s * 0.22]) { // vertical stripes front and back
-        const a = Math.abs(x) < 0.15 ? 0.045 : 0.035;
-        qd(RD, [0, 0, 1], [x - a / 2, y1, zf + 0.004], [x + a / 2, y1, zf + 0.004], [x + a / 2, to.y1 - 0.02, zf + 0.004], [x - a / 2, to.y1 - 0.02, zf + 0.004], 'band');
-        qd(RD, [0, 0, -1], [x - a / 2, y1, zb - 0.004], [x + a / 2, y1, zb - 0.004], [x + a / 2, to.y1 - 0.02, zb - 0.004], [x - a / 2, to.y1 - 0.02, zb - 0.004], 'band'); } }
-    if (lvl >= 2) RD.box([0, to.y1 + 0.02, (to.z0 + to.z1) / 2], [0.3, 0.08, 0.2], 'shirt'); // collar
+    // Rounded octagonal vest sections: waist, chest, sloping shoulder and neck.
+    // Reflective belt is part of the finished surface; stripe panels share its planes.
+    const zc=(to.z0+to.z1)/2;
+    const shape=y=> {const t=(y-to.y0)/(to.y1-to.y0),w=t<.92?.185+.045*t/.92:.23-(t-.92)*1.125,d=t<.70?.11+.025*t/.70:t<.92?.135-(t-.70)*.068:.12-(t-.92)*.50;return{y,w,d};};
+    const ys=lvl>=2?[to.y0,to.y0+.07,to.y0+.12,to.y1-.04,to.y1]:[to.y0,to.y1-.04,to.y1];
+    const section=y=>{const {w,d}=shape(y);return[[-w*.75,y,zc-d],[w*.75,y,zc-d],[w,y,zc-d*.5],[w,y,zc+d*.5],[w*.75,y,zc+d],[-w*.75,y,zc+d],[-w,y,zc+d*.5],[-w,y,zc-d*.5]];};
+    const rs=ys.map(y=>{const r=section(y);return lvl<2?r.filter((_,i)=>![2,6].includes(i)):r;}),rn=rs[0].length;
+    for(let j=0;j<rs.length-1;j++)for(let k=0;k<rn;k++) {
+      const pts=[rs[j][k],rs[j][(k+1)%rn],rs[j+1][(k+1)%rn],rs[j+1][k]];
+      qd(RD,sub(mean(pts),[0,mean(pts)[1],zc]),...pts,T.bands&&j===1&&lvl>=2?'band':'vest');
+    }
+    for(const [j,sign]of [[0,-1],[rs.length-1,1]])for(let k=1;k<rn-1;k++){const q=[rs[j][0],rs[j][k],rs[j][k+1]];if(sign<0)q.reverse();RD.tri(...q,'vest');}
+    if(T.bands)for(const side of [-1,1])for(const x of [-.10,.10])for(let j=0;j<ys.length-1;j++) {
+      const y0=ys[j],y1=ys[j+1];if(j===ys.length-2)continue;
+      const p=(xx,y)=>[xx,y,zc+side*(shape(y).d+.002)];
+      qd(RD,[0,0,side],p(x-.022,y0),p(x+.022,y0),p(x+.022,y1),p(x-.022,y1),'band');
+    }
     for (const s of [1, -1]) {
       const sh0 = [s * to.hw, J.shoulder[1] - 0.02, J.shoulder[2]], el = [s * J.elbow[0], J.elbow[1], J.elbow[2]], ha = [s * J.hand[0], J.hand[1], J.hand[2]];
       const hip = [s * 0.13, J.hip[1], J.hip[2]], kn = [s * J.knee[0], J.knee[1], J.knee[2]], ft = [s * J.foot[0], J.foot[1], J.foot[2]];
       if (lvl >= 2) {
-        RD.limb(sh0, el, 0.15, 0.15, 'shirt'); // a puffy sleeve
-        RD.limb(lerp(el, ha, 0.15), ha, 0.085, 0.085, 'skin');
+        RD.prism(sh0, el, .075, 5, 'shirt', null, 0, .062); // a puffy sleeve
+        RD.prism(el, ha, .049, 5, 'skin', null, 0, .035);
       }
       if (lvl >= 1) {
         RD.limb(hip, kn, 0.19, 0.19, 'pants'); // navy shorts to the knee, a bare shin
         RD.limb(kn, [ft[0], ft[1] + 0.2, ft[2] + 0.02], 0.1, 0.1, 'skin');
       } else RD.limb(hip, [ft[0], ft[1] + 0.2, ft[2]], 0.14, 0.14, 'pants');
-      if (lvl < 2) RD.limb(sh0, ha, 0.11, 0.11, 'shirt');
+      if(lvl<2) { RD.limb(sh0,el,.13,.13,'shirt'); RD.limb(el,ha,.075,.075,'skin'); }
       if (lvl >= 2) {
         RD.box([ha[0] + s * 0.02, ha[1] - 0.005, ha[2] + 0.01], [0.1, 0.085, 0.11], 'frame'); // glove on the grip
         RD.box([ft[0], ft[1] + 0.15, ft[2] - 0.03], [0.13, 0.2, 0.17], 'boots'); // tall boot on the pad
@@ -283,12 +296,22 @@ function makeSoups(P, lod) {
     // helmet: a faceted dome, grey in its lowest ring; a face behind a clear visor
     helmetBlob(RD, hc, [hr * 0.98, hr * 0.93, hr * 1.03], lvl >= 2 ? 10 : 6, lvl >= 2 ? 6 : 3);
     if (T.strap) RD.prism([0, hc[1] - hr * 0.95, hc[2]], [0, hc[1] - hr * 0.8, hc[2]], hr * 0.86, 8, 'frame', 'frame', Math.PI / 8); // the helmet's dark lower rim
-    const fz = hc[2] + hr * 1.03 + 0.005, fy = hc[1] - hr * 0.1;
-    if (lvl >= 1) RD.box([0, fy, hc[2] + .06], [hr * 1.1, hr * 1.2, hr * 1.5], 'skin'); // face fills the helmet opening, not a floating wafer
-    if (T.visor) { const vz = fz + 0.035, w = hr * 0.74, h = hr * 0.78, t = 0.02;
-      RD.box([0, fy + h / 2 - t / 2, vz], [w * 2, t, 0.026], 'visor'); RD.box([0, fy - h / 2 + t / 2, vz], [w * 2, t, 0.026], 'visor');
-      for (const s of [1, -1]) RD.box([s * (w - t / 2), fy, vz], [t, h, 0.026], 'visor'); }
-    else if (lvl >= 1) RD.box([0, fy, fz + 0.01], [hr * 1.3, hr * 0.74, 0.03], 'visor');
+    // Curved visor opening: cheek edges return into the shell. An opaque wafer
+    // hanging ahead of the helmet made the previous rider look like a robot.
+    { const fy=hc[1]-hr*.13;
+      const arc=[[-.72,.58],[-.47,.89],[.47,.89],[.72,.58]],point=(pair,y,off=0)=>[hc[0]+pair[0]*hr,fy+y*hr,hc[2]+pair[1]*hr+off];
+      if(lvl)RD.blob([hc[0],fy,hc[2]+hr*.33],[hr*.68,hr*.64,hr*.62],lvl>=2?8:6,lvl>=2?4:3,'skin');else for(let j=0;j<arc.length-1;j++)qd(RD,[0,0,1],point(arc[j],.50),point(arc[j+1],.50),point(arc[j+1],-.50),point(arc[j],-.50),'skin');
+      if(lvl>=1) {
+        // The visor follows a rounded brow arch and drops around the cheek/chin,
+        // with return facets attaching the edge to the shell rather than floating.
+        const outline=[[-.72,.43,.64],[-.49,.65,.68],[0,.73,.71],[.49,.65,.68],[.72,.43,.64],[.72,-.38,.64],[.44,-.65,.72],[-.44,-.65,.72],[-.72,-.38,.64]];
+        const p=([x,y,z],k)=>[hc[0]+x*hr*k,fy+y*hr*k,hc[2]+z*hr+.009];
+        for(let i=0;i<outline.length;i++){const j=(i+1)%outline.length;qd(RD,[0,0,1],p(outline[i],1),p(outline[j],1),p(outline[j],.91),p(outline[i],.91),'visor');}
+        // Helmet's lowered chin lip; retains a white silhouette below the face.
+        qd(RD,[0,0,1],[hc[0]-.44*hr,fy-.65*hr,hc[2]+.72*hr],[hc[0]+.44*hr,fy-.65*hr,hc[2]+.72*hr],[hc[0]+.32*hr,fy-.82*hr,hc[2]+.62*hr],[hc[0]-.32*hr,fy-.82*hr,hc[2]+.62*hr],'helmet2');
+      }
+    }
+
   }
 
   // ───────────────────────── wheels ─────────────────────────

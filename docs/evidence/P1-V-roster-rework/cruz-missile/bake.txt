@@ -1,0 +1,9 @@
+cruz-missile.lod0.glb: 2052 tris (budget 2800; optimiser flipped 23, dropped 2 unseen) {"core":296,"front":807,"back":561,"door_FL":32,"door_FR":32,"door_RL":26,"door_RR":26,"wheel_FL":68,"wheel_FR":68,"wheel_RL":68,"wheel_RR":68,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod1.glb: 891 tris (budget 900; optimiser flipped 2, dropped 3 unseen) {"core":160,"front":311,"back":284,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod2.glb: 576 tris (budget 600; optimiser flipped 2, dropped 0 unseen) {"core":152,"front":126,"back":174,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":25,"wheel_FR":25,"wheel_RL":25,"wheel_RR":25,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+wrote art/vehicles/cruz-missile/cruz-missile.atlas.png 97040 B sha256 2c08e01223aa11a286f6629fc3cd6b1d6ea43066f51cf01aecf29dce3ab3560f
+wrote art/vehicles/cruz-missile/cruz-missile.emissive.png 20033 B sha256 cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d
+wrote art/vehicles/cruz-missile/cruz-missile.lod0.glb 358396 B sha256 9fe27e567c3e11eccb579343ffcd03adfce37048283c3dd7542d0b8f3b07f391
+wrote art/vehicles/cruz-missile/cruz-missile.lod1.glb 222448 B sha256 9e20c318f4b7b078335241d22ec7a23a85c8365423ea63fb4f52e9d2fc2231a4
+wrote art/vehicles/cruz-missile/cruz-missile.lod2.glb 192200 B sha256 01f1608f7ed60ebfbe95dd053548acfee5723bf440dd872129efdbe5adf408dc
+wrote art/vehicles/cruz-missile/cruz-missile.asset.json 3520 B sha256 5b8cdc5befc70bc4e0f9d5fa5d0a1fa9a992289912790e5f7940e4d591cf8313

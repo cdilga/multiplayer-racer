@@ -9,7 +9,7 @@
       "beads": [
         "br-rgw6"
       ],
-      "summary": "Reference refinement: the AU Hawk keeps its broad teardrop headlamps, oval fish-mouth grille, tall glasshouse and rounded sedan body. The arch crowns now follow the original flank roll; the lower nose supports its bumper slot. Lamps lie on the actual body facets. Lean five-spoke silver wheels at close/medium distance and plain distant discs retain the faceted style. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2104 / 874 / 600 against 3000 / 900 / 600 budgets. The reference sheets include a wing; the deliberate base-sedan no-wing interpretation is retained. Owner review decides recognisability.",
+      "summary": "A smoother arched glasshouse and lower front pane replace the old high, forward side glass. Raised arch cuts now sample the original rounded section at their actual height, removing the old shelves. Nose/tail corners are curved before lamp clipping; the bumper slot and rear lamps are rounded. Side glass clips exactly to substrate triangles; continuous door seams and body-colour moulding replace fragmented marks. LOD0 wheels have a recessed barrel and five spokes; glass is neutral grey. Coarse tiers retain their rear paint-to-glass transition. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2308 / 900 / 590 against 3000 / 900 / 600 budgets. The deliberate no-wing base-sedan interpretation still differs from the sheet. LOD0 side silhouette IoU regresses from 0.9617 to 0.9559; LOD2 side-glass overlap regresses from 0.5551 to 0.5365. Thick dark window trim and plain distant rim discs remain stylised.",
       "lods": 3,
       "parts": 11,
       "specTwin": null
@@ -27,7 +27,7 @@
         "br-p1-d03b-poc-cleanup-uod",
         "br-rgw6"
       ],
-      "summary": "Narrower greenhouse through measured cabin stations and a tapered nose tip; 12-facet LOD0 tyres retain five-spoke depth. Front lamp wraps now clip onto the actual tub triangles, eliminating diagonal occlusion slits. At LOD1 the spoiler endplates retain both visible faces and their contour; hidden thickness funds the conforming lamps. Physics pivots are stored independently of visual extrema. Exported intact triangles: 1913 / 896 / 507 against 2800 / 900 / 600. Front-view cabin widths and nose taper improve; rear-view and small side-view silhouette regressions remain. The weighted score is essentially unchanged at LOD0 and improves slightly at LOD1/2. Lamp attachment is visually continuous after the projection repair; its side/fascia seam remains a visible faceted change in shading.",
+      "summary": "Reworked the actual body after owner feedback: longer overhangs with frozen wheel hubs, a broad curved nose with swept-back corners, upright facet-projected lamps, rolled upper flanks and crowned bonnet sections. Side glazing follows the actual greenhouse triangles, hidden damage bays sit inside the sloped doors, rear graphics follow the sculpted boot/bumper, and cheap repeated wheel detail funds the body. Intact exported triangles: 2052 / 891 / 576 against unchanged 2800 / 900 / 600. Front lamp envelope IoU improves from about 0.53 to 0.72; front silhouette improves while side/rear and coarse whole-view scores regress slightly. These measured local gains and inspected shaded comparisons are a review candidate, not an owner likeness acceptance.",
       "lods": 3,
       "parts": 11,
       "specTwin": null
@@ -59,7 +59,7 @@
       "beads": [
         "br-rgw6"
       ],
-      "summary": "Reference refinement: the Lion President keeps its black roof, yellow fanged lamps, twin bonnet scoops, black/gold stripe and broad rear light bar. A flatter, wider fascia replaces the peaked bonnet tip; its corners recess into faceted planes. The upper arch flares roll back towards the shoulder, and the cabin tapers towards the roof. Flat five-spoke wheels replace hidden barrel and spoke-side geometry. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 1813 / 897 / 576 against 2400 / 900 / 600 budgets. The Hawk Dash spec twin remains unchanged.",
+      "summary": "A new mid-flank crease and upper shoulder roll replace the broad flat side; raised arch cuts sample the original section at their actual height. Reshaped cabin stations, lower rear belt and independently annotated pane boundaries correct the high, forward glass. Window overlays clip to actual substrate triangles. The fascia bends through four broad close-view planes, with graphics sharing that transform. LOD0 wheels gain a shallow dish, lip and broader spokes. Coarse wing endplates remain explicit thin planes with crossed supports; coarse spokes are symmetric. Rear-glass foot stations follow deck height at their own x/z, including the bowed centre, closing the visible foot gap. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2296 / 900 / 592 against 2400 / 900 / 600 budgets. Weighted silhouette overlap regresses at every tier. LOD0 top IoU falls from 0.9365 to 0.9244, while side improves from 0.9467 to 0.9524. LOD1 side/rear and LOD2 side also regress. The LOD1 side-glass gate passes narrowly, 0.5066 against 0.5000. Coarse wing planes, tyre proportions and high spoiler retain the stylised reference interpretation.",
       "lods": 3,
       "parts": 11,
       "specTwin": {
@@ -78,7 +78,7 @@
         "br-bwju",
         "br-rgw6"
       ],
-      "summary": "Real annular tyres and open spoke interiors at every LOD replace opaque wheel caps. The rider has a tapered LOD0 torso, neck clearance, narrower leg stance, lower and better placed elbows, and a helmet peak even at the smallest tier. A retained beak transition avoids a single unbroken plank. Engine reduction was rejected after broad-form comparison; the enclosing engine volume is retained. Original collision inputs are frozen in colliders.json. Exported intact triangles: 2514 / 898 / 596 against 2800 / 900 / 600. Front/rear whole-view silhouettes improve at every tier. LOD0/1 weighted scores improve; LOD2 weighted score regresses by 0.0049, with side/top losses. The bike remains visibly approximate: plastics, engine and low-tier limbs are blockier than the sheet, and the rack/rope/sack differ in detail. It does not meet the general ~0.95 reference-parity target. Open spokes are a real geometry improvement that filled silhouette IoU cannot measure.",
+      "summary": "Reworked the engine as a rounded casting and narrow cylinder with curved right header, rider with nearly upright shirt and tapered shoulder/neck, faceted MX dome/brow/chin and wraparound goggles, chamfered guards, real annular rope and corrected tank/shroud/mudguard transitions. Exported triangles: 2607 / 883 / 600 within original 2800 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. LOD0 weighted silhouette .8504 to .8552; LOD1 .8497 to .8360 and LOD2 .8288 to .8026 regress. New current-geometry engine/torso gates reject the actual baseline at every tier. This remains below the ~.95 global likeness gate and is an explicit owner review candidate, not accepted parity.",
       "lods": 3,
       "parts": 6,
       "specTwin": null
@@ -91,7 +91,7 @@
       "beads": [
         "br-rgw6"
       ],
-      "summary": "Rebuilt around classic CB50 architecture: a curved red/cream tank, exposed finned single-cylinder engine, open diamond frame, slim spoked wheels and one low right exhaust replace the scooter floor and leg shield. The postie rider, carrier, parcels and panniers retain the game identity. Exported triangles: 2287 / 877 / 593 within unchanged 2900 / 900 / 600 budgets. Physics hulls, wheel hubs, anchors and original hinges remain frozen. Owner review decides likeness.",
+      "summary": "Refined the CB50-inspired delivery motorcycle with an octagonal cylinder/cooling fins, curved single right header, rounded tank inset ends and bevelled saddle, continuous tapered arms, shaped hi-vis vest with attached bands, cheek-returning face and arched visor/chin lip. Spoked wheel openings remain real. Exported triangles: 2669 / 894 / 599 within original 2900 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. Weighted silhouette .8563 to .8501 / .8241 to .8210 / .8049 to .7932 regresses; local helmet curvature improves and its new gate rejects the actual baseline at every tier. The primary CB50 image governs one right pipe despite generated contradictions. Review candidate below the ~.95 global target.",
       "lods": 3,
       "parts": 6,
       "specTwin": null
@@ -108,7 +108,7 @@
         "br-bwju.2",
         "br-bwju"
       ],
-      "summary": "Owner-evidence rebuild: separate thin alloy flat tray, closed black TC-style canopy (no rear glazing or invented vents), horizontal amber/red/white tray lamps, checker guards and mudflaps, under-tray boxes and tow ball. The dual cab now follows the newer owner-model rake and narrower tapered roof; roof rack, left awning and right snorkel remain recognizable. Tray/canopy dimensions use the owner tape measurements of 2026-10-21. Existing wheel pivots, collider hull, anchors and handling are frozen. Cab/front styling remains a faceted interpretation, not a scan. LOD0/1/2 qualified budgets remain 2400/900/600; measured totals are recorded in validation.md.",
+      "summary": "Reference-led MQ body refinement: convex lower doors, inset shoulder and glass, crowned multi-section roof and rounded rear side glass. The nose substrate now sweeps back through intermediate facets instead of a square cap, and swept lamps share its geometry. Owner-tape tray/canopy envelopes and angular neutral accessories remain unchanged. Actual physics, hinges, pivots, anchors and collision buffers are frozen. Front styling is an estimate from the newer owner-model provenance; the local photos are rear oblique and uncalibrated.",
       "lods": 3,
       "parts": 11,
       "specTwin": null

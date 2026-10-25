@@ -95,6 +95,34 @@ retain renderer review. Add only the tooling needed for the asset and observed f
 
 ## Close the loop in the real pipeline
 
+### Avoid the weak-pass trap
+
+A technically valid export and an almost unchanged aggregate score are not evidence that a
+reference refinement succeeded. The roster pass following Hawk demonstrated this: models passed
+broad contour gates while retaining short proportions, sloped-away lamps, upright slabs and
+incorrect window envelopes. Treat the owner's named visual defects as the work's acceptance
+questions. Record each defect in a large reference/previous/current comparison, correct its
+generating surface, then show what changed in that region. A finer helmet, window or bevel does
+not excuse a still-wrong torso, cabin or enclosing volume.
+
+Check internal proportions independently of the enclosing mask. Useful examples are body length
+relative to axle spacing, opening dimensions relative to a wall, or head/torso proportions.
+Normalization preserves aspect but can still hide absolute scale, landmark placement and the
+effect of thin protrusions on the bounding box. Inspect any score/section disagreement rather
+than tuning to whichever report passes. Surface-normal or depth-section checks can expose a
+feature flattened onto the wrong plane even when its projected envelope overlaps the reference.
+
+If helpers do the modelling, give them the actual defect, authoritative views and unchanged
+constraints, and require an early visual diagnosis and large comparison images. The integrating
+agent looks at those images and sends specific corrections before accepting their work. Inspect
+coarse tiers separately: removing a station can erase a semantic transition such as painted roof
+to rear glass, while removing hidden thickness can preserve the same silhouette cheaply.
+
+Use diagnostic cameras to judge shape and a separately justified reference hero camera to judge
+recognition. Copying another asset's hero azimuth can change front/side balance enough to mislead
+the comparison. When changing that convention, recapture both candidates. Finally, publish the
+new evidence with the new assets; stale comparison sheets make a correct deployment unreviewable.
+
 Export and load through the actual target renderer. Review relevant LODs, poses/states, material
 variants and gameplay scales. Capture reference/previous/revised/difference views and enlarge the
 regions that motivated the work. Look at every capture; inspect details that numeric masks miss.

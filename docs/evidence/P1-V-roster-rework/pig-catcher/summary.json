@@ -1,0 +1,91 @@
+{
+  "vehicle": "pig-catcher",
+  "candidateSha256": {
+    "model.js": "611809bfcd6e7a4a8e460c033f632e2051c9237bbd6e0a13daa1e5f2b65ffebd",
+    "params.json": "e3ac01bb371b9f792467f805093620a2dceca14f82af55fdcc26b8a2265e2b8d",
+    "vehicle.json": "d81558c46842bacd853d77abd67ce783549fff3cccc389f18f428896cde9d61c",
+    "colliders.json": "b76cdc650fa094a293dc503e20dfb42a7667cd861f895599aeffa0701ae79d5c",
+    "pig-catcher.asset.json": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
+    "pig-catcher.lod0.glb": "5f0c446691e42e1860943b09a5b07cf7c5e80db91bfa06f7c8c84285591ad7d5",
+    "pig-catcher.lod1.glb": "7ffaa28404b7f29fe7393ee1f594f59fc7790f385c3843797794194e50f89b56",
+    "pig-catcher.lod2.glb": "2cf412846bdb05f6de80e50562f1601b1c97527abda94df203f4b5ccbdb0c11e",
+    "refs/lod-plus-1.png": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+    "refs/lowest-lod.png": "a4152314b68076dd9839d19b83924d6b18c1234e87e8aab8972ec53ffbeeb477"
+  },
+  "frozenContracts": {
+    "vehicle.json": {
+      "unchanged": true,
+      "sha256": "d81558c46842bacd853d77abd67ce783549fff3cccc389f18f428896cde9d61c"
+    },
+    "colliders.json": {
+      "unchanged": true,
+      "sha256": "b76cdc650fa094a293dc503e20dfb42a7667cd861f895599aeffa0701ae79d5c"
+    },
+    "pig-catcher.asset.json": {
+      "unchanged": true,
+      "sha256": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4"
+    }
+  },
+  "scores": {
+    "baseline": {
+      "weighted": 0.8504,
+      "views": {
+        "side": 0.8766,
+        "top": 0.8359,
+        "front": 0.8254,
+        "rear": 0.8343
+      },
+      "sourceTris": 2732
+    },
+    "baseline-lod1": {
+      "weighted": 0.8497,
+      "views": {
+        "side": 0.8629,
+        "top": 0.8503,
+        "front": 0.8279,
+        "rear": 0.8352
+      },
+      "sourceTris": 920
+    },
+    "baseline-lod2": {
+      "weighted": 0.8288,
+      "views": {
+        "side": 0.8421,
+        "top": 0.8325,
+        "front": 0.8016,
+        "rear": 0.8133
+      },
+      "sourceTris": 604
+    },
+    "current-lod0": {
+      "weighted": 0.8552,
+      "views": {
+        "side": 0.8682,
+        "top": 0.8253,
+        "front": 0.8642,
+        "rear": 0.8715
+      },
+      "sourceTris": 2798
+    },
+    "current-lod1": {
+      "weighted": 0.836,
+      "views": {
+        "side": 0.8297,
+        "top": 0.8291,
+        "front": 0.8499,
+        "rear": 0.8528
+      },
+      "sourceTris": 894
+    },
+    "current-lod2": {
+      "weighted": 0.8026,
+      "views": {
+        "side": 0.7775,
+        "top": 0.8078,
+        "front": 0.8283,
+        "rear": 0.8334
+      },
+      "sourceTris": 606
+    }
+  }
+}

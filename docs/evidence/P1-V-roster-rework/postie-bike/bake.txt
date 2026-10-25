@@ -1,0 +1,9 @@
+postie-bike.lod0.glb: 2669 tris (budget 2900; optimiser flipped 36, dropped 191 unseen) {"core":902,"front":407,"back":424,"rider":416,"wheel_F":260,"wheel_R":260}
+postie-bike.lod1.glb: 894 tris (budget 900; optimiser flipped 30, dropped 24 unseen) {"core":331,"front":138,"back":102,"rider":187,"wheel_F":68,"wheel_R":68}
+postie-bike.lod2.glb: 599 tris (budget 600; optimiser flipped 28, dropped 17 unseen) {"core":183,"front":78,"back":94,"rider":132,"wheel_F":56,"wheel_R":56}
+wrote art/vehicles/postie-bike/postie-bike.atlas.png 25289 B sha256 cd14f3896ade5312ea88f74924148975ee683d333b5baa71f9f9b117a4bedb43
+wrote art/vehicles/postie-bike/postie-bike.emissive.png 17785 B sha256 e54f845802fed9909b3e19cca9254b7ab59252f30ecd7d06d868bed62cfe56d6
+wrote art/vehicles/postie-bike/postie-bike.lod0.glb 325636 B sha256 34b9315c869d20e8c4b53c29eac8b679924331ee73515b5c05fe77ec4a50abad
+wrote art/vehicles/postie-bike/postie-bike.lod1.glb 134280 B sha256 5ece55ef029291616728296e8e54117444753722b2547d360fa3477eb4435976
+wrote art/vehicles/postie-bike/postie-bike.lod2.glb 105956 B sha256 42aeeef9b3001ed52805a4077bcfe3d26d8c05e9017b0b6f0c65cf6501f0f773
+wrote art/vehicles/postie-bike/postie-bike.asset.json 1962 B sha256 c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499

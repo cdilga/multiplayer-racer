@@ -1,0 +1,22 @@
+{
+  "viewer": "tools/vehicles/view/view.js",
+  "viewerSha256": "5782a055396206eded4a24aaa26257da41c66d1d235d621c5cd194c73be213e8",
+  "camera": {
+    "position": [
+      5.5,
+      2.4,
+      -6.4
+    ],
+    "target": [
+      0,
+      1.1,
+      -0.4
+    ],
+    "fov": 30,
+    "projection": "perspective",
+    "frame": 900,
+    "paint": "#d4d7da"
+  },
+  "browser": "151.0.7922.34",
+  "note": "Photo-inspired left rear oblique. No recovered/calibrated camera claim. Only presentation response altered; actual GLTFLoader and paint-key renderer reused."
+}

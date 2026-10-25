@@ -80,3 +80,19 @@ view's tyre. Exclusions must never remove a mismatching part of the subject. Pos
 needed a brighter dark threshold, and its separate top-view front tyre needed a lower component
 share. Pin the resulting masks, explain each correction, and recapture both baseline and candidate
 with the same settings; scores from different masks cannot demonstrate improvement.
+
+
+### Body form regression (Cruz feedback rework)
+
+`node tools/vehicles/fit/reference-form.mjs cruz-missile` checks the current source at every tier:
+body length / unchanged axle spacing, multiple depth samples across the nose, front-facing lamp
+plane slope and the flank return below the shoulder. Its oracle is the unchanged reference and
+pixel observations in `tools/vehicles/test/fixtures/roster-form.json`, not params assertions.
+`--model <old-model.js> --params <old-params.json>` reproduces the rejected candidate. Source rays
+select the painted body for length/centre measurements so the nudge bar cannot masquerade as a
+flat fascia. Side wraps are excluded from the head-on lamp-normal measurement.
+
+The normal `tools/vehicles/test/reference-form.test.mjs` gate proves the real rejected Cruz fails
+four named checks at every tier and includes missing-lamp/shortened-body defects. It also runs the
+Ute's independent photo/source section checks and proves its previous body fails all twelve.
+These checks establish named forms, not complete likeness; use the shaded/actual-loader reviews.

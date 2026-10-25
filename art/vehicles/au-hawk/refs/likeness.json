@@ -5,7 +5,8 @@
   "notes": [
     "Contours use normalized roof=0 to ground=1; errors are full width/reference height. The fit pipeline excludes the lowest 12.5% to avoid contact shadows.",
     "Features use independently annotated reference crop coordinates. Front/rear lamp tolerances preserve recognizable position/extent while allowing low-poly simplification and generated-sheet projection uncertainty.",
-    "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification."
+    "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification.",
+    "Side-glass polygons are hand annotated from the unchanged lod1 side crop: clear pane perimeter, excluding painted/black pillars; endFacing selects the visible side. Reference lenses/mirrors may occlude glass, and projection does not establish visibility. Coarse limits allow lost pane division. Baseline/source comparison in docs/evidence/P1-V-roster-rework/au-hawk/shape-comparison.json rejects the previous forward/high glass error; existing gates are unchanged."
   ],
   "cameras": {
     "projection": "perspective",
@@ -269,6 +270,103 @@
         0.4,
         0.32,
         0.25
+      ]
+    },
+    {
+      "name": "AU rounded side glass and sedan pillars",
+      "view": "side",
+      "part": "core",
+      "endFacing": true,
+      "uvs": [
+        [
+          0.8875,
+          0.9375
+        ]
+      ],
+      "size": [
+        913,
+        301
+      ],
+      "polygons": [
+        [
+          [
+            320,
+            102
+          ],
+          [
+            354,
+            75
+          ],
+          [
+            405,
+            44
+          ],
+          [
+            454,
+            28
+          ],
+          [
+            491,
+            25
+          ],
+          [
+            482,
+            97
+          ]
+        ],
+        [
+          [
+            514,
+            25
+          ],
+          [
+            554,
+            26
+          ],
+          [
+            593,
+            32
+          ],
+          [
+            593,
+            93
+          ],
+          [
+            514,
+            96
+          ]
+        ],
+        [
+          [
+            614,
+            35
+          ],
+          [
+            642,
+            47
+          ],
+          [
+            661,
+            65
+          ],
+          [
+            667,
+            79
+          ],
+          [
+            661,
+            92
+          ],
+          [
+            614,
+            93
+          ]
+        ]
+      ],
+      "minIou": [
+        0.68,
+        0.64,
+        0.5
       ]
     }
   ],

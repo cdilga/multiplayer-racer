@@ -6,48 +6,48 @@
   "beads": [
     "br-rgw6"
   ],
-  "summary": "Rebuilt around classic CB50 architecture: a curved red/cream tank, exposed finned single-cylinder engine, open diamond frame, slim spoked wheels and one low right exhaust replace the scooter floor and leg shield. The postie rider, carrier, parcels and panniers retain the game identity. Exported triangles: 2287 / 877 / 593 within unchanged 2900 / 900 / 600 budgets. Physics hulls, wheel hubs, anchors and original hinges remain frozen. Owner review decides likeness.",
+  "summary": "Refined the CB50-inspired delivery motorcycle with an octagonal cylinder/cooling fins, curved single right header, rounded tank inset ends and bevelled saddle, continuous tapered arms, shaped hi-vis vest with attached bands, cheek-returning face and arched visor/chin lip. Spoked wheel openings remain real. Exported triangles: 2669 / 894 / 599 within original 2900 / 900 / 600 budgets. Original physics inputs, anchors, hinges and material stay frozen. Weighted silhouette .8563 to .8501 / .8241 to .8210 / .8049 to .7932 regresses; local helmet curvature improves and its new gate rejects the actual baseline at every tier. The primary CB50 image governs one right pipe despite generated contradictions. Review candidate below the ~.95 global target.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "New references generated with Muse from the Honda 1971 CB50 architecture; prompts, cost and primary image are retained in refs/provenance.json. The real Honda image governs a single right exhaust where the generated rear view invents two. Reference | model | silhouette diff use identical frozen level cameras. Corrected masks retain silver engine parts and the separate front tyre. Same-mask LOD0 score .8164 before to .8563 after; this remains an interpretation, not a calibrated replica.",
+    "note": "Unchanged reference and masks, identical frozen diagnostic cameras for shaded/mask captures. Exact source/asset identity and baseline/current scores are in docs/evidence/P1-V-roster-rework/postie-bike/summary.json. Actual rejected baseline source is preserved under baseline/; shape checks reject its named errors. Primary source and generated-camera limitations remain applicable. Honda primary CB50 image governs the single right exhaust; generated left/rear pipe visibility is contradictory.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the new CB50-inspired reference",
+        "label": "LOD0: current source against unchanged reference, frozen cameras",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.8561,
-          "top": 0.844,
-          "front": 0.8604,
-          "rear": 0.877
+          "side": 0.8506,
+          "top": 0.8434,
+          "front": 0.8515,
+          "rear": 0.8607
         },
-        "weightedIou": 0.8563
+        "weightedIou": 0.8501
       },
       {
         "lod": 1,
-        "label": "LOD1 against the new CB50-inspired reference",
+        "label": "LOD1: current source against unchanged reference, frozen cameras",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.8478,
-          "top": 0.7798,
-          "front": 0.8293,
-          "rear": 0.8439
+          "side": 0.8366,
+          "top": 0.7822,
+          "front": 0.831,
+          "rear": 0.8468
         },
-        "weightedIou": 0.8241
+        "weightedIou": 0.821
       },
       {
         "lod": 2,
-        "label": "LOD2 against the new CB50-inspired reference",
+        "label": "LOD2: current source against unchanged reference, frozen cameras",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.826,
-          "top": 0.7732,
-          "front": 0.7978,
-          "rear": 0.8188
+          "side": 0.82,
+          "top": 0.7461,
+          "front": 0.7932,
+          "rear": 0.8161
         },
-        "weightedIou": 0.8049
+        "weightedIou": 0.7932
       }
     ]
   },
@@ -60,7 +60,7 @@
       {
         "lod": 0,
         "glb": "media/model/postie-bike.lod0.glb",
-        "tris": 2287,
+        "tris": 2669,
         "draws": 6,
         "maxTris": 2900,
         "withinBudget": true
@@ -68,7 +68,7 @@
       {
         "lod": 1,
         "glb": "media/model/postie-bike.lod1.glb",
-        "tris": 877,
+        "tris": 894,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -76,7 +76,7 @@
       {
         "lod": 2,
         "glb": "media/model/postie-bike.lod2.glb",
-        "tris": 593,
+        "tris": 599,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -262,27 +262,19 @@
     }
   ],
   "gate": {
-    "result": "PASS",
+    "result": "FAIL",
     "findings": [
       {
         "result": "PASS",
-        "text": "byte-reproducible export, existing triangle budgets and native contract validator."
+        "text": "reproducible bake, native contract, triangle budgets and original sidecar/collider preservation; parent exports.json records exact hashes."
       },
       {
         "result": "PASS",
-        "text": "original collider bytes and complete original sidecar retained."
-      },
-      {
-        "result": "PASS",
-        "text": "local feature/negative-space checks; previous candidate and injected missing/displaced cues fail."
-      },
-      {
-        "result": "PASS",
-        "text": "actual-loader multi-view, colours, all-tier apertures and posed damage review."
+        "text": "current named local form gates; real previous source fails each named defect at all tiers."
       },
       {
         "result": "FAIL",
-        "text": "strict ~.95 silhouette qualification; current fit scores are .8563/.8241/.8049. Owner likeness judgment remains pending."
+        "text": "full global likeness target; see self-review.md for measured regressions."
       }
     ],
     "report": "media/gate/validation.md"

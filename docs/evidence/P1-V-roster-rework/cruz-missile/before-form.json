@@ -1,0 +1,122 @@
+[
+  {
+    "lod": 0,
+    "checks": [
+      {
+        "name": "lengthWheelbase",
+        "value": 1.6082089552238807,
+        "min": 1.63,
+        "max": 1.72,
+        "pass": false
+      },
+      {
+        "name": "noseMidSetback",
+        "value": 0,
+        "min": 0.02,
+        "max": 0.1,
+        "pass": false
+      },
+      {
+        "name": "noseCornerSetback",
+        "value": 0.27200000000000024,
+        "min": 0.12,
+        "max": 0.32,
+        "pass": true
+      },
+      {
+        "name": "lampUpForward",
+        "value": 1.0095188305058533,
+        "min": 0,
+        "max": 0.95,
+        "pass": false
+      },
+      {
+        "name": "upperFlankReturn",
+        "value": 0.02585227272727275,
+        "min": 0.045,
+        "max": 0.135,
+        "pass": false
+      }
+    ]
+  },
+  {
+    "lod": 1,
+    "checks": [
+      {
+        "name": "lengthWheelbase",
+        "value": 1.6082089552238807,
+        "min": 1.63,
+        "max": 1.72,
+        "pass": false
+      },
+      {
+        "name": "noseMidSetback",
+        "value": 0,
+        "min": 0.02,
+        "max": 0.1,
+        "pass": false
+      },
+      {
+        "name": "noseCornerSetback",
+        "value": 0.27200000000000024,
+        "min": 0.12,
+        "max": 0.32,
+        "pass": true
+      },
+      {
+        "name": "lampUpForward",
+        "value": 1.0095188305058533,
+        "min": 0,
+        "max": 0.95,
+        "pass": false
+      },
+      {
+        "name": "upperFlankReturn",
+        "value": 0.02585227272727275,
+        "min": 0.045,
+        "max": 0.135,
+        "pass": false
+      }
+    ]
+  },
+  {
+    "lod": 2,
+    "checks": [
+      {
+        "name": "lengthWheelbase",
+        "value": 1.6082089552238807,
+        "min": 1.63,
+        "max": 1.72,
+        "pass": false
+      },
+      {
+        "name": "noseMidSetback",
+        "value": 0,
+        "min": 0.02,
+        "max": 0.1,
+        "pass": false
+      },
+      {
+        "name": "noseCornerSetback",
+        "value": 0.27200000000000024,
+        "min": 0.12,
+        "max": 0.32,
+        "pass": true
+      },
+      {
+        "name": "lampUpForward",
+        "value": 1.0095188305058533,
+        "min": 0,
+        "max": 0.95,
+        "pass": false
+      },
+      {
+        "name": "upperFlankReturn",
+        "value": 0.02585227272727275,
+        "min": 0.045,
+        "max": 0.135,
+        "pass": false
+      }
+    ]
+  }
+]

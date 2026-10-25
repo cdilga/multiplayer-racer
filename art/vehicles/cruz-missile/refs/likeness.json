@@ -20,9 +20,9 @@
       "top": 10
     },
     "hero": {
-      "az": 52,
-      "elev": 0,
-      "dist": 11,
+      "az": 34,
+      "elev": 2,
+      "dist": 9,
       "fov": 26,
       "targetY": 0.78
     },

@@ -1,0 +1,23 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD.front
+PASS camera.camD.rear
+PASS camera.camD.side
+PASS camera.camD.top
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS rider neck clears the shoulder and shirt envelope error=0.0060 limit=0.055
+PASS fork and body section width error=0.0240 limit=0.065
+PASS rear rack and standing rider leg sections error=0.0220 limit=0.055
+PASS front beak narrows towards its tip error=0.0149 limit=0.03
+PASS MX helmet peak goggles and chin envelope IoU=0.679 minimum=0.55

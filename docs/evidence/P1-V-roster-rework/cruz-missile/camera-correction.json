@@ -1,0 +1,17 @@
+{
+  "oldHero": {
+    "az": 52,
+    "elev": 0,
+    "dist": 11,
+    "fov": 26,
+    "targetY": 0.78
+  },
+  "newHero": {
+    "az": 34,
+    "elev": 2,
+    "dist": 9,
+    "fov": 26,
+    "targetY": 0.78
+  },
+  "why": "Previous 52 degree azimuth overemphasized the side versus the reference front face. Hero comparison uses 34 degree azimuth and low2 degree pitch; uncalibrated generated reference, explicit convention. All before and after captures recaptured. Diagnostic cameras unchanged."
+}

@@ -10,29 +10,29 @@
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "Owner-evidence rebuild: separate thin alloy flat tray, closed black TC-style canopy (no rear glazing or invented vents), horizontal amber/red/white tray lamps, checker guards and mudflaps, under-tray boxes and tow ball. The dual cab now follows the newer owner-model rake and narrower tapered roof; roof rack, left awning and right snorkel remain recognizable. Tray/canopy dimensions use the owner tape measurements of 2026-10-21. Existing wheel pivots, collider hull, anchors and handling are frozen. Cab/front styling remains a faceted interpretation, not a scan. LOD0/1/2 qualified budgets remain 2400/900/600; measured totals are recorded in validation.md.",
+  "summary": "Reference-led MQ body refinement: convex lower doors, inset shoulder and glass, crowned multi-section roof and rounded rear side glass. The nose substrate now sweeps back through intermediate facets instead of a square cap, and swept lamps share its geometry. Owner-tape tray/canopy envelopes and angular neutral accessories remain unchanged. Actual physics, hinges, pivots, anchors and collision buffers are frozen. Front styling is an estimate from the newer owner-model provenance; the local photos are rear oblique and uncalibrated.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "art/vehicles/tradie-ute/refs/owner-2026-10-21/20261021_204514.jpg",
     "compare": [],
-    "note": "Authoritative real night photos and owner tape dimensions supersede the earlier Muse sheet, whose score only measures resemblance to a generated composite. See refs/measured-reference.json, measured-check.json and the validation report. Real photos are perspective, occluded and uncalibrated: no photo silhouette IoU is claimed.",
+    "note": "Authoritative real night photos and owner tape dimensions supersede the earlier Muse sheet, whose score only measures resemblance to a generated composite. See refs/measured-reference.json, measured-check.json and the validation report. Real photos are perspective, occluded and uncalibrated: no photo silhouette IoU is claimed. New local shape gates and baseline failure receipts are recorded in the current validation report.",
     "measured": {
       "oracle": "art/vehicles/tradie-ute/refs/measured-reference.json",
-      "report": "docs/evidence/P1-V-roster-reference/tradie-ute/measured-check.json"
+      "report": "docs/evidence/P1-V-roster-rework/tradie-ute/measured-check.json"
     }
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-roster-reference/tradie-ute/ladder.png",
-    "validation": "docs/evidence/P1-V-roster-reference/tradie-ute/validation.md"
+    "sheet": "docs/evidence/P1-V-roster-rework/tradie-ute/final/ladder.png",
+    "validation": "docs/evidence/P1-V-roster-rework/tradie-ute/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip.png",
-    "overview": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-roster-rework/tradie-ute/final/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-rework/tradie-ute/final/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray and canopy) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-roster-reference/tradie-ute/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-roster-rework/tradie-ute/final/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Player colour on cab/body paint key. Canopy including lid, alloy tray, rack, awning, bar, glass, tyres and lamps remain neutral; roof number remains above the cab."
   },
@@ -40,26 +40,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-1.png"
+      "path": "docs/evidence/P1-V-roster-rework/tradie-ute/final/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-4.png"
+      "path": "docs/evidence/P1-V-roster-rework/tradie-ute/final/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-24.png"
+      "path": "docs/evidence/P1-V-roster-rework/tradie-ute/final/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-roster-rework/tradie-ute/final/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-roster-reference/tradie-ute/validation.md"
+    "report": "docs/evidence/P1-V-roster-rework/tradie-ute/validation.md"
   },
   "profile": "assets/profiles/tradie-ute.json",
   "handling": {

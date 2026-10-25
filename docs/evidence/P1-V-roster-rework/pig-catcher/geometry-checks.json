@@ -1,0 +1,66 @@
+[
+  {
+    "id": "pig-catcher",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 2607,
+        "budget": 2800,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      },
+      {
+        "lod": 1,
+        "tris": 883,
+        "budget": 900,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      },
+      {
+        "lod": 2,
+        "tris": 600,
+        "budget": 600,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      }
+    ]
+  },
+  {
+    "id": "postie-bike",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 2669,
+        "budget": 2900,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      },
+      {
+        "lod": 1,
+        "tris": 894,
+        "budget": 900,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      },
+      {
+        "lod": 2,
+        "tris": 599,
+        "budget": 600,
+        "finite": true,
+        "nonzeroArea": true,
+        "oneMaterial": true,
+        "pivotsUnchanged": true
+      }
+    ]
+  }
+]

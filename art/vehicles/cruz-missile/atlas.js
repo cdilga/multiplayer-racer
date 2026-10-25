@@ -17,7 +17,7 @@ export const SW = ['paint', 'trim', 'glass', 'tyre', 'rim', 'head', 'led', 'tail
 export const W = 1024, H = 512;
 const SX = 0.7, CW = (1 - SX) / 4, CH = 1 / 8;
 export function swatchUV(name) { const i = SW.indexOf(name); if (i < 0) throw new Error('swatch ' + name); return [SX + CW * (i % 4 + 0.5), 1 - CH * (((i / 4) | 0) + 0.5)]; }
-export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, 0.35, 0.5], deck: [0.35, 0, SX, 0.5], roof: [SX, 0, 1, 0.25] };
+export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, 0.35, 0.5], deck: [0.35, 0, SX, 0.5], roof: [SX, 0, 1, 0.25], wheel: [.925,.375,1,.5], windscreen: [.7,.25,.925,.375] };
 
 export const DEFAULT_COLOURS = {
   paint: '#22c3e6', trim: '#26282c', glass: '#303840', tyre: '#2a2a2c', rim: '#4a4c50', head: '#fff2c8', led: '#9ff6ff', tail: '#e8311f',
@@ -139,7 +139,23 @@ function raster(shapes, background) {
 /** The base-colour and emissive atlases as RGBA pixel buffers (`W`×`H`, rows top to bottom). */
 export function drawAtlas(colours = BAKE_COLOURS) {
   const c = { ...DEFAULT_COLOURS, ...colours };
-  const base = raster([...sideShapes(c), ...topShapes(c), ...deckShapes(c), ...roofShapes(c), ...swatchShapes(c, false)], '#000000');
+  const detail=[];
+  const rect=(r,fill)=>detail.push({rect:r,fill});
+  const poly=(p,fill)=>detail.push({poly:p,fill});
+  // Five spokes and an inset barrel at distance, without repeated spoke sidewalls.
+  {const [u0,v0,u1,v1]=REGION.wheel,x=(u0+u1)*W/2,y=(1-(v0+v1)/2)*H,rx=(u1-u0)*W*.46,ry=(v1-v0)*H*.46;
+    rect([u0*W,(1-v1)*H,(u1-u0)*W,(v1-v0)*H],c.under);
+    for(let k=0;k<5;k++){const a=Math.PI/2+.2+k*Math.PI*2/5;
+      poly([[.14,-.1],[.92,-.19],[.92,.19],[.14,.1]].map(([r,t])=>[x+rx*(Math.cos(a)*r-Math.sin(a)*t),y-ry*(Math.sin(a)*r+Math.cos(a)*t)]),c.rim);}
+    poly(Array.from({length:6},(_,i)=>[x+rx*.22*Math.cos(i*Math.PI/3),y+ry*.22*Math.sin(i*Math.PI/3)]),c.trim);
+  }
+  // A restrained reflection and seat silhouettes, matching the reference's visible cabin interior.
+  {const [u0,v0,u1,v1]=REGION.windscreen,x=u0*W,y=(1-v1)*H,w=(u1-u0)*W,h=(v1-v0)*H;
+    rect([x,y,w,h],c.glass);
+    poly([[x,y],[x+w*.6,y],[x+w*.3,y+h],[x,y+h]],'#3b4752');
+    for(const f of [.15,.60])poly([[x+w*f,y+h*.88],[x+w*f,y+h*.48],[x+w*(f+.04),y+h*.44],[x+w*(f+.04),y+h*.21],[x+w*(f+.19),y+h*.21],[x+w*(f+.19),y+h*.44],[x+w*(f+.24),y+h*.48],[x+w*(f+.27),y+h*.88]],'#242b32');
+  }
+  const base = raster([...sideShapes(c), ...topShapes(c), ...deckShapes(c), ...roofShapes(c), ...swatchShapes(c, false),...detail], '#000000');
   const emissive = raster(swatchShapes(c, true), '#000000');
   return { width: W, height: H, base, emissive };
 }

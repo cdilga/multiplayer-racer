@@ -1,0 +1,13 @@
+✔ tradie-ute LOD0: hinges match the skin edge or exact frozen attachment (11.278417ms)
+✔ tradie-ute LOD1: hinges match the skin edge or exact frozen attachment (3.269958ms)
+✔ tradie-ute LOD2: hinges match the skin edge or exact frozen attachment (1.596875ms)
+✔ tradie-ute: the pivots are the same at every LOD and in the committed sidecar (8.341875ms)
+✔ tradie-ute: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (8.948417ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.445542

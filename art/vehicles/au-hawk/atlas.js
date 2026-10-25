@@ -22,9 +22,9 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
 export const SPAN = { side: [5.1, 1.8], top: [5.1, 2.1] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#f06a1a', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#b9bfc8', head: '#dde2e6', led: '#fff6dc', tail: '#a8161b',
+  paint: '#f06a1a', trim: '#26282c', glass: '#48494c', tyre: '#2a2a2c', rim: '#b9bfc8', head: '#dde2e6', led: '#fff6dc', tail: '#a8161b',
   stripe: '#16181c', grille: '#111214', white: '#f2f4f8', fog: '#ffe9b0', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', indicator: '#ff9a1a',
-  roofblack: '#141518', taildk: '#3a1412', barrel: '#7a8089',
+  roofblack: '#141518', taildk: '#3a1412', barrel: '#25282d',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };

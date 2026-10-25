@@ -6,7 +6,7 @@
   "beads": [
     "br-rgw6"
   ],
-  "summary": "Reference refinement: the Lion President keeps its black roof, yellow fanged lamps, twin bonnet scoops, black/gold stripe and broad rear light bar. A flatter, wider fascia replaces the peaked bonnet tip; its corners recess into faceted planes. The upper arch flares roll back towards the shoulder, and the cabin tapers towards the roof. Flat five-spoke wheels replace hidden barrel and spoke-side geometry. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 1813 / 897 / 576 against 2400 / 900 / 600 budgets. The Hawk Dash spec twin remains unchanged.",
+  "summary": "A new mid-flank crease and upper shoulder roll replace the broad flat side; raised arch cuts sample the original section at their actual height. Reshaped cabin stations, lower rear belt and independently annotated pane boundaries correct the high, forward glass. Window overlays clip to actual substrate triangles. The fascia bends through four broad close-view planes, with graphics sharing that transform. LOD0 wheels gain a shallow dish, lip and broader spokes. Coarse wing endplates remain explicit thin planes with crossed supports; coarse spokes are symmetric. Rear-glass foot stations follow deck height at their own x/z, including the bowed centre, closing the visible foot gap. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2296 / 900 / 592 against 2400 / 900 / 600 budgets. Weighted silhouette overlap regresses at every tier. LOD0 top IoU falls from 0.9365 to 0.9244, while side improves from 0.9467 to 0.9524. LOD1 side/rear and LOD2 side also regress. The LOD1 side-glass gate passes narrowly, 0.5066 against 0.5000. Coarse wing planes, tyre proportions and high spoiler retain the stylised reference interpretation.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "hawk-dash",
@@ -21,36 +21,36 @@
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9467,
-          "top": 0.9365,
-          "front": 0.9562,
-          "rear": 0.9645
+          "side": 0.9524,
+          "top": 0.9244,
+          "front": 0.9568,
+          "rear": 0.9653
         },
-        "weightedIou": 0.9478
+        "weightedIou": 0.9466
       },
       {
         "lod": 1,
         "label": "LOD1 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9414,
-          "top": 0.9288,
-          "front": 0.9588,
-          "rear": 0.9651
+          "side": 0.933,
+          "top": 0.9351,
+          "front": 0.9552,
+          "rear": 0.955
         },
-        "weightedIou": 0.9438
+        "weightedIou": 0.9402
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.946,
-          "top": 0.95,
-          "front": 0.947,
-          "rear": 0.9528
+          "side": 0.9352,
+          "top": 0.9519,
+          "front": 0.9467,
+          "rear": 0.9518
         },
-        "weightedIou": 0.9484
+        "weightedIou": 0.9444
       }
     ]
   },
@@ -63,7 +63,7 @@
       {
         "lod": 0,
         "glb": "media/model/lion-president.lod0.glb",
-        "tris": 1813,
+        "tris": 2296,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -71,7 +71,7 @@
       {
         "lod": 1,
         "glb": "media/model/lion-president.lod1.glb",
-        "tris": 897,
+        "tris": 900,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -79,7 +79,7 @@
       {
         "lod": 2,
         "glb": "media/model/lion-president.lod2.glb",
-        "tris": 576,
+        "tris": 592,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -367,19 +367,31 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "code-built export, unchanged triangle budgets and reproducible baked bytes."
+        "text": "Every baked visible triangle count meets its tier budget."
       },
       {
         "result": "PASS",
-        "text": "current local reference gates at all LODs; old candidates and meaningful injected defects rejected."
+        "text": "Focused likeness suite: 10 tests; frozen attachment-pivot suite: 10 tests."
       },
       {
         "result": "PASS",
-        "text": "original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks."
+        "text": "`node tools/vehicles/bake.mjs --check art/vehicles/lion-president`; see `reproducibility.log`."
+      },
+      {
+        "result": "PASS",
+        "text": "Independent shape reproduction: all current tiers pass; incoming failures are retained above."
+      },
+      {
+        "result": "PASS",
+        "text": "Vehicle contract, collider data and baked attachment sidecar have no rework diff; handling, anchors, hinge transforms and budgets remain unchanged. Parent integration runs complete contract/settle proof."
       },
       {
         "result": "WARN",
-        "text": "whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending."
+        "text": "Measured silhouette regressions and interpretation differences remain as stated above."
+      },
+      {
+        "result": "WARN",
+        "text": "Owner likeness approval, real-device playtests and hardware performance are not claimed."
       }
     ],
     "report": "media/gate/validation.md"

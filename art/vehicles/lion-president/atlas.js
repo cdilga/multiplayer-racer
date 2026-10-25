@@ -22,7 +22,7 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5] };
 export const SPAN = { side: [4.8, 1.6], top: [4.8, 1.9] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#d8231c', trim: '#232427', glass: '#3e4955', tyre: '#2a2a2c', rim: '#4a4d52', head: '#ffdc2e', led: '#ffe84a', tail: '#e8311f',
+  paint: '#d8231c', trim: '#232427', glass: '#3e4955', tyre: '#2a2a2c', rim: '#62666c', head: '#ffdc2e', led: '#ffe84a', tail: '#e8311f',
   stripe: '#16181c', grille: '#111214', roofblack: '#141518', gold: '#e2b23a', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', caliper: '#d61a1a', taildk: '#4a0b08',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */

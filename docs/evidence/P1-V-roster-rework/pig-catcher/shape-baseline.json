@@ -1,0 +1,62 @@
+{
+  "reference": "art/vehicles/pig-catcher/refs/lod-plus-1.png",
+  "referenceHash": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+  "referenceIdentity": true,
+  "lods": [
+    {
+      "lod": 0,
+      "checks": [
+        {
+          "name": "rounded lower crankcase narrows before its bottom",
+          "value": 1,
+          "max": 0.82,
+          "pass": false
+        },
+        {
+          "name": "standing rider shirt remains nearly upright",
+          "value": 0.3652460984393756,
+          "max": 0.25,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 1,
+      "checks": [
+        {
+          "name": "rounded lower crankcase narrows before its bottom",
+          "value": 1,
+          "max": 0.82,
+          "pass": false
+        },
+        {
+          "name": "standing rider shirt remains nearly upright",
+          "value": 0.32608695652173925,
+          "max": 0.25,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 2,
+      "checks": [
+        {
+          "name": "rounded lower crankcase narrows before its bottom",
+          "value": 1,
+          "max": 0.82,
+          "pass": false
+        },
+        {
+          "name": "standing rider shirt remains nearly upright",
+          "value": 0.32608695652173925,
+          "max": 0.25,
+          "pass": false
+        }
+      ],
+      "pass": false
+    }
+  ],
+  "pass": false
+}

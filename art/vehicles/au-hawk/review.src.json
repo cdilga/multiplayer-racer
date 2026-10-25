@@ -6,7 +6,7 @@
  "beads": [
   "br-rgw6"
  ],
- "summary": "Reference refinement: the AU Hawk keeps its broad teardrop headlamps, oval fish-mouth grille, tall glasshouse and rounded sedan body. The arch crowns now follow the original flank roll; the lower nose supports its bumper slot. Lamps lie on the actual body facets. Lean five-spoke silver wheels at close/medium distance and plain distant discs retain the faceted style. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2104 / 874 / 600 against 3000 / 900 / 600 budgets. The reference sheets include a wing; the deliberate base-sedan no-wing interpretation is retained. Owner review decides recognisability.",
+ "summary": "A smoother arched glasshouse and lower front pane replace the old high, forward side glass. Raised arch cuts now sample the original rounded section at their actual height, removing the old shelves. Nose/tail corners are curved before lamp clipping; the bumper slot and rear lamps are rounded. Side glass clips exactly to substrate triangles; continuous door seams and body-colour moulding replace fragmented marks. LOD0 wheels have a recessed barrel and five spokes; glass is neutral grey. Coarse tiers retain their rear paint-to-glass transition. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2308 / 900 / 590 against 3000 / 900 / 600 budgets. The deliberate no-wing base-sedan interpretation still differs from the sheet. LOD0 side silhouette IoU regresses from 0.9617 to 0.9559; LOD2 side-glass overlap regresses from 0.5551 to 0.5365. Thick dark window trim and plain distant rim discs remain stylised.",
  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
  "reference": {
   "sheet": "art/vehicles/au-hawk/refs/lod-plus-1.png",
@@ -14,32 +14,32 @@
    {
     "lod": 0,
     "label": "LOD0 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/au-hawk/after-lod0"
+    "dir": "docs/evidence/P1-V-roster-rework/au-hawk/after-lod0"
    },
    {
     "lod": 1,
     "label": "LOD1 against the 'lod + 1' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/au-hawk/after-lod1"
+    "dir": "docs/evidence/P1-V-roster-rework/au-hawk/after-lod1"
    },
    {
     "lod": 2,
     "label": "LOD2 against the 'lowest' reference sheet",
-    "dir": "docs/evidence/P1-V-roster-reference/au-hawk/after-lod2"
+    "dir": "docs/evidence/P1-V-roster-rework/au-hawk/after-lod2"
    }
   ],
   "note": "Unchanged generated reference sheets. Each comparison shows reference, revised render and silhouette diff through frozen shared perspective cameras (50m front/rear, 10m side/top, horizontal optical axis). Before/after and local reference contours/lamp envelopes are recorded in validation.md. Generated views are not calibrated photographs; measured regressions are disclosed."
  },
  "turntable": {
-  "sheet": "docs/evidence/P1-V-roster-reference/au-hawk/loader/lods.png",
-  "validation": "docs/evidence/P1-V-roster-reference/au-hawk/validation.md"
+  "sheet": "docs/evidence/P1-V-roster-rework/au-hawk/baked/lods.png",
+  "validation": "docs/evidence/P1-V-roster-rework/au-hawk/validation.md"
  },
  "damage": {
-  "strip": "docs/evidence/P1-V-roster-reference/au-hawk/loader/damage-strip.png",
-  "overview": "docs/evidence/P1-V-roster-reference/au-hawk/loader/damage-strip-overview.png",
+  "strip": "docs/evidence/P1-V-roster-rework/au-hawk/loader/damage-strip.png",
+  "overview": "docs/evidence/P1-V-roster-rework/au-hawk/loader/damage-strip-overview.png",
   "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
  },
  "paints": {
-  "sheet": "docs/evidence/P1-V-roster-reference/au-hawk/loader/paints-strip.png",
+  "sheet": "docs/evidence/P1-V-roster-rework/au-hawk/loader/paints-strip.png",
   "identity": "art/ui/tokens.json",
   "pattern": "Seat colour on the paint key (white texels tint: body and bumpers; the glass, lamps, grille, badges, black mirrors, rims and tyres keep their colour), the number on the roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. No livery: the AU has none."
  },
@@ -47,26 +47,26 @@
   {
    "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
    "size": "large",
-   "path": "docs/evidence/P1-V-roster-reference/au-hawk/loader/grid-1.png"
+   "path": "docs/evidence/P1-V-roster-rework/au-hawk/loader/grid-1.png"
   },
   {
    "label": "Four tiles",
    "size": "medium",
-   "path": "docs/evidence/P1-V-roster-reference/au-hawk/loader/grid-4.png"
+   "path": "docs/evidence/P1-V-roster-rework/au-hawk/loader/grid-4.png"
   },
   {
    "label": "24 tiles, small (each car about 100 px)",
    "size": "small",
-   "path": "docs/evidence/P1-V-roster-reference/au-hawk/loader/grid-24.png"
+   "path": "docs/evidence/P1-V-roster-rework/au-hawk/loader/grid-24.png"
   },
   {
    "label": "From the Derby overview camera (top-down damage row)",
    "size": "overview",
-   "path": "docs/evidence/P1-V-roster-reference/au-hawk/loader/damage-strip-overview.png"
+   "path": "docs/evidence/P1-V-roster-rework/au-hawk/loader/damage-strip-overview.png"
   }
  ],
  "gate": {
-  "report": "docs/evidence/P1-V-roster-reference/au-hawk/validation.md"
+  "report": "docs/evidence/P1-V-roster-rework/au-hawk/validation.md"
  },
  "profile": "assets/profiles/au-hawk.json",
  "handling": {

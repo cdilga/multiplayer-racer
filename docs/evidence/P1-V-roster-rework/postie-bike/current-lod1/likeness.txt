@@ -1,0 +1,21 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS helmet and delivery pannier width bands error=0.0219 limit=0.065
+PASS delivery stance widens below the torso error=0.0022 limit=0.09
+PASS helmet and rear pannier envelopes error=0.0219 limit=0.065
+PASS narrow motorcycle front beyond mail carrier error=0.0317 limit=0.05
+PASS rounded cream tank inset replaces scooter leg shield IoU=0.485 minimum=0.35
+PASS classic round headlamp envelope IoU=0.583 minimum=0.35

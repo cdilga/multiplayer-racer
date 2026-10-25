@@ -1,0 +1,1 @@
+art/vehicles/au-hawk/au-hawk.asset.json: ok (jj.vehicle.v1, triangles per LOD [2308, 900, 590])

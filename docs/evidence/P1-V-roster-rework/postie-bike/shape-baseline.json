@@ -1,0 +1,44 @@
+{
+  "reference": "art/vehicles/postie-bike/refs/lod-plus-1.png",
+  "referenceHash": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+  "referenceIdentity": true,
+  "lods": [
+    {
+      "lod": 0,
+      "checks": [
+        {
+          "name": "helmet face curves back into both cheek edges",
+          "value": 0,
+          "min": 0.015,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 1,
+      "checks": [
+        {
+          "name": "helmet face curves back into both cheek edges",
+          "value": 0,
+          "min": 0.015,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 2,
+      "checks": [
+        {
+          "name": "helmet face curves back into both cheek edges",
+          "value": null,
+          "min": 0.015,
+          "pass": false
+        }
+      ],
+      "pass": false
+    }
+  ],
+  "pass": false
+}

@@ -1,107 +1,61 @@
-# AU Hawk: reference refinement validation
+# AU Hawk: rework validation
 
-Vehicle Model Validation: PASS for the bounded visual refinement and unchanged-physics proof; full production gate remains INCOMPLETE.
+Vehicle Model Validation: PASS for bounded visual rework and source/bake checks; production hardware qualification remains INCOMPLETE.
 
-**Bead:** br-rgw6. **Date:** 2026-10-25. **Build:** working-tree model/bake delta over `9388bd30581aca3647ddfa95649d589ef54727b5`; parent integration/publication records the resulting commit. **Machine:** repository Mac, headless Playwright Chromium 151.0.7922.34, software WebGL. No hardware GPU or device performance qualification is claimed.
+Bead `br-rgw6`, 2026-10-25. Fresh working-tree final source/bake; parent integration records the publication commit. Machine: repository Mac, headless Playwright Chromium 151.0.7922.34, software WebGL. Desktop viewer evidence; no real-device or GPU performance qualification is claimed.
 
-Requirements: owner R81/R86; master plan §§12.3–12.5; game-asset-reference-modelling, lowpoly-model-from-refs and vehicle-model-validation skills. Scope is source geometry and its evidence, preserving the pre-existing handling and damage contract.
+Workflow: R81/R86, master plan §§12.3–12.5, game-asset-reference-modelling, lowpoly-model-from-refs and vehicle-model-validation skills. Unchanged references and cameras are the oracle. `baseline-source/` freezes the rejected incoming source/params/atlas; exact source/reference hashes and cameras are in `shape-comparison.json`. The accepted Hawk Dash was not edited.
 
-## Candidate and reference decisions
+## Form changes
 
-The AU keeps the long rounded sedan, tall glasshouse, swept teardrop headlamps and oval grille. The most useful fixes were the disconnected lamp/decal facets, the flank roll at raised arch crowns, and the lower bumper substrate. Decals now clip to actual body triangles rather than an independent grid. The nose underside was lowered to support the slot and fog lamps at LOD0/1. The cabin dimensions were retained after an unhelpful roof experiment. LOD1 uses an extra arch station to avoid a triangular crown. Five thin silver spokes replace the repeated thick wheel geometry at LOD0/1; LOD2 uses the simple silver discs in its lowest-tier sheet.
-
-The unchanged per-tier sheets and masks are identified by SHA-256 in `art/vehicles/au-hawk/refs/likeness.json`. `baseline-source/` freezes the original model, parameters, contract, sidecar, LOD0 collider-bearing GLB and pivots. The before/after images use the same frozen cameras: perspective projection; front/rear optical axes horizontal at 50m; side/top at 10m; front/rear hero elevation 0°, azimuth 52°/140°, distance 11m, FOV 26°, target height 0.78m. This removes the flattering elevated view from the diagnostic decision.
+A smoother arched glasshouse and lower front pane replace the old high, forward side glass. Raised arch cuts now sample the original rounded section at their actual height, removing the old shelves. Nose/tail corners are curved before lamp clipping; the bumper slot and rear lamps are rounded. Side glass clips exactly to substrate triangles; continuous door seams and body-colour moulding replace fragmented marks. LOD0 wheels have a recessed barrel and five spokes; glass is neutral grey. Coarse tiers retain their rear paint-to-glass transition.
 
 ## Exported geometry
 
-Counts below are the baked/pruned runtime geometry, excluding collider meshes. The fitter reports unpruned source geometry including internal bays, so its count is not the exported budget count.
+| LOD | Visible triangles | Budget |
+|---|---:|---:|
+| 0 | 2308 | 3000 |
+| 1 | 900 | 900 |
+| 2 | 590 | 600 |
 
-| LOD | Before | After | Budget | Each wheel before → after |
-|---|---:|---:|---:|---:|
-| 0 | 2906 | 2104 | 3000 | 167 → 50 |
-| 1 | 896 | 874 | 900 | 30 → 30 |
-| 2 | 600 | 600 | 600 | 38 → 28 |
-
-Per-part final counts (interior rows are documented separately and excluded from the exported budget total):
-
-| Part | LOD0 | LOD1 | LOD2 |
-|---|---:|---:|---:|
-| core | 664 | 188 | 156 |
-| front | 600 | 290 | 176 |
-| back | 536 | 228 | 132 |
-| door_FL | 34 | 16 | 6 |
-| door_FR | 34 | 16 | 6 |
-| door_RL | 18 | 8 | 6 |
-| door_RR | 18 | 8 | 6 |
-| wheel_FL | 50 | 30 | 28 |
-| wheel_FR | 50 | 30 | 28 |
-| wheel_RL | 50 | 30 | 28 |
-| wheel_RR | 50 | 30 | 28 |
-| interior_engine | 24 | 24 | 24 |
-| interior_cabin | 36 | 36 | 36 |
-| interior_boot | 24 | 24 | 24 |
+`bake.log` records per-part counts and output hashes. Runtime budget totals exclude interior bays and colliders. Fitter `stats.tris` includes unpruned source geometry/interiors, so it is not the exported budget count. Physics pivots remain separate from the revised visual shell.
 
 ## Frozen-camera silhouette results
 
-Values are before → after. Whole-car IoU is only one diagnostic: local shapes and graphics can improve while this aggregate falls. Regressions are retained here rather than hidden by the weighted number.
+Perspective, horizontal front/rear optical axis at 50 m, side/top at 10 m; hero azimuth 52°/140°, elevation 0°, distance 11 m, FOV 26°, target height 0.78 m. Generated sheets are not calibrated photographs. Values are incoming → revised.
 
-| LOD | Weighted | Side | Top | Front | Rear |
+| LOD | Weighted IoU | Side | Top | Front | Rear |
 |---|---:|---:|---:|---:|---:|
-| 0 | 0.9652 → 0.9612 | 0.9630 → 0.9617 | 0.9756 → 0.9670 | 0.9512 → 0.9518 | 0.9640 → 0.9577 |
-| 1 | 0.9614 → 0.9569 | 0.9597 → 0.9614 | 0.9672 → 0.9541 | 0.9568 → 0.9568 | 0.9586 → 0.9507 |
-| 2 | 0.9595 → 0.9517 | 0.9521 → 0.9532 | 0.9719 → 0.9426 | 0.9569 → 0.9619 | 0.9573 → 0.9556 |
+| 0 | 0.9612 → 0.9615 | 0.9617 → 0.9559 | 0.9670 → 0.9748 | 0.9518 → 0.9525 | 0.9577 → 0.9590 |
+| 1 | 0.9569 → 0.9600 | 0.9614 → 0.9590 | 0.9541 → 0.9653 | 0.9568 → 0.9573 | 0.9507 → 0.9546 |
+| 2 | 0.9517 → 0.9542 | 0.9532 → 0.9557 | 0.9426 → 0.9494 | 0.9619 → 0.9575 | 0.9556 → 0.9562 |
 
-AU front and medium/distant side measures hold or improve, but top/rear and weighted scores regress. The distant top silhouette is the largest regression, associated with simplified wheels and the revised guard/plan contour. The candidate is retained for coherent lamps, visible bumper slot and leaner wheel construction; this is not a claim of universal silhouette improvement.
+The deliberate no-wing base-sedan interpretation still differs from the sheet. LOD0 side silhouette IoU regresses from 0.9617 to 0.9559; LOD2 side-glass overlap regresses from 0.5551 to 0.5365. Thick dark window trim and plain distant rim discs remain stylised.
 
-## Local reference gates
+## Independent local oracle
 
-`checks.json` records source contour tests against reference masks and independently annotated lamp envelopes at each LOD. `after-lodN/likeness.json` and `.svg` record the capture-based checks with reference/camera identity. Width/delta errors are normalised by reference height. End-facing graphic selection excludes side-facing material triangles; the rear-band envelope test fills the deliberate hollow outline. These tests supplement the image review.
+Every existing contour/width/lamp gate and tolerance is retained. New side-glass polygons were annotated on the unchanged reference crop, not sampled from the candidate. Actual glass triangles are selected by UV and orientation. The same oracle runs on frozen incoming/current source at all tiers:
 
-| Check | LOD0 | LOD1 | LOD2 |
-|---|---:|---:|---:|
-| front shoulder to flank transition | error 0.0196; limit 0.060; PASS | error 0.0327; limit 0.070; PASS | error 0.0260; limit 0.080; PASS |
-| front lower stance width | error 0.0196; limit 0.065; PASS | error 0.0196; limit 0.075; PASS | error 0.0130; limit 0.090; PASS |
-| rear lower stance width | error 0.0129; limit 0.065; PASS | error 0.0161; limit 0.075; PASS | error 0.0354; limit 0.090; PASS |
-| plan nose taper at three sections | error 0.0086; limit 0.050; PASS | error 0.0208; limit 0.055; PASS | error 0.0234; limit 0.060; PASS |
-| AU swept teardrop headlamps | IoU 0.7067; limit 0.450; PASS | IoU 0.7061; limit 0.350; PASS | IoU 0.7054; limit 0.280; PASS |
-| AU rounded corner rear lamps | IoU 0.5962; limit 0.400; PASS | IoU 0.5835; limit 0.320; PASS | IoU 0.5856; limit 0.250; PASS |
+| LOD | Incoming IoU | Revised IoU | Minimum | Result |
+|---|---:|---:|---:|---|
+| 0 | 0.6189 | 0.7128 | 0.68 | FAIL → PASS |
+| 1 | 0.5992 | 0.6832 | 0.64 | FAIL → PASS |
+| 2 | 0.5551 | 0.5365 | 0.50 | PASS → PASS |
 
-A missing-front-lamp defect is injected independently at each LOD by replacing the feature UVs. Every injected defect fails the feature gate; the rejection is a meaningful visual defect, not an import failure. All current source gates pass. The focused sedan likeness and pivot suite passes 20/20 (`../lion-president/focused-tests.log`).
+Run `node docs/evidence/P1-V-roster-rework/au-hawk/reproduce-shape.mjs` to regenerate the JSON and before/after SVGs. Baseline failures demonstrate rejection of the incoming glass shape. Every final source check passes. A local pass does not cancel aggregate regressions.
 
-## Contract and reproducibility
+## Visual/state review
 
-`node docs/evidence/P1-V-roster-reference/au-hawk/reproduce.mjs` passes (`checks.log`). It checks every original exported collider triangle, all pivots, anchors, part definitions (including masses/hinges), part IDs and LOD budgets for exact equality with the baseline. It rebakes and compares every output byte, then runs all LOD source gates and the defect sensitivity checks. Original raw collider point data is frozen in `colliders.json`; visual retopology therefore cannot silently change handling or hinge geometry. No profile dynamics or runtime renderer/material code was changed by this refinement. Parent integration owns profile hash sync and the native/shared contract checks.
+Viewed original full references, all final sedan fitter sheets, all baked view/paint/LOD/collider sheets and every new loader capture. Large `comparison-{hero,hero_rear,shade_front,shade_rear,shade_side,shade_top}.png` pairs use identical union crop bounds and were regenerated after final corrections.
 
-## Loader and state review
+`baked/{views,paints,lods,colliders}.png` show fresh baked GLBs. Fresh `loader/` has intact/loose/detached side and overview strips, white plus five seat paints, and 1/4/24 viewer tiles. All were opened and inspected: no blank cars, broken media or missing paint keys; fixed-colour lamps/roof/trim remain distinct. These are posed viewer states, not a damage-simulation test or participant cap. Parent integration owns assembled review-page browser and running simulation evidence.
 
-Every listed PNG was opened and inspected, including the before/after sheets at every LOD and both horizontal heroes. `loader/views.png` covers front/rear/left/right/top and both three-quarter views; `paints.png` covers cyan/red/yellow/blue/dark/white with neutral tyres; `lods.png` shows all tiers; `colliders.png` overlays the preserved original proxies. `paints-strip.png` covers white plus five player colours. `damage-strip.png` and `damage-strip-overview.png` show intact, loose hinge poses, detached front/door/back/wheel, combined missing parts and a stripped shell. Dark internal bays remain visible beneath missing parts. These are deterministic viewer poses, not newly measured dynamic debris behaviour.
+## Checks and limits
 
-`grid-1.png`, `grid-4.png` and `grid-24.png` show the baked car and shared parts renderer at 1080p in different paints and LODs. They are viewer grids, not the host game: they contain no HUD, track or roof-number rendering. They prove visual loading and colour/silhouette continuity, not number readability, draw-cost qualification, input/networking behaviour or frame-rate acceptance.
-
-## Remaining limitations
-
-The generated reference includes a wing. The established deliberate base-sedan no-wing interpretation is retained, so this is not a literal match to that accessory. LOD2 loses the fog/slot detail and has deliberately coarse guards and disc wheels. The small blank rear badge remains partly occluded at some coarse views. At LOD2, tiny body-colour pixels can appear in the glass region in the tilted grid view; this is visible in grid-4/grid-24 and has not been claimed fixed. The roof/window treatment remains more angular than the sheet.
-
-Full production acceptance is not asserted here: no fresh native load/settle/recovery scenario, dynamic loose/detached simulation, roof-number smallest-tile proof, host gameplay capture, 24×24 draw benchmark or hardware/device performance run was made by this helper. Those are parent integration or existing gate evidence, and must be named explicitly if used. Original collider equality is strong regression evidence, but does not replace native settle evidence. Engine audio was untouched. The owner decides whether the visual candidate is recognisable.
-
-## Reproduction
-
-```sh
-node tools/vehicles/bake.mjs art/vehicles/au-hawk
-node docs/evidence/P1-V-roster-reference/au-hawk/reproduce.mjs
-node tools/vehicles/fit/capture.mjs au-hawk --lod 0 --sheet lod1 --out docs/evidence/P1-V-roster-reference/au-hawk/after-lod0
-node tools/vehicles/fit/capture.mjs au-hawk --lod 1 --sheet lod1 --out docs/evidence/P1-V-roster-reference/au-hawk/after-lod1
-node tools/vehicles/fit/capture.mjs au-hawk --lod 2 --sheet lowest --out docs/evidence/P1-V-roster-reference/au-hawk/after-lod2
-node tools/vehicles/view/capture.mjs --asset /art/vehicles/au-hawk/au-hawk.asset.json --out docs/evidence/P1-V-roster-reference/au-hawk/loader --ortho 3.0
-node tools/vehicles/evidence/run.mjs au-hawk --out docs/evidence/P1-V-roster-reference/au-hawk/loader
-node --test --test-name-pattern='au-hawk|lion-president' tools/vehicles/test/likeness.test.mjs tools/vehicles/test/pivots.test.mjs
-```
-
-For each capture run `tools/vehicles/fit/likeness.mjs au-hawk --capture <capture-directory>`. Baseline captures use the frozen `baseline-source/model.js` and `params.json` overrides; never overwrite the live source to reproduce an earlier candidate.
-
-## Review-page findings
-
-- PASS code-built export, unchanged triangle budgets and reproducible baked bytes.
-- PASS current local reference gates at all LODs; old candidates and meaningful injected defects rejected.
-- PASS original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks.
-- WARN whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending.
+- PASS Every baked visible triangle count meets its tier budget.
+- PASS Focused likeness suite: 10 tests; frozen attachment-pivot suite: 10 tests.
+- PASS `node tools/vehicles/bake.mjs --check art/vehicles/au-hawk`; see `reproducibility.log`.
+- PASS Independent shape reproduction: all current tiers pass; incoming failures are retained above.
+- PASS Vehicle contract, collider data and baked attachment sidecar have no rework diff; handling, anchors, hinge transforms and budgets remain unchanged. Parent integration runs complete contract/settle proof.
+- WARN Measured silhouette regressions and interpretation differences remain as stated above.
+- WARN Owner likeness approval, real-device playtests and hardware performance are not claimed.

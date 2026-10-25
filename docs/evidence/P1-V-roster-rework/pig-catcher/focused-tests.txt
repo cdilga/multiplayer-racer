@@ -1,0 +1,31 @@
+✔ pig-catcher: reference identity and camera stay fixed (4.558083ms)
+✔ pig-catcher: local gates reject a changed contour and missing features (42.908084ms)
+✔ pig-catcher LOD0: current geometry preserves annotated reference cues (128.180959ms)
+✔ pig-catcher LOD1: current geometry preserves annotated reference cues (80.366709ms)
+✔ pig-catcher LOD2: current geometry preserves annotated reference cues (73.657041ms)
+✔ postie-bike: reference identity and camera stay fixed (4.071459ms)
+✔ postie-bike: local gates reject a changed contour and missing features (27.624667ms)
+✔ postie-bike LOD0: current geometry preserves annotated reference cues (120.577125ms)
+✔ postie-bike LOD1: current geometry preserves annotated reference cues (65.669167ms)
+✔ postie-bike LOD2: current geometry preserves annotated reference cues (55.997667ms)
+✔ Postie LOD0: CB50 frame and spoked wheels retain reference negative spaces (3.996667ms)
+✔ Postie LOD1: CB50 frame and spoked wheels retain reference negative spaces (1.97575ms)
+✔ Postie LOD2: CB50 frame and spoked wheels retain reference negative spaces (1.857334ms)
+✔ pig-catcher LOD0: hinges match the skin edge or exact frozen attachment (11.9425ms)
+✔ pig-catcher LOD1: hinges match the skin edge or exact frozen attachment (3.728833ms)
+✔ pig-catcher LOD2: hinges match the skin edge or exact frozen attachment (4.555ms)
+✔ pig-catcher: the pivots are the same at every LOD and in the committed sidecar (6.727917ms)
+✔ pig-catcher: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (3.038834ms)
+✔ postie-bike LOD0: hinges match the skin edge or exact frozen attachment (7.314584ms)
+✔ postie-bike LOD1: hinges match the skin edge or exact frozen attachment (2.643833ms)
+✔ postie-bike LOD2: hinges match the skin edge or exact frozen attachment (1.643958ms)
+✔ postie-bike: the pivots are the same at every LOD and in the committed sidecar (5.31375ms)
+✔ postie-bike: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (4.554792ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 711.707583

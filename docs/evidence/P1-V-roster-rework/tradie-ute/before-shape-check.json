@@ -1,0 +1,172 @@
+{
+  "reference": "refs/shape-reference.json",
+  "referenceSha256": "6066af0ba0c9b25f7adc6f6cd789a9605c955742f4fd7a36840ceb618300a10c",
+  "sourceSha256": {
+    "model.js": "3d92e38f42ea275bed1ad6f0d8947d3c190253bc71f79c877a2fd4e2cce09d05",
+    "params.json": "2fadf5ba4d426131c3064933e0e38d304520ec1769a440d33b0c5541e1b3b9e9",
+    "atlas.js": "c7f683e2f08e3e3be7133fba8f6e03dce08cbf380bf941b0e0c68cc504a155f4"
+  },
+  "sourceDir": "/Users/cdilga/Documents/dev/multiplayer-racer/docs/evidence/P1-V-roster-rework/tradie-ute/baseline",
+  "lods": [
+    {
+      "lod": 0,
+      "widthHalfMetres": [
+        0.885,
+        0.885,
+        0.885,
+        0.862516447368421
+      ],
+      "noseZMetres": [
+        2.32,
+        2.32,
+        2.32
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": false
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.022483552631578974,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 1,
+      "widthHalfMetres": [
+        0.885,
+        0.885,
+        0.885,
+        0.8626575077399381
+      ],
+      "noseZMetres": [
+        2.32,
+        2.32,
+        2.32
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": false
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.022342492260061908,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 2,
+      "widthHalfMetres": [
+        0.885,
+        0.885,
+        0.885,
+        0.8640102998274374
+      ],
+      "noseZMetres": [
+        2.32,
+        2.32,
+        2.32
+      ],
+      "checks": [
+        {
+          "name": "lower flank returns toward sill",
+          "actual": 0,
+          "band": [
+            0.02,
+            0.075
+          ],
+          "pass": false
+        },
+        {
+          "name": "shoulder returns below glass",
+          "actual": 0.02098970017256263,
+          "band": [
+            0.03,
+            0.09
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose corner sweeps behind centre",
+          "actual": 0,
+          "band": [
+            0.09,
+            0.24
+          ],
+          "pass": false
+        },
+        {
+          "name": "nose intermediate section curves",
+          "actual": 0,
+          "band": [
+            0.015,
+            0.06
+          ],
+          "pass": false
+        }
+      ],
+      "pass": false
+    }
+  ],
+  "pass": false
+}

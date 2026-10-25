@@ -15,7 +15,7 @@ import { Soup, exportsFor } from '../_kit/bike.js';
 
 // n: tyre facets (a multiple of 4), lug: tread blocks, rim: rim-ring facets, spokes: wire diameters; detail 0..2 gates the small parts.
 export const LODS = {
-  0: { n: 16, lug: 16, rim: 12, spokes: 8, rider: 2, detail: 2, sackSeg: [8, 5], ropeSeg: 12, spotSeg: 8 },
+  0: { n: 16, lug: 16, rim: 12, spokes: 6, rider: 2, detail: 2, sackSeg: [8, 5], ropeSeg: 12, spotSeg: 8 },
   1: { n: 8, lug: 0, rim: 8, spokes: 4, rider: 1, detail: 1, sackSeg: [6, 3], ropeSeg: 8, spotSeg: 6 },
   2: { n: 8, lug: 0, rim: 6, spokes: 3, rider: 0, detail: 0, sackSeg: [5, 3], ropeSeg: 3, spotSeg: 4 },
 };
@@ -44,8 +44,8 @@ function loft(S, st, sw, caps = true) {
   }
   if (caps) {
     const f = st[0], l = st.at(-1), s0 = typeof sw === 'string' ? sw : sw[0];
-    face(S, p3(f.ring, f.z), s0, [0, 0, f.z - st[1].z]);
-    face(S, p3(l.ring, l.z), s0, [0, 0, l.z - st.at(-2).z]);
+    if(caps!=='front')face(S, p3(f.ring, f.z), s0, [0, 0, f.z - st[1].z]);
+    if(caps!=='back')face(S, p3(l.ring, l.z), s0, [0, 0, l.z - st.at(-2).z]);
   }
 }
 /** A thin plate: the convex polygon `pts` ([x, y, z]) and a copy offset by `off`, with edge quads. */
@@ -97,6 +97,10 @@ function wheel(S, z, R, W, T, look, extra) {
 function makeSoups(P, lod) {
   const T = LODS[lod], D = T.detail, soups = {}, S = (id) => (soups[id] ??= new Soup(swatchUV));
   const C = S('core'), F = S('front'), B = S('back');
+  if(lod>0) for(const target of [C,F,B,S('rider')]) {
+    const limb=target.limb.bind(target);
+    target.limb=(...args)=>{const start=target.p.length;limb(...args);target.p.splice(start+72);target.uv.splice((start/3)*2+48);};
+  }
   const e = P.engine, fw = P.frame.w, head = [0, P.fork.top[1] - 0.04, P.fork.top[0] - 0.04];
 
   // ── core ──
@@ -106,15 +110,20 @@ function makeSoups(P, lod) {
   if (D >= 2) C.limb([0, e.y - e.s[1] / 2 + 0.02, e.z + e.s[2] / 2], [0, P.swingarm.y0, P.swingarm.z0], fw, fw, 'frame');
   if (D >= 2) for (const s of [1, -1]) C.limb([s * 0.1, P.seat.y - 0.12, P.sidePanel.z0], [s * 0.1, P.swingarm.y0 + 0.06, P.swingarm.z0], 0.04, 0.04, 'frame');
   // engine: crank cases, clutch cover, cylinder head, skid plate, header pipe
-  C.box([0, e.y, e.z], e.s, { all: 'engine', ny: 'under' });
+  // The crankcase is a round casting below a narrow tilted cylinder, leaving daylight
+  // around the down tube and the rider's shins. The previous full-height box erased it.
+  C.prism([-e.s[0]/2,e.y-.01,e.z-.04],[e.s[0]/2,e.y-.01,e.z-.04],.17,D>=2?10:D?6:4,'engine','engine',Math.PI/10);
+  C.limb([0,e.y+.01,e.z+.04],[0,e.y+.24,e.z+.14],.19,.19,'engine');
   if (D >= 2) {
-    C.box([0, e.y + e.s[1] / 2 + 0.05, e.z + 0.09], [e.s[0] * 0.8, 0.13, 0.2], 'engine', [0.45, 0, 0]);
+    C.box([0,e.y+.235,e.z+.14],[.23,.09,.21],'hub',[.22,0,0]);
     C.box([0, e.y - e.s[1] / 2 - 0.02, e.z - 0.04], [0.16, 0.04, 0.62], 'under');
   }
-  if (D >= 2) for (const s of [1, -1]) C.prism([s * (e.s[0] / 2), e.y + 0.04, e.z - 0.08], [s * (e.s[0] / 2 + 0.05), e.y + 0.04, e.z - 0.08], 0.11, 8, 'hub', 'hub');
+  if (D >= 2) for (const s of [1, -1]) C.prism([s * (e.s[0] / 2), e.y -.01, e.z - 0.04], [s * (e.s[0] / 2 + 0.025), e.y -.01, e.z - 0.04], 0.105, 8, 'hub', 'hub');
   { const x = P.exhaust; // header from the cylinder head round to the silencer, silencer with a silver wrap and tip
-    if (D >= 1) { if (D >= 2) C.limb([x.x * 0.4, e.y + e.s[1] / 2 + 0.1, e.z + 0.2], [x.x * 0.9, e.y + 0.1, e.z + e.s[2] / 2 + 0.03], 0.05, 0.05, 'chrome');
-      C.limb([x.x * 0.9, e.y + 0.1, e.z + e.s[2] / 2 + 0.03], [x.x, x.y0 - 0.03, x.z0 + 0.04], 0.045, 0.045, 'chrome'); }
+    if(D>=2) {
+      const path=[[-.17,e.y+.24,e.z+.14],[-.19,e.y+.12,e.z+.32],[-.19,e.y-.17,e.z+.28],[-.17,e.y-.24,e.z+.05],[-.15,e.y-.16,e.z-.27],[x.x,x.y0-.03,x.z0+.04]];
+      for(let i=0;i<path.length-1;i++)C.prism(path[i],path[i+1],.027,6,'chrome');
+    } else if(D)C.limb([x.x*.9,e.y+.1,e.z+e.s[2]/2+.03],[x.x,x.y0-.03,x.z0+.04],.045,.045,'chrome');
     const at = (t) => [x.x, x.y0 + (x.y1 - x.y0) * t, x.z0 + (x.z1 - x.z0) * t];
     C.prism(at(0), at(0.86), x.r, D >= 2 ? 8 : D ? 6 : 4, 'pipe', 'under');
     if (D >= 2) { C.prism(at(0.28), at(0.4), x.r * 1.08, 8, 'chrome'); C.prism(at(0.55), at(0.67), x.r * 1.08, 8, 'chrome'); }
@@ -148,11 +157,12 @@ function makeSoups(P, lod) {
   if (D >= 2) for (const s of [1, -1]) C.box([s * P.pegs.x, P.pegs.y, P.pegs.z], [0.14, 0.04, 0.06], 'frame');
   { const b = P.bars; C.limb([0, P.fork.top[1], P.fork.top[0]], [0, b.y, b.z], 0.06, 0.06, 'frame');
     C.limb([-b.hw, b.y, b.z], [b.hw, b.y, b.z], 0.035, 0.035, 'frame');
-    if (D < 1) C.decor(() => C.box([0, b.y + 0.005, b.z + 0.07], [2 * (b.hw + b.gx) + b.guard, 0.12, 0.07], 'guard'));
-    if (D >= 1) for (const s of [1, -1]) C.decor(() => {
-      if (D >= 2) C.limb([s * (b.hw - 0.14), b.y, b.z], [s * (b.hw - 0.02), b.y, b.z], 0.05, 0.05, 'frame');
-      C.box([s * (b.hw + b.gx), b.y + 0.005, b.z + 0.07], [b.guard, 0.12, 0.07], 'guard', [0, -s * 0.08, 0]);
-      if (D >= 2) C.limb([s * (b.hw - 0.14), b.y - 0.02, b.z + 0.03], [s * (b.hw - 0.04), b.y - 0.03, b.z + 0.11], 0.02, 0.012, 'chrome');
+    for (const s of [1,-1]) C.decor(()=> {
+      const cx=s*(b.hw+b.gx),z=b.z+.11,w=b.guard/2;
+      const pts=[[cx-s*w,b.y-.045,z],[cx+s*w*.65,b.y-.055,z],[cx+s*w,b.y-.01,z-.025],[cx+s*w*.62,b.y+.065,z-.03],[cx-s*w*.9,b.y+.06,z-.015]];
+      if(D>=2)plate(C,pts,[0,0,-.055],'guard');
+      else {face(C,pts,'guard',[0,0,1]);face(C,pts,'guard',[0,0,-1]);}
+      if(D>=2) { C.limb([s*(b.hw-.14),b.y,b.z],[s*(b.hw-.02),b.y,b.z],.05,.05,'frame'); C.limb([s*(b.hw-.14),b.y-.02,b.z+.03],[cx-s*w*.8,b.y-.025,z],.02,.012,'chrome'); }
     });
   }
 
@@ -166,13 +176,13 @@ function makeSoups(P, lod) {
     }
     F.box([0, ty - 0.03, tz - 0.02], [fx * 2 + 0.1, 0.05, 0.08], 'frame');
     if (D >= 2) F.box([0, L(0.22)[0], L(0.22)[1]], [fx * 2 + 0.06, 0.03, 0.06], 'frame'); }
-  { const k = P.beak, w = k.w, t = 0.025, yc = (f) => k.y0 + (k.y1 - k.y0) * f, zc = (f) => k.z0 + (k.z1 - k.z0) * f;
-    const r = (hw, y) => hex(hw * 0.8, y + t, hw, y, hw * 0.7, y - t);
-    const st = [{ z: zc(0), ring: r(w * 1.05, yc(0)) }, { z: zc(k.bend), ring: r(w * 1.1, yc(0.10)) }, { z: zc(1), ring: r(w * 0.7, yc(1)) }];
+  { const k = P.beak, w = k.w, t = 0.04, yc = (f) => k.y0 + (k.y1 - k.y0) * f, zc = (f) => k.z0 + (k.z1 - k.z0) * f;
+    const r = (hw, y,th=t) => hex(hw * 0.8, y + th, hw, y, hw * 0.7, y - th);
+    const st = [{ z: zc(0), ring: r(w * 1.05, yc(0)) }, { z: zc(k.bend), ring: r(w * 1.1, yc(0.10)) }, { z: zc(1), ring: r(w * 0.95, yc(1),.018) }];
     loft(F, st, 'paint');
     if (D >= 2) for (const s of [1, -1]) F.limb([s * P.fork.x, P.rF + 0.3, P.zF - 0.12], [s * w * 0.8, yc(0.46) - 0.02, zc(0.46)], 0.025, 0.025, 'frame'); }
   { const h = P.shroud, hw = h.w / 2;
-    const shell=[[-hw, h.y1, h.z - 0.09], [hw, h.y1, h.z - 0.09], [hw * 0.8, h.y0 + 0.17, h.z + 0.04], [0, h.y0, h.z + 0.04], [-hw * 0.8, h.y0 + 0.17, h.z + 0.04]];
+    const shell=[[-hw, h.y1, h.z + 0.055], [hw, h.y1, h.z + 0.055], [hw * 0.8, h.y0 + 0.17, h.z - 0.015], [0, h.y0, h.z - 0.055], [-hw * 0.8, h.y0 + 0.17, h.z - 0.015]];
     if (D) plate(F, shell, [0,0,.1], 'paint'); else { face(F,shell,'paint',[0,0,-1]);face(F,shell.map(([x,y,z])=>[x,y,z+.1]),'paint',[0,0,1]); }
     const yl = (h.y0 + h.y1) / 2 - 0.1, zl = h.z + 0.12;
     if (D) F.box([0, yl, zl], [0.25, 0.14, 0.06], 'lightbar'); else { const q=[[-.125,yl-.07,zl+.03],[.125,yl-.07,zl+.03],[.125,yl+.07,zl+.03],[-.125,yl+.07,zl+.03]];face(F,q,'lightbar',[0,0,1]);face(F,q,'lightbar',[0,0,-1]); }
@@ -198,10 +208,16 @@ function makeSoups(P, lod) {
     } else B.quad([-hw,y,r.z0],[hw,y,r.z0],[hw,y,r.z1],[-hw,y,r.z1],'lightbar');
     if (D >= 2) { B.limb([-hw, y, zm], [hw, y, zm], 0.025, 0.025, 'lightbar'); B.limb([0, y, r.z0], [0, y, r.z1], 0.025, 0.025, 'lightbar'); }
     if (D >= 2) for (const s of [1, -1]) B.limb([s * hw, y, r.z0], [s * 0.12, P.fenderR.y0 - 0.08, r.z0 - 0.03], 0.03, 0.03, 'lightbar'); }
-  { const o = P.rope, y = P.rack.y + 0.02;
-    B.prism([o.x, y, o.z], [o.x, y + o.h, o.z], o.r, T.ropeSeg, 'rope', 'rope2');
-    if (D >= 2) { B.prism([o.x, y + 0.03, o.z], [o.x, y + 0.05, o.z], o.r * 1.04, T.ropeSeg, 'rope2'); B.prism([o.x, y + o.h * 0.6, o.z], [o.x, y + o.h * 0.6 + 0.02, o.z], o.r * 1.04, T.ropeSeg, 'rope2'); }
-    if (D >= 2) B.box([o.x, y + o.h + 0.005, o.z], [o.r * 1.7, 0.02, 0.04], 'rope2'); }
+  { const o = P.rope, y = P.rack.y + 0.02, n = D>=2?12:D?8:3;
+    // Annular coil: actual central opening and layered rope edge, rather than a solid puck.
+    const ring=(i,r,yy)=>[o.x+Math.cos(i*2*Math.PI/n)*r,yy,o.z+Math.sin(i*2*Math.PI/n)*r];
+    for(let i=0;i<n;i++) {const j=(i+1)%n;
+      face(B,[ring(i,o.r,y),ring(j,o.r,y),ring(j,o.r,y+o.h),ring(i,o.r,y+o.h)],'rope',sub(ring(i,o.r,y),[o.x,y,o.z]));
+      if(D)face(B,[ring(i,o.r*.38,y),ring(i,o.r*.38,y+o.h),ring(j,o.r*.38,y+o.h),ring(j,o.r*.38,y)],'rope2',sub([o.x,y,o.z],ring(i,o.r,y)));
+      face(B,[ring(i,o.r,y+o.h),ring(j,o.r,y+o.h),ring(j,o.r*.38,y+o.h),ring(i,o.r*.38,y+o.h)],'rope',[0,1,0]);
+      if(D>=2) for(const h of [.035,.085]) face(B,[ring(i,o.r+.001,y+h),ring(j,o.r+.001,y+h),ring(j,o.r+.001,y+h+.012),ring(i,o.r+.001,y+h+.012)],'rope2',sub(ring(i,o.r,y),[o.x,y,o.z]));
+    }
+    if(D)B.box([o.x,y+o.h+.008,o.z],[o.r*1.9,.018,.025],'rope2'); }
   { const k = P.sack;
     B.blob([k.x, k.y, k.z], [k.r * 0.95, k.r * 1.1, k.r], T.sackSeg[0], T.sackSeg[1], 'sack', 'sack2');
     if (D >= 2) B.prism([k.x, k.y + k.r * 0.95, k.z], [k.x, k.y + k.r * 1.2, k.z], k.r * 0.28, 6, 'sack', 'sack', 0, k.r * 0.16);
@@ -210,10 +226,10 @@ function makeSoups(P, lod) {
   // ── rider, standing on the pegs: an MX helmet with a peak, goggles and chin bar; khaki shirt; jeans; black boots ──
   const J = P.rider, R = S('rider'), rl = T.rider, r2 = rl >= 2, hr = J.headR;
   // Shirt hem, waist and shoulders are separate sections: the reference is a tapered human torso, not a plank.
-  const torso = [[J.waistY,J.waistZ,0.16,0.105],[J.shoulder[1]-0.18,J.shoulder[2]-0.02,0.17,0.115],[J.shoulder[1]-0.04,J.shoulder[2],0.22,0.11]];
+  const torso = [[J.waistY,J.waistZ,0.15,0.105],[J.shoulder[1]-0.19,J.shoulder[2]-0.02,0.17,0.115],[J.shoulder[1]-.05,J.shoulder[2],0.23,0.1],[J.shoulder[1]-.015,J.shoulder[2],.12,.08]];
   const tr = torso.map(([y,z,w,d]) => [[-w*.76,y,z-d],[w*.76,y,z-d],[w,y,z-d*.55],[w,y,z+d*.55],[w*.76,y,z+d],[-w*.76,y,z+d],[-w,y,z+d*.55],[-w,y,z-d*.55]]);
-  if (r2) { for(let i=0;i<tr.length-1;i++) for(let k=0;k<8;k++) { const j=(k+1)%8; face(R,[tr[i][k],tr[i][j],tr[i+1][j],tr[i+1][k]],'shirt',sub(avg([tr[i][k],tr[i][j],tr[i+1][j],tr[i+1][k]]),[0,torso[i][0],torso[i][1]])); }
-  face(R,tr[0],'shirt',[0,-1,0]);face(R,tr.at(-1),'shirt',[0,1,0]); } else R.limb([0,J.waistY,J.waistZ],[0,J.shoulder[1]-.06,J.shoulder[2]],.34,.22,'shirt');
+  { const sections=r2?tr:[tr[0],tr[2],tr[3]].map(r=>r.filter((_,i)=>![2,6].includes(i))),n=sections[0].length;for(let i=0;i<sections.length-1;i++) for(let k=0;k<n;k++) { const j=(k+1)%n; face(R,[sections[i][k],sections[i][j],sections[i+1][j],sections[i+1][k]],'shirt',sub(avg([sections[i][k],sections[i][j],sections[i+1][j],sections[i+1][k]]),[0,torso[0][0],torso[0][1]])); }
+  if(rl)face(R,sections[0],'shirt',[0,-1,0]);face(R,sections.at(-1),'shirt',[0,1,0]); }
   if (r2) R.box([0, J.waistY, J.waistZ], [0.30, 0.16, 0.22], 'pants');
   for (const s of [1, -1]) {
     const m = (p) => [s * p[0], p[1], p[2]], hip = [s * 0.11, J.waistY, J.waistZ], knee = m(J.knee), foot = m(J.foot), el = m(J.elbow), ha = m(J.hand);
@@ -221,8 +237,8 @@ function makeSoups(P, lod) {
     if (rl >= 1) {
       R.limb(hip, knee, 0.14, 0.14, 'pants');
       R.limb(knee, [foot[0], foot[1] + 0.12, foot[2]], 0.12, 0.12, 'pants');
-      R.limb(sh, el, 0.13, 0.13, 'shirt');
-      R.limb(el, ha, 0.105, 0.105, 'skin');
+      if(r2)R.prism(sh,el,.071,5,'shirt',null,0,.056);else R.limb(sh,el,.13,.13,'shirt');
+      if(r2)R.prism(el,ha,.052,5,'skin',null,0,.037);else R.limb(el,ha,.085,.085,'skin');
     } else {
       R.limb(hip, [foot[0], foot[1] + 0.12, foot[2]], 0.15, 0.15, 'pants');
       R.limb(sh, ha, 0.12, 0.12, 'shirt');
@@ -232,12 +248,27 @@ function makeSoups(P, lod) {
       R.box(ha, [0.09, 0.08, 0.1], 'gloves'); }
   }
   if (rl >= 1) R.limb([0, J.shoulder[1], J.shoulder[2]], [J.head[0], J.head[1] - hr * 0.8, J.head[2]], 0.09, 0.09, 'skin');
-  R.blob(J.head, [hr * 0.98, hr, hr * 1.06], r2 ? 8 : rl ? 6 : 5, r2 ? 5 : rl ? 4 : 3, 'helmet');
-  R.box([0, J.head[1] - hr * 0.08, J.head[2] + hr * 0.92], [hr * 1.45, hr * 0.62, 0.04], 'goggles', [0.1, 0, 0]);
-  if (rl) R.box([0, J.head[1] + hr * 0.55, J.head[2] + hr * 0.95], [hr * 1.4, 0.03, hr * 0.9], 'helmet', [-0.25, 0, 0]); else { const y=J.head[1]+hr*.55,z=J.head[2]+hr*.6,w=hr*.7;const a=[[-w,y-.012,z],[-w,y+hr*.1,z+hr*.9],[-w,y+.015,z]],b=a.map(([,y,z])=>[w,y,z]);face(R,a,'helmet',[-1,0,0]);face(R,b,'helmet',[1,0,0]);for(let i=0;i<3;i++) { const j=(i+1)%3;face(R,[a[i],b[i],b[j],a[j]],'helmet',sub(avg([a[i],b[i],b[j],a[j]]),[0,y,z])); } } // peak
-  if (rl) R.box([0, J.head[1] - hr * 0.65, J.head[2] + hr * 0.8], [hr * 0.9, hr * 0.4, hr * 0.5], 'helmet');
-  if (r2) {
-    R.box([0, J.head[1] - hr * 0.08, J.head[2] + hr * 0.88], [hr * 1.62, hr * 0.74, 0.03], 'lightbar', [0.1, 0, 0]); }
+  // MX shell has a brow, tapering back and protruding chin. Goggles wrap its
+  // three front facets; their dark surround is behind the lens, never in front.
+  { const [hx,hy,hz]=J.head, r=hr;
+    const n=rl>=2?8:6,levels=rl>=2?[[.94,.15,.28,-.18],[.72,.69,.70,-.16],[.25,.96,.93,-.05],[-.25,.84,.78,-.18],[-.70,.58,.62,-.16]]:[[.93,.24,.35,-.18],[.40,.90,.90,-.08],[-.25,.82,.76,-.18],[-.70,.56,.60,-.16]];
+    const rings=levels.map(([y,w,d,z])=>Array.from({length:n},(_,i)=>{const a=i*2*Math.PI/n;return[hx+Math.cos(a)*w*r,hy+y*r,hz+(z+Math.sin(a)*d)*r];}));
+    for(let j=0;j<rings.length-1;j++)for(let i=0;i<n;i++) {const k=(i+1)%n;if(j>=rings.length-3&&Math.sin((i+.5)*2*Math.PI/n)>.55)continue;const pts=[rings[j][i],rings[j][k],rings[j+1][k],rings[j+1][i]];face(R,pts,'helmet',sub(avg(pts),J.head));}
+    face(R,rings[0],'helmet',[0,1,0]);
+    if(rl)face(R,rings.at(-1),'helmet',[0,-1,0]);
+    const q=(x,y,z)=>[hx+x*r,hy+y*r,hz+z*r];
+    const band=[q(-.85,.28,.54),q(-.65,.34,1.0),q(.65,.34,1.0),q(.85,.28,.54),q(.84,-.3,.58),q(.60,-.34,1.04),q(-.60,-.34,1.04),q(-.84,-.3,.58)];
+    face(R,[band[1],band[2],band[5],band[6]],'lightbar',[0,0,1]);
+    face(R,[band[0],band[1],band[6],band[7]],'lightbar',[-1,0,1]);
+    face(R,[band[2],band[3],band[4],band[5]],'lightbar',[1,0,1]);
+    const lens=[q(-.53,.22,1.015),q(.53,.22,1.015),q(.50,-.20,1.055),q(-.50,-.20,1.055)];
+    face(R,lens,'goggles',[0,0,1]);
+    // Triangular chin points forward, with a black vent inset on its front facet.
+    loft(R,[{z:hz+r*.4,ring:hex(r*.65,hy-r*.18,r*.58,hy-r*.45,r*.38,hy-r*.86)},
+      {z:hz+r*1.22,ring:hex(r*.32,hy-r*.24,r*.28,hy-r*.45,r*.10,hy-r*.83)}],'helmet','front');
+    if(rl)face(R,[q(-.23,-.47,1.225),q(.23,-.47,1.225),q(.13,-.64,1.225),q(-.13,-.64,1.225)],'lightbar',[0,0,1]);
+    const peak=[q(-.66,.54,.24),q(.66,.54,.24),q(.63,.48,1.43),q(0,.62,1.55),q(-.63,.48,1.43)];if(rl)plate(R,peak,[0,.025,0],'helmet');else {face(R,peak,'helmet',[0,1,0]);face(R,peak,'helmet',[0,-1,0]);}
+  }
 
   // ── wheels: a big 21-inch-style front and an 18-inch-style rear, knobblies on silver spoked rims ──
   const look = { tyre: 'tyre', rim: 'rim', hub: 'hub', spokes: 'spokes', cap: 'pipe' };
@@ -249,4 +280,15 @@ function makeSoups(P, lod) {
   return { soups };
 }
 
-export const { pivots, soups, build } = exportsFor('pig-catcher', makeSoups);
+const generated = exportsFor('pig-catcher', makeSoups);
+export const pivots = P => P.physicsPivots ?? generated.pivots(P);
+export function soups(P,lod=0) {
+  const out=generated.soups(P,lod),fixed=pivots(P);
+  for(const [id,part]of Object.entries(out.parts)){const old=part.pivot;part.positions=part.positions.map((v,i)=>v+old[i%3]-fixed[id][i%3]);part.pivot=fixed[id].slice();}
+  return out;
+}
+export function build(P,lod=0) {
+  const out=generated.build(P,lod),fixed=pivots(P);
+  for(const [id,mesh]of Object.entries(out.parts)){const old=mesh.position.toArray(),pv=fixed[id];mesh.geometry.translate(...old.map((v,i)=>v-pv[i]));mesh.position.fromArray(pv);mesh.userData.rest=pv.slice();}
+  return out;
+}

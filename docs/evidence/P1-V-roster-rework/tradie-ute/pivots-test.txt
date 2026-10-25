@@ -1,0 +1,122 @@
+✔ the roster is found from the data and is not empty (6.757ms)
+✔ frozen attachment fixtures name existing roster parts (10.495958ms)
+✔ au-hawk LOD0: hinges match the skin edge or exact frozen attachment (1027.360542ms)
+✔ au-hawk LOD1: hinges match the skin edge or exact frozen attachment (53.776417ms)
+✔ au-hawk LOD2: hinges match the skin edge or exact frozen attachment (6.019125ms)
+✔ au-hawk: the pivots are the same at every LOD and in the committed sidecar (774.391042ms)
+✔ au-hawk: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (416.3465ms)
+✖ cruz-missile LOD0: hinges match the skin edge or exact frozen attachment (574.421875ms)
+✖ cruz-missile LOD1: hinges match the skin edge or exact frozen attachment (87.139292ms)
+✖ cruz-missile LOD2: hinges match the skin edge or exact frozen attachment (12.6985ms)
+✔ cruz-missile: the pivots are the same at every LOD and in the committed sidecar (338.661041ms)
+✔ cruz-missile: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (14.742833ms)
+✔ hawk-dash LOD0: hinges match the skin edge or exact frozen attachment (1513.220833ms)
+✔ hawk-dash LOD1: hinges match the skin edge or exact frozen attachment (372.807083ms)
+✔ hawk-dash LOD2: hinges match the skin edge or exact frozen attachment (107.782166ms)
+✔ hawk-dash: the pivots are the same at every LOD and in the committed sidecar (1005.888375ms)
+✔ hawk-dash: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (64.704917ms)
+✔ lion-president LOD0: hinges match the skin edge or exact frozen attachment (304.761541ms)
+✔ lion-president LOD1: hinges match the skin edge or exact frozen attachment (48.375292ms)
+✔ lion-president LOD2: hinges match the skin edge or exact frozen attachment (2.279333ms)
+✔ lion-president: the pivots are the same at every LOD and in the committed sidecar (6.101083ms)
+✔ lion-president: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (18.095833ms)
+✔ pig-catcher LOD0: hinges match the skin edge or exact frozen attachment (156.341208ms)
+✔ pig-catcher LOD1: hinges match the skin edge or exact frozen attachment (5.060792ms)
+✔ pig-catcher LOD2: hinges match the skin edge or exact frozen attachment (3.076541ms)
+✔ pig-catcher: the pivots are the same at every LOD and in the committed sidecar (9.715584ms)
+✔ pig-catcher: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (9.026833ms)
+✔ postie-bike LOD0: hinges match the skin edge or exact frozen attachment (10.03175ms)
+✔ postie-bike LOD1: hinges match the skin edge or exact frozen attachment (7.806041ms)
+✔ postie-bike LOD2: hinges match the skin edge or exact frozen attachment (32.368709ms)
+✔ postie-bike: the pivots are the same at every LOD and in the committed sidecar (290.68475ms)
+✔ postie-bike: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (66.279375ms)
+✔ tradie-ute LOD0: hinges match the skin edge or exact frozen attachment (28.209334ms)
+✔ tradie-ute LOD1: hinges match the skin edge or exact frozen attachment (48.917542ms)
+✔ tradie-ute LOD2: hinges match the skin edge or exact frozen attachment (72.55475ms)
+✔ tradie-ute: the pivots are the same at every LOD and in the committed sidecar (59.892375ms)
+✔ tradie-ute: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (96.750667ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 34
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8065.3025
+
+✖ failing tests:
+
+test at tools/vehicles/test/pivots.test.mjs:77:5
+✖ cruz-missile LOD0: hinges match the skin edge or exact frozen attachment (574.421875ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'door_FL: pivot x 0.966 is not the outer skin 1.020'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/tools/vehicles/test/pivots.test.mjs:83:21)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'door_FL: pivot x 0.966 is not the outer skin 1.020' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tools/vehicles/test/pivots.test.mjs:77:5
+✖ cruz-missile LOD1: hinges match the skin edge or exact frozen attachment (87.139292ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'door_FL: pivot x 0.966 is not the outer skin 1.020'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/tools/vehicles/test/pivots.test.mjs:83:21)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'door_FL: pivot x 0.966 is not the outer skin 1.020' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tools/vehicles/test/pivots.test.mjs:77:5
+✖ cruz-missile LOD2: hinges match the skin edge or exact frozen attachment (12.6985ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'door_FL: pivot x 0.966 is not the outer skin 1.020'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/tools/vehicles/test/pivots.test.mjs:83:21)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'door_FL: pivot x 0.966 is not the outer skin 1.020' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

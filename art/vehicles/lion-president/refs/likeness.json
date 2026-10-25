@@ -6,7 +6,8 @@
     "Contours use normalized roof=0 to ground=1; errors are full width/reference height. The fit pipeline excludes the lowest 12.5% to avoid contact shadows.",
     "Features use independently annotated reference crop coordinates. Front/rear lamp tolerances preserve recognizable position/extent while allowing low-poly simplification and generated-sheet projection uncertainty.",
     "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification.",
-    "The generated Lion front calls for a broad fascia while its plan view pinches the last nose section more strongly; front lamp identity governs the face. The 0.07 plan limit permits this inconsistency (59px on the 847px crop). Source contour projection retains thin geometry which the fit mask opening removes; lower front stance allows 0.085."
+    "The generated Lion front calls for a broad fascia while its plan view pinches the last nose section more strongly; front lamp identity governs the face. The 0.07 plan limit permits this inconsistency (59px on the 847px crop). Source contour projection retains thin geometry which the fit mask opening removes; lower front stance allows 0.085.",
+    "Side-glass polygons are hand annotated from the unchanged lod1 side crop: clear pane perimeter, excluding painted/black pillars; endFacing selects the visible side. Reference lenses/mirrors may occlude glass, and projection does not establish visibility. Coarse limits allow lost pane division. Baseline/source comparison in docs/evidence/P1-V-roster-rework/lion-president/shape-comparison.json rejects the previous forward/high glass error; existing gates are unchanged."
   ],
   "cameras": {
     "projection": "perspective",
@@ -255,6 +256,83 @@
         0.3
       ],
       "envelope": true
+    },
+    {
+      "name": "Lion side glass rake and level lower belt",
+      "view": "side",
+      "part": "core",
+      "endFacing": true,
+      "uvs": [
+        [
+          0.8875,
+          0.9375
+        ]
+      ],
+      "size": [
+        854,
+        296
+      ],
+      "polygons": [
+        [
+          [
+            334,
+            89
+          ],
+          [
+            397,
+            32
+          ],
+          [
+            468,
+            25
+          ],
+          [
+            456,
+            88
+          ]
+        ],
+        [
+          [
+            498,
+            27
+          ],
+          [
+            582,
+            35
+          ],
+          [
+            580,
+            85
+          ],
+          [
+            494,
+            88
+          ]
+        ],
+        [
+          [
+            603,
+            40
+          ],
+          [
+            630,
+            61
+          ],
+          [
+            649,
+            77
+          ],
+          [
+            602,
+            83
+          ]
+        ]
+      ],
+      "minIou": [
+        0.6,
+        0.5,
+        0.4
+      ]
     }
   ],
   "maskSha256": {

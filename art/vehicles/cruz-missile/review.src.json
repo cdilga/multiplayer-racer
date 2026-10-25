@@ -11,7 +11,7 @@
     "br-p1-d03b-poc-cleanup-uod",
     "br-rgw6"
   ],
-  "summary": "Narrower greenhouse through measured cabin stations and a tapered nose tip; 12-facet LOD0 tyres retain five-spoke depth. Front lamp wraps now clip onto the actual tub triangles, eliminating diagonal occlusion slits. At LOD1 the spoiler endplates retain both visible faces and their contour; hidden thickness funds the conforming lamps. Physics pivots are stored independently of visual extrema. Exported intact triangles: 1913 / 896 / 507 against 2800 / 900 / 600. Front-view cabin widths and nose taper improve; rear-view and small side-view silhouette regressions remain. The weighted score is essentially unchanged at LOD0 and improves slightly at LOD1/2. Lamp attachment is visually continuous after the projection repair; its side/fascia seam remains a visible faceted change in shading.",
+  "summary": "Reworked the actual body after owner feedback: longer overhangs with frozen wheel hubs, a broad curved nose with swept-back corners, upright facet-projected lamps, rolled upper flanks and crowned bonnet sections. Side glazing follows the actual greenhouse triangles, hidden damage bays sit inside the sloped doors, rear graphics follow the sculpted boot/bumper, and cheap repeated wheel detail funds the body. Intact exported triangles: 2052 / 891 / 576 against unchanged 2800 / 900 / 600. Front lamp envelope IoU improves from about 0.53 to 0.72; front silhouette improves while side/rear and coarse whole-view scores regress slightly. These measured local gains and inspected shaded comparisons are a review candidate, not an owner likeness acceptance.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -20,32 +20,32 @@
       {
         "lod": 0,
         "label": "LOD0 against lod+1 sheet; frozen perspective mask/shading cameras",
-        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod0"
+        "dir": "docs/evidence/P1-V-roster-rework/cruz-missile/after-lod0"
       },
       {
         "lod": 1,
         "label": "LOD1 against lod+1 sheet; frozen perspective mask/shading cameras",
-        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod1"
+        "dir": "docs/evidence/P1-V-roster-rework/cruz-missile/after-lod1"
       },
       {
         "lod": 2,
         "label": "LOD2 against lowest-lod sheet; frozen perspective mask/shading cameras",
-        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod2"
+        "dir": "docs/evidence/P1-V-roster-rework/cruz-missile/after-lod2"
       }
     ],
-    "note": "Frozen same-camera reference | shaded candidate | silhouette diff. Horizontal end views use a 50 m long lens; side/top 10 m. These generated sheets are not calibrated photographs. Before/after captures and local reference-derived section/cue gates are in docs/evidence/P1-V-roster-reference/cruz-missile. Reference limits and any extraction correction are documented in validation.md."
+    "note": "Unchanged references, horizontal 50 m end diagnostics and 10 m side/top. Hero azimuth corrected from 52 to 34 degrees to match the reference front/side balance; low 2 degree pitch. Both candidates were recaptured. Generated views remain uncalibrated. New independent body/axle, nose-section, lamp-plane and flank tests reject the real previous source at every tier."
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-roster-reference/cruz-missile/lods.png",
-    "validation": "docs/evidence/P1-V-roster-reference/cruz-missile/validation.md"
+    "sheet": "docs/evidence/P1-V-roster-rework/cruz-missile/final/ladder.png",
+    "validation": "docs/evidence/P1-V-roster-rework/cruz-missile/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip.png",
-    "overview": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-roster-rework/cruz-missile/final/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-rework/cruz-missile/final/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front, door_FL and wheel_FL detached; a stripped shell. Detached parts persist as dynamic debris, so the lying parts are the debris they leave."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-roster-reference/cruz-missile/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-roster-rework/cruz-missile/final/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour on the paint key, the number on the roof (anchor roof_number) and in the HUD badge; tyres stay dark, glass and lamps keep their colour. Full-tier patterns (plan section 2.3) are not drawn yet."
   },
@@ -53,26 +53,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-1.png"
+      "path": "docs/evidence/P1-V-roster-rework/cruz-missile/final/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-4.png"
+      "path": "docs/evidence/P1-V-roster-rework/cruz-missile/final/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-24.png"
+      "path": "docs/evidence/P1-V-roster-rework/cruz-missile/final/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-roster-rework/cruz-missile/final/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-roster-reference/cruz-missile/validation.md"
+    "report": "docs/evidence/P1-V-roster-rework/cruz-missile/validation.md"
   },
   "profile": "assets/profiles/cruz-missile.json",
   "handling": {

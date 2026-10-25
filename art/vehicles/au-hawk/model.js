@@ -28,8 +28,8 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 12, rim: 'flat', bayBoxes: true, hub: false, tyreCap: false, cell: 0.1, lampCell: 0.12, lampOff: 0, oval: 16, lampRim: false, reflector: 0, lampTop: false, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 14, badge: 10, lampRim: false, reflector: 0, lampTop: false, fog: 6, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: false },
+  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 12, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: false, cell: 0.1, lampCell: 0.12, lampOff: 0, oval: 16, lampRim: false, lampRing: true, reflector: 0, lampTop: false, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 8, badge: 3, lampRim: false, reflector: 0, lampTop: false, fog: 4, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: false },
   2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'disc', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, grilleCell: 0.22, lampOff: 0.045, oval: 10, badge: 6, lampRim: false, reflector: 0, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
 };
 
@@ -119,6 +119,8 @@ function topUV(P) { const [u0, v0, u1, v1] = REGION.top; return (v) => [u0 + (u1
 // ───────────────────────── build ─────────────────────────
 function makeSoups(P, lod) {
   const T = LODS[lod];
+  // Coarser tiers retain roof/rake breaks while dropping redundant coplanar stations.
+  const C = P.cabin.filter((c,i) => lod===0 || (lod===1 ? [0,1,3,5,6,8] : [0,3,5,6,8]).includes(i));
   const zA = P.zFA - P.archR, zC = P.zRA + P.archR; // door span = between the arches; front/back cut lines
   // stations along z (descending: nose → tail)
   // protected = ends, cut lines, arch samples, the nose and tail slopes; optional = profile control points (dropped when
@@ -143,17 +145,24 @@ function makeSoups(P, lod) {
   const ring0 = (z, s) => {
     const yb = lerpCurve(P.yBot, z), ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), hw = lerpCurve(P.hw, z);
     const ay = archY(z), lift = ay > 0 ? Math.max(yb, ay) : yb;
-    const y2 = Math.max(lift + 0.03, yb + P.skirt), y3 = Math.max(y2 + 0.06, ysh - P.sideDrop);
-    const pts = [[0, yb, z], [s * (hw - P.floorIn), lift, z], [s * (hw - P.tuck * tk), y2, z]];
-    if (T.belly) pts.push([s * hw, y2 + (y3 - y2) * P.bellyT, z]);
-    pts.push([s * (hw - (T.belly ? P.tuckTop : 0)), y3, z], [s * (hw - P.shoulderIn), ysh, z]); // (without the belly the flank top keeps the full width, so a door's hinge stays on its skin at every LOD)
-    if (T.dome) pts.push([s * (hw - P.shoulderIn) * P.dome.x, ycr - (ycr - ysh) * P.dome.y, z]); // the domed bonnet, roof-side and boot
-    pts.push([0, ycr, z]);
-    // The arch clips the flank, not its original taper: prevent an upright guard bulge.
-    for (let i = 1; i < pts.length - 1; i++) {
-      const roll = Math.max(0, Math.min(1, (pts[i][1] - P.section.rollStart) / (ysh - P.section.rollStart)));
-      pts[i][0] = s * Math.min(Math.abs(pts[i][0]), hw - P.shoulderIn * roll);
-    }
+    // Evaluate the original uncut rounded flank at the clipped arch height. Moving the
+    // belly upwards with the opening created a pinched shoulder and a vertical guard.
+    const y2 = yb + P.skirt, y3 = ysh - P.sideDrop;
+    const profile = [[yb, hw-P.floorIn], [y2,hw-P.tuck*tk],
+      [y2+(y3-y2)*P.bellyT,hw], [y3,hw-P.tuckTop], [ysh,hw-P.shoulderIn]];
+    const sx = y => { for(let i=1;i<profile.length;i++) if(y<=profile[i][0]) {
+      const a=profile[i-1],b=profile[i];return a[1]+(b[1]-a[1])*(y-a[0])/Math.max(1e-6,b[0]-a[0]);
+    } return profile.at(-1)[1]; };
+    const levels=[lift,Math.max(lift+.008,y2)];
+    if(T.belly)levels.push(Math.max(lift+.016,profile[2][0]));
+    levels.push(Math.max(lift+.024,y3),ysh);
+    const pts=[[0,yb,z],...levels.map(y=>[s*sx(y),y,z])];
+    if(T.dome)pts.push([s*(hw-P.shoulderIn)*P.dome.x,ycr-(ycr-ysh)*P.dome.y,z]);
+    pts.push([0,ycr,z]);
+    // End surfaces curve back at the corners before lamps are clipped to these facets.
+    for(const p of pts){const f=Math.max(0,1-(P.zNose-z)/.36),r=Math.max(0,1-(z-P.zTail)/.30);
+      p[2]-=P.section.noseCurve*f*(p[0]/Math.max(.1,hw))**2;
+      p[2]+=P.section.tailCurve*r*(p[0]/Math.max(.1,hw))**2;}
     return pts;
   };
   const NR = 6 + (T.belly ? 1 : 0) + (T.dome ? 1 : 0), DECK = NR - 2 - (T.dome ? 1 : 0); // ring points; the shoulder point (deck segments from it to the crown)
@@ -263,12 +272,12 @@ function makeSoups(P, lod) {
   // foot. Each station's `roof` says what the span behind it is: glass (windscreen, backlight) or the painted roof. ──
   const cring = (c, s) => {
     const yb = lerpCurve(P.ySh, c.z) - 0.005;
-    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s * c.wb, yb, c.z], [s * c.wt, yb + 0.002, c.z], [s * (c.wt - P.roofCh), yc, c.z], [0, yc, c.z]]; }
-    return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0, c.yr + P.roofCrown, c.z]];
+    if (c.yr == null) { const yc = Math.max(yb, lerpCurve(P.yCr, c.z) - 0.005); return [[s*c.wb,yb,c.z],[s*c.wt,yb+.002,c.z],[s*(c.wt-P.roofCh),yc,c.z],[0,yc,c.z+P.glassBow*(c.z>0?1:-1)]]; }
+    return [[s * c.wb, yb, c.z], [s * c.wt, c.yr - P.roofCh, c.z], [s * (c.wt - P.roofCh * 1.2), c.yr, c.z], [0,c.yr+P.roofCrown,c.z+P.glassBow*Math.max(-1,Math.min(1,c.z*2))]];
   };
-  const nC = P.cabin.length;
+  const nC = C.length;
   for (const s of [1, -1]) for (let i = 0; i < nC - 1; i++) {
-    const c = P.cabin[i], a = cring(c, s), b = cring(P.cabin[i + 1], s), roof = c.roof === 'paint';
+    const c = C[i], a = cring(c, s), b = cring(C[i + 1], s), roof = c.roof === 'paint';
     for (let k = 0; k < 3; k++) {
       const sw = k === 0 ? sUV : roof ? tUV : k === 1 ? sUV : 'glass';
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
@@ -276,8 +285,8 @@ function makeSoups(P, lod) {
   }
   // a point on the greenhouse side at (z, t): t = 0 at the belt, 1 at the glass top; pushed out by `off`
   const ghPoint = (z, t, s, off) => {
-    let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
-    const c0 = P.cabin[i], c1 = P.cabin[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
+    let i = 0; while (i < nC - 2 && C[i + 1].z > z) i++;
+    const c0 = C[i], c1 = C[i + 1], u = Math.min(1, Math.max(0, (c0.z - z) / (c0.z - c1.z)));
     // on the mesh's own two triangles (split along the belt-front to glass-top-rear diagonal), not a bilinear patch: a span
     // whose band closes to nothing at the windscreen base is twisted, and panes on the patch let the paint poke through
     const a = cring(c0, s), b = cring(c1, s), [a0, a1, b0, b1] = [a[0], a[1], b[0], b[1]];
@@ -289,17 +298,16 @@ function makeSoups(P, lod) {
   // ── side glass: one black frame over the whole glazed band, then the three panes (front door, rear door, quarter) ──
   const W = P.windows;
   if (T.windows) for (const s of [1, -1]) {
-    // each span of the greenhouse side is a non-planar quad, so a pane is cut at the span's middle (z) and at mid-height (t)
-    // to stay on top of it instead of sinking through along a diagonal (T.paneCuts pieces along z, three up t; the twisted span
-    // behind the windscreen base, where the band closes to nothing, needs the finest cut)
-    const poly = (pts, off, sw) => { for (let i = 0; i < nC - 1; i++) {
-      const za = P.cabin[i].z, zb = P.cabin[i + 1].z, nz = T.paneCuts ?? 1, zs = Array.from({ length: nz + 1 }, (_, k) => za + (zb - za) * k / nz);
-      const nt = T.paneCuts ? 3 : 1, ts = Array.from({ length: nt + 1 }, (_, k) => (k === 0 ? -1 : k === nt ? 2 : k / nt));
-      for (let a = 0; a < nz; a++) for (let b = 0; b < nt; b++) { const [z0, z1, t0, t1] = [zs[a], zs[a + 1], ts[b], ts[b + 1]];
-        const piece = clip(clip(clipZ(clipZ(pts, z0, -1), z1, 1), t0, 1, 1), t1, -1, 1);
-        if (piece.length >= 3) S('core').face(piece.map(([z, t]) => ghPoint(z, t, s, off)), sw, [s, 0.3, 0]);
-      }
-    } };
+    // Clip on the exact substrate diagonal in (u,t), so each pane triangle shares
+    // the painted greenhouse facet instead of floating across its twisted quad.
+    const poly = (pts, off, sw) => {for(let i=0;i<nC-1;i++){
+      const za=C[i].z,zb=C[i+1].z;
+      const piece=clipZ(clipZ(pts,za,-1),zb,1);
+      const diagonal=(pts,side)=>{const out=[];const d=p=>side*(p[1]-(za-p[0])/(za-zb));
+        for(let k=0;k<pts.length;k++){const a=pts[k],b=pts[(k+1)%pts.length],da=d(a),db=d(b);
+          if(da>=-1e-9)out.push(a);if((da>=0)!==(db>=0))out.push(mix(a,b,da/(da-db)));}return out;};
+      for(const side of [-1,1]){const q=diagonal(piece,side);if(q.length>=3)S('core').face(q.map(([z,t])=>ghPoint(z,t,s,off)),sw,[s,.3,0]);}
+    }};
     if (T.windows === true) { poly(W.frame, 0.012, 'roofblack'); for (const pane of W.panes) poly(pane, lod === 0 ? 0.018 : lod === 1 ? 0.026 : 0.034, 'glass'); }
     else { poly(W.frame, 0.008, 'glass'); poly(W.bPillar, 0.016, 'roofblack'); } // LOD2: one glazed band and the black B pillar (four doors, not a coupe)
   }
@@ -337,7 +345,7 @@ function makeSoups(P, lod) {
   if (T.seams && lod === 0 && P.moulding) for (const s of [1, -1]) for (let i = 0; i < Z.length - 1; i++) {
     const z0 = Math.min(Z[i], zA - 0.02), z1 = Math.max(Z[i + 1], zC + 0.02); if (z0 <= z1) continue;
     const y0 = P.moulding.y, y1 = y0 + P.moulding.h, zm = (z0 + z1) / 2, at = (z, y) => [skinX(z, y, s) + s * 0.006, y, z];
-    S(partOfTub(zm, 2, s)).face([at(z0, y0), at(z1, y0), at(z1, y1), at(z0, y1)], 'trim', [s, 0, 0]);
+    S(partOfTub(zm, 2, s)).face([at(z0, y0), at(z1, y0), at(z1, y1), at(z0, y1)], 'paint', [s, 0, 0]);
   }
   // door handles: small slots on each door
   if (T.handles) for (const s of [1, -1]) for (const [z, door] of [[P.handles.zF, 'door_F'], [P.handles.zR, 'door_R']]) {
@@ -347,8 +355,8 @@ function makeSoups(P, lod) {
   // door seams: thin dark strips on the door edges
   if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, zC + 0.012]) {
     const y0 = Math.max(lerpCurve(P.yBot, z) + P.skirt, archY(z)) + 0.02, y1 = lerpCurve(P.ySh, z) - P.sideDrop - 0.01, ym = (y0 + y1) / 2;
-    const pts = (lod === 0 ? [y0, ym, y1] : [y0, y1]).map((y) => [skinX(z, y, s) + s * 0.006, y]);
-    for (let i = 0; i < pts.length - 1; i++) S('core').face([[pts[i][0], pts[i][1], z + 0.008], [pts[i][0], pts[i][1], z - 0.008], [pts[i + 1][0], pts[i + 1][1], z - 0.008], [pts[i + 1][0], pts[i + 1][1], z + 0.008]], 'trim', [s, 0, 0]);
+    const pts = [...new Set([y0, ...ring(z,s).map(p=>p[1]).filter(y=>y>y0&&y<y1), y1])].map((y) => [skinX(z, y, s) + s * 0.006, y]);
+    for (let i = 0; i < pts.length - 1; i++) S('core').face([[pts[i][0], pts[i][1], z + 0.0035], [pts[i][0], pts[i][1], z - 0.0035], [pts[i + 1][0], pts[i + 1][1], z - 0.0035], [pts[i + 1][0], pts[i + 1][1], z + 0.0035]], 'trim', [s, 0, 0]);
   }
 
   // ── the tail (part: back), measured off the sheet's rear view, ray-cast onto the tail ──
@@ -399,7 +407,7 @@ function makeSoups(P, lod) {
     for (let k = 0; k < 5; k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
       const a = Math.PI / 2 + k * Math.PI * 2 / 5, ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
       const P0 = (r, w, x) => [x, yc + sa * r + ps * w, zc + ca * r + pc * w];
-      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 0.8, rr = rimR - 0.004;
+      const w0 = P.rim.spokeW, w1 = P.rim.spokeW * 1.25, rr = rimR - 0.004;
       const fr = [P0(hubR * 0.8, -w0, xf), P0(rr, -w1, xf), P0(rr, w1, xf), P0(hubR * 0.8, w0, xf)];
       Wh.face(fr, 'rim', [s, 0, 0]);
       if (T.rim === 'spokes') { const xb = xo - s * depth * 0.55; for (const e of [-1, 1]) Wh.face([P0(hubR * 0.8, e * w0, xf), P0(rr, e * w1, xf), P0(rr, e * w1, xb), P0(hubR * 0.8, e * w0, xb)], 'trim', [0, ps * e, pc * e]); }

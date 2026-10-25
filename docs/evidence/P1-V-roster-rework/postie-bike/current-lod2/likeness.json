@@ -1,0 +1,440 @@
+{
+  "car": "postie-bike",
+  "lod": 2,
+  "sheet": "lowest",
+  "reference": "art/vehicles/postie-bike/refs/lod-plus-1.png",
+  "sourceSha256": "3fbaa14772de1ac43df3e77b16eb4df3eb1d92f3a4d03baf588bca64f454c927",
+  "paramsSha256": "6ec03ec10c7054a0a3cf4cd88f9a42d79180a782d872862eb42031a840db021b",
+  "notes": [
+    "All sections use complete bike+rider bounds; uncalibrated generated sheets are proportion/style targets, not camera recovery.",
+    "Body/helmet bands allow up to roughly 27px at high/medium tiers and 36px at coarse tier for illustrated view inconsistencies and faceting.",
+    "The generated rear mistakenly retains twin outlet ends; real primary image governs single right-hand exhaust.",
+    "Silver engine segmentation uses dark .65 against background near .78; original .30 omitted gray mechanical form. Inspect mask crops as part of review. Whole silhouette fills enclosed holes, so wheel/frame negative spaces have separate current-triangle tests."
+  ],
+  "pass": true,
+  "checks": [
+    {
+      "name": "camera.projection",
+      "reference": "perspective",
+      "model": "perspective",
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.front",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.rear",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.camD",
+      "reference": 30,
+      "model": 30,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.az",
+      "reference": 52,
+      "model": 52,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.dist",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.targetY",
+      "reference": 1,
+      "model": 1,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.az",
+      "reference": 140,
+      "model": 140,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.dist",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.targetY",
+      "reference": 1,
+      "model": 1,
+      "pass": true
+    },
+    {
+      "name": "canonical reference hash",
+      "pass": true,
+      "reference": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+      "model": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8"
+    },
+    {
+      "name": "helmet and delivery pannier width bands",
+      "kind": "width",
+      "rows": [
+        0.1,
+        0.55,
+        0.65
+      ],
+      "reference": [
+        0.20261437908496732,
+        0.6753812636165577,
+        0.6753812636165577
+      ],
+      "model": [
+        0.19172113289760348,
+        0.6579520697167756,
+        0.6492374727668845
+      ],
+      "error": 0.02614379084967322,
+      "limit": 0.08,
+      "pass": true
+    },
+    {
+      "name": "delivery stance widens below the torso",
+      "kind": "delta",
+      "rows": [
+        0.28,
+        0.6
+      ],
+      "reference": [
+        0.5076252723311547,
+        0.6753812636165577
+      ],
+      "model": [
+        0.4880174291938998,
+        0.6535947712418301
+      ],
+      "error": 0.002178649237472685,
+      "limit": 0.1,
+      "pass": true
+    },
+    {
+      "name": "helmet and rear pannier envelopes",
+      "kind": "width",
+      "rows": [
+        0.1,
+        0.52,
+        0.65
+      ],
+      "reference": [
+        0.21179039301310043,
+        0.6986899563318777,
+        0.6986899563318777
+      ],
+      "model": [
+        0.1965065502183406,
+        0.7139737991266376,
+        0.7030567685589519
+      ],
+      "error": 0.015283842794759916,
+      "limit": 0.08,
+      "pass": true
+    },
+    {
+      "name": "narrow motorcycle front beyond mail carrier",
+      "kind": "width",
+      "rows": [
+        0.87,
+        0.94,
+        0.98
+      ],
+      "reference": [
+        0.176158940397351,
+        0.05562913907284768,
+        0.05562913907284768
+      ],
+      "model": [
+        0.14834437086092717,
+        0.08741721854304636,
+        0.08741721854304636
+      ],
+      "error": 0.03178807947019868,
+      "limit": 0.055,
+      "pass": true
+    },
+    {
+      "name": "rounded cream tank inset replaces scooter leg shield",
+      "kind": "feature-iou",
+      "iou": 0.42045454545454547,
+      "limit": 0.3,
+      "pass": true,
+      "envelope": false,
+      "reference": [
+        [
+          [
+            -0.25164835164835164,
+            0.4197802197802198
+          ],
+          [
+            -0.13736263736263737,
+            0.42417582417582417
+          ],
+          [
+            -0.045054945054945054,
+            0.4593406593406593
+          ],
+          [
+            -0.08241758241758242,
+            0.5054945054945055
+          ],
+          [
+            -0.24285714285714285,
+            0.5032967032967033
+          ],
+          [
+            -0.26483516483516484,
+            0.4725274725274725
+          ]
+        ]
+      ],
+      "model": [
+        [
+          [
+            -0.09105794315874682,
+            0.4731910704426178
+          ],
+          [
+            -0.23299386264326638,
+            0.4721975672453002
+          ],
+          [
+            -0.23319734400600664,
+            0.429523676021472
+          ]
+        ],
+        [
+          [
+            -0.09105794315874682,
+            0.4731910704426178
+          ],
+          [
+            -0.23319734400600664,
+            0.429523676021472
+          ],
+          [
+            -0.09114426955581033,
+            0.4187205591752683
+          ]
+        ],
+        [
+          [
+            -0.09230167956802238,
+            0.4727994032151439
+          ],
+          [
+            -0.09221293490066255,
+            0.41768442526076666
+          ],
+          [
+            -0.23571576467645078,
+            0.42874282874294567
+          ]
+        ],
+        [
+          [
+            -0.09230167956802238,
+            0.4727994032151439
+          ],
+          [
+            -0.23571576467645078,
+            0.42874282874294567
+          ],
+          [
+            -0.2359242009555852,
+            0.47184392000310815
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "classic round headlamp envelope",
+      "kind": "feature-iou",
+      "iou": 0.6165436654366544,
+      "limit": 0.25,
+      "pass": true,
+      "envelope": false,
+      "reference": [
+        [
+          [
+            -0.02954048140043764,
+            0.26695842450765866
+          ],
+          [
+            0.04048140043763676,
+            0.26695842450765866
+          ],
+          [
+            0.06455142231947483,
+            0.3085339168490153
+          ],
+          [
+            0.04923413566739606,
+            0.35667396061269147
+          ],
+          [
+            0.007658643326039387,
+            0.37636761487964987
+          ],
+          [
+            -0.038293216630196934,
+            0.35667396061269147
+          ],
+          [
+            -0.05579868708971553,
+            0.31291028446389496
+          ]
+        ]
+      ],
+      "model": [
+        [
+          [
+            0.05350197237028216,
+            0.2674717045141134
+          ],
+          [
+            -0.05350197237028214,
+            0.2674717045141134
+          ],
+          [
+            3.782857807924358e-18,
+            0.2365823263639551
+          ]
+        ],
+        [
+          [
+            0.05396003720221951,
+            0.26557507553858534
+          ],
+          [
+            3.8152452891565865e-18,
+            0.23442123353440172
+          ],
+          [
+            -0.05396003720221948,
+            0.26557507553858534
+          ]
+        ],
+        [
+          [
+            0.05350197237028216,
+            0.2674717045141134
+          ],
+          [
+            -0.05350197237028216,
+            0.32925046081443005
+          ],
+          [
+            -0.05350197237028214,
+            0.2674717045141134
+          ]
+        ],
+        [
+          [
+            0.05396003720221951,
+            0.26557507553858534
+          ],
+          [
+            -0.05396003720221948,
+            0.26557507553858534
+          ],
+          [
+            -0.05396003720221951,
+            0.3278827595469527
+          ]
+        ],
+        [
+          [
+            0.05350197237028216,
+            0.2674717045141134
+          ],
+          [
+            -1.1348573423773073e-17,
+            0.36013983896458834
+          ],
+          [
+            -0.05350197237028216,
+            0.32925046081443005
+          ]
+        ],
+        [
+          [
+            0.05396003720221951,
+            0.26557507553858534
+          ],
+          [
+            -0.05396003720221951,
+            0.3278827595469527
+          ],
+          [
+            -1.144573586746976e-17,
+            0.3590366015511363
+          ]
+        ],
+        [
+          [
+            0.05350197237028216,
+            0.2674717045141134
+          ],
+          [
+            0.05350197237028216,
+            0.32925046081443005
+          ],
+          [
+            -1.1348573423773073e-17,
+            0.36013983896458834
+          ]
+        ],
+        [
+          [
+            0.05396003720221951,
+            0.26557507553858534
+          ],
+          [
+            -1.144573586746976e-17,
+            0.3590366015511363
+          ],
+          [
+            0.05396003720221951,
+            0.3278827595469527
+          ]
+        ]
+      ]
+    }
+  ]
+}
