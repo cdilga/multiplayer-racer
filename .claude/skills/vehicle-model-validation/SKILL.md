@@ -35,6 +35,11 @@ name it.
 - The model comes from its **model script + parameter file + reference sheets** (R81), not a
   hand-edited mesh. Re-running the script reproduces the shipped geometry byte-for-byte.
 - Baked output (GLB + `*.asset.json` sidecar) passes the contract validator with no waivers.
+- Validate the matching runtime profile too: `target/debug/jj validate assets/profiles/<id>.json`.
+  Sidecar validation alone does not check the profile's recorded sidecar/LOD0 source hashes.
+  After a rebake, refresh them with `target/debug/jj vehicle sync assets/profiles/<id>.json`,
+  inspect the diff, and validate again. For a visual-only change, every physical value must stay
+  unchanged; only stale source-hash metadata should change. Repeat for every affected vehicle.
 - Units are metres, one documented forward axis, **origin on the ground between the axles**.
 - Part IDs are exactly the active set (Playtest 1: `core`, `front`, `back`, `door_FL/FR/RL/RR`,
   `wheel_FL/FR/RL/RR`), identical at every LOD, each with pivot/hinge, mass fraction and collider
