@@ -171,3 +171,38 @@ before joining, so it is not counted as journey validation.
 Linux checks use Node 26.10.0, Playwright Chromium, current committed web source and server. The candidate
 input module is supplied to Vite's load hook in memory, with compiled outputs in eris's run directory;
 no remote source files are edited. Test candidates run on stdin.
+
+### GPU CI 9224/9236: crowded nameplate layout
+
+R06 stalls growing from 24 to 120 live seats. Its original join helper performs 192 separate browser
+round trips during the growth; batch those same Hello/Claim frames in one browser task, retaining
+every seat, live simulation, capture and original assertion. That change alone still stalls locally.
+
+The runtime nameplate updater writes one label's styles, then immediately reads its dimensions,
+forcing full browser layout for every changed label. Finish all writes before measuring changed
+boxes together, then run the unchanged placement algorithm. No nameplates, cars or triangles are
+removed or capped. A real-module 1,000-label probe drops **1,002 layouts / 306 ms → 3 layouts /
+42 ms**. All 1,000 output rows (text, dataset, styles, width and height) are byte-identical, SHA256
+`f70abfbfea678a78dc5ff1db45b90fe8838e94f44bf960e0eb467654aeb5ca9b`.
+
+The permanent browser regression exercises creation, changed font/text and cached repaint across
+20 viewports × 50 labels. It retains all labels and checks text, finite geometry and horizontal
+containment, with a structural budget of at most ten browser layouts per update. Against the old
+committed module it **fails with 1,001 layouts**; the optimized module **passes in 1,164 ms**.
+The complete live R06 journey **passes in 46,590 ms** on macOS arm64, Playwright Chromium native
+Metal. Both 24-seat and 120-seat captures were inspected: rendered tiles are populated, with the
+expected number badges and no blank panels. The full build uses committed map.ts via an in-memory
+Vite load override to exclude another session's dirty route-draping edits; public assets/WASM come
+from CI 9217. This validates the runtime candidate, not a whole-vehicle visual qualification.
+
+GPU 9236 at `013f7eae` confirms keyboard Identify and the unchanged voting/flyover journey pass.
+Its R06 fails before this optimization. FL02 and FL17 fail latency bounds while this session's
+manual GPU reproductions were also using eris; that overlap confounds their measurements. Manual
+eris GPU work is stopped. Leave their gameplay bounds unchanged and inspect the isolated CI run.
+Do not treat the overlapping measurements as a demonstrated runtime regression or a passing check.
+
+Main 9228 already passes checks, Rust lint, all three Rust shards, build, image and browser slots
+1–3; slots 4–7 are still running at this recording. Its source predates the keyboard/JN6/HUD fixes.
+Preview **v02-9388bd30** smoke passes: room C3BJ, isolation from seven previews, real WebRTC join,
+input, resume, drive, HUD and round. URL: https://jammers-preview.dilger.dev/p/v02-9388bd30/ .
+Containing green CI and the next built preview remain required; neither is claimed in advance.

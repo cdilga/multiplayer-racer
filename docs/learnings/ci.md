@@ -88,3 +88,33 @@ the start window. The per-batch stamps (`__jjTest.netStamps()`) put the time on 
 at most 17 ms and worker to applied at most 12 ms, while one phone's batches arrived up to 2.3 s apart (p95 ~100 ms). The
 phones send on a `setInterval`, and a starved page fires it late. A real phone is its own device, so this is a harness
 artefact. Lighten the host page instead (FL02 renders the software-GL host at 960x540; it passes on SwiftShader again).
+
+## Pointer bytes, native compile memory and queued input (br-dsq4, 2026-10-25)
+
+- Likeness checks need actual reference PNGs and masks. CI 9187's bad SHA was exactly the Git LFS pointer's SHA;
+  its `oid` was the expected PNG hash. Pull `art/vehicles/**` before checking, rather than blessing pointer hashes.
+- A rustc SIGKILL needs the runner's cgroup/kernel evidence. CI 9187 exhausted its 8 GiB container compiling
+  Asupersync; four Cargo jobs rebuilt it successfully at 7.07 GiB peak, with zero OOM events. The shared
+  `cargo-memory.sh` policy applies to native web builds as well as Rust tests; explicit job settings win.
+- A periodic keyboard sampler can miss down and up delivered before its next timer. Reproduce with both events
+  in one browser task through the real room. Send discrete Identify edges immediately; keep periodic held-input
+  refresh. A longer synthetic key hold only hides the lost-tap bug.
+- Layout observations can themselves be starved by repeated software frames. The 99-player HUD fixture drew
+  11.3 million triangles per frame; a software frame reached 90.9 s despite all 99 HUD boxes existing. Stop the
+  fixture's draw loop after the real layout is placed, then explicitly draw its settled frame before asserting.
+  Keep every tile, car, text/containment assertion and the original timeout. Frame-rate checks remain separate.
+
+Measurements and reproductions: `docs/evidence/P1-CI-repair/repair.md` and `staging-profile.json` beside it.
+
+## Crowded DOM layout and GPU measurements (br-dsq4, 2026-10-25)
+
+- Reading offset dimensions immediately after each label's style update forces layout per label. Batch
+  all writes, then all required measurements, then placement. The real 1,000-label module retained
+  byte-identical output while reducing 1,002 layouts to three. CDP LayoutCount provides a deterministic
+  structural regression without a machine-dependent millisecond budget.
+- Synthetic cohort setup need not force a browser round trip between every Hello and Claim frame.
+  Feed every original frame in one task when the assertion concerns the resulting crowded room.
+- Never overlap manual GPU reproductions with eris's GPU CI latency checks: both share the actual GPU
+  and scheduler. This session overlapped FL02/FL17 in run 9236; those failures need isolated evidence,
+  not relaxed bounds. `eris.sh --run` also enables capture-only checks via JJ_CAPTURE_DIR; explicitly
+  unset it when reproducing a CI journey that does not enable captures.

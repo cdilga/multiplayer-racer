@@ -16,6 +16,7 @@ export function mountNameplates(root: HTMLElement, world: World): void {
     for (const point of points) (groups.get(point.tile) ?? groups.set(point.tile, []).get(point.tile)!).push(point);
     const placed = new Map<number, Array<{ left: number; right: number; top: number; bottom: number }>>();
     const pending: Array<{ point: typeof points[number]; mark: HTMLElement; width: number; height: number; x: number; y: number }> = [];
+    const measure: Array<{ mark: HTMLElement; key: string }> = [];
     for (const point of points) {
       const key = `${point.tile}:${point.car}`;
       live.add(key);
@@ -31,14 +32,22 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       // Overview's plates (P1-R11) carry the name too.
       const text = `#${number}${(point.named ?? (point.font >= 18 && !point.side)) ? ` ${v.nameOf(point.id)}` : ''}`;
       const keyStyle = `${number}:${v.paintOf(point.id)}:${text}:${point.font}:${point.clip.right - point.clip.left}`;
-      let box = sizes.get(mark);
+      const box = sizes.get(mark);
       if (box?.key !== keyStyle) {
         applySeatPattern(mark, number);
         mark.style.setProperty('--seat', v.paintOf(point.id)); mark.style.setProperty('--on', seatColor(number).on);
         mark.style.fontSize = `${point.font}px`; mark.firstElementChild!.textContent = text;
         mark.style.maxWidth = `${point.clip.right - point.clip.left}px`;
-        box = { key: keyStyle, width: mark.offsetWidth, height: mark.offsetHeight }; sizes.set(mark, box);
+        measure.push({ mark, key: keyStyle });
       }
+    }
+    // Finish every style write before measuring. Reading after each new/changed label forced a whole layout per
+    // label, freezing crowded grids during joins and resolution changes. These absolutely positioned boxes are
+    // independent; batching preserves their dimensions and the placement algorithm below.
+    for (const { mark, key } of measure) sizes.set(mark, { key, width: mark.offsetWidth, height: mark.offsetHeight });
+    for (const point of points) {
+      const mark = marks.get(`${point.tile}:${point.car}`)!;
+      const box = sizes.get(mark)!;
       // Stable labels require no layout reads or SVG work per frame.
       let { x, y } = point;
       if (point.side) {

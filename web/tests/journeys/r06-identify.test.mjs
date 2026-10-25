@@ -33,10 +33,14 @@ const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { tim
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 
 async function join(host, from, to) {
-  for (let k = from; k <= to; k++) {
-    await frame(host, `syn${k}`, { hello: true });
-    await frame(host, `syn${k}`, { claim: `Racer ${k}` });
-  }
+  // Fixture setup, not a join-latency measurement: preserve every real input frame without forcing a crowded
+  // render between each of the 192 browser round trips when growing from 24 to 120 seats.
+  await host.evaluate(([from, to]) => {
+    for (let k = from; k <= to; k++) {
+      window.__jjTest.input({ type: 'controller', endpoint: `syn${k}`, frame: { hello: true } });
+      window.__jjTest.input({ type: 'controller', endpoint: `syn${k}`, frame: { claim: `Racer ${k}` } });
+    }
+  }, [from, to]);
   await wait(host, (n) => window.__jjRoom.view().seats.length === n, to);
 }
 
