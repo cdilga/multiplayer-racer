@@ -55,10 +55,9 @@ t node scripts/ci/origin-scan.mjs web/dist web/dist-qualify >&2
 t npx --prefix web vite build --config web/host/tests/vite.config.ts >&2
 t cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server -p jj-input-helper --bin jj-input-helper >&2
 mkdir -p .ci-bin
-# Snapshot the actual bytes and validate them before archiving (br-hytm).
+# Snapshot and validate all three native executables before archiving (br-hytm, br-dsq4).
+# The input helper must use the same explicit read/write path, not a separate filesystem copy.
 t node scripts/ci/native-check.mjs --copy "$CARGO_TARGET_DIR/debug" .ci-bin >&2
-# The native input helper (P1-C12.1) its journey drives on the scripted backend; the journey builds it if absent.
-cp "$CARGO_TARGET_DIR/debug/jj-input-helper" .ci-bin/ && .ci-bin/jj-input-helper --version >&2
 
 [[ $store == on ]] || { echo "build-web: built in place (JJ_STORE=off)"; exit 0; }
 # mktemp, not $$: jobs are containers sharing this cache dir, and their shell PIDs collide.

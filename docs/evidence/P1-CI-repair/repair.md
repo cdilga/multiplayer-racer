@@ -1027,3 +1027,36 @@ Validation before publication:
 
 Focused receipts: `sse-streaming.txt`. Containing main/GPU and the next
 preview's smoke/public validation are still required; no green-main claim.
+
+### Input-helper snapshot gap in main9455
+
+Main **9455**, committed quiet-stream repair **34817d86**, fails build job
+**20251** on triton at `.ci-bin/jj-input-helper --version`: **Exec format
+error**. All seven browser jobs then refuse the absent build; they have not
+run their assertions. Lint, checks and Rust partitions 1/3 pass at diagnosis.
+The cached source helper is a valid **7,191,768-byte x86-64 ELF**, SHA-256
+`93ebf9581c93e1f5e1828f377b21b00c547ec348b52b9177b2eed04199b5b6aa`,
+and runs in the exact `jj-ci:d161a07c0df4` image. Both fresh `cp` and explicit
+read/write copies run too. The failed container was already removed, so the
+precise failed destination bytes and cause of that copy's corruption are
+unavailable; this is not evidence of a compiler or hardware cause.
+
+The build snapshots `jj` and `jj-server` with explicit reads/writes, byte
+comparison and execution checks, but copies the helper separately with `cp`.
+Extend the existing snapshot/validation list to all three executables and
+remove that separate copy. Cached and downloaded archive validation now also
+requires the helper's native header and exact `jj-input-helper <version>`
+response. No toolchain, memory, gameplay or timing setting changes.
+
+- The new copy regression fails old code because the helper is missing from
+  the verified snapshots, then passes the fix. All **9** native-check and
+  build-fetch regressions pass; shell syntax and diff whitespace checks pass.
+- On **triton**, exact CI image, with the cached target mounted read-only,
+  the final snapshot code copies and executes **all three** real binaries.
+  Corrupting only the copied helper to zero-filled bytes then makes validation
+  fail specifically for its native header, after both other binaries validate.
+- The original failed job's valid `jj`/`jj-server` hashes match this direct
+  run. No existing cache artifacts are deleted and no unchanged batch is
+  retried. Publish the actual coverage repair and qualify its containing run.
+
+Receipts: `native-helper.txt`. Main/GPU and preview receipts remain required.

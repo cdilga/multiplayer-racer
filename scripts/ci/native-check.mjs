@@ -7,9 +7,11 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+const executables = ['jj', 'jj-server', 'jj-input-helper'];
+
 export function checkNative(dir) {
   const receipts = [];
-  for (const name of ['jj', 'jj-server']) {
+  for (const name of executables) {
     const file = resolve(dir, name);
     const bytes = readFileSync(file);
     const magic = bytes.subarray(0, 4).toString('hex');
@@ -17,14 +19,14 @@ export function checkNative(dir) {
     assert.ok(allowed.includes(magic), `${file}: invalid native executable header ${magic} (${bytes.length} bytes)`);
     const env = { ...process.env, JJ_ROLE: 'turn-broker' };
     delete env.JJ_BROKER_KEY;
-    const args = name === 'jj' ? ['--version'] : [];
+    const args = name === 'jj-server' ? [] : ['--version'];
     const r = spawnSync(file, args, { env, encoding: 'utf8', timeout: 10_000 });
     const diagnostic = JSON.stringify({ file, args, status: r.status, signal: r.signal, error: r.error?.message, stdout: r.stdout, stderr: r.stderr });
     assert.equal(r.error, undefined, diagnostic);
     assert.equal(r.signal, null, diagnostic);
-    if (name === 'jj') {
+    if (name !== 'jj-server') {
       assert.equal(r.status, 0, diagnostic);
-      assert.match(r.stdout, /^jj \d+\.\d+\.\d+\S*\n$/, diagnostic);
+      assert.match(r.stdout, new RegExp(`^${name} \\d+\\.\\d+\\.\\d+\\S*\\n$`), diagnostic);
     } else {
       // This early configuration refusal proves the server runs without opening sockets or loading assets.
       assert.equal(r.status, 1, diagnostic);
@@ -40,7 +42,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     let dir = process.argv[2] ?? '.ci-bin';
     if (dir === '--copy') {
       dir = process.argv[4];
-      for (const name of ['jj', 'jj-server']) {
+      for (const name of executables) {
         // Explicit reads/writes avoid filesystem sparse/reflink copy shortcuts and verify the copied bytes.
         const bytes = readFileSync(resolve(process.argv[3], name));
         const destination = resolve(dir, name);

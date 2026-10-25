@@ -1,0 +1,62 @@
+Old snapshot regression
+
+✖ snapshot the input helper with the other executables before validating the archive inputs (57.38725ms)
+✔ reject the CI3419 all-zero executable even when it has the expected size and execute permission (44.985417ms)
+✔ a shell fallback that reports success is not a native CLI (0.738375ms)
+✔ a native-looking truncated payload must execute with the expected response (3.200667ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 183.182375
+
+✖ failing tests:
+
+test at scripts/ci/native-check.test.mjs:9:1
+✖ snapshot the input helper with the other executables before validating the archive inputs (57.38725ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/jj-native-copy-sPWDv1/destination/jj-input-helper'
+      at Object.openSync (node:fs:697:18)
+      at readFileSync (node:fs:543:35)
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/scripts/ci/native-check.test.mjs:25:22)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/jj-native-copy-sPWDv1/destination/jj-input-helper'
+  }
+
+
+Final local checks
+
+✔ pending current build waits for the artifact despite an older failed commit status (1655.62025ms)
+✔ current build success waits for store publication (730.554083ms)
+✔ current build failure stops the fetch (437.201666ms)
+✔ current build cancelled stops the fetch (438.7055ms)
+✔ current build timed_out stops the fetch (554.922125ms)
+✔ snapshot the input helper with the other executables before validating the archive inputs (57.789208ms)
+✔ reject the CI3419 all-zero executable even when it has the expected size and execute permission (18.66375ms)
+✔ a shell fallback that reports success is not a native CLI (0.736458ms)
+✔ a native-looking truncated payload must execute with the expected response (2.791041ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3880.748583
+
+
+Exact Linux CI image / real cached executables
+
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+[{"name":"jj","bytes":36840680,"sha256":"5656d79385101a541b03dea74442353993f2de5f7ec6cad13ec7acd0129a9ca0","status":0,"stdout":"jj 0.2.0\n","stderr":""},{"name":"jj-server","bytes":21016504,"sha256":"877948406439c250623e132636f87bebfa6979f8eee3af1330b0674757f061ba","status":1,"stdout":"","stderr":"jj-server (turn-broker): JJ_BROKER_KEY is required\n"},{"name":"jj-input-helper","bytes":7191768,"sha256":"93ebf9581c93e1f5e1828f377b21b00c547ec348b52b9177b2eed04199b5b6aa","status":0,"stdout":"jj-input-helper 0.2.0\n","stderr":""}]
+malformed helper refused after valid jj and jj-server: PASS

@@ -215,3 +215,10 @@ recording the cohort; a distinct-set count can accidentally accept a single null
 Flat triangle soup has no shared vertices: computing and normalising its face normal once avoids
 three repeated corner normalisations. Match three.js's Float32 rounding before normalisation;
 the byte golden plus zero-area/small/large-coordinate differential checks protect shading.
+
+Main9455's web build failed executing a separately copied `jj-input-helper`, while its
+cached source was a valid ELF that ran in the exact CI image. The failed destination
+disappeared with its job container, so the copy's precise corruption cause is unknown.
+Include every archived native tool in `native-check.mjs`'s verified read/write snapshot
+and execution checks; a separate `cp` bypassed the protection already used for `jj`
+and `jj-server`. Cached/downloaded archive validation must cover the helper too.
