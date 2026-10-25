@@ -10,6 +10,12 @@ Inspected `local/layout-contact.jpg`, containing `local/poc_g_promo_412x915.png`
 
 Inspected `local/playback-contact.jpg`: `local/Chromium-412-poster.png`, `local/Chromium-1920-poster.png`, `local/WebKit-412-poster.png`, `local/WebKit-1920-poster.png`, plus each matching `-seek.png`. Video is visible and framed correctly, the pending-narration explanation and download are readable, and seeking reaches the actual45s derby frame. Native WebKit control overlays are expected browser UI.
 
+Repeated the same layout/resize and four browser playback cases on the public POC after deploy9571 succeeded for d7256441779c36a912828716bb503c5ef79af0d7. Inspected `deployed/layout-contact.jpg` and `deployed/playback-contact.jpg`, containing the same twelve screenshot names under `deployed/`. Public player and download are visible and legible; seeking displays the correct frame. `live-deployed.txt` and `deployed/playback.json` pass. An actual click of Download yielded the complete26,456,576-byte MP4 with the original SHA256; HTTP200/video/mp4 and byte-range support are recorded in `deployed/download.json`.
+
+Watch: https://jammers-preview.dilger.dev/poc/#g-promo
+
+MP4: https://jammers-preview.dilger.dev/poc/promo/bring-everyone-picture-f2d4e0c3.mp4
+
 ## Defects found and fixed
 
 The only prior copy was under `/tmp`. Exact SHA256 f2d4e0c3cd07704ce35992ef612395cefc588e7ea041a889d8f35decc9fde7fc is now preserved as `art/ui/poc/promo/bring-everyone-picture-f2d4e0c3.mp4`, with poster and provenance. Both binary assets use the existing Git LFS rules, and the POC deployment already fetches/publishes this tree.
@@ -18,7 +24,7 @@ Added a Trailer draft section and jump link, manual native controls, inline phon
 
 ## Remaining defects
 
-This is the59.8s picture draft: music and editorial vehicle effects are present, Australian Maya1 narration is pending. It is not the final voiced trailer. Deployed publication/playback verification is pending the source commit at this checkpoint.
+This is the59.8s picture draft: music and editorial vehicle effects are present, Australian Maya1 narration is pending. It is not the final voiced trailer. No remaining persistence, POC layout, playback or download defect was found in the exercised cases.
 
 ## Not covered
 

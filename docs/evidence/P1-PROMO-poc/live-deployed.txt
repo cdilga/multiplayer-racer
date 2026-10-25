@@ -1,0 +1,3 @@
+ok   /poc/#g-promo 412x915 -> docs/evidence/P1-PROMO-poc/deployed/poc_g_promo_412x915.png
+ok   /poc/#g-promo 1920x1080 -> docs/evidence/P1-PROMO-poc/deployed/poc_g_promo_1920x1080.png
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.
