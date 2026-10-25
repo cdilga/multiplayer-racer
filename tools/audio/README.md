@@ -1,6 +1,13 @@
-# Audio tooling (runs on eris)
+# Audio tooling
 
-Canonical announcer, owner selection 25 October 2026: **`aussie-maya1-v1`**, the exact Australian Maya1 recipe in [`maya1-voice.json`](maya1-voice.json). Use `python3 tools/audio/maya1.py --estimate`, then the same command with `--key-file /secure/path` or configured `FAL_KEY`. Generation, raw takes and ASR run from eris; validated exports replace every gameplay clip together. The old Qwen/FrankenTTS references below are historical. See the [audio skill](../../.claude/skills/jammers-audio/SKILL.md) for batch/promo commands and resumable caching.
+## Default voice for future work
+
+Owner selection, 26 October 2026: **Stevo Australian Announcer Voice** (`stevo-australian-announcer-v1`) is the default for new voice work. It is the QUALITY FrankenTTS recovery of Aussie Maya1; aliases `stevo` and `aussie-maya1-frankentts-v1` resolve to the same unchanged pack. Explicit alternatives remain selectable: original `aussie-maya1-v1` or `chris-announcer-combined-v1`.
+
+Use the user-local skill `/Users/cdilga/.codex/skills/shared-voice-packs/SKILL.md` and shared private registry `/Users/cdilga/Documents/dev/Voices/voices.json`. Generate new Stevo lines with `python3 /Users/cdilga/Documents/dev/Voices/render-frankentts.py --text "Your line" --out /path/to/fresh.wav`; `--voice` selects a local alternative. Original Maya1 uses its separate renderer. This owner instruction permits the shared local workflow on the Mac or eris. Retain the repo's cue, mastering and export checks. Existing paid Maya1 batches, caches and shipped media keep their actual provenance; the commands below that explicitly name Maya1 reproduce those batches and do not implement Stevo batch generation. No automatic regeneration or asset installation follows from the new default.
+
+
+Original Maya1 batch, owner selection 25 October 2026: **`aussie-maya1-v1`**, the exact Australian Maya1 recipe in [`maya1-voice.json`](maya1-voice.json). Use `python3 tools/audio/maya1.py --estimate`, then the same command with `--key-file /secure/path` or configured `FAL_KEY`. Generation, raw takes and ASR run from eris; validated exports replace every gameplay clip together. The old Qwen/FrankenTTS references below are historical. See the [audio skill](../../.claude/skills/jammers-audio/SKILL.md) for batch/promo commands and resumable caching.
 
 The renderer can read the saved macOS Keychain service `fal-api-key`. For the already-generated batch, `--cached-only --review-only` audits and fetches private results without any paid submissions or asset installation. Local inference is available with `--local` on eris; it uses original pinned Maya1 FP16 weights, not the historical clone model.
 
@@ -8,8 +15,7 @@ Add `--cached-asr-only` when transcripts have already been independently recorde
 
 > **Licence rider:** `franken_tts` and `franken_whisper` (`ftts`, `fw`) are MIT with an OpenAI/Anthropic rider. The owner confirmed on 2026-10-04 that their use, including by agents, is approved without reservation; agents may run them. Keep the author's permission, if any, in `docs/evidence/P1-A01d/permission.md`.
 
-Generation happens on **eris** (`ssh eris`, RTX 2080 SUPER 8 GB, Arch Linux), never on the Mac and
-never in this repo (R89). Workspace: `~/Work/dev/jammers-audio` (`JJ_AUDIO_HOME`). Model weights,
+Historical batch generation happens on **eris** (`ssh eris`, RTX 2080 SUPER 8 GB, Arch Linux), outside this repo (R89). The owner-authorized shared Stevo workflow above also runs locally on the Mac. Workspace: `~/Work/dev/jammers-audio` (`JJ_AUDIO_HOME`). Model weights,
 the owner's voice recordings, clone prompts and drafts stay there under `private/` (mode 700).
 Only scripts, cue sheets and **approved, exported** clips live in the repo.
 

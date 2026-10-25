@@ -1,18 +1,26 @@
 ---
 name: jammers-audio
-description: How to regenerate Joystick Jammers 0.2 audio on eris, the GPU box. The canonical Australian Maya1 announcer voice (aussie-maya1-v1, from A00's cue sheet) and the instrumental music (YuE2), with the automatic screens, the loudness targets, the export rules and what may enter the repo. Use when a cue line changes, a voice clip is rejected, a repair bead asks for new takes, you add a moment or music cue, or you need to touch tools/audio/ or assets/audio/.
+description: Generate and export Joystick Jammers announcements and music. Routes new voice work to the shared Stevo default, preserves original Maya1 batch reproduction, and documents cue checks, mastering and private assets.
 ---
+
+## Default voice for future work
+
+Owner selection, 26 October 2026: **Stevo Australian Announcer Voice** (`stevo-australian-announcer-v1`) is the default for new voice work. It is the QUALITY FrankenTTS recovery of Aussie Maya1; aliases `stevo` and `aussie-maya1-frankentts-v1` resolve to the same unchanged pack. Explicit alternatives remain selectable: original `aussie-maya1-v1` or `chris-announcer-combined-v1`.
+
+Use the user-local skill `/Users/cdilga/.codex/skills/shared-voice-packs/SKILL.md` and shared private registry `/Users/cdilga/Documents/dev/Voices/voices.json`. Generate new Stevo lines with `python3 /Users/cdilga/Documents/dev/Voices/render-frankentts.py --text "Your line" --out /path/to/fresh.wav`; `--voice` selects a local alternative. Original Maya1 uses its separate renderer. This owner instruction permits the shared local workflow on the Mac or eris. Retain the repo's cue, mastering and export checks. Existing paid Maya1 batches, caches and shipped media keep their actual provenance; the commands below that explicitly name Maya1 reproduce those batches and do not implement Stevo batch generation. No automatic regeneration or asset installation follows from the new default.
+
+
 
 # Jammers audio (voice and music on eris)
 
 Everything in `tools/audio/` is documented in `tools/audio/README.md`; this is the working summary for an
-agent who has to regenerate something. Audio is **generated on eris, never in this repo** (R89). The Mac holds
-scripts, the cue sheet, exports and evidence; eris holds weights, the owner's recordings, clone prompts and every
-non-picked take.
+agent who has to regenerate something. Historical batch audio is **generated on eris, never in this repo** (R89).
+The owner-authorized shared Stevo workflow also runs on the Mac outside the repo. Private references, weights,
+clone prompts and non-picked takes stay out of project Git and public exports.
 
-## Canonical voice — owner selection, 25 October 2026
+## Original Maya1 batch — owner selection, 25 October 2026
 
-**Use `aussie-maya1-v1` for every new announcement and promo.** The owner explicitly selected the current live Physical Soccer voice for both games, then requested every Jammers announcement be regenerated. [`tools/audio/maya1-voice.json`](../../../tools/audio/maya1-voice.json) pins the exact fal.ai `fal-ai/maya` prompt, temperature 0.3 and 48 kHz WAV recipe, with a recipe hash and the verified live reference. This is a project recipe ID: Maya1 has no provider voice ID or seed and does not use an owner recording. Never substitute the older FrankenTTS Combined/Announcer or Qwen references.
+**The existing replacement batch uses `aussie-maya1-v1`.** The owner selected the current live Physical Soccer voice for both games, then requested every Jammers announcement be regenerated. [`tools/audio/maya1-voice.json`](../../../tools/audio/maya1-voice.json) pins the exact fal.ai `fal-ai/maya` prompt, temperature 0.3 and 48 kHz WAV recipe, with a recipe hash and the verified live reference. This is a project recipe ID: Maya1 has no provider voice ID or seed and does not use an owner recording. Keep this batch's original provenance; future voice selection follows the Stevo policy above.
 
 Run `python3 tools/audio/maya1.py --estimate`, then `python3 tools/audio/maya1.py --key-file /secure/path` (or configured `FAL_KEY`). The Mac validates the full cue sheet; generation requests, raw takes, Whisper ASR and Opus mastering run from eris. Only a complete batch passing the ASR/duration/audio screens replaces `assets/audio/voice/`. Requests are cached by exact text + recipe hash and pending IDs resume without a new paid submission. No automatic paid retakes. `--fetch-only` resumes export retrieval; private review lives under `private/voice/maya1-gameplay/review/`.
 

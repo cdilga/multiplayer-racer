@@ -261,3 +261,9 @@ previews independent of green, focused reproduction, and bounded red time.
   - Only force-pushing or rewriting pushed history needs the owner.
   - Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
     (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.
+
+## Default voice for future work
+
+Owner selection, 26 October 2026: **Stevo Australian Announcer Voice** (`stevo-australian-announcer-v1`) is the default for new voice work. It is the QUALITY FrankenTTS recovery of Aussie Maya1; aliases `stevo` and `aussie-maya1-frankentts-v1` resolve to the same unchanged pack. Explicit alternatives remain selectable: original `aussie-maya1-v1` or `chris-announcer-combined-v1`.
+
+Use the user-local skill `/Users/cdilga/.codex/skills/shared-voice-packs/SKILL.md` and shared private registry `/Users/cdilga/Documents/dev/Voices/voices.json`. Generate new Stevo lines with `python3 /Users/cdilga/Documents/dev/Voices/render-frankentts.py --text "Your line" --out /path/to/fresh.wav`; `--voice` selects a local alternative. Original Maya1 uses its separate renderer. This owner instruction permits the shared local workflow on the Mac or eris. Retain the repo's cue, mastering and export checks. Existing paid Maya1 batches, caches and shipped media keep their actual provenance; the commands below that explicitly name Maya1 reproduce those batches and do not implement Stevo batch generation. No automatic regeneration or asset installation follows from the new default.
