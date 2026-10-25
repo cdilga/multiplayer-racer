@@ -48,7 +48,7 @@ jobs:
           npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
           npx playwright install chromium firefox webkit
           npm --prefix web run build
-          cargo build --locked -q -p jj-server --bin jj-server
+          cargo build --locked -q -p jj-server --bin jj-server -p jj-tools --bin jj
       - name: GPU journeys (JJ_CHROMIUM_GPU=1, ANGLE on Vulkan)
         if: steps.plan.outputs.gpu_any == 'true'
         env:
@@ -56,4 +56,4 @@ jobs:
         run: |
           nvidia-smi --query-gpu=name,driver_version,memory.used,utilization.gpu --format=csv,noheader
           files=$(node -e 'console.log(JSON.parse(process.env.GPU_FILES).join(" "))')
-          JJ_CHROMIUM_GPU=1 JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 $files
+          JJ_CHROMIUM_GPU=1 JJ_BIN="$CARGO_TARGET_DIR/debug/jj" JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 $files

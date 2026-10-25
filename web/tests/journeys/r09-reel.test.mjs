@@ -124,7 +124,7 @@ test('two real controllers: retained damage plays beside results and QR; Hide le
   assert.equal(await host.locator('.jj-reel').count(),0);
   if(process.env.JJ_CAPTURE_DIR)await host.screenshot({path:join(out,'reel-hidden-1366x768.jpg'),type:'jpeg',quality:85});
   // Advance the existing intermission policy; replay never inserts a delay or needs a Start command.
-  const deadline=hidden.room.remainingMs;
+  const deadline=hidden.room.remainingMs + hidden.room.between.flyoverMs;
   assert.ok(deadline>0);
   const progression=await host.evaluate(async deadline=>{
     let stepped=0;

@@ -3,23 +3,32 @@
 Owner ask, 2026-10-08: publish to the rainbow preview page (`https://jammers-preview.dilger.dev/`) regularly, so the
 owner always has something current to play. Previews never freeze (R85), so publishing never blocks development.
 
-This is a proposed policy until the owner ratifies it.
+Owner rulings from 2026-10-17 and R140 (2026-10-25) supersede the original green-only proposal below.
 
 ## When to publish
 
-Publish a preview from the newest green commit when **any** of these is true:
+Every CI run whose image built gets a preview, red or green. The smoke check marks whether it is playable;
+green CI is a quality signal, never a publication gate. The scheduled `deploy-previews.yml` workflow handles
+normal publication. At a bead boundary the solo session or claimed CI repair agent checks that the newest built
+image has its preview and smoke record. A dedicated deploy session is optional.
+
+Publish promptly when **any** of these is true:
 
 1. **A playable step landed.** A bead closed that changes what a person sees or does on the host or a controller:
-   joining, driving, cameras, HUD, lobby or results screens, track generation, damage, sound. Epics count when their
-   last child closes. Internal-only beads (types, protocol internals, CI, docs, tooling) do not trigger a publish.
+   joining, driving, cameras, HUD, lobby or results screens, track generation, damage, sound. Do not wait for bead
+   closure or a green batch when the image is already built.
 2. **A fix to something already visible.** A bug bead closed that the owner would have hit while playing.
-3. **It has been 2 working days** since the last publish and anything visible has changed since. This is the ceiling;
+3. **It has been a day** since the last playable preview and anything visible has changed since. This is the ceiling;
    don't wait for it when 1 or 2 applies.
 4. **The owner is about to play.** Before a couch session, a gate (G-DESIGN, Q02) or a hardware check (P1-R), publish
    first, then tell the owner the preview id.
 
-Never publish from a red or unfinished commit. Never skip a publish because the build is "not impressive yet": a
-rough but current build beats a polished stale one.
+Publish built, committed images; identify red lanes and smoke failures honestly. A day without a new playable
+preview is P0 for the repair owner (or the solo session). Do not wait for a feature to feel impressive.
+
+If a built run is missing its preview, dispatch `deploy-previews.yml` with input `mode: --from-run <run-id>`.
+Its `infra/previews/scripts/publish.py` publishes that immutable image and records smoke results. Inspect once;
+keep working instead of polling or redispatching the same run. Preview records are pushed as tags, not commits.
 
 ## What to say when publishing
 
@@ -40,6 +49,5 @@ still publish; the reminder is a nudge, not the whole rule.
 
 ## Automation target (P1-D04)
 
-The end state is that a green push to `main` that touches the web or server bundle publishes by itself, with a
-smoke check, and that the index lists the commit and the CI run. Until D04 lands, publishing is a manual step by
-whichever session closes a qualifying bead.
+The scheduled/on-demand `deploy-previews.yml` workflow publishes built images independently of CI verdict,
+with a smoke check and an index linking the commit and source CI run. Code lives in `infra/previews/`.

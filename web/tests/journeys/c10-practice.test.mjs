@@ -11,7 +11,7 @@ import { evidencePath } from '../lib/evidence.mjs';
 //  2. A real phone (landscape and portrait) joins a running round: the join card offers Practise first beside Join the
 //     race (optional, never a queue), the practice bar's Join the race enters the round at the tail, and Help offers
 //     Practice again while the round races. TV and phone captures for the visual self-review.
-// Run on eris (browsers don't run on the Mac):
+// Run on eris's GPU (or JJ_CHROMIUM_GPU=native on the Mac's Metal GPU):
 //   JJ_CHROMIUM_GPU=1 JJ_SERVER_BIN=… JJ_BIN=<jj binary> node --test web/tests/journeys/c10-practice.test.mjs
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -20,12 +20,15 @@ import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
+import { chromiumArgs, closeContextsAfterEach, gpu } from './lib/chromium.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const evidence = join(evidencePath(''), 'P1-C10');
 const CAPTURE = process.env.JJ_CAPTURE_DIR ?? join(evidence, 'captures');
 const BASE = '/p/c10/';
+// CI 8912: the first five-tile practice/replay test passed in 785 s on SwiftShader, leaving only 115 s for the
+// phone journey before the file's 900 s watchdog. Keep both behavioural checks on the real GPU lane.
+const needsGpu = !gpu && 'practice worlds and five rendered tiles run on the GPU lane (CI 8912: 785 s on software GL)';
 const run = {};
 let browser;
 let server;
@@ -90,7 +93,7 @@ async function fourRacing(host) {
   return racers;
 }
 
-test('P1-C10: a newcomer practises in their own world while four race, then joins at the tail; the round never sees it', { timeout: 900_000 }, async () => {
+test('P1-C10: a newcomer practises in their own world while four race, then joins at the tail; the round never sees it', { timeout: 900_000, skip: needsGpu }, async () => {
   const { host, errors } = await hostRoom();
   const racers = await fourRacing(host);
   await host.evaluate(() => window.__jjTest.hold(true));
@@ -204,7 +207,7 @@ test('P1-C10: a newcomer practises in their own world while four race, then join
   assert.deepEqual(errors, []);
 });
 
-test('P1-C10: a phone sees Practise first on the join card while a round runs, practises, joins from the bar, and Help offers it again', { timeout: 600_000 }, async () => {
+test('P1-C10: a phone sees Practise first on the join card while a round runs, practises, joins from the bar, and Help offers it again', { timeout: 600_000, skip: needsGpu }, async () => {
   const { host, errors } = await hostRoom({ width: 1920, height: 1080 });
   await fourRacing(host);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));

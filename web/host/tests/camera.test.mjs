@@ -67,12 +67,14 @@ test('captures first-person-4 and mixed-fp-tp-12', async () => {
 });
 
 test('a respawn cuts the camera (no swoop frames)', async () => {
-  // Seat 2 chases synthetic car index 1, which respawns at tick 203 (and every 10 s after), jumping back to its grid
-  // slot. The camera must jump with it in one frame (a cut), never glide across.
+  // Seat 2 chases synthetic car index 1, which respawns every 10 s. Start from an initialized camera: loading
+  // assets can consume the first respawn before any frame is drawn. Observe a subsequent cut, never a glide.
   const { page, errors } = await open('?synthetic=8&map&tiles=2', { width: 1280, height: 720 });
-  await page.waitForFunction(() => (window.__jjRender?.stats().tick ?? 0) > 260, null, { timeout: 60_000 });
+  await frames(page, 2);
+  const baseline = await page.evaluate(() => window.__jjRender.cameras()[2].cuts);
+  await page.waitForFunction((cuts) => window.__jjRender.cameras()[2]?.cuts > cuts, baseline, { timeout: 60_000 });
   const cams = await page.evaluate(() => window.__jjRender.cameras());
-  assert.ok(cams[2].cuts >= 1, `seat 2 cut on the respawn (cuts ${cams[2].cuts})`);
+  assert.ok(cams[2].cuts > baseline, `seat 2 cut on the respawn (${baseline} → ${cams[2].cuts})`);
   // The chase holds its preset's offset from the car every frame (the farthest preset: 11.5 m back, 6.2 m up), so a
   // camera gliding across the map after the jump would be far from its car.
   const farthest = Math.hypot(11.5, 6.2);

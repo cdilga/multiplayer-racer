@@ -133,6 +133,8 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   const limit = gpu ? 150 : 8000;
   assert.ok(Math.max(...identify) <= limit, `press-to-visible ${identify} ms (≤ ${limit} ms, ${renderer})`);
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
+  // Results have a real deadline. Inspect/capture them without letting a slow renderer consume it.
+  await host.evaluate(() => window.__jjTest.hold(true));
   const results = await host.evaluate(() => window.__jjRoom.view().results);
   assert.equal(results.length, 2, JSON.stringify(results));
   assert.deepEqual(results.map((r) => r.place).sort(), [1, 2]);
@@ -143,6 +145,7 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
 
   // The next round.
   await host.getByRole('button', { name: 'Start next round now' }).click();
+  await host.evaluate(async () => { await window.__jjTest.step(1); await window.__jjTest.hold(false); });
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase) && window.__jjRoom.view().round === 2);
   assert.deepEqual(errors, []);
   await a.ctx.close();

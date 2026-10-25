@@ -53,7 +53,8 @@ test('keep a track at Round complete, pick it from the Tracks page, and race the
     await t.command({ cmd: 'autopilot', on: true });
     for (let k = 0; k < 400 && !window.__jjRoom.view().seats.some((s) => s.finished); k++) await t.step(120);
     await t.command({ cmd: 'finishRace' });
-    t.hold(false);
+    // Keep results on the controlled clock while the host saves the track.
+    await t.step(2);
   });
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission' && !document.querySelector('[data-keep]')?.hidden);
   const laps = await host.evaluate(() => window.__jjRoom.view().seats.map((s) => s.lapMs ?? []));
@@ -70,6 +71,7 @@ test('keep a track at Round complete, pick it from the Tracks page, and race the
 
   // Back to the lobby; the host menu's Tracks page races it next.
   await host.locator('[data-act=lobby]').click({ force: true });
+  await host.evaluate(async () => { await window.__jjTest.step(1); await window.__jjTest.hold(false); });
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   await host.locator('[data-act=menu]').click();
   await host.locator('[data-act=tracks]').click();
