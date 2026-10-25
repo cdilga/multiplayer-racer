@@ -1,0 +1,104 @@
+FAIL /poc/vehicles/review.html?v=cruz-missile 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_cruz_missile_412x915.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-1.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+FAIL /poc/vehicles/review.html?v=cruz-missile 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_cruz_missile_1920x1080.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/damage/damage-strip.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/damage/damage-strip-overview.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/paints/paints-strip.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-1.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/damage-strip-overview.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+FAIL /poc/vehicles/review.html?v=au-hawk 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_au_hawk_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/in-world/grid-24.png
+FAIL /poc/vehicles/review.html?v=au-hawk 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_au_hawk_1920x1080.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+FAIL /poc/vehicles/review.html?v=lion-president 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_lion_president_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/model/lion-president.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/in-world/grid-24.png
+FAIL /poc/vehicles/review.html?v=lion-president 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_lion_president_1920x1080.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/turntable/lods.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/in-world/grid-1.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/in-world/grid-24.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/hawk-dash/media/in-world/grid-1.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/lion-president/media/model/lion-president.lod0.glb
+FAIL /poc/vehicles/review.html?v=tradie-ute 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_tradie_ute_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/model/tradie-ute.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/shaded-comparison/reference-previous-current.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/reference/reference-previous-current.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/grid-24.png
+FAIL /poc/vehicles/review.html?v=tradie-ute 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_tradie_ute_1920x1080.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/shaded-comparison/reference-previous-current.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/reference/reference-previous-current.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/grid-1.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/grid-24.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/in-world/damage-strip-overview.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/tradie-ute/media/model/tradie-ute.lod0.glb
+FAIL /poc/vehicles/review.html?v=postie-bike 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_postie_bike_412x915.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/in-world/grid-1.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/model/postie-bike.lod0.glb
+FAIL /poc/vehicles/review.html?v=postie-bike 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_postie_bike_1920x1080.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/model/postie-bike.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/postie-bike/media/turntable/ladder.png
+FAIL /poc/vehicles/review.html?v=pig-catcher 412x915 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_pig_catcher_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/model/pig-catcher.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/turntable/ladder.png
+FAIL /poc/vehicles/review.html?v=pig-catcher 1920x1080 -> docs/evidence/P1-V-roster-visual/live-deployed/poc_vehicles_review_html_v_pig_catcher_1920x1080.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/shaded-comparison/visual-comparison.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/pig-catcher/media/model/pig-catcher.lod0.glb
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

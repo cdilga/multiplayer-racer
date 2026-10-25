@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cruz-missile",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  },
+  {
+    "id": "au-hawk",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  },
+  {
+    "id": "lion-president",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  },
+  {
+    "id": "tradie-ute",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  },
+  {
+    "id": "postie-bike",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  },
+  {
+    "id": "pig-catcher",
+    "modelReady": true,
+    "imagesDecoded": false,
+    "errors": []
+  }
+]

@@ -8,6 +8,8 @@ Images reviewed: `au-hawk/visual-comparison.png`, `au-hawk/lod-reference-review.
 
 Local review pages use the actual baked GLBs. Phone412×915 and TV1920×1080, before/after fullscreen-style resize, were captured with `art/ui/lib/live-check.mjs`; top-page contacts are `live-local/contact-412x915.png` and `live-local/contact-1920x1080.png`. The individual full-page images remain alongside them. Captures are this repository Mac, Playwright Chromium151.0.7922.34/software rendering, samples1/4/24 in the model viewer. They are not physical phones or a new GPU benchmark.
 
+Deployed f3c175d9 via successful POC run9388. Inspected the phone/TV top-page contacts in `live-deployed-ready/` and the six `viewer-*.png` crops. All six deployed LOD0 GLBs return200 and match local SHA256 (`deployed-hashes.json`). The viewer readiness marker is reached for all six, without uncaught errors (`deployed-viewers.json`). This is a qualified deployment inspection, not a passing automated network smoke: `live-deployed-ready.txt` retains FAIL for each GLB request cancellation. See `deployment.md` for the measured distinction and unresolved cause.
+
 ## Defects found and fixed
 
 The curved bottom face was an actual arch-to-floor fan, not a mask artifact. Cruz/AU/Lion/Tradie now separate level floors and inner wheel wells from arch lips. Dark wells and closed wheel backs fix the follow-on underside gaps. Door waist/shoulder returns, connected coarse sills, Cruz bar bends/mounts and splitter depth, AU moulding/spoiler, Lion side graphics, and Tradie photographed lamp ordering were inspected in shaded views. Bikes now have conforming tank/plastics, smaller shaped engine masses, joined neck/knees, visible raised spots, and lean open spokes. At100px, the coarse tyre silhouette and Postie dome still looked too angular;12-station outer tyres and an8-around/4-ring dome were funded by hidden/duplicated detail savings, without increasing budgets.
@@ -17,6 +19,8 @@ The review site now shows shaded previous/reference/current boards directly. The
 ## Remaining defects
 
 Global artistic qualification is not claimed. Lion weighted silhouette0.9461/0.9400/0.9443 and both bikes' roughly0.85→0.79 tier scores remain below the skill's approximately0.95 target. Their reports retain FAIL for that target, although the named corrective forms, unchanged physics, budgets and reproducible bakes pass. The parent did not change reference masks, score tolerances or budgets. Generated sheets are uncalibrated, and fascia recess/lamp/mirror details, helmets, castings and parcels still have visible simplifications. These are awaiting-review models, not owner likeness acceptance.
+
+Deployed Chromium's network smoke still reports `net::ERR_ABORTED` for the GLB fetch despite completed parsing/rendering and matching downloaded content. The cancellation cause remains unproved; the verifier was not weakened or made to ignore it. The initial smoke also sampled asynchronous image loading too early; the rerun waits for `#msg[hidden]` before checking.
 
 ## Not covered
 

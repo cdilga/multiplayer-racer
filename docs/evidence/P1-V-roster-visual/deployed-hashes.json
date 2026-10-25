@@ -1,0 +1,55 @@
+{
+  "commit": "f3c175d95ffb7fca22194c90176e93a70652d1f9",
+  "deployRun": 9388,
+  "checkedAt": "2026-10-25T11:20:16.379Z",
+  "rows": [
+    {
+      "id": "cruz-missile",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "localSha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "pass": true
+    },
+    {
+      "id": "au-hawk",
+      "status": 200,
+      "bytes": 343816,
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "localSha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "pass": true
+    },
+    {
+      "id": "lion-president",
+      "status": 200,
+      "bytes": 356460,
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "localSha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "pass": true
+    },
+    {
+      "id": "tradie-ute",
+      "status": 200,
+      "bytes": 275152,
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "localSha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "pass": true
+    },
+    {
+      "id": "postie-bike",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "localSha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "pass": true
+    },
+    {
+      "id": "pig-catcher",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "localSha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "pass": true
+    }
+  ]
+}
