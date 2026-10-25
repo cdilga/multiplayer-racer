@@ -22,13 +22,13 @@ export const REGION = { side: [0, 0.5, SX, 1], top: [0, 0, SX, 0.5], windscreen:
 export const SPAN = { side: [4.8, 1.6], top: [4.8, 1.9] };
 
 export const DEFAULT_COLOURS = {
-  paint: '#2c4fb4', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#303236', head: '#ffeaa8', led: '#fff6dc', tail: '#e8311f',
+  paint: '#2c4fb4', trim: '#26282c', glass: '#46525e', tyre: '#2a2a2c', rim: '#303236', head: '#ffeaa8', led: '#fff6dc', tail: '#8b2928',
   stripe: '#16181c', grille: '#111214', white: '#f2f4f8', fog: '#ffe9b0', under: '#1c1d20', bay: '#34373e', chrome: '#b4bcc6', indicator: '#ff9a1a',
-  roofblack: '#141518', taildk: '#3a1412',
+  roofblack: '#141518', taildk: '#697579',
 };
 /** The colours the asset is baked with: paint pure white for the paint key. */
 export const BAKE_COLOURS = { ...DEFAULT_COLOURS, paint: '#ffffff' };
-const EMIT = { head: '#fff0c0', led: '#fff2d0', tail: '#c81a0c', fog: '#ffe2a0', indicator: '#ff8a10', taildk: '#1e0503' };
+const EMIT = { head: '#fff0c0', led: '#fff2d0', tail: '#4b0e0c', fog: '#ffe2a0', indicator: '#ff8a10', taildk: '#000000' };
 
 // The drawing, as data: rectangles and polygons in atlas pixels (y down from the top of the image), drawn in order.
 // Side: the sheet's black "C" graphic, measured off its side view (metres from the nose, height): a broad leg down behind

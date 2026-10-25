@@ -9,7 +9,7 @@
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "Hawk Dash, 25 October: wheel budget moved into the body. The four LOD0 wheels fall from 668 to 176 triangles (74% less), with five-spoke rims drawn in the shared atlas and closed inner sidewalls at every tier. The body now has tucked sills and fuller flanks, rolled shoulders, a crowned bonnet and shaped power bulge, a rounded roof and bowed windscreen/backlight, a wider lower intake, contoured bumper and recessed boot panel. The diffuser, fins and wing tips are closed. The existing collision hulls and handling are retained. The labelled reference / before / after / diff sheets below show the change in the same blue paint and lighting. This is a review candidate; the owner judges the likeness.",
+  "summary": "Hawk Dash, second likeness pass: the front and rear now have sloped shoulders and tucked door sections, broader framed headlamps, angled LED recesses and a lower intake that widens towards the bottom. The rear has framed red/grey lamps, a boot seam, a wider wing, and a six-sided exhaust recess with painted lip, black bevel and larger hexagonal outlets. The low-cost wheels remain. Triangle totals are 2697 / 837 / 553, within the existing 2800 / 900 / 600 budgets. Collision hulls and handling are retained. The enlarged front/rear comparisons lead each sheet below; the owner judges the likeness.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -20,33 +20,33 @@
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0: reference / before / after / silhouette diff",
-        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod0"
+        "label": "LOD0: enlarged front / rear, then all-view comparison",
+        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod0"
       },
       {
         "lod": 1,
-        "label": "LOD1: reference / before / after / silhouette diff",
-        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod1"
+        "label": "LOD1: enlarged front / rear, then all-view comparison",
+        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod1"
       },
       {
         "lod": 2,
-        "label": "LOD2: reference / before / after / silhouette diff",
-        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod2"
+        "label": "LOD2: enlarged front / rear, then all-view comparison",
+        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod2"
       }
     ],
-    "note": "Generated reference sheets are unchanged. The comparison columns are labelled REFERENCE, BEFORE (24 Oct), AFTER (25 Oct), and AFTER silhouette diff. The bottom row repeats reference / before / after in the front three-quarter view. Flat shading and paint are identical between the two model renders. Silhouette IoU measures the outline; the bonnet, shoulder, glass and bumper curves need the by-eye comparison too."
+    "note": "Reference sheets and comparison cameras are unchanged. Each sheet starts with enlarged FRONT and REAR rows: REFERENCE / PREVIOUS PASS / REVISED PASS. Below are the four views plus silhouettes and three-quarter comparisons. This pass prioritises internal shapes from owner feedback; weighted outline IoU falls to .9495 / .9472 / .9362, mainly from the wider nose/tail and wing in top view. That tradeoff is visible in the diffs and recorded in validation.md."
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-hawk-curves/lods.png",
-    "validation": "docs/evidence/P1-V-hawk-curves/validation.md"
+    "sheet": "docs/evidence/P1-V-hawk-fascia/lods.png",
+    "validation": "docs/evidence/P1-V-hawk-fascia/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-hawk-curves/damage-strip.png",
-    "overview": "docs/evidence/P1-V-hawk-curves/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-hawk-fascia/damage-strip.png",
+    "overview": "docs/evidence/P1-V-hawk-fascia/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-hawk-curves/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-hawk-fascia/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour tints the paint; the twin stripes, C graphic, framed glass, lamps and atlas-drawn rims/tyres keep their own colours. White and five bright seat colours are shown below."
   },
@@ -54,26 +54,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-hawk-curves/grid-1.png"
+      "path": "docs/evidence/P1-V-hawk-fascia/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-hawk-curves/grid-4.png"
+      "path": "docs/evidence/P1-V-hawk-fascia/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-hawk-curves/grid-24.png"
+      "path": "docs/evidence/P1-V-hawk-fascia/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-hawk-curves/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-hawk-fascia/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-hawk-curves/validation.md"
+    "report": "docs/evidence/P1-V-hawk-fascia/validation.md"
   },
   "profile": "assets/profiles/hawk-dash.json",
   "handling": {

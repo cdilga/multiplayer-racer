@@ -1,46 +1,17 @@
-Vehicle Model Validation: PASS (visual rebuild and review candidate; caveats below)
+Vehicle Model Validation: PASS (publishable visual candidate; outline tradeoff below)
 
-Vehicle: Hawk Dash. Parts: core, front, back, door_FL/FR/RL/RR, wheel_FL/FR/RL/RR; dark engine/cabin/boot interiors retained.
-Build: the commit containing this report, based on 798b7d8e0e4707e7980d058edb23447462106d01. Captured 2026-10-25 on the Mac with Playwright Chromium 151.0.7922.34, software GL. These are browser captures, not device measurements.
-Contract: owner request 2026-10-25, br-8h3u.11.1 / P1-V-hawk-curves; R81/R86; existing 2800/900/600 budgets. Method: lowpoly-model-from-refs; validation: vehicle-model-validation. References and masks are unchanged.
+Hawk Dash, br-8h3u.11.1 / P1-V-hawk-curves, owner follow-up 25 October 2026. NobleMoose. Build: the commit containing this report, based on the published first pass 72c518500. Mac, Playwright Chromium 151 software GL; browser evidence, not device measurements. Requirements: R81/R86, existing contract and 2800/900/600 budgets. lowpoly-model-from-refs and vehicle-model-validation applied.
 
-Reused: existing Hawk source/bake, AU Hawk body-section construction, reference fitter and capture tools, shared paint-key material, review builder and evidence viewer. No host renderer/material/batching changes. The POC viewer now uses the canonical premultiplied paint shader (its obsolete white-key rule rendered current atlases black); review/build.mjs copies and checks that shared module for the self-hosted design site. Its camera now frames the visible bounds at the actual canvas aspect, including detached parts on portrait phones. Collision hull points were extracted from the baseline GLB into colliders.json and retained verbatim; the visual sampling does not retune handling.
+This pass changes model/params/atlas, reproducible bake, synced profile and POC review evidence. It reuses the existing loft, reference fitter, bake, one-material paint atlas, evidence viewer and review builder. No host renderer, simulation, material/batching or audio code changed. Existing colliderPoints and handling are retained.
 
-## Triangle allocation
+- PASS source / contract / reproducibility: bake.txt, reproducibility.txt, contract.txt. GLBs reproduced byte-for-byte; sidecar and profile validate without waivers.
+- PASS geometry / budgets: geometry.json and verify.mjs inspect shipped GLBs: 2697 / 837 / 553 triangles versus 2800 / 900 / 600. All eleven damage part IDs, one material, finite vertices/normals and nonzero triangles. Wheels cost 176 / 112 / 112; sealed inner sidewalls, manifold edges and ground contact retained. Previous pass totals were 2689 / 883 / 597.
+- PASS visual cue revision: stronger sill and shoulder taper at every tier; door seams follow the skin; front intake widens downward; broader outlined headlamps and angled vertical LED recesses. Rear gains red/grey framed lamps, boot seam, full-width wing and shaped six-sided exhaust surround with painted lip, dark bevel, central fins and larger hexagonal tips. Actual rear-cap triangles now match the decal projection, fixing broken stripes on nonplanar polygons. Closed diffuser, fins and wing tips retained. Coarse tiers use continuous flat fascia graphics; their stripes sit behind grille/intake/lamp layers, avoiding broken lamps and floating stripe fragments. Fascia ray projection is restricted to its own front/back part so a missing rear hit cannot paint onto a door or front fender and corrupt the hinge bounds.
+- WARN silhouette tradeoff: weighted IoU .9495 / .9472 / .9362 versus first-pass .9652 / .9612 / .9490. Top-view widening is the largest regression. Reference sheets and cameras are unchanged, and this candidate is not claimed to improve every outline. Enlarged front/rear rows and the previous/revised/diff sheets expose the tradeoff for owner review. Exact per-view scores are in reference-lodN/score.json. LOD2 falls below the method's approximate .95 target; the owner likeness verdict is pending.
+- PASS paint / hinges / identity contract: focused pivots, paint-key and spec-twin tests in paint-spec-tests.txt; one shared atlas material, neutral wheels/lamps and seat paint retained. Paint strips and LOD sheets reviewed. Existing roof-number mount retained above the unchanged crown. Small-grid evidence is a viewer sample, not proof of runtime number readability or an N×N host benchmark.
+- PASS damage geometry: damage-strip.png and damage-strip-overview.png show intact, loose, detached and stripped states with dark bays using existing evidence tooling. This does not retest dynamic debris lifetime; damage runtime code is unchanged.
+- PASS physics fit: sim.json runs the focused settle fixture and existing Hawk straight-run fixture through native jj-sim; both pass and replay matches. Collision hulls and handling are unchanged; no driving-feel claim.
+- PASS POC loading and controls: review-probe.mjs exercises all LODs, bright paint and intact/loose/detached through the actual review page in Chromium and WebKit. Local and deployed results are recorded in self-review.md.
+- WARN unchanged engine lab: previous pass recorded seven unrelated broad sound-lab failures in P1-V-hawk-curves/engine.txt, tracked by br-8h3u.12. The profile passed schema validation then. Audio has not changed and the broad sound gate is not recertified here.
 
-Counts are from baked GLB damage parts, excluding collider proxies and hidden interior blocks. Full per-part counts and hashes: before-geometry.json and geometry.json.
-
-| Tier | Wheels before → after | Body before → after | Total before → after | Existing budget |
-|---|---:|---:|---:|---:|
-| LOD0 | 668 → 176 | 1780 → 2513 | 2448 → 2689 | 2800 |
-| LOD1 | 152 → 112 | 744 → 771 | 896 → 883 | 900 |
-| LOD2 | 152 → 112 | 444 → 485 | 596 → 597 | 600 |
-
-LOD0 wheel cost falls 73.7%, from 27.3% to 6.5% of the intact car. Twelve-sided LOD0 and eight-sided lower-tier tyres have closed inner sidewalls. Five-spoke rims are drawn in the existing atlas. The body gains fuller flanks, tucked sills, rolled shoulders, bonnet/boot crown, a multi-section power bulge, roof crown and stations, bowed windscreen/backlight, shaped bumper/intake and boot panel. Glass and fascia overlays follow their underlying triangles. Diffuser, fins and wing tips are closed solids. LOD2 retains four exhaust outlets as single silver facets and mirrors as closed triangular prisms.
-
-## Reference comparison
-
-Each reference-lodN/sheet.png is labelled reference / before / after / after silhouette diff, with an additional three-quarter comparison. Before uses the baseline source and the same fit viewer, camera and blue paint as after. The outline metric does not measure internal body curvature.
-
-| Tier/view | Before | After |
-|---|---:|---:|
-| LOD0 weighted | .9633 | .9652 |
-| LOD0 side / top / front / rear | .9792 / .9530 / .9335 / .9713 | .9761 / .9584 / .9373 / .9773 |
-| LOD1 weighted | .9609 | .9612 |
-| LOD1 side / top / front / rear | .9795 / .9447 / .9295 / .9752 | .9755 / .9506 / .9339 / .9719 |
-| LOD2 weighted | .9505 | .9490 |
-| LOD2 side / top / front / rear | .9586 / .9579 / .9082 / .9562 | .9546 / .9598 / .9138 / .9476 |
-
-LOD0 improves overall, especially front/top/rear; side falls slightly. LOD2 is approximately the skill's .95 target and falls .0015 overall, principally at the rear. This is a body-likeness candidate for owner review, not a claim that every outline improved. The reference still has rounder arches and a more detailed fascia than the coarse tiers. The existing 0.4 m physics wheel radius is retained.
-
-## Checks and evidence
-
-- PASS source/contract/reproducibility: bake.txt, reproducibility.txt (`node tools/vehicles/bake.mjs art/vehicles/hawk-dash --check`), contract.txt (`jj vehicle sync` and `jj validate`), no waivers.
-- PASS geometry/budget: verify.mjs checks the shipped GLBs, all 11 part IDs, finite vertices/normals, nonzero triangles, one material and sealed manifold wheels at all tiers. Wheel bottoms meet ground and wheel pivots match sidecar. geometry.json records per-part counts.
-- PASS paint and hinges: `node --test tools/vehicles/test/{pivots,paint-key,spec-twins}.test.mjs`, 42 passed (paint-spec-tests.txt). Bright/white/near-black paint keeps tyres, rims, lamps and framed glass neutral (paints.png, paints-strip.png).
-- PASS damage geometry: damage-strip.png and damage-strip-overview.png show intact, loose, detached and stripped-shell poses with dark bays. This is the existing evidence viewer, not a new simulation test of debris lifetime; no damage runtime code changed.
-- PASS physics fit: final-sim.json, `jj sim --json --profile assets/profiles/hawk-dash.json settle.json scenarios/handling/roster-straight-hawk-dash.json`, both fixtures pass and replay matches. The focused settle fixture reuses the original idle-settle drops and settle checks verbatim. Original Cruz idle-settle asks for at least 2° pitch; Hawk reaches 1.6967° before and after and fails those two Cruz-specific checks identically (sim.json, physics-before-after.json). All other checks pass; before/after state hashes are identical. No fixture was relaxed to claim a handling improvement.
-- PASS visual inspection: views.png, lods.png, colliders.png, all three comparison sheets, damage and paint strips, grid-1/4/24.png. These grids use the model evidence viewer. Current roof-number anchor was raised to clear the new crown. Runtime identity and N×N draw benchmarks were not rerun because host loader/material/batching are unchanged; the grids do not prove roof-number readability. review-probe.mjs exercises all three LODs, three seat paints and intact/loose/detached states through the actual POC controls in Chromium and WebKit; screenshots and checks.json are in local-interactions/ and live-interactions/.
-- WARN engine gate: the unchanged Hawk sound profile passes schema validation (engine.txt P7). The broad sound-lab check reports seven failures: M5/B12/L6 squeal, B10/L1 firing pitch, K2 start and SL1 control inventory. These are outside this geometry change; tracked with br-8h3u.12. No sound files changed. This report does not certify the sound lab.
-
-Remaining blockers for publishing this visual candidate: none. Owner likeness verdict pending on /poc/vehicles/review.html?v=hawk-dash. Full batch CI is handed to the deploy worker; no green-CI claim here. Deployed page checks are recorded in self-review.md.
+Visual evidence: views.png, lods.png, paints.png, colliders.png; reference-lod0/1/2/sheet.png; damage and paint strips; grid-1/4/24.png. Deployed verification and browser limitations: self-review.md. This report qualifies the visual review candidate, not full game readiness or green batch CI.

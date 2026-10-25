@@ -4,7 +4,7 @@
   "source": {
     "sidecar": "art/vehicles/hawk-dash/hawk-dash.asset.json",
     "sidecar_sha256": "aaa80770ec8963cabd7b674c2cae00c567dca241a9e24c6390e9fd2cd2205023",
-    "lod0_sha256": "7959210d50226b76be5263e0d78e50cb4282195e3e034b751bb0036abd56b185"
+    "lod0_sha256": "10638feb8a379d2c14273aada2422996e3f2d755babb7e29bcc6f0b0dd520281"
   },
   "geometry": {
     "hull": [

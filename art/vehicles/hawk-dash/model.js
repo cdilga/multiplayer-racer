@@ -29,7 +29,7 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, roofDome: true, wheelSeg: 12, bayBoxes: true, flare: 9, flareLip: true, flareEnds: true, cell: 0.1, lampCell: 0.06, lampOff: 0, lamps: 'full', intakeBars: 3, slots: true, splitter: true, vents: 4, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 4, handles: true, skirts: true, seams: true, corners: true },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, roofDome: true, wheelSeg: 12, bayBoxes: true, flare: 9, flareLip: true, flareEnds: true, cell: 0.1, lampCell: 0.06, lampOff: 0, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 4, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 4, handles: true, skirts: true, seams: true, corners: true },
   1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: false, wheelSeg: 8, bayBoxes: false, flare: 5, flareLip: false, flareEnds: false, cell: 0.35, lampCell: 0.2, lampOff: 0.02, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 0, bulge: true, windows: true, mirrors: 'box', wing: 'posts', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
   2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, bayBoxes: false, flare: 0, flareLip: false, flareEnds: false, cell: 0.35, lampCell: 0.25, lampOff: 0.025, lamps: 'flat', intakeBars: 0, slots: false, splitter: false, vents: -1, bulge: false, windows: 'flat', mirrors: 'wedge', wing: 'plate', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
 };
@@ -147,9 +147,10 @@ function makeSoups(P, lod) {
     const yb = lerpCurve(P.yBot, z), ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), hw = lerpCurve(P.hw, z);
     const ay = archY(z), lift = ay > 0 ? Math.max(yb, ay) : yb;
     const y2 = Math.max(lift + 0.03, yb + P.skirt), y3 = Math.max(y2 + 0.06, ysh - P.sideDrop);
-    const pts = [[0, yb, z], [s * (hw - P.floorIn), lift, z], [s * (hw - (T.belly ? P.section.sillTuck : 0)), y2, z]];
+    const endT = Math.min(1, (P.zNose-z)/.45, (z-P.zTail)/.45), tuck = .45 + .55 * endT;
+    const pts = [[0, yb, z], [s * (hw - P.floorIn*tuck), lift, z], [s * (hw - (T.belly ? P.section.sillTuck*tuck : 0)), y2, z]];
     if (T.belly) pts.push([s * hw, y2 + (y3 - y2) * P.section.bellyT, z]);
-    pts.push([s * (hw - (T.belly ? P.section.upperTuck : 0)), y3, z], [s * (hw - P.shoulderIn), ysh, z]);
+    pts.push([s * (hw - P.section.upperTuck), y3, z], [s * (hw - P.shoulderIn), ysh, z]);
     if (T.dome) pts.push([s * (hw - P.shoulderIn) * P.section.deckX, ycr - (ycr - ysh) * P.section.deckDrop, z]);
     pts.push([0, ycr, z]);
     return pts;
@@ -206,8 +207,8 @@ function makeSoups(P, lod) {
         const pc = clip(clip(clip(clip(outline, xs[i], 1), xs[i + 1], -1), ys[j], 1, 1), ys[j + 1], -1, 1);
         if (pc.length < 3) continue;
         const pts = pc.map(([x, y]) => { const w = widthAt(y), fade = w > 1e-6 ? Math.max(0, 1 - (x / w) ** 2) : 0; return [x, y, z + sign * lerpCurve(profile, y) * fade]; });
-        S(id).face(pts, sw, [0, 0, sign]);
-        for (let k = 1; k < pts.length - 1; k++) hull.push([pts[0], pts[k], pts[k + 1]]);
+        // Triangulate once: decoration must use the identical planes, including on the rear cap.
+        for (let k = 1; k < pts.length - 1; k++) { const tri = [pts[0], pts[k], pts[k + 1]]; S(id).face(tri, sw, [0, 0, sign]); hull.push(tri); }
       }
       return;
     }
@@ -220,9 +221,12 @@ function makeSoups(P, lod) {
   // ── decals on the nose and tail: a polygon measured in the sheet's front (dir 1) or rear (dir −1) view, in metres (x
   // across the car, the rear view's x mirrored so +x is still the car's left; y up), projected along the car's axis onto
   // the tub and lifted off it by `off` along the surface normal. It is cut into T.cell cells so it follows the curve. ──
+  const inEnd = (tri, dir) => dir > 0 ? tri.every((p) => p[2] >= zA - 1e-6) : tri.every((p) => p[2] <= zC + 1e-6);
   const ray = (o, d) => {
     let best = null;
-    for (const [a, b, c] of hull) {
+    for (const tri of hull) {
+      if (!inEnd(tri, -d[2])) continue; // a lamp cannot project through a quarter onto a door or the opposite bumper
+      const [a, b, c] = tri;
       const e1 = sub(b, a), e2 = sub(c, a), pv = cross(d, e2), det = dot(e1, pv);
       if (Math.abs(det) < 1e-12) continue;
       const iv = 1 / det, tv = sub(o, a), u = dot(tv, pv) * iv; if (u < -1e-9 || u > 1 + 1e-9) continue;
@@ -235,25 +239,13 @@ function makeSoups(P, lod) {
   };
   // Clip decoration to the actual visible facets. Grid decals bridged bumper recesses and disappeared into the skin;
   // a facet owns its exact polygon now, with a constant view-axis offset so adjacent pieces meet without cracks.
-  const coarseDecal = (so, poly, sw, off, dir, cell) => {
-    const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    const nx = Math.max(1, Math.ceil((x1 - x0) / cell - 1e-6)), ny = Math.max(1, Math.ceil((y1 - y0) / cell - 1e-6));
-    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
-      const pc = clip(clip(clip(clip(poly, x0 + (x1 - x0) * i / nx, 1), x0 + (x1 - x0) * (i + 1) / nx, -1), y0 + (y1 - y0) * j / ny, 1, 1), y0 + (y1 - y0) * (j + 1) / ny, -1, 1);
-      if (pc.length < 3) continue;
-      const hits = pc.map(([x, y]) => ray([x, y, dir > 0 ? P.zNose + 1 : P.zTail - 1], [0, 0, -dir]));
-      if (hits.some((h) => !h)) continue;
-      so.face(hits.map((h) => [h.p[0], h.p[1], h.p[2] + dir * off]), sw, [0, 0, dir]);
-    }
-  };
   const decal = (so, poly, sw, off, dir, cell = T.cell) => {
-    if (lod > 0 && sw !== 'head') return coarseDecal(so, poly, sw, off, dir, cell);
     const area = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
-    for (const tri of hull) {
-      const det = area(...tri); if (Math.abs(det) < 1e-10) continue;
+    const clipPoly = (poly, boundary) => {
+      const sign = Math.sign(boundary.reduce((sum,a,i) => { const b=boundary[(i+1)%boundary.length]; return sum+a[0]*b[1]-b[0]*a[1]; },0));
       let pc = poly;
-      for (let e = 0; e < 3 && pc.length >= 3; e++) {
-        const a = tri[e], b = tri[(e + 1) % 3], sign = Math.sign(det), out = [];
+      for (let e = 0; e < boundary.length && pc.length >= 3; e++) {
+        const a = boundary[e], b = boundary[(e + 1) % boundary.length], out = [];
         for (let i = 0; i < pc.length; i++) {
           const p = pc[i], q = pc[(i + 1) % pc.length], dp = area(a, b, p) * sign, dq = area(a, b, q) * sign;
           if (dp >= -1e-9) out.push(p);
@@ -261,6 +253,25 @@ function makeSoups(P, lod) {
         }
         pc = out;
       }
+      return pc;
+    };
+    const zEnd = dir > 0 ? P.zNose : P.zTail;
+    // At distance these are deliberately flat fascia graphics. One continuous polygon avoids grid holes.
+    if (lod > 0 && sw !== 'head') {
+      const pc = sw === 'stripe' ? clipPoly(poly, capPoly(zEnd).map(([x,y]) => [x,y])) : poly;
+      if (pc.length >= 3) so.face(pc.map(([x,y]) => [x,y,zEnd+dir*off]), sw, [0,0,dir]);
+      return;
+    }
+    // Coarse end caps are one plane. Clip once to their outline rather than paying for their fan's internal edges.
+    // This keeps lamps and stripes continuous without a grid bridging onto a different quarter-panel plane.
+    if (lod > 0) {
+      const pc = clipPoly(poly, capPoly(zEnd).map(([x,y]) => [x,y]));
+      if (pc.length >= 3) so.face(pc.map(([x,y]) => [x,y,zEnd+dir*off]), sw, [0,0,dir]);
+    }
+    for (const tri of hull) {
+      if (!inEnd(tri, dir) || (lod > 0 && tri.every((p) => Math.abs(p[2]-zEnd)<1e-8))) continue;
+      const det = area(...tri); if (Math.abs(det) < 1e-10) continue;
+      const pc = clipPoly(poly, tri);
       if (pc.length < 3) continue;
       const at = (p) => { const u = area(tri[0], p, tri[2]) / det, v = area(tri[0], tri[1], p) / det; return [p[0], p[1], tri[0][2] + u * (tri[1][2] - tri[0][2]) + v * (tri[2][2] - tri[0][2])]; };
       const centre = pc.reduce((a, p) => a.map((v, k) => v + p[k] / pc.length), [0, 0]);
@@ -270,6 +281,7 @@ function makeSoups(P, lod) {
     }
   };
   const mirrorX = (poly) => poly.map(([x, y]) => [-x, y]).reverse();
+  const expandLamp = (poly, w) => { const c = poly.reduce((a,p) => a.map((v,k)=>v+p[k]/poly.length),[0,0]); return poly.map(([x,y]) => [x + Math.sign(x-c[0])*w, y + Math.sign(y-c[1])*w]); };
   const both = (fn) => { for (const s of [1, -1]) fn(s, (poly) => (s > 0 ? poly : mirrorX(poly))); };
 
   // ── greenhouse: ring per cabin station, one side: base (belt) → glass top → roof edge → crown. The sides are painted
@@ -386,7 +398,7 @@ function makeSoups(P, lod) {
   // ── front fascia (part: front): measured off the sheet's front view, (x, y) in metres, projected onto the nose ──
   const Fr = P.front, ybN = lerpCurve(P.yBot, P.zNose);
   // the twin stripes run down the nose to the bumper
-  for (const s of [1, -1]) decal(F, s > 0 ? Fr.stripe : mirrorX(Fr.stripe), 'stripe', 0.004 + T.lampOff, 1);
+  for (const s of [1, -1]) decal(F, s > 0 ? Fr.stripe : mirrorX(Fr.stripe), 'stripe', 0.004, 1);
   // the black upper grille: a long hexagon between the lamps, framed in trim
   decal(F, Fr.grille, 'trim', 0.006, 1);
   decal(F, Fr.grilleIn, 'grille', 0.009, 1);
@@ -396,6 +408,7 @@ function makeSoups(P, lod) {
     decal(F, [[-w, y - 0.008], [w, y - 0.008], [w, y + 0.008], [-w, y + 0.008]], 'trim', 0.01, 1); }
   // the swept headlamps: a dark rim and the lamp itself, wrapping round the corner onto the wing
   both((s, m) => {
+    if (lod === 0) decal(F, m(expandLamp(Fr.lamp,.008)), 'trim', .008, 1);
     decal(F, m(Fr.lamp), 'head', 0.01 + T.lampOff, 1, T.lampCell);
   });
   // the bumper corners: vertical LED slots in black surrounds
@@ -413,27 +426,47 @@ function makeSoups(P, lod) {
   }
   // door seams: thin dark strips on the door edges
   if (T.seams) for (const s of [1, -1]) for (const z of [zA - 0.012, P.zB, zC + 0.012]) {
-    const x = s * (lerpCurve(P.hw, z) + 0.003), y0 = Math.max(lerpCurve(P.yBot, z) + P.skirt, archY(z)) + 0.02, y1 = lerpCurve(P.ySh, z) - P.sideDrop - 0.01;
-    S('core').face([[x, y0, z + 0.008], [x, y0, z - 0.008], [x, y1, z - 0.008], [x, y1, z + 0.008]], 'trim', [s, 0, 0]);
+    const y0 = Math.max(lerpCurve(P.yBot, z) + P.skirt, archY(z)) + 0.02, y1 = lerpCurve(P.ySh, z) - 0.01;
+    const ys = [y0, ...ring(z, s).slice(2, DECK + 1).map((p) => p[1]).filter((y) => y > y0 && y < y1), y1];
+    for (let i = 0; i < ys.length - 1; i++) {
+      const edge = (y, dz) => [skinX(z + dz, y, s) + s * 0.003, y, z + dz];
+      S('core').face([edge(ys[i], .006), edge(ys[i], -.006), edge(ys[i+1], -.006), edge(ys[i+1], .006)], 'trim', [s, 0, 0]);
+    }
   }
 
   // ── rear (part: back): measured off the sheet's rear view, projected onto the tail ──
   const Bk = S('back'), zt = P.zTail, Rr = P.rear;
-  for (const s of [1, -1]) decal(Bk, s > 0 ? Rr.stripe : mirrorX(Rr.stripe), 'stripe', 0.004 + T.lampOff, -1);
+  for (const s of [1, -1]) decal(Bk, s > 0 ? Rr.stripe : mirrorX(Rr.stripe), 'stripe', 0.004, -1);
   // the tail lamps: a red lamp, its smoked centre, wrapping onto the quarter
   both((s, m) => {
+    if (lod === 0) decal(Bk, m(expandLamp(Rr.lamp,.008)), 'trim', .006, -1);
     decal(Bk, m(Rr.lamp), 'tail', 0.008 + T.lampOff, -1, T.lampCell);
     if (T.lamps === 'full') decal(Bk, m(Rr.lampIn), 'taildk', 0.012 + T.lampOff, -1, T.lampCell);
   });
-  // the black diffuser hanging under the bumper, with fins, and four chrome tail pipes in two pairs
-  { const D = Rr.diffuser, hwT = lerpCurve(P.hw, zt);
-    Bk.slab([[-D.w, D.y0, zt - 0.01], [D.w, D.y0, zt - 0.01], [D.w, D.y1, zt - 0.01], [-D.w, D.y1, zt - 0.01]], [[-D.w, D.y0 + 0.03, zt + D.l], [D.w, D.y0 + 0.03, zt + D.l], [D.w, D.y1, zt + D.l], [-D.w, D.y1, zt + D.l]], 'under');
+  if (lod === 0) {
+    const seam = [[-.58,1.01],[-.53,.77],[-.47,.715],[.47,.715],[.53,.77],[.58,1.01]];
+    for (let i=0;i<seam.length-1;i++) {
+      const [a,b]=[seam[i],seam[i+1]], dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),w=.003;
+      decal(Bk, [[a[0]-dy/len*w,a[1]+dx/len*w],[b[0]-dy/len*w,b[1]+dx/len*w],[b[0]+dy/len*w,b[1]-dx/len*w],[a[0]+dy/len*w,a[1]-dx/len*w]], 'trim', .007,-1);
+    }
+  }
+  // Sculpted six-sided exhaust surround: painted lip, dark bevel, recessed black centre.
+  // Keep the broad bottom and angled top corners visible from the rear and three-quarter view.
+  { const D = Rr.diffuser;
+    const outline = [[-D.w,D.y0],[-D.w+.035,D.y1-.055],[-D.w+D.corner,D.y1],[D.w-D.corner,D.y1],[D.w-.035,D.y1-.055],[D.w,D.y0]];
+    const inner = [[-D.w+D.rim,D.y0],[-D.w+.035+D.rim,D.y1-.065],[-D.w+D.corner+D.rim,D.y1-D.rim],[D.w-D.corner-D.rim,D.y1-D.rim],[D.w-.035-D.rim,D.y1-.065],[D.w-D.rim,D.y0]];
+    const lip = outline.map(([x,y]) => [x,y,zt-.045]);
+    const outer = outline.map(([x,y]) => [x*1.035,y + (y>D.y0 ? .032 : 0),zt-.015]);
+    if (lod < 2) for (let i=0;i<outline.length-1;i++) Bk.face([outer[i],outer[i+1],lip[i+1],lip[i]],'paint',[0,0,-1]);
+    const inset = inner.map(([x,y]) => [x,y,zt-.025]);
+    if (lod === 0) for (let i=0;i<outline.length-1;i++) Bk.face([lip[i],lip[i+1],inset[i+1],inset[i]],'trim',[0,0,-1]);
+    Bk.slab(inset, inner.map(([x,y]) => [x,y,zt+D.l]), 'under');
     for (let i = 0; i < T.diffFins; i++) { const x = Rr.finX[i % Rr.finX.length] * (i < Rr.finX.length ? 1 : -1), w = 0.012, d = 0.05, y0 = D.y0 + 0.02, y1 = D.y1 - 0.02;
-      Bk.slab([[x - w, y0, zt - 0.01], [x - w, y1, zt - 0.01], [x - w, y1, zt - 0.01 - d * 0.5], [x - w, y0, zt - 0.01 - d]], [[x + w, y0, zt - 0.01], [x + w, y1, zt - 0.01], [x + w, y1, zt - 0.01 - d * 0.5], [x + w, y0, zt - 0.01 - d]], 'trim'); }
+      Bk.slab([[x - w, y0, zt - 0.03], [x - w, y1, zt - 0.03], [x - w, y1, zt - 0.03 - d * 0.5], [x - w, y0, zt - 0.03 - d]], [[x + w, y0, zt - 0.03], [x + w, y1, zt - 0.03], [x + w, y1, zt - 0.03 - d * 0.5], [x + w, y0, zt - 0.03 - d]], 'trim'); }
     for (const s of [1, -1]) for (const x of Rr.pipeX) {
-      const c = [s * x, Rr.pipeY, zt - 0.01], r0 = Rr.pipeR;
+      const c = [s * x, Rr.pipeY, zt - 0.03], r0 = Rr.pipeR;
       if (T.exhaust === 'rings') {
-        const n = 8, ring2 = (rr, dz) => Array.from({ length: n }, (_, i) => { const a = Math.PI * 2 * (i + 0.5) / n; return [c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr, c[2] - dz]; });
+        const n = 6, ring2 = (rr, dz) => Array.from({ length: n }, (_, i) => { const a = Math.PI * 2 * i / n; return [c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr, c[2] - dz]; });
         const o = ring2(r0, 0.05), o0 = ring2(r0, 0), inn = ring2(r0 * 0.7, 0.05), deep = ring2(r0 * 0.7, 0.02);
         for (let i = 0; i < n; i++) { const j = (i + 1) % n;
           Bk.face([o0[i], o0[j], o[j], o[i]], 'chrome', sub(mix(o[i], o[j], 0.5), [c[0], c[1], c[2] - 0.05])); // the pipe
@@ -447,7 +480,7 @@ function makeSoups(P, lod) {
         Bk.face(face, 'chrome', [0, 0, -1]);
       }
     }
-    void hwT; }
+    }
   // the wing: a body-colour blade on two short black posts, its tips turned down (a plain plate on the deck at LOD2)
   { const SP = P.spoiler, xs = SP.span * SP.postX;
     Bk.box(0, SP.y, SP.z, SP.span * 2, 0.035, SP.chord, { all: 'trim', py: tUV, pz: sUV, nz: sUV }, [SP.tilt, 0, 0]);
