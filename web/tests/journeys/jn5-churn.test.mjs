@@ -115,8 +115,9 @@ async function phone(url, name) {
 
 async function leave(host, p, { held = false } = {}) {
   // Leave asks for a second tap within 3 s (no browser dialogs).
-  const chooserLeave = p.page.locator('[data-overlay=cars] [data-act=car-leave]');
-  const btn = await chooserLeave.count() ? chooserLeave : p.page.getByRole('button', { name: /Leave/ });
+  // Returning to the Lobby opens the car sheet asynchronously. Resolve its Leave action at click time:
+  // choosing once with count() can retain the play-screen button after the sheet covers it.
+  const btn = p.page.locator('[data-overlay=cars] [data-act=car-leave], body:not(:has([data-overlay=cars])) button[data-act=leave]');
   const t0 = Date.now();
   await btn.click();
   const t1 = Date.now();

@@ -63,3 +63,25 @@ preserves the button and sends exactly one Start command.
 
 These are local captures. Deployed review follows the new image, before repair closure. Physical
 phones/TV and Safari are not covered; the touch-sized WebKit run is Playwright WebKit.
+
+## Deployed CI Lobby repair review — d9a795cc, 2026-10-25
+
+Preview: https://jammers-preview.dilger.dev/p/v02-d9a795cc/ (`/version` confirms the build,
+protocol 7 and preview realm). Mac arm64, pinned Node 26.10.0, Playwright Chromium/WebKit.
+These are the deployed fixture screens; the publisher's separate smoke exercises a real room.
+
+Looked at every original PNG before archiving the thirteen JPEGs:
+
+- `ci-lobby/public/host_roundfixture_lobby_2_412x915.jpg` and `ci-lobby/public/host_roundfixture_lobby_2_412x915_after-resize.jpg`: complete QR, two Ready cards, mode and Start controls, hints and footer.
+- `ci-lobby/public/host_roundfixture_lobby_2_915x412.jpg` and `ci-lobby/public/host_roundfixture_lobby_2_915x412_after-resize.jpg`: short landscape keeps the actions and hints above the footer.
+- `ci-lobby/public/host_roundfixture_lobby_2_375x667.jpg` and `ci-lobby/public/host_roundfixture_lobby_2_375x667_after-resize.jpg`: small portrait wraps the controller hint without covering the actions.
+- `ci-lobby/public/host_roundfixture_lobby_2_1366x768.jpg` and `ci-lobby/public/host_roundfixture_lobby_2_1366x768_after-resize.jpg`: complete laptop columns and brush labels.
+- `ci-lobby/public/host_roundfixture_lobby_2_1920x1080.jpg` and `ci-lobby/public/host_roundfixture_lobby_2_1920x1080_after-resize.jpg`: readable TV labels, cards, QR and actions.
+- `ci-lobby/public/webkit-updated.jpg`: Ready/unplugged updates render while an actual pointer press delivers exactly one Start command.
+- `ci-lobby/public/webkit-empty-derby.jpg`: empty roster, zero Ready, Derby selected and Start derby disabled.
+- `ci-lobby/public/webkit-derby.jpg`: three arriving cards, enabled Start derby, brush intact and three-minute rule hint.
+
+All five unchanged live-check viewport checks pass, including fullscreen/resize handling. No new
+blank, clipped or overlapping content observed. The deployed WebKit interaction assertions pass;
+`ci-lobby/public/matrix.txt` and `webkit.json` record the runs. No additional visual fix was needed.
+Physical phones, TV hardware and Safari remain outside this emulated-browser receipt.

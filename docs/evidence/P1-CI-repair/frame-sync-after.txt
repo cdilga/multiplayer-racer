@@ -1,0 +1,50 @@
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs d9a795cc0905.
+d9a795cc0905d06d3b547503c3e0fd8fc894d381
+﹣ chromium: a generated loop is ridden upside down at the top, out upright, matching native; chase and overview see it (43.000838ms) # SKIP
+# 1 tiles: 70 checks, 0 lost
+# 4 tiles: 70 checks, 0 lost
+# 9 tiles: 70 checks, 0 lost
+✔ chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second (44876.205967ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 54334.607661
+
+Full normal loop file:
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs d9a795cc0905.
+d9a795cc0905d06d3b547503c3e0fd8fc894d381
+✔ chromium: a generated loop is ridden upside down at the top, out upright, matching native; chase and overview see it (11678.644951ms)
+# 1 tiles: 70 checks, 0 lost
+# 4 tiles: 70 checks, 0 lost
+# 9 tiles: 70 checks, 0 lost
+✔ chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second (23583.680263ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38945.483512
+
+Full normal jump file:
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs d8ee872a3cdf.
+d9a795cc0905d06d3b547503c3e0fd8fc894d381
+✔ chromium: a generated boosted jump is visibly airborne, lands upright and matches native replay (4425.737053ms)
+✔ webkit: a generated boosted jump is visibly airborne, lands upright and matches native replay (6271.297611ms)
+# 1 tiles: 42 checks, 0 lost
+# 4 tiles: 42 checks, 0 lost
+# 9 tiles: 42 checks, 0 lost
+✔ chromium: the jump stays in frame in 1, 4 and 9 tiles, 12 times a second (17078.094871ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35605.494433

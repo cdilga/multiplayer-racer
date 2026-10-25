@@ -1,0 +1,73 @@
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs d9a795cc0905.
+d9a795cc0905d06d3b547503c3e0fd8fc894d381
+﹣ chromium: a generated loop is ridden upside down at the top, out upright, matching native; chase and overview see it (52.89304ms) # SKIP
+# 1 tiles: 70 checks, 0 lost
+{"tick": 6, "drawn": 0, "position": [-213.64068603515625, 10.805184364318848, 51.71514129638672], "tiles": [{"seat": 1, "sees": [false, false]}, {"seat": 2, "sees": [false, false]}, {"seat": 3, "sees": [false, false]}, {"seat": 4, "sees": [false, false]}]}
+# 4 tiles: 70 checks, 4 lost
+✖ chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second (13558.342572ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 17306.022673
+
+✖ failing tests:
+
+test at [eval1]:177:1
+✖ chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second (13558.342572ms)
+  AssertionError [ERR_ASSERTION]: 4 tiles: the car leaves a tile's frame
+  + actual - expected
+  
+  + [
+  +   {
+  +     position: [
+  +       -213.64068603515625,
+  +       10.805184364318848,
+  +       51.71514129638672
+  +     ],
+  +     seat: 1,
+  +     tick: 6
+  +   },
+  +   {
+  +     position: [
+  +       -213.64068603515625,
+  +       10.805184364318848,
+  +       51.71514129638672
+  +     ],
+  +     seat: 2,
+  +     tick: 6
+  +   },
+  +   {
+  +     position: [
+  +       -213.64068603515625,
+  +       10.805184364318848,
+  +       51.71514129638672
+  +     ],
+  +     seat: 3,
+  +     tick: 6
+  +   },
+  +   {
+  +     position: [
+  +       -213.64068603515625,
+  +       10.805184364318848,
+  +       51.71514129638672
+  +     ],
+  +     seat: 4,
+  +     tick: 6
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///home/cdilga/Work/dev/multiplayer-racer/[eval1]:205:14)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [Array],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

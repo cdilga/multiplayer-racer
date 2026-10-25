@@ -6,20 +6,22 @@ export async function inFrameRide(page, { ticks, every = 6, car = 0 }) {
   const lost = [];
   let frames = 0;
   for (let tick = 0; tick < ticks; tick += every) {
-    const seen = await page.evaluate(async ({ every, car }) => {
+    const state = await page.evaluate(async ({ every, car }) => {
       await window.__jjTest.step(every);
       const s = await window.__jjTest.observe();
       const c = s.cars.find((x) => x.car === car) ?? s.cars[car];
-      // A frame painted at (or a tick or two short of) this tick: the cameras move in frame(). A few ticks' lag is well
-      // inside a frustum's margin, and each SwiftShader frame of 9 tiles costs a lot.
-      let k = 0;
-      do {
-        window.__jjRender.frame();
-        await new Promise((r) => setTimeout(r, 10));
-      } while (++k < 3 && window.__jjRender.stats().tick < s.tick);
-      const [x, y, z] = c.position;
-      return { tick: s.tick, tiles: window.__jjRender.tilesSee([[x, y, z], [x, y + 1.2, z]]), position: c.position };
+      return { tick: s.tick, position: c.position };
     }, { every, car });
+    // The worker's command reply can precede delivery of its render snapshot. Check this pose only
+    // after its frame is drawn: three paint attempts could compare a new car with an older camera.
+    await page.waitForFunction(tick => {
+      window.__jjRender.frame();
+      return window.__jjRender.stats().tick >= tick;
+    }, state.tick, { polling: 10 });
+    const seen = await page.evaluate(({ tick, position }) => {
+      const [x, y, z] = position;
+      return { tick, tiles: window.__jjRender.tilesSee([[x, y, z], [x, y + 1.2, z]]), position };
+    }, state);
     frames++;
     for (const t of seen.tiles) if (!t.sees.every(Boolean)) lost.push({ tick: seen.tick, seat: t.seat, position: seen.position });
     if (!seen.tiles.length) lost.push({ tick: seen.tick, seat: null, position: seen.position });

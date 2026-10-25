@@ -190,3 +190,14 @@ update, then mouse-up loses Start on the old full-`innerHTML` renderer. Keep the
 mounted, update the roster and text in place, and bind handlers once. Preserve a brushed button's
 SVG when changing its label (update a label span). Test the actual press across the update plus
 empty/new-player/mode transitions; a DOM assertion alone misses the lost action.
+
+Camera fixture checks must synchronize the rendered tick with the observed worker pose before
+projecting that pose through a camera. Three ten-millisecond paint attempts are not a snapshot
+delivery guarantee: an 80 ms delayed delivery reproduced tick-6 car versus tick-0 camera and four
+false out-of-frame results. Wait for the actual matching rendered tick; retain the ride steps,
+frustum limits, sample cadence and tile cohorts.
+
+JN5's return to Lobby opens a car sheet asynchronously. Selecting Leave once with `count()` can
+retain the play-screen action after that sheet covers it. Use a locator that resolves the sheet's
+Leave or the uncovered play-screen action at click time; keep both confirmation taps and the host
+seat-removal assertion. A passing drop-in timing sample alone does not qualify the full churn loop.

@@ -613,3 +613,81 @@ button's brush SVG. The live journey and its 30-second click deadline are unchan
 GPU9332's single retry has passed FL17 with original budgets: **302** samples, main-to-worker
 p99 **0.2 ms**, worker-to-tick **8.7 ms**, tick-to-drawn **35.9 ms**, render lag **3 ticks**.
 The rest of that batch and the new Lobby fix's containing main/GPU runs remain required.
+
+### Deployed Lobby repair at d9a795cc
+
+Main **9345**, browser 2/job **19758**, passes the unchanged real **End mid-round → empty
+Lobby → ready → Start → finish/results** journey in **149.1 seconds**. The exact-source cached
+web build and independent image typecheck/build pass. This verifies the repaired interaction in
+Linux CI; the entire containing main and GPU batches still need their final verdicts.
+
+GPU **9346** passes the previously intermittent settings Identify case in **4,686 ms** and FL17
+in **14,630 ms**, retaining all original budgets: **302 samples**, main-to-worker p99 **0.8 ms**,
+worker-to-tick **8.9 ms**, tick-to-drawn **42.6 ms**, render lag **3.3 ticks**. FL02 retains the
+original four-phone assertions: **0.03 m** pre-GO travel per car, fastest forward speed
+**0.01 m/s**, and the expected Early/Perfect/Launch outcomes. No Identify patch or deadline
+change was introduced for the previous one-off failure.
+
+Image job **19764** publishes digest
+`sha256:f29af1f7d875c533b81a0fe1b3f7eb9a4a98da008ddfc76011c72e96c71b5269`.
+Publisher **9349**, job **19768**, succeeds. At **2026-10-25T10:04:53Z**, its smoke reports
+**PASS**: room **RCQ2**, isolated from **13** other previews, WebRTC join (**host, 3 ms**),
+input, resume, drive, HUD and round.
+
+Preview: https://jammers-preview.dilger.dev/p/v02-d9a795cc/
+
+Deployed visual review passes the unchanged live-check matrix at five phone/laptop/TV sizes,
+before/after fullscreen and resize. All **13** Chromium/WebKit PNGs were personally inspected
+before archiving as JPEGs. WebKit independently verifies a real press across a Ready/unplugged
+update sends exactly one Start command, empty Derby disables Start, and three arriving players
+re-enable it with the correct hint and intact brush. No new clipping, overlap or blank content
+observed. Receipt: `docs/evidence/P1-R07/self-review.md`, captures and logs in `ci-lobby/public/`.
+These are Playwright browser receipts, not physical-device or Safari claims.
+
+### GPU 9346: synchronize the frame under test and resolve the active Leave action
+
+The completed batch has **38 passes, two failures** (plus the two existing, explicitly labelled
+skips). Generated-loop loses all four tiles at five observations starting at tick **318**. JN5
+exceeds the unchanged **3,000 ms** drop-in target: **3,885 / 557 / 220 / 240 / 777 ms**. Neither
+failure is reported as a pass and the batch is not retried unchanged.
+
+The camera helper stepped the worker, read its car pose, then tried painting at most three times
+with ten-millisecond gaps. It could still project that pose through an older camera. A controlled
+Linux GPU reproduction delays only render-snapshot delivery by **80 ms**: the old helper compares
+the tick-**6** car with a tick-**0** frame, reports all **four** tiles lost, and fails the original
+frustum assertion. The updated helper waits for `render.stats().tick >= observed.tick`, then
+projects the same body and 1.2 m marker through the actual cameras. No ride steps, sampling
+cadence, cohort, viewport, frustum limits or gameplay timing acceptance change.
+
+- Delayed-snapshot reproduction: old helper fails; fixed helper passes **210 observations** at
+  **1/4/9 tiles**, zero lost, **44,876 ms** test time. Receipts: `frame-sync-before.txt` and
+  `frame-sync-after.txt` beside this file.
+- Full normal generated-loop file with the fixed helper: **both tests pass**, including
+  upside-down ride/native parity and all **210** camera observations; **38,945 ms** total.
+- Isolated Linux GPU JN5 at exact runtime commit `d9a795cc0905d06d3b547503c3e0fd8fc894d381`
+  keeps all original interactions/bounds and records **249/236/354/277/236 ms**, no pause during
+  the timed arrivals. It later fails leaving the Lobby, so it is not a full-journey pass.
+- A separate Mac run against the deployed image reproduces a Leave selector race: `count()`
+  chooses the play-screen button before the car sheet opens; the sheet then intercepts its click.
+  Resolve the sheet's Leave or the uncovered play-screen Leave at click time with one locator.
+  Keep native first click, confirmation tap and the real host seat-removal assertion. The corrected
+  Linux GPU journey completes **all phases, 12 → 2, Leave, Sit out and preserved standings** in
+  **43,871 ms** (**49,654 ms** total), drop-ins **275/200/292/313/321 ms**, target unchanged.
+  Receipt: `jn5-fixed.txt`. One renderer-unavailable pause occurs earlier, outside the timed
+  arrivals; the original CI spike's pause reason is not recovered or attributed to this fix.
+- The first Mac selector-candidate diagnostic reaches the final two-player state but its own
+  sampler starts before the test API exists and causes page errors; it is not counted as a full
+  pass. After guarding the sampler, another public run times out finding its third newcomer
+  (host SSE reconnect count **8**); that WAN probe is not a Linux loopback qualification receipt.
+
+Manual eris browser runs start only after GPU9346 has completed. The two reproduced harness
+fixes are validated directly before publication; no speculative runtime, cooldown, pause or latency
+patch is introduced. The exact isolated p95 passes do not explain the earlier 3,885 ms sample.
+
+The same helper's other caller is verified too: the full generated-jump file passes **all three
+tests** (Chromium, WebKit, and all **126** 1/4/9-tile camera observations) in **35,605 ms** on
+eris at explicitly printed runtime SHA `d9a795cc0905d06d3b547503c3e0fd8fc894d381`. The normal
+loop and jump outputs are appended to `frame-sync-after.txt`. These executions receive only the
+candidate helper/test harness through stdin; eris's code checkout is unmodified. `ERIS_MIN` is
+used after another session commits `d8ee872a` on the shared Mac tree; the remote SHA, rather
+than eris.sh's Mac-HEAD note, identifies the runtime that actually ran.
