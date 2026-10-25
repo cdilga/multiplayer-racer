@@ -49,41 +49,50 @@ async function identify(host, n) {
   const before = await host.evaluate(() => window.__jjRoom.identified().length);
   const cdp = await host.context().newCDPSession(host);
   try {
-  // A claim flashes Identify itself and starts the seat's 3 s (sim-time) limit; a loaded host runs fewer ticks than real
+  // A claim flashes Identify itself and starts the seat's sim-time limit; a loaded host runs fewer ticks than real
   // time, so a press soon after joining can be refused as limited. Press again until it lands, as a player would.
   for (let tries = 0; ; tries++) {
-    await frame(host, `syn${n}`, { identify: true });
     try {
-      // Capture the live pulse atomically with its own new event. A different seat's delayed join flash must
-      // not satisfy this wait, and a second round-trip on a 120-tile host can outlast the 1.6 s pulse.
-      const shown = await host.waitForFunction(({ n, before }) => {
-        const room = window.__jjRoom.view();
-        const seat = room.seats.find((s) => s.number === n);
-        if (!window.__jjRoom.identified().slice(before).some(e => e.seat === seat.seat)) return false;
-        const box = document.querySelector(`.hud-tile.identify[data-seat="${seat.seat}"]`);
-        if (!box) return false;
-        const marks = window.__jjRender.identifyMarks();
-        // The label follows the rendered snapshot; observe the pulse and its visible billboard together.
-        if (!marks.includes(seat.car)) return false;
-        const fits = (el) => !!el && el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width > 0;
-        const c = box.querySelector('.hud-cooee')?.getBoundingClientRect();
-        const t = box.getBoundingClientRect();
-        return {
-          seat: seat.seat, car: seat.car,
-          pulsing: [...document.querySelectorAll('.hud-tile.identify')].map(b => Number(b.dataset.seat)),
-          marks,
-          badge: box.querySelector('.hud-badge')?.textContent,
-          badgeFits: fits(box.querySelector('.hud-badge')),
-          cooee: box.querySelector('.hud-cooee')?.textContent,
-          cooeeInside: !!c && c.left >= t.left && c.right <= t.right,
+      // Install the observation before pressing. At 120 tiles a frame takes 0.7–1.4 s on eris: a polling RPC can
+      // miss the visible 1.6 s pulse entirely. Observe DOM updates in the page, retaining the 1500 ms attempt timer
+      // and requiring this seat's own new event plus its rendered billboard together.
+      const state = await host.evaluate(({ n, before }) => new Promise(resolve => {
+        let timer;
+        const finish = value => { observer.disconnect(); clearTimeout(timer); resolve(value); };
+        const inspect = () => {
+          const room = window.__jjRoom.view();
+          const seat = room.seats.find((s) => s.number === n);
+          if (!window.__jjRoom.identified().slice(before).some(e => e.seat === seat.seat)) return false;
+          const box = document.querySelector(`.hud-tile.identify[data-seat="${seat.seat}"]`);
+          if (!box) return false;
+          const marks = window.__jjRender.identifyMarks();
+          // The label follows the rendered snapshot; observe the pulse and its visible billboard together.
+          if (!marks.includes(seat.car)) return false;
+          const fits = (el) => !!el && el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width > 0;
+          const c = box.querySelector('.hud-cooee')?.getBoundingClientRect();
+          const t = box.getBoundingClientRect();
+          return {
+            seat: seat.seat, car: seat.car,
+            pulsing: [...document.querySelectorAll('.hud-tile.identify')].map(b => Number(b.dataset.seat)),
+            marks,
+            badge: box.querySelector('.hud-badge')?.textContent,
+            badgeFits: fits(box.querySelector('.hud-badge')),
+            cooee: box.querySelector('.hud-cooee')?.textContent,
+            cooeeInside: !!c && c.left >= t.left && c.right <= t.right,
+          };
         };
-      }, {n, before}, {timeout:1500,polling:50});
+        const check = () => { const state = inspect(); if (state) finish(state); };
+        const observer = new MutationObserver(check);
+        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+        timer = setTimeout(() => finish(null), 1500);
+        window.__jjTest.input({ type: 'controller', endpoint: `syn${n}`, frame: { identify: true } });
+        check();
+      }), { n, before });
+      if (!state) throw new Error('Identify pulse and rendered mark were not observed within 1500 ms');
       // Capture the compositor now: Playwright's normal screenshot waits for font/layout stability, which can
       // consume the entire transient on a crowded host. CDP captures the actual browser surface without that wait.
         const { data } = await cdp.send('Page.captureScreenshot', {format:'png',fromSurface:true,captureBeyondViewport:false});
         writeFileSync(`${CAPTURE}/identify-${n === 7 ? '24' : n}.png`, Buffer.from(data,'base64'));
-      const state = await shown.jsonValue();
-      await shown.dispose();
       return state;
     } catch (e) {
       if (tries >= 12) throw e;

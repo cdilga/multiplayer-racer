@@ -227,3 +227,37 @@ clock correction (**30,181 ms**, macOS arm64, Playwright Chromium native Metal, 
 above). Both captures inspected: populated tiles, expected badges and no blank panels. This is a
 reproduced clock defect, not an increase to any FL17 budget; the containing Linux GPU result is still
 required and not assumed.
+
+### GPU 9256: Linux pulse observation and isolated infrastructure
+
+At `f48e668b`, all three menu/settings/keyboard Identify checks and FL02 pass. The unchanged FL17
+budget now passes: **301 samples**, main→worker p99 **0.2 ms**, worker→tick **8.4 ms**, tick→drawn
+**36.3 ms** (60 ms bound), render lag **2.9 ticks** (five-tick bound), total-path p99 **49.2 ms**.
+TURN coverage is explicitly skipped because no TURN credentials are configured; loopback is real WebRTC.
+
+R06 still fails its transient observation on Linux (**92,536 ms** in CI; **62,456 ms** focused).
+An instrumented reproduction shows the correct #108 tile in `identify` state and mark **107** (its
+actual car) present, with its own new Identify event. However, crowded frames occupy the page for
+**0.7–1.4 seconds** (about 38.9 million triangles, 6,500 draws). The separate polling RPC misses the
+live state even though both conditions are true when the failed attempt is inspected. Simulation
+and rendering remain live; no frame-rate acceptance is inferred from this functional cohort test.
+
+Install a MutationObserver in the page **before sending the same Identify input**, and resolve from
+the actual DOM update when the existing event/tile/billboard conditions all hold. Keep the **1,500 ms
+browser attempt timer**, retry count, 600-second file bound, 24/120 cohorts, live simulation, captures,
+and every original functional/fit assertion. This changes the observation point, not the pulse's
+duration or any gameplay rule. The complete Linux/eris RTX 2080 Super journey **passes in 23,416 ms**
+with this candidate supplied on stdin against committed `f48e668b`; no remote source files edited.
+Both captures inspected: every tile is populated, including the three-digit badges and #108 markers.
+
+The two R13 failures in GPU 9256 occur **before browser creation**: local STUN never answers. Their
+Docker containers remain `Created`, never started, with no coturn output. A separate readiness probe
+after the batch finishes starts the same pinned coturn image successfully in **941 ms**. The two
+identified abandoned CI containers were removed. R13's checks and readiness deadline are unchanged;
+the isolated full file passes: Chromium real-phone identity **14,586 ms**, WebKit **33,936 ms**,
+and the 1/4/24-tile pattern/draw/number/CVD check **7,659 ms** (whole file **57,029 ms**).
+
+Preview **v02-f48e668b** passes public smoke: room **2M3N**, isolation from eight previews, WebRTC
+join (host, 0 ms), input, resume, drive, HUD and round. Published by run **9260**:
+https://jammers-preview.dilger.dev/p/v02-f48e668b/ . Main 9255's checks, lint, three Rust shards,
+build, image and browser slots 1/2/4 pass at this recording; remaining browser slots are running.

@@ -122,3 +122,7 @@ Measurements and reproductions: `docs/evidence/P1-CI-repair/repair.md` and `stag
   them. Never extrapolate it backwards from its arrival: negative elapsed time inflated the smoothing
   delay from three ticks to 6.6 in a deterministic 30 ms delayed-callback replay. Clamping elapsed time
   at zero preserves smooth playback and the original latency budget.
+- Observe short UI transients in the page before sending the triggering input. At 120 seats eris
+  draws 0.7–1.4-second frames; R06's separate polling RPC missed the correct #108 tile/marker even
+  though the post-timeout diagnostic saw both. A preinstalled MutationObserver records the same
+  event, tile and billboard together, retaining the attempt timer and every original assertion.
