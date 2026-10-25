@@ -31,6 +31,25 @@
 - local-interactions/chromium-matrix.jpg: every Chromium stage capture (LOD0/1/2, red/blue/orange paint, intact/loose/detached), camera contains all visible parts.
 - local-interactions/webkit-matrix.jpg: every WebKit phone stage capture, same nine states; paint and tyres correct, no portrait cropping.
 
+## Deployed review
+
+Published model commit 72c518500 at https://jammers-preview.dilger.dev/poc/vehicles/review.html?v=hawk-dash via Gitea POC deployment run 9117. deployment.json verifies ten live files byte-for-byte against the candidate: review data, viewer, shared shader, atlas, all three GLBs and all three comparison sheets. The deployed Chromium laptop and WebKit phone controls probes pass (live-interactions/checks.json).
+
+- live-interactions/chromium-matrix.jpg: all nine deployed LOD/paint/damage states, reviewed; colours correct and parts contained.
+- live-interactions/webkit-matrix.jpg: same nine deployed states on phone, reviewed; no clipped body or blank canvas.
+
+- live-page/matrix.jpg: all ten deployed full-page screenshots, reviewed at 375x667, 412x915, 915x412, 1366x768 and 1920x1080 before/after shrink/grow. Complete comparisons, cyan interactive car, damage/paint/grid evidence and validation all render.
+- live-page/poc_vehicles_review_html_v_hawk_dash_375x667.png: deployed 375x667, initial; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_375x667_after-resize.png: deployed 375x667, after shrink/grow; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_412x915.png: deployed 412x915, initial; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_412x915_after-resize.png: deployed 412x915, after shrink/grow; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_915x412.png: deployed 915x412, initial; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_915x412_after-resize.png: deployed 915x412, after shrink/grow; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1366x768.png: deployed 1366x768, initial; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1366x768_after-resize.png: deployed 1366x768, after shrink/grow; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1920x1080.png: deployed 1920x1080, initial; sections complete and model visible.
+- live-page/poc_vehicles_review_html_v_hawk_dash_1920x1080_after-resize.png: deployed 1920x1080, after shrink/grow; sections complete and model visible.
+
 ## Defects found and fixed
 
 - Wheels consumed 668 LOD0 triangles. Replaced rim geometry with a shared-atlas face, reduced tyre segments and closed every inner sidewall. All four now cost 176 triangles.
@@ -44,11 +63,12 @@
 
 - Likeness is for owner review. Detailed tier is closer; side IoU falls slightly and coarse-tier rear IoU falls. Exact numbers and reference comparisons are in validation.md. Coarse fascia/arch shapes remain intentionally faceted under existing budgets.
 - Broad engine-lab checks have seven unrelated failures, recorded in engine.txt and br-8h3u.12; the unchanged Hawk profile passes schema validation. No audio changes in this pass.
-- live-check reports viewport-bottom crossings at 412x915 (reference paragraph) and 1920x1080 (an image link). These are normal content continuing below the viewport on this vertically scrolling page, not hidden content. Full-page screenshots show the complete content. No horizontal overflow, failed requests, undecoded images, script errors or blank canvases. The independent controls probe passes in both engines.
+- The first deployed live-check ran before the asynchronously inserted model/images had loaded; its full-page screenshots eventually rendered correctly. Reran with the existing `--ready "#controls button[title=LOD0]"` option to wait for model load.
+- live-check reports viewport-bottom crossings at 412x915 (reference paragraph) and 1920x1080 (an image link). These are normal content continuing below the viewport on this vertically scrolling page, not hidden content. Full-page screenshots show the complete content. No horizontal overflow, undecoded images, script errors or blank canvases remain in the ready capture. Chromium still emits `net::ERR_ABORTED` on the initial GLB request despite successful model parse/render; this makes live-check exit 1 at every live viewport. A diagnostic fresh page reproduces that event followed by model-ready controls. The GLB hashes match the candidate; all three LODs render in both browser engines. This is recorded, not counted as a green live-check. The independent controls probe passes in both engines.
 
 ## Not covered
 
 - Physical phones/TV, Safari, actual OS fullscreen: viewport shrink/grow and WebKit emulation only.
 - New driving feel, dynamic debris lifetime and N×N host rendering benchmarks: visual geometry and the POC viewer changed; host simulation/renderer/batching did not. Frozen collision proxies give the same before/after idle-settle replay hash. Focused settle and existing Hawk straight-run fixtures pass.
 - Roof-number readability is not demonstrated by the evidence viewer's grids. The mount was moved above the new crown.
-- Deployed-page capture pending this first push; deployment receipt and live images follow in the next evidence commit.
+- No claim of full CI completion. The bead is handed off as batch_pending after focused checks.

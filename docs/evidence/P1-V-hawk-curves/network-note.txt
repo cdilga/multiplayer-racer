@@ -1,0 +1,6 @@
+Fresh Playwright Chromium 151, 412x915, deployed URL:
+requestfailed hawk-dash.lod0.glb: net::ERR_ABORTED
+then #controls button[title=LOD0] is attached and car renders.
+Live GLB byte counts/hashes: deployment.json.
+Actual LOD/paint/damage controls + screenshots: live-interactions/checks.json.
+Full-page ready screenshots have all images decoded, no blank canvases or errors; live-check remains exit 1 for aborted request and viewport-bottom text crossings.
