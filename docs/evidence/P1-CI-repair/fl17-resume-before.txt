@@ -1,0 +1,35 @@
+TRACE START {"tick":437,"hash":"163afcd80052d0553b25615c26a9b0a6de5053fc588f6194c90910eaf23f1263","pauseMask":0,"countdownMs":3000,"published":141,"skipped":293,"appliedThrottle":[0,0,0,0]}
+# lan-loopback: {"samples":302,"touchToSend":{"p50":0.8,"p99":30.1,"max":265},"network":{"p50":0.5,"p99":7.1,"max":21},"mainToWorker":{"p50":0.2,"p99":0.9,"max":2.5},"workerToTick":{"p50":5.6,"p99":2547,"max":2968.1},"tickToDrawn":{"p50":26.8,"p99":33.1,"max":54.5},"total":{"p50":36.5,"p99":2825.9,"max":3017.9},"renderLagTicks":{"p50":2.5,"p99":3},"frameMs":{"p50":8.3,"p99":9.4},"worst":[{"i":0,"touchToSend":34.7,"network":1.4,"mainToWorker":0.3,"workerToTick":2968.1,"tickToDrawn":13.4,"total":3017.9},{"i":1,"touchToSend":25.2,"network":3,"mainToWorker":0.2,"workerToTick":2916.3,"tickToDrawn":13.4,"total":2958.1},{"i":2,"touchToSend":17.6,"network":0.8,"mainToWorker":0.2,"workerToTick":2847.5,"tickToDrawn":13.4,"total":2879.5},{"i":3,"touchToSend":265,"network":0.4,"mainToWorker":0.1,"workerToTick":2547,"tickToDrawn":13.4,"total":2825.9},{"i":4,"touchToSend":5.2,"network":0.5,"mainToWorker":0.2,"workerToTick":2505.5,"tickToDrawn":13.4,"total":2524.8}]}
+✖ FL17: thumb-to-screen stages on loopback WebRTC, host-side within budget (20703.303958ms)
+﹣ FL17: the same through TURN (relay forced) (4.165917ms) # no TURN configured (TURN_STATIC_AUTH_SECRET, JJ_TURN_URLS)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 26502.349
+
+✖ failing tests:
+
+test at ../../../../../private/tmp/jj-ci-fl17-resume-before.mjs:100:1
+✖ FL17: thumb-to-screen stages on loopback WebRTC, host-side within budget (20703.303958ms)
+  AssertionError [ERR_ASSERTION]: lan-loopback: host-side stages over budget
+  + actual - expected
+  
+  + [
+  +   'workerToTick p99 2547 > 16.7'
+  + ]
+  - []
+  
+      at run (file:///private/tmp/jj-ci-fl17-resume-before.mjs:95:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'workerToTick p99 2547 > 16.7' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

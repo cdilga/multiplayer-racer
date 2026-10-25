@@ -1,0 +1,13 @@
+TRACE START {"tick":336,"hash":"b2377e2223c4845c65e2c4667c549200bfc456d2f503cbd93d7e49a975da713e","pauseMask":0,"countdownMs":2995,"published":192,"skipped":134,"appliedThrottle":[0,0,0,0]}
+AFTER WAIT {"tick":343,"hash":"cf3f8f70611e6e04b2c1e28ef9c8dfc9b9fe2a7321577d23bf08157576fd92d8","pauseMask":0,"countdownMs":0,"published":199,"skipped":134,"appliedThrottle":[0,0,0,0]}
+# lan-loopback: {"samples":302,"touchToSend":{"p50":1,"p99":19.5,"max":23.1},"network":{"p50":0.6,"p99":9.1,"max":34.3},"mainToWorker":{"p50":0.1,"p99":1.1,"max":1.5},"workerToTick":{"p50":5.1,"p99":13.4,"max":19.1},"tickToDrawn":{"p50":26.6,"p99":35.5,"max":43.2},"total":{"p50":35.8,"p99":60.3,"max":76.5},"renderLagTicks":{"p50":2.1,"p99":3.2},"frameMs":{"p50":8.3,"p99":9.3},"worst":[{"i":150,"touchToSend":0.9,"network":34.3,"mainToWorker":0.2,"workerToTick":11.9,"tickToDrawn":29.2,"total":76.5},{"i":149,"touchToSend":10.1,"network":1.7,"mainToWorker":0,"workerToTick":13.4,"tickToDrawn":43.2,"total":68.4},{"i":236,"touchToSend":23.1,"network":1,"mainToWorker":0.2,"workerToTick":5.4,"tickToDrawn":31.1,"total":60.8},{"i":145,"touchToSend":19.5,"network":1.5,"mainToWorker":0.1,"workerToTick":9.3,"tickToDrawn":29.9,"total":60.3},{"i":183,"touchToSend":17.3,"network":3.6,"mainToWorker":0.5,"workerToTick":1.7,"tickToDrawn":35.1,"total":58.2}]}
+✔ FL17: thumb-to-screen stages on loopback WebRTC, host-side within budget (23541.501542ms)
+﹣ FL17: the same through TURN (relay forced) (3.512583ms) # no TURN configured (TURN_STATIC_AUTH_SECRET, JJ_TURN_URLS)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 31978.550458

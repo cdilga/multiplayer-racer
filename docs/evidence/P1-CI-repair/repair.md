@@ -784,3 +784,28 @@ uncommitted `web/host/src/render/map/map.ts`; those edits are excluded.
 GPU 9367 independently reports FL17 first-touch worker-to-tick delays of
 **2600.9/2570.5/2504/2470.4/2435.9 ms**, followed by normal samples. Resume
 countdown involvement is under investigation; no timing bound is changed.
+
+### FL17: begin live-input measurement after the real resume countdown
+
+A controlled full-journey reproduction sends the real UI Pause then Resume
+through the worker before the first touch. The old setup starts with
+`pauseMask:0,countdownMs:3000` and fails its unchanged GPU worker-to-tick bound:
+**2547 ms p99**, first touch **2968.1 ms**. This reproduces GPU 9367's initial
+2.6 s samples without introducing load or changing the simulation.
+
+Wait for worker status to show no pause, no countdown, and an advancing tick
+before starting the trace and first touch. The same forced-countdown journey
+then records countdown **2995 → 0 ms**, tick **336 → 343**, and passes with
+**302** samples: worker-to-tick **13.4 ms p99** (limit **16.7**), tick-to-drawn
+**35.5 ms p99** (limit **60**), render lag **3.2 ticks p99** (limit **5**),
+main-to-worker **1.1 ms p99** (limit **8**). Native Mac Chromium, real local
+WebRTC and coturn STUN, built candidate; **23,542 ms** journey. TURN relay is
+explicitly unconfigured/skipped, as in CI. No measured samples are discarded,
+no budgets change, and a pause during measurement is still included. Receipts:
+`fl17-resume-before.txt`, `fl17-resume-after.txt`.
+
+The first candidate used an async `waitForFunction` predicate. A diagnostic
+status immediately after it still showed **2979 ms** countdown: that API treats
+the returned Promise as truthy here. The final setup explicitly awaits worker
+status inside a bounded page evaluation. That failed candidate is not counted
+as passing validation.

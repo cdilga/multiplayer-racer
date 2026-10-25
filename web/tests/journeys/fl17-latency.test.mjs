@@ -67,6 +67,19 @@ async function run(label, ice) {
   const cy = zone.y + zone.height * 0.58;
   const cdp = await phoneCtx.newCDPSession(phone);
   const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+  // This measures live input, so finish any lifecycle/stall resume countdown before
+  // touching the stick. A connected controller can join while the host is held.
+  // Require an actual tick too; keep every measured sample and all original budgets.
+  await host.evaluate(async () => {
+    const before = await window.__jjTest.status();
+    const deadline = performance.now() + 30_000;
+    do {
+      const status = await window.__jjTest.status();
+      if (status.pauseMask === 0 && status.countdownMs === 0 && status.tick > before.tick) return;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    } while (performance.now() < deadline);
+    throw new Error('Latency measurement needs a running host: ' + JSON.stringify(await window.__jjTest.status()));
+  });
   await host.evaluate(() => window.__jjRender.tickTrace(true));
   await touch('touchStart', cx, cy);
   for (let i = 0; i < MOVES; i++) {
