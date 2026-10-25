@@ -1,0 +1,140 @@
+[
+  {
+    "id": "joining",
+    "sha256": "350e10dfd97142f492470d5d967db9a062c22e0a762b0cc5880247fb0870860d",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "240",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "8.000000"
+      }
+    }
+  },
+  {
+    "id": "crowd",
+    "sha256": "4bde47a6edfe3cdff771a05782e15d7a3de791327486c0e4712b7bdb1a0b37a4",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "120",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "4.000000"
+      }
+    }
+  },
+  {
+    "id": "pileup",
+    "sha256": "a245b432cbaa92f40c4826a6d6ad054b203a6678f4d25d47ee6b20c29421c730",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "240",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "8.000000"
+      }
+    }
+  },
+  {
+    "id": "derby",
+    "sha256": "92530bffa8fb68400699160a68a084a5a714a26edf3796b38dd1b39b4ffa2546",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "300",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "10.000000"
+      }
+    }
+  },
+  {
+    "id": "rivalry",
+    "sha256": "f13e5f64eaeff57b9a78edea9af24cbd3e3d072e7ebef1d5c70770328e226db3",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "150",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "5.000000"
+      }
+    }
+  },
+  {
+    "id": "winner",
+    "sha256": "ae9b43657e3d41ff139147f0b20cae8df8cc2a343267b3b6711701b4e45e5bc9",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "150",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "5.000000"
+      }
+    }
+  }
+]

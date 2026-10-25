@@ -1,0 +1,2054 @@
+{
+  "requestedVehicleRevision": "f3c175d95ffb7fca22194c90176e93a70652d1f9",
+  "hostRevision": "8b3a9211fceebc2d0eafa17cd0a77f2a30a09957",
+  "node": "v26.10.0",
+  "origin": "http://127.0.0.1:63290",
+  "base": "/p/promo/",
+  "browser": "151.0.7922.34",
+  "serverSha256": "14fb59fef61889bad6d22c292c63be2d6a48b7d565b1f4de0cf6004972022cfa",
+  "mapSha256": "ed62558fe2475ab90df0228f294043d405b516913032940265416c2e8f0f1a6e",
+  "dirty": [
+    {
+      "file": ".beads/issues.jsonl",
+      "sha256": "847fe56317ef001d8891e5a54b451fab71b06b83549bc2fd5deb64823a768d1b"
+    },
+    {
+      "file": "assets/profiles/generator.json",
+      "sha256": "491588836121d949d0351c5d21b3e098d1cb98285f8d98daffa8a614d66d735b"
+    },
+    {
+      "file": "assets/profiles/overpass.json",
+      "sha256": "22678427f476f3ea9dbf63a8309c00a43bd943e2717daff31f8223779087b83f"
+    },
+    {
+      "file": "assets/profiles/set-pieces.json",
+      "sha256": "64547fa162571653a717b9ca25b35f939d9be636e860bc9c90c04d62c58f9aed"
+    },
+    {
+      "file": "crates/jj-procgen/src/features/mod.rs",
+      "sha256": "7042585ca39b2dcc03e20d1efbd74a0e3d109098d259b200053d65d7ab48354a"
+    },
+    {
+      "file": "crates/jj-procgen/src/lib.rs",
+      "sha256": "37d0cc16203344490e9cc0c412c039000936bedfce2376304d12921c98735bd3"
+    },
+    {
+      "file": "crates/jj-procgen/src/setpieces/mod.rs",
+      "sha256": "61fbec6ebba94e8b619715cc5096618ca43e94dace154066506388e67fbb45f3"
+    },
+    {
+      "file": "crates/jj-procgen/src/tuning/mod.rs",
+      "sha256": "166b81bf4a89701244b70f9c872c09ebe3ee1812b02dcb18fe92ccdeb5be8f54"
+    },
+    {
+      "file": "crates/jj-procgen/tests/goldens/recipes.txt",
+      "sha256": "2ce0ad449ad5eebdedddce2f505e1f0cd1ae4982db58ff20a8ff54e7a9ef4200"
+    },
+    {
+      "file": "crates/jj-procgen/tests/goldens/seeds.txt",
+      "sha256": "8fde436db803b7e2d015affb46ca51cec86fb4cd4453a8fc18175a40c9f75fd0"
+    },
+    {
+      "file": "crates/jj-procgen/tests/skill_jump.rs",
+      "sha256": "5a8f226ec9ef810ce94aef7e6dfd6d2f3a0c397e06d96dcb8b525399c02c4407"
+    },
+    {
+      "file": "crates/jj-sim/src/race/mod.rs",
+      "sha256": "bfd2962bb253787ee939473080672b4abbfc94a81fe73cb8b4d6619beaa4fc91"
+    },
+    {
+      "file": "docs/evidence/P1-A04/checks.json",
+      "sha256": "3e67daf8f474d5464644dc60787db864f195a2f9547f8e76756b20e75f4e4098"
+    },
+    {
+      "file": "docs/evidence/P1-A04/cpu.json",
+      "sha256": "de992c69973dbd99d7edd7aaa87c20f6b1ffecad41fa4a851ab0dcf2572ec2b9"
+    },
+    {
+      "file": "docs/evidence/P1-A04/gallery-phone.png",
+      "sha256": "0badeda300465c66cb1e44d61d622c85038bec4f7b0fc8eff065dfa48ee8272e"
+    },
+    {
+      "file": "docs/evidence/P1-A04/gallery.png",
+      "sha256": "536de7ab5a8a3e5dbef4817df3d96108194e85e998f4a8492d3b74440c3612d0"
+    },
+    {
+      "file": "docs/evidence/P1-A04/lab-phone.png",
+      "sha256": "a4321263d9f4dc410e603633552cc3931ebce6b11d7855ec313a8cdc5b302671"
+    },
+    {
+      "file": "docs/evidence/P1-A04/lab.png",
+      "sha256": "e655725c901d0912824b90cf7151d5ffd18669aacd0d7cc9b2e1fbebd866c753"
+    },
+    {
+      "file": "docs/evidence/P1-A04c/checks.json",
+      "sha256": "1f33a3dec5c37a4c83867ca3d72307b44c1bbe842ab57a174ed78e6319ccb457"
+    },
+    {
+      "file": "docs/evidence/P1-A04c/lap-spectrogram.png",
+      "sha256": "97e94a85ad087b149eb6e23e07ba0894d709a4887394b6a24d50ce0dadc6c7a4"
+    },
+    {
+      "file": "docs/evidence/P1-A04c/scripted-lap.wav",
+      "sha256": "52013f13278dc108397cd5c507e98a4c03a2ca3b6aceac431988d484edd3678d"
+    },
+    {
+      "file": "docs/evidence/P1-V-roster-visual/self-review.md",
+      "sha256": "db1adcefc2fbaeb5e940044d566ff8e11f5b3f2f1cb704e45b0dde75b19c63a2"
+    },
+    {
+      "file": "docs/evidence/P1-V-roster-visual/validation.md",
+      "sha256": "7cee79c2f9291f2ac1cc61fec82bf4473e5f8037fae3b8b6ab73822a5c287502"
+    },
+    {
+      "file": "docs/evidence/P1-V02/colliders.png",
+      "sha256": "9558f52518b2a50c7b5d9f4952c64900b5fcc86882b060eb3c62824431ae7b3b"
+    },
+    {
+      "file": "docs/evidence/P1-V02/lods.png",
+      "sha256": "b2f961103b4bb2033b2e1c1d2d8fd5c832a112bdb974346d6aaf8bcf3e9662ef"
+    },
+    {
+      "file": "docs/evidence/P1-V02/paints.png",
+      "sha256": "2ca6d5ab117ac1cbdea28ca9ae0778e846dfbf219807ddd488fd27ac4c88f671"
+    },
+    {
+      "file": "docs/evidence/P1-V02/views.png",
+      "sha256": "93a2f82921db57c50a7ada190b3171d14b87bdb943d9616b339ed71b2d6f12fd"
+    },
+    {
+      "file": "docs/learnings/procgen.md",
+      "sha256": "eed350b5c6600ce77f18aa5dd692dc133fc8f6b00c4ef8ce9f79eca617ee8a5b"
+    },
+    {
+      "file": "maps/lab/canyon-leap.json",
+      "sha256": "305a7c44278e663f11901c96c4b1c1789fd0044ede1e6cdf531e9f2eab265f1f"
+    },
+    {
+      "file": "maps/lab/hairpin-cut.json",
+      "sha256": "2ded1d619250df67bed2b9e2adf6a2439530644394f3a35dec74aa49d9138c11"
+    },
+    {
+      "file": "maps/lab/off-road-climb.json",
+      "sha256": "74f591eba4f41befbea536dacbf4020aac4a93426a39590c5de642e8e96c4e00"
+    },
+    {
+      "file": "maps/lab/start-line.json",
+      "sha256": "1cecaa6b7ed0b81e7006f9b82d1cc82d57c26bfb9d8720f0c505807445f22a92"
+    },
+    {
+      "file": "scenarios/lab/canyon-leap-short.json",
+      "sha256": "a9cfda95ad713c60531f6535a6b6335e786e186c4f0fbc16e07fc2436f0a226d"
+    },
+    {
+      "file": "scenarios/lab/canyon-leap.json",
+      "sha256": "a7e34bfced1d1d03a7570cf8cccf2e6a9af021ec4950a65719a6d50d162b97f1"
+    },
+    {
+      "file": "scripts/ci/durations.json",
+      "sha256": "cefe72cbaf2082ae7a99194f65e1ec61a2b7eb612e1bb83c93d2f07ff729aa43"
+    },
+    {
+      "file": "tools/audio/maya1.py",
+      "sha256": "ede4504f77d77696e9f21569958ddab94383f1408ccbd71ebf5ce4bbad4cb87e"
+    },
+    {
+      "file": "tools/maps/review-landscape.mjs",
+      "sha256": "bafd58166568a24737eec92066ecf62f7240faa9d4e359006f9569cf73270a36"
+    },
+    {
+      "file": "web/host/src/render/map/map.ts",
+      "sha256": "96c59dffc53a93c43ff957195219fa8029601ef3cc4aeabf12882e36152b3041"
+    }
+  ],
+  "sourceGlbs": {
+    "art/vehicles/cruz-missile/cruz-missile.lod0.glb": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+    "art/vehicles/cruz-missile/cruz-missile.lod1.glb": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+    "art/vehicles/cruz-missile/cruz-missile.lod2.glb": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+    "art/vehicles/tradie-ute/tradie-ute.lod0.glb": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+    "art/vehicles/tradie-ute/tradie-ute.lod1.glb": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+    "art/vehicles/tradie-ute/tradie-ute.lod2.glb": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+    "art/vehicles/hawk-dash/hawk-dash.lod0.glb": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+    "art/vehicles/hawk-dash/hawk-dash.lod1.glb": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+    "art/vehicles/hawk-dash/hawk-dash.lod2.glb": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+    "art/vehicles/lion-president/lion-president.lod0.glb": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+    "art/vehicles/lion-president/lion-president.lod1.glb": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+    "art/vehicles/lion-president/lion-president.lod2.glb": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+    "art/vehicles/au-hawk/au-hawk.lod0.glb": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+    "art/vehicles/au-hawk/au-hawk.lod1.glb": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+    "art/vehicles/au-hawk/au-hawk.lod2.glb": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+    "art/vehicles/postie-bike/postie-bike.lod0.glb": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+    "art/vehicles/postie-bike/postie-bike.lod1.glb": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+    "art/vehicles/postie-bike/postie-bike.lod2.glb": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+    "art/vehicles/pig-catcher/pig-catcher.lod0.glb": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+    "art/vehicles/pig-catcher/pig-catcher.lod1.glb": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+    "art/vehicles/pig-catcher/pig-catcher.lod2.glb": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d"
+  },
+  "buildManifest": [
+    {
+      "file": "assets/all-ready-1-DGI9EG-L.ogg",
+      "sha256": "171c3b42022f797fd123f19e00d5bd691d2087b8d1392871512c90d56a2ee68b",
+      "bytes": 24009
+    },
+    {
+      "file": "assets/all-ready-2-CJRxHdXq.ogg",
+      "sha256": "fa4179b67287115b93923659d40199b8dc7c72cb66b1e1cc13d701fd298b8f88",
+      "bytes": 23296
+    },
+    {
+      "file": "assets/all-ready-3-DXVidJG_.ogg",
+      "sha256": "9b02b7dfffd9d5a9d9ff95e0d05ac96040020b944b3f848d26c8b4880d69b986",
+      "bytes": 11599
+    },
+    {
+      "file": "assets/apple-touch-icon-180-Mn3cjl2B.png",
+      "sha256": "37e064d2acc4e6484a2a3b934b5cef103e5d5f57233abf5db2d5fcb21265fb1e",
+      "bytes": 6452
+    },
+    {
+      "file": "assets/au-hawk-D7tPAYwy.png",
+      "sha256": "c748c3d15e811351f46906bece4d31876fdcc10e44ad2d841b0844597e81b7fd",
+      "bytes": 111144
+    },
+    {
+      "file": "assets/au-hawk.lod0-D_PnLIcf.glb",
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "bytes": 343816
+    },
+    {
+      "file": "assets/au-hawk.lod1-CL4BuC63.glb",
+      "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+      "bytes": 181320
+    },
+    {
+      "file": "assets/au-hawk.lod2-Cah5GbV5.glb",
+      "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+      "bytes": 154580
+    },
+    {
+      "file": "assets/barlow-condensed-800-DGdgwb4p.woff2",
+      "sha256": "2f9dcb04093a06b5589de292c6781dccf146d4c594d9d4c8ce84489be99c0bf3",
+      "bytes": 34224
+    },
+    {
+      "file": "assets/barlow-condensed-900-B48YGAGs.woff2",
+      "sha256": "a4f2c6a6c0db6417b282f2b93f5fb142edaaafd464da776c3bc9b52828fce244",
+      "bytes": 33452
+    },
+    {
+      "file": "assets/barlow-condensed-900-italic-cIV6hM2u.woff2",
+      "sha256": "3cb7916913773e7a0720fa590b487c86355df421af3c59705cb716075c49b218",
+      "bytes": 35464
+    },
+    {
+      "file": "assets/barlow-semi-condensed-500-B0Zsh8-m.woff2",
+      "sha256": "6d5e316066edd5496b9af59c5589639af0519ff5f68e5c7a243a4797c4eefe4b",
+      "bytes": 34084
+    },
+    {
+      "file": "assets/barlow-semi-condensed-600-DUE0SVSJ.woff2",
+      "sha256": "b67fc98beec20a24e8fe000faee9cc41f627ca759dcf0a46140012fce105c241",
+      "bytes": 35020
+    },
+    {
+      "file": "assets/barlow-semi-condensed-700-D8oN59Yl.woff2",
+      "sha256": "d4ae2c08fcf6767e8b519f78481e298d249be1a5411f747a560f3091ab9e47f0",
+      "bytes": 35400
+    },
+    {
+      "file": "assets/base-B5Pn6pm6.css",
+      "sha256": "ed876b7d60f5944a27bb14f60424eafd3c9f6f99f16b8df67fd5779ef6148fee",
+      "bytes": 22913
+    },
+    {
+      "file": "assets/base-wNlwNNiy.js",
+      "sha256": "d10a7983de0e5c47d8207978dbcdc7514a08b5b62d1599867b301b4d2982c960",
+      "bytes": 33277
+    },
+    {
+      "file": "assets/bench-ChoeSbPs.js",
+      "sha256": "5d97c03d382037fad525c39a8960678df785b05cd7ee78b3d07eebcf13583e32",
+      "bytes": 3027
+    },
+    {
+      "file": "assets/big-air-1-DDY_VcLG.ogg",
+      "sha256": "7afdbd13c6a1437d9de9e0a5a097380b0b2ad2c012742e1423c0b5ec5eef7cfa",
+      "bytes": 11535
+    },
+    {
+      "file": "assets/big-air-2-Bdz1gy9z.ogg",
+      "sha256": "7198533605e2112802107f377ad32ceaa4ab701ecb334fdb264b7f4f2e8eb364",
+      "bytes": 15108
+    },
+    {
+      "file": "assets/big-air-3-cbENZt3l.ogg",
+      "sha256": "59b8531a3315d2449204b11e7506817bc4a59460e3ab35e64c612fb780a39b06",
+      "bytes": 13423
+    },
+    {
+      "file": "assets/big-air-4-BmumaEnH.ogg",
+      "sha256": "4a4000d3fd8fbff35bac0a447fa011b14e9f31c3e78e2dd68c7ee062b76716f0",
+      "bytes": 11024
+    },
+    {
+      "file": "assets/bodywork-off-1-Ccm7Z7cy.ogg",
+      "sha256": "97fa4eb980fc68e2436f095cc1f32ad59e6d98f99ddaae50f083ba8ebf352250",
+      "bytes": 18416
+    },
+    {
+      "file": "assets/bodywork-off-2-BQYmBn-3.ogg",
+      "sha256": "c1dba4433bd25d29e23fcf07866f9c3c2c00e277f1a79f2bc1cd0d481f555294",
+      "bytes": 13153
+    },
+    {
+      "file": "assets/bodywork-off-3-BF0ews7q.ogg",
+      "sha256": "1f17b91a4c2241097cfea5f46e9bc6b6e12d85a77103e7be96170699d1d6d350",
+      "bytes": 15059
+    },
+    {
+      "file": "assets/bodywork-off-4-Cie-AWyp.ogg",
+      "sha256": "d64ff671191a7c5eab512767b475fafa36ab799149ae3197a1707782e790fc87",
+      "bytes": 17480
+    },
+    {
+      "file": "assets/bring-your-friends-B5sCBF9b.mp4",
+      "sha256": "14474a45ea9ef8f7fe40668cfd75e64b8a904ed6580e769a54cd63f664f7dd44",
+      "bytes": 25715991
+    },
+    {
+      "file": "assets/bring-your-friends-NYg2-2lo.vtt",
+      "sha256": "86c3b98309e477d08f9b932fd5e47b0b6621beb3047852e4382f8154fc3af08c",
+      "bytes": 731
+    },
+    {
+      "file": "assets/bring-your-friends-dScOT2xW.jpg",
+      "sha256": "40cbc10354e3d9aa76aff2ff41654d0512307aedd878a53de2a709bafa1c6225",
+      "bytes": 163999
+    },
+    {
+      "file": "assets/broken-no-gates-JKDGj3wr.js",
+      "sha256": "90f17b2616e6cfc4803863ef9a82a407ea04be20784831d75c7825fee559997f",
+      "bytes": 63124
+    },
+    {
+      "file": "assets/canyon-leap-BTAbR_fn.js",
+      "sha256": "6ec5d879af24a57d9f221066ef0e3f67d1f708768299fd5cd0726ef74a0108a0",
+      "bytes": 801303
+    },
+    {
+      "file": "assets/carnage-bowl-nnY6rjEM.js",
+      "sha256": "e748823357fc53a2940470e78aefcc83b0aebf21e7bbec4a46aaf6419316d235",
+      "bytes": 212602
+    },
+    {
+      "file": "assets/controller-BC6dHhNj.js",
+      "sha256": "dcb0887e7a96e23c880fdb1784e30cf9c3a08806b34d5d126b9a660e5860f9ea",
+      "bytes": 95135
+    },
+    {
+      "file": "assets/controller-Bymfn2TD.css",
+      "sha256": "5fcce027ae8cfd04cdaa1a47f32ba29d5b1a154686cebbee3f629a2d9a6096e6",
+      "bytes": 52988
+    },
+    {
+      "file": "assets/controller-options-LMvh9S-_.js",
+      "sha256": "cae8b898be5c7f7d722607bd22277ffeca8a8835e433d07853d52ee5558d6446",
+      "bytes": 236
+    },
+    {
+      "file": "assets/countdown-1-CrWm-Tt9.ogg",
+      "sha256": "39d1cb08bd32c9dc27b28ec8ae083d2eea584308d1995645c8469d16ae6471a4",
+      "bytes": 13919
+    },
+    {
+      "file": "assets/countdown-2-Bd4wS5Bk.ogg",
+      "sha256": "896740e94b656e764bbbdb42925aebe81f9cfa13ab22b326fe94ed3d95ca81ec",
+      "bytes": 15600
+    },
+    {
+      "file": "assets/countdown-3-CgOEz_UC.ogg",
+      "sha256": "2a169111b79a1235a4afbb2e6bf803f14af015e275e33a09e5f7150bcd19b803",
+      "bytes": 18026
+    },
+    {
+      "file": "assets/credits-B_PxpkU7.css",
+      "sha256": "18089658c1fa81665d089f01da8afe7f52135c9e2f44ee20c76fbe9f46f74b94",
+      "bytes": 1890
+    },
+    {
+      "file": "assets/credits-DsQUsxbD.js",
+      "sha256": "727d27930dfe40b23523e3c2cb8440c2d470559c60420f3d6966e349df449b30",
+      "bytes": 26660
+    },
+    {
+      "file": "assets/cruz-missile-CPF9C0xB.png",
+      "sha256": "3df3a400fca276cd29a2c2e212239646fe749c2c19ad5f6cfb5647829b49cf83",
+      "bytes": 145282
+    },
+    {
+      "file": "assets/cruz-missile-hero-BGsSsvsn.png",
+      "sha256": "bb0ce349f44484ae1dfaf36d3695673362df8a698a7aaf174727151fff06af99",
+      "bytes": 57526
+    },
+    {
+      "file": "assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "bytes": 358524
+    },
+    {
+      "file": "assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "bytes": 223140
+    },
+    {
+      "file": "assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "bytes": 193668
+    },
+    {
+      "file": "assets/derby-bowl-16-nnY6rjEM.js",
+      "sha256": "e748823357fc53a2940470e78aefcc83b0aebf21e7bbec4a46aaf6419316d235",
+      "bytes": 212602
+    },
+    {
+      "file": "assets/derby-bowl-32-DyYLyTeL.js",
+      "sha256": "3a3d3414e110682aa22ef81dd6f77e470a21513e284e4110494bf2f37a533744",
+      "bytes": 260868
+    },
+    {
+      "file": "assets/derby-bowl-8-nnY6rjEM.js",
+      "sha256": "e748823357fc53a2940470e78aefcc83b0aebf21e7bbec4a46aaf6419316d235",
+      "bytes": 212602
+    },
+    {
+      "file": "assets/devmaps-BuJ1NK6a.js",
+      "sha256": "9501f1a3c0d99df09a8d08703a63b9e6a632b90c8a734df98737e97cf7f12adc",
+      "bytes": 1714
+    },
+    {
+      "file": "assets/dist-DM8r0F1-.js",
+      "sha256": "b50836479eac03ae276f25874b894dbfee220d6735cc9d9e149b143541978faf",
+      "bytes": 10614
+    },
+    {
+      "file": "assets/door-off-1-XvR289QE.ogg",
+      "sha256": "9a9769621287932eb6db9386a3d7c42ad471490ef4e838aecda71cbdcbe23dc1",
+      "bytes": 13039
+    },
+    {
+      "file": "assets/door-off-2-CWKRI7rs.ogg",
+      "sha256": "93d2df9dbc433e380b30ff7499d6ad5f573caa767dc4708a3f299fdd6d8322d2",
+      "bytes": 13605
+    },
+    {
+      "file": "assets/door-off-3-DcdKl5Ro.ogg",
+      "sha256": "29be45cc5ecf4170bbd2b8a20cf9856d1b01121141300526f4a90418580be995",
+      "bytes": 6673
+    },
+    {
+      "file": "assets/door-off-4-q19po2KC.ogg",
+      "sha256": "ee4eb55dc75c212d35f9d62b202e6721483744fbc91db6397cb9b6788029e783",
+      "bytes": 14085
+    },
+    {
+      "file": "assets/door-off-5-C3AEpN3p.ogg",
+      "sha256": "3fa437288070b7e2e1ce1e0bcd7e4ba58d25d85226fa251ff026fe7572913775",
+      "bytes": 12935
+    },
+    {
+      "file": "assets/favicon-HYMeRXmZ.svg",
+      "sha256": "1e299385104992233c90c77fd6a14dc4e7904d169b04eccd74b49980ff9b4f4a",
+      "bytes": 1367
+    },
+    {
+      "file": "assets/final-lap-1-C4PN3_g6.ogg",
+      "sha256": "d875c4a4278938cc7d3ce867311a7a2b80c659c4bdada0cce10130ac96b505a9",
+      "bytes": 18525
+    },
+    {
+      "file": "assets/final-lap-2-DZ4uVhjJ.ogg",
+      "sha256": "5ae9a7c8ad4f02e4f533d869d95f5948addc14e99e8c77c54e848390e41536dd",
+      "bytes": 16625
+    },
+    {
+      "file": "assets/final-lap-3-CdhDTLHd.ogg",
+      "sha256": "b124d35c1e775e94d6056fcdc3283d0521cb5cb4fa54c74986ad04dc79ec21e7",
+      "bytes": 27389
+    },
+    {
+      "file": "assets/first-finisher-1-ChmzLMqC.ogg",
+      "sha256": "c03d4c94c35e671a337a3b44b16bfe501be3fd0742dee09c6c5dd8bbe70e3da3",
+      "bytes": 16141
+    },
+    {
+      "file": "assets/first-finisher-2-BnReLxGN.ogg",
+      "sha256": "6f0973364c48b4cf355a12b08aa8f935e1a6ef172090683c046d9968c0b4981d",
+      "bytes": 17780
+    },
+    {
+      "file": "assets/first-finisher-3-DytpE43g.ogg",
+      "sha256": "d210603ab15786e74b847c2a5c831a7241d9e30dc98317ef95d0992a00a7984f",
+      "bytes": 17173
+    },
+    {
+      "file": "assets/generator-kfTtZCwy.js",
+      "sha256": "e7e8a049eecb76bc426beae12f960aa54592717a1ba0d53f738a0e872538d9e5",
+      "bytes": 5426
+    },
+    {
+      "file": "assets/hairpin-cut-CRitkjxj.js",
+      "sha256": "e39900297fe3990a84076e5437f8a99bf0bf14902274f09cddbab8a6639cda0b",
+      "bytes": 557274
+    },
+    {
+      "file": "assets/hawk-dash-C-tFSj7e.png",
+      "sha256": "ef81527f0c8c296fe1603d69ecd419fb418e3d431dea4a98013af2f13f9dab6d",
+      "bytes": 143021
+    },
+    {
+      "file": "assets/hawk-dash.lod0-CnQmCHJ8.glb",
+      "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+      "bytes": 395604
+    },
+    {
+      "file": "assets/hawk-dash.lod1-w0JV7_54.glb",
+      "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+      "bytes": 188592
+    },
+    {
+      "file": "assets/hawk-dash.lod2-DGx3gpFK.glb",
+      "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+      "bytes": 161532
+    },
+    {
+      "file": "assets/hello-BTgDxEtb.js",
+      "sha256": "7de81c7172a016e185dd39a86360d6b79c8790da5e9c6fa093d203b2a09b9616",
+      "bytes": 406
+    },
+    {
+      "file": "assets/hello-Cy-42ZWf.js",
+      "sha256": "1bac451bec5434b0495135f5ae550b3b7ecb8c5591aaac4be269578da58e5730",
+      "bytes": 2562
+    },
+    {
+      "file": "assets/hello-e8IdmLeC.js",
+      "sha256": "160cc0d24357de34a757691e3d89d447304d4776416cf83714e4d0c950304a60",
+      "bytes": 2909
+    },
+    {
+      "file": "assets/host-B9LmJ_3f.js",
+      "sha256": "52d8612ae31da0d5a077e560ed9e60a8a5ba7199478aaecb7d5aa545d911d208",
+      "bytes": 871758
+    },
+    {
+      "file": "assets/host-BZxTMWCh.css",
+      "sha256": "60f0dae5e0eba50965feb34a7c0e2e3ea41b434105ff4fe5ea3e3c2685889568",
+      "bytes": 43525
+    },
+    {
+      "file": "assets/jj_wasm_host_bg-CIrIBvxN.wasm",
+      "sha256": "77b21d009436c4e3a33612b273ad9a48336d0fd6ba6b91246976636c4107ba4d",
+      "bytes": 5420259
+    },
+    {
+      "file": "assets/jj_wasm_input_bg-62MOWMJO.wasm",
+      "sha256": "58aa153ad5043e0aae0eb9252b59e4ab9a4bfb620a73e8e2532721d5cfafc1c5",
+      "bytes": 313848
+    },
+    {
+      "file": "assets/jj_wasm_procgen_bg-DCQjgz9C.wasm",
+      "sha256": "8a72028b9e5c34aeb55a47d67be6cbbb5d89b1e95a2aa12286d82fcfe623965a",
+      "bytes": 2292363
+    },
+    {
+      "file": "assets/jsQR-DhH5ppsp.js",
+      "sha256": "0a032327f8181fa0aaee4374804b4116bd0de77f115f43ef5295ee08ee91e2d5",
+      "bytes": 129986
+    },
+    {
+      "file": "assets/landing-9r3ABTOR.js",
+      "sha256": "ee5e777c34eaae0569325cd1c44784ffd95bcccca57ccb4bb35859a509ed8a11",
+      "bytes": 2567
+    },
+    {
+      "file": "assets/landing-Dr-AWV1O.css",
+      "sha256": "a2fb8d1b1d0bf6c2fdf4d89a94fc9c358bb192260e5ff2806d8b937f68d698e3",
+      "bytes": 1037
+    },
+    {
+      "file": "assets/landing-hR6s2b1h.css",
+      "sha256": "9bc4ed2b48d9094e246d346d57191b292e3fb4c9c05133d7f0360ba82b9d27c0",
+      "bytes": 4116
+    },
+    {
+      "file": "assets/late-joiner-1-D5dw1lM7.ogg",
+      "sha256": "89ceda4ef9f7530a6f9ab15527d68115cb62de0cca3197a06dbd0775307b3a82",
+      "bytes": 16930
+    },
+    {
+      "file": "assets/late-joiner-2-Dc58DYtx.ogg",
+      "sha256": "eab09c0099cb3b5d6e2e14b3698b865938c8c6d18f40e68242536a4748e6116c",
+      "bytes": 15634
+    },
+    {
+      "file": "assets/late-joiner-3-Cgq9bL4Q.ogg",
+      "sha256": "447906407dd5417dd9c09cab91e60695bc6e9c34267040f364f45fa5bb34dc3d",
+      "bytes": 11071
+    },
+    {
+      "file": "assets/late-joiner-4-IvaeUC48.ogg",
+      "sha256": "116bbac72f222a29fe423d2a7c2f1953a7907eb27df00c23f9f10d2349ab2ae8",
+      "bytes": 14036
+    },
+    {
+      "file": "assets/late-joiner-5-C-UcBuSs.ogg",
+      "sha256": "e00cd16d7400e80907ca5883257f6425bb14ef0b36d25637f223d951559b4f34",
+      "bytes": 14514
+    },
+    {
+      "file": "assets/lead-change-1-C0Y7_7cN.ogg",
+      "sha256": "40e4a5bae5a8f3ea5243b66b0583800477cec8896432a92fc55b42f80adaa09e",
+      "bytes": 7201
+    },
+    {
+      "file": "assets/lead-change-2-BTmGpm5x.ogg",
+      "sha256": "7255690d55783a513ee2a41d8204a37b29a654d0e3d62dc5ede5ad86c32d59ff",
+      "bytes": 19309
+    },
+    {
+      "file": "assets/lead-change-3-D6ujwRIV.ogg",
+      "sha256": "2d79031d5843f0f2d29fb6d6978d53e6913eb243f6d097a35b7a3161b4899a1d",
+      "bytes": 11404
+    },
+    {
+      "file": "assets/lead-change-4-BO-M7kOm.ogg",
+      "sha256": "a1ef9150f0966b5201a74bb198a26c11c3ee8f64e29ff4981a675f22e3412a30",
+      "bytes": 12816
+    },
+    {
+      "file": "assets/lead-change-5-B2DGwOSe.ogg",
+      "sha256": "f09fe12c026a7c587714dce54291dd1cad9af395a74910938f0796af1e433e48",
+      "bytes": 17793
+    },
+    {
+      "file": "assets/lion-president-CD1oI939.png",
+      "sha256": "04258e25de70e19f4ea84ac721a650a69f1982e7dc17bc43a40bd98da4e540e7",
+      "bytes": 135556
+    },
+    {
+      "file": "assets/lion-president.lod0-Bf8PyDla.glb",
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "bytes": 356460
+    },
+    {
+      "file": "assets/lion-president.lod1-CsVneLCq.glb",
+      "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+      "bytes": 190544
+    },
+    {
+      "file": "assets/lion-president.lod2-Cd_RPfAb.glb",
+      "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+      "bytes": 159056
+    },
+    {
+      "file": "assets/lobby-DHKH8eYM.ogg",
+      "sha256": "096833cf396d978579ecc3370af0de5af2a1af86db830c30f4c5a6fe77ac07f4",
+      "bytes": 3897276
+    },
+    {
+      "file": "assets/loop-CayxSciK.js",
+      "sha256": "755f1f830936cea00c2a3ec0411c97f4dec5008cb249c3a144fab4ea4c65a12a",
+      "bytes": 63782
+    },
+    {
+      "file": "assets/next-round-1-CwSYl_n5.ogg",
+      "sha256": "b6fc7bc4e794ddc519f238863539343233c44ed2d9fa0b7f7bb3702e91a01535",
+      "bytes": 14086
+    },
+    {
+      "file": "assets/next-round-2-D_EEjGHT.ogg",
+      "sha256": "24c890cac9cbabbf09a79802df959b0b0efa4d285297c82c70a93221f3bddbd9",
+      "bytes": 15134
+    },
+    {
+      "file": "assets/next-round-3-DzW1XYt5.ogg",
+      "sha256": "f569804ce345b1eaf99709e9e6b75bb18525ccffb157fd33e5160e60cd1fb699",
+      "bytes": 14543
+    },
+    {
+      "file": "assets/next-round-4-DsgDIiML.ogg",
+      "sha256": "3a776ee3bd3b6dadb217faa2e454b8b8f56036b012adadaba733c457c3b43827",
+      "bytes": 17098
+    },
+    {
+      "file": "assets/next-round-5-CtVx1s8e.ogg",
+      "sha256": "359f9171728f9bd319ddc260294cd16d8849c822e69532868643b2854c62602e",
+      "bytes": 16667
+    },
+    {
+      "file": "assets/off-course-1-B_ujIsLm.ogg",
+      "sha256": "92e1137e7e452113cf28fade75125fe12341b88f8e383635d5a748fc4ceb781e",
+      "bytes": 18872
+    },
+    {
+      "file": "assets/off-course-2-7ihy7pXq.ogg",
+      "sha256": "e5a6a76838e1eee0604102fdde113158599905c14f60ce65ac953e425889173e",
+      "bytes": 20184
+    },
+    {
+      "file": "assets/off-course-3-Daiw3yR3.ogg",
+      "sha256": "bef8951d69466d94da2a06d33f4bd969abcd1d4be94495c5932131eb74cd1860",
+      "bytes": 20540
+    },
+    {
+      "file": "assets/off-course-4-BweAFipy.ogg",
+      "sha256": "59a6a4b6943401de2459e0ca743d0cdb1f73ca47d44cc9ca9944483742758fe4",
+      "bytes": 20588
+    },
+    {
+      "file": "assets/off-road-climb-CkwDDgXL.js",
+      "sha256": "4419a11834268ba439080cd762972866ead6974324700fe9ea8433c38d46bb55",
+      "bytes": 881998
+    },
+    {
+      "file": "assets/og-card.png",
+      "sha256": "2b9eadafee8db7f3234a4d855a4752d5f66515504e86c33a0aae6cc46216a0b9",
+      "bytes": 196556
+    },
+    {
+      "file": "assets/panel-DBMXHykv.js",
+      "sha256": "3c1f52e0f21d4768ab527acb60d9efd1a7c136d28a5a094193b8644abdbbf6dc",
+      "bytes": 16977
+    },
+    {
+      "file": "assets/panel-vRgF0DUt.css",
+      "sha256": "46cd105fe37cde95e53df846f434b20a8f7ebcfaee0433d5ce7d5b226198a34a",
+      "bytes": 4961
+    },
+    {
+      "file": "assets/photo-finish-1-DO4AWfXc.ogg",
+      "sha256": "597a0caa94182cf84ad25af480a9b2d78b1f5206528e2884e699a25998605cae",
+      "bytes": 15166
+    },
+    {
+      "file": "assets/photo-finish-2-Bbs-FF1j.ogg",
+      "sha256": "c5b2325eff6e2a1342752420a21a1bf704c19167fbce26b4683785dd8dbee5e9",
+      "bytes": 15667
+    },
+    {
+      "file": "assets/photo-finish-3-Dg8K8dPM.ogg",
+      "sha256": "e7f3b5cc54e48c2cc6df5aa2fc66ea1ba3f64600e2ccf497ed7faec8490f2448",
+      "bytes": 13894
+    },
+    {
+      "file": "assets/photo-finish-4-BGxZZ1fD.ogg",
+      "sha256": "12f47712ac573141a99627b0c353d17e8e35ba85809c2760d6430787ea436a91",
+      "bytes": 14794
+    },
+    {
+      "file": "assets/pig-catcher-BdKB2d9v.png",
+      "sha256": "7195f6fa2e2c301f13e4476d6f3cb2f492b8f4343e4455821e48d3c54c503623",
+      "bytes": 97478
+    },
+    {
+      "file": "assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "bytes": 328076
+    },
+    {
+      "file": "assets/pig-catcher.lod1-D6CTES49.glb",
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "bytes": 133348
+    },
+    {
+      "file": "assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "bytes": 104660
+    },
+    {
+      "file": "assets/postie-bike-DvLNp5wM.png",
+      "sha256": "0085e15b6cd72c624b85717eab1237e78d901212fb0c86049f1e71621a38de89",
+      "bytes": 73795
+    },
+    {
+      "file": "assets/postie-bike.lod0-_b7zK3oT.glb",
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "bytes": 320068
+    },
+    {
+      "file": "assets/postie-bike.lod1-CsKW5cUP.glb",
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "bytes": 134760
+    },
+    {
+      "file": "assets/postie-bike.lod2-BXpbw4nH.glb",
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "bytes": 105956
+    },
+    {
+      "file": "assets/preload-helper-BaNbYf_w.js",
+      "sha256": "49e31bba082196935782ac14bbedbc2a8e7c4229f918bc086ab5dd08ca015034",
+      "bytes": 1398
+    },
+    {
+      "file": "assets/procgen.worker-th-kGccb.js",
+      "sha256": "bdc8c06634be6ba77ca229a655ee9b38de934e68f30f82ed5d649997415bf580",
+      "bytes": 5663
+    },
+    {
+      "file": "assets/promo-01-C8Vu_lYc.ogg",
+      "sha256": "1828b033db310a7cb6d86e8573b6e4e4aacfd4f8edb3c92a036f03940e7d543c",
+      "bytes": 27028
+    },
+    {
+      "file": "assets/promo-02-BEVuoWyw.ogg",
+      "sha256": "5212d5d5ea91740ae72e291e3576c290c7e33d986664775b6c1ed60f17c13e9b",
+      "bytes": 22177
+    },
+    {
+      "file": "assets/promo-03-xy4Pipko.ogg",
+      "sha256": "5d84bbb57b2166a8160d966c75fc73705633bb142d8225da38f7ba603333c1d1",
+      "bytes": 27157
+    },
+    {
+      "file": "assets/promo-04-9PnDcFXE.ogg",
+      "sha256": "0cae4074e7074b832470d6976aa9324e1b99a982558921a7cbf5ba1c154fe889",
+      "bytes": 22980
+    },
+    {
+      "file": "assets/promo-05-C5v5m887.ogg",
+      "sha256": "2c046d1bd2f60b7eb23a00aa1d172bc0143f1eb18bd1e33037fd7bfffd09c973",
+      "bytes": 29375
+    },
+    {
+      "file": "assets/promo-06-D_9MtQjH.ogg",
+      "sha256": "b852cffd3403bae18e7e4e141251e987c04e53e95737164edf4cab50fdb24c2d",
+      "bytes": 32023
+    },
+    {
+      "file": "assets/promo-07-DDtnj5Fi.ogg",
+      "sha256": "88e556527abc49ffa425d2f4864f7cf0a9836fa28787b1d223f56549fcf3812c",
+      "bytes": 22851
+    },
+    {
+      "file": "assets/race-1-Bn_ltGGS.ogg",
+      "sha256": "df4b4fa4a2c9d52b8aa436a5c0dbbd777785a9f53f99d4004f6ad3217cd331c0",
+      "bytes": 4222575
+    },
+    {
+      "file": "assets/race-2-B17J2hMN.ogg",
+      "sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
+      "bytes": 4457828
+    },
+    {
+      "file": "assets/race-3-DZ79BCGY.ogg",
+      "sha256": "322f57bf40cfb845514678fdfac53861e3de053312cd1d3dfaf79f2724fda43e",
+      "bytes": 4792203
+    },
+    {
+      "file": "assets/race-4-BZyfYHdj.ogg",
+      "sha256": "1f751a2f63a5c3e4d958ce3d14778d0f39948f3697e88ec61dbf34a07d951cfc",
+      "bytes": 5455293
+    },
+    {
+      "file": "assets/registry-CO4VMADB.js",
+      "sha256": "d50d6c16562bff5da595a19a60245763c13f2e854368d4b928e18575410178f8",
+      "bytes": 402503
+    },
+    {
+      "file": "assets/results-1-D6dbAp1k.ogg",
+      "sha256": "ecbcba9c2c663a5ed91b39ba359c9317a60cca9c0fa6752e6a713f00ecf9595e",
+      "bytes": 2573663
+    },
+    {
+      "file": "assets/results-2-D8m1dblG.ogg",
+      "sha256": "b65817b31130016ef726f03c1375aecf8eb6eb7429427e0f7c5899c324f051fd",
+      "bytes": 3470989
+    },
+    {
+      "file": "assets/results-3-B3eXUDs7.ogg",
+      "sha256": "5158eb2266fb04726764b4674b61427beec7af4fce229e0efe2689024f37c320",
+      "bytes": 4377116
+    },
+    {
+      "file": "assets/rolldown-runtime-hePW80VL.js",
+      "sha256": "580ad8c58061a4dde99bde0a56905e382f0568516ee2f5b84dbfb52085709021",
+      "bytes": 716
+    },
+    {
+      "file": "assets/scan-BU7uRmz_.js",
+      "sha256": "441a2b07d7bc36e4a04b0d4cf5ca5f085e3028c271895fea6251cdb356eb9006",
+      "bytes": 4543
+    },
+    {
+      "file": "assets/sim.worker-CpXAN-g-.js",
+      "sha256": "ea0189d59f1d973b0b87d3a98de9ce3b16af913bde9a78e80bd66f8b8907a657",
+      "bytes": 14237
+    },
+    {
+      "file": "assets/skidpad-C95iZlJm.js",
+      "sha256": "ac64012fae09ce63ea31399b84d78d9b10d6aaa52be2b265a1e28be216fe7ab3",
+      "bytes": 224124
+    },
+    {
+      "file": "assets/smoke.json",
+      "sha256": "d8d9d09610e5c1a3aaaa85b223b25b62c4999868358457a5e3c00a7a39d9ea84",
+      "bytes": 457
+    },
+    {
+      "file": "assets/sources-BuHzXcS8.js",
+      "sha256": "d1255ef9edd65885326e67e1caf14bdaab357a1817b874d552e8a34f1821dc04",
+      "bytes": 11575
+    },
+    {
+      "file": "assets/start-BXhEeC1q.css",
+      "sha256": "33d09abf030b0fdc5f2cd8489b7700fdc365dcc190e17a7364b4dd89d368d61f",
+      "bytes": 1113
+    },
+    {
+      "file": "assets/start-DeJ7Rpau.js",
+      "sha256": "3fe0576f424603dc56a337439f04d573d794352efa6a9a01026babb774f8ab21",
+      "bytes": 9281
+    },
+    {
+      "file": "assets/start-line-C8BGvi1B.js",
+      "sha256": "8961b27214a29cf0c23bfda4373a0930d81d424dcc70368c2e70dbba472ab59d",
+      "bytes": 740398
+    },
+    {
+      "file": "assets/surface-strips-CkQyYnNz.js",
+      "sha256": "2891b98d66dbd5e56ea779b2fab6122f0223cc09e69df67bc213083aa9bf7f37",
+      "bytes": 63689
+    },
+    {
+      "file": "assets/takedown-ojPFjcBv.js",
+      "sha256": "ba5db2d4c539ca2216e399a042affcf01be334054bade9d329364b40887e829e",
+      "bytes": 32295
+    },
+    {
+      "file": "assets/three.core-DnPmqh_V.js",
+      "sha256": "6a5e62e65f0eb9740181ce218089fa274fb82250caeea262812dd49622a70d77",
+      "bytes": 268182
+    },
+    {
+      "file": "assets/three.webgpu-Dly9HmWP.js",
+      "sha256": "93e334af61bd9a55fdbb00fc923c104f83a3022c5912f3a5c3528f6e76d0d150",
+      "bytes": 581252
+    },
+    {
+      "file": "assets/time-up-1-1J32z4xQ.ogg",
+      "sha256": "ae7b4947691b43ede39821bf9321301703d755cda23ef47a776afd276feb9f0f",
+      "bytes": 13410
+    },
+    {
+      "file": "assets/time-up-2-DUi0A7Ff.ogg",
+      "sha256": "a0ea804ef3b99d0ac02ab9536a99a91894029fbbf53dd1fae2ebee38cacd902c",
+      "bytes": 15503
+    },
+    {
+      "file": "assets/time-up-3-CA6S9v7l.ogg",
+      "sha256": "302f1f8750652f00df5166194394d863416791875fe50e34862d1ac5e43bb7ce",
+      "bytes": 11579
+    },
+    {
+      "file": "assets/time-up-4-DFtkSx96.ogg",
+      "sha256": "3cb74a020b95894f8c9b2369a5ef9404513c96e38d6ac75fcce066f32f46377e",
+      "bytes": 17378
+    },
+    {
+      "file": "assets/tradie-ute-H-o4yvFv.png",
+      "sha256": "6a970cc836f54bf73f60dda5a1d8ef3d252bd5c8b8a681fceff46148fa919a6a",
+      "bytes": 143030
+    },
+    {
+      "file": "assets/tradie-ute.lod0-BdeREewe.glb",
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "bytes": 275152
+    },
+    {
+      "file": "assets/tradie-ute.lod1-_EV6reX1.glb",
+      "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+      "bytes": 165088
+    },
+    {
+      "file": "assets/tradie-ute.lod2-1CuQNEKM.glb",
+      "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+      "bytes": 136652
+    },
+    {
+      "file": "assets/welcome-1-CUloT3L-.ogg",
+      "sha256": "3ad6d91178e9b97baf1c8eba13041fa01b7a6bf34d8251aae0056e5e9c1bc6da",
+      "bytes": 29699
+    },
+    {
+      "file": "assets/welcome-2-DLzzFIf1.ogg",
+      "sha256": "4d80b381ecabef02a367bab3d1c547a78b82b55f97212b354d20a588d5e7c021",
+      "bytes": 17605
+    },
+    {
+      "file": "assets/welcome-3-BHevDTEe.ogg",
+      "sha256": "169d04fecc632fbf383ed80b941128791296608e12780c80c44c09988d386b9c",
+      "bytes": 21257
+    },
+    {
+      "file": "assets/welcome-4-Dn22srXf.ogg",
+      "sha256": "ba34902f428710b45d2a69d2a3e4a836211c9abe5c195f7aaf38cf40121cc253",
+      "bytes": 21953
+    },
+    {
+      "file": "assets/wheel-off-1-DW5anjv8.ogg",
+      "sha256": "b871ac636e812e0b5457dfc7b9ee648ab6eb8ac5e637edc36ffa599cfd1e3fec",
+      "bytes": 20913
+    },
+    {
+      "file": "assets/wheel-off-2-DJ-RZvxt.ogg",
+      "sha256": "5f8843bc39ad325af72744d75ecea621966aefd88aff40a0c1438569e79e6cf8",
+      "bytes": 16842
+    },
+    {
+      "file": "assets/wheel-off-3-D_8vt3_i.ogg",
+      "sha256": "f697ad0ae8bca2e7f7595c065e34d470e91428e24be04a1184b574041dbcfbc5",
+      "bytes": 14409
+    },
+    {
+      "file": "assets/wheel-off-4-NP57h3w6.ogg",
+      "sha256": "912aa7f6583d08eb426dd97206b2fe51d0d6e3ed8133865e253c133ca2a7cade",
+      "bytes": 20653
+    },
+    {
+      "file": "assets/wheel-off-5-gMMRN8xE.ogg",
+      "sha256": "be97043dcbeff80c72b85f82543a843f819d221f60cb0fc340e5a2aa26ef806c",
+      "bytes": 10824
+    },
+    {
+      "file": "assets/winner-1-BEGj4TKQ.ogg",
+      "sha256": "2fdb5994925ed39d897534e19dc78f112bbeac981b01a04d49eebe5a06389824",
+      "bytes": 25458
+    },
+    {
+      "file": "assets/winner-2-BUpXwOb_.ogg",
+      "sha256": "8d257e0feed0341c7e920cfdb6577b50d07d733f66a45bc06bb175cefecb1dee",
+      "bytes": 24644
+    },
+    {
+      "file": "assets/winner-3-vqI5AHum.ogg",
+      "sha256": "0397754409cf90a55c87abab56f06ade5686de396e33b0c451ba25ef0cd33e3d",
+      "bytes": 18734
+    },
+    {
+      "file": "assets/winner-4-_WqLY9Os.ogg",
+      "sha256": "9d0edca7be68c148d5523d96b6a68e8aee4632a3eaf7463db91d48a00cb3f4e5",
+      "bytes": 22684
+    },
+    {
+      "file": "assets/wordmark-C3SYZTe9.svg",
+      "sha256": "f3cfe6d7951f6688ec767ef427f6776cd40f8467d996e8937e44133bf7c90064",
+      "bytes": 9537
+    },
+    {
+      "file": "assets/wreck-1-CImFIl3-.ogg",
+      "sha256": "e73766899bf9eed426206358278cd13d9fa2df2dec62c76b7e3bbe55d03b6f20",
+      "bytes": 7648
+    },
+    {
+      "file": "assets/wreck-2-DWhiEr7L.ogg",
+      "sha256": "b22d9eaec974892c58318f1770991b391a6df908bd995788153393385a63d040",
+      "bytes": 16794
+    },
+    {
+      "file": "assets/wreck-3-DUB59wXo.ogg",
+      "sha256": "512af69c4e91f589c3fd7855d8f823b13eb222a8401481f264e1c89606bbc23f",
+      "bytes": 14622
+    },
+    {
+      "file": "assets/wreck-4-BjFOa7kp.ogg",
+      "sha256": "3980d00c0a040927862ea8490a1f6a3f8e44609c8caf5278a5fc3a4320031f12",
+      "bytes": 16975
+    },
+    {
+      "file": "assets/wreck-5-5hCnTexQ.ogg",
+      "sha256": "ed85887d5a71d7b3acf743b4e7001a4e529598cd597e25ca1430b1f3b92d5b36",
+      "bytes": 20351
+    },
+    {
+      "file": "controller/index.html",
+      "sha256": "ef154f64f78824db5b60e82bd94a004de3830a2421ca4ed85ec75133adb3467b",
+      "bytes": 2051
+    },
+    {
+      "file": "downloads/index.json",
+      "sha256": "72094c8b2dcf0bfb4f1d7ef1e19f4be87352e3165051f0a9f28b3169215a5896",
+      "bytes": 13
+    },
+    {
+      "file": "host/index.html",
+      "sha256": "ce4d89b4c0b38a20dd867c511a4a65acc799dd42f1c2af24a49a4f13c2c6657f",
+      "bytes": 4312
+    },
+    {
+      "file": "landing/credits/index.html",
+      "sha256": "9bc3d217c910c59882f68072439aa7e32ca3db4e200d3473a92cdb50f1b84597",
+      "bytes": 5251
+    },
+    {
+      "file": "landing/index.html",
+      "sha256": "5c6be7347e550755b1c8ee2d93204c76ee0a1fcab16ebbb09cef9110021bb6f1",
+      "bytes": 5535
+    },
+    {
+      "file": "test/fixture-testing-DHlCNqV3.js",
+      "sha256": "9aa42cda943beb17bf142690a8abacfb2b9677f5e7f7c7b49c2465b807e25f0f",
+      "bytes": 2494
+    },
+    {
+      "file": "test/jj_wasm_host_testing_bg-DVKtx4g9.wasm",
+      "sha256": "92cb298637bf7d6b5debacbcfb6513b87ed94cb7609353bf7dd97117d7c5dd58",
+      "bytes": 6177963
+    },
+    {
+      "file": "test/testing-CKaV4oJJ.js",
+      "sha256": "2fae80179852d4a57546a3085d0bbcea4557fb240d443e40c0105476b4fd94a5",
+      "bytes": 5933
+    },
+    {
+      "file": "test/testing.worker-BVzT_Po6.js",
+      "sha256": "83e001d18f6ea5705132fcfe584616e79da17b82529540440005f5b3f4443044",
+      "bytes": 18715
+    }
+  ],
+  "network": [
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+      "status": 200,
+      "bytes": 275152,
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+      "status": 200,
+      "bytes": 165088,
+      "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+      "status": 200,
+      "bytes": 136652,
+      "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+      "status": 200,
+      "bytes": 275152,
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+      "status": 200,
+      "bytes": 165088,
+      "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+      "status": 200,
+      "bytes": 136652,
+      "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+      "status": 200,
+      "bytes": 395604,
+      "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+      "status": 200,
+      "bytes": 188592,
+      "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+      "status": 200,
+      "bytes": 161532,
+      "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+      "status": 200,
+      "bytes": 395604,
+      "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+      "status": 200,
+      "bytes": 188592,
+      "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+      "status": 200,
+      "bytes": 161532,
+      "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+      "status": 200,
+      "bytes": 356460,
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+      "status": 200,
+      "bytes": 190544,
+      "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+      "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+      "status": 200,
+      "bytes": 159056,
+      "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+      "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+      "status": 200,
+      "bytes": 356460,
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+      "status": 200,
+      "bytes": 190544,
+      "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+      "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+      "status": 200,
+      "bytes": 159056,
+      "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+      "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+      "status": 200,
+      "bytes": 343816,
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+      "status": 200,
+      "bytes": 181320,
+      "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+      "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+      "status": 200,
+      "bytes": 154580,
+      "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+      "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+      "status": 200,
+      "bytes": 343816,
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+      "status": 200,
+      "bytes": 181320,
+      "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+      "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+      "status": 200,
+      "bytes": 154580,
+      "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+      "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:64910/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    }
+  ],
+  "captured": [
+    {
+      "id": "cruz-missile",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+          "status": 200,
+          "bytes": 358524,
+          "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+          "status": 200,
+          "bytes": 223140,
+          "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+          "status": 200,
+          "bytes": 193668,
+          "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "tradie-ute",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+          "status": 200,
+          "bytes": 275152,
+          "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+          "status": 200,
+          "bytes": 165088,
+          "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+          "status": 200,
+          "bytes": 136652,
+          "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "hawk-dash",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+          "status": 200,
+          "bytes": 395604,
+          "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+          "status": 200,
+          "bytes": 188592,
+          "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+          "status": 200,
+          "bytes": 161532,
+          "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "lion-president",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+          "status": 200,
+          "bytes": 356460,
+          "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+          "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+          "status": 200,
+          "bytes": 190544,
+          "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+          "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+          "status": 200,
+          "bytes": 159056,
+          "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+          "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "au-hawk",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+          "status": 200,
+          "bytes": 343816,
+          "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+          "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+          "status": 200,
+          "bytes": 181320,
+          "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+          "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+          "status": 200,
+          "bytes": 154580,
+          "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+          "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "postie-bike",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+          "status": 200,
+          "bytes": 320068,
+          "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+          "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+          "status": 200,
+          "bytes": 134760,
+          "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+          "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+          "status": 200,
+          "bytes": 105956,
+          "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+          "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "pig-catcher",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+          "status": 200,
+          "bytes": 328076,
+          "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+          "status": 200,
+          "bytes": 133348,
+          "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:63290/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+          "status": 200,
+          "bytes": 104660,
+          "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+        }
+      ]
+    }
+  ],
+  "buildManifestSha256": "a0bb11a019c757e20d784cfbef21c5acd2453b8fb4a922facf8ec7e8b0385391",
+  "publishedVehicleMatch": {
+    "art/vehicles/cruz-missile/cruz-missile.lod0.glb": true,
+    "art/vehicles/cruz-missile/cruz-missile.lod1.glb": true,
+    "art/vehicles/cruz-missile/cruz-missile.lod2.glb": true,
+    "art/vehicles/tradie-ute/tradie-ute.lod0.glb": true,
+    "art/vehicles/tradie-ute/tradie-ute.lod1.glb": true,
+    "art/vehicles/tradie-ute/tradie-ute.lod2.glb": true,
+    "art/vehicles/hawk-dash/hawk-dash.lod0.glb": true,
+    "art/vehicles/hawk-dash/hawk-dash.lod1.glb": true,
+    "art/vehicles/hawk-dash/hawk-dash.lod2.glb": true,
+    "art/vehicles/lion-president/lion-president.lod0.glb": true,
+    "art/vehicles/lion-president/lion-president.lod1.glb": true,
+    "art/vehicles/lion-president/lion-president.lod2.glb": true,
+    "art/vehicles/au-hawk/au-hawk.lod0.glb": true,
+    "art/vehicles/au-hawk/au-hawk.lod1.glb": true,
+    "art/vehicles/au-hawk/au-hawk.lod2.glb": true,
+    "art/vehicles/postie-bike/postie-bike.lod0.glb": true,
+    "art/vehicles/postie-bike/postie-bike.lod1.glb": true,
+    "art/vehicles/postie-bike/postie-bike.lod2.glb": true,
+    "art/vehicles/pig-catcher/pig-catcher.lod0.glb": true,
+    "art/vehicles/pig-catcher/pig-catcher.lod1.glb": true,
+    "art/vehicles/pig-catcher/pig-catcher.lod2.glb": true
+  },
+  "captureKind": "close-front-three-quarter-and-side",
+  "framingRevision": {
+    "bikeCaptureProvenance": "/tmp/jj-promo-roster-angles-f3c175d9/bike-framing/provenance.json",
+    "targetCropOriginalPixels": [
+      0,
+      180,
+      1280,
+      720
+    ],
+    "reason": "Keep complete bike helmets and tyres in final 640x270 tile crop"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "phone": {
+    "source": "Current controller R90 state opener, no network connection",
+    "url": "http://127.0.0.1:64892/p/promo/j/TEST#state=playing&round=racing&seat=1&name=Davo&boost=75",
+    "state": {
+      "phase": "playing",
+      "code": "TEST",
+      "you": {
+        "seat": 1,
+        "number": 1,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "source": 1
+      },
+      "hud": {
+        "position": 3,
+        "lap": [
+          2,
+          3
+        ],
+        "boost": 75,
+        "pause": null,
+        "derby": null
+      },
+      "inventory": {
+        "front": null,
+        "back": null
+      },
+      "itemUseRefusal": null,
+      "lastItemEvent": null,
+      "roomPhase": "Racing",
+      "practising": false,
+      "ready": false,
+      "countdownMs": null,
+      "results": null,
+      "persisted": true,
+      "cameraDistance": "host",
+      "assist": "off",
+      "carChoice": "",
+      "sticks": {
+        "drive": {
+          "x": 0,
+          "y": 0,
+          "touch": false
+        },
+        "action": {
+          "x": 0,
+          "y": 0,
+          "touch": false
+        }
+      },
+      "stats": {
+        "batches": 0,
+        "stateBytes": 0,
+        "actions": 0,
+        "cmds": 0,
+        "records": 0,
+        "dropped": 1
+      },
+      "link": null,
+      "source": null,
+      "kids": [],
+      "inputProfile": null,
+      "inputAgeMs": null,
+      "launchOutcome": null,
+      "takedowns": 0,
+      "launch": {
+        "preloading": false,
+        "cooldown": 0,
+        "lastDetectedAction": null
+      },
+      "drive": null
+    }
+  },
+  "inserts": [
+    {
+      "file": "controller-pad-phone.jpg",
+      "source": "docs/evidence/P1-C08/captures/c08-phone-with-pad-phone-landscape-844x390.png",
+      "sha256": "a9eb13d1f3547c110e8debd761fc7e6ef4f231f50939f26a652bf9a2f5436042"
+    },
+    {
+      "file": "controller-keyboard.jpg",
+      "source": "docs/evidence/P1-C12/frames/keyboard-actions-1366x768.jpg",
+      "sha256": "0cf7db08cb835dd22684b04ac5e96d3dabbc7c4144e135381b722508679475a8"
+    }
+  ],
+  "limitations": "Fresh phone is a UI state-opener illustration without a room connection; pad and keyboard inserts reuse committed journey captures. No new connection or device qualification is claimed.",
+  "buildProvenance": "/tmp/jj-promo-roster-reviewed-f3c175d9/provenance.json",
+  "buildManifestSha256": "a0bb11a019c757e20d784cfbef21c5acd2453b8fb4a922facf8ec7e8b0385391",
+  "outputs": [
+    {
+      "file": "controller-phone.jpg",
+      "sha256": "b3d46fc4a57282b9f2fb6b52f95451eab6ca98026a6017bb585f178eb3f3fe67",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "controller-pad-phone.jpg",
+      "sha256": "3ce28fd80a719bf21d36e1ac496e9c00a9893b8063d403048ea68ab61533f3f6",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "controller-keyboard.jpg",
+      "sha256": "931698525a2a7b457a9d05c0c9f514eadebae269e011db51c3378dd1993399ef",
+      "size": [
+        1366,
+        768
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+[
+  {
+    "id": "jump",
+    "sha256": "5c23204d29693ae27f1759b8910ef6216b3811d782e9597a489edc07a513298d",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "180",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "6.000000"
+      }
+    }
+  },
+  {
+    "id": "dirt",
+    "sha256": "9d40c0409c1051640be0d229a1022d83eccc23e725d76fc83fa9fff44d7041dd",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "210",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "7.000000"
+      }
+    }
+  },
+  {
+    "id": "town",
+    "sha256": "bf328eb907093d050f9d82288ea1c654097162c014997adc2958e9c86164a09b",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "210",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "7.000000"
+      }
+    }
+  },
+  {
+    "id": "rivals",
+    "sha256": "0a9e7b224a6e92e54e82127797d1458345d5735532f33f379c862e9fa6c7462e",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "210",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "7.000000"
+      }
+    }
+  },
+  {
+    "id": "rocks",
+    "sha256": "dfcfbff06d1057d757f4fb6d749ac2dc35df4b441ecfaa78b36f7254c0472e29",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "210",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "7.000000"
+      }
+    }
+  }
+]

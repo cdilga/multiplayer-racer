@@ -1,0 +1,31 @@
+{
+  "inputs": {
+    "roster": {
+      "au-hawk.mp4": "8ba02a381744a2e01a5ff502f1fa1d4366fe869c2291089fb244092b009c075a",
+      "cruz-missile.mp4": "d7abd6a9413053c6cffd2c9d784f9e56a7bc56f08068fd6d9512be7142bef101",
+      "hawk-dash.mp4": "770f1e4fdd6c1d609031abfa699af66e6db7cab6b17209ad2f213235fcb9611b",
+      "lion-president.mp4": "fad188a1894a092ed7685d7a59b36bb4188dc3e864fbd7dd2597d115155ec76b",
+      "pig-catcher.mp4": "d6d349f95fca0b339e00e4c87ea5b336700baf3e06f12df0e8efd59cff89cc70",
+      "postie-bike.mp4": "dfadd89f96f73c085ff7689c788d2384f5b95e5967c9c9598723b4081959ee60",
+      "tradie-ute.mp4": "74192965acc55998630c2539731f7ee6fefe6943049627afa3fcc396df3f8026"
+    },
+    "roads": {
+      "dirt.mp4": "9d40c0409c1051640be0d229a1022d83eccc23e725d76fc83fa9fff44d7041dd",
+      "jump.mp4": "5c23204d29693ae27f1759b8910ef6216b3811d782e9597a489edc07a513298d",
+      "rivals.mp4": "0a9e7b224a6e92e54e82127797d1458345d5735532f33f379c862e9fa6c7462e",
+      "rocks.mp4": "dfcfbff06d1057d757f4fb6d749ac2dc35df4b441ecfaa78b36f7254c0472e29",
+      "town.mp4": "bf328eb907093d050f9d82288ea1c654097162c014997adc2958e9c86164a09b"
+    },
+    "crowd": {
+      "crowd.mp4": "4bde47a6edfe3cdff771a05782e15d7a3de791327486c0e4712b7bdb1a0b37a4",
+      "derby.mp4": "92530bffa8fb68400699160a68a084a5a714a26edf3796b38dd1b39b4ffa2546",
+      "joining.mp4": "350e10dfd97142f492470d5d967db9a062c22e0a762b0cc5880247fb0870860d",
+      "pileup.mp4": "a245b432cbaa92f40c4826a6d6ad054b203a6678f4d25d47ee6b20c29421c730",
+      "rivalry.mp4": "f13e5f64eaeff57b9a78edea9af24cbd3e3d072e7ebef1d5c70770328e226db3",
+      "winner.mp4": "ae9b43657e3d41ff139147f0b20cae8df8cc2a343267b3b6711701b4e45e5bc9"
+    }
+  },
+  "voice": "silent narration placeholders only; music and editorial engine bed present",
+  "finalVoiceInstalled": false,
+  "videoSha256": "f2d4e0c3cd07704ce35992ef612395cefc588e7ea041a889d8f35decc9fde7fc"
+}

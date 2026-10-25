@@ -1,0 +1,233 @@
+[
+  {
+    "id": "cruz-missile",
+    "sha256": "d7abd6a9413053c6cffd2c9d784f9e56a7bc56f08068fd6d9512be7142bef101",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 4.7,
+      "height": 1.65,
+      "targetHeight": 0.65,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "tradie-ute",
+    "sha256": "74192965acc55998630c2539731f7ee6fefe6943049627afa3fcc396df3f8026",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 4.7,
+      "height": 1.65,
+      "targetHeight": 0.65,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "hawk-dash",
+    "sha256": "770f1e4fdd6c1d609031abfa699af66e6db7cab6b17209ad2f213235fcb9611b",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 4.7,
+      "height": 1.65,
+      "targetHeight": 0.65,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "lion-president",
+    "sha256": "fad188a1894a092ed7685d7a59b36bb4188dc3e864fbd7dd2597d115155ec76b",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 4.7,
+      "height": 1.65,
+      "targetHeight": 0.65,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "au-hawk",
+    "sha256": "8ba02a381744a2e01a5ff502f1fa1d4366fe869c2291089fb244092b009c075a",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 4.7,
+      "height": 1.65,
+      "targetHeight": 0.65,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "postie-bike",
+    "sha256": "dfadd89f96f73c085ff7689c788d2384f5b95e5967c9c9598723b4081959ee60",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 3.8,
+      "height": 1.6,
+      "targetHeight": 1.25,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  },
+  {
+    "id": "pig-catcher",
+    "sha256": "d6d349f95fca0b339e00e4c87ea5b336700baf3e06f12df0e8efd59cff89cc70",
+    "ffprobe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "30/1",
+          "nb_read_frames": "90",
+          "side_data_list": [
+            {}
+          ]
+        }
+      ],
+      "format": {
+        "duration": "3.000000"
+      }
+    },
+    "camera": {
+      "distance": 3.8,
+      "height": 1.6,
+      "targetHeight": 1.25,
+      "orbitDegrees": [
+        135,
+        90
+      ],
+      "secondsPerAngle": 1.5
+    }
+  }
+]
