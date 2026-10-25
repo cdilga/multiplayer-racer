@@ -104,7 +104,8 @@ class CloseBoundary(unittest.TestCase):
         shutil.copy(ROOT / "scripts/beads/close.sh", self.root / "scripts/beads/close.sh")
         self.log = self.root / "calls"
         br = self.root / "bin/br"
-        br.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >>"$CALL_LOG"\n')
+        br.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >>"$CALL_LOG"\n'
+                      'if [ "$1" = show ]; then printf \'[{"status":"%s"}]\\n\' "${BR_FIXTURE_STATUS:-in_progress}"; fi\n')
         br.chmod(0o755)
         self.env.update(PATH=str(self.root / "bin") + os.pathsep + self.env["PATH"], CALL_LOG=str(self.log))
 
@@ -131,6 +132,14 @@ class CloseBoundary(unittest.TestCase):
         log = self.log.read_text()
         self.assertNotIn("--wait", log)
         self.assertNotIn("gate report", log)
+
+    def test_followup_to_pending_records_new_handoff_without_same_status_transition(self):
+        self.env["BR_FIXTURE_STATUS"] = "batch_pending"
+        result = self.close()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        log = self.log.read_text()
+        self.assertIn("comments add ct-1 commit:", log)
+        self.assertNotIn("--status batch_pending", log)
 
     def test_green_finalization_records_gate_and_receipt(self):
         result = self.close("--finalize", code=0)

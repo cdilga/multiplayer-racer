@@ -97,7 +97,14 @@ for d in map(json.loads, open(".beads/issues.jsonl")):
 fi
 
 if [[ $pending == 1 ]]; then
-    br update "$id" --status batch_pending --transition-comment "commit:$sha $tests" --actor "$AGENT_NAME" >/dev/null
+    status=$(br show "$id" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print((d[0] if isinstance(d,list) else d)["status"])')
+    if [[ $status == batch_pending ]]; then
+        # A follow-up commit can replace a pending handoff. Beads correctly rejects transition comments on a
+        # same-status update; record the newer receipt without pretending another transition occurred.
+        br comments add "$id" "commit:$sha $tests" --actor "$AGENT_NAME" >/dev/null
+    else
+        br update "$id" --status batch_pending --transition-comment "commit:$sha $tests" --actor "$AGENT_NAME" >/dev/null
+    fi
     echo "close: $id handed off (batch_pending, commit $short); finalize at the next bead boundary when CI is green"
     exit 0
 fi

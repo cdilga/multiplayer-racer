@@ -11,3 +11,5 @@
 Limits: Claude-only PreToolUse hooks do not become Codex/OMP hooks; shared cargo/delete rules still apply. Existing desktop sessions register once and follow the same pickup/reservation loop. This proves coordination mechanisms; the previously red game CI is the owner's next separately tracked task.
 
 Follow-up: installed Claude/Codex/OMP CLI help confirms prompt/model arguments. OMP's startup source honors its `autoResume` setting, so the launcher supplies an explicit `autoResume: false` config overlay: a fresh Agent Mail identity must not inherit an old conversation. Its dry command and all eight workflow/publication regressions pass. No provider sessions were launched as part of validation.
+
+The live follow-up handoff exposed Beads' rejection of a same-status transition comment (exit 4). `close.sh` now records a newer commit through `br comments add` when already `batch_pending`, preserving its status. The new regression and previous checks pass (nine total); a real repeat handoff for br-i674 succeeds. No acceptance boxes or gates are ticked by either handoff.
