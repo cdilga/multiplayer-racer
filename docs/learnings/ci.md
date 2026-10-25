@@ -230,3 +230,12 @@ before its first throttle input. Hold the loaded scene, wait for the worker's ac
 Running phase, and refresh input between fixed simulation steps when asserting a
 two-second movement envelope. The room view can be Running during the worker's race
 Countdown. Keep the full scene cohort and movement assertion; verify the tick interval.
+
+The results Keep action and its label repaint used to ask the procgen worker twice
+for a share code already displayed. The same worker also prepares the next map;
+these extra replies make a local save depend on unrelated worker/main-thread load.
+Reuse the current source/seed/recipe's share-code promise, invalidate when that
+identity changes, and evict rejected promises so transient errors can retry. Test
+a resolved displayed code with subsequent worker requests blocked: storage must
+update without another worker task. A passing trace proves the dependency, not
+the unavailable failed CI task's duration; keep that distinction in evidence.

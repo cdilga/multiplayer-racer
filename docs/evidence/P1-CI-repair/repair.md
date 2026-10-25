@@ -1120,3 +1120,33 @@ fix batch must still pass them. Do not treat an isolated pass as green CI.
 This is triage after the second red batch, not speculative patching. No
 quarantine, weakened gameplay assertion, duplicate dispatch or unchanged
 batch retry is made. Receipts: `scene-clock.txt`, `main9459-triage.txt`.
+
+## Remaining kept-track repair after main 9471
+
+Main **9471** at `ec7821cd` passes every lane except G-kept's Keep-label
+wait (10 seconds). The fixed five-scene file and unchanged FL12 Chromium/WebKit
+file pass. GPU **9472** succeeds. Preview **v02-ec7821cd** smoke passes, room
+**6MV6**. G-kept remains intermittent: the unchanged full software files pass
+on Mac and Linux, so an isolated pass is not a green receipt.
+
+The instrumented Linux journey confirms Keep receives its pointer down/up/click.
+After displaying the share code, saving requests it again, then repainting the
+label requests it a third time. These extra worker/main-thread round trips are
+unnecessary: the code is immutable for the current generator/seed/recipe, and
+next-track generation uses that same worker. The captured passing trace does
+**not** prove a ten-second worker job in the failed CI instance; that snapshot
+is unavailable.
+
+Reuse the current track's code promise across readers, including Keep and its
+label update. Changing source, seed or recipe requests a fresh identity; failed
+requests are evicted for retry; tuned tracks retain their local identity. A
+deterministic regression resolves the displayed code and blocks subsequent worker
+requests. It fails against the old source because nothing saves, and passes the
+fix without waiting for another worker task. All three regressions and the
+focused strict TypeScript check pass. The complete journey, its 10-second
+deadlines, best-lap/typo/storage checks and point-for-point rerace remain unchanged.
+
+Focused runtime validation uses prior compiled artifacts with **only** the changed
+favourites module substituted; unrelated shared-tree WIP is excluded. Mac
+SwiftShader full journey passes **142,153 ms**. Linux SwiftShader full journey passes **117,611 ms**. Receipt: `kept-code.txt`;
+the containing CI must compile and validate the actual source.

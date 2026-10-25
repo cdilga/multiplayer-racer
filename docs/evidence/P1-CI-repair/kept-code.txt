@@ -1,0 +1,46 @@
+P1-CI-repair / br-dsq4 — kept-track async dependency
+Main9471/ec7821cd: only browser3 G-kept fails, Keep label deadline10000ms; all other main lanes and GPU9472 succeed. Preview v02-ec7821cd smokePASS room6MV6.
+Original full journey unchanged: Mac software141535ms PASS; Linux CI artifact120537ms PASS; worker-traced Linux121658ms PASS. These do not erase intermittent CI failure.
+Original Linux worker trace (ms since navigation):
+73422.6 code(job2) out ->74098.3 reply (displayed share code)
+73429.7 prepare(job3,seed3) out ->74704.1 reply (next map)
+83072.6 code(job4,same seed2/recipe) out ->83679.7 reply (Keep save)
+83680.0 code(job5,same seed2/recipe) out (paint label)
+Pointer down/up/click hit the Keep BUTTON. These passing timings establish redundant worker dependencies; they do not measure the failed CI click or prove a >10s worker task in that unavailable snapshot.
+Deterministic lowest-level regression: resolve initial displayed code, leave subsequent code requests pending (worker busy). Old source does not save; fixed source saves before setImmediate, one worker call. Old regression FAIL, fixed3/3PASS. Invalidation tests cover seed/recipe/source changes, shared inflight request, transient failure retry and tuned-generator local identity.
+Focused strict TS typecheck PASS. No journey code/deadline/assertion/cohort changes.
+Candidate whole-file runs use existing compiled game assets/WASM/native server with only the favourites module replaced by the Node-stripped changed TS source in its host chunk. No unrelated working-tree source is built. Linux uses jj-ci:d161a07c0df4 on triton, SwiftShader,12GiB/4096pids/2GiBshm. Mac uses Chromium SwiftShader and native jj-server. Final CI must compile the source normally and pass the containing batch.
+
+Candidate full journey: Mac142152.795ms PASS; Linux117610.592ms PASS. Both traces show only the initial displayed-code request before Keep; the stored code and Kept label are present in the immediate after-click readback.
+
+Old-source regression:
+✖ Keep uses the displayed code even when subsequent worker requests cannot complete (2.728167ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 93.54475
+
+✖ failing tests:
+
+test at ../../../../../private/tmp/jj-favourites-before.test.mjs:11:1
+✖ Keep uses the displayed code even when subsequent worker requests cannot complete (2.728167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'T32-08-2'
+  
+      at TestContext.<anonymous> (file:///private/tmp/jj-favourites-before.test.mjs:18:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'T32-08-2',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

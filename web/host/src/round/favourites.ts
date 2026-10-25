@@ -37,8 +37,14 @@ export interface BestLap {
 const FAV = 'jj.host.favourites';
 const LAPS = 'jj.host.bestlaps';
 let source: TrackSource | null = null;
+// A displayed track's code is immutable for this generator. Reuse its reply when Keep is pressed:
+// another worker round trip can queue behind generation of the next track during Intermission.
+let currentCode: { source: TrackSource; seed: number; recipe: string; code: Promise<string> } | null = null;
 
-export const setTrackSource = (s: TrackSource) => (source = s);
+export const setTrackSource = (s: TrackSource) => {
+  currentCode = null;
+  return (source = s);
+};
 export const trackSource = () => source;
 
 function load<T>(key: string, empty: T): T {
@@ -68,7 +74,18 @@ export function kept(): KeptTrack[] {
 export async function currentKey(): Promise<{ key: string; track: TrackNow; code: string | null } | null> {
   const t = source?.current();
   if (!t || !source) return null;
-  const code = t.generator ? null : await source.code(t.seed, t.recipe).catch(() => null);
+  let code: string | null = null;
+  if (!t.generator) {
+    if (!currentCode || currentCode.source !== source || currentCode.seed !== t.seed || currentCode.recipe !== t.recipe) {
+      const entry = { source, seed: t.seed, recipe: t.recipe, code: source.code(t.seed, t.recipe) };
+      currentCode = entry;
+      // A failed request may be retried; never retain a transient worker failure as the track's identity.
+      void entry.code.catch(() => {
+        if (currentCode === entry) currentCode = null;
+      });
+    }
+    code = await currentCode.code.catch(() => null);
+  }
   return { key: keyOf({ code, seed: t.seed, recipe: t.recipe }), track: t, code };
 }
 
