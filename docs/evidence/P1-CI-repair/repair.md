@@ -272,9 +272,10 @@ Chromium/WebKit/pattern checks; no GPU failure is waived.
 
 Two runtime defects are reproduced and repaired:
 
-- The lab sends fourteen fields for each of seven vehicles, and every send scheduled an independent
-  worker tuning read plus whole-panel refresh. A real-browser panel regression records **113 reads**
-  for **98 field writes** before the fix. Coalescing each burst and reusing the tuning response that
+- The lab considers fourteen tuning fields per vehicle (skipping absent fields), and every send
+  scheduled an independent worker tuning read plus whole-panel refresh. A real-browser regression
+  with seven complete car profiles records **113 reads** for **98 field writes** before the fix.
+  Coalescing each burst and reusing the tuning response that
   confirms a vehicle switch reduces this to **9 reads**. All 98 writes, every vehicle's values,
   return to the selected vehicle and all seven vehicles' exported patch fields are checked.
 - A resize between pointer-down and pointer-up on Resume replaced its DOM node, losing the click.
@@ -308,3 +309,30 @@ The Vite candidate build uses committed `map.ts` through a load hook to preserve
 dirty route-draping edits. Local pinned whole-web typecheck reports only those dirty map edits
 (`lo`/`hi` possibly undefined, lines 377–387); the author sessions were notified. There are no
 diagnostics in the owned repair paths. Exact committed-source typechecking remains a CI check.
+
+The exact committed-source build and pinned typecheck pass in main **9281** at
+`76a5c6ea61b0feecea5b593dd605f864714961a8`. Publisher **9284** publishes image
+`sha256:0fca3774509f7726bd180a82776499ee23afd63d3ee142f9be4beb11627f4c4c` at
+https://jammers-preview.dilger.dev/p/v02-76a5c6ea/ . Public smoke **PASS**: room **839Y**,
+isolation from ten other previews, WebRTC join (host, 0 ms), input, resume, drive, HUD and round.
+Main 9281 and GPU 9282 are still running at this recording; GPU 9282 has a Firefox eight-pad
+failure whose deferred stack is still pending, so this is not yet a green repair handoff.
+
+### GPU 9282: Firefox's duplicate graphics environment
+
+The completed GPU batch reports **40 passes**, one configured TURN skip and one failure: Firefox's
+eight-pad test times out in `page.goto` after **30,000 ms**, waiting for the generic `load` event,
+before any pad assertion. All R06, R07b, R08, R11 and R13 checks pass unchanged.
+
+The required CPU run of the **same complete Firefox test** passes in main 9281 / browser 5,
+job **19399**, in **6,736 ms**, using the fixture's existing Xvfb/Mesa path. The native GPU runner
+has no Xvfb and inherits `DISPLAY=:0`, `WAYLAND_DISPLAY=wayland-1`, `MOZ_ENABLE_WAYLAND=1` from its
+desktop. A focused Linux reproduction without that desktop reports WebGL unsupported; with the
+runner's display environment the unchanged eight-pad test passes in **7,179 ms**. This exposes a
+desktop-dependent duplicate setup, not a missing pad or a limit on sources.
+
+Firefox's whole eight-pad check now runs once in **required CPU CI**, with every assertion and
+the original navigation, readiness, claim and whole-test deadlines unchanged. Only its duplicate
+Linux GPU invocation is skipped. Chromium's 24-source/input-age GPU checks and the rest of C12
+remain intact. The full-selection audit confirms the eight-pad Firefox case remains a CPU target
+and C12 remains in the GPU selection. No gameplay acceptance is quarantined or omitted.

@@ -374,7 +374,14 @@ test('Chromium full-slot guidance and second-keyboard actions show the live join
   await shotMatrix(lap, 'joined-full-slots');
 });
 
-test('Firefox exposes eight emulated host pads and each press claims a distinct seat', { timeout: 360_000 }, async () => {
+test('Firefox exposes eight emulated host pads and each press claims a distinct seat', {
+  timeout: 360_000,
+  // This whole eight-source check remains required in main CI's CPU lane, whose image provides Xvfb/Mesa. The Linux
+  // GPU runner has no Xvfb and its headless Firefox depends on an interactive Wayland desktop (GPU 9282 timed out
+  // navigating). Chromium's ANGLE flag does not configure Firefox. Keep one deterministic Firefox run, with all eight
+  // assertions, rather than duplicating it under a different graphics environment in the Chromium timing lane.
+  skip: process.platform === 'linux' && gpu ? 'covered with Xvfb/Mesa in required CPU CI' : false,
+}, async () => {
   // Linux CPU runners cannot create WebGL in Firefox's headless mode. The same Mesa driver works with Xvfb.
   let display;
   const software = process.platform === 'linux' && !gpu;

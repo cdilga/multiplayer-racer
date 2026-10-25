@@ -129,8 +129,8 @@ Measurements and reproductions: `docs/evidence/P1-CI-repair/repair.md` and `stag
 
 ### Tuning bursts and full-resolution browser work (2026-10-25, br-dsq4)
 
-The Feel Lab's fourteen-field edit across seven vehicles scheduled 98 delayed tuning readbacks in
-addition to switch reads. Coalesce the field burst and reuse the read that confirmed the selected
+The Feel Lab's fourteen-field edit in a seven-car browser fixture scheduled 98 delayed tuning
+readbacks in addition to switch reads. Coalesce the field burst and reuse the read that confirmed the selected
 vehicle: the browser probe retains all 98 writes and seven exported profiles with 9 rather than 113
 worker reads. A display resize must defer menu DOM replacement during a pointer press, just as a
 room update does; otherwise Resume loses its click between down and up.
@@ -140,3 +140,9 @@ the same R07b matrix takes 24.6 seconds on RTX 2080 and stalls for 225.8 seconds
 stability. CI selection now schedules all of R07b/R08/R11 on GPU, with their assertions and cohorts
 intact. Audit the union of CPU and GPU selections when changing scheduling; all 87 journey/smoke
 files remain covered, with focused menu/tuning regressions still on CPU.
+
+`JJ_CHROMIUM_GPU` configures Chromium ANGLE, not Firefox. Eris's native GPU runner inherits an
+interactive Wayland display and has no Xvfb; headless Firefox can fail navigation or lack WebGL
+without that desktop. The complete eight-pad Firefox check belongs in required CPU CI's explicit
+Xvfb/Mesa environment (6.7 s in main 9281), with the duplicate Linux GPU invocation skipped. Keep
+its eight-source assertions and deadlines, and retain Chromium's measured 24-source GPU checks.
