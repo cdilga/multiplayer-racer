@@ -537,7 +537,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     inspect: () => ({ mode: fs.mode, active: fs.active, lost: fs.lostUnasked, prompt: !!app.querySelector('[data-overlay=fs-prompt]'), note: !!app.querySelector('[data-overlay=fs-note]') }),
   };
   (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: showTutorial };
-  matchMedia('(orientation: landscape)').addEventListener('change', () => {
+  const reorient = () => {
     // Turning the phone rebuilds the play screen; an open settings sheet moves onto the new one (still open, Menu still held).
     const keep = sheet?.open ? sheet : null;
     const keepCars = cars?.open ? cars : null;
@@ -554,6 +554,29 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       cars = keepCars;
       keepCars.rehost(screenEl);
     }
+  };
+  // As with the host menu, keep a pressed button alive until its click has dispatched.
+  // Orientation notifications may arrive after layout settles, including between down and up.
+  const buttonPresses = new Set<number>();
+  let orientationPending = false;
+  addEventListener('pointerdown', (e) => {
+    if (e.target instanceof Element && app.contains(e.target) && e.target.closest('button')) buttonPresses.add(e.pointerId);
+  }, true);
+  const releaseButton = (e: PointerEvent) => {
+    if (!buttonPresses.has(e.pointerId)) return;
+    setTimeout(() => {
+      buttonPresses.delete(e.pointerId);
+      if (buttonPresses.size === 0 && orientationPending) {
+        orientationPending = false;
+        reorient();
+      }
+    }, 0);
+  };
+  addEventListener('pointerup', releaseButton);
+  addEventListener('pointercancel', releaseButton);
+  matchMedia('(orientation: landscape)').addEventListener('change', () => {
+    if (buttonPresses.size) orientationPending = true;
+    else reorient();
   });
   session.onIdentify = () => {
     flash(app, session);

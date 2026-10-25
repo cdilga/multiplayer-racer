@@ -336,3 +336,75 @@ the original navigation, readiness, claim and whole-test deadlines unchanged. On
 Linux GPU invocation is skipped. Chromium's 24-source/input-age GPU checks and the rest of C12
 remain intact. The full-selection audit confirms the eight-pad Firefox case remains a CPU target
 and C12 remains in the GPU selection. No gameplay acceptance is quarantined or omitted.
+
+### Containing-run verification
+
+GPU **9288** at `b43febb20a98273483b9878699621f44c1d5e50c` completes successfully at
+2026-10-25T07:42:43Z: **41 passes, zero failures**, one existing unconfigured TURN skip.
+It contains every runtime repair through `76a5c6ea`, plus the trailer/server changes. The unchanged
+Firefox eight-pad check also passes in this batch (**11,778 ms**), consistent with its diagnosed
+desktop-dependent duplicate environment. The final scheduling fix `a2f5fec0` still needs its own
+containing main/GPU receipts; this preceding green run alone does not close the repair.
+
+Run: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9288
+
+Full original R07b viewport/display-mode matrix, R08 DPR/orientation cases, R11 overview checks,
+R06 24/120-seat Identify and R13 Chromium/WebKit identity/pattern checks all pass. FL17 retains
+its original bounds: **302 samples**, main→worker p99 **0.5 ms**, worker→tick **8.6 ms**,
+tick→drawn **42.7 ms**, render lag **3.2 ticks**. The measured loopback total is **77.6 ms**;
+TURN is not claimed as tested.
+
+Main **9281** at `76a5c6ea61b0feecea5b593dd605f864714961a8` completes successfully at
+2026-10-25T07:50:03Z: all **14 jobs green**, including seven browser shards, all three Rust
+partitions, lint, checks, build and image. The committed-source tuning-readback and resize-click
+regressions pass in this run. This establishes the runtime repair; final main **9297** at the
+containing roster commit `56252cf5` starts immediately afterward to validate the later Firefox
+scheduling change and other published work.
+
+Run: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9281
+
+### GPU 9293: atomic start observations and controller orientation clicks
+
+The completed final-scheduling batch reports **38 passes, two failures**, and two explicit skips
+(unconfigured TURN and duplicate Firefox coverage retained in required CPU CI). Its exact failures:
+
+- FL02: `no car drove off before GO (fastest 2.978 m/s)`. All four cars' recorded travel is the same
+  **0.41 m**. The test reads the page's cached Countdown, then asynchronously asks the worker for
+  car speeds. A delayed query can return after GO while retaining the earlier phase. The old
+  500 ms wall-time margin cannot make those reads atomic. Add the director's phase to the worker's
+  existing `observe.host` response, and sample the speeds only when that same response says
+  Countdown. The original **1.5 m/s** bound, all four phones, their launch outcomes and callouts,
+  real countdown duration and all deadlines remain. Every observed Countdown sample now counts,
+  including the final 500 ms, and an explicit assertion requires a nonempty countdown sample set.
+- R13 WebKit: the first phone stays unready, with **five commands**, while the second is ready
+  with **six**; both WebRTC links stay connected. An orientation callback rebuilds the controller's
+  play screen immediately and can remove Ready between pointer-down and click. A deterministic
+  real-browser probe dispatches that callback during the press, keeping the viewport fixed to
+  isolate DOM replacement: the old controller loses the click in **both Chromium and WebKit**.
+  Reuse the host menu's deferred-redraw approach: retain pressed buttons through native click,
+  then apply the pending orientation rebuild. This also preserves the existing settings/car-sheet
+  rehosting path. No Ready retry, forced start or test deadline change is introduced.
+
+Focused validation on macOS arm64, pinned Node 26.10.0 and Playwright:
+
+- The permanent Ready regression fails before the runtime fix in both engines (no click within
+  its two-second observation), then passes in **349 / 695 ms**. It checks exactly one Ready action
+  reaches the session and the deferred rebuild actually completes. The full controller file passes
+  **all 13 checks in 6,849 ms**, including touch isolation, orientation, fullscreen and wake lock.
+- The unchanged R13 WebKit real-phone journey also passes against public preview `v02-76a5c6ea`
+  in **12,273 ms** before the fix; that establishes the failure is intermittent, not validation of
+  the new runtime candidate. Background-page click probes pass; focus alone does not reproduce it.
+- The new native observation regression captures Countdown, advances the real host through GO,
+  and verifies the newer car observation says Running despite the earlier cached Countdown. It
+  fails before the API change (`Null` versus Countdown). All **six test-surface tests pass after**
+  through RCH on eris (**0.15 s** test time), including mixed-roster determinism and clip replay.
+  The sim's per-car `race.held` describes respawn holds, not the director's grid hold; the initial
+  fixture assertion conflating them was removed before the successful run. Likewise, the existing
+  observation `countdownMs` is pause/resume time and is not used for the round's Countdown.
+- Whole-web typecheck reports only the other session's existing dirty `map.ts` route-draping
+  errors. No diagnostics name the repair files. The new containing CI build must verify the exact
+  committed source and execute the full FL02/R13 journeys before this repair closes.
+
+No manual eris GPU tests overlap either batch. RCH native compilation is limited to two jobs.
+Devbox is temporarily unavailable, so eris is the only admitted RCH worker. The repair remains open
+for containing green main/GPU results and the latest image's published smoke result.

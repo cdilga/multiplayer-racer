@@ -146,3 +146,15 @@ interactive Wayland display and has no Xvfb; headless Firefox can fail navigatio
 without that desktop. The complete eight-pad Firefox check belongs in required CPU CI's explicit
 Xvfb/Mesa environment (6.7 s in main 9281), with the duplicate Linux GPU invocation skipped. Keep
 its eight-source assertions and deadlines, and retain Chromium's measured 24-source GPU checks.
+
+Round phase and simulated car state must come from the same worker observation. Reading a cached
+page Countdown before awaiting worker speeds misclassified a post-GO 2.978 m/s sample in GPU9293;
+a 500 ms margin did not prevent it. `observe.host.phase` now carries the actual director phase
+beside those cars. The existing `countdownMs` describes pause/resume, and `car.race.held` describes
+respawn holds; neither identifies the director's start grid.
+
+Controller orientation callbacks can replace a pressed Ready button, just as host menu resizes
+can lose Resume. A fixed-viewport orientation-notification probe reproduces the missing click in
+Chromium and WebKit. Keep pressed buttons alive through native click, then perform the pending
+orientation rebuild; test both the single action and completion of the deferred redraw. A Ready
+retry or forced start would hide the lost interaction rather than repair it.

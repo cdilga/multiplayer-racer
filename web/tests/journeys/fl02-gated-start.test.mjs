@@ -198,19 +198,17 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   const before = await host.evaluate(async () => (await window.__jjTest.observe()).cars.map((c) => c.position));
   let after = before;
   let preGoSpeed = 0;
+  let countdownSamples = 0;
   const watch = (async () => {
     for (;;) {
-      // The room view and the worker's snapshot come from different threads: sample only with at least 0.5 s of
-      // countdown left before the snapshot was asked for, so a sample can never be from after GO (CI run 5064).
-      const s = await host.evaluate(async () => {
-        const v = window.__jjRoom.view();
-        const o = await window.__jjTest.observe();
-        return { phase: v.phase, left: v.remainingMs ?? 0, cars: o.cars.map((c) => ({ p: c.position, v: Math.abs(c.forwardSpeed ?? 0) })) };
-      });
-      if (s.phase !== 'Countdown') return;
-      if (s.left < 500) { await host.waitForTimeout(120); continue; }
-      after = s.cars.map((c) => c.p);
-      preGoSpeed = Math.max(preGoSpeed, ...s.cars.map((c) => c.v));
+      // Read the phase and cars atomically in the worker. A cached page Countdown can precede a
+      // delayed observation that is already after GO (GPU 9293); a wall-time margin cannot fix that.
+      const s = await host.evaluate(() => window.__jjTest.observe());
+      assert.ok(['Countdown', 'Running'].includes(s.host.phase), `start observation phase: ${s.host.phase}`);
+      if (s.host.phase !== 'Countdown') return;
+      countdownSamples++;
+      after = s.cars.map((c) => c.position);
+      preGoSpeed = Math.max(preGoSpeed, ...s.cars.map((c) => Math.abs(c.forwardSpeed ?? 0)));
       await host.waitForTimeout(120);
     }
   })();
@@ -227,6 +225,7 @@ test('FL02: early, perfect, late and none through four real phones', { timeout: 
   // B: charged for the last 0.6 s of the countdown and snapped on the first state that says GO.
   await gestureB;
   await watch;
+  assert.ok(countdownSamples > 0, 'the worker supplied car-speed observations during the countdown');
   // The held grid: the early snapper did not launch (no lifted front, no more travel than the car that did nothing), and
   // nobody is driving off. A held car takes zero input, so a slope or the suspension settling can still creep it a little:
   // that creep is the same for every car, is reported here, and is not the launch.

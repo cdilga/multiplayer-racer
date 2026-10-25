@@ -201,6 +201,7 @@ impl Host {
             }),
         };
         state["host"] = json!({
+            "phase": format!("{:?}", self.round.director.phase()),
             "seats": self.observe_seats(),
             "pauseMask": self.pause_mask(),
             "countdownMs": self.countdown_us() / 1000,
@@ -698,6 +699,73 @@ mod tests {
             "the seated car ignored the script"
         );
         assert_eq!(seen["cars"][1]["wheels"].as_array().unwrap().len(), 4);
+    }
+
+    #[test]
+    fn a_delayed_observation_identifies_which_side_of_go_its_cars_are_on() {
+        use jj_protocol::abi::UiCommand;
+        use jj_session::director::Phase;
+        use jj_types::CommandId;
+
+        let mut h = host();
+        h.set_free_drive(false);
+        for c in [
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId("phone".into()),
+                resume: None,
+            },
+            ControllerCmd::Claim {
+                request: RequestId(1),
+                name: "Ava".into(),
+            },
+        ] {
+            h.handle(
+                &MainToSim::NetBytes {
+                    endpoint: EndpointId("phone".into()),
+                    channel: Channel::Cmd,
+                    bytes: c.encode(),
+                }
+                .encode(),
+            )
+            .unwrap();
+        }
+        cmd(&mut h, json!({ "cmd": "step", "ticks": 1 }));
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(1),
+                ui: UiCommand::StartRound,
+            }
+            .encode(),
+        )
+        .unwrap();
+        for _ in 0..1200 {
+            cmd(&mut h, json!({ "cmd": "step", "ticks": 1 }));
+            if h.phase() == Phase::Countdown {
+                break;
+            }
+        }
+        assert_eq!(h.phase(), Phase::Countdown);
+        let cached_room: Value = serde_json::from_str(&h.room_json()).unwrap();
+        let before = cmd(&mut h, json!({ "cmd": "observe" }));
+        assert_eq!(before["host"]["phase"], "Countdown");
+        assert_eq!(before["cars"].as_array().unwrap().len(), 1);
+
+        // A page can read its cached Countdown, then deliver its worker query only after GO.
+        // The phase must describe the returned cars, regardless of that earlier page read.
+        for _ in 0..1200 {
+            cmd(&mut h, json!({ "cmd": "step", "ticks": 1 }));
+            if h.phase() == Phase::Running {
+                break;
+            }
+        }
+        assert_eq!(h.phase(), Phase::Running);
+        let after = cmd(&mut h, json!({ "cmd": "observe" }));
+        assert_eq!(cached_room["phase"], "Countdown");
+        assert_eq!(after["host"]["phase"], "Running");
+        assert_eq!(after["cars"].as_array().unwrap().len(), 1);
+        assert!(after["tick"].as_u64().unwrap() > before["tick"].as_u64().unwrap());
     }
 
     /// A clip kept from `journalChunk` polls replays to the live hash, across the host rebuilding its sim (P1-F07).

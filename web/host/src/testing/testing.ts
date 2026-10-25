@@ -7,7 +7,7 @@
 // steps that wait on their own fact (`until`), fake controllers that join through the real controller path, a debug
 // overlay and capture metadata.
 import type { LocalInput } from '../input/local';
-import { SimClient, type Snapshot } from '../worker/client';
+import { SimClient, type RoomView, type Snapshot } from '../worker/client';
 import { ClipRecorder, installHotkey } from '../clips/recorder';
 import { SessionRecorder, type SessionOptions } from '../clips/session';
 import { IdbStore } from '../clips/store';
@@ -32,7 +32,7 @@ export interface Observed {
   cars: Array<Json & { car: number; position: [number, number, number]; speed: number; wheels: Json[] }>;
   debris: Json[];
   session?: Json;
-  host: { seats: Array<Json & { endpoint: string; source: number; car: number | null; practice?: { slot: number; car: number; x: number; y: number; z: number; speed: number; tick: number } | null }>; pauseMask: number; held: boolean };
+  host: { phase: RoomView['phase']; seats: Array<Json & { endpoint: string; source: number; car: number | null; practice?: { slot: number; car: number; x: number; y: number; z: number; speed: number; tick: number } | null }>; pauseMask: number; held: boolean };
 }
 
 /** The main-thread side of the testing worker's extra messages. */

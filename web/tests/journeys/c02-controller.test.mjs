@@ -64,6 +64,42 @@ for (const engine of ['chromium', 'webkit']) {
   describe(`${engine}: touch`, () => {
     const eng = () => engines.find((e) => e.name === engine);
 
+    test('Ready survives an orientation notification between press and release', { timeout: 60_000 }, async (t) => {
+      if (!eng()) return t.skip('engine not installed');
+      const { ctx, page } = await open(eng(), 'playing', LAND, { init: () => {
+        localStorage.setItem('jj.tutorial', 'done');
+        const original = window.matchMedia.bind(window);
+        window.__orientationQueries = [];
+        window.matchMedia = (query) => {
+          const media = original(query);
+          if (query === '(orientation: landscape)') window.__orientationQueries.push(media);
+          return media;
+        };
+      } });
+      try {
+        const ready = page.locator('[data-act=ready]');
+        const box = await ready.boundingBox();
+        const before = await page.evaluate(() => {
+          window.__readyClicks = 0;
+          window.__pressedReadyButton = document.querySelector('[data-act=ready]');
+          document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-act=ready]')) window.__readyClicks++;
+          });
+          return window.__jjController.inspect().stats.dropped;
+        });
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        // Keep the viewport fixed: isolate the orientation listener replacing the pressed node,
+        // rather than a finger naturally ending outside a button after the screen turns.
+        await page.evaluate(() => window.__orientationQueries.forEach((m) => m.dispatchEvent(new Event('change'))));
+        await page.mouse.up();
+        await page.waitForFunction(() => window.__readyClicks === 1, undefined, { timeout: 2000 });
+        assert.equal(await page.evaluate(() => window.__jjController.inspect().stats.dropped), before + 1,
+          'Ready reached the session once (the offline state opener has no command channel)');
+        await page.waitForFunction(() => !window.__pressedReadyButton.isConnected, undefined, { timeout: 2000 });
+      } finally { await ctx.close(); }
+    });
+
     test('two simultaneous touch points drive two independent sticks (landscape and portrait)', { timeout: 60_000, skip: false }, async (t) => {
       if (!eng()) return t.skip('engine not installed');
       for (const size of [LAND, PORT]) {
