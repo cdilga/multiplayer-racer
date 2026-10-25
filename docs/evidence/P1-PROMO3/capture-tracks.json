@@ -1,0 +1,44 @@
+{
+  "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+  "fps": 60,
+  "simHz": 120,
+  "size": [
+    1920,
+    1080
+  ],
+  "driving": "Sim autopilot (staged footage)",
+  "shots": [
+    {
+      "id": "dirt",
+      "recipe": "outback-dirt",
+      "seed": 3,
+      "finalTick": 840,
+      "cars": 6,
+      "speed": 15.179842948913574
+    },
+    {
+      "id": "bitumen",
+      "recipe": "outback-bitumen",
+      "seed": 1,
+      "finalTick": 840,
+      "cars": 6,
+      "speed": 15.774518966674805
+    },
+    {
+      "id": "town",
+      "recipe": "town",
+      "seed": 1,
+      "finalTick": 840,
+      "cars": 6,
+      "speed": 15.571951866149902
+    },
+    {
+      "id": "rocks",
+      "recipe": "rocks",
+      "seed": 1,
+      "finalTick": 840,
+      "cars": 6,
+      "speed": 16.032264709472656
+    }
+  ]
+}

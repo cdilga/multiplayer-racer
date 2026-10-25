@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "canonical_voice_id": "stevo-australian-announcer-v1",
+  "conditioning_mode": "quality",
+  "training": "Reference-backed ICL enrollment; base-model weights unchanged; not a fine-tuned checkpoint.",
+  "pack_sha256": "7c72946bba059990ad3cae1ab9d5c946f696fa9f0faa96e4bdb2c8db660c06f0",
+  "engine": {
+    "version": "ftts 0.1.10",
+    "model": "qwen3-tts-12hz-0.6b-base.fttsq",
+    "model_sha256": "597f7eb3314a2fe5be74fa10a6a3a28ace9e10e582c641deccd37348a0ccd824",
+    "tested_model_path": "/Users/cdilga/.cache/franken_tts/model/qwen3-tts-12hz-0.6b-base.fttsq",
+    "profile": "strict",
+    "math_mode": "strict",
+    "precision_note": "Installed FTTS model/kernel route; strict math is not a claim of full f32 weights."
+  },
+  "profile": "strict",
+  "math_mode": "strict",
+  "api_cost_usd": 0,
+  "storyboard_sha256": "55ce59c26beff147adcf662c4764885815ac666fa9114c1e0e9e4c06bd26595a",
+  "asr": {
+    "engine": "franken_whisper 0.9.3",
+    "model": "ggml-large-v3.bin",
+    "model_sha256": "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2",
+    "prompt": null,
+    "normalization": "Case/punctuation, digits 1/4/16/64 as words, Cruise/Cruz, AU/A U, Posty/Postie."
+  },
+  "human_listening": "Not performed; transcript and signal screens are automated checks, not accent approval.",
+  "rows": [
+    {
+      "id": "grow1",
+      "text": "One player. One screen. Pretty normal so far.",
+      "file": "promo3-grow1.ogg",
+      "sha256": "03515a3c5cb9ff5e2a04f97233834afb5063dca16a78108b7c30af51a4d9df54",
+      "seconds": 2.8065,
+      "seed": 251025,
+      "raw_sha256": "7bedd06bbfa6293a16be1fe35d19346f8b00cdc65cdcd0eae3bf3768d42290bd",
+      "raw_peak_amplitude": 0.657989501953125,
+      "raw_lufs": -21.03,
+      "decoded_lufs": -16.36,
+      "decoded_true_peak_dbtp": -2.38,
+      "transcript": "One player, one screen, pretty normal so far.",
+      "asr_run_id": "4b997f3d-ccf0-4899-a8b7-f6e0f42360ce",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 2.74,
+          "text": "One player, one screen, pretty normal so far.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "grow4",
+      "text": "Four mates? Split it four ways.",
+      "file": "promo3-grow4.ogg",
+      "sha256": "0ca7a0c909586468f56660d4773c2aa6c6037908bcb4241e8f522d9bf845f05e",
+      "seconds": 2.1665,
+      "seed": 251025,
+      "raw_sha256": "7e989af9b390d0c0c9e569596839765a40d51676914c70608dbc0e47c4b6a424",
+      "raw_peak_amplitude": 0.868408203125,
+      "raw_lufs": -14.84,
+      "decoded_lufs": -16.05,
+      "decoded_true_peak_dbtp": -2.36,
+      "transcript": "Four mates split it four ways.",
+      "asr_run_id": "dedf034b-8e89-4871-80c8-003144982ec2",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 1.92,
+          "text": "Four mates split it four ways.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "grow16",
+      "text": "Sixteen? Yeah, still going.",
+      "file": "promo3-grow16.ogg",
+      "sha256": "50981c24967525bf33f10003e42b440c7928b3dc0f109f7fcb9ad0f797db349f",
+      "seconds": 2.2365,
+      "seed": 251025,
+      "raw_sha256": "6c166acea58635a067d6821b926aec4df1f7232de73368d539d62238b957a98a",
+      "raw_peak_amplitude": 0.649658203125,
+      "raw_lufs": -18.37,
+      "decoded_lufs": -16.05,
+      "decoded_true_peak_dbtp": -2.44,
+      "transcript": "16! Yeah, still going!",
+      "asr_run_id": "1e3e42d1-4152-430e-826d-fcf08c3822f3",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 2.2,
+          "text": "16! Yeah, still going!",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "grow64",
+      "text": "Sixty-four drivers. One shared screen. And there's no player cap.",
+      "file": "promo3-grow64.ogg",
+      "sha256": "dcc6ea82ea4dd576d475fbe7e73aeb5ab31adf52a313126cf67b7f1695e67957",
+      "seconds": 3.2065,
+      "seed": 251025,
+      "raw_sha256": "48be36e9a7ce6451023dc1a950b547481236e5862d85f0b0cbdcd5b2a7de83b4",
+      "raw_peak_amplitude": 0.802276611328125,
+      "raw_lufs": -17.81,
+      "decoded_lufs": -16.2,
+      "decoded_true_peak_dbtp": -1.86,
+      "transcript": "64 drivers, one shared screen, and there's no player cap.",
+      "asr_run_id": "0d3b7d72-0140-477a-bd12-ddf338e208a0",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 3.08,
+          "text": "64 drivers, one shared screen, and there's no player cap.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "race",
+      "text": "This is Joystick Jammers. Bring the whole mob.",
+      "file": "promo3-race.ogg",
+      "sha256": "82fe158f5682c84746edac58cc6c3cfe7b8de3f5077a154ba83d71f535d5477d",
+      "seconds": 2.4865,
+      "seed": 251025,
+      "raw_sha256": "279442eb6b9a5d2cd981e349d7cc0c3b9edca02a95624900359f0370895ea1c4",
+      "raw_peak_amplitude": 0.82220458984375,
+      "raw_lufs": -16.62,
+      "decoded_lufs": -16.35,
+      "decoded_true_peak_dbtp": -2.44,
+      "transcript": "This is Joystick Jammers. Bring the whole mob.",
+      "asr_run_id": "1f53b459-f90f-4d06-9436-30fff70a19a6",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 2.4,
+          "text": "This is Joystick Jammers. Bring the whole mob.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "tracks",
+      "text": "Every track is generated fresh. Dirt, bitumen, town streets, and rocky country.",
+      "file": "promo3-tracks.ogg",
+      "sha256": "76943e6267d836b616d492aa411cdf4faa58a6f73cb56076dbd4436d52e9a915",
+      "seconds": 3.9265,
+      "seed": 251025,
+      "raw_sha256": "37b9342a0c84e796034b235401cc1c9d176e9e24726b1634b5b4ff0cfbe46c06",
+      "raw_peak_amplitude": 0.95220947265625,
+      "raw_lufs": -16.46,
+      "decoded_lufs": -16.16,
+      "decoded_true_peak_dbtp": -2.15,
+      "transcript": "Every track is generated fresh. Dirt, bitumen, town streets and rocky country.",
+      "asr_run_id": "4196b659-92a2-429e-82a6-92194d3b709d",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 3.66,
+          "text": "Every track is generated fresh. Dirt, bitumen, town streets and rocky country.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "loop",
+      "text": "And then someone put a loop in the road. Completely reasonable.",
+      "file": "promo3-loop.ogg",
+      "sha256": "d572a5183d8402d0089abc9ea8163362c7d1bb77aeae239c663604b00f56583a",
+      "seconds": 2.7265,
+      "seed": 251025,
+      "raw_sha256": "fdda277a38baca2b28ef824f6956f898325c0b324785455b7146f8ab66b0055e",
+      "raw_peak_amplitude": 0.681884765625,
+      "raw_lufs": -18.58,
+      "decoded_lufs": -16.21,
+      "decoded_true_peak_dbtp": -2.55,
+      "transcript": "and then someone put a loop in the road. Completely reasonable.",
+      "asr_run_id": "ba557434-2714-4d73-8808-ec13439b380f",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 2.46,
+          "text": "and then someone put a loop in the road. Completely reasonable.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "cars",
+      "text": "Take the Cruz Missile, the A U Hawk, the Tradie Ute, or the Lion President.",
+      "file": "promo3-cars.ogg",
+      "sha256": "b0dafc05d09ce8bf3c43795bd24173a20923613884734af2d619eb49f38a131e",
+      "seconds": 4.0865,
+      "seed": 251025,
+      "raw_sha256": "d34383ae2b4e1d3a5deac76ec733138e8264032039d847191ac70adf8b612fc0",
+      "raw_peak_amplitude": 0.5106201171875,
+      "raw_lufs": -23.57,
+      "decoded_lufs": -16.39,
+      "decoded_true_peak_dbtp": -2.22,
+      "transcript": "Take the cruise missile, the AU Hawk, the tradie Ute, or the Lion President.",
+      "asr_run_id": "1c5d81ca-d617-4e5a-a86a-c7ac3de28c55",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 4.0,
+          "text": "Take the cruise missile, the AU Hawk, the tradie Ute, or the Lion President.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "bikes",
+      "text": "Or stir things up with the Pig Catcher, the Postie Bike, and the Hawk Dash.",
+      "file": "promo3-bikes.ogg",
+      "sha256": "dde146c185dc22f35c0238acc40bbe598445ab13a0738402b4946c667df12da7",
+      "seconds": 3.6065,
+      "seed": 251025,
+      "raw_sha256": "e904f56b48a272b09a388964c4f746d2a45e4fbd6ee42db3dd7e96625ffb7987",
+      "raw_peak_amplitude": 0.914764404296875,
+      "raw_lufs": -18.02,
+      "decoded_lufs": -16.48,
+      "decoded_true_peak_dbtp": -2.21,
+      "transcript": "Or stir things up with the pig catcher, the postie bike, and the hawk dash.",
+      "asr_run_id": "433510eb-8b61-4bcf-ab60-5419f2fdb7b0",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 3.42,
+          "text": "Or stir things up with the pig catcher, the postie bike, and the hawk dash.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "controllers",
+      "text": "Your phone is the controller. Or bring a keyboard or a gamepad. Get everyone in.",
+      "file": "promo3-controllers.ogg",
+      "sha256": "8f9a8f03195abab355fa39755b2fe905a6a72c594b9dd2b87ce324ab64f21275",
+      "seconds": 4.0865,
+      "seed": 251025,
+      "raw_sha256": "74873e53fd10c2abf131fe8f5565e85341c085213d9b597c4c780c6f58b4cedb",
+      "raw_peak_amplitude": 0.77105712890625,
+      "raw_lufs": -17.14,
+      "decoded_lufs": -16.24,
+      "decoded_true_peak_dbtp": -2.42,
+      "transcript": "Your phone is the controller or bring a keyboard or a gamepad. Get everyone in.",
+      "asr_run_id": "81ba47cf-a6f7-481e-8aa0-886675179eb9",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 4.0,
+          "text": "Your phone is the controller or bring a keyboard or a gamepad. Get everyone in.",
+          "speaker": null,
+          "confidence": 1.0
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    },
+    {
+      "id": "end",
+      "text": "Joystick Jammers. Bring everyone. Play in your browser.",
+      "file": "promo3-end.ogg",
+      "sha256": "ef3c651f9e64ca22bf0f5b933c9d45b254c905fbd0f6a1d73ec8d1b1178db283",
+      "seconds": 2.8065,
+      "seed": 251025,
+      "raw_sha256": "82a776d31b8bcc83fe2a508cdc10da5283b44b5a56c1d6b8f7035ab8338c8e5f",
+      "raw_peak_amplitude": 0.888702392578125,
+      "raw_lufs": -14.72,
+      "decoded_lufs": -16.11,
+      "decoded_true_peak_dbtp": -2.54,
+      "transcript": "Joystick jammers, bring everyone. Play in your browser.",
+      "asr_run_id": "9918b427-a872-467c-b5ba-a05075b381a9",
+      "asr_segments": [
+        {
+          "start_sec": 0.0,
+          "end_sec": 1.62,
+          "text": "Joystick jammers, bring everyone.",
+          "speaker": null,
+          "confidence": 0.4113822014651357
+        },
+        {
+          "start_sec": 1.62,
+          "end_sec": 2.6,
+          "text": "Play in your browser.",
+          "speaker": null,
+          "confidence": 0.5886177985348643
+        }
+      ],
+      "screens": {
+        "wording": true,
+        "duration": true,
+        "raw_unclipped": true,
+        "raw_audible": true,
+        "decoded_loudness": true,
+        "decoded_true_peak": true
+      },
+      "pass": true
+    }
+  ],
+  "summary": {
+    "pass": 11,
+    "fail": 0
+  }
+}

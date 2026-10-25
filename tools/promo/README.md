@@ -46,3 +46,23 @@ uv run --with 'fonttools[woff]' python tools/promo/render.py --captures /tmp/jj-
 FFmpeg expands project Barlow WOFF2 fonts to TTF, edits the eleven narration beats, adds readable titles and an extended website end card, then mixes the voice with ducked `race-2.ogg` and the committed Jammers engine/SFX lap export. That sound bed is editorial, not telemetry-synchronised. All runtime media is self-hosted H.264/AAC with faststart, local WebVTT captions and a local poster. The MP4/JPEG use LFS.
 
 The index uses an explicit play button, no autoplay, no video request before interaction, native controls after play and fingerprinted media. `og:video` retains the existing image fallback; actual social video embedding depends on the platform. `web/landing/tests/trailer.test.mjs` checks the real Rust server's MIME/ranges and Chromium/WebKit playback/captions/seek at root and preview bases. Evidence and feature-to-timestamp coverage live in `docs/evidence/P1-PROMO2/`.
+
+## Race-led Stevo trailer (P1-PROMO3)
+
+Owner direction 25–26 October: race-led, the free shared Stevo voice, subtitled, the host grid growing from one screen to 64 with narrated stops, generated tracks, a loop, all seven vehicles, 60 fps with no lag. It supersedes the Maya1 derby-led cut above; that picture draft stays on the POC page as the earlier draft. Evidence and self-review: `docs/evidence/P1-PROMO3/`.
+
+```sh
+python3 tools/promo/stevo-voice.py --private-dir /outside/git/stevo          # free local Stevo takes + transcript QC
+node -e "import('./web/landing/tests/lib/site.mjs').then(m=>m.build('./','promo-grow'))"
+export JJ_PROMO_BUILD=$PWD/web/dist-test/promo-grow
+JJ_PROMO_CAPTURE=/tmp/jj-promo3-grow JJ_PROMO_PACK=7 JJ_PROMO_STOPS='[{"n":1,"hold":3.5},{"n":4,"via":[2,3],"step":0.4,"hold":2.7},{"n":16,"via":[6,9,12],"step":0.4,"hold":2.8},{"n":64,"via":[20,25,30,36,42,49,56],"step":0.34,"hold":5.6}]' node tools/promo/capture-grow.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo3-loop node tools/promo/capture-loop.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo3-tracks node tools/promo/capture-tracks.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo3-roster60 node tools/promo/capture-roster60.mjs
+uv run --with 'fonttools[woff]' python tools/promo/render-stevo.py --grow /tmp/jj-promo3-grow --loop /tmp/jj-promo3-loop \
+  --tracks /tmp/jj-promo3-tracks --roster /tmp/jj-promo3-roster60 --voice /outside/git/stevo
+python3 tools/promo/check-cadence.py art/ui/poc/promo/bring-everyone-stevo-<hash>.mp4
+node docs/evidence/P1-PROMO3/check-playback.mjs [--base https://jammers-preview.dilger.dev]
+```
+
+Every capture is frame-stepped: 2 sim ticks and exactly 1/60 s of page clock per frame (a virtual `performance.now`), so render interpolation and the grid's 300 ms reflow advance with the sim, whatever a screenshot costs. Between grid stops the tile count steps through `via` sizes, each held long enough for the reflow to land; a tile added every frame restarts the tween and the tiles pile up. Overview is the host's derby-arena view (disabled on tracks), so the race shot is the real 2×2 grid. The loop shot is its own `jj procgen --mix` fixture and refuses footage in which the car never goes inverted.

@@ -1,0 +1,179 @@
+{
+  "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+  "dirty": [
+    "M .beads/issues.jsonl",
+    " M art/ui/lib/serve.mjs",
+    " M assets/profiles/generator.json",
+    " M assets/profiles/overpass.json",
+    " M assets/profiles/set-pieces.json",
+    " M crates/jj-procgen/src/features/mod.rs",
+    " M crates/jj-procgen/src/lib.rs",
+    " M crates/jj-procgen/src/setpieces/mod.rs",
+    " M crates/jj-procgen/src/tuning/mod.rs",
+    " M crates/jj-procgen/tests/goldens/recipes.txt",
+    " M crates/jj-procgen/tests/goldens/seeds.txt",
+    " M crates/jj-procgen/tests/skill_jump.rs",
+    " M crates/jj-sim/src/race/mod.rs",
+    " M docs/evidence/P1-A04/checks.json",
+    " M docs/evidence/P1-A04/cpu.json",
+    " M docs/evidence/P1-A04/gallery-phone.png",
+    " M docs/evidence/P1-A04/gallery.png",
+    " M docs/evidence/P1-A04/lab-phone.png",
+    " M docs/evidence/P1-A04/lab.png",
+    " M docs/evidence/P1-A04c/checks.json",
+    " M docs/evidence/P1-A04c/lap-spectrogram.png",
+    " M docs/evidence/P1-A04c/scripted-lap.wav",
+    " M docs/evidence/P1-V02/colliders.png",
+    " M docs/evidence/P1-V02/lods.png",
+    " M docs/evidence/P1-V02/paints.png",
+    " M docs/evidence/P1-V02/views.png",
+    " M docs/learnings/procgen.md",
+    " M maps/lab/canyon-leap.json",
+    " M maps/lab/hairpin-cut.json",
+    " M maps/lab/off-road-climb.json",
+    " M maps/lab/start-line.json",
+    " M scenarios/lab/canyon-leap-short.json",
+    " M scenarios/lab/canyon-leap.json",
+    " M scripts/ci/durations.json",
+    " M tools/maps/review-landscape.mjs",
+    " M web/host/src/render/map/map.ts",
+    " M web/host/src/testing/messages.ts",
+    " M web/host/src/testing/testing.worker.ts",
+    "?? crates/jj-procgen/tests/fun_jumps.rs",
+    "?? docs/evidence/P1-FL20.3/",
+    "?? docs/evidence/P1-M-presets/workspace-matrix.txt",
+    "?? docs/evidence/P1-PROMO3/",
+    "?? tools/promo/capture-grow.mjs",
+    "?? tools/promo/capture-loop.mjs",
+    "?? tools/promo/capture-roster60.mjs",
+    "?? tools/promo/capture-tracks.mjs",
+    "?? tools/promo/render-stevo.py",
+    "?? tools/promo/stevo-storyboard.json",
+    "?? tools/promo/stevo-voice.py"
+  ],
+  "testingWasm": "92cb298637bf7d6b5debacbcfb6513b87ed94cb7609353bf7dd97117d7c5dd58",
+  "cohort": 64,
+  "controllers": "Synthetic controller endpoints through the real host controller path; not 64 human players",
+  "driving": "Sim autopilot drives every car (staged footage)",
+  "fps": 60,
+  "simHz": 120,
+  "size": [
+    1920,
+    1080
+  ],
+  "seed": 7,
+  "stops": [
+    {
+      "n": 1,
+      "hold": 3.5
+    },
+    {
+      "n": 4,
+      "via": [
+        2,
+        3
+      ],
+      "step": 0.4,
+      "hold": 2.7
+    },
+    {
+      "n": 16,
+      "via": [
+        6,
+        9,
+        12
+      ],
+      "step": 0.4,
+      "hold": 2.8
+    },
+    {
+      "n": 64,
+      "via": [
+        20,
+        25,
+        30,
+        36,
+        42,
+        49,
+        56
+      ],
+      "step": 0.34,
+      "hold": 5.6
+    }
+  ],
+  "shots": [
+    {
+      "id": "grow",
+      "frames": 1204,
+      "seconds": 20.066666666666666,
+      "tick": 5297,
+      "cars": 64,
+      "tiles": 64
+    },
+    {
+      "id": "pack",
+      "frames": 420,
+      "seconds": 7,
+      "tick": 7966,
+      "cars": 64,
+      "tiles": 4
+    }
+  ],
+  "lobby": {
+    "seats": 64,
+    "vehicles": {
+      "cruz-missile": 10,
+      "tradie-ute": 9,
+      "hawk-dash": 9,
+      "lion-president": 9,
+      "au-hawk": 9,
+      "postie-bike": 9,
+      "pig-catcher": 9
+    }
+  },
+  "loops": 1,
+  "map": {
+    "terrainCells": 49680,
+    "routePoints": 574,
+    "features": 3,
+    "kitTypes": 24,
+    "kitInstances": 1492,
+    "draws": 35,
+    "relief": [],
+    "kit": {
+      "generic/box-building": 1,
+      "outback_bitumen/centre-line": 40,
+      "outback_bitumen/reflector-post": 13,
+      "outback_dirt/desert-oak": 81,
+      "outback_dirt/spinifex": 875,
+      "rocks/dome": 18,
+      "rocks/shrub": 24,
+      "rocks/spinifex": 103,
+      "signs/big-red-rock": 1,
+      "signs/junction": 3,
+      "signs/kangaroo": 2,
+      "signs/stuart-hwy": 1,
+      "signs/unsealed-road": 1,
+      "town/gum-tree": 88,
+      "town/house": 24,
+      "town/mailbox": 15,
+      "town/power-line": 7,
+      "town/power-pole": 10,
+      "town/shopfront": 17,
+      "town/side-street": 3,
+      "town/water-tower": 5,
+      "wayfinding/chevron-post": 42,
+      "wayfinding/finish-gantry": 2,
+      "wayfinding/guard-rail": 116
+    }
+  },
+  "plan": {
+    "frames": 1204,
+    "stopsAtFrame": [
+      0,
+      258,
+      516,
+      848
+    ]
+  }
+}

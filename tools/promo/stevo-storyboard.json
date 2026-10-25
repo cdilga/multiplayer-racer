@@ -1,0 +1,17 @@
+{
+  "voice_id": "stevo-australian-announcer-v1",
+  "fps": 60,
+  "scenes": [
+    {"id":"grow1","shot":"grow","stop":1,"title":"ONE PLAYER. ONE SCREEN.","label":"THE ACTUAL HOST GRID / A REAL 64-CAR RACE","text":"One player. One screen. Pretty normal so far."},
+    {"id":"grow4","shot":"grow","stop":4,"title":"FOUR MATES.","label":"EVERY PLAYER GETS THEIR OWN CHASE CAMERA","text":"Four mates? Split it four ways."},
+    {"id":"grow16","shot":"grow","stop":16,"title":"SIXTEEN.","label":"EVERY TILE THE SAME SIZE","text":"Sixteen? Yeah, still going."},
+    {"id":"grow64","shot":"grow","stop":64,"title":"SIXTY-FOUR. NO PLAYER CAP.","label":"64 IS A SAMPLE, NEVER A LIMIT","text":"Sixty-four drivers. One shared screen. And there's no player cap."},
+    {"id":"race","shot":"pack","title":"BRING THE WHOLE MOB.","label":"JOYSTICK JAMMERS / 64 CARS / ONE RACE","text":"This is Joystick Jammers. Bring the whole mob."},
+    {"id":"tracks","shot":"tracks","title":"A FRESH TRACK. EVERY TIME.","label":"GENERATED TRACKS / DIRT / BITUMEN / TOWN / ROCKS","text":"Every track is generated fresh. Dirt, bitumen, town streets, and rocky country."},
+    {"id":"loop","shot":"loop","title":"A COMPLETELY REASONABLE ROAD.","label":"LOOP-THE-LOOPS / GENERATED INTO THE TRACK","text":"And then someone put a loop in the road. Completely reasonable."},
+    {"id":"cars","shot":"cars","title":"PICK YOUR PRIDE AND JOY.","label":"CRUZ MISSILE / AU HAWK / TRADIE UTE / LION PRESIDENT","text":"Take the Cruz Missile, the A U Hawk, the Tradie Ute, or the Lion President."},
+    {"id":"bikes","shot":"bikes","title":"YOU LITTLE BEAUTIES.","label":"PIG CATCHER / POSTIE BIKE / HAWK DASH","text":"Or stir things up with the Pig Catcher, the Postie Bike, and the Hawk Dash."},
+    {"id":"controllers","shot":"controllers","title":"BRING WHATEVER YOU'VE GOT.","label":"PHONES / KEYBOARDS / GAMEPADS / ONE SHARED GAME","text":"Your phone is the controller. Or bring a keyboard or a gamepad. Get everyone in."},
+    {"id":"end","shot":"end","title":"JOYSTICK JAMMERS","label":"JAMMERS.DILGER.DEV","text":"Joystick Jammers. Bring everyone. Play in your browser."}
+  ]
+}

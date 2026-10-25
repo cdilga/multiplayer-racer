@@ -1,0 +1,763 @@
+{
+  "buildDir": "/Users/cdilga/Documents/dev/multiplayer-racer/web/dist-test/promo-grow",
+  "git": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+  "fps": 60,
+  "simHz": 120,
+  "sourceGlbs": {
+    "art/vehicles/cruz-missile/cruz-missile.lod0.glb": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+    "art/vehicles/cruz-missile/cruz-missile.lod1.glb": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+    "art/vehicles/cruz-missile/cruz-missile.lod2.glb": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+    "art/vehicles/tradie-ute/tradie-ute.lod0.glb": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+    "art/vehicles/tradie-ute/tradie-ute.lod1.glb": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+    "art/vehicles/tradie-ute/tradie-ute.lod2.glb": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+    "art/vehicles/hawk-dash/hawk-dash.lod0.glb": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+    "art/vehicles/hawk-dash/hawk-dash.lod1.glb": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+    "art/vehicles/hawk-dash/hawk-dash.lod2.glb": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+    "art/vehicles/lion-president/lion-president.lod0.glb": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+    "art/vehicles/lion-president/lion-president.lod1.glb": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+    "art/vehicles/lion-president/lion-president.lod2.glb": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+    "art/vehicles/au-hawk/au-hawk.lod0.glb": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+    "art/vehicles/au-hawk/au-hawk.lod1.glb": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+    "art/vehicles/au-hawk/au-hawk.lod2.glb": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+    "art/vehicles/postie-bike/postie-bike.lod0.glb": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+    "art/vehicles/postie-bike/postie-bike.lod1.glb": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+    "art/vehicles/postie-bike/postie-bike.lod2.glb": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+    "art/vehicles/pig-catcher/pig-catcher.lod0.glb": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+    "art/vehicles/pig-catcher/pig-catcher.lod1.glb": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+    "art/vehicles/pig-catcher/pig-catcher.lod2.glb": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d"
+  },
+  "origin": "http://127.0.0.1:50660",
+  "captureKind": "close-front-three-quarter-and-side",
+  "network": [
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+      "status": 200,
+      "bytes": 275152,
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+      "status": 200,
+      "bytes": 165088,
+      "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+      "status": 200,
+      "bytes": 136652,
+      "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+      "status": 200,
+      "bytes": 275152,
+      "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+      "status": 200,
+      "bytes": 165088,
+      "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+      "status": 200,
+      "bytes": 136652,
+      "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+      "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+      "status": 200,
+      "bytes": 395604,
+      "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+      "status": 200,
+      "bytes": 188592,
+      "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+      "status": 200,
+      "bytes": 161532,
+      "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+      "status": 200,
+      "bytes": 395604,
+      "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+      "status": 200,
+      "bytes": 188592,
+      "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+      "status": 200,
+      "bytes": 161532,
+      "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+      "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+      "status": 200,
+      "bytes": 356460,
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+      "status": 200,
+      "bytes": 190544,
+      "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+      "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+      "status": 200,
+      "bytes": 159056,
+      "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+      "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+      "status": 200,
+      "bytes": 356460,
+      "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+      "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+      "status": 200,
+      "bytes": 190544,
+      "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+      "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+      "status": 200,
+      "bytes": 159056,
+      "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+      "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+      "status": 200,
+      "bytes": 343816,
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+      "status": 200,
+      "bytes": 181320,
+      "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+      "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+      "status": 200,
+      "bytes": 154580,
+      "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+      "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+      "status": 200,
+      "bytes": 343816,
+      "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+      "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+      "status": 200,
+      "bytes": 181320,
+      "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+      "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+      "status": 200,
+      "bytes": 154580,
+      "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+      "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+      "status": 200,
+      "bytes": 320068,
+      "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+      "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+      "status": 200,
+      "bytes": 134760,
+      "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+      "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+      "status": 200,
+      "bytes": 105956,
+      "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+      "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+      "status": 200,
+      "bytes": 358524,
+      "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+      "status": 200,
+      "bytes": 223140,
+      "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+      "status": 200,
+      "bytes": 193668,
+      "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+      "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+      "status": 200,
+      "bytes": 328076,
+      "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+      "status": 200,
+      "bytes": 133348,
+      "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+    },
+    {
+      "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+      "status": 200,
+      "bytes": 104660,
+      "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+      "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+    }
+  ],
+  "captured": [
+    {
+      "id": "cruz-missile",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod0-DdNfi9fD.glb",
+          "status": 200,
+          "bytes": 358524,
+          "sha256": "64bb3b2ceea19b51d69f20bcd1cd5c8d4aac682e3258c545d8e85c082711aa28",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod1-DRQE_uUB.glb",
+          "status": 200,
+          "bytes": 223140,
+          "sha256": "1d00e99f07a5996d3bc80c99a45ccb3146349510a7a08cc9caee33db1145e753",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/cruz-missile.lod2-D3gVZcRz.glb",
+          "status": 200,
+          "bytes": 193668,
+          "sha256": "a23423352dd9973c0e103d4089cc4dbb1b6de90a60846ca2c97b7c885da63a6a",
+          "source": "art/vehicles/cruz-missile/cruz-missile.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "tradie-ute",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod0-BdeREewe.glb",
+          "status": 200,
+          "bytes": 275152,
+          "sha256": "04e6b131e7c3498b6dd5bda6bf278978baa502a8bfa1ec92ccc8841bc60794d6",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod1-_EV6reX1.glb",
+          "status": 200,
+          "bytes": 165088,
+          "sha256": "0b0561983196cca05c68d0e866b3bb0b84407deee003238732616e66da55e649",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/tradie-ute.lod2-1CuQNEKM.glb",
+          "status": 200,
+          "bytes": 136652,
+          "sha256": "87fac349bb72aaa523bcf82f69c8d3c24e88a1fdba3245e22dbed8a1831b5644",
+          "source": "art/vehicles/tradie-ute/tradie-ute.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "hawk-dash",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod0-CnQmCHJ8.glb",
+          "status": 200,
+          "bytes": 395604,
+          "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod1-w0JV7_54.glb",
+          "status": 200,
+          "bytes": 188592,
+          "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/hawk-dash.lod2-DGx3gpFK.glb",
+          "status": 200,
+          "bytes": 161532,
+          "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+          "source": "art/vehicles/hawk-dash/hawk-dash.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "lion-president",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod0-Bf8PyDla.glb",
+          "status": 200,
+          "bytes": 356460,
+          "sha256": "e6af1af539dce6b09d8631e8d5519172fe0468edfc9097a4ffeb8389cc0a0202",
+          "source": "art/vehicles/lion-president/lion-president.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod1-CsVneLCq.glb",
+          "status": 200,
+          "bytes": 190544,
+          "sha256": "cdf139825bc8804b3c434769ecee9224bd5a4ff241c8c2a86ce5d6897a05244d",
+          "source": "art/vehicles/lion-president/lion-president.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/lion-president.lod2-Cd_RPfAb.glb",
+          "status": 200,
+          "bytes": 159056,
+          "sha256": "0747dd31cdef588c028183daf092db2f14c15c56bce15abaefc5c2de162ac08d",
+          "source": "art/vehicles/lion-president/lion-president.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "au-hawk",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod0-D_PnLIcf.glb",
+          "status": 200,
+          "bytes": 343816,
+          "sha256": "7b958a508e6e380bcd77c1bc62947a0c2f8a7536286e9c0a4936371285b49dd2",
+          "source": "art/vehicles/au-hawk/au-hawk.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod1-CL4BuC63.glb",
+          "status": 200,
+          "bytes": 181320,
+          "sha256": "064e687a5a4b691972f29293b69acba57c55c58319ddd3fd44dee21561ffd097",
+          "source": "art/vehicles/au-hawk/au-hawk.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/au-hawk.lod2-Cah5GbV5.glb",
+          "status": 200,
+          "bytes": 154580,
+          "sha256": "a1487eb11152ac16fc4fc7f515eeaf8ffbc037f3c8d9c03e95c0c21211263868",
+          "source": "art/vehicles/au-hawk/au-hawk.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "postie-bike",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod0-_b7zK3oT.glb",
+          "status": 200,
+          "bytes": 320068,
+          "sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f",
+          "source": "art/vehicles/postie-bike/postie-bike.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod1-CsKW5cUP.glb",
+          "status": 200,
+          "bytes": 134760,
+          "sha256": "e4f720d6426fa8da04cb7aa42f5c3556885f43f5a3d0f14f19e9957505980a7b",
+          "source": "art/vehicles/postie-bike/postie-bike.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/postie-bike.lod2-BXpbw4nH.glb",
+          "status": 200,
+          "bytes": 105956,
+          "sha256": "e577bc37be64446cd672a08438faf293078c6657cc98d47dc924106059bbf7d4",
+          "source": "art/vehicles/postie-bike/postie-bike.lod2.glb"
+        }
+      ]
+    },
+    {
+      "id": "pig-catcher",
+      "glbs": [
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod0-CzlAY6Pu.glb",
+          "status": 200,
+          "bytes": 328076,
+          "sha256": "301cd7a13481d9b080ed19fa30e4624d52bc6d12dc041db28a6634bfb93afbfd",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod0.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod1-D6CTES49.glb",
+          "status": 200,
+          "bytes": 133348,
+          "sha256": "e656f4f35630186bd38957a31920d3900ff10c5e8fcb5ae5b771e99db1ccbff0",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod1.glb"
+        },
+        {
+          "url": "http://127.0.0.1:50660/p/promo/assets/pig-catcher.lod2-BWe4r3WC.glb",
+          "status": 200,
+          "bytes": 104660,
+          "sha256": "3cee559937e7cbc51e07602b1a144b3bf78b8e7056e77d9e7a656ff0e517e60d",
+          "source": "art/vehicles/pig-catcher/pig-catcher.lod2.glb"
+        }
+      ]
+    }
+  ]
+}

@@ -17,6 +17,7 @@ function encode(input: unknown): Uint8Array | undefined {
   const f = i.frame;
   if ('hello' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_hello(i.endpoint));
   if ('claim' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_claim(f.claim));
+  if ('pick' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_pick(f.pick.vehicle, f.pick.open));
   if ('ready' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_ready(f.ready));
   if ('identify' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_identify());
   if ('leave' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_leave());

@@ -6,6 +6,8 @@ import type { SimInput } from '../worker/messages';
 export type ControllerFrame =
   | { hello: true }
   | { claim: string }
+  /** The lobby car picker: a roster id, and whether the picker is still open. */
+  | { pick: { vehicle: string; open: boolean } }
   | { ready: boolean }
   | { identify: true }
   | { leave: true }

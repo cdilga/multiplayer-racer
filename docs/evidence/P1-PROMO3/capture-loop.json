@@ -1,0 +1,77 @@
+{
+  "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+  "fps": 60,
+  "simHz": 120,
+  "size": [
+    1920,
+    1080
+  ],
+  "seed": 1,
+  "loop": {
+    "barrierHeightMm": 900,
+    "barrierWidthMm": 400,
+    "entry": 475,
+    "exit": 488,
+    "minSpeedMms": 9000,
+    "radiusMm": 8488,
+    "segments": 48,
+    "thicknessMm": 400
+  },
+  "fixture": {
+    "scenario": "promo-loop",
+    "what": "Promotional loop capture",
+    "map": "promo.json",
+    "seed": 1,
+    "ticks": 3600,
+    "cars": [
+      {
+        "routePoint": 430,
+        "lateral": -1.6,
+        "lift": 0.5
+      },
+      {
+        "routePoint": 425,
+        "lateral": 1.6,
+        "lift": 0.5
+      },
+      {
+        "routePoint": 420,
+        "lateral": -1.6,
+        "lift": 0.5
+      }
+    ],
+    "seats": [
+      {
+        "name": "Racer 1",
+        "car": 0
+      },
+      {
+        "name": "Racer 2",
+        "car": 1
+      },
+      {
+        "name": "Racer 3",
+        "car": 2
+      }
+    ],
+    "inputs": []
+  },
+  "driving": "Sim autopilot (staged footage)",
+  "minUp": -0.9992865920066833,
+  "invertedFrames": [
+    389,
+    390,
+    391,
+    392,
+    393,
+    394,
+    395,
+    396,
+    397,
+    398,
+    399,
+    400,
+    401,
+    402
+  ]
+}

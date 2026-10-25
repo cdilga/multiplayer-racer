@@ -1,0 +1,517 @@
+{
+  "mp4": "bring-everyone-stevo-a8d821e0.mp4",
+  "sha256": "a8d821e0c865f6edf606edf047e3282396990479aecbbbcdd5553bfb38b5bdaa",
+  "bytes": 61807616,
+  "seconds": 58.76,
+  "fps": 60,
+  "size": [
+    1920,
+    1080
+  ],
+  "voice": {
+    "canonical_voice_id": "stevo-australian-announcer-v1",
+    "pack_sha256": "7c72946bba059990ad3cae1ab9d5c946f696fa9f0faa96e4bdb2c8db660c06f0",
+    "engine": {
+      "version": "ftts 0.1.10",
+      "model": "qwen3-tts-12hz-0.6b-base.fttsq",
+      "model_sha256": "597f7eb3314a2fe5be74fa10a6a3a28ace9e10e582c641deccd37348a0ccd824",
+      "tested_model_path": "/Users/cdilga/.cache/franken_tts/model/qwen3-tts-12hz-0.6b-base.fttsq",
+      "profile": "strict",
+      "math_mode": "strict",
+      "precision_note": "Installed FTTS model/kernel route; strict math is not a claim of full f32 weights."
+    },
+    "api_cost_usd": 0
+  },
+  "cues": [
+    {
+      "start": 0.35,
+      "end": 3.407,
+      "id": "grow1",
+      "text": "One player. One screen. Pretty normal so far."
+    },
+    {
+      "start": 4.4,
+      "end": 6.816,
+      "id": "grow4",
+      "text": "Four mates? Split it four ways."
+    },
+    {
+      "start": 8.7,
+      "end": 11.186,
+      "id": "grow16",
+      "text": "Sixteen? Yeah, still going."
+    },
+    {
+      "start": 14.233,
+      "end": 17.69,
+      "id": "grow64",
+      "text": "Sixty-four drivers. One shared screen. And there's no player cap."
+    },
+    {
+      "start": 20.317,
+      "end": 23.053,
+      "id": "race",
+      "text": "This is Joystick Jammers. Bring the whole mob."
+    },
+    {
+      "start": 23.803,
+      "end": 27.98,
+      "id": "tracks",
+      "text": "Every track is generated fresh. Dirt, bitumen, town streets, and rocky country."
+    },
+    {
+      "start": 30.553,
+      "end": 33.53,
+      "id": "loop",
+      "text": "And then someone put a loop in the road. Completely reasonable."
+    },
+    {
+      "start": 36.203,
+      "end": 40.54,
+      "id": "cars",
+      "text": "Take the Cruz Missile, the A U Hawk, the Tradie Ute, or the Lion President."
+    },
+    {
+      "start": 42.603,
+      "end": 46.46,
+      "id": "bikes",
+      "text": "Or stir things up with the Pig Catcher, the Postie Bike, and the Hawk Dash."
+    },
+    {
+      "start": 48.003,
+      "end": 52.34,
+      "id": "controllers",
+      "text": "Your phone is the controller. Or bring a keyboard or a gamepad. Get everyone in."
+    },
+    {
+      "start": 54.153,
+      "end": 57.21,
+      "id": "end",
+      "text": "Joystick Jammers. Bring everyone. Play in your browser."
+    }
+  ],
+  "titles": [
+    {
+      "start": 0.35,
+      "end": 4.3,
+      "title": "ONE PLAYER. ONE SCREEN.",
+      "label": "THE ACTUAL HOST GRID / A REAL 64-CAR RACE"
+    },
+    {
+      "start": 4.4,
+      "end": 8.6,
+      "title": "FOUR MATES.",
+      "label": "EVERY PLAYER GETS THEIR OWN CHASE CAMERA"
+    },
+    {
+      "start": 8.7,
+      "end": 14.133,
+      "title": "SIXTEEN.",
+      "label": "EVERY TILE THE SAME SIZE"
+    },
+    {
+      "start": 14.233,
+      "end": 20.067,
+      "title": "SIXTY-FOUR. NO PLAYER CAP.",
+      "label": "64 IS A SAMPLE, NEVER A LIMIT"
+    },
+    {
+      "start": 20.317,
+      "end": 23.453,
+      "title": "BRING THE WHOLE MOB.",
+      "label": "JOYSTICK JAMMERS / 64 CARS / ONE RACE"
+    },
+    {
+      "start": 23.803,
+      "end": 29.853,
+      "title": "A FRESH TRACK. EVERY TIME.",
+      "label": "GENERATED TRACKS / DIRT / BITUMEN / TOWN / ROCKS"
+    },
+    {
+      "start": 30.553,
+      "end": 35.853,
+      "title": "A COMPLETELY REASONABLE ROAD.",
+      "label": "LOOP-THE-LOOPS / GENERATED INTO THE TRACK"
+    },
+    {
+      "start": 35.953,
+      "end": 37.503,
+      "title": null,
+      "label": "CRUZ MISSILE"
+    },
+    {
+      "start": 37.553,
+      "end": 39.103,
+      "title": null,
+      "label": "AU HAWK"
+    },
+    {
+      "start": 39.153,
+      "end": 40.703,
+      "title": null,
+      "label": "TRADIE UTE"
+    },
+    {
+      "start": 40.753,
+      "end": 42.303,
+      "title": null,
+      "label": "LION PRESIDENT"
+    },
+    {
+      "start": 36.203,
+      "end": 42.253,
+      "title": "PICK YOUR PRIDE AND JOY.",
+      "label": "CRUZ MISSILE / AU HAWK / TRADIE UTE / LION PRESIDENT"
+    },
+    {
+      "start": 42.353,
+      "end": 44.103,
+      "title": null,
+      "label": "PIG CATCHER"
+    },
+    {
+      "start": 44.153,
+      "end": 45.903,
+      "title": null,
+      "label": "POSTIE BIKE"
+    },
+    {
+      "start": 45.953,
+      "end": 47.703,
+      "title": null,
+      "label": "HAWK DASH"
+    },
+    {
+      "start": 42.603,
+      "end": 47.653,
+      "title": "YOU LITTLE BEAUTIES.",
+      "label": "PIG CATCHER / POSTIE BIKE / HAWK DASH"
+    },
+    {
+      "start": 48.003,
+      "end": 53.653,
+      "title": "BRING WHATEVER YOU'VE GOT.",
+      "label": "PHONES / KEYBOARDS / GAMEPADS / ONE SHARED GAME"
+    },
+    {
+      "start": 54.153,
+      "end": 58.66,
+      "title": "JOYSTICK JAMMERS",
+      "label": "JAMMERS.DILGER.DEV"
+    }
+  ],
+  "sources": {
+    "grow": {
+      "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+      "dirty": [
+        "M .beads/issues.jsonl",
+        " M art/ui/lib/serve.mjs",
+        " M assets/profiles/generator.json",
+        " M assets/profiles/overpass.json",
+        " M assets/profiles/set-pieces.json",
+        " M crates/jj-procgen/src/features/mod.rs",
+        " M crates/jj-procgen/src/lib.rs",
+        " M crates/jj-procgen/src/setpieces/mod.rs",
+        " M crates/jj-procgen/src/tuning/mod.rs",
+        " M crates/jj-procgen/tests/goldens/recipes.txt",
+        " M crates/jj-procgen/tests/goldens/seeds.txt",
+        " M crates/jj-procgen/tests/skill_jump.rs",
+        " M crates/jj-sim/src/race/mod.rs",
+        " M docs/evidence/P1-A04/checks.json",
+        " M docs/evidence/P1-A04/cpu.json",
+        " M docs/evidence/P1-A04/gallery-phone.png",
+        " M docs/evidence/P1-A04/gallery.png",
+        " M docs/evidence/P1-A04/lab-phone.png",
+        " M docs/evidence/P1-A04/lab.png",
+        " M docs/evidence/P1-A04c/checks.json",
+        " M docs/evidence/P1-A04c/lap-spectrogram.png",
+        " M docs/evidence/P1-A04c/scripted-lap.wav",
+        " M docs/evidence/P1-V02/colliders.png",
+        " M docs/evidence/P1-V02/lods.png",
+        " M docs/evidence/P1-V02/paints.png",
+        " M docs/evidence/P1-V02/views.png",
+        " M docs/learnings/procgen.md",
+        " M maps/lab/canyon-leap.json",
+        " M maps/lab/hairpin-cut.json",
+        " M maps/lab/off-road-climb.json",
+        " M maps/lab/start-line.json",
+        " M scenarios/lab/canyon-leap-short.json",
+        " M scenarios/lab/canyon-leap.json",
+        " M scripts/ci/durations.json",
+        " M tools/maps/review-landscape.mjs",
+        " M web/host/src/render/map/map.ts",
+        " M web/host/src/testing/messages.ts",
+        " M web/host/src/testing/testing.worker.ts",
+        "?? crates/jj-procgen/tests/fun_jumps.rs",
+        "?? docs/evidence/P1-FL20.3/",
+        "?? docs/evidence/P1-M-presets/workspace-matrix.txt",
+        "?? docs/evidence/P1-PROMO3/",
+        "?? tools/promo/capture-grow.mjs",
+        "?? tools/promo/capture-loop.mjs",
+        "?? tools/promo/capture-roster60.mjs",
+        "?? tools/promo/capture-tracks.mjs",
+        "?? tools/promo/render-stevo.py",
+        "?? tools/promo/stevo-storyboard.json",
+        "?? tools/promo/stevo-voice.py"
+      ],
+      "testingWasm": "92cb298637bf7d6b5debacbcfb6513b87ed94cb7609353bf7dd97117d7c5dd58",
+      "cohort": 64,
+      "controllers": "Synthetic controller endpoints through the real host controller path; not 64 human players",
+      "driving": "Sim autopilot drives every car (staged footage)",
+      "fps": 60,
+      "simHz": 120,
+      "size": [
+        1920,
+        1080
+      ],
+      "seed": 7,
+      "stops": [
+        {
+          "n": 1,
+          "hold": 3.5
+        },
+        {
+          "n": 4,
+          "via": [
+            2,
+            3
+          ],
+          "step": 0.4,
+          "hold": 2.7
+        },
+        {
+          "n": 16,
+          "via": [
+            6,
+            9,
+            12
+          ],
+          "step": 0.4,
+          "hold": 2.8
+        },
+        {
+          "n": 64,
+          "via": [
+            20,
+            25,
+            30,
+            36,
+            42,
+            49,
+            56
+          ],
+          "step": 0.34,
+          "hold": 5.6
+        }
+      ],
+      "shots": [
+        {
+          "id": "grow",
+          "frames": 1204,
+          "seconds": 20.066666666666666,
+          "tick": 5297,
+          "cars": 64,
+          "tiles": 64
+        },
+        {
+          "id": "pack",
+          "frames": 420,
+          "seconds": 7,
+          "tick": 7966,
+          "cars": 64,
+          "tiles": 4
+        }
+      ],
+      "lobby": {
+        "seats": 64,
+        "vehicles": {
+          "cruz-missile": 10,
+          "tradie-ute": 9,
+          "hawk-dash": 9,
+          "lion-president": 9,
+          "au-hawk": 9,
+          "postie-bike": 9,
+          "pig-catcher": 9
+        }
+      },
+      "loops": 1,
+      "map": {
+        "terrainCells": 49680,
+        "routePoints": 574,
+        "features": 3,
+        "kitTypes": 24,
+        "kitInstances": 1492,
+        "draws": 35,
+        "relief": [],
+        "kit": {
+          "generic/box-building": 1,
+          "outback_bitumen/centre-line": 40,
+          "outback_bitumen/reflector-post": 13,
+          "outback_dirt/desert-oak": 81,
+          "outback_dirt/spinifex": 875,
+          "rocks/dome": 18,
+          "rocks/shrub": 24,
+          "rocks/spinifex": 103,
+          "signs/big-red-rock": 1,
+          "signs/junction": 3,
+          "signs/kangaroo": 2,
+          "signs/stuart-hwy": 1,
+          "signs/unsealed-road": 1,
+          "town/gum-tree": 88,
+          "town/house": 24,
+          "town/mailbox": 15,
+          "town/power-line": 7,
+          "town/power-pole": 10,
+          "town/shopfront": 17,
+          "town/side-street": 3,
+          "town/water-tower": 5,
+          "wayfinding/chevron-post": 42,
+          "wayfinding/finish-gantry": 2,
+          "wayfinding/guard-rail": 116
+        }
+      },
+      "plan": {
+        "frames": 1204,
+        "stopsAtFrame": [
+          0,
+          258,
+          516,
+          848
+        ]
+      }
+    },
+    "loop": {
+      "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+      "fps": 60,
+      "simHz": 120,
+      "size": [
+        1920,
+        1080
+      ],
+      "seed": 1,
+      "loop": {
+        "barrierHeightMm": 900,
+        "barrierWidthMm": 400,
+        "entry": 475,
+        "exit": 488,
+        "minSpeedMms": 9000,
+        "radiusMm": 8488,
+        "segments": 48,
+        "thicknessMm": 400
+      },
+      "fixture": {
+        "scenario": "promo-loop",
+        "what": "Promotional loop capture",
+        "map": "promo.json",
+        "seed": 1,
+        "ticks": 3600,
+        "cars": [
+          {
+            "routePoint": 430,
+            "lateral": -1.6,
+            "lift": 0.5
+          },
+          {
+            "routePoint": 425,
+            "lateral": 1.6,
+            "lift": 0.5
+          },
+          {
+            "routePoint": 420,
+            "lateral": -1.6,
+            "lift": 0.5
+          }
+        ],
+        "seats": [
+          {
+            "name": "Racer 1",
+            "car": 0
+          },
+          {
+            "name": "Racer 2",
+            "car": 1
+          },
+          {
+            "name": "Racer 3",
+            "car": 2
+          }
+        ],
+        "inputs": []
+      },
+      "driving": "Sim autopilot (staged footage)",
+      "minUp": -0.9992865920066833,
+      "invertedFrames": [
+        389,
+        390,
+        391,
+        392,
+        393,
+        394,
+        395,
+        396,
+        397,
+        398,
+        399,
+        400,
+        401,
+        402
+      ]
+    },
+    "tracks": {
+      "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+      "fps": 60,
+      "simHz": 120,
+      "size": [
+        1920,
+        1080
+      ],
+      "driving": "Sim autopilot (staged footage)",
+      "shots": [
+        {
+          "id": "dirt",
+          "recipe": "outback-dirt",
+          "seed": 3,
+          "finalTick": 840,
+          "cars": 6,
+          "speed": 15.179842948913574
+        },
+        {
+          "id": "bitumen",
+          "recipe": "outback-bitumen",
+          "seed": 1,
+          "finalTick": 840,
+          "cars": 6,
+          "speed": 15.774518966674805
+        },
+        {
+          "id": "town",
+          "recipe": "town",
+          "seed": 1,
+          "finalTick": 840,
+          "cars": 6,
+          "speed": 15.571951866149902
+        },
+        {
+          "id": "rocks",
+          "recipe": "rocks",
+          "seed": 1,
+          "finalTick": 840,
+          "cars": 6,
+          "speed": 16.032264709472656
+        }
+      ]
+    },
+    "roster": [
+      "au-hawk",
+      "cruz-missile",
+      "hawk-dash",
+      "lion-president",
+      "pig-catcher",
+      "postie-bike",
+      "tradie-ute"
+    ],
+    "controllers": "/tmp/jj-promo-crowd-reviewed-f3c175d9"
+  },
+  "music": "assets/audio/music/race-2.ogg",
+  "engine": "aded492721be8323f8fc4f6beedb5aedcd28c571c6511caac051828cf7d7c813"
+}

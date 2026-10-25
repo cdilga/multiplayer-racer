@@ -1,0 +1,25 @@
+{
+  "mp4": "bring-everyone-stevo-a8d821e0.mp4",
+  "r_frame_rate": "60/1",
+  "avg_frame_rate": "60/1",
+  "size": [
+    1920,
+    1080
+  ],
+  "duration": 58.76,
+  "frames": 3525,
+  "expected_frames": 3526,
+  "stills_excluded": [
+    [
+      47.603,
+      56.153
+    ],
+    [
+      53.753,
+      61.16
+    ]
+  ],
+  "repeated_frames_in_motion": 0,
+  "gaps": [],
+  "pass": true
+}

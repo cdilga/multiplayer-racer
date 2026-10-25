@@ -10,7 +10,7 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.glb': 'model/gltf-binary', '.md': 'text/markdown; charset=utf-8',
-  '.jpg': 'image/jpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
+  '.jpg': 'image/jpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4', '.vtt': 'text/vtt; charset=utf-8', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
 };
 
 export async function serveArtUi(port = 0) {
