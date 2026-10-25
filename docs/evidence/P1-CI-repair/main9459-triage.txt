@@ -1,0 +1,188 @@
+Main9459 focused failed-target diagnostics
+
+
+Job20270
+2026-10-25T14:00:31.7486770Z ✖ failing tests:
+2026-10-25T14:00:31.7486933Z 
+2026-10-25T14:00:31.7487072Z test at web/tests/journeys/fl12-climb.test.mjs:30:3
+2026-10-25T14:00:31.7487237Z ✖ webkit: the Ute climbs the bank off the road, the Cruz stalls at its foot, and a rock face stays a wall (17639.646139ms)
+2026-10-25T14:00:31.7487444Z   page.waitForFunction: Target page, context or browser has been closed
+2026-10-25T14:00:31.7487582Z       at TestContext.<anonymous> (/workspace/cdilga/multiplayer-racer/web/tests/journeys/fl12-climb.test.mjs:42:20) {
+2026-10-25T14:00:31.7487740Z     log: []
+2026-10-25T14:00:31.7487865Z   }
+2026-10-25T14:00:31.7551070Z ::endgroup::
+2026-10-25T14:00:31.7551365Z slot-timing: 57.2s FAIL web/tests/journeys/fl12-climb.test.mjs
+2026-10-25T14:00:31.7551757Z ::group::web/tests/journeys/g01-two-rounds.test.mjs
+2026-10-25T14:05:26.6668049Z ✔ four controllers play two consecutive 1-lap rounds hands-off (292023.469468ms)
+2026-10-25T14:05:26.7816146Z ℹ tests 1
+2026-10-25T14:05:26.7816676Z ℹ suites 0
+2026-10-25T14:05:26.7816881Z ℹ pass 1
+2026-10-25T14:05:26.7817096Z ℹ fail 0
+2026-10-25T14:05:26.7817234Z ℹ cancelled 0
+2026-10-25T14:05:26.7817372Z ℹ skipped 0
+2026-10-25T14:05:26.7817512Z ℹ todo 0
+2026-10-25T14:05:26.7817858Z ℹ duration_ms 294698.947288
+2026-10-25T14:05:26.7878636Z ::endgroup::
+2026-10-25T14:05:26.7878874Z slot-timing: 295.0s pass web/tests/journeys/g01-two-rounds.test.mjs
+2026-10-25T14:05:26.7879225Z ::group::web/tests/journeys/generated-loop.test.mjs
+2026-10-25T14:05:57.0407599Z ✔ chromium: a generated loop is ridden upside down at the top, out upright, matching native; chase and overview see it (25572.397164ms)
+2026-10-25T14:05:57.0420057Z ﹣ chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second (0.598934ms) # needs the gpu runner (JJ_CHROMIUM_GPU)
+2026-10-25T14:05:57.0754941Z ℹ tests 2
+2026-10-25T14:05:57.0755656Z ℹ suites 0
+2026-10-25T14:05:57.0755991Z ℹ pass 1
+2026-10-25T14:05:57.0756283Z ℹ fail 0
+2026-10-25T14:05:57.0756502Z ℹ cancelled 0
+2026-10-25T14:05:57.0757297Z ℹ skipped 1
+2026-10-25T14:05:57.0759984Z ℹ todo 0
+2026-10-25T14:05:57.0761493Z ℹ duration_ms 30141.928837
+2026-10-25T14:05:57.0836100Z ::endgroup::
+
+Job20272
+2026-10-25T14:06:20.3005022Z ✖ failing tests:
+2026-10-25T14:06:20.3005363Z 
+2026-10-25T14:06:20.3005600Z test at web/tests/journeys/g-kept-tracks.test.mjs:36:1
+2026-10-25T14:06:20.3005872Z ✖ keep a track at Round complete, pick it from the Tracks page, and race the same track again; best laps are kept; a mistyped code is refused (299273.700281ms)
+2026-10-25T14:06:20.3006199Z   locator.click: Timeout 30000ms exceeded.
+2026-10-25T14:06:20.3006428Z   Call log:
+2026-10-25T14:06:20.3006630Z     - waiting for locator('[data-tracks] [data-act=fav-race]').first()
+2026-10-25T14:06:20.3006894Z       - locator resolved to <button type="button" class="btn brush" data-act="fav-race" data-key="T32-08-2" aria-pressed="false">…</button>
+2026-10-25T14:06:20.3007184Z     - attempting click action
+2026-10-25T14:06:20.3007410Z       - waiting for element to be visible, enabled and stable
+2026-10-25T14:06:20.3007685Z       - element is visible, enabled and stable
+2026-10-25T14:06:20.3007925Z       - scrolling into view if needed
+2026-10-25T14:06:20.3008142Z       - done scrolling
+2026-10-25T14:06:20.3008344Z       - performing click action
+2026-10-25T14:06:20.3008545Z       - click action done
+2026-10-25T14:06:20.3008763Z       - waiting for scheduled navigations to finish
+2026-10-25T14:06:20.3008974Z   
+2026-10-25T14:06:20.3009178Z       at TestContext.<anonymous> (/workspace/cdilga/multiplayer-racer/web/tests/journeys/g-kept-tracks.test.mjs:83:67) {
+2026-10-25T14:06:20.3009440Z     name: 'TimeoutError',
+2026-10-25T14:06:20.3009820Z     log: [ "  - waiting for locator('[data-tracks] [data-act=fav-race]').first()", '    - locator resolved to <button type="button" class="btn brush" data-act="fav-race" data-key="T32-08-2" aria-pressed="false">…</button>', '  - attempting click action', '    - waiting for element to be visible, enabled and stable', '    - element is visible, enabled and stable', '    - scrolling into view if needed', '    - done scrolling', '    - performing click action', '    - click action done', '    - waiting for scheduled navigations to finish' ]
+2026-10-25T14:06:20.3010305Z   }
+2026-10-25T14:06:20.3153827Z ::endgroup::
+2026-10-25T14:06:20.3154355Z slot-timing: 304.8s FAIL web/tests/journeys/g-kept-tracks.test.mjs
+2026-10-25T14:06:20.3155033Z ::group::web/tests/journeys/generated-jump.test.mjs
+2026-10-25T14:06:56.0551097Z ✔ chromium: a generated boosted jump is visibly airborne, lands upright and matches native replay (20769.446446ms)
+2026-10-25T14:07:07.4791164Z ✔ webkit: a generated boosted jump is visibly airborne, lands upright and matches native replay (11424.477019ms)
+2026-10-25T14:07:07.4796974Z ﹣ chromium: the jump stays in frame in 1, 4 and 9 tiles, 12 times a second (0.452654ms) # needs the gpu runner (JJ_CHROMIUM_GPU)
+2026-10-25T14:07:07.5329574Z ℹ tests 3
+2026-10-25T14:07:07.5330151Z ℹ suites 0
+2026-10-25T14:07:07.5330372Z ℹ pass 2
+2026-10-25T14:07:07.5330606Z ℹ fail 0
+2026-10-25T14:07:07.5330762Z ℹ cancelled 0
+2026-10-25T14:07:07.5331081Z ℹ skipped 1
+2026-10-25T14:07:07.5331813Z ℹ todo 0
+
+Job20273
+2026-10-25T14:03:49.5889884Z ✖ failing tests:
+2026-10-25T14:03:49.5890146Z 
+2026-10-25T14:03:49.5890408Z test at web/tests/journeys/fl03-1-scenes.test.mjs:37:3
+2026-10-25T14:03:49.5890693Z ✖ scene picker: carnage-bowl loads as the next round's track and a seat drives on it (39589.522685ms)
+2026-10-25T14:03:49.5891004Z   AssertionError [ERR_ASSERTION]: the seat drove on carnage-bowl: moved 1.0 m
+2026-10-25T14:03:49.5891297Z       at TestContext.<anonymous> (file:///workspace/cdilga/multiplayer-racer/web/tests/journeys/fl03-1-scenes.test.mjs:68:12)
+2026-10-25T14:03:49.5891615Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-25T14:03:49.5891914Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+2026-10-25T14:03:49.5892177Z     generatedMessage: false,
+2026-10-25T14:03:49.5892404Z     code: 'ERR_ASSERTION',
+2026-10-25T14:03:49.5892634Z     actual: false,
+2026-10-25T14:03:49.5892841Z     expected: true,
+2026-10-25T14:03:49.5893095Z     operator: '==',
+2026-10-25T14:03:49.5893316Z     diff: 'simple'
+2026-10-25T14:03:49.5893539Z   }
+2026-10-25T14:03:49.5999286Z ::endgroup::
+2026-10-25T14:03:49.6001639Z slot-timing: 164.2s FAIL web/tests/journeys/fl03-1-scenes.test.mjs
+2026-10-25T14:03:49.6005189Z ::group::web/tests/journeys/fl14-buttons-look.test.mjs
+2026-10-25T14:04:16.9622675Z ✔ FL14 buttons look (chromium) (23539.985667ms)
+2026-10-25T14:04:59.5237144Z ✔ FL14 buttons look (webkit) (42562.275175ms)
+2026-10-25T14:04:59.5816213Z ℹ tests 2
+2026-10-25T14:04:59.5816899Z ℹ suites 0
+2026-10-25T14:04:59.5817187Z ℹ pass 2
+2026-10-25T14:04:59.5817514Z ℹ fail 0
+2026-10-25T14:04:59.5817768Z ℹ cancelled 0
+2026-10-25T14:04:59.5818019Z ℹ skipped 0
+2026-10-25T14:04:59.5818276Z ℹ todo 0
+2026-10-25T14:04:59.5818528Z ℹ duration_ms 69917.000469
+2026-10-25T14:04:59.5920064Z ::endgroup::
+2026-10-25T14:04:59.5920487Z slot-timing: 70.0s pass web/tests/journeys/fl14-buttons-look.test.mjs
+2026-10-25T14:04:59.5921994Z ::group::web/tests/journeys/g03-android-background.test.mjs
+2026-10-25T14:05:01.9265164Z ﹣ JN6 emulator: a backgrounded Android phone goes to the autopilot, the room never pauses, and it takes the car back (1.066616ms) # no Android SDK at /root/Android/Sdk on this machine
+2026-10-25T14:05:01.9512329Z ℹ tests 1
+2026-10-25T14:05:01.9512815Z ℹ suites 0
+
+Unchanged FL12 Linux debug run
+✔ chromium: the Ute climbs the bank off the road, the Cruz stalls at its foot, and a rock face stays a wall (32057.213592ms)
+✔ webkit: the Ute climbs the bank off the road, the Cruz stalls at its foot, and a rock face stays a wall (17590.555953ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 49669.215676
+
+Unchanged kept-track Mac navigation run
+NAVREQUEST GET http://127.0.0.1:52399/p/kept/host?room&test=live&laps=1
+NAV http://127.0.0.1:52399/p/kept/host?room&test=live&laps=1
+✔ keep a track at Round complete, pick it from the Tracks page, and race the same track again; best laps are kept; a mistyped code is refused (11442.116042ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11753.483083
+
+
+First unchanged Linux kept-track reproduction
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+NAVREQUEST GET http://127.0.0.1:39859/p/kept/host?room&test=live&laps=1
+NAV http://127.0.0.1:39859/p/kept/host?room&test=live&laps=1
+✖ keep a track at Round complete, pick it from the Tracks page, and race the same track again; best laps are kept; a mistyped code is refused (90050.958712ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 90125.110866
+
+✖ failing tests:
+
+test at [eval1]:36:1
+✖ keep a track at Round complete, pick it from the Tracks page, and race the same track again; best laps are kept; a mistyped code is refused (90050.958712ms)
+  page.waitForFunction: Timeout 10000ms exceeded.
+      at wait (/workspace/cdilga/multiplayer-racer/[eval1]:29:52)
+      at TestContext.<anonymous> (/workspace/cdilga/multiplayer-racer/[eval1]:68:9) {
+    log: [],
+    name: 'TimeoutError'
+  }
+
+
+Second unchanged Linux kept-track run with pointer tracing
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+NAVREQUEST GET http://127.0.0.1:34235/p/kept/host?room&test=live&laps=1
+NAV http://127.0.0.1:34235/p/kept/host?room&test=live&laps=1
+KEEP BBOX { x: 1323.890625, y: 717.015625, width: 185, height: 40 }
+AFTER KEEP [
+  { name: 'pointerdown', act: 'keep', tag: 'BUTTON' },
+  { name: 'pointerup', act: 'keep', tag: 'BUTTON' },
+  { name: 'click', act: 'keep', tag: 'BUTTON' }
+]
+✔ keep a track at Round complete, pick it from the Tracks page, and race the same track again; best laps are kept; a mistyped code is refused (123287.341293ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 123371.111292

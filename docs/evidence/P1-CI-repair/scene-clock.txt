@@ -1,0 +1,57 @@
+Linux original-clock diagnostic
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+BEFORE DRIVE {"tick":495,"host":{"countdownMs":0,"held":false,"pauseMask":0,"phase":"Running","queued":0,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":1134,"inputAgeMs":null,"inputDropped":false,"inputSeq":null,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[28.208890914916992,-0.0030364990234375,-0.7392187118530273],"input":{"brake":0,"steer":0,"throttle":0},"speed":7.29751443862915},"status":{"tick":529,"hash":"bc0aa396c045840364b3636ea29be5cfbf43498c0c00bbf217e45379403d0c89","pauseMask":0,"countdownMs":0,"published":110,"skipped":1460,"appliedThrottle":[0,0.299996942281723,1,1]}}
+DRIVE SAMPLE {"tick":774,"host":{"countdownMs":0,"held":false,"pauseMask":0,"phase":"Running","queued":0,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":67,"inputAgeMs":317,"inputDropped":false,"inputSeq":13999,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[36.00374984741211,2.679758310317993,7.445087432861328],"input":{"brake":0,"steer":0,"throttle":1},"speed":1.3054444789886475},"status":{"tick":801,"hash":"7ab78dc40ede4065aeaf7480b74817f4ad00159d9354fa407c375dc11d426e81","pauseMask":0,"countdownMs":0,"published":125,"skipped":1532,"appliedThrottle":[1,1,1,1]}}
+DRIVE SAMPLE {"tick":944,"host":{"countdownMs":2955,"held":false,"pauseMask":0,"phase":"Running","queued":3,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":100,"inputAgeMs":350,"inputDropped":false,"inputSeq":15551,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[36.488887786865234,3.573760986328125,8.44666862487793],"input":{"brake":0,"steer":0,"throttle":1},"speed":0.7718523740768433},"status":{"tick":944,"hash":"817c91f8ce005f48b04e8006fd4bac4e377436cab0ac57bd65549c9aa93230e5","pauseMask":0,"countdownMs":2561,"published":128,"skipped":1533,"appliedThrottle":[1,1,1,1]}}
+DRIVE SAMPLE {"tick":944,"host":{"countdownMs":1290,"held":false,"pauseMask":0,"phase":"Running","queued":7,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":100,"inputAgeMs":350,"inputDropped":false,"inputSeq":15551,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[36.488887786865234,3.573760986328125,8.44666862487793],"input":{"brake":0,"steer":0,"throttle":1},"speed":0.7718523740768433},"status":{"tick":944,"hash":"817c91f8ce005f48b04e8006fd4bac4e377436cab0ac57bd65549c9aa93230e5","pauseMask":0,"countdownMs":1084,"published":128,"skipped":1533,"appliedThrottle":[1,1,1,1]}}
+DRIVE SAMPLE {"tick":965,"host":{"countdownMs":0,"held":false,"pauseMask":0,"phase":"Running","queued":0,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":true,"idleCued":false,"idleForMs":8,"inputAgeMs":175,"inputDropped":false,"inputSeq":20153,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[36.43311309814453,3.473067283630371,8.384984016418457],"input":{"brake":0,"steer":0,"throttle":1},"speed":0.7313025593757629},"status":{"tick":991,"hash":"5491d56d0d9d5f0c3bf5c34a5c2bb214a3b86d506577268c2950d1e3876ff82e","pauseMask":0,"countdownMs":0,"published":132,"skipped":1544,"appliedThrottle":[1,1,1,1]}}
+DRIVE SAMPLE {"tick":1200,"host":{"countdownMs":0,"held":false,"pauseMask":0,"phase":"Running","queued":0,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":84,"inputAgeMs":334,"inputDropped":false,"inputSeq":21966,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[36.355220794677734,3.4530956745147705,8.671740531921387],"input":{"brake":0,"steer":0,"throttle":1},"speed":0.5981000065803528},"status":{"tick":1241,"hash":"436ff4c81e1c30fdee44a4c2e02fa8f2a8cea94448ca039765d2cb6295c8a49f","pauseMask":0,"countdownMs":0,"published":142,"skipped":1547,"appliedThrottle":[1,1,1,1]}}
+AFTER DRIVE {"tick":1386,"host":{"countdownMs":0,"held":false,"pauseMask":8,"phase":"Running","queued":1,"seats":[{"boosting":false,"car":0,"colour":{"index":0,"rgb":[229,50,45]},"connected":true,"endpoint":"syn1","fresh":false,"idleCued":false,"idleForMs":200,"inputAgeMs":450,"inputDropped":false,"inputSeq":23770,"menuOpen":false,"name":"Lab driver","number":1,"practice":null,"presence":"Active","seat":1,"source":1}]},"car":{"position":[35.933563232421875,2.778280735015869,8.180868148803711],"input":{"brake":0,"steer":0,"throttle":1},"speed":1.1181554794311523},"status":{"tick":1386,"hash":"0a78f8e58e8af7a8bed3843951b57f080aa422d9baafe0b882f39ad514566eb8","pauseMask":8,"countdownMs":0,"published":145,"skipped":1547,"appliedThrottle":[1,1,1,1]}}
+✔ scene picker: carnage-bowl loads as the next round's track and a seat drives on it (27870.624321ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27977.066307
+
+
+Controlled candidate Mac software
+✔ scene picker: canyon-leap loads as the next round's track and a seat drives on it (21720.314916ms)
+✔ scene picker: carnage-bowl loads as the next round's track and a seat drives on it (17200.521625ms)
+✔ scene picker: hairpin-cut loads as the next round's track and a seat drives on it (15504.824916ms)
+✔ scene picker: off-road-climb loads as the next round's track and a seat drives on it (23486.027208ms)
+✔ scene picker: start-line loads as the next round's track and a seat drives on it (18142.153708ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 96373.391375
+
+
+Controlled candidate Linux exact archive
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+✔ scene picker: canyon-leap loads as the next round's track and a seat drives on it (29203.557808ms)
+✔ scene picker: carnage-bowl loads as the next round's track and a seat drives on it (28615.561827ms)
+✔ scene picker: hairpin-cut loads as the next round's track and a seat drives on it (20066.050128ms)
+✔ scene picker: off-road-climb loads as the next round's track and a seat drives on it (24691.433696ms)
+✔ scene picker: start-line loads as the next round's track and a seat drives on it (17989.411847ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120622.708554

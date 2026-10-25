@@ -222,3 +222,11 @@ disappeared with its job container, so the copy's precise corruption cause is un
 Include every archived native tool in `native-check.mjs`'s verified read/write snapshot
 and execution checks; a separate `cp` bypassed the protection already used for `jj`
 and `jj-server`. Cached/downloaded archive validation must cover the helper too.
+
+FL03.1's real-room scene drive mixed twenty 100 ms wall sleeps with live physics and
+full-resolution software rendering. The Linux probe recorded a resume countdown in
+that drive window and 317–450 ms input ages; the carnage bowl's bots can move a car
+before its first throttle input. Hold the loaded scene, wait for the worker's actual
+Running phase, and refresh input between fixed simulation steps when asserting a
+two-second movement envelope. The room view can be Running during the worker's race
+Countdown. Keep the full scene cohort and movement assertion; verify the tick interval.

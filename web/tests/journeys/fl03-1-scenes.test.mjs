@@ -52,19 +52,34 @@ for (const scene of SCENES) {
     await frame(host, 'syn1', { claim: 'Lab driver' });
     await frame(host, 'syn1', { ready: true });
     await wait(host, () => window.__jjRoom.view().phase === 'Running');
+    // Keep the loaded scene's clock independent of renderer/readback latency. The room can be Running while its
+    // worker is still in the race countdown; no drive measurement starts before the worker actually reaches GO.
+    await host.evaluate(() => window.__jjTest.hold(true));
+    await host.waitForFunction(async () => {
+      const o = await window.__jjTest.observe();
+      if (o.host.phase === 'Running' && o.host.countdownMs === 0) return true;
+      await window.__jjTest.step(12);
+      return false;
+    }, undefined, { timeout: 90_000, polling: 100 });
     const plan = await host.evaluate(() => window.__jjPrepare.seeds().at(-1));
     assert.equal(plan.plan, `lab:${scene}`, `the round's track is the scene: ${JSON.stringify(plan)}`);
     const route = await host.evaluate(() => window.__jjPrepare.mapInfo()?.route.length);
     assert.equal(route, want, 'the shown map is the scene\'s committed map');
-    // The seat drives on it: full throttle for a moment moves the car.
-    const before = await host.evaluate(async () => (await window.__jjTest.observe()).cars[0].position);
+    // Two seconds at 120 Hz, retaining the scene's whole cohort (including the carnage bowl's twelve bots).
+    // Wall-clock sleeps let slow software frames consume the 250 ms input-freshness window or trigger a resume
+    // countdown; explicit steps keep each 100 ms input span identical on GPU and software renderers.
+    const before = await host.evaluate(async () => window.__jjTest.observe());
     const seat = await host.evaluate(async () => (await window.__jjTest.observe()).host.seats[0]);
     for (let k = 0; k < 20; k++) {
-      await host.evaluate((seat) => window.__jjTest.input({ type: 'controller', endpoint: seat.endpoint, frame: { state: { source: seat.source, seq: Date.now() & 0xffff, drive: [0, 32767], action: [0, 0] } } }), seat);
-      await host.waitForTimeout(100);
+      await host.evaluate(({ seat, seq }) => window.__jjTest.input({ type: 'controller', endpoint: seat.endpoint, frame: { state: { source: seat.source, seq, drive: [0, 32767], action: [0, 0] } } }), { seat, seq: k + 1 });
+      await host.evaluate(() => window.__jjTest.step(12));
     }
-    const after = await host.evaluate(async () => (await window.__jjTest.observe()).cars[0].position);
-    const moved = Math.hypot(after[0] - before[0], after[2] - before[2]);
+    const after = await host.evaluate(async () => window.__jjTest.observe());
+    assert.equal(after.tick - before.tick, 240, 'the drive window covers exactly two simulation seconds');
+    assert.equal(after.host.phase, 'Running', 'the whole drive window stays past GO');
+    assert.equal(after.host.countdownMs, 0, 'no lifecycle resume countdown consumes the drive window');
+    assert.equal(after.cars.length, before.cars.length, 'every scene car stays in the drive window');
+    const moved = Math.hypot(after.cars[0].position[0] - before.cars[0].position[0], after.cars[0].position[2] - before.cars[0].position[2]);
     assert.ok(moved > 2, `the seat drove on ${scene}: moved ${moved.toFixed(1)} m`);
     if (CAPTURE) await host.screenshot({ path: `${CAPTURE}/scene-${scene}.png` });
     assert.deepEqual(errors, []);

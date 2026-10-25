@@ -1060,3 +1060,63 @@ response. No toolchain, memory, gameplay or timing setting changes.
   retried. Publish the actual coverage repair and qualify its containing run.
 
 Receipts: `native-helper.txt`. Main/GPU and preview receipts remain required.
+
+### Main9459 triage: scene drive clock, browser trap and kept-track navigation
+
+At **b6b7e53c**, main **9459** passes every Rust partition, lint, checks,
+build, image, and browser shards **1/3/6/7**. GPU **9460** is green.
+The final preview **v02-b6b7e53c** passes smoke (room **2TAE**), including
+join, input, resume, driving, HUD and round, isolated from 17 other previews.
+The preceding runtime preview **v02-34817d86** also passes smoke (room
+**BWYE**), plus the complete public Mac Chromium/WebKit owner-lobby file
+**2/2, 47,288 ms**. The final preview's Chromium case passes; its WebKit
+case receives HTML from the Node `/version` fetch before the phone joins.
+The subsequent captured `/version` response is HTTP 200 JSON with the correct
+build. The original HTML/status was not captured, so its cause is unknown.
+
+Main9459 has three remaining browser failures:
+
+- **FL03.1 carnage-bowl**, job **20273**: the wall-clock drive loop measures
+  **1.0 m**, below its unchanged **2 m** threshold. Native/software Mac and
+  exact-archive Linux diagnostic runs pass, but Linux records a real lifecycle
+  resume countdown (**2,561 ms**, frozen at tick **944**) during the input
+  window, and **317–450 ms** input ages around the host's **250 ms** freshness
+  window. The bots also move the uncommanded car before measurement; one
+  Linux observation already has it travelling **7.3 m/s** at throttle zero.
+  These probes do not reconstruct the missing original failure snapshot.
+  A controlled probe additionally shows room `Running` while the actual
+  worker remains in its race `Countdown`; a room-view gate alone is inadequate.
+  Hold the loaded scene's clock, advance until the worker is really past GO,
+  then feed the same twenty throttle samples over exactly **240 ticks**
+  (**2 s at 120 Hz**). Keep the **2 m** threshold, all five scenes, the full
+  twelve-bot derby cohort, map/plan checks and rendering. Add assertions for
+  the tick interval, live phase, no resume countdown and the whole car cohort.
+  The complete candidate file passes **5/5, 96,373 ms** on Mac software and
+  **5/5, 120,623 ms** on triton in the exact Linux CI image/archive.
+- **FL12 WebKit**, job **20270**: the page closes waiting for the first loaded
+  vehicle. Triton's kernel records `WPEWebProcess[3190310] trap int3` in GLib
+  at **14:00:31 UTC**, the failure's exact time. Its still-running job cgroup
+  reports **pids max events 0**, **memory failcnt 0**, and peak **4.27 GB**
+  below the **12 GiB** limit. No crash dump is available. The unchanged full
+  Chromium/WebKit file passes **2/2, 49,669 ms** in the exact Linux CI image
+  with `DEBUG=pw:browser`. Do not invent a memory/toolchain/gameplay patch or
+  remove WebKit coverage; the trap's precise cause remains unproven.
+- **G-kept**, job **20272**: the favourite button's click completes but
+  Playwright times out waiting for scheduled navigation, before the explicit
+  favourite readback. The menu action is a `type=button` and sends a room
+  command; it should not navigate. The unchanged complete Mac native journey
+  passes **11,753 ms**, with only the initial page navigation observed.
+  An exact-archive Linux run captures requests, navigation and menu history;
+  retain all assertions and deadlines while investigating.
+
+The first isolated Linux kept-track run instead times out waiting for the
+Keep label (10-second deadline). A second focused run, with pointer tracing,
+passes the **whole unchanged journey, 123,371 ms**; Keep receives down, up
+and click on its actual button, and only the initial navigation occurs.
+Neither failure's precise cause is established. Keep G-kept and FL12's code,
+coverage, deadlines and assertions unchanged; the next actual scene-clock
+fix batch must still pass them. Do not treat an isolated pass as green CI.
+
+This is triage after the second red batch, not speculative patching. No
+quarantine, weakened gameplay assertion, duplicate dispatch or unchanged
+batch retry is made. Receipts: `scene-clock.txt`, `main9459-triage.txt`.
