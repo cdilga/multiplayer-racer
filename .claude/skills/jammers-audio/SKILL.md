@@ -1,6 +1,6 @@
 ---
 name: jammers-audio
-description: How to regenerate Joystick Jammers 0.2 audio on eris, the GPU box. The announcer voice (the owner's cloned voice, Qwen3-TTS 1.7B, from A00's cue sheet) and the instrumental music (YuE2), with the automatic screens, the loudness targets, the export rules and what may enter the repo. Use when a cue line changes, a voice clip is rejected, a repair bead asks for new takes, you add a moment or music cue, or you need to touch tools/audio/ or assets/audio/.
+description: How to regenerate Joystick Jammers 0.2 audio on eris, the GPU box. The canonical Australian Maya1 announcer voice (aussie-maya1-v1, from A00's cue sheet) and the instrumental music (YuE2), with the automatic screens, the loudness targets, the export rules and what may enter the repo. Use when a cue line changes, a voice clip is rejected, a repair bead asks for new takes, you add a moment or music cue, or you need to touch tools/audio/ or assets/audio/.
 ---
 
 # Jammers audio (voice and music on eris)
@@ -9,6 +9,20 @@ Everything in `tools/audio/` is documented in `tools/audio/README.md`; this is t
 agent who has to regenerate something. Audio is **generated on eris, never in this repo** (R89). The Mac holds
 scripts, the cue sheet, exports and evidence; eris holds weights, the owner's recordings, clone prompts and every
 non-picked take.
+
+## Canonical voice — owner selection, 25 October 2026
+
+**Use `aussie-maya1-v1` for every new announcement and promo.** The owner explicitly selected the current live Physical Soccer voice for both games, then requested every Jammers announcement be regenerated. [`tools/audio/maya1-voice.json`](../../../tools/audio/maya1-voice.json) pins the exact fal.ai `fal-ai/maya` prompt, temperature 0.3 and 48 kHz WAV recipe, with a recipe hash and the verified live reference. This is a project recipe ID: Maya1 has no provider voice ID or seed and does not use an owner recording. Never substitute the older FrankenTTS Combined/Announcer or Qwen references.
+
+Run `python3 tools/audio/maya1.py --estimate`, then `python3 tools/audio/maya1.py --key-file /secure/path` (or configured `FAL_KEY`). The Mac validates the full cue sheet; generation requests, raw takes, Whisper ASR and Opus mastering run from eris. Only a complete batch passing the ASR/duration/audio screens replaces `assets/audio/voice/`. Requests are cached by exact text + recipe hash and pending IDs resume without a new paid submission. No automatic paid retakes. `--fetch-only` resumes export retrieval; private review lives under `private/voice/maya1-gameplay/review/`.
+
+The saved macOS Keychain service is `fal-api-key`; the renderer reads it into subprocess memory if environment/file credentials are absent. Never print its value. Owner authorized up to **$2 total** for the 25 October gameplay + Jammers/Soccer promo replacement; coordinate one spend owner across sessions. That authorization is not a general future budget.
+
+After all takes are cached, use `--cached-only --review-only` to run ASR/mastering and fetch the private review without credentials, provider submissions or game-asset changes. Flagged batches are fetched for inspection but never installed. Respect an owner media-publication hold independently of a technical screen pass.
+
+`python3 tools/audio/maya1.py --local` uses pinned original Maya1 weights with native FP16 on eris (no quantization), SNAC **1.2.1**, and the same description/temperature. A 2.39-second line rendered in 5.667 seconds with the model fully on GPU. Under shared CI GPU load, CPU weight offload made a 5.55-second welcome take 70.072 seconds. It pauses/restores voxtype only while holding the audio GPU lock. Local backend settings/revisions are separate provenance; do not claim the fal.ai and local outputs are byte-identical. The shared local library `/Users/cdilga/Documents/dev/Voices` includes this recipe, examples and reusable eris runner, with Combined stored separately.
+
+For the promo, validate its current job with `tools/promo/voice-job.py`, then `python3 tools/audio/maya1.py --job tools/promo/voice-job.json --batch maya1-promo --key-file /secure/path`. Gameplay and promo caches/exports stay separate. The original Qwen pipeline below is historical, not the default; its owner-speaker similarity screen does not apply to prompt-defined Maya1. Maya1 candidates use Whisper word accuracy, duration, raw clipping and decoded Opus targets (−16 LUFS ±1 LU, ≤−1 dBTP). ASR is a sanity check, not a listening approval.
 
 ## Rules that bind you
 
@@ -23,14 +37,16 @@ non-picked take.
   a playtest, and a rejected cue becomes a repair bead (re-render that moment with new seeds).
 - **Highest precision that fits, no quantised fallbacks.** Qwen3-TTS 1.7B Base runs in bfloat16 (its native precision;
   float32 does not fit 8 GB). YuE2 runs BF16 with an F32 VAE. If a model or dependency is missing on eris, run the
-  matching `tools/audio/eris-setup-*.sh`; if that cannot fix it, stop and report what is missing. Never switch models.
+  matching `tools/audio/eris-setup-*.sh`; if that cannot fix it, stop and report what is missing. Never switch models unless the owner explicitly selects a replacement, as with Maya1 above.
 - **One GPU job at a time** (RTX 2080 SUPER 8 GB). All voice and music jobs take `~/Work/dev/jammers-audio/.gpu.lock`
   (`render_voice.py` and `eris-audio-queue.sh` do it for you). Never run a second Whisper/TTS/music job by hand next to
   one that is running; check `nvidia-smi` first.
 - **Music has no voices at all.** Score-only path only (below); the calibrated no-voice check must pass on every file.
 - Machine rule (R93): the tree, `br` and Agent Mail live on the Mac; GPU audio work is pinned to eris by hardware.
 
-## Regenerate the announcer voice (one command)
+## Historical Qwen clone workflow (superseded)
+
+The public `render_voice.py` command now routes to Maya1 (`--dry-run` maps to `--estimate`). The commands below require explicit `--legacy-qwen` for historical reproduction; they must never replace the canonical announcer silently.
 
 ```
 tools/audio/render_voice.py --sheet tools/audio/cues-playtest1.tsv        # all rows; ~40 min the first time

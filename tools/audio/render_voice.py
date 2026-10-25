@@ -242,4 +242,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # Keep the old API for historical job tooling, but never silently regenerate
+    # the superseded clone from the public command after the owner's selection.
+    if "--legacy-qwen" in sys.argv:
+        sys.argv.remove("--legacy-qwen")
+        sys.exit(main())
+    from maya1 import main as canonical_main
+    sys.argv = ["maya1.py", *("--estimate" if s == "--dry-run" else s for s in sys.argv[1:])]
+    sys.exit(canonical_main())

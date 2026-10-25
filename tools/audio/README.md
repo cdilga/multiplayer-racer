@@ -1,5 +1,9 @@
 # Audio tooling (runs on eris)
 
+Canonical announcer, owner selection 25 October 2026: **`aussie-maya1-v1`**, the exact Australian Maya1 recipe in [`maya1-voice.json`](maya1-voice.json). Use `python3 tools/audio/maya1.py --estimate`, then the same command with `--key-file /secure/path` or configured `FAL_KEY`. Generation, raw takes and ASR run from eris; validated exports replace every gameplay clip together. The old Qwen/FrankenTTS references below are historical. See the [audio skill](../../.claude/skills/jammers-audio/SKILL.md) for batch/promo commands and resumable caching.
+
+The renderer can read the saved macOS Keychain service `fal-api-key`. For the already-generated batch, `--cached-only --review-only` audits and fetches private results without any paid submissions or asset installation. Local inference is available with `--local` on eris; it uses original pinned Maya1 FP16 weights, not the historical clone model.
+
 > **Licence rider:** `franken_tts` and `franken_whisper` (`ftts`, `fw`) are MIT with an OpenAI/Anthropic rider. The owner confirmed on 2026-10-04 that their use, including by agents, is approved without reservation; agents may run them. Keep the author's permission, if any, in `docs/evidence/P1-A01d/permission.md`.
 
 Generation happens on **eris** (`ssh eris`, RTX 2080 SUPER 8 GB, Arch Linux), never on the Mac and

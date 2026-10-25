@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "canonical_voice_id": "aussie-maya1-v1",
+  "name": "Aussie Maya1 v1",
+  "selected_by": "Owner, 25 October 2026: Maya1 to replace BOTH; redo all Jammers announcements",
+  "provider": "fal.ai",
+  "model": "Maya1 (Maya Research)",
+  "provider_voice_id": null,
+  "seed": null,
+  "recipe": {
+    "endpoint": "fal-ai/maya",
+    "prompt": "A bright, warm, extremely broad australian male accent. Male voice in the 30s, normal pitch, warm timbre, upbeat energetic sports-announcer pacing, friendly and cheerful delivery at medium-high intensity.",
+    "temperature": 0.3,
+    "sample_rate": "48 kHz",
+    "output_format": "wav"
+  },
+  "recipe_sha256": "6d43cc70a833a04325ef5d976543b2ea8c8e0f7a1b7ea7838b4d87af795777b2",
+  "identity_note": "Project recipe ID, not a provider speaker ID. Maya1 has no voice ID or seed. Identical prompt/settings guide consistency; new takes can vary. No owner recording or legacy Combined pack conditions this recipe.",
+  "reference": {
+    "game": "Physical Soccer",
+    "asset_url": "https://physicalsoccer.dilger.dev/releases/rainbow-r1/host/audio/media/voice/opening.m4a",
+    "encoded_sha256": "2123d81f6e42b3dc5be16a56116567816ac778df44f724eb73f29470bce71a41",
+    "source_commit": "018cd34811017e4a502d9bb422d3e66a75de8473"
+  }
+}

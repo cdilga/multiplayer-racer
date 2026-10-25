@@ -62,3 +62,25 @@ Code: `web/host/src/audio/` (`mix`, `announcer`, `music`, `director`, `engine`, 
   15 windows of stem within -10 dB of the mix; the score renders stay <= 0.16 and <= -14.6 dB. "Singing bowl" is excluded
   (an instrument). Demucs's random shift moves scores by a few hundredths between runs. Demucs leaves the vocals stem near
   -55 dB on the Opus renders but -15..-26 dB on their WAV premasters; both pass, and the manifest records both.
+
+## 2026-10-25 · Canonical Maya1 and eris compatibility (br-8h3u.13)
+
+- **Verify live bytes before naming a voice.** Soccer's current fifty announcements were fal.ai Maya1, while Jammers
+  used Qwen owner-reference clones. The old FrankenTTS Announcer/Combined packs were different historical assets.
+  Owner selected the Soccer recipe as `aussie-maya1-v1`; it is a project recipe identifier, not a provider speaker ID.
+- **Maya1 works on the RTX2080 SUPER at native FP16 without quantization.** BF16 emulation plus CPU offload was slow.
+  Fully resident proof: 2.39 s audio in 5.667 s. Shared CI VRAM pressure forced several layers onto CPU and a 5.55 s
+  welcome took 70.072 s. Keep local backend revision/settings separate from fal.ai recipe provenance.
+- **Use SNAC1.2.1.** SNAC0.1.0 rejected the model's `sampling_rate` constructor option. The audio venv has no pip;
+  its working installer is the actual mise-managed uv binary, not an unconfigured plain `uv` shim.
+- **Allocator and KV cache matter.** The inherited Qwen `expandable_segments:True` setting OOMed Maya1 shard loading;
+  clear it only in the local Maya process. Explicit `use_cache=True` avoids the model config's slow no-cache default.
+  Pin explicit Hugging Face cache paths when another import already read `HF_HOME`, avoiding duplicate weight downloads.
+- **Pause dictation inside the shared GPU lock.** Pausing/restoring voxtype outside the lock races queued workers.
+  ExitStack restores the prior state on exceptions and a handled SIGTERM; never stop another agent's browser or CI.
+- **faster-whisper/PyAV mismatch:** `open(metadata_errors=...)` failed with this venv. Decode through ffmpeg to mono16k
+  float32 samples and pass the ndarray, as the historical audit does. CTranslate2 needs CUDA12 libraries whereas shared
+  Torch uses CUDA13: use per-process CUDA12 cublas/cudnn library paths, not system or venv-wide linker changes.
+- **Paid work is resumable.** Persist request IDs before polling, cache raw takes by exact text+recipe, and never pay
+  again because a download or later ASR step failed. `--cached-only --review-only` does not read a key, submit requests
+  or install assets. The 25 October owner authorization is $2 across both games and promos, not a recurring budget.
