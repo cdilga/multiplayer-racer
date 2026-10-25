@@ -158,3 +158,20 @@ can lose Resume. A fixed-viewport orientation-notification probe reproduces the 
 Chromium and WebKit. Keep pressed buttons alive through native click, then perform the pending
 orientation rebuild; test both the single action and completion of the deferred redraw. A Ready
 retry or forced start would hide the lost interaction rather than repair it.
+
+Docker launch and service readiness are separate clocks. GPU9304's STUN container spent 11.17 s
+between create and start, then the fixture killed it 37.6 ms after start because Docker launch had
+consumed the readiness deadline. Await `docker run --detach` first, then attach logs and perform the
+unchanged real STUN binding probe. The delayed-start regression fails the old fixture and passes
+the fix; an empty service log alone does not establish a broken service or unreachable UDP.
+
+New bundled LFS asset families need hydration in the cached web builder **and** source-based
+browser journeys, including native GPU CI. The trailer added `assets/promo/**`, outside the older
+vehicle/brand/audio lists. Without it, the real server returns 200 and `video/mp4` for a 133-byte
+pointer; bytes 4–7 are `ion ` instead of `ftyp`. Keep the trailer's byte-signature/playback assertions,
+hydrate the source objects, and invalidate any archive already built from the pointer bytes.
+
+`preload="none"` does not guarantee zero media requests: Linux WebKit probes an attached video
+source before play. Keep the URL unattached until an explicit viewer gesture, then enable native
+controls and call play. Preserve scraper-visible `og:video` metadata separately. Test the real
+button click in both engines; evaluating `video.play()` directly can miss an unusable affordance.

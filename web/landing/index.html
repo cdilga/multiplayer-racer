@@ -60,11 +60,13 @@
           <h2 id="trailer-heading">Bring your friends.<br />Leave your dignity.</h2>
           <p>One screen. Your phones. A very competitive night in.</p>
         </div>
-        <video id="promo-video" controls playsinline preload="none" width="1280" height="720" poster="../../assets/promo/bring-your-friends.jpg" aria-label="Joystick Jammers promotional trailer" aria-describedby="trailer-note">
-          <source src="../../assets/promo/bring-your-friends.mp4" type="video/mp4" />
-          <track default kind="captions" srclang="en" label="English" src="../../assets/promo/bring-your-friends.vtt?no-inline" />
-          Your browser cannot play this video. <a href="../../assets/promo/bring-your-friends.mp4">Download the trailer</a>.
-        </video>
+        <div class="trailer-player">
+          <video id="promo-video" playsinline preload="none" width="1280" height="720" poster="../../assets/promo/bring-your-friends.jpg" aria-label="Joystick Jammers promotional trailer" aria-describedby="trailer-note">
+            <track default kind="captions" srclang="en" label="English" src="../../assets/promo/bring-your-friends.vtt?no-inline" />
+            Your browser cannot play this video. <a href="../../assets/promo/bring-your-friends.mp4">Download the trailer</a>.
+          </video>
+          <button type="button" class="btn btn-primary display brush trailer-play" id="play-trailer">Play trailer</button>
+        </div>
         <p id="trailer-note">Watch the trailer · sound on for the full experience. Work-in-progress gameplay.</p>
       </section>
       <footer class="foot"><a class="credits-link" id="credits-link" href="credits">Credits and licences</a></footer>

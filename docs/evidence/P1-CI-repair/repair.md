@@ -468,3 +468,61 @@ the containing Linux CI run still must prove the repaired hydration pipeline its
 A second full native Mac Chromium JN3 run passes in **123,356 ms** (152,445 ms total), samples
 **39, 46, 45, 41, 44 ms**. Event-loop diagnostics record startup tasks up to 332 ms, but do not
 reproduce the Linux press spike. No speculative latency patch or relaxed limit is introduced.
+
+### Containing GPU verification at 8284620d
+
+GPU **9320** completes successfully at **2026-10-25T08:53:06Z** on
+`8284620d19658144f06cde94a43d331790b006f1`: **40 passes, zero failures**, with the existing
+unconfigured TURN and duplicate Firefox skips. The required CPU Firefox case remains scheduled.
+Full JN3 passes in **116,698 ms**, Identify samples **9, 9, 9, 10, 2 ms**, retaining the **150 ms**
+limit and the full two-phone idle/results/next-round loop. FL02 passes with all four cars' pre-GO
+travel **0.03 m**, fastest forward speed **0.01 m/s**, and the expected Early/Perfect/Launch results.
+R13's real-phone identity journeys pass in Chromium **28,668 ms** and WebKit **57,502 ms** with
+the revised Docker/STUN fixture. No manual eris GPU tests overlap the batch.
+
+Run: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9320
+
+The local trailer pointer reproduction also exactly matches main 9297: serving the committed LFS
+pointer through the real server returns **200**, `video/mp4`, **133 bytes**, signature `ion `;
+hydrating the same fixture returns **25,715,991 bytes**, signature `ftyp`. This changes only scratch
+fixture files and restarts the real server between the two responses; repository media is untouched.
+
+Main **9319** has passed all three Rust partitions, lint, checks and its new-key web build. The
+image job **19631** fails before any build step: fresh-checkout Git reports a corrupt packed object
+`5457d999a37316710c06d111030df8e29a3c081e` (an existing evidence PNG). Gitea's blob API returns
+**244,535 bytes** with the correct Git SHA-1, byte-identical to the valid local object; other jobs
+check out the same commit successfully. The runner removes the failed temporary container and
+volume. Gitea rejects an image-only rerun while the batch is active (`this workflow run is not
+done`); the one permitted infrastructure retry is deferred until that batch finishes.
+
+### Main 9319: enforce deferred media loading in Linux WebKit
+
+The repaired hydration pipeline passes both Chromium trailer cases, including the real MP4
+signature. WebKit now reaches the next assertion and fails both bases: **one media request before
+Play, expected zero**. A focused eris Linux reproduction of the unchanged committed source
+reproduces both failures (Chromium passes). `preload="none"` is a browser hint, not a guaranteed
+network barrier: WebKit probes an attached source even though autoplay is off.
+
+The poster now has a real **Play trailer** button. No video source URL exists before that
+gesture; the click attaches the bundled URL, invokes playback and enables native controls. The
+original scraper metadata, captions, fallback download, native player and seek support remain.
+The four existing journeys click the actual affordance and retain the zero-request requirement,
+now also asserting an initially empty `currentSrc` and native controls after playback starts.
+
+- Mac pinned Node 26.10.0: all **43 landing tests pass in 23,007 ms**. The four focused trailer
+  cases pass in **7,391 ms**.
+- Eris Linux, real pinned Chromium/WebKit and real `jj-server`: the built candidate passes all
+  **four unchanged behavioural requirements in 6,966 ms**, at production and preview bases.
+  Candidate transfer contains built landing/assets outputs only; the remote code checkout is
+  unmodified, and the harness is supplied through stdin.
+- Local visual review: inspected ten phone/laptop/TV captures before/after resize, plus WebKit
+  poster and decoded-caption playback states. An initial brush-positioning conflict was caught
+  and fixed before publication. Receipt: `docs/evidence/P1-PROMO/self-review.md`.
+- Whole-web typecheck still names only the unrelated, uncommitted renderer `map.ts` errors;
+  the previous clean-compiler probe cannot run because the old JavaScript compiler API is absent
+  from this install. The candidate's exact-source CI build remains required. No typecheck pass
+  is invented and the other session's renderer is not edited.
+
+Main 9319 now has a genuine landing-code failure as well as its disposable image checkout failure;
+the next push contains this reproduced runtime fix. Do not rerun the old unchanged batch just to
+get past WebKit. A public preview and deployed visual review follow the new image.

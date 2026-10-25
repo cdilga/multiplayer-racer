@@ -5,6 +5,7 @@ import './landing.css';
 import '../../controller/src/app/scan.css';
 import { basePath } from '../../shared/src/base';
 import { checkCode, normaliseCode } from './code';
+import trailerUrl from '../../../assets/promo/bring-your-friends.mp4?url';
 
 // All routes sit under the deployment base path B: `/` in production, `/p/<id>/` in a preview (plan §5.1).
 const base = basePath();
@@ -23,6 +24,17 @@ const form = $<HTMLFormElement>('join-form');
 const input = $<HTMLInputElement>('code');
 const error = $<HTMLParagraphElement>('code-error');
 const scan = $<HTMLButtonElement>('scan');
+const trailer = $<HTMLVideoElement>('promo-video');
+const playTrailer = $<HTMLButtonElement>('play-trailer');
+
+// preload="none" is only a hint: Linux WebKit still probes a source URL. Attach it on the
+// viewer's play gesture so visiting the join page never downloads the trailer's media.
+playTrailer.addEventListener('click', () => {
+  if (!trailer.src) trailer.src = trailerUrl;
+  trailer.controls = true;
+  playTrailer.hidden = true;
+  void trailer.play().catch(() => { playTrailer.hidden = false; });
+});
 
 hostLink.href = routes.host;
 $<HTMLAnchorElement>('credits-link').href = `${base}credits`;
