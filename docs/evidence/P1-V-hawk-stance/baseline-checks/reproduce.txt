@@ -1,0 +1,1 @@
+All three current LODs pass; all three published previous LODs reject the known shoulder, nose and lamp defects.

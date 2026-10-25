@@ -29,9 +29,9 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, roofDome: true, wheelSeg: 12, bayBoxes: true, flare: 9, flareLip: true, flareEnds: true, cell: 0.1, lampCell: 0.06, lampOff: 0, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 4, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 4, handles: true, skirts: true, seams: true, corners: true },
+  0: { arch: 7, nose: 2, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, roofDome: true, wheelSeg: 12, bayBoxes: true, flare: 9, flareLip: true, flareEnds: true, cell: 0.1, lampCell: 0.06, lampOff: 0, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 3, bulge: true, windows: true, mirrors: 'stalk', wing: 'posts', tips: true, exhaust: 'rings', diffFins: 3, handles: true, skirts: true, seams: true, corners: true },
   1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: false, wheelSeg: 8, bayBoxes: false, flare: 5, flareLip: false, flareEnds: false, cell: 0.35, lampCell: 0.2, lampOff: 0.02, lamps: 'full', intakeBars: 0, slots: true, splitter: true, vents: 0, bulge: true, windows: true, mirrors: 'box', wing: 'posts', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, bayBoxes: false, flare: 0, flareLip: false, flareEnds: false, cell: 0.35, lampCell: 0.25, lampOff: 0.025, lamps: 'flat', intakeBars: 0, slots: false, splitter: false, vents: -1, bulge: false, windows: 'flat', mirrors: 'wedge', wing: 'plate', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, bayBoxes: false, flare: 3, flareLip: false, flareEnds: false, cell: 0.35, lampCell: 0.25, lampOff: 0.025, lamps: 'flat', intakeBars: 0, slots: false, splitter: false, vents: -1, bulge: false, windows: 'flat', mirrors: 'wedge', wing: 'plate', tips: false, exhaust: 'flat', diffFins: 0, handles: false, skirts: false, seams: false, corners: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -143,6 +143,8 @@ function makeSoups(P, lod) {
   };
   // Spend the wheel savings on the visible section: a tucked sill, full flank, rolled shoulder and crowned deck.
   // Same loft construction as the AU Hawk; coarse tiers retain the section's endpoints.
+  // Curve the actual skin before projecting lamps/graphics, so decal fragments share its exact planes.
+  const noseWarp = (p) => [p[0],p[1],p[2] - P.section.noseRound * Math.max(0,Math.min(1,(p[2]-(P.zNose-.55))/.55)) * (p[0]/lerpCurve(P.hw,P.zNose))**2];
   const ring0 = (z, s) => {
     const yb = lerpCurve(P.yBot, z), ysh = lerpCurve(P.ySh, z), ycr = lerpCurve(P.yCr, z), hw = lerpCurve(P.hw, z);
     const ay = archY(z), lift = ay > 0 ? Math.max(yb, ay) : yb;
@@ -153,7 +155,13 @@ function makeSoups(P, lod) {
     pts.push([s * (hw - P.section.upperTuck), y3, z], [s * (hw - P.shoulderIn), ysh, z]);
     if (T.dome) pts.push([s * (hw - P.shoulderIn) * P.section.deckX, ycr - (ycr - ysh) * P.section.deckDrop, z]);
     pts.push([0, ycr, z]);
-    return pts;
+    // An arch lifts the bottom vertices, but must not lift the section's widest point with them.
+    // Evaluate the side taper at each clipped height; otherwise the arch crown becomes an upright bulge.
+    for (let i=1;i<pts.length-1;i++) {
+      const roll=Math.max(0,Math.min(1,(pts[i][1]-P.section.rollStart)/(ysh-P.section.rollStart)));
+      pts[i][0]=s*Math.min(Math.abs(pts[i][0]),hw-P.shoulderIn*roll);
+    }
+    return pts.map(noseWarp);
   };
   const NR = 6 + (T.belly ? 1 : 0) + (T.dome ? 1 : 0), DECK = NR - 2 - (T.dome ? 1 : 0);
   // the ring as the mesh draws it at any z: interpolated between the two stations either side (so a coarse LOD's decals
@@ -206,7 +214,7 @@ function makeSoups(P, lod) {
       for (let i = 0; i < xs.length - 1; i++) for (let j = 0; j < ys.length - 1; j++) {
         const pc = clip(clip(clip(clip(outline, xs[i], 1), xs[i + 1], -1), ys[j], 1, 1), ys[j + 1], -1, 1);
         if (pc.length < 3) continue;
-        const pts = pc.map(([x, y]) => { const w = widthAt(y), fade = w > 1e-6 ? Math.max(0, 1 - (x / w) ** 2) : 0; return [x, y, z + sign * lerpCurve(profile, y) * fade]; });
+        const pts = pc.map(([x, y]) => { const w = widthAt(y), fade = w > 1e-6 ? Math.max(0, 1 - (x / w) ** 2) : 0; return noseWarp([x, y, z + sign * lerpCurve(profile, y) * fade]); });
         // Triangulate once: decoration must use the identical planes, including on the rear cap.
         for (let k = 1; k < pts.length - 1; k++) { const tri = [pts[0], pts[k], pts[k + 1]]; S(id).face(tri, sw, [0, 0, sign]); hull.push(tri); }
       }
@@ -259,15 +267,13 @@ function makeSoups(P, lod) {
     // At distance these are deliberately flat fascia graphics. One continuous polygon avoids grid holes.
     if (lod > 0 && sw !== 'head') {
       const pc = sw === 'stripe' ? clipPoly(poly, capPoly(zEnd).map(([x,y]) => [x,y])) : poly;
-      if (pc.length >= 3) so.face(pc.map(([x,y]) => [x,y,zEnd+dir*off]), sw, [0,0,dir]);
+      const pieces = dir > 0 ? [clip(pc,0,-1),clip(pc,0,1)] : [pc];
+      for (const piece of pieces) if (piece.length >= 3) so.face(piece.map(([x,y]) => [x,y,zEnd+dir*off - (dir>0 ? P.section.noseRound*.8*Math.abs(x)/lerpCurve(P.hw,P.zNose) : 0)]), sw, [0,0,dir]);
       return;
     }
     // Coarse end caps are one plane. Clip once to their outline rather than paying for their fan's internal edges.
     // This keeps lamps and stripes continuous without a grid bridging onto a different quarter-panel plane.
-    if (lod > 0) {
-      const pc = clipPoly(poly, capPoly(zEnd).map(([x,y]) => [x,y]));
-      if (pc.length >= 3) so.face(pc.map(([x,y]) => [x,y,zEnd+dir*off]), sw, [0,0,dir]);
-    }
+
     for (const tri of hull) {
       if (!inEnd(tri, dir) || (lod > 0 && tri.every((p) => Math.abs(p[2]-zEnd)<1e-8))) continue;
       const det = area(...tri); if (Math.abs(det) < 1e-10) continue;
@@ -350,7 +356,7 @@ function makeSoups(P, lod) {
     for (const e of [-1, 1]) S('core').face([[cx - sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy - sy / 2, cz + e * sz / 2], [cx + sx / 2, cy + sy / 2, cz + e * sz / 2], [cx - sx / 2, cy + sy / 2, cz + e * sz / 2]], 'bay', [0, 0, e]); };
   { const hwA = lerpCurve(P.hw, zA) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zA)) / 2 - 0.02, zA + 0.03, hwA * 2, lerpCurve(P.ySh, zA) - 0.36, 0.06); } // firewall
   { const hwC = lerpCurve(P.hw, zC) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zC)) / 2 - 0.02, zC - 0.03, hwC * 2, lerpCurve(P.ySh, zC) - 0.36, 0.06); } // rear bulkhead
-  for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) - 0.07); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
+  for (const s of [1, -1]) { const x = s * (Math.min(Math.abs(skinX(zA,1.02,1)),Math.abs(skinX(zC,1.05,1)),Math.abs(skinX(0,1.05,1))) - 0.04); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
 
   // ── flared wheel arches: a band round each arch cut, standing proud of the side by P.flare.out at its lip (always clear
   // of the tyre), its outer edge flush with the body P.flare.w further out (front arch: part front; rear arch: part back) ──
@@ -362,7 +368,7 @@ function makeSoups(P, lod) {
       // the outer edge stops at the part's cut line, so the front (back) part ends at its hinge at every LOD
       const zo0 = zc + (P.archR + Fw) * Math.cos(th), zo = id === 'front' ? Math.max(zo0, zA) : Math.min(zo0, zC), yo = P.archBase + (ht + Fw) * Math.sin(th);
       const x = skinX(z, Math.max(y, lerpCurve(P.yBot, z) + P.skirt), s);
-      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo, P.track + P.wheelW / 2 + 0.02), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
+      E.push([x, y, z]); Ep.push([s * Math.max(Math.abs(x) + Fo * (1 - .65 * Math.sin(th)), P.track + P.wheelW / 2 + 0.02 - .09 * Math.sin(th)), y, z]); Ei.push([x - s * 0.05, y, z]); O.push([skinX(zo, yo, s) + s * 0.004, yo, zo]);
     }
     for (let i = 0; i < n - 1; i++) {
       const th = Math.PI * (i + 0.5) / (n - 1);
@@ -401,7 +407,7 @@ function makeSoups(P, lod) {
   for (const s of [1, -1]) decal(F, s > 0 ? Fr.stripe : mirrorX(Fr.stripe), 'stripe', 0.004, 1);
   // the black upper grille: a long hexagon between the lamps, framed in trim
   decal(F, Fr.grille, 'trim', 0.006, 1);
-  decal(F, Fr.grilleIn, 'grille', 0.009, 1);
+  if (lod < 2) decal(F, Fr.grilleIn, 'grille', 0.009, 1);
   // the big lower intake, its mesh drawn as horizontal bars at LOD0
   decal(F, Fr.intake, 'grille', 0.006, 1);
   for (let i = 0; i < T.intakeBars; i++) { const [y0, y1] = [Fr.intake[3][1], Fr.intake[0][1]], y = y0 + (y1 - y0) * (i + 1) / (T.intakeBars + 1), w = Math.abs(Fr.intake[2][0]) - 0.03;
@@ -414,7 +420,7 @@ function makeSoups(P, lod) {
   // the bumper corners: vertical LED slots in black surrounds
   if (T.slots) both((s, m) => { decal(F, m(Fr.slotBox), 'grille', 0.006, 1); decal(F, m(Fr.slot), 'led', 0.01, 1); });
   // the splitter: a wide black plate under the nose
-  if (T.splitter) { const hwN = lerpCurve(P.hw, P.zNose); F.box(0, ybN - 0.01, P.zNose - 0.14, (hwN + Fr.splitterOut) * 2, 0.04, 0.36, 'trim'); }
+  if (T.splitter) { const hwN = lerpCurve(P.hw, P.zNose); F.box(0, ybN - 0.01, P.zNose - 0.22, (hwN + Fr.splitterOut) * 2, 0.04, 0.30, 'trim'); }
 
   // ── side skirts (core) ──
   if (T.skirts) for (const s of [1, -1]) { const za = P.zFA - P.archR - P.flare.w, zb = P.zRA + P.archR + P.flare.w, x = s * (lerpCurve(P.hw, 0) + 0.015), y0 = lerpCurve(P.yBot, 0) + 0.02;

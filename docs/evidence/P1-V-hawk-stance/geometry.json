@@ -1,0 +1,74 @@
+[
+  {
+    "lod": 0,
+    "tris": 2702,
+    "budget": 2800,
+    "wheels": 176,
+    "body": 2526,
+    "parts": {
+      "core": 464,
+      "front": 918,
+      "back": 1040,
+      "door_FL": 34,
+      "door_FR": 34,
+      "door_RL": 18,
+      "door_RR": 18,
+      "wheel_FL": 44,
+      "wheel_FR": 44,
+      "wheel_RL": 44,
+      "wheel_RR": 44
+    },
+    "sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837",
+    "sealedWheels": true,
+    "finiteNondegenerate": true,
+    "materials": 1
+  },
+  {
+    "lod": 1,
+    "tris": 879,
+    "budget": 900,
+    "wheels": 112,
+    "body": 767,
+    "parts": {
+      "core": 236,
+      "front": 254,
+      "back": 229,
+      "door_FL": 18,
+      "door_FR": 18,
+      "door_RL": 6,
+      "door_RR": 6,
+      "wheel_FL": 28,
+      "wheel_FR": 28,
+      "wheel_RL": 28,
+      "wheel_RR": 28
+    },
+    "sha256": "00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851",
+    "sealedWheels": true,
+    "finiteNondegenerate": true,
+    "materials": 1
+  },
+  {
+    "lod": 2,
+    "tris": 597,
+    "budget": 600,
+    "wheels": 112,
+    "body": 485,
+    "parts": {
+      "core": 164,
+      "front": 154,
+      "back": 143,
+      "door_FL": 6,
+      "door_FR": 6,
+      "door_RL": 6,
+      "door_RR": 6,
+      "wheel_FL": 28,
+      "wheel_FR": 28,
+      "wheel_RL": 28,
+      "wheel_RR": 28
+    },
+    "sha256": "40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb",
+    "sealedWheels": true,
+    "finiteNondegenerate": true,
+    "materials": 1
+  }
+]

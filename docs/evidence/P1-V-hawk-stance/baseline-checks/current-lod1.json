@@ -1,0 +1,324 @@
+{
+  "car": "hawk-dash",
+  "lod": 1,
+  "sheet": "lod1",
+  "reference": "art/vehicles/hawk-dash/refs/lod-plus-1.png",
+  "sourceSha256": "36edf406394960c75adb1bf80160e11d89887cfa7725f3226d1888efd42f9dca",
+  "paramsSha256": "e5d2fad5cc041da6c2d99652acac6fc20c970cf024b7898c8628fc0be0a85790",
+  "notes": [
+    "All contour row coordinates run from roof=0 to ground=1. Errors are full width / reference height; tolerance .025 is 7.5 px on the 299 px reference.",
+    "Width-delta checks isolate where the body flares instead of rewarding a globally wider rectangle. Base bands stay above the ignored ground-shadow band (.875).",
+    "Feature polygons were annotated on lod1_front.crop.png (394x299) and lod1_rear.crop.png (389x299). LOD2 is compared to these stable identity cues with a looser faceting tolerance.",
+    "These are necessary local constraints, not a claim of photographic or complete likeness. Hidden surfaces, shading, side graphics and unannotated curves still need visual review."
+  ],
+  "pass": true,
+  "checks": [
+    {
+      "name": "camera.projection",
+      "pass": true,
+      "reference": "perspective",
+      "model": "perspective"
+    },
+    {
+      "name": "camera.tilt.front",
+      "pass": true,
+      "reference": 0,
+      "model": 0
+    },
+    {
+      "name": "camera.tilt.rear",
+      "pass": true,
+      "reference": 0,
+      "model": 0
+    },
+    {
+      "name": "camera.camD.front",
+      "pass": true,
+      "reference": 50,
+      "model": 50
+    },
+    {
+      "name": "camera.camD.rear",
+      "pass": true,
+      "reference": 50,
+      "model": 50
+    },
+    {
+      "name": "camera.camD.side",
+      "pass": true,
+      "reference": 10,
+      "model": 10
+    },
+    {
+      "name": "camera.camD.top",
+      "pass": true,
+      "reference": 10,
+      "model": 10
+    },
+    {
+      "name": "camera.hero.az",
+      "pass": true,
+      "reference": 52,
+      "model": 52
+    },
+    {
+      "name": "camera.hero.elev",
+      "pass": true,
+      "reference": 0,
+      "model": 0
+    },
+    {
+      "name": "camera.hero.dist",
+      "pass": true,
+      "reference": 11,
+      "model": 11
+    },
+    {
+      "name": "camera.hero.fov",
+      "pass": true,
+      "reference": 26,
+      "model": 26
+    },
+    {
+      "name": "camera.hero.targetY",
+      "pass": true,
+      "reference": 0.78,
+      "model": 0.78
+    },
+    {
+      "name": "camera.heroRear.az",
+      "pass": true,
+      "reference": 140,
+      "model": 140
+    },
+    {
+      "name": "camera.heroRear.elev",
+      "pass": true,
+      "reference": 0,
+      "model": 0
+    },
+    {
+      "name": "camera.heroRear.dist",
+      "pass": true,
+      "reference": 11,
+      "model": 11
+    },
+    {
+      "name": "camera.heroRear.fov",
+      "pass": true,
+      "reference": 26,
+      "model": 26
+    },
+    {
+      "name": "camera.heroRear.targetY",
+      "pass": true,
+      "reference": 0.78,
+      "model": 0.78
+    },
+    {
+      "name": "canonical reference hash",
+      "pass": true,
+      "reference": "409e7e0edbca72dd5784c116e1fadb6381a4f09cd9f87b8d0b8f1958942541aa",
+      "model": "409e7e0edbca72dd5784c116e1fadb6381a4f09cd9f87b8d0b8f1958942541aa"
+    },
+    {
+      "name": "front shoulder widens at the reference height",
+      "kind": "delta",
+      "rows": [
+        0.4,
+        0.5
+      ],
+      "error": 0.02006688963210701,
+      "limit": 0.045,
+      "pass": true,
+      "reference": [
+        1.1672240802675586,
+        1.2876254180602007
+      ],
+      "model": [
+        1.1839464882943145,
+        1.2842809364548495
+      ]
+    },
+    {
+      "name": "front lower base retains its width",
+      "kind": "delta",
+      "rows": [
+        0.65,
+        0.85
+      ],
+      "error": 0.006688963210702337,
+      "limit": 0.018,
+      "pass": true,
+      "reference": [
+        1.3110367892976589,
+        1.3177257525083612
+      ],
+      "model": [
+        1.2909698996655519,
+        1.2909698996655519
+      ]
+    },
+    {
+      "name": "front body width bands",
+      "kind": "width",
+      "rows": [
+        0.45,
+        0.55,
+        0.7,
+        0.83
+      ],
+      "error": 0.026755852842809347,
+      "limit": 0.045,
+      "pass": true,
+      "reference": [
+        1.2608695652173914,
+        1.2876254180602007,
+        1.31438127090301,
+        1.3177257525083612
+      ],
+      "model": [
+        1.234113712374582,
+        1.2842809364548495,
+        1.2909698996655519,
+        1.3110367892976589
+      ]
+    },
+    {
+      "name": "rear shoulder widens at the reference height",
+      "kind": "delta",
+      "rows": [
+        0.4,
+        0.5
+      ],
+      "error": 0.016722408026756064,
+      "limit": 0.04,
+      "pass": true,
+      "reference": [
+        1.1672240802675586,
+        1.2709030100334449
+      ],
+      "model": [
+        1.1538461538461537,
+        1.274247491638796
+      ]
+    },
+    {
+      "name": "rear lower base retains its width",
+      "kind": "delta",
+      "rows": [
+        0.65,
+        0.85
+      ],
+      "error": 0.013377926421404673,
+      "limit": 0.018,
+      "pass": true,
+      "reference": [
+        1.2876254180602007,
+        1.3010033444816054
+      ],
+      "model": [
+        1.2809364548494984,
+        1.2809364548494984
+      ]
+    },
+    {
+      "name": "rear body width bands",
+      "kind": "width",
+      "rows": [
+        0.45,
+        0.55,
+        0.7,
+        0.83
+      ],
+      "error": 0.01672240802675584,
+      "limit": 0.045,
+      "pass": true,
+      "reference": [
+        1.2173913043478262,
+        1.274247491638796,
+        1.294314381270903,
+        1.3010033444816054
+      ],
+      "model": [
+        1.2006688963210703,
+        1.2809364548494984,
+        1.2809364548494984,
+        1.3010033444816054
+      ]
+    },
+    {
+      "name": "rounded nose tapers towards its centre",
+      "kind": "width",
+      "rows": [
+        0.9,
+        0.94,
+        0.98
+      ],
+      "error": 0.017073170731707332,
+      "limit": 0.035,
+      "pass": true,
+      "reference": [
+        0.3804878048780488,
+        0.35365853658536583,
+        0.2548780487804878
+      ],
+      "model": [
+        0.3975609756097561,
+        0.3426829268292683,
+        0.2682926829268293
+      ]
+    },
+    {
+      "name": "nose curvature continues to the tip",
+      "kind": "delta",
+      "rows": [
+        0.9,
+        0.98
+      ],
+      "error": 0.003658536585365857,
+      "limit": 0.05,
+      "pass": true,
+      "reference": [
+        0.3804878048780488,
+        0.2548780487804878
+      ],
+      "model": [
+        0.3975609756097561,
+        0.2682926829268293
+      ]
+    },
+    {
+      "name": "swept front lamp envelopes",
+      "kind": "feature-iou",
+      "iou": 0.7665198237885462,
+      "limit": 0.4,
+      "pass": true,
+      "envelope": false
+    },
+    {
+      "name": "angled rear lamp envelopes",
+      "kind": "feature-iou",
+      "iou": 0.8983265720081136,
+      "limit": 0.4,
+      "pass": true,
+      "envelope": false
+    },
+    {
+      "name": "rear exhaust surround envelope",
+      "kind": "feature-iou",
+      "iou": 0.8072492330197688,
+      "limit": 0.45,
+      "pass": true,
+      "envelope": false
+    },
+    {
+      "name": "four exhaust outlet positions and size",
+      "kind": "feature-iou",
+      "iou": 0.5909090909090909,
+      "limit": 0.26,
+      "pass": true,
+      "envelope": true
+    }
+  ]
+}

@@ -1,0 +1,447 @@
+{
+  "what": "Reference-derived local likeness gates for P1-V-hawk-curves. Expected geometry comes from unchanged sheet pixels, not model parameters. Run fit/capture then fit/likeness; see tools/vehicles/fit/likeness.md.",
+  "reference": "art/vehicles/hawk-dash/refs/lod-plus-1.png",
+  "referenceSha256": "409e7e0edbca72dd5784c116e1fadb6381a4f09cd9f87b8d0b8f1958942541aa",
+  "notes": [
+    "All contour row coordinates run from roof=0 to ground=1. Errors are full width / reference height; tolerance .025 is 7.5 px on the 299 px reference.",
+    "Width-delta checks isolate where the body flares instead of rewarding a globally wider rectangle. Base bands stay above the ignored ground-shadow band (.875).",
+    "Feature polygons were annotated on lod1_front.crop.png (394x299) and lod1_rear.crop.png (389x299). LOD2 is compared to these stable identity cues with a looser faceting tolerance.",
+    "These are necessary local constraints, not a claim of photographic or complete likeness. Hidden surfaces, shading, side graphics and unannotated curves still need visual review."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": {
+      "front": 50,
+      "rear": 50,
+      "side": 10,
+      "top": 10
+    },
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "front shoulder widens at the reference height",
+        "kind": "delta",
+        "rows": [
+          0.4,
+          0.5
+        ],
+        "tolerance": 0.045
+      },
+      {
+        "name": "front lower base retains its width",
+        "kind": "delta",
+        "rows": [
+          0.65,
+          0.85
+        ],
+        "tolerance": 0.018
+      },
+      {
+        "name": "front body width bands",
+        "rows": [
+          0.45,
+          0.55,
+          0.7,
+          0.83
+        ],
+        "tolerance": 0.045
+      }
+    ],
+    "rear": [
+      {
+        "name": "rear shoulder widens at the reference height",
+        "kind": "delta",
+        "rows": [
+          0.4,
+          0.5
+        ],
+        "tolerance": 0.04
+      },
+      {
+        "name": "rear lower base retains its width",
+        "kind": "delta",
+        "rows": [
+          0.65,
+          0.85
+        ],
+        "tolerance": 0.018
+      },
+      {
+        "name": "rear body width bands",
+        "rows": [
+          0.45,
+          0.55,
+          0.7,
+          0.83
+        ],
+        "tolerance": 0.045
+      }
+    ],
+    "top": [
+      {
+        "name": "rounded nose tapers towards its centre",
+        "rows": [
+          0.9,
+          0.94,
+          0.98
+        ],
+        "tolerance": 0.035
+      },
+      {
+        "name": "nose curvature continues to the tip",
+        "kind": "delta",
+        "rows": [
+          0.9,
+          0.98
+        ],
+        "tolerance": [
+          0.035,
+          0.05,
+          0.055
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "swept front lamp envelopes",
+      "view": "front",
+      "part": "front",
+      "uvs": [
+        [
+          0.8125,
+          0.8125
+        ]
+      ],
+      "size": [
+        394,
+        299
+      ],
+      "polygons": [
+        [
+          [
+            25,
+            141
+          ],
+          [
+            100,
+            155
+          ],
+          [
+            84,
+            170
+          ],
+          [
+            37,
+            167
+          ]
+        ],
+        [
+          [
+            357,
+            167
+          ],
+          [
+            310,
+            170
+          ],
+          [
+            294,
+            155
+          ],
+          [
+            369,
+            141
+          ]
+        ]
+      ],
+      "minIou": [
+        0.5,
+        0.4,
+        0.3
+      ]
+    },
+    {
+      "name": "angled rear lamp envelopes",
+      "view": "rear",
+      "part": "back",
+      "uvs": [
+        [
+          0.9625,
+          0.8125
+        ],
+        [
+          0.8125,
+          0.4375
+        ]
+      ],
+      "size": [
+        389,
+        299
+      ],
+      "polygons": [
+        [
+          [
+            23,
+            111
+          ],
+          [
+            43,
+            102
+          ],
+          [
+            99,
+            103
+          ],
+          [
+            120,
+            112
+          ],
+          [
+            89,
+            134
+          ],
+          [
+            19,
+            133
+          ]
+        ],
+        [
+          [
+            370,
+            133
+          ],
+          [
+            300,
+            134
+          ],
+          [
+            269,
+            112
+          ],
+          [
+            290,
+            103
+          ],
+          [
+            346,
+            102
+          ],
+          [
+            366,
+            111
+          ]
+        ]
+      ],
+      "minIou": [
+        0.5,
+        0.4,
+        0.3
+      ]
+    },
+    {
+      "name": "rear exhaust surround envelope",
+      "view": "rear",
+      "part": "back",
+      "uvs": [
+        [
+          0.7374999999999999,
+          0.5625
+        ]
+      ],
+      "endFacing": true,
+      "endDepth": 0.4,
+      "size": [
+        389,
+        299
+      ],
+      "polygons": [
+        [
+          [
+            31,
+            265
+          ],
+          [
+            40,
+            237
+          ],
+          [
+            54,
+            219
+          ],
+          [
+            334,
+            219
+          ],
+          [
+            349,
+            237
+          ],
+          [
+            358,
+            265
+          ]
+        ]
+      ],
+      "minIou": [
+        0.5,
+        0.45,
+        0.4
+      ]
+    },
+    {
+      "name": "four exhaust outlet positions and size",
+      "view": "rear",
+      "part": "back",
+      "uvs": [
+        [
+          0.8875,
+          0.5625
+        ]
+      ],
+      "size": [
+        389,
+        299
+      ],
+      "polygons": [
+        [
+          [
+            84,
+            246
+          ],
+          [
+            78.5,
+            255.52627944162882
+          ],
+          [
+            67.5,
+            255.52627944162882
+          ],
+          [
+            62,
+            246
+          ],
+          [
+            67.5,
+            236.47372055837118
+          ],
+          [
+            78.5,
+            236.47372055837118
+          ]
+        ],
+        [
+          [
+            110,
+            246
+          ],
+          [
+            104.5,
+            255.52627944162882
+          ],
+          [
+            93.5,
+            255.52627944162882
+          ],
+          [
+            88,
+            246
+          ],
+          [
+            93.5,
+            236.47372055837118
+          ],
+          [
+            104.5,
+            236.47372055837118
+          ]
+        ],
+        [
+          [
+            300,
+            246
+          ],
+          [
+            294.5,
+            255.52627944162882
+          ],
+          [
+            283.5,
+            255.52627944162882
+          ],
+          [
+            278,
+            246
+          ],
+          [
+            283.5,
+            236.47372055837118
+          ],
+          [
+            294.5,
+            236.47372055837118
+          ]
+        ],
+        [
+          [
+            327,
+            246
+          ],
+          [
+            321.5,
+            255.52627944162882
+          ],
+          [
+            310.5,
+            255.52627944162882
+          ],
+          [
+            305,
+            246
+          ],
+          [
+            310.5,
+            236.47372055837118
+          ],
+          [
+            321.5,
+            236.47372055837118
+          ]
+        ]
+      ],
+      "minIou": [
+        0.32,
+        0.26,
+        0.2
+      ],
+      "envelope": true
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "03ad39a497db9bf4193f5d3bdc27c524a667b0c0dca72afb1ed44b10ef23fc0b",
+    "lod1_rear.mask.png": "fa5c8ad58e1ea691d37bab1ce97700c188c273318c46f5514ce057cb967bdf01",
+    "lod1_top.mask.png": "47d4bdcbfe22040cacc0c32ab2f81f805c6ac4429e2ea265c1da40723a70a178",
+    "lowest_front.mask.png": "369a468150937ef23309e76a472e6ee8c878c51074cdfcbb78c12364a708b99f",
+    "lowest_rear.mask.png": "a629fc8bacf2f2d3659b27e2302e8e0f1668d9d9ac2f012f71cec2dcb0a57f3c",
+    "lowest_top.mask.png": "cefac8a4dec928c092596e3e358a692f94aa8f7d41c7dd513217b9cc60b9f64e"
+  }
+}

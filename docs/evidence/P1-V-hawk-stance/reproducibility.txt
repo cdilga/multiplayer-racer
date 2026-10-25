@@ -1,0 +1,10 @@
+hawk-dash.lod0.glb: 2702 tris (budget 2800; optimiser flipped 63, dropped 41 unseen) {"core":464,"front":918,"back":1040,"door_FL":34,"door_FR":34,"door_RL":18,"door_RR":18,"wheel_FL":44,"wheel_FR":44,"wheel_RL":44,"wheel_RR":44,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+hawk-dash.lod1.glb: 879 tris (budget 900; optimiser flipped 2, dropped 0 unseen) {"core":236,"front":254,"back":229,"door_FL":18,"door_FR":18,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+hawk-dash.lod2.glb: 597 tris (budget 600; optimiser flipped 0, dropped 0 unseen) {"core":164,"front":154,"back":143,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+same    hawk-dash.atlas.png fb64b3a3988382d2c962d98918de1b1347e897370efe7f46edd0915316cd8b86
+same    hawk-dash.emissive.png d84445d390996ad13c5d03da35e2c2e4a8833ff47267dea4cb2d73857718e2b3
+same    hawk-dash.lod0.glb 68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837
+same    hawk-dash.lod1.glb 00364aafbdc7739dd11fe7bc33076a6b15070656022d5c58bf99c5ee2419e851
+same    hawk-dash.lod2.glb 40a2306230fc9242382105e7219a57d14ab3eaf3f2d38fe1687bb8891acdabcb
+same    hawk-dash.asset.json 19b1a9864777a5d30d6dc5c34ec457ca440d0ce45656d823f6bcdce936b4b963
+bake --check: the committed files are exactly what the model script bakes

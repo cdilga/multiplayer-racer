@@ -84,9 +84,10 @@ function extent(cam, view) {
 function renderSilhouette(view, pxPerM) {
   const V = VIEWS[view], dir = new THREE.Vector3(...V.dir).normalize(), box = new THREE.Box3().setFromObject(model.group);
   const ctr = box.getCenter(new THREE.Vector3()), R = box.getSize(new THREE.Vector3()).length() / 2;
+  const distance = typeof CAM_D === 'object' ? (CAM_D[view] ?? 10) : CAM_D;
   const cam = persp;
-  cam.up.set(...V.up); cam.position.copy(ctr).addScaledVector(dir, CAM_D); cam.lookAt(ctr);
-  cam.aspect = 1; cam.fov = (2 * Math.atan((R * 1.15) / (CAM_D - R)) * 180) / Math.PI; cam.near = 0.05; cam.far = CAM_D + 2 * R;
+  cam.up.set(...V.up); cam.position.copy(ctr).addScaledVector(dir, distance); cam.lookAt(ctr);
+  cam.aspect = 1; cam.fov = (2 * Math.atan((R * 1.15) / (distance - R)) * 180) / Math.PI; cam.near = Math.max(0.05, distance - 2 * R); cam.far = distance + 2 * R;
   cam.updateProjectionMatrix(); cam.updateMatrixWorld();
   let y0 = 1, y1 = -1; const v = new THREE.Vector3();
   model.group.traverse((o) => {
@@ -148,19 +149,28 @@ async function evaluate(sheet = 'lod1', { images = false } = {}) {
   return out;
 }
 
-/** A shaded render: a named view (orthographic, fitted) or a free perspective camera { az, elev, dist, fov }. */
-function shaded(view, w, h, { fov = 22, elev = 12, az = 40, dist = 11 } = {}) {
+/** Named views share the silhouette perspective when the car opts in; legacy sheets retain ortho. Free views accept { az, elev, dist, fov, targetY }. */
+function shaded(view, w, h, { fov = 22, elev = 12, az = 40, dist = 11, targetY = null } = {}) {
   renderer.setSize(w, h, false);
-  if (VIEWS[view]) {
+  if (VIEWS[view] && SHEETS.projection === 'perspective') {
+    // Render shaded pixels through exactly the mask camera, then uniformly frame its silhouette.
+    const size = renderSilhouette(view, 250), b = bbox(readMask(size.w, size.h), size.w, size.h);
+    ground.visible = false; renderer.render(scene, persp); ground.visible = true;
+    const out = document.createElement('canvas'); out.width = w; out.height = h;
+    const ctx = out.getContext('2d'), scale = Math.min((w-20)/b.w, (h-20)/b.h);
+    ctx.fillStyle = '#c9c9cb'; ctx.fillRect(0,0,w,h);
+    ctx.drawImage(canvas,b.x,b.y,b.w,b.h,(w-b.w*scale)/2,(h-b.h*scale)/2,b.w*scale,b.h*scale);
+    return out.toDataURL('image/png');
+  } else if (VIEWS[view]) {
     const e = extent(ortho, view), ppm = Math.min((w - 20) / (e.x1 - e.x0), (h - 20) / (e.y1 - e.y0));
     const cx = (e.x0 + e.x1) / 2, cy = (e.y0 + e.y1) / 2;
     Object.assign(ortho, { left: cx - w / 2 / ppm, right: cx + w / 2 / ppm, top: cy + h / 2 / ppm, bottom: cy - h / 2 / ppm, near: 0.1, far: 60 });
     ortho.updateProjectionMatrix(); renderer.render(scene, ortho);
   } else {
     const a = (az * Math.PI) / 180, el = (elev * Math.PI) / 180;
-    persp.fov = fov; persp.aspect = w / h;
-    persp.position.set(Math.sin(a) * Math.cos(el) * dist, 0.7 + Math.sin(el) * dist, Math.cos(a) * Math.cos(el) * dist);
-    persp.up.set(0, 1, 0); persp.lookAt(0, 0.62, 0); persp.updateProjectionMatrix(); renderer.render(scene, persp);
+    persp.near = .1; persp.far = 100; persp.fov = fov; persp.aspect = w / h;
+    persp.position.set(Math.sin(a) * Math.cos(el) * dist, (targetY ?? 0.7) + Math.sin(el) * dist, Math.cos(a) * Math.cos(el) * dist);
+    persp.up.set(0, 1, 0); persp.lookAt(0, targetY ?? 0.62, 0); persp.updateProjectionMatrix(); renderer.render(scene, persp);
   }
   return canvas.toDataURL('image/png');
 }
@@ -168,6 +178,7 @@ function shaded(view, w, h, { fov = 22, elev = 12, az = 40, dist = 11 } = {}) {
 rebuild();
 window.__fit = {
   get P() { return P; }, LODS,
+  get cameras() { return { camD: CAM_D, projection: SHEETS.projection ?? 'orthographic-shaded/perspective-mask', tilt: { front:Math.asin(VIEWS.front.dir[1]),rear:Math.asin(VIEWS.rear.dir[1]) }, hero:SHEETS.hero,heroRear:SHEETS.heroRear }; },
   setP(p) { P = structuredClone(p); return rebuild(); },
   setLod(l) { lod = l; return rebuild(); },
   setCamD(d) { CAM_D = d; },

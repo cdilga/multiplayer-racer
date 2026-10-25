@@ -1,0 +1,14 @@
+FAIL /poc/vehicles/review.html?v=hawk-dash 375x667 -> docs/evidence/P1-V-hawk-stance/local-page/poc_vehicles_review_html_v_hawk_dash_375x667.png
+     cut off by the screen edge: "Feedback: Comment on thi"
+     after resize: cut off by the screen edge: "Feedback: Comment on thi"
+FAIL /poc/vehicles/review.html?v=hawk-dash 412x915 -> docs/evidence/P1-V-hawk-stance/local-page/poc_vehicles_review_html_v_hawk_dash_412x915.png
+     cut off by the screen edge: "The owner's reference sh"
+     after resize: cut off by the screen edge: "The owner's reference sh"
+FAIL /poc/vehicles/review.html?v=hawk-dash 915x412 -> docs/evidence/P1-V-hawk-stance/local-page/poc_vehicles_review_html_v_hawk_dash_915x412.png
+     cut off by the screen edge: "Feedback: Comment on thi", "Feedback:"
+     after resize: cut off by the screen edge: "Feedback: Comment on thi", "Feedback:"
+ok   /poc/vehicles/review.html?v=hawk-dash 1366x768 -> docs/evidence/P1-V-hawk-stance/local-page/poc_vehicles_review_html_v_hawk_dash_1366x768.png
+FAIL /poc/vehicles/review.html?v=hawk-dash 1920x1080 -> docs/evidence/P1-V-hawk-stance/local-page/poc_vehicles_review_html_v_hawk_dash_1920x1080.png
+     cut off by the screen edge: ""
+     after resize: cut off by the screen edge: ""
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

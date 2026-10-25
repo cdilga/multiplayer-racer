@@ -12,7 +12,7 @@
         "br-bwju.3",
         "br-bwju"
       ],
-      "summary": "Hawk Dash, second likeness pass: the front and rear now have sloped shoulders and tucked door sections, broader framed headlamps, angled LED recesses and a lower intake that widens towards the bottom. The rear has framed red/grey lamps, a boot seam, a wider wing, and a six-sided exhaust recess with painted lip, black bevel and larger hexagonal outlets. The low-cost wheels remain. Triangle totals are 2697 / 837 / 553, within the existing 2800 / 900 / 600 budgets. Collision hulls and handling are retained. The enlarged front/rear comparisons lead each sheet below; the owner judges the likeness.",
+      "summary": "Third likeness pass: wider lower stance, body widening starts lower, sloping shoulders above the wheels, narrower upper cabin, and a rounded nose in plan. Lamps sit closer to the reference shapes and heights; exhaust outlets are closer together. Cheap wheels retained; triangles 2702 / 879 / 597 within 2800 / 900 / 600. New reference-derived tests check local width, shoulder slope, nose taper, lamps/outlets and camera setup at every LOD. Collision hulls and handling retained.",
       "lods": 3,
       "parts": 11,
       "specTwin": {

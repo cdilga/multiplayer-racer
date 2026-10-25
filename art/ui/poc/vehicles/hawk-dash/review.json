@@ -9,7 +9,7 @@
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "Hawk Dash, second likeness pass: the front and rear now have sloped shoulders and tucked door sections, broader framed headlamps, angled LED recesses and a lower intake that widens towards the bottom. The rear has framed red/grey lamps, a boot seam, a wider wing, and a six-sided exhaust recess with painted lip, black bevel and larger hexagonal outlets. The low-cost wheels remain. Triangle totals are 2697 / 837 / 553, within the existing 2800 / 900 / 600 budgets. Collision hulls and handling are retained. The enlarged front/rear comparisons lead each sheet below; the owner judges the likeness.",
+  "summary": "Third likeness pass: wider lower stance, body widening starts lower, sloping shoulders above the wheels, narrower upper cabin, and a rounded nose in plan. Lamps sit closer to the reference shapes and heights; exhaust outlets are closer together. Cheap wheels retained; triangles 2702 / 879 / 597 within 2800 / 900 / 600. New reference-derived tests check local width, shoulder slope, nose taper, lamps/outlets and camera setup at every LOD. Collision hulls and handling retained.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -17,19 +17,19 @@
   },
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Reference sheets and comparison cameras are unchanged. Each sheet starts with enlarged FRONT and REAR rows: REFERENCE / PREVIOUS PASS / REVISED PASS. Below are the four views plus silhouettes and three-quarter comparisons. This pass prioritises internal shapes from owner feedback; weighted outline IoU falls to .9495 / .9472 / .9362, mainly from the wider nose/tail and wing in top view. That tradeoff is visible in the diffs and recorded in validation.md.",
+    "note": "Previous and revised models use the SAME corrected horizontal camera at car midpoint. Shaded views and silhouette diffs now share perspective projection. Front/rear use a long-lens 50 m distance; 3/4 views are horizontal at 0.78 m, instead of the old elevated views. Generated reference sheets are unchanged and are not calibrated photographs. Enlarged FRONT/REAR rows lead each sheet. Weighted IoU at the corrected camera: .9392 → .9486 / .9391 → .9526 / .9412 → .9497. New local likeness tests pass all tiers and reject the previous model; owner likeness judgement is still needed. See validation report for commands and failure-injection evidence.",
     "compare": [
       {
         "lod": 0,
         "label": "LOD0: enlarged front / rear, then all-view comparison",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9618,
-          "top": 0.9281,
-          "front": 0.9369,
-          "rear": 0.9716
+          "side": 0.9537,
+          "top": 0.95,
+          "front": 0.9392,
+          "rear": 0.9417
         },
-        "weightedIou": 0.9495
+        "weightedIou": 0.9486
       },
       {
         "lod": 1,
@@ -37,23 +37,23 @@
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
           "side": 0.9627,
-          "top": 0.9252,
-          "front": 0.9301,
-          "rear": 0.9668
+          "top": 0.9524,
+          "front": 0.9368,
+          "rear": 0.942
         },
-        "weightedIou": 0.9472
+        "weightedIou": 0.9526
       },
       {
         "lod": 2,
         "label": "LOD2: enlarged front / rear, then all-view comparison",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9426,
-          "top": 0.9369,
-          "front": 0.9083,
-          "rear": 0.9456
+          "side": 0.948,
+          "top": 0.9554,
+          "front": 0.941,
+          "rear": 0.9514
         },
-        "weightedIou": 0.9362
+        "weightedIou": 0.9497
       }
     ]
   },
@@ -66,7 +66,7 @@
       {
         "lod": 0,
         "glb": "media/model/hawk-dash.lod0.glb",
-        "tris": 2697,
+        "tris": 2702,
         "draws": 11,
         "maxTris": 2800,
         "withinBudget": true
@@ -74,7 +74,7 @@
       {
         "lod": 1,
         "glb": "media/model/hawk-dash.lod1.glb",
-        "tris": 837,
+        "tris": 879,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -82,7 +82,7 @@
       {
         "lod": 2,
         "glb": "media/model/hawk-dash.lod2.glb",
-        "tris": 553,
+        "tris": 597,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -149,7 +149,7 @@
           "max": 0
         },
         "pivot": [
-          0.9532571428571428,
+          0.9697142857142856,
           0.6040921052631579,
           0.9199999999999999
         ]
@@ -166,7 +166,7 @@
           "max": 70
         },
         "pivot": [
-          -0.9532571428571428,
+          -0.9697142857142856,
           0.6040921052631579,
           0.9199999999999999
         ]
@@ -183,7 +183,7 @@
           "max": 0
         },
         "pivot": [
-          0.9017857142857143,
+          0.95,
           0.6088,
           -0.3
         ]
@@ -200,7 +200,7 @@
           "max": 70
         },
         "pivot": [
-          -0.9017857142857143,
+          -0.95,
           0.6088,
           -0.3
         ]
@@ -370,39 +370,35 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "source / contract / reproducibility: bake.txt, reproducibility.txt, contract.txt. GLBs reproduced byte-for-byte; sidecar and profile validate without waivers."
+        "text": "source, contract and reproducibility: bake.txt, reproducibility.txt, contract.txt. Byte-reproducible GLBs, eleven damage parts, existing mass sum/units/anchors and one shared paint material. Frozen colliderPoints and handling retained. Roof height and number mount unchanged."
       },
       {
         "result": "PASS",
-        "text": "geometry / budgets: geometry.json and verify.mjs inspect shipped GLBs: 2697 / 837 / 553 triangles versus 2800 / 900 / 600. All eleven damage part IDs, one material, finite vertices/normals and nonzero triangles. Wheels cost 176 / 112 / 112; sealed inner sidewalls, manifold edges and ground contact retained. Previous pass totals were 2689 / 883 / 597."
+        "text": "geometry and budgets: geometry.json audits the shipped GLBs: 2702 / 879 / 597 triangles. Wheels 176 / 112 / 112, body 2526 / 767 / 485. Prior pass totals 2697 / 837 / 553. Initial wheel-heavy baseline was 668 / 152 / 152 wheel triangles. Finite vertices/normals, no zero-area triangles, closed manifold wheel inner walls and ground contact. Three LOD0 louvres/fins and fewer arch stations fund curves; LOD2 now retains coarse arch shoulders."
       },
       {
         "result": "PASS",
-        "text": "visual cue revision: stronger sill and shoulder taper at every tier; door seams follow the skin; front intake widens downward; broader outlined headlamps and angled vertical LED recesses. Rear gains red/grey framed lamps, boot seam, full-width wing and shaped six-sided exhaust surround with painted lip, dark bevel, central fins and larger hexagonal tips. Actual rear-cap triangles now match the decal projection, fixing broken stripes on nonplanar polygons. Closed diffuser, fins and wing tips retained. Coarse tiers use continuous flat fascia graphics; their stripes sit behind grille/intake/lamp layers, avoiding broken lamps and floating stripe fragments. Fascia ray projection is restricted to its own front/back part so a missing rear hit cannot paint onto a door or front fender and corrupt the hinge bounds."
+        "text": "likeness checks: tools/vehicles/test/likeness.test.mjs runs in the existing vehicle CI directory. Twelve tests include current geometry at EVERY tier, immutable reference/mask hashes, frozen cameras, and deliberate defects: narrow base, early widening, square nose, displaced/missing lamps/outlets and elevated/mismatched cameras. Expected contours come from reference masks and internal cue polygons are annotated in reference pixels; expectations are not copied from model params. See tools/vehicles/fit/likeness.md and refs/likeness.json. Actual previous source fails the new gates: baseline-checks/ receipt. Current browser silhouette contours and projected feature masks pass as recorded in reference-lodN/likeness.json and SVG overlays."
       },
       {
         "result": "WARN",
-        "text": "silhouette tradeoff: weighted IoU .9495 / .9472 / .9362 versus first-pass .9652 / .9612 / .9490. Top-view widening is the largest regression. Reference sheets and cameras are unchanged, and this candidate is not claimed to improve every outline. Enlarged front/rear rows and the previous/revised/diff sheets expose the tradeoff for owner review. Exact per-view scores are in reference-lodN/score.json. LOD2 falls below the method's approximate .95 target; the owner likeness verdict is pending."
+        "text": "silhouette comparison: corrected-camera weighted IoU .9392 → .9486 (LOD0), .9391 → .9526 (LOD1), .9412 → .9497 (LOD2). Front .9200 → .9392 and rear .9202 → .9417 at LOD0. Side .9618 → .9537 is a small regression; front/rear/top improve and the remaining differences are visible. Approximate .95 target, plus local and visual cue review; no claim of complete likeness. Reference/previous/revised/diff sheets are reference-lodN/sheet.png."
       },
       {
         "result": "PASS",
-        "text": "paint / hinges / identity contract: focused pivots, paint-key and spec-twin tests in paint-spec-tests.txt; one shared atlas material, neutral wheels/lamps and seat paint retained. Paint strips and LOD sheets reviewed. Existing roof-number mount retained above the unchanged crown. Small-grid evidence is a viewer sample, not proof of runtime number readability or an N×N host benchmark."
+        "text": "paint, hinges and spec: focused-tests.txt, 54 tests. Bright paint/neutral tyres, sidecar pivots and shared spec handling checked. No renderer batching/material changes; existing instancing benchmark is not remeasured."
       },
       {
         "result": "PASS",
-        "text": "damage geometry: damage-strip.png and damage-strip-overview.png show intact, loose, detached and stripped states with dark bays using existing evidence tooling. This does not retest dynamic debris lifetime; damage runtime code is unchanged."
+        "text": "physics fit: sim.json, native jj-sim settle and Hawk straight-run fixtures pass with matching deterministic replay. This is a retained-hull check, not a new driving-feel assessment."
       },
       {
         "result": "PASS",
-        "text": "physics fit: sim.json runs the focused settle fixture and existing Hawk straight-run fixture through native jj-sim; both pass and replay matches. Collision hulls and handling are unchanged; no driving-feel claim."
+        "text": "visual and damage evidence: views/lods/paints/colliders, paint strip, intact/loose/detached strips, 1/4/24-grid samples. Dark bays retained. Evidence viewer samples do not requalify host number readability, dynamic debris lifetime or an N×N host benchmark; those runtime systems are unchanged."
       },
       {
         "result": "PASS",
-        "text": "POC loading and controls: review-probe.mjs exercises all LODs, bright paint and intact/loose/detached through the actual review page in Chromium and WebKit. Local and deployed results are recorded in self-review.md."
-      },
-      {
-        "result": "WARN",
-        "text": "unchanged engine lab: previous pass recorded seven unrelated broad sound-lab failures in P1-V-hawk-curves/engine.txt, tracked by br-8h3u.12. The profile passed schema validation then. Audio has not changed and the broad sound gate is not recertified here."
+        "text": "POC loader/controls; deployed verification: see self-review.md. Engine/audio unchanged; prior broad lab failures remain tracked by br-8h3u.12 and are not recertified here."
       }
     ],
     "report": "media/gate/validation.md"

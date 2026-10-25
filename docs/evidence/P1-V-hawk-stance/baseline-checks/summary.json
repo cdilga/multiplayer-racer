@@ -1,0 +1,49 @@
+{
+  "previousCommit": "e1d8a900",
+  "method": "Same frozen horizontal camera; source-based feature projection plus browser pixel contours. Original reference pixels and masks unchanged.",
+  "lods": [
+    {
+      "lod": 0,
+      "previousPass": false,
+      "previousFailures": [
+        "front shoulder widens at the reference height",
+        "front lower base retains its width",
+        "front body width bands",
+        "rear lower base retains its width",
+        "rear body width bands",
+        "rounded nose tapers towards its centre",
+        "nose curvature continues to the tip",
+        "swept front lamp envelopes"
+      ],
+      "currentPass": true,
+      "checks": 30
+    },
+    {
+      "lod": 1,
+      "previousPass": false,
+      "previousFailures": [
+        "front shoulder widens at the reference height",
+        "front lower base retains its width",
+        "rear lower base retains its width",
+        "rear body width bands",
+        "rounded nose tapers towards its centre",
+        "nose curvature continues to the tip",
+        "swept front lamp envelopes"
+      ],
+      "currentPass": true,
+      "checks": 30
+    },
+    {
+      "lod": 2,
+      "previousPass": false,
+      "previousFailures": [
+        "front shoulder widens at the reference height",
+        "rounded nose tapers towards its centre",
+        "nose curvature continues to the tip",
+        "swept front lamp envelopes"
+      ],
+      "currentPass": true,
+      "checks": 30
+    }
+  ]
+}

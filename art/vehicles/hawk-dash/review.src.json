@@ -9,7 +9,7 @@
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "Hawk Dash, second likeness pass: the front and rear now have sloped shoulders and tucked door sections, broader framed headlamps, angled LED recesses and a lower intake that widens towards the bottom. The rear has framed red/grey lamps, a boot seam, a wider wing, and a six-sided exhaust recess with painted lip, black bevel and larger hexagonal outlets. The low-cost wheels remain. Triangle totals are 2697 / 837 / 553, within the existing 2800 / 900 / 600 budgets. Collision hulls and handling are retained. The enlarged front/rear comparisons lead each sheet below; the owner judges the likeness.",
+  "summary": "Third likeness pass: wider lower stance, body widening starts lower, sloping shoulders above the wheels, narrower upper cabin, and a rounded nose in plan. Lamps sit closer to the reference shapes and heights; exhaust outlets are closer together. Cheap wheels retained; triangles 2702 / 879 / 597 within 2800 / 900 / 600. New reference-derived tests check local width, shoulder slope, nose taper, lamps/outlets and camera setup at every LOD. Collision hulls and handling retained.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -21,32 +21,32 @@
       {
         "lod": 0,
         "label": "LOD0: enlarged front / rear, then all-view comparison",
-        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod0"
+        "dir": "docs/evidence/P1-V-hawk-stance/reference-lod0"
       },
       {
         "lod": 1,
         "label": "LOD1: enlarged front / rear, then all-view comparison",
-        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod1"
+        "dir": "docs/evidence/P1-V-hawk-stance/reference-lod1"
       },
       {
         "lod": 2,
         "label": "LOD2: enlarged front / rear, then all-view comparison",
-        "dir": "docs/evidence/P1-V-hawk-fascia/reference-lod2"
+        "dir": "docs/evidence/P1-V-hawk-stance/reference-lod2"
       }
     ],
-    "note": "Reference sheets and comparison cameras are unchanged. Each sheet starts with enlarged FRONT and REAR rows: REFERENCE / PREVIOUS PASS / REVISED PASS. Below are the four views plus silhouettes and three-quarter comparisons. This pass prioritises internal shapes from owner feedback; weighted outline IoU falls to .9495 / .9472 / .9362, mainly from the wider nose/tail and wing in top view. That tradeoff is visible in the diffs and recorded in validation.md."
+    "note": "Previous and revised models use the SAME corrected horizontal camera at car midpoint. Shaded views and silhouette diffs now share perspective projection. Front/rear use a long-lens 50 m distance; 3/4 views are horizontal at 0.78 m, instead of the old elevated views. Generated reference sheets are unchanged and are not calibrated photographs. Enlarged FRONT/REAR rows lead each sheet. Weighted IoU at the corrected camera: .9392 \u2192 .9486 / .9391 \u2192 .9526 / .9412 \u2192 .9497. New local likeness tests pass all tiers and reject the previous model; owner likeness judgement is still needed. See validation report for commands and failure-injection evidence."
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-hawk-fascia/lods.png",
-    "validation": "docs/evidence/P1-V-hawk-fascia/validation.md"
+    "sheet": "docs/evidence/P1-V-hawk-stance/lods.png",
+    "validation": "docs/evidence/P1-V-hawk-stance/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-hawk-fascia/damage-strip.png",
-    "overview": "docs/evidence/P1-V-hawk-fascia/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-hawk-stance/damage-strip.png",
+    "overview": "docs/evidence/P1-V-hawk-stance/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-hawk-fascia/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-hawk-stance/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour tints the paint; the twin stripes, C graphic, framed glass, lamps and atlas-drawn rims/tyres keep their own colours. White and five bright seat colours are shown below."
   },
@@ -54,26 +54,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-hawk-fascia/grid-1.png"
+      "path": "docs/evidence/P1-V-hawk-stance/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-hawk-fascia/grid-4.png"
+      "path": "docs/evidence/P1-V-hawk-stance/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-hawk-fascia/grid-24.png"
+      "path": "docs/evidence/P1-V-hawk-stance/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-hawk-fascia/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-hawk-stance/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-hawk-fascia/validation.md"
+    "report": "docs/evidence/P1-V-hawk-stance/validation.md"
   },
   "profile": "assets/profiles/hawk-dash.json",
   "handling": {

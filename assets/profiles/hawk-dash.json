@@ -3,8 +3,8 @@
   "vehicle": "hawk-dash",
   "source": {
     "sidecar": "art/vehicles/hawk-dash/hawk-dash.asset.json",
-    "sidecar_sha256": "aaa80770ec8963cabd7b674c2cae00c567dca241a9e24c6390e9fd2cd2205023",
-    "lod0_sha256": "10638feb8a379d2c14273aada2422996e3f2d755babb7e29bcc6f0b0dd520281"
+    "sidecar_sha256": "19b1a9864777a5d30d6dc5c34ec457ca440d0ce45656d823f6bcdce936b4b963",
+    "lod0_sha256": "68cb91e27cbb953109420ab622528deb94bdb07dabf2a118180938322c36d837"
   },
   "geometry": {
     "hull": [
@@ -2243,7 +2243,7 @@
       {
         "name": "door_FL",
         "pivot": [
-          0.9533,
+          0.9697,
           0.6041,
           0.92
         ],
@@ -2328,7 +2328,7 @@
       {
         "name": "door_FR",
         "pivot": [
-          -0.9533,
+          -0.9697,
           0.6041,
           0.92
         ],
@@ -2413,7 +2413,7 @@
       {
         "name": "door_RL",
         "pivot": [
-          0.9018,
+          0.95,
           0.6088,
           -0.3
         ],
@@ -2503,7 +2503,7 @@
       {
         "name": "door_RR",
         "pivot": [
-          -0.9018,
+          -0.95,
           0.6088,
           -0.3
         ],

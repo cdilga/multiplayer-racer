@@ -1,0 +1,47 @@
+✔ Hawk likeness oracle remains the canonical unmodified reference (55.476583ms)
+✔ local shape gates reject a tucked base even if most of the silhouette is unchanged (11.480584ms)
+✔ local shape gates reject widening that begins above the reference shoulder (5.603333ms)
+✔ local shape gates reject a square nose with the same width farther back (13.665542ms)
+✔ feature gates reject missing lamps, moved lamps and misplaced exhaust outlets (26.716917ms)
+✔ camera gates reject an elevated, mismatched or unspecified comparison camera (0.877875ms)
+✔ Hawk LOD0: current geometry retains reference stance, shoulders and rounded nose (228.192ms)
+✔ Hawk LOD0: current geometry retains annotated lamps and exhaust placement (58.734958ms)
+✖ Hawk LOD1: current geometry retains reference stance, shoulders and rounded nose (154.6895ms)
+✔ Hawk LOD1: current geometry retains annotated lamps and exhaust placement (32.05475ms)
+✔ Hawk LOD2: current geometry retains reference stance, shoulders and rounded nose (137.236042ms)
+✔ Hawk LOD2: current geometry retains annotated lamps and exhaust placement (32.773ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 863.792625
+
+✖ failing tests:
+
+test at tools/vehicles/test/likeness.test.mjs:66:3
+✖ Hawk LOD1: current geometry retains reference stance, shoulders and rounded nose (154.6895ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'rounded nose tapers towards its centre: error 0.06219512195121951 / limit 0.035'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/cdilga/Documents/dev/multiplayer-racer/tools/vehicles/test/likeness.test.mjs:67:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'rounded nose tapers towards its centre: error 0.06219512195121951 / limit 0.035' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

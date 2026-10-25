@@ -87,3 +87,7 @@ Looked at the deployed follow-up:
 - docs/evidence/P1-V-hawk-fascia/live-interactions/webkit-stage-matrix.jpg: same states on emulated phone; model contained.
 
 Remaining defects: owner likeness verdict pending; wider ends/wing reduce weighted silhouette scores to .9495 / .9472 / .9362, mostly in top view. Live-check’s initial GLB abort and viewport-bottom crossings remain documented, with successful independent render/controls proof. Physical devices, host identity/batching and audio were not recertified by this geometry pass.
+
+## Third pass: lower stance, rounded nose and reference-derived tests
+
+Owner feedback on widening height, base width, nose squareness and camera elevation is addressed in [P1-V-hawk-stance](../P1-V-hawk-stance/self-review.md). That pass adds geometry/reference tests at every LOD, demonstrates that the actual previous model fails the new local gates, holds before/after cameras fixed and publishes new front/rear comparison sheets. See its validation and deployment receipt for the current candidate.

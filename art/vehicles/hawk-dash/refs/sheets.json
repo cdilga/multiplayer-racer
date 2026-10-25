@@ -1,5 +1,65 @@
 {
  "what": "Reference sheets for tools/vehicles/fit (br-bwju.3): Muse Image turnarounds (art/ui/frames/generate.mjs --prompt refs/prompts/<sheet>.txt; ledger art/ui/frames/ledger.jsonl). Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets, one view each.",
- "sheets": { "lod1": "lod-plus-1.png", "lowest": "lowest-lod.png" },
- "views": { "hero": [0, 0, 1450, 860], "top": [1460, 0, 1920, 900], "front": [0, 900, 470, 1280], "side": [480, 900, 1400, 1280], "rear": [1420, 900, 1920, 1280] }
+ "sheets": {
+  "lod1": "lod-plus-1.png",
+  "lowest": "lowest-lod.png"
+ },
+ "views": {
+  "hero": [
+   0,
+   0,
+   1450,
+   860
+  ],
+  "top": [
+   1460,
+   0,
+   1920,
+   900
+  ],
+  "front": [
+   0,
+   900,
+   470,
+   1280
+  ],
+  "side": [
+   480,
+   900,
+   1400,
+   1280
+  ],
+  "rear": [
+   1420,
+   900,
+   1920,
+   1280
+  ]
+ },
+ "tilt": {
+  "front": 0,
+  "rear": 0
+ },
+ "projection": "perspective",
+ "hero": {
+  "az": 52,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "heroRear": {
+  "az": 140,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "cameraNote": "Owner 2026-10-25: front/rear comparisons at car midpoint with horizontal optical axis. Hero views use the same horizontal axis, target height 0.78 m. Projection and direction are shared by shaded capture and silhouette scoring; generated reference is not a calibrated photograph. Front/rear use a 50 m long-lens distance to avoid wide-angle enlargement of the near bumper; side/top retain 10 m. These settings are frozen for before/after and regression checks.",
+ "camD": {
+  "side": 10,
+  "top": 10,
+  "front": 50,
+  "rear": 50
+ }
 }

@@ -1,0 +1,44 @@
+✔ the roster is found from the data and is not empty (6.022208ms)
+✔ au-hawk LOD0: doors, front and back pivot on their hinge lines (449.672917ms)
+✔ au-hawk LOD1: doors, front and back pivot on their hinge lines (92.097417ms)
+✔ au-hawk LOD2: doors, front and back pivot on their hinge lines (118.840875ms)
+✔ au-hawk: the pivots are the same at every LOD and in the committed sidecar (1713.139125ms)
+✔ au-hawk: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (527.779ms)
+✔ cruz-missile LOD0: doors, front and back pivot on their hinge lines (87.805959ms)
+✔ cruz-missile LOD1: doors, front and back pivot on their hinge lines (18.1345ms)
+✔ cruz-missile LOD2: doors, front and back pivot on their hinge lines (77.512875ms)
+✔ cruz-missile: the pivots are the same at every LOD and in the committed sidecar (29.409875ms)
+✔ cruz-missile: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (126.212666ms)
+✔ hawk-dash LOD0: doors, front and back pivot on their hinge lines (137.822458ms)
+✔ hawk-dash LOD1: doors, front and back pivot on their hinge lines (30.723458ms)
+✔ hawk-dash LOD2: doors, front and back pivot on their hinge lines (145.311125ms)
+✔ hawk-dash: the pivots are the same at every LOD and in the committed sidecar (389.169541ms)
+✔ hawk-dash: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (384.78175ms)
+✔ lion-president LOD0: doors, front and back pivot on their hinge lines (66.783833ms)
+✔ lion-president LOD1: doors, front and back pivot on their hinge lines (157.659625ms)
+✔ lion-president LOD2: doors, front and back pivot on their hinge lines (73.765667ms)
+✔ lion-president: the pivots are the same at every LOD and in the committed sidecar (10.793708ms)
+✔ lion-president: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (3.291417ms)
+✔ pig-catcher LOD0: doors, front and back pivot on their hinge lines (14.376458ms)
+✔ pig-catcher LOD1: doors, front and back pivot on their hinge lines (2.073208ms)
+✔ pig-catcher LOD2: doors, front and back pivot on their hinge lines (12.710334ms)
+✔ pig-catcher: the pivots are the same at every LOD and in the committed sidecar (13.866417ms)
+✔ pig-catcher: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (2.813458ms)
+✔ postie-bike LOD0: doors, front and back pivot on their hinge lines (9.251292ms)
+✔ postie-bike LOD1: doors, front and back pivot on their hinge lines (2.095625ms)
+✔ postie-bike LOD2: doors, front and back pivot on their hinge lines (138.144125ms)
+✔ postie-bike: the pivots are the same at every LOD and in the committed sidecar (12.274667ms)
+✔ postie-bike: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (3.278792ms)
+✔ tradie-ute LOD0: doors, front and back pivot on their hinge lines (55.254458ms)
+✔ tradie-ute LOD1: doors, front and back pivot on their hinge lines (8.560375ms)
+✔ tradie-ute LOD2: doors, front and back pivot on their hinge lines (7.877792ms)
+✔ tradie-ute: the pivots are the same at every LOD and in the committed sidecar (14.423917ms)
+✔ tradie-ute: defect injection, the check rejects a pivot moved to the panel centre or the wrong edge (6.110416ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5330.300792
