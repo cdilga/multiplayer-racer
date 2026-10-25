@@ -1,0 +1,20 @@
+{
+  "pass": true,
+  "comparison": "current baked GLB collider position bytes + sidecar vs pre-rebuild baseline captured in /tmp/evidence/tradie-ute-before",
+  "checks": {
+    "collider_core": true,
+    "collider_front": true,
+    "collider_back": true,
+    "collider_door_FL": true,
+    "collider_door_FR": true,
+    "collider_door_RL": true,
+    "collider_door_RR": true,
+    "collider_wheel_FL": true,
+    "collider_wheel_FR": true,
+    "collider_wheel_RL": true,
+    "collider_wheel_RR": true,
+    "part_contract": true,
+    "anchors": true,
+    "lod_budgets": true
+  }
+}

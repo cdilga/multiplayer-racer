@@ -1,0 +1,97 @@
+{
+ "scenario": "lion-president-reference-settle",
+ "what": "Visual-only roster refinement: original collider, hubs, hinges and tuning retained. Reuse canonical idle-settle no-input drops and envelopes. Bike profiles use four existing ray contacts; this does not claim a two-wheel physics rewrite.",
+ "map": "maps/greybox-loop.json",
+ "seed": 1,
+ "ticks": 180,
+ "cars": [
+  {
+   "routePoint": 16,
+   "lateral": -3,
+   "lift": 0.6
+  },
+  {
+   "routePoint": 40,
+   "lateral": 3,
+   "lift": 0.2
+  }
+ ],
+ "inputs": [],
+ "observe": [
+  120,
+  180
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "rebounds",
+   "min": 0,
+   "max": 1
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "height",
+   "min": -0.04,
+   "max": 0.04
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.1
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "upY",
+   "min": 0.99,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "rebounds",
+   "min": 0,
+   "max": 1
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "height",
+   "min": -0.04,
+   "max": 0.04
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.1
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "upY",
+   "min": 0.99,
+   "max": 1.001
+  }
+ ],
+ "vehicle": "lion-president"
+}

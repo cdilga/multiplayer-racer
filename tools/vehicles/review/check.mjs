@@ -21,9 +21,15 @@ export function checkReview(r, has, byId = {}) {
   const need = (item, ok, what) => { if (!ok) bad.push(`item ${item}: ${what}`); };
   need(0, !!r.id && !!r.name && STATUSES.includes(r.status) && !!r.date && r.beads?.length > 0 && !!r.feedback, `id, name, status (${STATUSES.join('/')}), date, beads and how feedback comes back`);
   const cmp = r.reference?.compare ?? [];
-  need(1, has(r.reference?.sheet) && cmp.length > 0 && cmp.every((c) => has(c.sheet) && VIEWS.every((v) => typeof c.iou?.[v] === 'number') && typeof c.weightedIou === 'number'),
-    'reference sheet, and per compared LOD the sheet image plus side/top/front/rear IoU and the weighted IoU');
   const lods = r.turntable?.lods ?? [];
+  const measured = r.reference?.measured;
+  const measuredValid = measured?.kind === 'owner-measured' && measured.pass === true && has(measured.oracle) && has(measured.report)
+    && measured.rows?.length > 0 && measured.rows.every(row => Number.isFinite(row.target) && row.actual?.length === lods.length && row.actual.every(a => Number.isFinite(a.value)) && lods.every(l => row.actual.some(a => a.lod === l.lod)))
+    && measured.lods?.length === lods.length && lods.length > 0 && new Set(measured.lods.map(l => l.lod)).size === lods.length
+    && lods.every(l => measured.lods.some(m => m.lod === l.lod && m.pass === true && m.checks?.length > 0 && m.checks.every(c => c.pass === true) && Array.isArray(m.injections) && m.injections.every(i => i.detected === true)));
+  const sheetValid = cmp.length > 0 && cmp.every(c => has(c.sheet) && VIEWS.every(v => typeof c.iou?.[v] === 'number') && typeof c.weightedIou === 'number');
+  need(1, has(r.reference?.sheet) && (measured ? measuredValid : sheetValid),
+    'reference sheet with per-view IoU, or explicit owner photo with existing measured oracle/report, finite target/current rows and passing checks at every model LOD');
   need(2, lods.length > 0 && has(r.turntable?.assetJson) && has(r.turntable?.atlas) && lods.every((l) => has(l.glb) && Number.isInteger(l.tris) && Number.isInteger(l.draws) && l.maxTris > 0 && l.withinBudget),
     'every LOD with its GLB, triangles and draw calls within maxTris');
   const parts = (r.damage?.parts ?? []).map((p) => p.name);

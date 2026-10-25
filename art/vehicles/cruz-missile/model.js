@@ -24,7 +24,7 @@ import * as THREE from 'three';
 import { swatchUV, REGION } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, windows: true, handles: true, sill: true, seams: true, mirrors: 'stalk', lamps: 'full', grille: 'full', fog: 'full', bar: 'full', aerial: 'coil', splitter: true, wedges: true, corners: true, exhaust: 'ring', diffFins: true, badge: true, spoiler: 'full' },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 12, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, windows: true, handles: true, sill: true, seams: true, mirrors: 'stalk', lamps: 'full', grille: 'full', fog: 'full', bar: 'full', aerial: 'coil', splitter: true, wedges: true, corners: true, exhaust: 'ring', diffFins: true, badge: true, spoiler: 'full' },
   1: { arch: 5, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', bayBoxes: true, hub: true, tyreCap: false, windows: true, handles: false, sill: false, seams: false, mirrors: 'box', lamps: 'full', grille: 'flat', fog: 'flat', bar: 'simple', aerial: 'rod', splitter: true, wedges: true, corners: true, exhaust: 'flat', diffFins: false, badge: false, spoiler: 'full' },
   2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, wheelSeg: 8, rim: 'decal', bayBoxes: false, hub: false, tyreCap: false, windows: 'flat', handles: false, sill: false, seams: false, mirrors: 'box', lamps: 'flat', grille: 'flat', fog: 'none', bar: 'plate', aerial: 'none', splitter: false, wedges: false, corners: false, exhaust: 'none', diffFins: false, badge: false, spoiler: 'plate' },
 };
@@ -271,11 +271,37 @@ function makeSoups(P, lod) {
   { const hwC = lerpCurve(P.hw, zC) - 0.14; bay(0, (0.30 + lerpCurve(P.ySh, zC)) / 2 - 0.02, zC - 0.03, hwC * 2, lerpCurve(P.ySh, zC) - 0.36, 0.06); } // rear bulkhead
   for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) - 0.07); S('core').quad(...(s > 0 ? [[x, 0.3, zA], [x, 0.3, zC], [x, 1.05, zC], [x, 1.02, zA]] : [[x, 0.3, zC], [x, 0.3, zA], [x, 1.02, zA], [x, 1.05, zC]]), 'bay'); }
 
-  // a lamp wrapping round a corner: four (dz, y) corners, cut into slices along z so each follows the curved skin
+  // Clip the wrap to the actual tub triangles. Evaluating skinX only at four corners
+  // lets its diagonal cross the faceted skin, leaving black slits in the lamps.
   const wrap = (So, corners, s, sw, z0, dir, out) => {
-    const [a, b, c, d] = corners, N = lod === 0 ? 3 : 1, at = (k) => { const t = k / N, mixp = (p, q) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t], lo = mixp(a, b), hi = mixp(d, c); return [lo, hi]; };
-    const pt = ([dz, y]) => { const z = z0 + dir * dz; return [skinX(z, y, s) + s * 0.006, y, z]; };
-    for (let k = 0; k < N; k++) { const [l0, h0] = at(k), [l1, h1] = at(k + 1); So.face([pt(l0), pt(l1), pt(h1), pt(h0)], sw, out); }
+    if (dir > 0) { // rear lamp wraps retain their existing, already clear projection
+      const [a,b,c,d]=corners,N=lod===0?3:1,at=k=>{const t=k/N,mixp=(p,q)=>[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];return [mixp(a,b),mixp(d,c)];};
+      const pt=([dz,y])=>{const z=z0+dir*dz;return [skinX(z,y,s)+s*.006,y,z];};
+      for(let k=0;k<N;k++){const [l0,h0]=at(k),[l1,h1]=at(k+1);So.face([pt(l0),pt(l1),pt(h1),pt(h0)],sw,out);}return;
+    }
+    const poly = corners.map(([dz,y]) => [z0+dir*dz,y]);
+    const area = (a,b,c) => (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+    for(let i=0;i<Z.length-1;i++) {
+      if(Z[i]<Math.min(...poly.map(p=>p[0])) || Z[i+1]>Math.max(...poly.map(p=>p[0]))) continue;
+      const a=ring(Z[i],s),b=ring(Z[i+1],s);
+      for(let k=1;k<4;k++) for(const tri of [[a[k],b[k],b[k+1]],[a[k],b[k+1],a[k+1]]]) {
+        const t=tri.map(p=>[p[2],p[1]]),den=area(...t);if(Math.abs(den)<1e-9)continue;
+        let clipped=poly.slice();
+        for(let e=0;e<3;e++) {
+          const u=t[e],v=t[(e+1)%3],next=[];
+          for(let j=0;j<clipped.length;j++) {
+            const p=clipped[j],q=clipped[(j+1)%clipped.length],dp=area(u,v,p)*Math.sign(den),dq=area(u,v,q)*Math.sign(den);
+            if(dp>=-1e-9)next.push(p);
+            if((dp>=0)!==(dq>=0)){const f=dp/(dp-dq);next.push([p[0]+(q[0]-p[0])*f,p[1]+(q[1]-p[1])*f]);}
+          }
+          clipped=next;
+        }
+        clipped=clipped.filter((p,j)=>j===0||Math.hypot(p[0]-clipped[j-1][0],p[1]-clipped[j-1][1])>1e-7);
+        if(clipped.length<3)continue;
+        const points=clipped.map(p=>{const w0=area(t[1],t[2],p)/den,w1=area(t[2],t[0],p)/den,w2=1-w0-w1;return [w0*tri[0][0]+w1*tri[1][0]+w2*tri[2][0]+s*.006,p[1],p[0]];});
+        So.face(points,sw,out);
+      }
+    }
   };
 
   // ── front fascia (part: front): the grille, lamps and the pink/black lower bumper, then the nudge bar ──
@@ -375,7 +401,11 @@ function makeSoups(P, lod) {
     for (const s of [1, -1]) Bk.box(s * SP.span * 0.55, (deck + SP.y) / 2, SP.z + 0.04, 0.05, SP.y - deck, 0.10, 'trim', [-0.25, 0, 0]);
     // endplates: the reference's raked parallelogram, measured off the side view (z, y) and moved with the wing
     if (T.spoiler === 'full') { const dz = SP.z + 1.98, dy = SP.y - 1.42, poly = [[-1.79, 1.13], [-2.12, 1.22], [-2.23, 1.53], [-1.74, 1.32]].map(([z, y]) => [z + dz, y + dy]);
-      for (const s of [1, -1]) Bk.slab(poly, s * SP.span - 0.018, s * SP.span + 0.018, 'pink', s > 0 ? sUV : 'pink', s > 0 ? 'pink' : sUV); } }
+      for (const s of [1, -1]) {
+        if(lod===1) { // endplate silhouette and both faces survive; hidden thickness funds conforming lamps
+          const q=poly.map(([z,y])=>[s*SP.span,y,z]);Bk.face(q,s>0?sUV:'pink',[1,0,0]);Bk.face(q,s>0?'pink':sUV,[-1,0,0]);
+        } else Bk.slab(poly, s * SP.span - 0.018, s * SP.span + 0.018, 'pink', s > 0 ? sUV : 'pink', s > 0 ? 'pink' : sUV);
+      } } }
 
   // ── side details (core and doors): the sill, door seams, handles ──
   if (T.sill) for (const s of [1, -1]) { const x = s * (lerpCurve(P.hw, 0) + 0.012), y0 = lerpCurve(P.yBot, 0) + 0.075;
@@ -454,7 +484,7 @@ function makeSoups(P, lod) {
 // the vehicle origin. Measured on LOD0, because the contract wants one pivot per part at every LOD.
 export function pivots(P) {
   const out = {};
-  for (const [id, so] of Object.entries(makeSoups(P, 0).soups)) out[id] = pivotOf(P, id, so.p);
+  for (const [id, so] of Object.entries(makeSoups(P, 0).soups)) out[id] = P.physicsPivots?.[id]?.slice() ?? pivotOf(P, id, so.p);
   return out;
 }
 

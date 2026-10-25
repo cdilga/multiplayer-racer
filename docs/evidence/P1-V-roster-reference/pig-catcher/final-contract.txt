@@ -1,0 +1,1 @@
+art/vehicles/pig-catcher/pig-catcher.asset.json: ok (jj.vehicle.v1, triangles per LOD [2514, 898, 596])

@@ -1,0 +1,10 @@
+lion-president.lod0.glb: 1813 tris (budget 2400; optimiser flipped 20, dropped 3 unseen) {"core":306,"front":613,"back":598,"door_FL":26,"door_FR":26,"door_RL":14,"door_RR":14,"wheel_FL":54,"wheel_FR":54,"wheel_RL":54,"wheel_RR":54,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+lion-president.lod1.glb: 897 tris (budget 900; optimiser flipped 2, dropped 1 unseen) {"core":188,"front":278,"back":251,"door_FL":18,"door_FR":18,"door_RL":12,"door_RR":12,"wheel_FL":30,"wheel_FR":30,"wheel_RL":30,"wheel_RR":30,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+lion-president.lod2.glb: 576 tris (budget 600; optimiser flipped 0, dropped 0 unseen) {"core":144,"front":172,"back":136,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":25,"wheel_FR":25,"wheel_RL":25,"wheel_RR":25,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+same    lion-president.atlas.png 37ffb72c8bdec9b7efece7100a6769cc28386c89c5972b0811d78f42ae10513e
+same    lion-president.emissive.png 1558ba0302525cfd6201e2fb47910cad708d91f4e7bc458de4e404282b33f00c
+same    lion-president.lod0.glb e7d9b5b9f59fb260abca4e793675d6a9b98b19bed24c5197a1059cc806773c2d
+same    lion-president.lod1.glb 5900a50cd426aedfd5a997553cc8afba577b67327226e1fd5a89f5443497a44b
+same    lion-president.lod2.glb 4294cc18c76b62918ca7b78bdb24d38f4ce7f2030726469c5cae46a995718f01
+same    lion-president.asset.json f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b
+bake --check: the committed files are exactly what the model script bakes

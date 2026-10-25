@@ -1,0 +1,10 @@
+pig-catcher.lod0.glb: 2514 tris (budget 2800; optimiser flipped 0, dropped 218 unseen) {"core":546,"front":323,"back":305,"rider":344,"wheel_F":508,"wheel_R":488}
+pig-catcher.lod1.glb: 898 tris (budget 900; optimiser flipped 0, dropped 22 unseen) {"core":239,"front":167,"back":132,"rider":208,"wheel_F":76,"wheel_R":76}
+pig-catcher.lod2.glb: 596 tris (budget 600; optimiser flipped 0, dropped 8 unseen) {"core":180,"front":98,"back":74,"rider":124,"wheel_F":60,"wheel_R":60}
+same    pig-catcher.atlas.png ee012ca578bc209e1436b47ce9cf93544c86f088eb2a5f8e76a7798488f7a8e3
+same    pig-catcher.emissive.png 88f5a8924527ec92d6be57b92004ea7d41a882b856b5a80579c7ebe94b82615c
+same    pig-catcher.lod0.glb caf9281916d8de2a6dbab86263c62b10e580d135154357ee0240433718cc6546
+same    pig-catcher.lod1.glb dbc52529a662b2d1c14aa2b7e1b1a34aa69f95eb0430b2ae28d4a9df0fa9eabb
+same    pig-catcher.lod2.glb 94b166ad839207bd784daa4a89b468a227e430317ef718553c532be2e9135ead
+same    pig-catcher.asset.json 2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4
+bake --check: the committed files are exactly what the model script bakes

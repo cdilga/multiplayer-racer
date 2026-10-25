@@ -2,15 +2,16 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Cruz Missile",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
     "br-bwju.11",
     "P1-V02",
     "P1-V03",
     "br-bwju.1",
-    "br-p1-d03b-poc-cleanup-uod"
+    "br-p1-d03b-poc-cleanup-uod",
+    "br-rgw6"
   ],
-  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81), rebuilt against its contact sheet in br-bwju.11: painted pillars and roof with black-framed side glass and a black B pillar; the sheet's lightning livery traced into the atlas (side, bonnet, roof, boot and wing bolts); big angular headlamps in dark brows wrapping onto the wings over a black hex-mesh grille with its round badge; the bent nudge bar with four cyan LED blocks, hex fog lamps, pink bumper wedges and a black splitter; the UHF whip with its coil and red tip; two-part tail lamps wrapping onto the quarters, a boot badge, a finned diffuser with a red reverse-light triangle, hex exhaust and pink L corners; 16-sided tyres on five-spoke rims. LOD0 2037 triangles (qualified budget now 3000). Front drive, 1200 kg (R136: the Cruze is front-driven). The physics hulls are frozen at the P1-V02 bake (the Cruz is in the feel bank).",
+  "summary": "Narrower greenhouse through measured cabin stations and a tapered nose tip; 12-facet LOD0 tyres retain five-spoke depth. Front lamp wraps now clip onto the actual tub triangles, eliminating diagonal occlusion slits. At LOD1 the spoiler endplates retain both visible faces and their contour; hidden thickness funds the conforming lamps. Physics pivots are stored independently of visual extrema. Exported intact triangles: 1913 / 896 / 507 against 2800 / 900 / 600. Front-view cabin widths and nose taper improve; rear-view and small side-view silhouette regressions remain. The weighted score is essentially unchanged at LOD0 and improves slightly at LOD1/2. Lamp attachment is visually continuous after the projection repair; its side/fascia seam remains a visible faceted change in shading.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
@@ -18,33 +19,33 @@
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the lod+1 sheet",
-        "dir": "docs/evidence/P1-V-finish/cruz-missile/reference-lod0"
+        "label": "LOD0 against lod+1 sheet; frozen perspective mask/shading cameras",
+        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod0"
       },
       {
         "lod": 1,
-        "label": "LOD1 against the lod+1 sheet",
-        "dir": "docs/evidence/P1-V-finish/cruz-missile/reference-lod1"
+        "label": "LOD1 against lod+1 sheet; frozen perspective mask/shading cameras",
+        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod1"
       },
       {
         "lod": 2,
-        "label": "LOD2 against the lowest-lod sheet",
-        "dir": "docs/evidence/P1-V-finish/cruz-missile/reference-lod2"
+        "label": "LOD2 against lowest-lod sheet; frozen perspective mask/shading cameras",
+        "dir": "docs/evidence/P1-V-roster-reference/cruz-missile/reference-lod2"
       }
     ],
-    "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Front IoU is limited by the reference's own perspective, so don't chase it."
+    "note": "Frozen same-camera reference | shaded candidate | silhouette diff. Horizontal end views use a 50 m long lens; side/top 10 m. These generated sheets are not calibrated photographs. Before/after captures and local reference-derived section/cue gates are in docs/evidence/P1-V-roster-reference/cruz-missile. Reference limits and any extraction correction are documented in validation.md."
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-finish/cruz-missile/lods.png",
-    "validation": "docs/evidence/P1-V-finish/cruz-missile/validation.md"
+    "sheet": "docs/evidence/P1-V-roster-reference/cruz-missile/lods.png",
+    "validation": "docs/evidence/P1-V-roster-reference/cruz-missile/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-finish/cruz-missile/damage-strip.png",
-    "overview": "docs/evidence/P1-V-finish/cruz-missile/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front, door_FL and wheel_FL detached; a stripped shell. Detached parts persist as dynamic debris, so the lying parts are the debris they leave."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-finish/cruz-missile/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-roster-reference/cruz-missile/paints-strip.png",
     "identity": "art/ui/tokens.json",
     "pattern": "Seat colour on the paint key, the number on the roof (anchor roof_number) and in the HUD badge; tyres stay dark, glass and lamps keep their colour. Full-tier patterns (plan section 2.3) are not drawn yet."
   },
@@ -52,26 +53,26 @@
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-finish/cruz-missile/grid-1.png"
+      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-finish/cruz-missile/grid-4.png"
+      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-finish/cruz-missile/grid-24.png"
+      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-finish/cruz-missile/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-finish/cruz-missile/validation.md"
+    "report": "docs/evidence/P1-V-roster-reference/cruz-missile/validation.md"
   },
   "profile": "assets/profiles/cruz-missile.json",
   "handling": {

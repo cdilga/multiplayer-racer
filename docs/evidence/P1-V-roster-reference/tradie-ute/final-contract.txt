@@ -1,0 +1,1 @@
+art/vehicles/tradie-ute/tradie-ute.asset.json: ok (jj.vehicle.v1, triangles per LOD [1402, 896, 586])

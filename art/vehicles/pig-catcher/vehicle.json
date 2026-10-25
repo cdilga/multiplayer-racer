@@ -112,7 +112,7 @@
   ],
   "lplate_rear": [
    0,
-   1.0,
+   1,
    -1.4
   ]
  },
@@ -121,5 +121,7 @@
   "roof_number": "On the rider's back (the khaki shirt), where the number reads from the chase camera and from above.",
   "lplate_front": "On the number-plate shroud, under the light bar.",
   "lplate_rear": "On the rear mudguard's tail, above the tail lamp."
- }
+ },
+ "colliderPoints": "colliders.json",
+ "colliderNote": "Frozen pre-reference-refinement collision points (P1-V-roster-reference); visual-only changes preserve the existing physics hull and hinges."
 }

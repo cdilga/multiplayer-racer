@@ -1,0 +1,540 @@
+{
+  "car": "lion-president",
+  "lod": 2,
+  "sheet": "lowest",
+  "reference": "art/vehicles/lion-president/refs/lod-plus-1.png",
+  "sourceSha256": "cde864dc2f4f1efb1cd7fbc5eba9034db630e1f423055993efc5abb4e9d4455d",
+  "paramsSha256": "40728304bf96d4b481310317fed799379c66642c6ef2888290a26af87ced9c23",
+  "notes": [
+    "Contours use normalized roof=0 to ground=1; errors are full width/reference height. The fit pipeline excludes the lowest 12.5% to avoid contact shadows.",
+    "Features use independently annotated reference crop coordinates. Front/rear lamp tolerances preserve recognizable position/extent while allowing low-poly simplification and generated-sheet projection uncertainty.",
+    "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification.",
+    "The generated Lion front calls for a broad fascia while its plan view pinches the last nose section more strongly; front lamp identity governs the face. The 0.07 plan limit permits this inconsistency (59px on the 847px crop). Source contour projection retains thin geometry which the fit mask opening removes; lower front stance allows 0.085."
+  ],
+  "pass": true,
+  "checks": [
+    {
+      "name": "camera.projection",
+      "reference": "perspective",
+      "model": "perspective",
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.front",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.rear",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.front",
+      "reference": 50,
+      "model": 50,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.rear",
+      "reference": 50,
+      "model": 50,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.side",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.top",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.az",
+      "reference": 52,
+      "model": 52,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.dist",
+      "reference": 11,
+      "model": 11,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.targetY",
+      "reference": 0.78,
+      "model": 0.78,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.az",
+      "reference": 140,
+      "model": 140,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.dist",
+      "reference": 11,
+      "model": 11,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.targetY",
+      "reference": 0.78,
+      "model": 0.78,
+      "pass": true
+    },
+    {
+      "name": "canonical reference hash",
+      "pass": true,
+      "reference": "44dd9fbab0d96ff229dd5fc986f1d7664d2e0b20580b1afbd5c0d211cc796443",
+      "model": "44dd9fbab0d96ff229dd5fc986f1d7664d2e0b20580b1afbd5c0d211cc796443"
+    },
+    {
+      "name": "front shoulder to flank transition",
+      "kind": "delta",
+      "rows": [
+        0.4,
+        0.65
+      ],
+      "reference": [
+        1.1627906976744187,
+        1.3355481727574752
+      ],
+      "model": [
+        1.186046511627907,
+        1.2857142857142858
+      ],
+      "error": 0.07308970099667778,
+      "limit": 0.08,
+      "pass": true
+    },
+    {
+      "name": "front lower stance width",
+      "kind": "width",
+      "rows": [
+        0.65,
+        0.75,
+        0.83
+      ],
+      "reference": [
+        1.3355481727574752,
+        1.3388704318936877,
+        1.3388704318936877
+      ],
+      "model": [
+        1.2857142857142858,
+        1.282392026578073,
+        1.2990033222591362
+      ],
+      "error": 0.056478405315614655,
+      "limit": 0.09,
+      "pass": true
+    },
+    {
+      "name": "rear lower stance width",
+      "kind": "width",
+      "rows": [
+        0.6,
+        0.72,
+        0.83
+      ],
+      "reference": [
+        1.3322033898305086,
+        1.3491525423728814,
+        1.3491525423728814
+      ],
+      "model": [
+        1.2779661016949153,
+        1.2779661016949153,
+        1.2983050847457627
+      ],
+      "error": 0.07118644067796609,
+      "limit": 0.09,
+      "pass": true
+    },
+    {
+      "name": "plan nose taper at three sections",
+      "kind": "width",
+      "rows": [
+        0.9,
+        0.94,
+        0.97
+      ],
+      "reference": [
+        0.37411764705882355,
+        0.3447058823529412,
+        0.2647058823529412
+      ],
+      "model": [
+        0.42,
+        0.3811764705882353,
+        0.2411764705882353
+      ],
+      "error": 0.04588235294117643,
+      "limit": 0.08,
+      "pass": true
+    },
+    {
+      "name": "Lion yellow corner chevrons and fangs",
+      "kind": "feature-iou",
+      "iou": 0.3372337628188272,
+      "limit": 0.15,
+      "pass": true,
+      "envelope": false,
+      "reference": [
+        [
+          [
+            -0.5816666666666667,
+            0.4866666666666667
+          ],
+          [
+            -0.5216666666666666,
+            0.53
+          ],
+          [
+            -0.2916666666666667,
+            0.56
+          ],
+          [
+            -0.2916666666666667,
+            0.5766666666666667
+          ],
+          [
+            -0.425,
+            0.5766666666666667
+          ],
+          [
+            -0.42833333333333334,
+            0.6033333333333334
+          ],
+          [
+            -0.465,
+            0.56
+          ],
+          [
+            -0.505,
+            0.5566666666666666
+          ],
+          [
+            -0.5116666666666667,
+            0.6233333333333333
+          ],
+          [
+            -0.5516666666666666,
+            0.58
+          ]
+        ],
+        [
+          [
+            0.585,
+            0.4866666666666667
+          ],
+          [
+            0.525,
+            0.53
+          ],
+          [
+            0.295,
+            0.56
+          ],
+          [
+            0.295,
+            0.5766666666666667
+          ],
+          [
+            0.42833333333333334,
+            0.5766666666666667
+          ],
+          [
+            0.43166666666666664,
+            0.6033333333333334
+          ],
+          [
+            0.4683333333333333,
+            0.56
+          ],
+          [
+            0.5083333333333333,
+            0.5566666666666666
+          ],
+          [
+            0.515,
+            0.6233333333333333
+          ],
+          [
+            0.555,
+            0.58
+          ]
+        ]
+      ],
+      "model": [
+        [
+          [
+            0.5361868217601958,
+            0.5205119655233131
+          ],
+          [
+            0.5865878061122758,
+            0.5271167352520053
+          ],
+          [
+            0.5895512920558074,
+            0.45433175369368456
+          ]
+        ],
+        [
+          [
+            0.5361868217601958,
+            0.5205119655233131
+          ],
+          [
+            0.5895512920558074,
+            0.45433175369368456
+          ],
+          [
+            0.5421184798837604,
+            0.46226093374664584
+          ]
+        ],
+        [
+          [
+            0.4887130872904051,
+            0.5635672228536337
+          ],
+          [
+            0.518388436626662,
+            0.5999627513430205
+          ],
+          [
+            0.5865878061122758,
+            0.5271167352520053
+          ]
+        ],
+        [
+          [
+            0.4887130872904051,
+            0.5635672228536337
+          ],
+          [
+            0.5865878061122758,
+            0.5271167352520053
+          ],
+          [
+            0.5361868217601958,
+            0.5205119655233131
+          ]
+        ],
+        [
+          [
+            0.3758169269664171,
+            0.6100307697005776
+          ],
+          [
+            0.399601639322899,
+            0.5503658444786935
+          ],
+          [
+            0.33417170840273686,
+            0.5437669370767526
+          ]
+        ],
+        [
+          [
+            -0.5421184798837604,
+            0.46226093374664584
+          ],
+          [
+            -0.5895512920558074,
+            0.45433175369368456
+          ],
+          [
+            -0.5865878061122758,
+            0.5271167352520053
+          ]
+        ],
+        [
+          [
+            -0.5421184798837604,
+            0.46226093374664584
+          ],
+          [
+            -0.5865878061122758,
+            0.5271167352520053
+          ],
+          [
+            -0.5361868217601958,
+            0.5205119655233131
+          ]
+        ],
+        [
+          [
+            -0.5361868217601958,
+            0.5205119655233131
+          ],
+          [
+            -0.5865878061122758,
+            0.5271167352520053
+          ],
+          [
+            -0.518388436626662,
+            0.5999627513430205
+          ]
+        ],
+        [
+          [
+            -0.5361868217601958,
+            0.5205119655233131
+          ],
+          [
+            -0.518388436626662,
+            0.5999627513430205
+          ],
+          [
+            -0.4887130872904051,
+            0.5635672228536337
+          ]
+        ],
+        [
+          [
+            -0.33417170840273686,
+            0.5437669370767526
+          ],
+          [
+            -0.399601639322899,
+            0.5503658444786935
+          ],
+          [
+            -0.3758169269664171,
+            0.6100307697005776
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "Lion full width rear lamp band",
+      "kind": "feature-iou",
+      "iou": 0.6907737303908535,
+      "limit": 0.3,
+      "pass": true,
+      "envelope": true,
+      "reference": [
+        [
+          [
+            -0.5440677966101695,
+            0.36610169491525424
+          ],
+          [
+            0.5372881355932203,
+            0.36610169491525424
+          ],
+          [
+            0.5779661016949152,
+            0.39661016949152544
+          ],
+          [
+            0.5644067796610169,
+            0.4542372881355932
+          ],
+          [
+            -0.5610169491525424,
+            0.4542372881355932
+          ],
+          [
+            -0.5711864406779661,
+            0.4101694915254237
+          ]
+        ]
+      ],
+      "model": [
+        [
+          [
+            0.4278332437287237,
+            0.3636028989635285
+          ],
+          [
+            -0.4278332437287237,
+            0.3636028989635285
+          ],
+          [
+            -0.4513405648127196,
+            0.41657714365985704
+          ]
+        ],
+        [
+          [
+            0.4278332437287237,
+            0.3636028989635285
+          ],
+          [
+            -0.4513405648127196,
+            0.41657714365985704
+          ],
+          [
+            -0.4278332437287237,
+            0.4695513883561856
+          ]
+        ],
+        [
+          [
+            0.4278332437287237,
+            0.3636028989635285
+          ],
+          [
+            -0.4278332437287237,
+            0.4695513883561856
+          ],
+          [
+            0.4278332437287237,
+            0.4695513883561856
+          ]
+        ],
+        [
+          [
+            0.4278332437287237,
+            0.3636028989635285
+          ],
+          [
+            0.4278332437287237,
+            0.4695513883561856
+          ],
+          [
+            0.4513405648127196,
+            0.41657714365985704
+          ]
+        ]
+      ]
+    }
+  ]
+}

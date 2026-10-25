@@ -1,5 +1,65 @@
 {
  "what": "Reference sheets for tools/vehicles/fit (br-bwju.11): the owner's turnarounds, as Spike J cut them. Views are [x0, y0, x1, y1] windows on the 1672x941 sheets, one view each.",
- "sheets": { "lod1": "lod-plus-1.png", "lowest": "lowest-lod.png" },
- "views": { "hero": [20, 20, 1262, 612], "top": [1280, 0, 1672, 668], "front": [20, 612, 412, 941], "side": [412, 622, 1205, 941], "rear": [1215, 640, 1672, 941] }
+ "sheets": {
+  "lod1": "lod-plus-1.png",
+  "lowest": "lowest-lod.png"
+ },
+ "views": {
+  "hero": [
+   20,
+   20,
+   1262,
+   612
+  ],
+  "top": [
+   1280,
+   0,
+   1672,
+   668
+  ],
+  "front": [
+   20,
+   612,
+   412,
+   941
+  ],
+  "side": [
+   412,
+   622,
+   1205,
+   941
+  ],
+  "rear": [
+   1215,
+   640,
+   1672,
+   941
+  ]
+ },
+ "projection": "perspective",
+ "tilt": {
+  "front": 0,
+  "rear": 0
+ },
+ "camD": {
+  "front": 50,
+  "rear": 50,
+  "side": 10,
+  "top": 10
+ },
+ "hero": {
+  "az": 52,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "heroRear": {
+  "az": 140,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "cameraNote": "Frozen diagnostic cameras: horizontal end views at bounding-box midpoint with long lens; identical mask/shading perspective. Generated refs are not calibrated photography. Side/top at 10 m. Baseline recaptured under these cameras before model edits."
 }

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { PNG } from 'pngjs';
-import { cameraChecks, contourChecks, featureCheck, projectFeatures, sourceContourChecks } from '../fit/likeness.mjs';
+import { cameraChecks, contourChecks, featureCheck, projectFeatures, sourceContourChecks, loadCandidate, inside } from '../fit/likeness.mjs';
 import { soups } from '../../../art/vehicles/hawk-dash/model.js';
 
 const dir='art/vehicles/hawk-dash',fixture=JSON.parse(fs.readFileSync(`${dir}/refs/likeness.json`)),sheets=JSON.parse(fs.readFileSync(`${dir}/refs/sheets.json`)),P=JSON.parse(fs.readFileSync(`${dir}/params.json`));
@@ -71,3 +71,67 @@ for(let lod=0;lod<3;lod++) {
     assert.deepEqual(failures(fixture.features.map(f=>featureCheck(f,projected[f.name],lod))),[]);
   });
 }
+
+// Every annotated roster vehicle exercises current source, not a screenshot left by its author.
+const annotated=fs.readdirSync('art/vehicles').filter(id=>id!=='hawk-dash'&&fs.existsSync(`art/vehicles/${id}/refs/likeness.json`));
+for(const id of annotated) {
+  const root=`art/vehicles/${id}`,f=JSON.parse(fs.readFileSync(`${root}/refs/likeness.json`)),s=JSON.parse(fs.readFileSync(`${root}/refs/sheets.json`));
+  test(`${id}: reference identity and camera stay fixed`,()=> {
+    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(f.reference)).digest('hex'),f.referenceSha256);
+    assert.ok(Object.keys(f.maskSha256).length>0,'reference masks must be pinned');
+    for(const [file,hash]of Object.entries(f.maskSha256))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(`${root}/refs/masks/${file}`)).digest('hex'),hash,file);
+    assert.deepEqual(failures(cameraChecks(s,f.cameras)),[]);
+    const bad=structuredClone(s);bad.projection='mismatched';
+    assert.ok(cameraChecks(bad,f.cameras).some(c=>!c.pass),'mismatched mask/shaded cameras must fail');
+  });
+  test(`${id}: local gates reject a changed contour and missing features`,()=> {
+    for(const [view,specs]of Object.entries(f.contours)) {
+      const png=PNG.sync.read(fs.readFileSync(`${root}/refs/masks/lod1_${view}.mask.png`)),mask=Uint8Array.from({length:png.width*png.height},(_,i)=>png.data[i*4]>127?1:0);
+      const d={w:png.width,h:png.height,reference:mask,model:mask.slice()};
+      const spec=specs[0];rewriteRow(d,spec.rows.at(-1),.025);
+      const collapsed=contourChecks(d,specs).some(c=>!c.pass);
+      // A naturally narrow tip may already be this narrow; the opposite full-width defect must expose it.
+      rewriteRow(d,spec.rows.at(-1),d.w/d.h);
+      assert.ok(collapsed||contourChecks(d,specs).some(c=>!c.pass),`${view}: collapsed/full-width section defects must fail`);
+    }
+    for(const spec of f.features)assert.equal(featureCheck(spec,[]).pass,false,`${spec.name}: missing feature`);
+  });
+  for(let lod=0;lod<3;lod++)test(`${id} LOD${lod}: current geometry preserves annotated reference cues`,async()=> {
+    const {model,P}=await loadCandidate(id),parts=model.soups(P,lod).parts;
+    const contours=sourceContourChecks(parts,f,s,`${root}/refs/masks`,lod);
+    const projected=projectFeatures(parts,f.features,s);
+    assert.deepEqual(failures([...contours,...f.features.map(spec=>featureCheck(spec,projected[spec.name],lod))]),[]);
+  });
+}
+
+test('source override loader resolves a bike kit against the original vehicle directory',async()=> {
+  // This path used to break baseline reproduction for bikes because ../_kit was relative to a data URL.
+  const {model,P}=await loadCandidate('postie-bike',{modelFile:'art/vehicles/postie-bike/model.js'});
+  const parts=model.soups(P,2).parts;
+  assert.ok(parts.rider.positions.length>0&&parts.wheel_F.positions.length>0);
+});
+
+for(let lod=0;lod<3;lod++)test(`Postie LOD${lod}: CB50 frame and spoked wheels retain reference negative spaces`,async()=> {
+  const {model,P}=await loadCandidate('postie-bike'),parts=model.soups(P,lod).parts;
+  const covered=(part,z,y)=> {
+    for(let i=0;i<part.positions.length;i+=9) {
+      const triangle=[0,3,6].map(k=>[part.positions[i+k+2]+part.pivot[2],part.positions[i+k+1]+part.pivot[1]]);
+      if(inside([z,y],triangle))return true;
+    }
+    return false;
+  };
+  for(const name of ['wheel_F','wheel_R']) {
+    const part=parts[name],r=part.pivot[1];
+    assert.equal(covered(part,part.pivot[2]+r*.20,r+r*.40),false,`${name}: daylight between spokes, unlike a filled scooter wheel`);
+  }
+  // Reference side crop: daylight below the rear frame triangle, behind the exposed engine.
+  assert.equal(covered(parts.core,-.55,.55),false,'scooter body/floor must not fill the classic motorcycle frame gap');
+});
+
+test('Tradie Ute: current LODs retain independent owner measurements and reject geometric defects',async()=> {
+  const {runChecks}=await import('../../../art/vehicles/tradie-ute/refs/check-measured.mjs');
+  const report=await runChecks({defects:true});
+  assert.equal(report.lods.length,3);
+  assert.equal(report.pass,true,JSON.stringify(report.lods));
+  for(const lod of report.lods)assert.equal(lod.pass,true,`LOD${lod.lod}`);
+});

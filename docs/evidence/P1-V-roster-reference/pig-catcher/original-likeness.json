@@ -1,0 +1,231 @@
+{
+  "what": "Reference-derived section and cue gates for roster refinement. Pixel annotations are independent of params; tolerances allow generated-sheet disagreement and coarse faceting. Comparison masks still exclude bottom shadow band; no claim of complete likeness.",
+  "reference": "art/vehicles/pig-catcher/refs/lod-plus-1.png",
+  "referenceSha256": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+  "notes": [
+    "Horizontal optical axes and identical perspective mask/shading; baseline recaptured before source edits. References are generated, not calibrated photographs.",
+    "Reference mask sections normalize full width by unchanged crop height, preserving aspect. Ground-shadow region below .875 is excluded by fitter.",
+    "Named local gates supplement whole-view score. Open bike spokes, shading, material visibility and unannotated contours require rendered review."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": {
+      "front": 50,
+      "rear": 50,
+      "side": 10,
+      "top": 10
+    },
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 1
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 1
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "rider neck clears the shoulder and shirt envelope",
+        "rows": [
+          0.12
+        ],
+        "tolerance": [
+          0.045,
+          0.055,
+          0.06
+        ]
+      },
+      {
+        "name": "fork and body section width",
+        "rows": [
+          0.3,
+          0.4,
+          0.5,
+          0.6
+        ],
+        "tolerance": 0.065
+      }
+    ],
+    "rear": [
+      {
+        "name": "rear rack and standing rider leg sections",
+        "rows": [
+          0.3,
+          0.5,
+          0.6
+        ],
+        "tolerance": [
+          0.055,
+          0.055,
+          0.07
+        ]
+      }
+    ],
+    "top": [
+      {
+        "name": "front beak narrows towards its tip",
+        "rows": [
+          0.9,
+          0.94,
+          0.98
+        ],
+        "tolerance": 0.03
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "MX helmet peak goggles and chin envelope",
+      "view": "side",
+      "part": "rider",
+      "uvs": [
+        [
+          0.6875,
+          0.8125
+        ],
+        [
+          0.8125,
+          0.8125
+        ]
+      ],
+      "size": [
+        679,
+        465
+      ],
+      "polygons": [
+        [
+          [
+            287,
+            21
+          ],
+          [
+            327,
+            0
+          ],
+          [
+            368,
+            5
+          ],
+          [
+            384,
+            33
+          ],
+          [
+            376,
+            57
+          ],
+          [
+            340,
+            80
+          ],
+          [
+            304,
+            67
+          ],
+          [
+            311,
+            55
+          ],
+          [
+            322,
+            54
+          ],
+          [
+            323,
+            31
+          ]
+        ]
+      ],
+      "minIou": [
+        0.55,
+        0.55,
+        0.45
+      ],
+      "envelope": true
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "4d407502c776efb305684c1b85a9ade9080f05075e5eb8220c1a2dc765d5976e",
+    "lod1_rear.mask.png": "4504026b993625b48dcaa35bc974487fa7c88bb74685ac47be35a5c384af391d",
+    "lod1_top.mask.png": "e381dc611a44ce6e24aa7e5e5a52c919eebe31060ced623caab9c10a1c42c2ce",
+    "lowest_front.mask.png": "ab9c72731f7285af68696f3ece821d57c295e001226be10540a91ab081099845",
+    "lowest_rear.mask.png": "9b2c827768467d910b89bf868d6301889ec9e3818f59b0bac710ca74e343cffe",
+    "lowest_top.mask.png": "8f5e28998c15285741fe35e940f18f7d767ac39e11b1cfa970468ab3ed802ea1"
+  },
+  "negativeSpaces": [
+    {
+      "name": "daylight between front wheel spokes",
+      "part": "wheel_F",
+      "view": "side",
+      "referenceCenterPx": [
+        100,
+        365
+      ],
+      "referenceRadiusPx": 96,
+      "sampleRadiusFraction": 0.47,
+      "anglesDeg": [
+        11.25,
+        33.75,
+        56.25,
+        78.75,
+        101.25,
+        123.75,
+        146.25,
+        168.75,
+        191.25,
+        213.75,
+        236.25,
+        258.75,
+        281.25,
+        303.75,
+        326.25,
+        348.75
+      ],
+      "minOpenFraction": 0.6,
+      "note": "On unchanged lod1 side crop the rim bore is about 0.62 of tyre radius. Samples at 0.47 radius lie inside the rim, beyond the hub/disc; require daylight through a majority of directions, not an opaque cap."
+    },
+    {
+      "name": "daylight between rear wheel spokes",
+      "part": "wheel_R",
+      "view": "side",
+      "referenceCenterPx": [
+        565,
+        370
+      ],
+      "referenceRadiusPx": 94,
+      "sampleRadiusFraction": 0.47,
+      "anglesDeg": [
+        11.25,
+        33.75,
+        56.25,
+        78.75,
+        101.25,
+        123.75,
+        146.25,
+        168.75,
+        191.25,
+        213.75,
+        236.25,
+        258.75,
+        281.25,
+        303.75,
+        326.25,
+        348.75
+      ],
+      "minOpenFraction": 0.6,
+      "note": "Same normalized bore test on the rear wheel; spoke crossings may obscure some samples."
+    }
+  ]
+}

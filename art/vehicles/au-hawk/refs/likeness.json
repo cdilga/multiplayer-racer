@@ -1,0 +1,283 @@
+{
+  "what": "Reference-derived likeness checks for roster refinement. Polygon points annotated from unchanged cropped sheets; tolerances allow uncalibrated camera, 300px crops and coarse faceting.",
+  "reference": "art/vehicles/au-hawk/refs/lod-plus-1.png",
+  "referenceSha256": "ac75b33528199c675e7f7446074656875e0fd02e000e63457109494754d81af1",
+  "notes": [
+    "Contours use normalized roof=0 to ground=1; errors are full width/reference height. The fit pipeline excludes the lowest 12.5% to avoid contact shadows.",
+    "Features use independently annotated reference crop coordinates. Front/rear lamp tolerances preserve recognizable position/extent while allowing low-poly simplification and generated-sheet projection uncertainty.",
+    "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": {
+      "front": 50,
+      "rear": 50,
+      "side": 10,
+      "top": 10
+    },
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "front shoulder to flank transition",
+        "kind": "delta",
+        "rows": [
+          0.4,
+          0.65
+        ],
+        "tolerance": [
+          0.06,
+          0.07,
+          0.08
+        ]
+      },
+      {
+        "name": "front lower stance width",
+        "rows": [
+          0.65,
+          0.75,
+          0.83
+        ],
+        "tolerance": [
+          0.065,
+          0.075,
+          0.09
+        ]
+      }
+    ],
+    "rear": [
+      {
+        "name": "rear lower stance width",
+        "rows": [
+          0.6,
+          0.72,
+          0.83
+        ],
+        "tolerance": [
+          0.065,
+          0.075,
+          0.09
+        ]
+      }
+    ],
+    "top": [
+      {
+        "name": "plan nose taper at three sections",
+        "rows": [
+          0.9,
+          0.94,
+          0.97
+        ],
+        "tolerance": [
+          0.05,
+          0.055,
+          0.06
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "AU swept teardrop headlamps",
+      "view": "front",
+      "part": "front",
+      "uvs": [
+        [
+          0.8125,
+          0.8125
+        ]
+      ],
+      "size": [
+        405,
+        306
+      ],
+      "polygons": [
+        [
+          [
+            29,
+            151
+          ],
+          [
+            60,
+            142
+          ],
+          [
+            89,
+            153
+          ],
+          [
+            108,
+            165
+          ],
+          [
+            112,
+            182
+          ],
+          [
+            104,
+            191
+          ],
+          [
+            29,
+            190
+          ]
+        ],
+        [
+          [
+            376,
+            151
+          ],
+          [
+            345,
+            142
+          ],
+          [
+            316,
+            153
+          ],
+          [
+            299,
+            165
+          ],
+          [
+            295,
+            182
+          ],
+          [
+            303,
+            191
+          ],
+          [
+            375,
+            190
+          ]
+        ]
+      ],
+      "minIou": [
+        0.45,
+        0.35,
+        0.28
+      ]
+    },
+    {
+      "name": "AU rounded corner rear lamps",
+      "view": "rear",
+      "part": "back",
+      "uvs": [
+        [
+          0.9625,
+          0.8125
+        ],
+        [
+          0.8875,
+          0.6875
+        ]
+      ],
+      "size": [
+        390,
+        310
+      ],
+      "polygons": [
+        [
+          [
+            12,
+            166
+          ],
+          [
+            23,
+            140
+          ],
+          [
+            40,
+            121
+          ],
+          [
+            57,
+            115
+          ],
+          [
+            78,
+            116
+          ],
+          [
+            94,
+            128
+          ],
+          [
+            102,
+            147
+          ],
+          [
+            101,
+            165
+          ]
+        ],
+        [
+          [
+            378,
+            166
+          ],
+          [
+            367,
+            140
+          ],
+          [
+            350,
+            121
+          ],
+          [
+            333,
+            115
+          ],
+          [
+            312,
+            116
+          ],
+          [
+            296,
+            128
+          ],
+          [
+            288,
+            147
+          ],
+          [
+            289,
+            165
+          ]
+        ]
+      ],
+      "minIou": [
+        0.4,
+        0.32,
+        0.25
+      ]
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "cb8276aca7bf2dd3bef1c51a82672c22c9ff7edd740ddedca79793bfa5828735",
+    "lod1_rear.mask.png": "ea02f13e6a198a35c5fd86d997f59026a310b2b2cdaba3f21acef85a8c705dce",
+    "lod1_top.mask.png": "391b1420c5847ac41ec9b39a24783bbf1339f1668fdf122095ed6ca0674d93bc",
+    "lowest_front.mask.png": "e9ed31edb45e992fa91cb6841d8557d03af9a172f90540f4c881012df7121a5e",
+    "lowest_rear.mask.png": "485255b68d11e3b14da0f124e7c728217b448eb13ea2d008276e524d871d22c6",
+    "lowest_top.mask.png": "586b3716204c2594743aaa030a0eb610254d0eae027dc5fac2c0c124f8cf6094"
+  }
+}

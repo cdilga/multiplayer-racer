@@ -49,5 +49,31 @@
     24
    ]
   ]
- }
+ },
+ "projection": "perspective",
+ "tilt": {
+  "front": 0,
+  "rear": 0
+ },
+ "camD": {
+  "front": 50,
+  "rear": 50,
+  "side": 10,
+  "top": 10
+ },
+ "hero": {
+  "az": 52,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "heroRear": {
+  "az": 140,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 0.78
+ },
+ "cameraNote": "Frozen diagnostic comparison: horizontal midpoint optical axis, 50m front/rear and 10m side/top; shared shaded and silhouette perspective. Generated sheets are not calibrated photographs. Same setup used before and after."
 }

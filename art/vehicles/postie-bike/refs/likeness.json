@@ -1,0 +1,207 @@
+{
+  "what": "Reference-derived CB50-inspired Postie shape gates. Authoritative architecture is Honda primary image; polygons annotated on regenerated Muse crops, independent of source params.",
+  "reference": "art/vehicles/postie-bike/refs/lod-plus-1.png",
+  "referenceSha256": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+  "notes": [
+    "All sections use complete bike+rider bounds; uncalibrated generated sheets are proportion/style targets, not camera recovery.",
+    "Body/helmet bands allow up to roughly 27px at high/medium tiers and 36px at coarse tier for illustrated view inconsistencies and faceting.",
+    "The generated rear mistakenly retains twin outlet ends; real primary image governs single right-hand exhaust.",
+    "Silver engine segmentation uses dark .65 against background near .78; original .30 omitted gray mechanical form. Inspect mask crops as part of review. Whole silhouette fills enclosed holes, so wheel/frame negative spaces have separate current-triangle tests."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": 30,
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 10,
+      "fov": 26,
+      "targetY": 1
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 10,
+      "fov": 26,
+      "targetY": 1
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "helmet and delivery pannier width bands",
+        "rows": [
+          0.1,
+          0.55,
+          0.65
+        ],
+        "tolerance": [
+          0.06,
+          0.065,
+          0.08
+        ]
+      },
+      {
+        "name": "delivery stance widens below the torso",
+        "kind": "delta",
+        "rows": [
+          0.28,
+          0.6
+        ],
+        "tolerance": [
+          0.08,
+          0.09,
+          0.1
+        ]
+      }
+    ],
+    "rear": [
+      {
+        "name": "helmet and rear pannier envelopes",
+        "rows": [
+          0.1,
+          0.52,
+          0.65
+        ],
+        "tolerance": [
+          0.06,
+          0.065,
+          0.08
+        ]
+      }
+    ],
+    "top": [
+      {
+        "name": "narrow motorcycle front beyond mail carrier",
+        "rows": [
+          0.87,
+          0.94,
+          0.98
+        ],
+        "tolerance": [
+          0.045,
+          0.05,
+          0.055
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "rounded cream tank inset replaces scooter leg shield",
+      "view": "side",
+      "part": "core",
+      "uvs": [
+        [
+          0.8125,
+          0.5625
+        ]
+      ],
+      "size": [
+        679,
+        455
+      ],
+      "polygons": [
+        [
+          [
+            225,
+            191
+          ],
+          [
+            277,
+            193
+          ],
+          [
+            319,
+            209
+          ],
+          [
+            302,
+            230
+          ],
+          [
+            229,
+            229
+          ],
+          [
+            219,
+            215
+          ]
+        ]
+      ],
+      "minIou": [
+        0.45,
+        0.35,
+        0.3
+      ]
+    },
+    {
+      "name": "classic round headlamp envelope",
+      "view": "front",
+      "part": "front",
+      "uvs": [
+        [
+          0.0625,
+          0.8125
+        ]
+      ],
+      "size": [
+        315,
+        457
+      ],
+      "polygons": [
+        [
+          [
+            144,
+            122
+          ],
+          [
+            176,
+            122
+          ],
+          [
+            187,
+            141
+          ],
+          [
+            180,
+            163
+          ],
+          [
+            161,
+            172
+          ],
+          [
+            140,
+            163
+          ],
+          [
+            132,
+            143
+          ]
+        ]
+      ],
+      "minIou": [
+        0.45,
+        0.35,
+        0.25
+      ]
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "e8b26022c09dc530ff8e5f48b2834ff6e9b2c6291ac487d6cbbad0eb338c36fd",
+    "lod1_hero.mask.png": "71b45ef4ecd1a366eccb6f81e4bd74b5bda8439aa7b836d812375ddb76122e28",
+    "lod1_rear.mask.png": "2de4189940c97f05daec0192a3f2d4e906de7daf3a4014a75cbb20a30e783906",
+    "lod1_side.mask.png": "8e970d43e5fa1a785fe9a3696c12b4235bf3dc4136ecc33ff6882e32238ff92b",
+    "lod1_top.mask.png": "abbdf8e825345d52eee6939cbc82a81ba80f6664305d179e41609c1b063b23da",
+    "lowest_front.mask.png": "d65a2ced2c412b1c5546dddd145598b9c31b1aff3489860bf4b6e8c7d7dc21e0",
+    "lowest_hero.mask.png": "9035a3664f56fae847af31569f87c5d7f64cb33279826a90b85fff0e9f5b2d63",
+    "lowest_rear.mask.png": "9824e17fbdbb4dd0fcf67dfe935d878404f5c8da257f9db173805deb1fa527aa",
+    "lowest_side.mask.png": "e057b32f7f739f15786c9efb71eaa4ee70de9c1fa4487829626d58c4945ad0bb",
+    "lowest_top.mask.png": "691da68168207c5a6b176b68b39bd6a915b692acb00c03948d9c2a278d73441a"
+  }
+}

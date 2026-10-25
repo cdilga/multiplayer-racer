@@ -1,0 +1,24 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD.front
+PASS camera.camD.rear
+PASS camera.camD.side
+PASS camera.camD.top
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS front shoulder to flank transition error=0.0731 limit=0.08
+PASS front lower stance width error=0.0565 limit=0.09
+PASS rear lower stance width error=0.0712 limit=0.09
+PASS plan nose taper at three sections error=0.0459 limit=0.08
+PASS Lion yellow corner chevrons and fangs IoU=0.337 minimum=0.15
+PASS Lion full width rear lamp band IoU=0.691 minimum=0.3

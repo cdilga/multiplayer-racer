@@ -1,0 +1,72 @@
+{
+ "car": "pig-catcher",
+ "lod": 1,
+ "sheet": "lod1",
+ "cameras": {
+  "camD": {
+   "front": 50,
+   "rear": 50,
+   "side": 10,
+   "top": 10
+  },
+  "projection": "perspective",
+  "tilt": {
+   "front": 0,
+   "rear": 0
+  },
+  "hero": {
+   "az": 52,
+   "elev": 0,
+   "dist": 11,
+   "fov": 26,
+   "targetY": 1
+  },
+  "heroRear": {
+   "az": 140,
+   "elev": 0,
+   "dist": 11,
+   "fov": 26,
+   "targetY": 1
+  }
+ },
+ "stats": {
+  "tris": 884,
+  "draws": 6,
+  "breakdown": {
+   "core": 248,
+   "front": 160,
+   "back": 144,
+   "rider": 204,
+   "wheel_F": 64,
+   "wheel_R": 64
+  },
+  "stations": 0
+ },
+ "views": {
+  "side": {
+   "iou": 0.8778,
+   "aspect": 0.996,
+   "miss": 0.0873,
+   "extra": 0.0349
+  },
+  "top": {
+   "iou": 0.8519,
+   "aspect": 0.985,
+   "miss": 0.0697,
+   "extra": 0.0784
+  },
+  "front": {
+   "iou": 0.7931,
+   "aspect": 0.959,
+   "miss": 0.0711,
+   "extra": 0.1358
+  },
+  "rear": {
+   "iou": 0.7987,
+   "aspect": 1.022,
+   "miss": 0.0611,
+   "extra": 0.1402
+  }
+ },
+ "score": 0.8455
+}

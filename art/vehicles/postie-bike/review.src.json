@@ -2,13 +2,11 @@
  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
  "name": "Postie Bike",
  "status": "awaiting-review",
- "date": "2026-10-18",
+ "date": "2026-10-25",
  "beads": [
-  "br-bwju.11",
-  "br-bwju.5",
-  "br-bwju"
+  "br-rgw6"
  ],
- "summary": "R123's Postie Bike, rebuilt against its contact sheet in br-bwju.11: a bent leg shield with bowed facets and a floor wedge with rubber pads; lugged tyres on black four-diameter spoked wheels; an octagon headlamp with rim and lens; swept silver bars with black grips and round mirrors on stalks; twin hex mufflers with header pipes and shocks; a front mudguard with skirts; a silver wire carrier with a postal-red mail tub and parcels; open-top panniers with lid rims and parcels; a rounded rear grab rail, tail block with brake cap and hex lens. The rider is part of the model: faceted white helmet with a grey lower ring and a clear visor frame, hi-vis vest with bands and stripes, puffy blue sleeves, shorts and tall boots. LOD0 2782 triangles (qualified budget now 3000). The physics hulls are frozen at the br-bwju.5 bake.",
+ "summary": "Rebuilt around classic CB50 architecture: a curved red/cream tank, exposed finned single-cylinder engine, open diamond frame, slim spoked wheels and one low right exhaust replace the scooter floor and leg shield. The postie rider, carrier, parcels and panniers retain the game identity. Exported triangles: 2287 / 877 / 593 within unchanged 2900 / 900 / 600 budgets. Physics hulls, wheel hubs, anchors and original hinges remain frozen. Owner review decides likeness.",
  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
  "specTwin": null,
  "reference": {
@@ -16,60 +14,60 @@
   "compare": [
    {
     "lod": 0,
-    "label": "LOD0 against the lod+1 sheet",
-    "dir": "docs/evidence/P1-V-finish/postie-bike/reference-lod0"
+    "label": "LOD0 against the new CB50-inspired reference",
+    "dir": "docs/evidence/P1-V-roster-reference/postie-bike/after-lod0"
    },
    {
     "lod": 1,
-    "label": "LOD1 against the lod+1 sheet",
-    "dir": "docs/evidence/P1-V-finish/postie-bike/reference-lod1"
+    "label": "LOD1 against the new CB50-inspired reference",
+    "dir": "docs/evidence/P1-V-roster-reference/postie-bike/after-lod1"
    },
    {
     "lod": 2,
-    "label": "LOD2 against the lowest-lod sheet",
-    "dir": "docs/evidence/P1-V-finish/postie-bike/reference-lod2"
+    "label": "LOD2 against the new CB50-inspired reference",
+    "dir": "docs/evidence/P1-V-roster-reference/postie-bike/after-lod2"
    }
   ],
-  "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Scored with the helmet-patched masks and the level far camera of refs/sheets.json; thin parts (wire basket, rail, mirror stalks) vanish from the masks on both sides."
+  "note": "New references generated with Muse from the Honda 1971 CB50 architecture; prompts, cost and primary image are retained in refs/provenance.json. The real Honda image governs a single right exhaust where the generated rear view invents two. Reference | model | silhouette diff use identical frozen level cameras. Corrected masks retain silver engine parts and the separate front tyre. Same-mask LOD0 score .8164 before to .8563 after; this remains an interpretation, not a calibrated replica."
  },
  "turntable": {
-  "sheet": "docs/evidence/P1-V-finish/postie-bike/lods.png",
-  "validation": "docs/evidence/P1-V-finish/postie-bike/validation.md"
+  "sheet": "docs/evidence/P1-V-roster-reference/postie-bike/ladder.png",
+  "validation": "docs/evidence/P1-V-roster-reference/postie-bike/validation.md"
  },
  "damage": {
-  "strip": "docs/evidence/P1-V-finish/postie-bike/damage-strip.png",
-  "overview": "docs/evidence/P1-V-finish/postie-bike/damage-strip-overview.png",
+  "strip": "docs/evidence/P1-V-roster-reference/postie-bike/damage-strip.png",
+  "overview": "docs/evidence/P1-V-roster-reference/postie-bike/damage-strip-overview.png",
   "note": "Left to right: intact; front and back loose; the rider loose; wheel_F cambered; front detached; the rider thrown (detached, R121); back detached; wheel_F detached; rider and front detached; a stripped frame. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
  },
  "paints": {
-  "sheet": "docs/evidence/P1-V-finish/postie-bike/paints-strip.png",
+  "sheet": "docs/evidence/P1-V-roster-reference/postie-bike/paints-strip.png",
   "identity": "art/ui/tokens.json",
-  "pattern": "Seat colour on the paint key (the leg shield, side covers and mudguards tint); the postal-red panniers, the hi-vis vest and the parcels keep their colours, so it reads as a postie in any seat colour. The number sits on the rider's back (anchor roof_number) and in the HUD badge."
+  "pattern": "Seat colour tints the tank panels and mudguards. The cream tank inset, postal-red panniers, hi-vis vest, parcels, mechanical metal and dark tyres retain their colours. The identity number uses the original rider-back roof_number anchor and HUD badge."
  },
  "inWorld": [
   {
    "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
    "size": "large",
-   "path": "docs/evidence/P1-V-finish/postie-bike/grid-1.png"
+   "path": "docs/evidence/P1-V-roster-reference/postie-bike/grid-1.png"
   },
   {
    "label": "Four tiles",
    "size": "medium",
-   "path": "docs/evidence/P1-V-finish/postie-bike/grid-4.png"
+   "path": "docs/evidence/P1-V-roster-reference/postie-bike/grid-4.png"
   },
   {
    "label": "24 tiles, small (each car about 100 px)",
    "size": "small",
-   "path": "docs/evidence/P1-V-finish/postie-bike/grid-24.png"
+   "path": "docs/evidence/P1-V-roster-reference/postie-bike/grid-24.png"
   },
   {
    "label": "From the Derby overview camera (top-down damage row)",
    "size": "overview",
-   "path": "docs/evidence/P1-V-finish/postie-bike/damage-strip-overview.png"
+   "path": "docs/evidence/P1-V-roster-reference/postie-bike/damage-strip-overview.png"
   }
  ],
  "gate": {
-  "report": "docs/evidence/P1-V-finish/postie-bike/validation.md"
+  "report": "docs/evidence/P1-V-roster-reference/postie-bike/validation.md"
  },
  "profile": "assets/profiles/postie-bike.json",
  "handling": {

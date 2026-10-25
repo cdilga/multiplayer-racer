@@ -4,6 +4,9 @@
 //   doors:  the front edge (max z, +z is forward) on the outer skin (max |x| on the door's own side), hinge axis +y
 //   front:  its rear edge (min z) where it meets the body, at the shoulder line (upper half of its height), on the centre line
 //   back:   its front edge (max z) where it meets the body, likewise, hinge axis +x
+// Visual-only refinements may retain an existing physical attachment while changing the visible edge.
+// The narrow frozen-attachments fixture then checks the exact original physical contract instead of
+// moving gameplay hinges to chase new silhouettes. Every other part still uses the geometric check.
 // node --test tools/vehicles/test/ (scripts/ci/checks.sh)
 
 import test from 'node:test';
@@ -15,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const ROOT = path.join(REPO, 'art/vehicles');
 const TOL = 0.02; // metres: the bake's pivots are exact; this absorbs float32 and nothing else
+const frozen = JSON.parse(fs.readFileSync(new URL('./fixtures/frozen-attachments.json', import.meta.url), 'utf8'));
 
 const roster = fs.readdirSync(ROOT, { withFileTypes: true }).filter((d) => d.isDirectory()
   && ['model.js', 'params.json', 'vehicle.json'].every((f) => fs.existsSync(path.join(ROOT, d.name, f)))).map((d) => d.name);
@@ -46,21 +50,38 @@ function pivotProblems(id, pivot, { lo, hi }, tol = TOL) {
   return out;
 }
 
+function frozenAttachment(expected, pivot, declaration, sidecar) {
+  assert.deepEqual({ pivot, ...declaration, collider: { type: declaration.collider } }, expected, 'source attachment equals original physical contract');
+  assert.deepEqual(sidecar, expected, 'baked sidecar attachment equals original physical contract');
+}
+
 test('the roster is found from the data and is not empty', () => assert.ok(roster.includes('cruz-missile'), roster.join()));
+test('frozen attachment fixtures name existing roster parts', () => {
+  for (const [id, vehicle] of Object.entries(frozen.vehicles)) {
+    assert.ok(roster.includes(id), `frozen vehicle ${id} exists`);
+    const V = JSON.parse(fs.readFileSync(path.join(ROOT, id, 'vehicle.json'), 'utf8'));
+    for (const p of Object.keys(vehicle.parts)) assert.ok(V.parts[p]?.hinge, `frozen ${id}/${p} is an articulated part`);
+  }
+});
 
 for (const id of roster) {
   const dir = path.join(ROOT, id);
   const P = JSON.parse(fs.readFileSync(path.join(dir, 'params.json'), 'utf8'));
   const V = JSON.parse(fs.readFileSync(path.join(dir, 'vehicle.json'), 'utf8'));
   const model = await import(pathToFileURL(path.join(dir, 'model.js')).href);
+  const side = JSON.parse(fs.readFileSync(path.join(dir, `${V.id}.asset.json`), 'utf8'));
+  const attachments = frozen.vehicles[id]?.parts ?? {};
   const hinged = Object.keys(V.parts).filter((p) => /^(door|front$|back$)/.test(p));
 
   for (const lod of V.lods.keys()) {
-    test(`${id} LOD${lod}: doors, front and back pivot on their hinge lines`, () => {
+    test(`${id} LOD${lod}: hinges match the skin edge or exact frozen attachment`, () => {
       const { parts } = model.soups(P, lod);
       // a car has four doors, front and back; a bike (br-bwju.5) front and back, and its rider pitches off about the hip
       assert.ok(hinged.length >= (V.parts.wheel_F ? 2 : 6), `${id} has its doors and front/back parts (${hinged})`);
-      for (const p of hinged) assert.deepEqual(pivotProblems(p, parts[p].pivot, bounds(parts[p])), []);
+      for (const p of hinged) {
+        if (attachments[p]) frozenAttachment(attachments[p], parts[p].pivot, V.parts[p], side.parts[p]);
+        else assert.deepEqual(pivotProblems(p, parts[p].pivot, bounds(parts[p])), []);
+      }
       if (parts.rider) {
         const b = bounds(parts.rider), [x, y] = parts.rider.pivot;
         assert.ok(Math.abs(x) < TOL && y >= b.lo[1] - TOL && y <= b.lo[1] + 0.5 * (b.hi[1] - b.lo[1]), `${id}: the rider pivots at the hip (y ${y.toFixed(3)} in ${b.lo[1].toFixed(3)}..${b.hi[1].toFixed(3)})`);
@@ -78,6 +99,18 @@ for (const id of roster) {
     const { parts } = model.soups(P, 0);
     for (const p of hinged) {
       const b = bounds(parts[p]), centre = b.lo.map((l, k) => (l + b.hi[k]) / 2);
+      if (attachments[p]) {
+        const expected = attachments[p], pivot = parts[p].pivot;
+        const drifted = [0, 1, 2].map(axis => pivot.map((v, k) => v + (k === axis ? .001 : 0)));
+        for (const wrong of [centre, ...drifted, [pivot[0], pivot[1], p === 'front' ? b.hi[2] : b.lo[2]]]) {
+          assert.throws(() => frozenAttachment(expected, wrong, V.parts[p], side.parts[p]), `${p}: centre, wrong-edge and 1mm pivot drift rejected`);
+        }
+        const axis = structuredClone(V.parts[p]); axis.hinge.axis = [0, 0, 1];
+        assert.throws(() => frozenAttachment(expected, pivot, axis, side.parts[p]), `${p}: hinge-axis drift rejected`);
+        const baked = structuredClone(side.parts[p]); baked.pivot[1] += .001;
+        assert.throws(() => frozenAttachment(expected, pivot, V.parts[p], baked), `${p}: sidecar-only pivot drift rejected`);
+        continue;
+      }
       assert.notDeepEqual(pivotProblems(p, centre, b), [], `${p}: a centre pivot must be rejected`);
       if (p.startsWith('door')) {
         const rear = [...parts[p].pivot]; rear[2] = b.lo[2];

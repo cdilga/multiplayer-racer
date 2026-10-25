@@ -1,0 +1,10 @@
+cruz-missile.lod0.glb: 1913 tris (budget 2800; optimiser flipped 0, dropped 20 unseen) {"core":264,"front":608,"back":373,"door_FL":32,"door_FR":32,"door_RL":26,"door_RR":26,"wheel_FL":138,"wheel_FR":138,"wheel_RL":138,"wheel_RR":138,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod1.glb: 896 tris (budget 900; optimiser flipped 0, dropped 9 unseen) {"core":200,"front":273,"back":207,"door_FL":12,"door_FR":12,"door_RL":12,"door_RR":12,"wheel_FL":42,"wheel_FR":42,"wheel_RL":42,"wheel_RR":42,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod2.glb: 507 tris (budget 600; optimiser flipped 0, dropped 4 unseen) {"core":144,"front":102,"back":137,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":25,"wheel_FR":25,"wheel_RL":25,"wheel_RR":25,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+same    cruz-missile.atlas.png d4c7edcfc86f04d8599ef58ee354982797ac6e59843fbd91f79c7906554a579f
+same    cruz-missile.emissive.png cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d
+same    cruz-missile.lod0.glb 369fa0cb5c08ff374ba32e5ba8633a1f87952d99fa386d898c83a9baca338b65
+same    cruz-missile.lod1.glb 3ba45bb1c28769ee10c966c182ea3f390b5e2c2f0a5336915ebe7b8609804a90
+same    cruz-missile.lod2.glb a724a36bbde9338395dfbf4366677c29a6850333d63780b948dbe2a8ee97e627
+same    cruz-missile.asset.json 5b8cdc5befc70bc4e0f9d5fa5d0a1fa9a992289912790e5f7940e4d591cf8313
+bake --check: the committed files are exactly what the model script bakes

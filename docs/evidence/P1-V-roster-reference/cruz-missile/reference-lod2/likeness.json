@@ -1,0 +1,288 @@
+{
+  "car": "cruz-missile",
+  "lod": 2,
+  "sheet": "lowest",
+  "reference": "art/vehicles/cruz-missile/refs/lod-plus-1.png",
+  "sourceSha256": "e30c0751a797cf5a822f368f48a918da29dee813bdd34e30ab81885ca8acda6a",
+  "paramsSha256": "de0255bb2b37ec099ffda602df0c36abb36496c8bd240b07f8d5f4e6002a9b6f",
+  "notes": [
+    "Horizontal optical axes and identical perspective mask/shading; baseline recaptured before source edits. References are generated, not calibrated photographs.",
+    "Reference mask sections normalize full width by unchanged crop height, preserving aspect. Ground-shadow region below .875 is excluded by fitter.",
+    "Named local gates supplement whole-view score. Open bike spokes, shading, material visibility and unannotated contours require rendered review."
+  ],
+  "pass": true,
+  "checks": [
+    {
+      "name": "camera.projection",
+      "reference": "perspective",
+      "model": "perspective",
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.front",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.tilt.rear",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.front",
+      "reference": 50,
+      "model": 50,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.rear",
+      "reference": 50,
+      "model": 50,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.side",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.camD.top",
+      "reference": 10,
+      "model": 10,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.az",
+      "reference": 52,
+      "model": 52,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.dist",
+      "reference": 11,
+      "model": 11,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.hero.targetY",
+      "reference": 0.78,
+      "model": 0.78,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.az",
+      "reference": 140,
+      "model": 140,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.elev",
+      "reference": 0,
+      "model": 0,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.dist",
+      "reference": 11,
+      "model": 11,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.fov",
+      "reference": 26,
+      "model": 26,
+      "pass": true
+    },
+    {
+      "name": "camera.heroRear.targetY",
+      "reference": 0.78,
+      "model": 0.78,
+      "pass": true
+    },
+    {
+      "name": "canonical reference hash",
+      "pass": true,
+      "reference": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73",
+      "model": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73"
+    },
+    {
+      "name": "front greenhouse tapers into the roof instead of staying broad",
+      "kind": "width",
+      "rows": [
+        0.12,
+        0.2
+      ],
+      "reference": [
+        0.8286852589641435,
+        0.9203187250996016
+      ],
+      "model": [
+        0.9402390438247012,
+        1.00398406374502
+      ],
+      "error": 0.11155378486055778,
+      "limit": 0.13,
+      "pass": true
+    },
+    {
+      "name": "front body remains broad below the shoulders",
+      "kind": "width",
+      "rows": [
+        0.5,
+        0.6
+      ],
+      "reference": [
+        1.2868525896414342,
+        1.3227091633466135
+      ],
+      "model": [
+        1.250996015936255,
+        1.254980079681275
+      ],
+      "error": 0.06772908366533859,
+      "limit": 0.115,
+      "pass": true
+    },
+    {
+      "name": "nose tip narrows from the shoulder footprint",
+      "kind": "width",
+      "rows": [
+        0.9,
+        0.94,
+        0.98
+      ],
+      "reference": [
+        0.4292527821939587,
+        0.40063593004769477,
+        0.30842607313195547
+      ],
+      "model": [
+        0.4117647058823529,
+        0.3767885532591415,
+        0.3036565977742448
+      ],
+      "error": 0.023847376788553254,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "name": "front angular lamp envelopes",
+      "kind": "feature-iou",
+      "iou": 0.3030558838426473,
+      "limit": 0.25,
+      "pass": true,
+      "envelope": false,
+      "reference": [
+        [
+          [
+            -0.5863453815261044,
+            0.43373493975903615
+          ],
+          [
+            -0.3895582329317269,
+            0.46987951807228917
+          ],
+          [
+            -0.3654618473895582,
+            0.5622489959839357
+          ],
+          [
+            -0.606425702811245,
+            0.5341365461847389
+          ]
+        ],
+        [
+          [
+            0.606425702811245,
+            0.5341365461847389
+          ],
+          [
+            0.3654618473895582,
+            0.5622489959839357
+          ],
+          [
+            0.3895582329317269,
+            0.46987951807228917
+          ],
+          [
+            0.5863453815261044,
+            0.43373493975903615
+          ]
+        ]
+      ],
+      "model": [
+        [
+          [
+            0.362184319340364,
+            0.5652711796077476
+          ],
+          [
+            0.4756376288357474,
+            0.5164449289334487
+          ],
+          [
+            0.5028706685072019,
+            0.4809429198548446
+          ]
+        ],
+        [
+          [
+            0.362184319340364,
+            0.5652711796077476
+          ],
+          [
+            0.5028706685072019,
+            0.4809429198548446
+          ],
+          [
+            0.36101426273273585,
+            0.46574223037864054
+          ]
+        ],
+        [
+          [
+            -0.36101426273273585,
+            0.46574223037864054
+          ],
+          [
+            -0.5028706685072019,
+            0.4809429198548446
+          ],
+          [
+            -0.4756376288357474,
+            0.5164449289334487
+          ]
+        ],
+        [
+          [
+            -0.36101426273273585,
+            0.46574223037864054
+          ],
+          [
+            -0.4756376288357474,
+            0.5164449289334487
+          ],
+          [
+            -0.362184319340364,
+            0.5652711796077476
+          ]
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "what": "Reference-derived likeness checks for roster refinement. Polygon points annotated from unchanged cropped sheets; tolerances allow uncalibrated camera, 300px crops and coarse faceting.",
+  "reference": "art/vehicles/lion-president/refs/lod-plus-1.png",
+  "referenceSha256": "44dd9fbab0d96ff229dd5fc986f1d7664d2e0b20580b1afbd5c0d211cc796443",
+  "notes": [
+    "Contours use normalized roof=0 to ground=1; errors are full width/reference height. The fit pipeline excludes the lowest 12.5% to avoid contact shadows.",
+    "Features use independently annotated reference crop coordinates. Front/rear lamp tolerances preserve recognizable position/extent while allowing low-poly simplification and generated-sheet projection uncertainty.",
+    "A missing-lamp injected defect is required to fail. These are local likeness checks, not complete material, shading, silhouette or physics qualification.",
+    "The generated Lion front calls for a broad fascia while its plan view pinches the last nose section more strongly; front lamp identity governs the face. The 0.07 plan limit permits this inconsistency (59px on the 847px crop). Source contour projection retains thin geometry which the fit mask opening removes; lower front stance allows 0.085."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": {
+      "front": 50,
+      "rear": 50,
+      "side": 10,
+      "top": 10
+    },
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "front shoulder to flank transition",
+        "kind": "delta",
+        "rows": [
+          0.4,
+          0.65
+        ],
+        "tolerance": [
+          0.06,
+          0.07,
+          0.08
+        ]
+      },
+      {
+        "name": "front lower stance width",
+        "rows": [
+          0.65,
+          0.75,
+          0.83
+        ],
+        "tolerance": [
+          0.085,
+          0.085,
+          0.09
+        ]
+      }
+    ],
+    "rear": [
+      {
+        "name": "rear lower stance width",
+        "rows": [
+          0.6,
+          0.72,
+          0.83
+        ],
+        "tolerance": [
+          0.065,
+          0.075,
+          0.09
+        ]
+      }
+    ],
+    "top": [
+      {
+        "name": "plan nose taper at three sections",
+        "rows": [
+          0.9,
+          0.94,
+          0.97
+        ],
+        "tolerance": [
+          0.07,
+          0.075,
+          0.08
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "Lion yellow corner chevrons and fangs",
+      "view": "front",
+      "part": "front",
+      "uvs": [
+        [
+          0.8125,
+          0.8125
+        ]
+      ],
+      "size": [
+        397,
+        300
+      ],
+      "polygons": [
+        [
+          [
+            24,
+            146
+          ],
+          [
+            42,
+            159
+          ],
+          [
+            111,
+            168
+          ],
+          [
+            111,
+            173
+          ],
+          [
+            71,
+            173
+          ],
+          [
+            70,
+            181
+          ],
+          [
+            59,
+            168
+          ],
+          [
+            47,
+            167
+          ],
+          [
+            45,
+            187
+          ],
+          [
+            33,
+            174
+          ]
+        ],
+        [
+          [
+            374,
+            146
+          ],
+          [
+            356,
+            159
+          ],
+          [
+            287,
+            168
+          ],
+          [
+            287,
+            173
+          ],
+          [
+            327,
+            173
+          ],
+          [
+            328,
+            181
+          ],
+          [
+            339,
+            168
+          ],
+          [
+            351,
+            167
+          ],
+          [
+            353,
+            187
+          ],
+          [
+            365,
+            174
+          ]
+        ]
+      ],
+      "minIou": [
+        0.25,
+        0.22,
+        0.15
+      ],
+      "endFacing": true
+    },
+    {
+      "name": "Lion full width rear lamp band",
+      "view": "rear",
+      "part": "back",
+      "uvs": [
+        [
+          0.9625,
+          0.8125
+        ],
+        [
+          0.7374999999999999,
+          0.4375
+        ]
+      ],
+      "size": [
+        389,
+        295
+      ],
+      "polygons": [
+        [
+          [
+            34,
+            108
+          ],
+          [
+            353,
+            108
+          ],
+          [
+            365,
+            117
+          ],
+          [
+            361,
+            134
+          ],
+          [
+            29,
+            134
+          ],
+          [
+            26,
+            121
+          ]
+        ]
+      ],
+      "minIou": [
+        0.45,
+        0.4,
+        0.3
+      ],
+      "envelope": true
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "37233ded5abe67a6d43d97d9aa3a4c65736770d6b21538a6343f6a5a14a5e2a8",
+    "lod1_rear.mask.png": "3984e84d58d4736f09278288d8e003c1afa68b8efa83adedb5337c4409954d5b",
+    "lod1_top.mask.png": "84e73fa015ef652b41b494cc53d74cbb0b2da479c4645c317809b61c79efa340",
+    "lowest_front.mask.png": "ac4ed2e75c8705ab267a968b775c4ac6bf2f02f5cbc339baf4b2a838892a2376",
+    "lowest_rear.mask.png": "c2c3a6f1127ac3b4c5998a2acabf568f347ad34adc9df683ec26ac94c246b67e",
+    "lowest_top.mask.png": "479bdb7d6b4bbe1cdd432cc2ea8c75c5522c45059afc4e40f4358ca18e08f0a8"
+  }
+}

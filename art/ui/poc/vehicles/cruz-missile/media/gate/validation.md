@@ -1,38 +1,85 @@
-Vehicle Model Validation: PASS (with the WARNs below)
+# Vehicle Model Validation — cruz-missile
 
-Vehicle/part IDs: cruz-missile; core (greenhouse with side glass and frames, painted roof, sill, mirrors, bays), front (nose, bonnet, lamps, grille and badge, intake, fog housings, bent nudge bar with LEDs, pink wedges, splitter, whip aerial), back (boot, tail lamps and wraps, badge, diffuser with fins, reverse-light triangle, exhaust, pink L corners, wing and endplates), door_FL/FR/RL/RR (with handles and pockets), wheel_FL/FR/RL/RR (tyre, rim lip, barrel, spokes, hub); interior blocks engine, cabin, boot
-Commits: d322454e (model, atlas, params, bake, frozen colliders) and the evidence commit that ships this file, on v0.2-revamp
-Changed files: art/vehicles/cruz-missile/{model.js, atlas.js, params.json, vehicle.json, colliders.json, review.src.json, refs/sheets.json, refs/masks/, cruz-missile.asset.json, cruz-missile.lod{0,1,2}.glb, cruz-missile.atlas.png}; assets/profiles/cruz-missile.json (hashes and rounding only); tools/vehicles/bake.mjs (vehicle.json colliderPoints); tools/vehicles/test/bake.test.mjs (no more comparison with Spike J's bounds and counts)
-Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), R81, R86, R123; Playtest-1 plan 6.3 hinge lines
+Vehicle Model Validation: PASS for the bounded visual refinement; full reference/production qualification is not claimed.
 
-Method: lowpoly-model-from-refs. Structure built by hand from numbers measured off refs/lod-plus-1.png (side, front and rear crops at 2x with a metre grid; each view mapped to the model's frame separately, because the sheet's car is lower and longer than the model's); the livery is traced off the sheet (tools hue-classify the pink, lime and white regions of the side and top views, outline and simplify them, and map them into the atlas); then tools/vehicles/fit/opt.mjs on eris, 4 passes, numbers only, wheelR and track pinned (they are the sim's wheels). No new LOD level.
+2026-10-25 · br-rgw6 · P1-V-roster-reference.
 
-Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
-- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json (`node tools/vehicles/fit/capture.mjs cruz-missile --out <dir> --lod N --sheet lod1|lowest`; compose.py run on the Mac). before-br-bwju.3/ holds the same for the model before this change (the directory name follows the other cars; these are the P1-V02 numbers)
-- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png (the committed P1-V02 GLBs) and ladder-after-raw.png (`node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder`)
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/cruz-missile/cruz-missile.asset.json --out <dir>`
-- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs cruz-missile --out <dir>`
-- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080), every roster car four times; old = the P1-V02 Cruz GLBs routed in, new = the committed ones
+**Scoped visual-refinement checks: PASS. Full production/reference-parity qualification: not established by this evidence.** This is an owner-review candidate; no new native settle, host-renderer performance or identity-readability claim is made.
 
-Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/cruz-missile: 2037 / 895 / 511 tris (asks 2800 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
-  - LOD0 per part: front 600, back 373, core 268, door_FL/FR 32, door_RL/RR 26, wheels 170 each
-- jj vehicle sync / jj validate: in sync with its sidecar. The profile's hull is unchanged (colliders frozen), wheels and wheel_radius 0.4 unchanged
-- node --test tools/vehicles/test/ (eris): 42 passed (bake reproducibility and loader, pivots on hinge lines at every LOD, sidecar pivots, paint key at every roster car, spec twins)
-- scenario bank (rch cargo test -p jj-tools --test scenarios, on a clean clone of HEAD plus this change): only off-road-climb fails, as it already did at HEAD. With the hulls taken from the new visuals, flip-recover, air-level, air-pitch-crash and two-wheels-off failed too (their outcomes rest on the exact hull), so the bake now takes the Cruz's collision points from colliders.json, the P1-V02 bake's own per-part colliders
-- node tools/vehicles/review/check.mjs and `build.mjs --check`: run by CI on the evidence commit (they need the spikes' evidence tree)
+Narrower greenhouse through measured cabin stations and a tapered nose tip; 12-facet LOD0 tyres retain five-spoke depth. Front lamp wraps now clip onto the actual tub triangles, eliminating diagonal occlusion slits. At LOD1 the spoiler endplates retain both visible faces and their contour; hidden thickness funds the conforming lamps. Physics pivots are stored independently of visual extrema.
 
-Findings:
-- PASS contract + reproducibility (validator clean; origin between the axles; anchors unchanged; mass fractions unchanged)
-- PASS budget: LOD0 2037 <= 2800 <= 3000; LOD1 895 <= 900; LOD2 511 <= 600
-- PASS silhouette (better than before): weighted IoU LOD0 0.9422 -> 0.9494 (side 0.960 -> 0.969, top 0.950 -> 0.954, front 0.902 -> 0.898, rear 0.920 -> 0.940); LOD1 0.941 -> 0.946; LOD2 0.9327 -> 0.9335. LOD0 is 0.0006 short of the skill's ~0.95
-- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): lamps in brows, grille with badge, bent nudge bar with four LEDs, fog lamps, pink wedges, splitter, coil whip, framed glass and painted pillars, body-colour mirrors, handles, 5-spoke rims, tail lamps, badge, diffuser with fins, triangle and hex exhaust, wing with bolt-covered endplates, the traced lightning livery
-- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid)
-- PASS damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)
-- PASS physics fit (colliders.png: one convex hull per part, as it was; the whip, mirrors, glass layers and sill are not collision surfaces and the hull no longer depends on them)
-- WARN wheel size: the sheet's wheels are about 0.36 m in radius, the model's 0.4 m (the sim's wheel_radius); not changed here
-- WARN front view IoU 0.898: the sheet's nose and fenders are broader than the model's (the optimiser narrowed the nose to fit the side and top views)
-- WARN the headlamps and wraps render as a flat white/cream patch (the sheet's lamps are warm, glowing and shaded)
-- WARN the scenario bank's off-road-climb already failed at HEAD (not caused by this change)
+## Provenance and comparison
 
-Remaining blockers: none for the model and the gate. The owner judges recognisability (br-bwju.11's ev:owner item).
+Baseline revision: `d44c909378f9964d4d3beb56aa3a6d6e6ef1bdf2`. `baseline-model.js`, `baseline-params.json`, `baseline-vehicle.json` and `baseline.asset.json` preserve the before candidate. Final source is `art/vehicles/cruz-missile/model.js` plus `params.json`; `bake.txt` and `reproducibility.txt` identify exported asset hashes. Runtime source is code-built per R81; R86 damage semantics, part IDs, physical dimensions, pivots, masses, anchors and collider contracts are preserved. Requirement references: R81/R86, Playtest-1 §6, master §12.3–12.5, and the current vehicle.json budgets of 2800/900/600.
+
+Frozen diagnostic cameras: perspective for both silhouette and shaded views; horizontal front/rear optical axes at the bounding-box midpoint, 50 m long lens; side/top 10 m. Hero/rear-hero settings are in refs/sheets.json. Generated turnarounds are not calibrated photography and opposing views disagree in some rider/body details. Fit score height normalization and shadow-band exclusion remain the shared fitter convention.
+
+Reference sheets and extraction are unchanged. Comparison cameras are frozen for both candidates.
+
+| LOD/view | Before | Revised | Change |
+|---|---:|---:|---:|
+| 0 / weighted | 0.9545 | 0.9542 | -0.0003 |
+| 0 / side | 0.9687 | 0.9659 | -0.0028 |
+| 0 / top | 0.9540 | 0.9544 | +0.0004 |
+| 0 / front | 0.9227 | 0.9384 | +0.0157 |
+| 0 / rear | 0.9494 | 0.9387 | -0.0107 |
+| 1 / weighted | 0.9526 | 0.9533 | +0.0007 |
+| 1 / side | 0.9692 | 0.9668 | -0.0024 |
+| 1 / top | 0.9509 | 0.9520 | +0.0011 |
+| 1 / front | 0.9233 | 0.9404 | +0.0171 |
+| 1 / rear | 0.9409 | 0.9330 | -0.0079 |
+| 2 / weighted | 0.9353 | 0.9359 | +0.0006 |
+| 2 / side | 0.9354 | 0.9348 | -0.0006 |
+| 2 / top | 0.9430 | 0.9430 | +0.0000 |
+| 2 / front | 0.9133 | 0.9285 | +0.0152 |
+| 2 / rear | 0.9418 | 0.9318 | -0.0100 |
+
+
+Front-view cabin widths and nose taper improve; rear-view and small side-view silhouette regressions remain. The weighted score is essentially unchanged at LOD0 and improves slightly at LOD1/2. Lamp attachment is visually continuous after the projection repair; its side/fascia seam remains a visible faceted change in shading.
+
+## Exported budget and physics preservation
+
+| Exported part | LOD0 | LOD1 | LOD2 |
+|---|---:|---:|---:|
+| core | 264 | 200 | 144 |
+| front | 608 | 273 | 102 |
+| back | 373 | 207 | 137 |
+| door_FL | 32 | 12 | 6 |
+| door_FR | 32 | 12 | 6 |
+| door_RL | 26 | 12 | 6 |
+| door_RR | 26 | 12 | 6 |
+| wheel_FL | 138 | 42 | 25 |
+| wheel_FR | 138 | 42 | 25 |
+| wheel_RL | 138 | 42 | 25 |
+| wheel_RR | 138 | 42 | 25 |
+| interior_engine | 24 | 24 | 24 |
+| interior_cabin | 36 | 36 | 36 |
+| interior_boot | 32 | 32 | 32 |
+| **Intact total** | 1913 | 896 | 507 |
+
+
+Interior rows are dormant damage interiors and are excluded from the intact total. Source fit counts include these or pre-optimisation hidden faces; shipped counts come from exported GLBs. `export-checks.json` verifies every collider's POSITION float32 array exactly against the pinned baseline GLB, the entire asset sidecar unchanged, finite nonzero exported triangles, one material and all intact budgets. This is physical-equivalence evidence, not a fresh native simulation settle run.
+
+## Checks and visual evidence
+
+- `node tools/vehicles/bake.mjs --check art/vehicles/cruz-missile`: byte-reproducible export; receipt in reproducibility.txt.
+- `node docs/evidence/P1-V-roster-reference/cruz-missile/check-export.mjs`: exported budget/mesh/material plus exact collider and sidecar preservation PASS.
+- `node docs/evidence/P1-V-roster-reference/cruz-missile/reproduce.mjs`: current source passes all local gates at all LODs; preserved previous source fails each tier; missing and displaced cue defects are rejected. Pig Catcher's separate wheel ray tests require daylight through the bores and reject every capped baseline wheel tier.
+- `node tools/vehicles/fit/likeness.mjs cruz-missile --capture docs/evidence/P1-V-roster-reference/cruz-missile/reference-lodN`: source/params/mask-identified contour and feature checks PASS at all tiers; see likeness.json, likeness.svg and likeness.txt in each directory.
+- Focused `tools/vehicles/test/pivots.test.mjs` for both cars: 10 tests pass.
+- `tools/vehicles/view/capture.mjs` and `tools/vehicles/evidence/run.mjs`: actual GLB via Three GLTFLoader, shared paint-key shader, self-hosted assets, Playwright Chromium 151.0.7922.34 on the Mac using software GL. These are vehicle viewer captures, not a live host qualification. No new material, instancing or batching code was introduced.
+
+Inspected images: all final reference-lod0/1/2 sheets (reference, shaded, diff, heroes); views.png (front, rear, sides, top and both three-quarter views), paints.png and paints-strip.png (bright/dark colours and neutral tyres), lods.png (tier ladder), colliders.png, damage-strip.png and damage-strip-overview.png (intact, posed loose and detached parts), grid-1.png, grid-4.png and grid-24.png (static gameplay-scale preview). Every image was opened and reviewed. No blank panel, missing texture or broken asset found. The viewer does not display runtime roof numbers; smallest-tile number readability is unproven. Damage captures pose the contracted hinges and detached meshes; dynamic persistence/velocity remain the existing runtime's responsibility and are not proven by these stills.
+
+## Remaining qualification
+
+General reference parity, native simulation settle, runtime roof-number readability, N×N draw/performance measurement and live dynamic damage qualification are outside this visual-preservation pass. Existing sound/handling profiles were not altered here. The parent bead owns integration and preview publication.
+
+A small body-colour triangular patch remains at the front side-window corner in grid-1.png. It comes from the older analytic glass-span attachment; exact decal-to-facet projection was repaired for the front lamp wraps only in this pass. It is a known visual limit for subsequent review, not blank/missing geometry.
+
+## Review-page findings
+
+- PASS code-built export, unchanged triangle budgets and reproducible baked bytes.
+- PASS current local reference gates at all LODs; old candidates and meaningful injected defects rejected.
+- PASS original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks.
+- WARN whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending.

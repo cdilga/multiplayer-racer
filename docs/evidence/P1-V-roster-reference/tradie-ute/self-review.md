@@ -1,0 +1,15 @@
+# Tradie Ute self-review — 2026-10-25
+
+Inspected the two real owner night photos, the newer model source/dimensions and all captures produced by the actual baked-asset review viewer in Playwright Chromium 151.0.7922.34, Mac software rendering. These are review-viewer captures, not physical-device or running-host receipts.
+
+- Opened `before-ladder.png` and `ladder.png`: every front/side/rear/top/3/4 view at LOD0/1/2. Same camera/framing (ortho 3.2 m). The revised ute has the actual separate tray and canopy proportions, cab taper/rake, black unglazed rear and horizontal tray lamps. Removed invented scoop, decorative vents/struts and painted canopy roof. Coarse tiers retain awning and snorkel.
+- Opened `paints-strip.png`: white, pink, cyan, yellow, green and purple. Cab/body tint works; tyre/canopy/metal/glass remain neutral. The black canopy reduces the old large rear paint area intentionally to match owner evidence.
+- Opened `damage-strip.png` and `damage-strip-overview.png`: loose front/back/doors/wheel and detached parts remain recognizable; original pivots and dark interior/bays remain. New cab back closes the greenhouse when the tray detaches.
+- Opened `grid-1.png`, `grid-4.png`, `grid-24.png`: paint and the cab/tray/canopy silhouette remain distinguishable across scales. The cheapest tier is deliberately faceted; it retains the real rear beam/light arrangement and mudflaps. Viewer has no roof-number overlay, so these captures do not claim number legibility.
+- Opened `colliders.png`: old convex collision proxies remain visible, intentionally larger/differently positioned in places. All collider position bytes and contract attachment data were checked identical against the pre-rebuild bake.
+
+Iteration fixes: the first measured rebuild exceeded coarse budgets; reduced hidden repetition and used single-face coarse guards/under-tray panels instead of increasing budgets. Corrected an early raised headlamp patch to lie on the current nose/bonnet facets. Covered an exposed coarse under-tray interior prop and changed the residual decorative orange prop to neutral trim, matching the real black underside.
+
+No blank panels, missing assets or clipping found in the inspected final review captures. Limits remain: night-photo front/cab form uncertainty; source dimensions include published/estimated quantities; collision visuals intentionally retain previous gameplay shape; owner playtest and parent host/scenario verification are separate.
+
+The actual review page was also opened through `art/ui/lib/live-check.mjs --local` at phone portrait 412×915 and desktop 1920×1080 (`review-page/`). Inspected both full-page images: owner photo is displayed inline, seven target/actual dimension rows are visible and scroll appropriately, LOD pass labels and provenance/check links render, and the baked viewer loads. The existing screen-edge heuristic reports an ordinary paragraph/photo crossing the viewport bottom on this vertically scrollable document; no content is clipped in the full-page images and there is no horizontal overflow or missing asset. The failing heuristic exit is recorded honestly in validation.md/live-check.log.

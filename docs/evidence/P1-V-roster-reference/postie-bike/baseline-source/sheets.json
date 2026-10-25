@@ -1,0 +1,75 @@
+{
+ "what": "Reference sheets for tools/vehicles/fit (br-bwju.5): Muse Image turnarounds (art/ui/frames/generate.mjs --prompt refs/prompts/<sheet>.txt; ledger art/ui/frames/ledger.jsonl). Views are [x0, y0, x1, y1] windows on the 1920x1280 sheets, one view each. A bike's sheets need `segment.bright` (white helmet, silver racks), a small `open` (thin forks) and `keep` (parts joined by a few pixels). `patch` adds ellipses (sheet pixels) for the white helmet the grey backdrop swallows (br-bwju.11). `camD` and `tilt` set the evaluator camera for this sheet: it is a level, far (near-orthographic) render, not the Cruz-calibrated 10 m with an 8 degree look-down (br-bwju.11: front/rear IoU 0.70/0.77 -> 0.84/0.83 on the same model).",
+ "sheets": {
+  "lod1": "lod-plus-1.png",
+  "lowest": "lowest-lod.png"
+ },
+ "views": {
+  "hero": [
+   0,
+   0,
+   1320,
+   790
+  ],
+  "top": [
+   1400,
+   0,
+   1840,
+   790
+  ],
+  "front": [
+   80,
+   790,
+   500,
+   1280
+  ],
+  "side": [
+   560,
+   790,
+   1320,
+   1280
+  ],
+  "rear": [
+   1400,
+   790,
+   1840,
+   1280
+  ]
+ },
+ "segment": {
+  "bright": 0.06
+ },
+ "open": 2,
+ "keep": 0.03,
+ "patch": {
+  "side": [
+   [
+    962,
+    853,
+    56,
+    48
+   ]
+  ],
+  "front": [
+   [
+    281,
+    853,
+    47,
+    47
+   ]
+  ],
+  "rear": [
+   [
+    1620,
+    853,
+    49,
+    47
+   ]
+  ]
+ },
+ "camD": 30,
+ "tilt": {
+  "front": 0,
+  "rear": 0
+ }
+}

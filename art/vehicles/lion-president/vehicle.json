@@ -173,7 +173,7 @@
   "cam_fp": [
    -0.36,
    1.2,
-   0.0
+   0
   ],
   "cam_tp_target": [
    0,
@@ -209,5 +209,6 @@
  },
  "colliderExclude": {
   "front": "The UHF whip and its mount: a thin aerial is not a collision surface."
- }
+ },
+ "colliderPoints": "colliders.json"
 }

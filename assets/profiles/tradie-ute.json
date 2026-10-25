@@ -4,7 +4,7 @@
   "source": {
     "sidecar": "art/vehicles/tradie-ute/tradie-ute.asset.json",
     "sidecar_sha256": "57f65448925b21bf1a6989216d8e6044cf357c1d41ef7d8e8c86797786542032",
-    "lod0_sha256": "c3a57f22c9093b70bdab172e25f9736a98ac74e4f01e3ce3e73c9c114378e209"
+    "lod0_sha256": "2e20560df326558affd632e2182b9c0197c62cb764dcbb9ffc0e096ab975a83d"
   },
   "geometry": {
     "hull": [

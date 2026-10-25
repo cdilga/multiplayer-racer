@@ -1,32 +1,53 @@
-Vehicle Model Validation: PASS (with the WARNs below)
+# Tradie Ute reference rebuild — 2026-10-25
 
-Vehicle/part IDs: tradie-ute; core (cab with side glass and frames, roof rack, snorkel, mirrors, steps, bays), front (nose, bonnet scoop and vents, shield grille, lamps, bull bar, front flares), back (painted tray, canopy, tray lamps, step bumper, tow bar, rear flares), door_FL/FR/RL/RR, wheel_FL/FR/RL/RR (tyre, alloy rim, 8 spokes, hub); interior blocks engine, cabin, boot
-Commits: 48a28076 (model, refs, bake, profile sync) and the evidence commit that ships this file, on v0.2-revamp
-Changed files: art/vehicles/tradie-ute/{model.js, atlas.js, params.json, vehicle.json, review.src.json, tradie-ute.asset.json, tradie-ute.lod{0,1,2}.glb, tradie-ute.atlas.png, refs/}; assets/profiles/tradie-ute.json (geometry re-synced); tools/vehicles/view/{view.js, capture.mjs} (--ortho for a long car)
-Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), br-bwju.8 (keep the canopy, the real roof rack, the dual cab), R81, R86, R123; Playtest-1 plan 6.3 hinge lines
+Vehicle Model Validation: PASS for the reference/body rebuild. Full room/host integration and profile hash refresh belong to parent bead `br-rgw6`; this receipt does not claim a new driving, device or GPU benchmark.
 
-Method: lowpoly-model-from-refs. The Ute had no contact sheet: two Muse Image turnarounds were generated (refs/prompts/, the Cruz's layout as the example, the br-bwju.8 render as the content example; art/ui/frames/ledger.jsonl) and cut into masks (tools/vehicles/fit/extract.mjs). Structure by hand from the sheet (the Lion's construction: flares, framed glass panes, decor parts the bake leaves out of colliders, spoked tyres), then tools/vehicles/fit/opt.mjs on eris, 4 passes, numbers only, wheelR and track pinned (the sim's wheels), then a few profile heights set by hand against the sheet's taller nose and higher sill. No new LOD level.
+Vehicle/parts: `tradie-ute`; existing eleven car part IDs plus existing interiors. Candidate is the working tree over `d44c9093`, identified by `measured-check.json` source hashes and `bake-check.log` baked hashes. Helper edits were confined to this vehicle and this evidence directory. No Asyar work.
 
-Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
-- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json, `node tools/vehicles/fit/capture.mjs tradie-ute --out <dir> --lod N --sheet lod1|lowest` (compose.py run on the Mac: eris has no PIL)
-- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png (the br-bwju.8 GLBs) and ladder-after-raw.png, `node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder --paint '#00adc9' --ortho 3.0`
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/tradie-ute/tradie-ute.asset.json --out <dir> --ortho 3.0`
-- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs tradie-ute --out <dir>`
-- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080) at 48a28076, every roster car four times, old = the br-bwju.8 GLBs routed in
+Requirement sources: R81/R86/R90/R123, the existing `jj.vehicle.v1` contract and vehicle budgets; game-asset-reference-modelling, lowpoly-model-from-refs and vehicle-model-validation skills. Existing collision, pivots, anchors and handling remain the contract for this visual change.
 
-Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/tradie-ute: 2080 / 878 / 596 tris (asks 2400 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
-  - LOD0 per part: front 460, back 396, core 424, door_FL/FR/RL/RR 12 each, wheels 188 each
-- jj vehicle sync assets/profiles/tradie-ute.json: in sync with its sidecar. Hull +-1.19 m (mirrors and the other decoration now stay out of it; it was +-1.29 m); wheels (+-0.88 m, 0.43 m) unchanged
-- node --test tools/vehicles/test/ (eris scratch copy of the Mac tree): the Ute's pivot, sidecar, load and paint-key tests all pass; the only 4 failures are cruz-missile's, from another session's uncommitted rebuild in that copy
-- rch cargo test -p jj-sim --test tradie_ute: 5 passed
-- node tools/vehicles/review/check.mjs: every Vehicles-contract item present; review/build.mjs rebuilt the Ute's page from this evidence
+## Authoritative evidence
 
-Findings:
-- PASS contract + reproducibility (origin between the axles; anchors unchanged; part ids and hinge layout unchanged; mass fractions unchanged)
-- PASS budget: LOD0 2080 <= 2400 <= 3000; LOD1 878 <= 900; LOD2 596 <= 600
-- WARN silhouette: LOD0 weighted IoU 0.8729 -> 0.9024 (side 0.851 -> 0.867, top 0.939 -> 0.965, front 0.833 -> 0.890, rear 0.840 -> 0.884); LOD1 0.8725 -> 0.9018; LOD2 0.8847 -> 0.9162. Short of the skill's ~0.95: the sheet's body is taller and narrower than the sim's 0.43 m wheels on a 0.88 m track allow, and its tyres are bigger than the sim's
-- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): framed side glass, flares, 8-spoke rims, bonnet scoop, shield grille, swept lamps, bull bar with light bar, fog lamps, plate and winch hook, painted tray with tall lamps, step bumper with reversing lamps, canopy hardware, rack, snorkel, mirrors, J-line and shoulder line
-- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid)
-- PASS damage: intact -> loose -> detached for every part (damage-strip.png); dark bays behind the missing panels
-- WARN LOD1 and LOD2 drop the full rack, the snorkel's bends and the scoop's vents to fit their budgets; the grille's slots read as a grey block at those sizes
+The actual owner vehicle is the MQ dual cab, alloy tray, closed black canopy, roof rack/left awning, right snorkel and tow hitch. Read `art/vehicles/tradie-ute/refs/measured-reference.json`: it records source locations/hashes, tape measurements, frame transform and uncertainty. The two downsized owner photos alongside it were inspected; the rear plate is already blurred in the source repository's tracked copy.
+
+The newer `triton.glb` was read as evidence (714,440 bytes, six meshes, fourteen nodes; `newer-mesh-inspection.json`). Its `build_triton()` source and `fleet.json units.triton` supplied measured sizes and estimated cab/rack proportions. No mesh from that GLB ships in the game. The code-built faceted model remains reproducible.
+
+The old Muse contact sheets are historical stylized composites, **not acceptance references for the real ute**. Their invented bonnet scoop, pickup tub, rear window and canopy hardware are removed. Their old silhouette IoU is not carried forward as a likeness claim. The actual photos are dark, occluded perspective views without calibration; no photo silhouette IoU is claimed.
+
+## Measured improvement
+
+| Feature | Before | Revised | Oracle |
+|---|---|---|---|
+| Canopy | too wide/tall; painted lid, invented rear glazing/hardware | 1.500 × 1.772 × .845 m, deck 1.090 m, top 1.935 m; black lid/closed rear; two low side locks | owner tape + photos |
+| Tray | painted pickup tub and tall corner lamps | separate 1.620 × 1.835 m alloy deck; under-deck space, guards/mudflaps/boxes, horizontal amber/red/white rear lamps | owner tape + photos |
+| Cab | broad square roof, steep short windscreen | narrower tapered roof, longer windshield rake and dual-cab span | newer owner-model estimates and visible cab cues |
+| Accessories | coarse tier lost awning/snorkel | left awning and right snorkel present at every tier | owner evidence |
+| Repetition cost | LOD0 wheels 752 exported triangles | wheels 240 triangles; body form receives the budget | actual baked mesh counts |
+
+LOD totals are **1402 / 896 / 586**, within unchanged **2400 / 900 / 600** qualified budgets. Before was **2039 / 860 / 582**. The detailed body is cheaper; LOD1/2 spend a few more triangles retaining actual accessory/tray cues. Per-part counts are in `bake-check.log`; interiors remain separate from the body budget, as in the existing contract.
+
+## Checks
+
+- `node art/vehicles/tradie-ute/refs/check-measured.mjs`: PASS, current triangle geometry at all three LODs. UV-selected tray/canopy envelopes use independent owner dimensions, not candidate params. Also checks roof taper, neutral black canopy roof and accessory sides.
+- Isolated pre-rebuild source at `/tmp/evidence/tradie-ute-before`: the same gate correctly rejects canopy/tray envelopes, cab roof width and painted lid at every LOD (`previous-measured-check.json`). It imports the old model successfully; rejection is not a failed load.
+- Geometry defects: canopy raised 15 cm, tray widened 20%, cab roof widened 35%; all detected at all three LODs. These checks cover named errors, not complete likeness.
+- `node tools/vehicles/bake.mjs --check art/vehicles/tradie-ute`: PASS, fresh bake exactly matches current output. A prior fresh bake supplied the bytes being checked.
+- `target/debug/jj validate art/vehicles/tradie-ute/tradie-ute.asset.json`: PASS, `jj.vehicle.v1`, triangle budgets, no waivers (`contract-check.log`).
+- All eleven collider POSITION buffers compare byte-for-byte with pre-rebuild baked GLB. Sidecar pivots/hinges/mass fractions, anchors and LOD budgets also compare identical (`frozen-physics-check.json`). `colliders.json` freezes the old points and the model freezes old pivots. No simulation mechanics changed.
+- `node --test tools/vehicles/test/pivots.test.mjs`: PASS, 37 tests. The six refined body attachments compare source and sidecar exactly with original `d44c9093` pivot/hinge/mass/collider data. Narrower cab skins and separate tray now have different visual edges; moving the gameplay hinges to those edges would contradict this visual-only rebuild's frozen-physics scope. Defects reject centre/wrong-edge pivots, 1 mm drift on each axis, changed hinge axis and sidecar-only drift. All unlisted roster parts retain the visual hinge-edge assertions.
+- `node tools/vehicles/view/capture.mjs ... --sheet ladder --ortho 3.2`, `--sheet colliders`, and `node tools/vehicles/evidence/run.mjs tradie-ute ...`: PASS through actual baked asset loader, Playwright Chromium 151.0.7922.34 on Mac, software-rendered review viewer. Every screenshot was opened and inspected.
+- Measured-reference review page integration: the build copies the oracle/report and derives width/length/deck/canopy-height rows; item 1 now accepts this explicit evidence path and rejects missing files, nonfinite/missing rows, failed or missing LOD/check/defect data. Existing per-view IoU path is unchanged. Eight focused review tests pass, including Cruz/reference regressions.
+- `art/ui/lib/live-check.mjs --local` on the ute review page at 412×915 and 1920×1080: captured and visually inspected; no failed requests, missing images, JS errors, blank canvas or horizontal overflow. The command exits 1 because its existing screen-edge heuristic flags text/the linked photo crossing the initial viewport bottom of this normally scrollable long page. Full-page captures in `review-page/` show the content intact. This heuristic failure is disclosed, not represented as a green automated check.
+
+- PASS contract and byte-reproducible bake at unchanged budgets.
+- PASS independent owner-tape envelopes and named photo cues at all LODs; old candidate and injected defects rejected.
+- PASS frozen collider bytes, part contract and anchors unchanged.
+- PASS standalone baked-loader visual review; no new host/device or driving measurement claimed.
+
+## Visual evidence and limits
+
+`before-ladder.png` and `ladder.png` use the same viewer/cameras and ortho half-frame 3.2 m. The ladder covers front, front 3/4, side, rear 3/4, rear and top for every LOD. `paints-strip.png` shows white and five player colours with neutral tyres/canopy/accessories. `damage-strip.png` and `damage-strip-overview.png` show intact, loose hinges, each detached part and stripped shell with the original part contract. `grid-1.png`, `grid-4.png`, `grid-24.png` show different LODs/colours at tile scale. `colliders.png` honestly displays the retained old collision shell; it intentionally differs from the refined visual shell.
+
+The front/cab remains an interpretation with broad facets; the night photographs do not provide a calibrated front orthographic reference. Rack/bag maximum 2.20 m was only an earlier owner estimate; the photos confirm an awning but cannot resolve a roof bag, so none was invented. Published 3 m wheelbase/.802 m tyres are evidence, while existing game wheels stay at z ±1.45 m/radius .43 m to preserve handling. These are disclosed stylization/physics constraints, not claimed exact measurements.
+
+The standalone evidence viewer poses damage and colours; it does not prove dynamic debris lifetime, gameplay recovery, phone controls or roof-number rendering. Existing engine profile, single material and batching code are unchanged; there is no new draw-cost or sound claim. The parent bead owns current host/scenario evidence and profile sync. Owner playtest is still the final judgment of likeness.

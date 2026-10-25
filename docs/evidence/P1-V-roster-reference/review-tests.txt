@@ -1,0 +1,21 @@
+✔ the committed roster passes (54.617917ms)
+✔ the Cruz Missile has every item (0.119625ms)
+✔ a missing item 1 fails (0.683708ms)
+✔ a missing item 2 fails (0.180458ms)
+✔ a missing item 3 fails (0.174459ms)
+✔ a missing item 4 fails (0.123459ms)
+✔ a missing item 5 fails (0.143417ms)
+✔ a missing item 6 fails (0.204875ms)
+✔ a bike (br-bwju.5) has every item, and fails item 3 without its rider (4.147209ms)
+✔ a missing image fails (0.24075ms)
+✔ missing handling fails (0.149958ms)
+✔ a spec twin without its partner fails (0.147167ms)
+✔ owner-measured reference replaces invented orthographic IoU only with complete passing evidence (2.675708ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 148.543208

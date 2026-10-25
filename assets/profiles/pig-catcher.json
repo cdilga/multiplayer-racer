@@ -4,7 +4,7 @@
   "source": {
     "sidecar": "art/vehicles/pig-catcher/pig-catcher.asset.json",
     "sidecar_sha256": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
-    "lod0_sha256": "794f5f675c7f62db12ff6a679d20a7b1a3d37906c455be77e33f0fc4821046d1"
+    "lod0_sha256": "caf9281916d8de2a6dbab86263c62b10e580d135154357ee0240433718cc6546"
   },
   "geometry": {
     "hull": [

@@ -1,38 +1,49 @@
-Vehicle Model Validation: PASS (with the WARNs below)
+# Postie Bike reference rebuild — 2026-10-25
 
-Vehicle/part IDs: postie-bike; core (leg shield, floor and pads, body, seat, engine, twin mufflers, shocks, head tube, bars, mirrors), front (fork, headlamp, front mudguard, wire carrier with mail tub and parcels), back (rear grab rail, two open panniers with parcels, tail block with lamp and plate bracket, rear mudguard), rider, wheel_F, wheel_R
-Commits: 843f7d32 (model, atlas, params, bake, frozen colliders, evaluator changes) and the evidence commit that ships this file, on v0.2-revamp
-Changed files: art/vehicles/postie-bike/{model.js, atlas.js, params.json, vehicle.json, colliders.json, review.src.json, refs/sheets.json, refs/masks/, postie-bike.asset.json, postie-bike.lod{0,1,2}.glb, postie-bike.atlas.png}; assets/profiles/postie-bike.json (hashes and rounding only); tools/vehicles/fit/extract.mjs (sheets.json `patch`), tools/vehicles/fit/app.js (sheets.json `camD`, `tilt`)
-Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), R81, R86, R121, R123; Playtest-1 plan 6.3 hinge lines
+Vehicle Model Validation: PASS for the reference-architecture rebuild and unchanged contract. The strict ~.95 silhouette qualification remains unmet; this is a review candidate, not full production or owner-playtest qualification.
 
-Method: lowpoly-model-from-refs. Structure built by hand from numbers measured off refs/lod-plus-1.png (side, front, rear and plan crops with a pixel grid; each view mapped to the model's frame separately); then tools/vehicles/fit/opt.mjs on eris, 4 passes, wheels pinned, followed by hand corrections where the optimiser bent the look (muffler height, rail width, lamp size, mirror spread; the carrier kept deep). No new LOD level.
+Vehicle/parts: `postie-bike`; `core`, `front`, `back`, `rider`, `wheel_F`, `wheel_R`. Working-tree candidate over original contract baseline `d44c9093`, identified by source and baked SHA256 values in `source-checks.json`. Parent bead: `br-rgw6`. No Asyar work.
 
-Evaluator changes (both before and after numbers use them): the helmet is white on a grey backdrop and the segmenter dropped its top, so the mask extractor takes elliptical patches (sheets.json `patch`); the sheet is a level, far render, so refs/sheets.json sets camD 30 and tilt 0 instead of the Cruz-calibrated 10 m and 8 degree look-down (the same model scored front 0.70 and rear 0.77 under the old camera and 0.84 and 0.83 under the new).
+Requirements: R81/R86/R90, existing `jj.vehicle.v1` bike contract and qualified 2900/900/600 triangle budgets; lowpoly-model-from-refs and vehicle-model-validation skills. Physics, anchors, pivots and handling are frozen for this visual change.
 
-Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
-- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json (`node tools/vehicles/fit/capture.mjs postie-bike --out <dir> --lod N --sheet lod1|lowest`; compose.py run on the Mac). before-br-bwju.5/ holds the same for the br-bwju.5 bake under the same evaluator
-- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png and ladder-after-raw.png (`node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder --ortho 1.9`)
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/postie-bike/postie-bike.asset.json --out <dir> --ortho 1.9`
-- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs postie-bike --out <dir>`
-- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080; tile 1 follows a Postie, the four-tile capture follows four), every roster car four times; old = the br-bwju.5 Postie GLBs routed in, new = the committed ones
+## Reference and result
 
-Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/postie-bike: 2782 / 894 / 586 tris (asks 2900 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
-  - LOD0 per part: core 578, front 472, back 488, rider 420, wheel_F 412, wheel_R 412
-- jj vehicle sync: the profile is in sync with its sidecar. The hull is unchanged (colliders frozen); only hashes and 4th-decimal rounding differ
-- node --test tools/vehicles/test/ (eris): 42 passed (pivots on hinge lines at every LOD for front and back, rider pivot at the hip, sidecar pivots, paint key, spec twins)
-- scenario bank (rch cargo test -p jj-tools --test scenarios, on a clean clone of HEAD plus this change's profile and sidecar): only off-road-climb fails, as it already did at HEAD. rch cargo test -p jj-sim --test roster --test bikes: 4 and 5 passed
-- tools/vehicles/review/check.mjs and `build.mjs --check`: run by CI on the evidence commit
+`art/vehicles/postie-bike/refs/provenance.json` records the primary real Honda CB50 architecture image, generated tier sheets, prompts, hashes and their limitations. The model uses a long tank, exposed vertical engine, open diamond frame, narrow spoked wheels and a single right exhaust in place of the old broad scooter-like floor/shield and twin pipes. Mail panniers, front basket/parcels and orange-vest rider preserve the fictional delivery identity. No real badge ships.
 
-Findings:
-- PASS contract + reproducibility (origin between the axles; anchors unchanged; mass fractions unchanged; part set core, front, back, rider, wheel_F, wheel_R at every LOD)
-- PASS budget: LOD0 2782 <= 2900 <= 3000; LOD1 894 <= 900; LOD2 586 <= 600
-- WARN silhouette: weighted IoU LOD0 0.7999 -> 0.8579 (side 0.757 -> 0.850, top 0.887 -> 0.846, front 0.793 -> 0.868, rear 0.747 -> 0.893); LOD1 0.7502 -> 0.8441; LOD2 0.685 -> 0.7827. Below the skill's ~0.95: thin parts (wire basket, rail, mirror stalks, spokes) vanish from the masks, the sheet's panniers and bars are wider than the sim's bike, and the top view got worse (0.887 -> 0.846) because the sheet's plan is perspective-stretched
-- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): step-through shield and floor wedge, spoked lugged wheels, headlamp, swept bars with mirrors, twin mufflers, wire carrier with mail tub and parcels, open panniers with parcels, rear rail, tail lamp, hi-vis rider with helmet and visor
-- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid); the shield, floor, body, mudguards and tail block tint, the panniers, vest and parcels keep their colours
-- PASS damage states (damage-strip.png: front, back and the rider swing about their hinge lines, wheels detach, the rider is thrown; no see-through holes)
-- PASS physics fit (colliders.png: one convex hull per part, as it was; the new panniers, bars, mirrors and helmet are not collision surfaces)
-- WARN wheel size: the sheet's tyres are about 0.37 m in radius, the model's 0.4 m and 0.36 m (the sim's)
-- WARN the optimiser narrowed the plan (top view IoU fell) to fit side and rear; the rail and mirrors sit narrower than the sheet's
+The primary real image governs architecture. Generated rear sheets invent twin pipe ends and the large hero is almost side-on; these are disclosed reference inconsistencies, not details to copy. Wheel centres and collision scale retain the game contract rather than pretending to be calibrated real-bike dimensions.
 
-Remaining blockers: none for the model and the gate. The owner judges recognisability (br-bwju.11's ev:owner item).
+The supplied same-camera fit captures improve LOD0 weighted IoU from **.8164 to .8563**; revised LOD1 is **.8241**, LOD2 **.8049**. None reaches .95. Broad rider/mailbox silhouette and coarse simplification remain approximate. The fit tool reports raw source triangles (2464/894/614); the bake optimiser drops 177/17/21 unseen triangles and the actual exported counts below are the contract budget measurement.
+
+| Part | LOD0 | LOD1 | LOD2 |
+|---|---:|---:|---:|
+| core | 732 | 303 | 175 |
+| front | 407 | 138 | 78 |
+| back | 424 | 102 | 94 |
+| rider | 380 | 166 | 102 |
+| wheel_F | 172 | 84 | 72 |
+| wheel_R | 172 | 84 | 72 |
+| **Total / budget** | **2287 / 2900** | **877 / 900** | **593 / 600** |
+
+## Checks and reproducibility
+
+- `node tools/vehicles/bake.mjs --check art/vehicles/postie-bike`: PASS, current bytes reproduce and exported budgets pass (`bake-check.log`).
+- `target/debug/jj validate art/vehicles/postie-bike/postie-bike.asset.json`: PASS, no waivers (`contract-check.log`).
+- `node docs/evidence/P1-V-roster-reference/postie-bike/reproduce.mjs`: PASS (`reproduce.log`, `source-checks.json`). Entire original sidecar deep-equals the current sidecar, including anchors/hinges/pivots/mass fractions/budgets. All six original collider POSITION buffer hashes and vertex counts match the original LFS asset. `baseline-source/contract-physics.json` includes the original commit/LFS oid and extracted contract/hash oracle, so the check does not need an old LFS download.
+- Current source at all three LODs passes the unchanged local contour/feature fixture and open-wheel/frame samples. The independently loaded pre-rebuild source in `baseline-source/` fails the same fixture at every LOD. Missing and displaced named cues are rejected at each LOD. These targeted checks prove the stated cues, not complete likeness.
+- Actual baked GLTFLoader meshes: 8 interspoke angles × 3 radii × both wheel sides × two wheels × three LODs = **288 probes**. No probe hits the wheel mesh. Whole-bike clear rays are 20–21/24 at the front and 17–19/24 at the rear; remaining hits are fork/frame/back structure. Four LOD0 side-view aperture pixels equal the empty backdrop exactly, RGB 201/201/203. The pale areas initially resembling filled disks are background through the wheel, not opaque wheel faces. Results are recorded in `source-checks.json`.
+- `node --test tools/vehicles/test/pivots.test.mjs`: PASS, 37 tests. The bike's front/back attachment test compares source and sidecar exactly with original `d44c9093` pivot/hinge/mass/collider data rather than forcing frozen gameplay hinges onto the new visible edges. Defects reject centre/wrong-edge pivots, 1 mm drift on each axis, changed hinge axis and sidecar-only drift. This preserves the original physical attachment; it does not claim that the revised visible skins end exactly at that old pivot.
+- Actual-loader captures: `tools/vehicles/view/capture.mjs` with asset `/art/vehicles/postie-bike/postie-bike.asset.json`, `--ortho 2.0`, plus `--sheet ladder`; `tools/vehicles/evidence/run.mjs postie-bike`. Playwright Chromium **151.0.7922.34**, Mac software rendering, standalone baked-asset review viewer. Every generated image was opened and inspected.
+
+- PASS byte-reproducible export, existing triangle budgets and native contract validator.
+- PASS original collider bytes and complete original sidecar retained.
+- PASS local feature/negative-space checks; previous candidate and injected missing/displaced cues fail.
+- PASS actual-loader multi-view, colours, all-tier apertures and posed damage review.
+- FAIL strict ~.95 silhouette qualification; current fit scores are .8563/.8241/.8049. Owner likeness judgment remains pending.
+
+## Visual evidence and scope limits
+
+`views.png` covers front, rear, left, right, top and both 3/4 views. `ladder.png` covers six views per LOD; `lods.png` compares side and 3/4 at all tiers. `paints.png` and `paints-strip.png` show bright player colours with neutral tyres, panniers, rider and engine. `damage-strip.png` / `damage-strip-overview.png` show intact, loose and each part detached, including the rider and both wheels. `grid-1.png`, `grid-4.png`, `grid-24.png` show the baked bike at tile scales. `colliders.png` displays the original proxies intentionally unchanged beneath the new visual form.
+
+LOD1/2 simplify hands and omit mirrors; the cheapest rider/helmet is deliberately angular. Fine engine/spoke detail becomes small at 24 tiles, while mailboxes, vest and bike silhouette remain recognizable. This viewer does not draw the gameplay roof-number/identity overlay, so these grids do not prove number legibility. No material/batching/loader code changed; no new draw-cost benchmark is claimed.
+
+Damage images are static poses, not proof of dynamic debris lifetime, velocity inheritance or driving recovery. The parent owns running host/scenario evidence, profile hash synchronization, engine-profile checks and publication. `settle.json` is a scenario fixture, not by itself a passing run receipt; the parent's roster-level `sim.json` records native load/settle and straight-run results, including the bike's two-wheel contact requirement. This helper receipt makes no new hardware device, sound or network claim. Remaining qualification blockers are the explicit silhouette target and parent integration/owner playtest acceptance.

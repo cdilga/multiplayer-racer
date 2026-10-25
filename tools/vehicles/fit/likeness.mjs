@@ -139,6 +139,19 @@ export function overlaySvg(checks) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="${Math.max(1,Math.ceil(panels.length/2))*440}">${panels.map((p,i)=>`<g transform="translate(${(i%2)*610},${Math.floor(i/2)*440})"><rect width="600" height="430" fill="#f4f4f6"/>${p}</g>`).join('')}</svg>`;
 }
 
+// Source overrides retain the vehicle's dependency base rather than the override file's location.
+// Bikes import ../_kit/bike.js; data-URL modules cannot resolve those relative imports themselves.
+export async function loadCandidate(car, {modelFile, paramsFile} = {}) {
+  const dir=path.resolve('art/vehicles',car), sourceText=fs.readFileSync(modelFile??`${dir}/model.js`,'utf8'),paramsText=fs.readFileSync(paramsFile??`${dir}/params.json`,'utf8');
+  const source=sourceText.replace(/(\bfrom\s*['"])([^'"]+)(['"])/g,(match,start,spec,end)=> {
+    const target=spec==='three'?pathToFileURL(path.resolve('node_modules/three/build/three.module.js')).href
+      :spec.startsWith('.')?new URL(spec,pathToFileURL(`${dir}/model.js`)).href:null;
+    return target?`${start}${target}${end}`:match;
+  });
+  const model=await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+  return {model,P:JSON.parse(paramsText),sourceText,paramsText};
+}
+
 export async function checkCapture({car,capture,modelFile,paramsFile}) {
   const dir=path.resolve('art/vehicles',car),fixture=JSON.parse(fs.readFileSync(`${dir}/refs/likeness.json`)),score=JSON.parse(fs.readFileSync(path.join(capture,'score.json')));
   const checks=cameraChecks(score.cameras,fixture.cameras);
@@ -149,9 +162,7 @@ export async function checkCapture({car,capture,modelFile,paramsFile}) {
     checks.push(...contourChecks(diff,specs,score.lod));
   }
   // A source override is for reproducing an earlier candidate without mutating the shared working tree.
-  const sourceText=fs.readFileSync(modelFile??`${dir}/model.js`,'utf8'),paramsText=fs.readFileSync(paramsFile??`${dir}/params.json`,'utf8');
-  const source=sourceText.replace(/from 'three'/g,`from '${pathToFileURL(path.resolve('node_modules/three/build/three.module.js')).href}'`).replace(/from '\.\/atlas.js'/g,`from '${pathToFileURL(`${dir}/atlas.js`).href}'`);
-  const model=await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`),P=JSON.parse(paramsText);
+  const {model,P,sourceText,paramsText}=await loadCandidate(car,{modelFile,paramsFile});
   const {parts}=model.soups(P,score.lod),sheets=JSON.parse(fs.readFileSync(`${dir}/refs/sheets.json`));
   const projected=projectFeatures(parts,fixture.features,sheets);
   checks.push(...fixture.features.map(f=>featureCheck(f,projected[f.name],score.lod)));

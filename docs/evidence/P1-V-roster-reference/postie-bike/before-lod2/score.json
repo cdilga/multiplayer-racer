@@ -1,0 +1,67 @@
+{
+ "car": "postie-bike",
+ "lod": 2,
+ "sheet": "lowest",
+ "cameras": {
+  "camD": 30,
+  "projection": "perspective",
+  "tilt": {
+   "front": 0,
+   "rear": 0
+  },
+  "hero": {
+   "az": 52,
+   "elev": 0,
+   "dist": 10,
+   "fov": 26,
+   "targetY": 1
+  },
+  "heroRear": {
+   "az": 140,
+   "elev": 0,
+   "dist": 10,
+   "fov": 26,
+   "targetY": 1
+  }
+ },
+ "stats": {
+  "tris": 586,
+  "draws": 6,
+  "breakdown": {
+   "core": 154,
+   "front": 92,
+   "back": 132,
+   "rider": 120,
+   "wheel_F": 44,
+   "wheel_R": 44
+  },
+  "stations": 0
+ },
+ "views": {
+  "side": {
+   "iou": 0.828,
+   "aspect": 1.02,
+   "miss": 0.0972,
+   "extra": 0.0747
+  },
+  "top": {
+   "iou": 0.7403,
+   "aspect": 1.086,
+   "miss": 0.114,
+   "extra": 0.1458
+  },
+  "front": {
+   "iou": 0.8342,
+   "aspect": 1.041,
+   "miss": 0.0857,
+   "extra": 0.0801
+  },
+  "rear": {
+   "iou": 0.8253,
+   "aspect": 1.079,
+   "miss": 0.0763,
+   "extra": 0.0983
+  }
+ },
+ "score": 0.8022
+}

@@ -1,0 +1,7 @@
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/damage-strip.png
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/damage-strip-overview.png
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/paints-strip.png
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/grid-1.png
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/grid-4.png
+wrote docs/evidence/P1-V-roster-reference/pig-catcher/grid-24.png
+browser: Playwright Chromium 151.0.7922.34

@@ -1,0 +1,7 @@
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip.png
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/damage-strip-overview.png
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/paints-strip.png
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/grid-1.png
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/grid-4.png
+wrote docs/evidence/P1-V-roster-reference/cruz-missile/grid-24.png
+browser: Playwright Chromium 151.0.7922.34

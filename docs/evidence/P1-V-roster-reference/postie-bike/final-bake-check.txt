@@ -1,0 +1,10 @@
+postie-bike.lod0.glb: 2287 tris (budget 2900; optimiser flipped 10, dropped 177 unseen) {"core":732,"front":407,"back":424,"rider":380,"wheel_F":172,"wheel_R":172}
+postie-bike.lod1.glb: 877 tris (budget 900; optimiser flipped 10, dropped 17 unseen) {"core":303,"front":138,"back":102,"rider":166,"wheel_F":84,"wheel_R":84}
+postie-bike.lod2.glb: 593 tris (budget 600; optimiser flipped 10, dropped 21 unseen) {"core":175,"front":78,"back":94,"rider":102,"wheel_F":72,"wheel_R":72}
+same    postie-bike.atlas.png cd14f3896ade5312ea88f74924148975ee683d333b5baa71f9f9b117a4bedb43
+same    postie-bike.emissive.png e54f845802fed9909b3e19cca9254b7ab59252f30ecd7d06d868bed62cfe56d6
+same    postie-bike.lod0.glb 2127a995d5764a4e0454276144a7b3cbe8bd9629b9f4417a5c1a6510f9f2f112
+same    postie-bike.lod1.glb 83d6e13e7566840108c9b7cf3a2984093a09742f001c201cfba16000c584bf52
+same    postie-bike.lod2.glb 2a52bb66f20979ae4fe12e9129aa8bc7bd0d27acf0ac20dd72e68b306e4916dd
+same    postie-bike.asset.json c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499
+bake --check: the committed files are exactly what the model script bakes

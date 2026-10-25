@@ -1,0 +1,73 @@
+{
+  "car": "pig-catcher",
+  "pass": true,
+  "baseline": "HEAD before roster refinement",
+  "sidecarUnchanged": true,
+  "colliders": {
+    "collider_core": {
+      "unchanged": true,
+      "sha256": "65cd273d38997b889a04c5323d7bbea937969f44bfa0667ab989dc89292e1b58"
+    },
+    "collider_front": {
+      "unchanged": true,
+      "sha256": "7175fe3e98b5f04b23b74259b2451f794d567b21a0f04a434cea61f9fb9bb783"
+    },
+    "collider_back": {
+      "unchanged": true,
+      "sha256": "faaa1561fb186da4aecb815b3c992cdf19c02427698de8ecdacfbcacc0ca39a6"
+    },
+    "collider_rider": {
+      "unchanged": true,
+      "sha256": "430e8276ca2ef86535d6db5f76f2bf5c8331ca14a7caee4295d92846228282e7"
+    },
+    "collider_wheel_F": {
+      "unchanged": true,
+      "sha256": "4f65c7cbf402002d8807e743fa2c4f5dae40822875eab4f27801f21aaf1b91b4"
+    },
+    "collider_wheel_R": {
+      "unchanged": true,
+      "sha256": "fe72ec54622d6e1d880578602577f9dd7877f9dc290050458909eb41f39e0825"
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "triangles": 2514,
+      "maxTris": 2800,
+      "parts": {
+        "core": 546,
+        "front": 323,
+        "back": 305,
+        "rider": 344,
+        "wheel_F": 508,
+        "wheel_R": 488
+      }
+    },
+    {
+      "lod": 1,
+      "triangles": 898,
+      "maxTris": 900,
+      "parts": {
+        "core": 239,
+        "front": 167,
+        "back": 132,
+        "rider": 208,
+        "wheel_F": 76,
+        "wheel_R": 76
+      }
+    },
+    {
+      "lod": 2,
+      "triangles": 596,
+      "maxTris": 600,
+      "parts": {
+        "core": 180,
+        "front": 98,
+        "back": 74,
+        "rider": 124,
+        "wheel_F": 60,
+        "wheel_R": 60
+      }
+    }
+  ]
+}

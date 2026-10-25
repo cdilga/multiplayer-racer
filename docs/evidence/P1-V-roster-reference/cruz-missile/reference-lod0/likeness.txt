@@ -1,0 +1,22 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD.front
+PASS camera.camD.rear
+PASS camera.camD.side
+PASS camera.camD.top
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS front greenhouse tapers into the roof instead of staying broad error=0.0763 limit=0.12
+PASS front body remains broad below the shoulders error=0.0402 limit=0.115
+PASS nose tip narrows from the shoulder footprint error=0.0204 limit=0.035
+PASS front angular lamp envelopes IoU=0.511 minimum=0.5

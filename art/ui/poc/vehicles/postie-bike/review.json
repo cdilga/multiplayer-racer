@@ -2,54 +2,52 @@
   "id": "postie-bike",
   "name": "Postie Bike",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
-    "br-bwju.11",
-    "br-bwju.5",
-    "br-bwju"
+    "br-rgw6"
   ],
-  "summary": "R123's Postie Bike, rebuilt against its contact sheet in br-bwju.11: a bent leg shield with bowed facets and a floor wedge with rubber pads; lugged tyres on black four-diameter spoked wheels; an octagon headlamp with rim and lens; swept silver bars with black grips and round mirrors on stalks; twin hex mufflers with header pipes and shocks; a front mudguard with skirts; a silver wire carrier with a postal-red mail tub and parcels; open-top panniers with lid rims and parcels; a rounded rear grab rail, tail block with brake cap and hex lens. The rider is part of the model: faceted white helmet with a grey lower ring and a clear visor frame, hi-vis vest with bands and stripes, puffy blue sleeves, shorts and tall boots. LOD0 2782 triangles (qualified budget now 3000). The physics hulls are frozen at the br-bwju.5 bake.",
+  "summary": "Rebuilt around classic CB50 architecture: a curved red/cream tank, exposed finned single-cylinder engine, open diamond frame, slim spoked wheels and one low right exhaust replace the scooter floor and leg shield. The postie rider, carrier, parcels and panniers retain the game identity. Exported triangles: 2287 / 877 / 593 within unchanged 2900 / 900 / 600 budgets. Physics hulls, wheel hubs, anchors and original hinges remain frozen. Owner review decides likeness.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Scored with the helmet-patched masks and the level far camera of refs/sheets.json; thin parts (wire basket, rail, mirror stalks) vanish from the masks on both sides.",
+    "note": "New references generated with Muse from the Honda 1971 CB50 architecture; prompts, cost and primary image are retained in refs/provenance.json. The real Honda image governs a single right exhaust where the generated rear view invents two. Reference | model | silhouette diff use identical frozen level cameras. Corrected masks retain silver engine parts and the separate front tyre. Same-mask LOD0 score .8164 before to .8563 after; this remains an interpretation, not a calibrated replica.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the lod+1 sheet",
+        "label": "LOD0 against the new CB50-inspired reference",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.8495,
-          "top": 0.8456,
-          "front": 0.8683,
-          "rear": 0.8928
+          "side": 0.8561,
+          "top": 0.844,
+          "front": 0.8604,
+          "rear": 0.877
         },
-        "weightedIou": 0.8576
+        "weightedIou": 0.8563
       },
       {
         "lod": 1,
-        "label": "LOD1 against the lod+1 sheet",
+        "label": "LOD1 against the new CB50-inspired reference",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.8443,
-          "top": 0.8302,
-          "front": 0.8469,
-          "rear": 0.8721
+          "side": 0.8478,
+          "top": 0.7798,
+          "front": 0.8293,
+          "rear": 0.8439
         },
-        "weightedIou": 0.8446
+        "weightedIou": 0.8241
       },
       {
         "lod": 2,
-        "label": "LOD2 against the lowest-lod sheet",
+        "label": "LOD2 against the new CB50-inspired reference",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.7011,
-          "top": 0.7985,
-          "front": 0.8819,
-          "rear": 0.8767
+          "side": 0.826,
+          "top": 0.7732,
+          "front": 0.7978,
+          "rear": 0.8188
         },
-        "weightedIou": 0.7838
+        "weightedIou": 0.8049
       }
     ]
   },
@@ -57,12 +55,12 @@
     "assetJson": "media/model/postie-bike.asset.json",
     "atlas": "media/model/postie-bike.atlas.png",
     "emissive": "media/model/postie-bike.emissive.png",
-    "sheet": "media/turntable/lods.png",
+    "sheet": "media/turntable/ladder.png",
     "lods": [
       {
         "lod": 0,
         "glb": "media/model/postie-bike.lod0.glb",
-        "tris": 2573,
+        "tris": 2287,
         "draws": 6,
         "maxTris": 2900,
         "withinBudget": true
@@ -70,7 +68,7 @@
       {
         "lod": 1,
         "glb": "media/model/postie-bike.lod1.glb",
-        "tris": 864,
+        "tris": 877,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -78,7 +76,7 @@
       {
         "lod": 2,
         "glb": "media/model/postie-bike.lod2.glb",
-        "tris": 559,
+        "tris": 593,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -239,7 +237,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (the leg shield, side covers and mudguards tint); the postal-red panniers, the hi-vis vest and the parcels keep their colours, so it reads as a postie in any seat colour. The number sits on the rider's back (anchor roof_number) and in the HUD badge."
+    "pattern": "Seat colour tints the tank panels and mudguards. The cream tank inset, postal-red panniers, hi-vis vest, parcels, mechanical metal and dark tyres retain their colours. The identity number uses the original rider-back roof_number anchor and HUD badge."
   },
   "inWorld": [
     {
@@ -268,39 +266,23 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (origin between the axles; anchors unchanged; mass fractions unchanged; part set core, front, back, rider, wheel_F, wheel_R at every LOD)"
+        "text": "byte-reproducible export, existing triangle budgets and native contract validator."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2782 <= 2900 <= 3000; LOD1 894 <= 900; LOD2 586 <= 600"
-      },
-      {
-        "result": "WARN",
-        "text": "silhouette: weighted IoU LOD0 0.7999 -> 0.8579 (side 0.757 -> 0.850, top 0.887 -> 0.846, front 0.793 -> 0.868, rear 0.747 -> 0.893); LOD1 0.7502 -> 0.8441; LOD2 0.685 -> 0.7827. Below the skill's ~0.95: thin parts (wire basket, rail, mirror stalks, spokes) vanish from the masks, the sheet's panniers and bars are wider than the sim's bike, and the top view got worse (0.887 -> 0.846) because the sheet's plan is perspective-stretched"
+        "text": "original collider bytes and complete original sidecar retained."
       },
       {
         "result": "PASS",
-        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): step-through shield and floor wedge, spoked lugged wheels, headlamp, swept bars with mirrors, twin mufflers, wire carrier with mail tub and parcels, open panniers with parcels, rear rail, tail lamp, hi-vis rider with helmet and visor"
+        "text": "local feature/negative-space checks; previous candidate and injected missing/displaced cues fail."
       },
       {
         "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid); the shield, floor, body, mudguards and tail block tint, the panniers, vest and parcels keep their colours"
+        "text": "actual-loader multi-view, colours, all-tier apertures and posed damage review."
       },
       {
-        "result": "PASS",
-        "text": "damage states (damage-strip.png: front, back and the rider swing about their hinge lines, wheels detach, the rider is thrown; no see-through holes)"
-      },
-      {
-        "result": "PASS",
-        "text": "physics fit (colliders.png: one convex hull per part, as it was; the new panniers, bars, mirrors and helmet are not collision surfaces)"
-      },
-      {
-        "result": "WARN",
-        "text": "wheel size: the sheet's tyres are about 0.37 m in radius, the model's 0.4 m and 0.36 m (the sim's)"
-      },
-      {
-        "result": "WARN",
-        "text": "the optimiser narrowed the plan (top view IoU fell) to fit side and rear; the rail and mirrors sit narrower than the sheet's"
+        "result": "FAIL",
+        "text": "strict ~.95 silhouette qualification; current fit scores are .8563/.8241/.8049. Owner likeness judgment remains pending."
       }
     ],
     "report": "media/gate/validation.md"

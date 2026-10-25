@@ -1,0 +1,171 @@
+{
+ "contract": "jj.vehicle.v1",
+ "id": "pig-catcher",
+ "units": "m",
+ "forward": "+z",
+ "up": "+y",
+ "lods": [
+  {
+   "file": "pig-catcher.lod0.glb",
+   "maxTris": 2800
+  },
+  {
+   "file": "pig-catcher.lod1.glb",
+   "maxTris": 900
+  },
+  {
+   "file": "pig-catcher.lod2.glb",
+   "maxTris": 600
+  }
+ ],
+ "parts": {
+  "core": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "hinge": null,
+   "massFraction": 0.5,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "front": {
+   "pivot": [
+    0,
+    1.46,
+    0.4
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": 0,
+    "max": 25
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "back": {
+   "pivot": [
+    0,
+    1.4991,
+    -0.7227719648636579
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -25,
+    "max": 0
+   },
+   "massFraction": 0.08,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "rider": {
+   "pivot": [
+    0,
+    1.04,
+    -0.23
+   ],
+   "hinge": {
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "min": -15,
+    "max": 15
+   },
+   "massFraction": 0.25,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_F": {
+   "pivot": [
+    0,
+    0.4,
+    0.98
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "convex"
+   }
+  },
+  "wheel_R": {
+   "pivot": [
+    0,
+    0.385,
+    -0.94
+   ],
+   "hinge": {
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "min": -6,
+    "max": 6
+   },
+   "massFraction": 0.045,
+   "collider": {
+    "type": "convex"
+   }
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   0,
+   1.7,
+   0.08
+  ],
+  "cam_tp_target": [
+   0,
+   1.2,
+   0.2
+  ],
+  "com": [
+   0,
+   0.8,
+   -0.05
+  ],
+  "roof_number": [
+   0,
+   1.38,
+   -0.235
+  ],
+  "lplate_front": [
+   0,
+   1.2,
+   0.68
+  ],
+  "lplate_rear": [
+   0,
+   1,
+   -1.4
+  ]
+ },
+ "material": {
+  "count": 1,
+  "atlas": "pig-catcher.atlas.png"
+ }
+}

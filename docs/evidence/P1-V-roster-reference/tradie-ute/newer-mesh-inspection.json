@@ -1,0 +1,115 @@
+{
+  "source": "studies/landscape/build/_vehicles/triton.glb",
+  "bytes": 714440,
+  "generator": "Khronos glTF Blender I/O v5.2.40",
+  "meshes": 6,
+  "materials": 18,
+  "nodes": [
+    {
+      "name": "body.exterior",
+      "translation": null,
+      "mesh": 0
+    },
+    {
+      "name": "body.interior.mesh",
+      "translation": null,
+      "mesh": 1
+    },
+    {
+      "name": "body.interior",
+      "translation": null,
+      "mesh": null
+    },
+    {
+      "name": "body",
+      "translation": null,
+      "mesh": null
+    },
+    {
+      "name": "marker.eye",
+      "translation": [
+        1.25,
+        1.6200000047683716,
+        0.3799999952316284
+      ],
+      "mesh": null
+    },
+    {
+      "name": "marker.hitch",
+      "translation": [
+        -1.6449999809265137,
+        0.5199999809265137,
+        0
+      ],
+      "mesh": null
+    },
+    {
+      "name": "marker.mirror.left",
+      "translation": [
+        2.0199999809265137,
+        1.3799999952316284,
+        -1.0399999618530273
+      ],
+      "mesh": null
+    },
+    {
+      "name": "marker.mirror.right",
+      "translation": [
+        2.0199999809265137,
+        1.3799999952316284,
+        1.0399999618530273
+      ],
+      "mesh": null
+    },
+    {
+      "name": "marker.rearcam",
+      "translation": [
+        -1.5,
+        0.8500000238418579,
+        0
+      ],
+      "mesh": null
+    },
+    {
+      "name": "wheel.FL",
+      "translation": [
+        3,
+        0.4009999930858612,
+        -0.7599999904632568
+      ],
+      "mesh": 2
+    },
+    {
+      "name": "wheel.FR",
+      "translation": [
+        3,
+        0.4009999930858612,
+        0.7599999904632568
+      ],
+      "mesh": 3
+    },
+    {
+      "name": "wheel.RL",
+      "translation": [
+        0,
+        0.4009999930858612,
+        -0.7574999928474426
+      ],
+      "mesh": 4
+    },
+    {
+      "name": "wheel.RR",
+      "translation": [
+        0,
+        0.4009999930858612,
+        0.7574999928474426
+      ],
+      "mesh": 5
+    },
+    {
+      "name": "vehicle.triton",
+      "translation": null,
+      "mesh": null
+    }
+  ]
+}

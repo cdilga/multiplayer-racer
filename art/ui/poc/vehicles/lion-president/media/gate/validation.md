@@ -1,36 +1,107 @@
-Vehicle Model Validation: PASS (with the WARNs below)
+# Lion President: reference refinement validation
 
-Vehicle/part IDs: lion-president; core (greenhouse with side glass and frames, black roof, shark fin, skirts, mirrors, calipers, bays), front (nose, bonnet scoops, lamps, grille, lower bumper and intakes, splitter, aerial, front flares), back (boot, tail-lamp bar, wing on swan-neck posts, diffuser, pipes, rear flares), door_FL/FR/RL/RR (with handles), wheel_FL/FR/RL/RR (tyre, rim, spokes, hub); interior blocks engine, cabin, boot
-Commits: b57b9c9a (structure), 54a30978 (fit and bake), and the evidence commit that ships this file, on v0.2-revamp
-Changed files: art/vehicles/lion-president/{model.js, atlas.js, params.json, vehicle.json, review.src.json, lion-president.asset.json, lion-president.lod{0,1,2}.glb, lion-president.atlas.png, lion-president.emissive.png}; assets/profiles/lion-president.json (geometry re-synced); crates/jj-contracts/src/vehicle.rs and art/contracts/vehicle.schema.json (LOD0 qualified budget 1300 -> 3000); tools/vehicles/bake.mjs (noCollide decoration); tools/vehicles/fit/opt.mjs (--out, pinned); tools/vehicles/view/{view.js, capture.mjs} (ladder sheet)
-Requirement source: owner 2026-10-18 on br-bwju.11 (match the contact sheet; more LOD0 triangles allowed), R81, R86, R123; Playtest-1 plan 6.3 hinge lines
+Vehicle Model Validation: PASS for the bounded visual refinement and unchanged-physics proof; full production gate remains INCOMPLETE.
 
-Method: lowpoly-model-from-refs. Structure built by hand from numbers measured off refs/lod-plus-1.png (side, front and rear crops at 2x with a 10 cm scale); then tools/vehicles/fit/opt.mjs on eris, 4 passes, numbers only, wheelR and track pinned (they are the sim's wheels); then the fascia details measured again. No new LOD level.
+**Bead:** br-rgw6. **Date:** 2026-10-25. **Build:** working-tree model/bake delta over `9388bd30581aca3647ddfa95649d589ef54727b5`; parent integration/publication records the resulting commit. **Machine:** repository Mac, headless Playwright Chromium 151.0.7922.34, software WebGL. No hardware GPU or device performance qualification is claimed.
 
-Visual evidence (Playwright Chromium headless on eris, software GL for the fit/viewer/evidence tools, ANGLE/Vulkan on the RTX 2080 Super for the host probe; not a TV or phone):
-- reference-lod0/, reference-lod1/, reference-lod2/: sheet.png + score.json, `node tools/vehicles/fit/capture.mjs lion-president --out <dir> --lod N --sheet lod1|lowest` (compose.py run on the Mac: eris has no PIL)
-- ladder-lod0.png, ladder-lod1.png, ladder-lod2.png: sheet crop | before | after for front, front 3/4, side, rear 3/4, rear, top; from ladder-before-raw.png (the br-bwju.3 GLBs, still in art/ui/poc/vehicles/lion-president/media/model/ at capture time) and ladder-after-raw.png, `node tools/vehicles/view/capture.mjs --asset <asset> --out <dir> --sheet ladder --paint '#d8231c'`
-- views.png, lods.png, paints.png, colliders.png: `node tools/vehicles/view/capture.mjs --asset /art/vehicles/lion-president/lion-president.asset.json --out <dir>`
-- damage-strip.png, damage-strip-overview.png, paints-strip.png, grid-1.png, grid-4.png, grid-24.png: `node tools/vehicles/evidence/run.mjs lion-president --out <dir>`
-- host-grid-1.png, host-grid-4.png, host-grid-24.png and render.json: the real host page (`host?synthetic=24&vehicles=mixed&freeze=240&tiles=N&res=1&autores=off`, 1920x1080), every roster car four times
+Requirements: owner R81/R86; master plan §§12.3–12.5; game-asset-reference-modelling, lowpoly-model-from-refs and vehicle-model-validation skills. Scope is source geometry and its evidence, preserving the pre-existing handling and damage contract.
 
-Checks run:
-- node tools/vehicles/bake.mjs art/vehicles/lion-president: 2162 / 892 / 594 tris (asks 2400 / 900 / 600; qualified 3000 / 900 / 600); `--check` byte-reproducible
-  - LOD0 per part: front 516, back 580, core 306, door_FL/FR 26, door_RL/RR 14, wheels 170 each
-- jj vehicle sync / jj validate assets/profiles/lion-president.json: in sync with its sidecar. Hull now +-0.99 m wide (flares), was +-0.975; wheels and wheel_radius 0.43 unchanged
-- node --test tools/vehicles/test/ (eris, b57b9c9a): 39 passed (pivots on hinge lines at every LOD, sidecar pivots, spec twins)
-- node tools/vehicles/review/check.mjs: every Vehicles-contract item present
-- rch cargo test -p jj-contracts: passed. jj-sim roster and jj-procgen handling tests: CI (the RCH worker's cargo registry cache was broken during this session)
+## Candidate and reference decisions
 
-Findings:
-- PASS contract + reproducibility (validator clean with the 3000 LOD0 budget; origin between the axles; anchors unchanged)
-- PASS budget: LOD0 2162 <= 2400 <= 3000; LOD1 892 <= 900; LOD2 594 <= 600
-- PASS silhouette (better than before): LOD0 weighted IoU 0.9349 -> 0.9452 (side 0.949 -> 0.964, top 0.922 -> 0.928, front 0.921 -> 0.921, rear 0.938 -> 0.953); LOD1 0.933 -> 0.941; LOD2 0.941 -> 0.946. Short of the skill's ~0.95 at LOD0 by 0.005, mostly the top view (the sim's 0.43 m wheels on a 0.84 m track sit wider than the sheet's narrow body)
-- PASS by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): every cue in the owner's list is present: tall cabin with pillars and window frames, 5-spoke rims with red calipers, flared arches, large fanged lamps, barred grille, slatted intakes with 4 LEDs, black splitter, raised scoops, aerial, swoosh, swan-neck wing, full-width tail bar, black diffuser with quad pipes, mirrors
-- PASS paint key / one material; draws per tile unchanged (44 in the mixed grid)
-- PASS damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)
-- PASS physics fit (colliders.png: one convex hull per part; the aerial, fin, calipers and mirrors are left out of the colliders)
-- WARN wheel size: the sheet's wheels are about 0.34 m in radius, the model's 0.43 m (the sim's wheel_radius, shared feel with the Hawk); not changed here
-- WARN the swoosh's pinstripes read cream through the paint key's filtered edges (br-vhtm, renderer-wide)
+The Lion keeps the yellow corner chevrons/fangs, black and yellow shoulder stripe, rectangular rear lamp band, low red sedan body and large wing. Its previous bonnet crown made a deep V and its front corners were too square. The nose is flatter and broader, with a two-plane corner setback and a centre split so the substrate and graphics share the crease. Extra longitudinal stations control the transition. The arch crown was lowered; the forced wheel-clearance flare now rolls back above 0.72m instead of forcing the wide wheel section up to the shoulder. The unchanged shoulder tolerance passes after that geometry correction. Cabin roof width was reduced. The outer door skin remains constrained to the original hinge plane. Thin flat wheel blades replace costly repeated 3D spoke sides and barrels.
 
-Remaining blockers: none for the model and the gate. The owner judges recognisability (br-bwju.11's ev:owner item).
+The unchanged per-tier sheets and masks are identified by SHA-256 in `art/vehicles/lion-president/refs/likeness.json`. `baseline-source/` freezes the original model, parameters, contract, sidecar, LOD0 collider-bearing GLB and pivots. The before/after images use the same frozen cameras: perspective projection; front/rear optical axes horizontal at 50m; side/top at 10m; front/rear hero elevation 0°, azimuth 52°/140°, distance 11m, FOV 26°, target height 0.78m. This removes the flattering elevated view from the diagnostic decision.
+
+## Exported geometry
+
+Counts below are the baked/pruned runtime geometry, excluding collider meshes. The fitter reports unpruned source geometry including internal bays, so its count is not the exported budget count.
+
+| LOD | Before | After | Budget | Each wheel before → after |
+|---|---:|---:|---:|---:|
+| 0 | 2150 | 1813 | 2400 | 170 → 54 |
+| 1 | 891 | 897 | 900 | 42 → 30 |
+| 2 | 594 | 576 | 600 | 38 → 25 |
+
+Per-part final counts (interior rows are documented separately and excluded from the exported budget total):
+
+| Part | LOD0 | LOD1 | LOD2 |
+|---|---:|---:|---:|
+| core | 306 | 188 | 144 |
+| front | 613 | 278 | 172 |
+| back | 598 | 251 | 136 |
+| door_FL | 26 | 18 | 6 |
+| door_FR | 26 | 18 | 6 |
+| door_RL | 14 | 12 | 6 |
+| door_RR | 14 | 12 | 6 |
+| wheel_FL | 54 | 30 | 25 |
+| wheel_FR | 54 | 30 | 25 |
+| wheel_RL | 54 | 30 | 25 |
+| wheel_RR | 54 | 30 | 25 |
+| interior_engine | 24 | 24 | 24 |
+| interior_cabin | 36 | 36 | 36 |
+| interior_boot | 32 | 32 | 32 |
+
+## Frozen-camera silhouette results
+
+Values are before → after. Whole-car IoU is only one diagnostic: local shapes and graphics can improve while this aggregate falls. Regressions are retained here rather than hidden by the weighted number.
+
+| LOD | Weighted | Side | Top | Front | Rear |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.9481 → 0.9478 | 0.9643 → 0.9467 | 0.9280 → 0.9365 | 0.9378 → 0.9562 | 0.9553 → 0.9645 |
+| 1 | 0.9452 → 0.9438 | 0.9622 → 0.9414 | 0.9206 → 0.9288 | 0.9388 → 0.9588 | 0.9557 → 0.9651 |
+| 2 | 0.9507 → 0.9484 | 0.9637 → 0.9460 | 0.9438 → 0.9500 | 0.9314 → 0.9470 | 0.9496 → 0.9528 |
+
+Lion front, top and rear scores improve at every tier; its side score regresses at every tier and the aggregate remains around/below the nominal 0.95 target. The shorter faceted nose/corner transition and wheel simplification contribute to this tradeoff. The broad face, flatter bonnet and yellow graphic placement make a stronger local recognition candidate, subject to owner review.
+
+## Local reference gates
+
+`checks.json` records source contour tests against reference masks and independently annotated lamp envelopes at each LOD. `after-lodN/likeness.json` and `.svg` record the capture-based checks with reference/camera identity. Width/delta errors are normalised by reference height. End-facing graphic selection excludes side-facing material triangles; the rear-band envelope test fills the deliberate hollow outline. These tests supplement the image review.
+
+| Check | LOD0 | LOD1 | LOD2 |
+|---|---:|---:|---:|
+| front shoulder to flank transition | error 0.0067; limit 0.060; PASS | error 0.0267; limit 0.070; PASS | error 0.0731; limit 0.080; PASS |
+| front lower stance width | error 0.0733; limit 0.085; PASS | error 0.0200; limit 0.085; PASS | error 0.0565; limit 0.090; PASS |
+| rear lower stance width | error 0.0542; limit 0.065; PASS | error 0.0136; limit 0.075; PASS | error 0.0746; limit 0.090; PASS |
+| plan nose taper at three sections | error 0.0508; limit 0.070; PASS | error 0.0508; limit 0.075; PASS | error 0.0447; limit 0.080; PASS |
+| Lion yellow corner chevrons and fangs | IoU 0.3473; limit 0.250; PASS | IoU 0.3899; limit 0.220; PASS | IoU 0.3372; limit 0.150; PASS |
+| Lion full width rear lamp band | IoU 0.4974; limit 0.450; PASS | IoU 0.7491; limit 0.400; PASS | IoU 0.6908; limit 0.300; PASS |
+
+A missing-front-lamp defect is injected independently at each LOD by replacing the feature UVs. Every injected defect fails the feature gate; the rejection is a meaningful visual defect, not an import failure. All current source gates pass. The focused sedan likeness and pivot suite passes 20/20 (`../lion-president/focused-tests.log`).
+
+## Contract and reproducibility
+
+`node docs/evidence/P1-V-roster-reference/lion-president/reproduce.mjs` passes (`checks.log`). It checks every original exported collider triangle, all pivots, anchors, part definitions (including masses/hinges), part IDs and LOD budgets for exact equality with the baseline. It rebakes and compares every output byte, then runs all LOD source gates and the defect sensitivity checks. Original raw collider point data is frozen in `colliders.json`; visual retopology therefore cannot silently change handling or hinge geometry. No profile dynamics or runtime renderer/material code was changed by this refinement. Parent integration owns profile hash sync and the native/shared contract checks.
+
+## Loader and state review
+
+Every listed PNG was opened and inspected, including the before/after sheets at every LOD and both horizontal heroes. `loader/views.png` covers front/rear/left/right/top and both three-quarter views; `paints.png` covers cyan/red/yellow/blue/dark/white with neutral tyres; `lods.png` shows all tiers; `colliders.png` overlays the preserved original proxies. `paints-strip.png` covers white plus five player colours. `damage-strip.png` and `damage-strip-overview.png` show intact, loose hinge poses, detached front/door/back/wheel, combined missing parts and a stripped shell. Dark internal bays remain visible beneath missing parts. These are deterministic viewer poses, not newly measured dynamic debris behaviour.
+
+`grid-1.png`, `grid-4.png` and `grid-24.png` show the baked car and shared parts renderer at 1080p in different paints and LODs. They are viewer grids, not the host game: they contain no HUD, track or roof-number rendering. They prove visual loading and colour/silhouette continuity, not number readability, draw-cost qualification, input/networking behaviour or frame-rate acceptance.
+
+## Remaining limitations
+
+The generated front wants a broad fascia while the plan view pinches the nose more strongly. Front lamp identity governs this candidate. The fixture records a 0.07 plan-width uncertainty (59 pixels on the 847-pixel crop); source contour projection retains thin geometry removed by the mask opening, so the lower-front stance limit is 0.085. This uncertainty is explicit, not evidence of a perfect match. LOD2 wheel blades and guards are coarse and the side silhouette loses score. The dark glasshouse and rear wing remain stylised rather than a literal surface reconstruction.
+
+Full production acceptance is not asserted here: no fresh native load/settle/recovery scenario, dynamic loose/detached simulation, roof-number smallest-tile proof, host gameplay capture, 24×24 draw benchmark or hardware/device performance run was made by this helper. Those are parent integration or existing gate evidence, and must be named explicitly if used. Original collider equality is strong regression evidence, but does not replace native settle evidence. Engine audio was untouched. The owner decides whether the visual candidate is recognisable.
+
+## Reproduction
+
+```sh
+node tools/vehicles/bake.mjs art/vehicles/lion-president
+node docs/evidence/P1-V-roster-reference/lion-president/reproduce.mjs
+node tools/vehicles/fit/capture.mjs lion-president --lod 0 --sheet lod1 --out docs/evidence/P1-V-roster-reference/lion-president/after-lod0
+node tools/vehicles/fit/capture.mjs lion-president --lod 1 --sheet lod1 --out docs/evidence/P1-V-roster-reference/lion-president/after-lod1
+node tools/vehicles/fit/capture.mjs lion-president --lod 2 --sheet lowest --out docs/evidence/P1-V-roster-reference/lion-president/after-lod2
+node tools/vehicles/view/capture.mjs --asset /art/vehicles/lion-president/lion-president.asset.json --out docs/evidence/P1-V-roster-reference/lion-president/loader --ortho 3.0
+node tools/vehicles/evidence/run.mjs lion-president --out docs/evidence/P1-V-roster-reference/lion-president/loader
+node --test --test-name-pattern='au-hawk|lion-president' tools/vehicles/test/likeness.test.mjs tools/vehicles/test/pivots.test.mjs
+```
+
+For each capture run `tools/vehicles/fit/likeness.mjs lion-president --capture <capture-directory>`. Baseline captures use the frozen `baseline-source/model.js` and `params.json` overrides; never overwrite the live source to reproduce an earlier candidate.
+
+## Review-page findings
+
+- PASS code-built export, unchanged triangle budgets and reproducible baked bytes.
+- PASS current local reference gates at all LODs; old candidates and meaningful injected defects rejected.
+- PASS original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks.
+- WARN whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending.

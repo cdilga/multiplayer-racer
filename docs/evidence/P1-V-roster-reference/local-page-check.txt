@@ -1,0 +1,24 @@
+FAIL /poc/vehicles/review.html?v=au-hawk 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_au_hawk_412x915.png
+     cut off by the screen edge: "The owner's reference sh"
+FAIL /poc/vehicles/review.html?v=au-hawk 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_au_hawk_1920x1080.png
+     cut off by the screen edge: ""
+ok   /poc/vehicles/review.html?v=cruz-missile 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_cruz_missile_412x915.png
+FAIL /poc/vehicles/review.html?v=cruz-missile 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_cruz_missile_1920x1080.png
+     cut off by the screen edge: ""
+FAIL /poc/vehicles/review.html?v=lion-president 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_lion_president_412x915.png
+     cut off by the screen edge: "The owner's reference sh"
+FAIL /poc/vehicles/review.html?v=lion-president 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_lion_president_1920x1080.png
+     cut off by the screen edge: ""
+FAIL /poc/vehicles/review.html?v=pig-catcher 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_pig_catcher_412x915.png
+     cut off by the screen edge: "Feedback: Comment on thi"
+FAIL /poc/vehicles/review.html?v=pig-catcher 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_pig_catcher_1920x1080.png
+     cut off by the screen edge: ""
+FAIL /poc/vehicles/review.html?v=postie-bike 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_postie_bike_412x915.png
+     cut off by the screen edge: "The owner's reference sh"
+FAIL /poc/vehicles/review.html?v=postie-bike 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_postie_bike_1920x1080.png
+     cut off by the screen edge: ""
+FAIL /poc/vehicles/review.html?v=tradie-ute 412x915 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_tradie_ute_412x915.png
+     cut off by the screen edge: "The actual owner vehicle"
+FAIL /poc/vehicles/review.html?v=tradie-ute 1920x1080 -> docs/evidence/P1-V-roster-reference/local-page/poc_vehicles_review_html_v_tradie_ute_1920x1080.png
+     cut off by the screen edge: ""
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { SITE } from './build.mjs';
+import { SITE, buildVehicle } from './build.mjs';
 import { checkAll, checkReview } from './check.mjs';
 
 const cruz = JSON.parse(fs.readFileSync(path.join(SITE, 'cruz-missile/review.json'), 'utf8'));
@@ -38,4 +38,32 @@ test('missing handling fails', () => { const r = structuredClone(cruz); r.handli
 test('a spec twin without its partner fails', () => {
   const r = structuredClone(cruz); r.specTwin = { id: 'lion-president', sharedSpec: 'x' };
   assert.ok(checkReview(r, all, {}).some((b) => b.startsWith('item 7')));
+});
+
+test('owner-measured reference replaces invented orthographic IoU only with complete passing evidence', () => {
+  const ute = buildVehicle('tradie-ute', []);
+  assert.equal(ute.reference.compare.length, 0);
+  assert.equal(ute.reference.measured.kind, 'owner-measured');
+  assert.deepEqual(checkReview(ute, all), []);
+  const canopyWidth = ute.reference.measured.rows.find(r => r.label === 'Canopy width');
+  assert.equal(canopyWidth.target, 1.772);
+  assert.equal(canopyWidth.actual.length, ute.turntable.lods.length);
+  assert.ok(canopyWidth.actual.every(a => Math.abs(a.value - 1.772) < .006));
+  for (const field of ['oracle', 'report']) {
+    assert.ok(checkReview(ute, f => f !== ute.reference.measured[field]).some(b => b.startsWith('item 1')));
+  }
+  for (const mutate of [
+    r => { r.reference.measured = undefined; },
+    r => { r.reference.measured.pass = false; },
+    r => { r.reference.measured.lods[1].pass = false; },
+    r => { r.reference.measured.lods[0].checks[0].pass = false; },
+    r => { r.reference.measured.lods[0].checks = []; },
+    r => { r.reference.measured.lods[0].injections[0].detected = false; },
+    r => { r.reference.measured.lods.pop(); },
+    r => { r.reference.measured.rows[0].actual[0].value = null; },
+    r => { r.reference.measured.rows[0].actual[0].lod = 2; },
+  ]) {
+    const broken = structuredClone(ute); mutate(broken);
+    assert.ok(checkReview(broken, all).some(b => b.startsWith('item 1')), 'missing or failed measured evidence must fail');
+  }
 });

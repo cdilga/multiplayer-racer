@@ -60,6 +60,29 @@ function handling(profileFile, src) {
   };
 }
 
+// An owner-measured vehicle can have authoritative photos and tape envelopes instead of an invented
+// orthographic sheet. Preserve the actual oracle/report as downloadable media and derive the page's
+// numbers from those files, rather than copying a hand-written pass or candidate parameters.
+export function measuredReference(spec, media) {
+  const oracle = readJson(path.join(REPO, spec.oracle)), report = readJson(path.join(REPO, spec.report));
+  const lods = report.lods ?? [];
+  const rows = [];
+  for (const [part, label] of [['tray', 'Tray'], ['canopy', 'Canopy']]) {
+    const target = oracle.visualOracles?.[part]?.bounds;
+    const dimensions = [['width', 0], ['length', 2], ...(part === 'canopy' ? [['height above deck', 1]] : []), [part === 'tray' ? 'deck height' : 'top height', 1, 1]];
+    for (const [name, axis, endpoint] of dimensions) {
+      const value = b => b ? endpoint == null ? b[1][axis] - b[0][axis] : b[endpoint][axis] : null;
+      rows.push({ label: `${label} ${name}`, target: value(target), actual: lods.map(l => ({ lod: l.lod, value: value(l.measurement?.[part]) })), unit: 'm' });
+    }
+  }
+  return {
+    kind: 'owner-measured', oracle: media(spec.oracle, 'reference'), report: media(spec.report, 'reference'),
+    authority: oracle.authority, comparison: report.comparison, rows,
+    pass: oracle.schema === 'jj.vehicle.measured-reference.v1' && report.pass === true,
+    lods: lods.map(l => ({ lod: l.lod, pass: l.pass === true, checks: l.checks ?? [], injections: l.injections ?? [] })),
+  };
+}
+
 export function buildVehicle(id, copies) {
   const car = path.join(REPO, 'art/vehicles', id), out = path.join(SITE, id);
   const vehicle = readJson(path.join(car, 'vehicle.json'));
@@ -86,6 +109,7 @@ export function buildVehicle(id, copies) {
       iou: Object.fromEntries(Object.entries(score.views).map(([k, v]) => [k, v.iou])), weightedIou: score.score,
     });
   }
+  if (src.reference.measured) r.reference.measured = measuredReference(src.reference.measured, media);
   r.turntable = {
     assetJson: media(rel(path.join(car, `${id}.asset.json`)), 'model'), atlas: media(rel(path.join(car, `${id}.atlas.png`)), 'model'),
     emissive: media(rel(path.join(car, `${id}.emissive.png`)), 'model'), sheet: media(src.turntable.sheet, 'turntable'), lods: [],

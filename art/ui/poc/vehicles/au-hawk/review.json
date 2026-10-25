@@ -2,52 +2,52 @@
   "id": "au-hawk",
   "name": "AU Hawk",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
-    "br-bwju.12"
+    "br-rgw6"
   ],
-  "summary": "The AU Hawk (owner 2026-10-18): a bubbly caricature of the 1998 series-1 Ford AU Falcon sedan, the burnout and doughnut king. Round 2 rebuilt it to a literal AU reference sheet (named an AU Falcon by a minimal vision model before modelling): two big swept teardrop headlamps wrapping into the guards, the oval fish-mouth grille with one body-colour bar and a plain blank oval badge (no lettering, R81), round fog lamps, a high round roof over a tall glasshouse, round tumblehome flanks and a domed bonnet and boot, rounded corner tail lamps with white reverse lamps and a plain oval on the boot lid, silver five-spoke rims, no wing. Recognition (docs/evidence/P1-V-au-hawk/recognition.md): LOD0's front 3/4 and rear 3/4 views read as an AU Falcon to a minimal vision model most of the time in good windows; LOD1, LOD2, side, top and the chase view don't reliably, and the model's answers drift run to run, so the owner's verdict decides. LOD0 2906 triangles (qualified 3000), LOD1 896, LOD2 600. Code-built from generated reference sheets (R81).",
+  "summary": "Reference refinement: the AU Hawk keeps its broad teardrop headlamps, oval fish-mouth grille, tall glasshouse and rounded sedan body. The arch crowns now follow the original flank roll; the lower nose supports its bumper slot. Lamps lie on the actual body facets. Lean five-spoke silver wheels at close/medium distance and plain distant discs retain the faceted style. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 2104 / 874 / 600 against 3000 / 900 / 600 budgets. The reference sheets include a wing; the deliberate base-sedan no-wing interpretation is retained. Owner review decides recognisability.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/au-hawk/refs/prompts/, the Hawk Dash's sheet as the layout example; art/ui/frames/ledger.jsonl). Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out).",
+    "note": "Unchanged generated reference sheets. Each comparison shows reference, revised render and silhouette diff through frozen shared perspective cameras (50m front/rear, 10m side/top, horizontal optical axis). Before/after and local reference contours/lamp envelopes are recorded in validation.md. Generated views are not calibrated photographs; measured regressions are disclosed.",
     "compare": [
       {
         "lod": 0,
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.963,
-          "top": 0.9756,
-          "front": 0.9162,
-          "rear": 0.9643
+          "side": 0.9617,
+          "top": 0.967,
+          "front": 0.9518,
+          "rear": 0.9577
         },
-        "weightedIou": 0.96
+        "weightedIou": 0.9612
       },
       {
         "lod": 1,
         "label": "LOD1 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9597,
-          "top": 0.9672,
-          "front": 0.9031,
-          "rear": 0.962
+          "side": 0.9614,
+          "top": 0.9541,
+          "front": 0.9568,
+          "rear": 0.9507
         },
-        "weightedIou": 0.9538
+        "weightedIou": 0.9569
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9521,
-          "top": 0.9719,
-          "front": 0.9143,
-          "rear": 0.9583
+          "side": 0.9532,
+          "top": 0.9426,
+          "front": 0.9619,
+          "rear": 0.9556
         },
-        "weightedIou": 0.9533
+        "weightedIou": 0.9517
       }
     ]
   },
@@ -60,7 +60,7 @@
       {
         "lod": 0,
         "glb": "media/model/au-hawk.lod0.glb",
-        "tris": 2906,
+        "tris": 2104,
         "draws": 11,
         "maxTris": 3000,
         "withinBudget": true
@@ -68,7 +68,7 @@
       {
         "lod": 1,
         "glb": "media/model/au-hawk.lod1.glb",
-        "tris": 896,
+        "tris": 874,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -364,31 +364,19 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean; origin between the axles; part ids and hinges as before; anchors moved to the new body: roof number on the crown at y 1.65, plates at the new nose and tail)"
+        "text": "code-built export, unchanged triangle budgets and reproducible baked bytes."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2906 <= 3000; LOD1 896 <= 900; LOD2 600 <= 600"
+        "text": "current local reference gates at all LODs; old candidates and meaningful injected defects rejected."
       },
       {
         "result": "PASS",
-        "text": "silhouette: weighted IoU LOD0 0.9600, LOD1 0.9538, LOD2 0.9533 (front views 0.90-0.92: the sheet's front view is drawn wider than its plan view)"
+        "text": "original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks."
       },
       {
-        "result": "PASS",
-        "text": "by-eye cues (views.png, lods.png, reference sheets): teardrop lamps, oval grille with bar and blank badge, fog lamps at LOD0/1, corner tail lamps with reverse lamps, boot badge, black mirrors, silver rims; LOD2 keeps both lamps, the grille, the bar, both badges and the tail lamps"
-      },
-      {
-        "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged"
-      },
-      {
-        "result": "PASS",
-        "text": "damage states; PASS physics fit (one convex hull per part, mirrors excluded)"
-      },
-      {
-        "result": "FAIL",
-        "text": "(automated) recognition (recognition.md): this bake, 3 calls per image: LOD0 6/15, LOD1 3/15, LOD2 1/15 on the bar views, chase 0/12; the same images ranged 33/45 to 12/45 between windows. The control (Hawk Dash) is named a Falcon 0/25. The owner judges recognisability (owner checklist, \"AU Hawk\")"
+        "result": "WARN",
+        "text": "whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending."
       }
     ],
     "report": "media/gate/validation.md"

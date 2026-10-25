@@ -2,91 +2,91 @@
  "lod1_hero": {
   "sheet": "lod1",
   "view": "hero",
-  "x": 168,
-  "y": 87,
-  "w": 1092,
-  "h": 690,
-  "aspect": 1.5826
+  "x": 164,
+  "y": 20,
+  "w": 1089,
+  "h": 753,
+  "aspect": 1.4462
  },
  "lod1_top": {
   "sheet": "lod1",
   "view": "top",
-  "x": 1439,
-  "y": 38,
-  "w": 371,
-  "h": 748,
-  "aspect": 0.496
+  "x": 1453,
+  "y": 24,
+  "w": 344,
+  "h": 757,
+  "aspect": 0.4544
  },
  "lod1_front": {
   "sheet": "lod1",
   "view": "front",
-  "x": 109,
-  "y": 806,
-  "w": 342,
-  "h": 448,
-  "aspect": 0.7634
+  "x": 124,
+  "y": 798,
+  "w": 315,
+  "h": 457,
+  "aspect": 0.6893
  },
  "lod1_side": {
   "sheet": "lod1",
   "view": "side",
-  "x": 595,
-  "y": 806,
-  "w": 678,
-  "h": 446,
-  "aspect": 1.5202
+  "x": 591,
+  "y": 799,
+  "w": 679,
+  "h": 455,
+  "aspect": 1.4923
  },
  "lod1_rear": {
   "sheet": "lod1",
   "view": "rear",
-  "x": 1446,
-  "y": 807,
-  "w": 348,
-  "h": 447,
-  "aspect": 0.7785
+  "x": 1457,
+  "y": 800,
+  "w": 325,
+  "h": 456,
+  "aspect": 0.7127
  },
  "lowest_hero": {
   "sheet": "lowest",
   "view": "hero",
-  "x": 167,
-  "y": 88,
-  "w": 1102,
-  "h": 686,
-  "aspect": 1.6064
+  "x": 164,
+  "y": 22,
+  "w": 1085,
+  "h": 742,
+  "aspect": 1.4623
  },
  "lowest_top": {
   "sheet": "lowest",
   "view": "top",
-  "x": 1428,
-  "y": 32,
-  "w": 383,
+  "x": 1446,
+  "y": 24,
+  "w": 347,
   "h": 755,
-  "aspect": 0.5073
+  "aspect": 0.4596
  },
  "lowest_front": {
   "sheet": "lowest",
   "view": "front",
-  "x": 111,
-  "y": 803,
-  "w": 342,
-  "h": 452,
-  "aspect": 0.7566
+  "x": 127,
+  "y": 795,
+  "w": 318,
+  "h": 459,
+  "aspect": 0.6928
  },
  "lowest_side": {
   "sheet": "lowest",
   "view": "side",
-  "x": 598,
-  "y": 803,
-  "w": 683,
-  "h": 450,
-  "aspect": 1.5178
+  "x": 590,
+  "y": 795,
+  "w": 691,
+  "h": 458,
+  "aspect": 1.5087
  },
  "lowest_rear": {
   "sheet": "lowest",
   "view": "rear",
-  "x": 1444,
-  "y": 805,
-  "w": 348,
-  "h": 450,
-  "aspect": 0.7733
+  "x": 1454,
+  "y": 796,
+  "w": 329,
+  "h": 458,
+  "aspect": 0.7183
  }
 }

@@ -1,0 +1,478 @@
+{
+  "sourceSha256": {
+    "model.js": "0cbc446b6ff575615cf0287b5e9f502d91d93414c1e7a6d7acc2d213e5f6e8b1",
+    "atlas.js": "9580b5388b963288761ce1d02c65f7115f6e269445b6fb6a88f68bd0b1ec3742",
+    "params.json": "639ac66c8718860ce32de81930edf098f1b29322122008aec0be508bbd40b978"
+  },
+  "reference": "refs/measured-reference.json",
+  "candidate": "../../../../../../../../tmp/evidence/tradie-ute-before",
+  "comparison": "Independent measured geometry envelopes and photo-derived cues; no old generated-sheet IoU.",
+  "lods": [
+    {
+      "lod": 0,
+      "measurement": {
+        "canopy": [
+          [
+            -0.94,
+            1.2199999999999998,
+            -2.58
+          ],
+          [
+            0.94,
+            2.04,
+            -0.9699999999999999
+          ]
+        ],
+        "tray": null,
+        "cabRoof": null,
+        "darkLid": false,
+        "awning": [
+          [
+            0.745,
+            1.9999999999999998,
+            -0.8
+          ],
+          [
+            0.9700000000000001,
+            2.1466025403784434,
+            0.6162585826273473
+          ]
+        ],
+        "snorkel": [
+          [
+            -1.04,
+            1.8256194613825267,
+            0.06
+          ],
+          [
+            -0.9036133300808774,
+            2.05,
+            0.38999999999999996
+          ]
+        ]
+      },
+      "checks": [
+        {
+          "name": "tray: tape envelope",
+          "pass": false,
+          "actual": null,
+          "expected": [
+            [
+              -0.9175,
+              1.04,
+              -3.01
+            ],
+            [
+              0.9175,
+              1.09,
+              -1.39
+            ]
+          ]
+        },
+        {
+          "name": "canopy: tape envelope",
+          "pass": false,
+          "actual": [
+            [
+              -0.94,
+              1.2199999999999998,
+              -2.58
+            ],
+            [
+              0.94,
+              2.04,
+              -0.9699999999999999
+            ]
+          ],
+          "expected": [
+            [
+              -0.886,
+              1.09,
+              -2.98
+            ],
+            [
+              0.886,
+              1.935,
+              -1.48
+            ]
+          ]
+        },
+        {
+          "name": "cab: tapered roof",
+          "pass": false,
+          "actual": null,
+          "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+        },
+        {
+          "name": "canopy: black lid",
+          "pass": false,
+          "actual": false,
+          "expected": "UV-selected canopy roof RGB <65"
+        },
+        {
+          "name": "awning: left roof edge",
+          "pass": true,
+          "actual": [
+            [
+              0.745,
+              1.9999999999999998,
+              -0.8
+            ],
+            [
+              0.9700000000000001,
+              2.1466025403784434,
+              0.6162585826273473
+            ]
+          ],
+          "expected": "nonempty actual geometry x>.73,y>1.99"
+        },
+        {
+          "name": "snorkel: right A pillar",
+          "pass": true,
+          "actual": [
+            [
+              -1.04,
+              1.8256194613825267,
+              0.06
+            ],
+            [
+              -0.9036133300808774,
+              2.05,
+              0.38999999999999996
+            ]
+          ],
+          "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+        }
+      ],
+      "injections": [
+        {
+          "name": "canopy raised 15cm",
+          "detected": true,
+          "gate": "canopy: tape envelope"
+        },
+        {
+          "name": "tray width enlarged 20%",
+          "detected": true,
+          "gate": "tray: tape envelope"
+        },
+        {
+          "name": "cab roof widened 35%",
+          "detected": true,
+          "gate": "cab: tapered roof"
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 1,
+      "measurement": {
+        "canopy": [
+          [
+            -0.94,
+            1.2199999999999998,
+            -2.58
+          ],
+          [
+            0.94,
+            2.04,
+            -0.9699999999999999
+          ]
+        ],
+        "tray": null,
+        "cabRoof": null,
+        "darkLid": false,
+        "awning": [
+          [
+            0.7700000000000001,
+            2.005,
+            -0.8
+          ],
+          [
+            0.9700000000000001,
+            2.1466025403784434,
+            0.52
+          ]
+        ],
+        "snorkel": [
+          [
+            -1.04,
+            1.8256194613825267,
+            0.06
+          ],
+          [
+            -0.9036133300808774,
+            2.05,
+            0.38999999999999996
+          ]
+        ]
+      },
+      "checks": [
+        {
+          "name": "tray: tape envelope",
+          "pass": false,
+          "actual": null,
+          "expected": [
+            [
+              -0.9175,
+              1.04,
+              -3.01
+            ],
+            [
+              0.9175,
+              1.09,
+              -1.39
+            ]
+          ]
+        },
+        {
+          "name": "canopy: tape envelope",
+          "pass": false,
+          "actual": [
+            [
+              -0.94,
+              1.2199999999999998,
+              -2.58
+            ],
+            [
+              0.94,
+              2.04,
+              -0.9699999999999999
+            ]
+          ],
+          "expected": [
+            [
+              -0.886,
+              1.09,
+              -2.98
+            ],
+            [
+              0.886,
+              1.935,
+              -1.48
+            ]
+          ]
+        },
+        {
+          "name": "cab: tapered roof",
+          "pass": false,
+          "actual": null,
+          "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+        },
+        {
+          "name": "canopy: black lid",
+          "pass": false,
+          "actual": false,
+          "expected": "UV-selected canopy roof RGB <65"
+        },
+        {
+          "name": "awning: left roof edge",
+          "pass": true,
+          "actual": [
+            [
+              0.7700000000000001,
+              2.005,
+              -0.8
+            ],
+            [
+              0.9700000000000001,
+              2.1466025403784434,
+              0.52
+            ]
+          ],
+          "expected": "nonempty actual geometry x>.73,y>1.99"
+        },
+        {
+          "name": "snorkel: right A pillar",
+          "pass": true,
+          "actual": [
+            [
+              -1.04,
+              1.8256194613825267,
+              0.06
+            ],
+            [
+              -0.9036133300808774,
+              2.05,
+              0.38999999999999996
+            ]
+          ],
+          "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+        }
+      ],
+      "injections": [
+        {
+          "name": "canopy raised 15cm",
+          "detected": true,
+          "gate": "canopy: tape envelope"
+        },
+        {
+          "name": "tray width enlarged 20%",
+          "detected": true,
+          "gate": "tray: tape envelope"
+        },
+        {
+          "name": "cab roof widened 35%",
+          "detected": true,
+          "gate": "cab: tapered roof"
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lod": 2,
+      "measurement": {
+        "canopy": [
+          [
+            -0.94,
+            1.2199999999999998,
+            -2.58
+          ],
+          [
+            0.94,
+            2.04,
+            -0.9699999999999999
+          ]
+        ],
+        "tray": null,
+        "cabRoof": null,
+        "darkLid": false,
+        "awning": [
+          [
+            0.8,
+            2.005,
+            -0.8
+          ],
+          [
+            0.8,
+            2.0549999999999997,
+            0.52
+          ]
+        ],
+        "snorkel": [
+          [
+            -0.9289957867680538,
+            1.869459603466495,
+            0.36
+          ],
+          [
+            -0.92,
+            1.9,
+            0.36
+          ]
+        ]
+      },
+      "checks": [
+        {
+          "name": "tray: tape envelope",
+          "pass": false,
+          "actual": null,
+          "expected": [
+            [
+              -0.9175,
+              1.04,
+              -3.01
+            ],
+            [
+              0.9175,
+              1.09,
+              -1.39
+            ]
+          ]
+        },
+        {
+          "name": "canopy: tape envelope",
+          "pass": false,
+          "actual": [
+            [
+              -0.94,
+              1.2199999999999998,
+              -2.58
+            ],
+            [
+              0.94,
+              2.04,
+              -0.9699999999999999
+            ]
+          ],
+          "expected": [
+            [
+              -0.886,
+              1.09,
+              -2.98
+            ],
+            [
+              0.886,
+              1.935,
+              -1.48
+            ]
+          ]
+        },
+        {
+          "name": "cab: tapered roof",
+          "pass": false,
+          "actual": null,
+          "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+        },
+        {
+          "name": "canopy: black lid",
+          "pass": false,
+          "actual": false,
+          "expected": "UV-selected canopy roof RGB <65"
+        },
+        {
+          "name": "awning: left roof edge",
+          "pass": true,
+          "actual": [
+            [
+              0.8,
+              2.005,
+              -0.8
+            ],
+            [
+              0.8,
+              2.0549999999999997,
+              0.52
+            ]
+          ],
+          "expected": "nonempty actual geometry x>.73,y>1.99"
+        },
+        {
+          "name": "snorkel: right A pillar",
+          "pass": true,
+          "actual": [
+            [
+              -0.9289957867680538,
+              1.869459603466495,
+              0.36
+            ],
+            [
+              -0.92,
+              1.9,
+              0.36
+            ]
+          ],
+          "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+        }
+      ],
+      "injections": [
+        {
+          "name": "canopy raised 15cm",
+          "detected": true,
+          "gate": "canopy: tape envelope"
+        },
+        {
+          "name": "tray width enlarged 20%",
+          "detected": true,
+          "gate": "tray: tape envelope"
+        },
+        {
+          "name": "cab roof widened 35%",
+          "detected": true,
+          "gate": "cab: tapered roof"
+        }
+      ],
+      "pass": false
+    }
+  ],
+  "pass": false
+}

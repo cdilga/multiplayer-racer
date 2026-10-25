@@ -16,7 +16,7 @@ import { segment, openMask, largest, bbox, cropMask } from './mask.js';
 const id = process.argv[2];
 if (!id) { console.error('usage: extract.mjs <vehicle id>'); process.exit(2); }
 const dir = path.join('art/vehicles', id, 'refs');
-const { sheets, views, segment: seg = {}, open: OPEN = 5, keep: KEEP = 0, patch = {} } = JSON.parse(fs.readFileSync(path.join(dir, 'sheets.json'), 'utf8'));
+const { sheets, views, segment: seg = {}, open: OPEN = 5, keep: KEEP = 0, patch = {}, exclude = {} } = JSON.parse(fs.readFileSync(path.join(dir, 'sheets.json'), 'utf8'));
 const write = (file, png) => fs.writeFileSync(path.join(dir, 'masks', file), PNG.sync.write(png));
 
 fs.mkdirSync(path.join(dir, 'masks'), { recursive: true });
@@ -29,6 +29,13 @@ for (const [sheet, file] of Object.entries(sheets)) {
     const seg0 = segment(rgba, w, h, seg);
     // `patch`: { view: [[cx, cy, rx, ry]] } ellipses in sheet pixels added to the mask (a white helmet the grey backdrop swallows; br-bwju.11)
     for (const [cx, cy, rx, ry] of patch[view] ?? []) for (let y = Math.max(0, Math.floor(cy - ry - y0)); y < Math.min(h, Math.ceil(cy + ry - y0)); y++) for (let x = Math.max(0, Math.floor(cx - rx - x0)); x < Math.min(w, Math.ceil(cx + rx - x0)); x++) if (((x + x0 - cx) / rx) ** 2 + ((y + y0 - cy) / ry) ** 2 <= 1) seg0[y * w + x] = 1;
+    // Explicit sheet-pixel rectangles remove a neighboring view when a crop must expand to include this view's helmet.
+    // Keep the exclusion in sheets.json so the oracle's limitations are reviewable; never hide the asset being scored.
+    for (const [ax, ay, bx, by] of exclude[view] ?? []) {
+      if (![ax, ay, bx, by].every(Number.isFinite) || bx <= ax || by <= ay) throw new Error(`Invalid exclusion for ${view}`);
+      for(let y=Math.max(0,Math.floor(ay-y0));y<Math.min(h,Math.ceil(by-y0));y++)
+        for(let x=Math.max(0,Math.floor(ax-x0));x<Math.min(w,Math.ceil(bx-x0));x++)seg0[y*w+x]=0;
+    }
     const m = largest(openMask(seg0, w, h, OPEN), w, h, KEEP), b = bbox(m, w, h), cm = cropMask(m, w, b);
     const mask = new PNG({ width: b.w, height: b.h }), crop = new PNG({ width: b.w, height: b.h });
     for (let i = 0; i < b.w * b.h; i++) { const v = cm[i] ? 255 : 0; mask.data.set([v, v, v, 255], i * 4); }

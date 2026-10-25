@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-25",
+  "owner_request": "Replace the scooter-like Postie reference with Honda CB50 architecture; keep delivery identity. User authorizes image API generation.",
+  "primary_source": {
+    "page": "https://global.honda/en/CB/models/1971_benly-cb50/",
+    "image": "https://global.honda/en/CB/models/1971_benly-cb50/img/main.png",
+    "local": "source/cb50-primary.png",
+    "role": "Architecture reference, not an in-game texture. Badges are excluded from model and atlas."
+  },
+  "generation": {
+    "provider": "Meta Muse Image API",
+    "model": "muse-image-1.0",
+    "runner": "art/ui/frames/generate.mjs",
+    "ledger": "art/ui/frames/ledger.jsonl",
+    "prompts": [
+      "prompts/cb50-lod-plus-1.txt",
+      "prompts/cb50-lowest.txt"
+    ],
+    "billed_images": 2,
+    "usd": 0.02,
+    "files": [
+      "cb50-lod-plus-1-1.webp",
+      "cb50-lowest-1.webp"
+    ]
+  },
+  "interpretation": [
+    "Classic long tank, exposed vertical single-cylinder engine, open diamond frame, slim spoked wheels and single right-hand exhaust replace broad floor/shield and twin pipes. Rider/mail accessories retained as game identity.",
+    "Muse did not obey every view instruction: large hero remains close to side elevation and rear invents twin pipe ends. Primary real image governs one-sided exhaust; no attempt to fit that generated inconsistency.",
+    "Generated sheets are uncalibrated style/proportion targets. Physics wheel hubs and original collider/pivots remain frozen rather than claiming scale-faithful CB50 dimensions.",
+    "Low sheet simplification is modest; actual LOD geometry is independently authored within contract budgets."
+  ],
+  "sha256": {
+    "source/cb50-primary.png": "d44f92779999c5d9a6309342f269a8acce97054c79a5b561ab708fe65ec3953b",
+    "lod-plus-1.png": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+    "lowest-lod.png": "7cf4c8cdff56ca14afd4de0e178a8eac419e95140d93a5525ec1cd71f80b9047"
+  }
+}

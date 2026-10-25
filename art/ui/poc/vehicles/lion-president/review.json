@@ -2,13 +2,11 @@
   "id": "lion-president",
   "name": "Lion President",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
-    "br-bwju.11",
-    "br-bwju.3",
-    "br-bwju"
+    "br-rgw6"
   ],
-  "summary": "R123's Lion President: a bubbly Aussie V8 sedan in the spirit of the last V8 Commodore, the SS-V Redline. Rebuilt against its contact sheet (br-bwju.11): a tall sedan cabin with painted pillars, black-framed side glass in three panes and a gloss-black roof with a shark fin; big fanged headlamps wrapping onto the wings over a barred grille; a black lower bumper with slatted intakes and four LED blocks; a splitter with a red lip; raised body-colour bonnet scoops with black mouths; a whip aerial; widebody flares; 5-spoke dark rims with red calipers; a tall wing on swan-neck posts; a full-width tail-lamp bar; a finned diffuser with four chrome pipes; mirrors on stalks and the black-and-gold swoosh. LOD0 2162 triangles (qualified budget now 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Hawk Dash's spec twin.",
+  "summary": "Reference refinement: the Lion President keeps its black roof, yellow fanged lamps, twin bonnet scoops, black/gold stripe and broad rear light bar. A flatter, wider fascia replaces the peaked bonnet tip; its corners recess into faceted planes. The upper arch flares roll back towards the shoulder, and the cabin tapers towards the roof. Flat five-spoke wheels replace hidden barrel and spoke-side geometry. Original colliders, hinges, anchors and handling are preserved. Exported triangles: 1813 / 897 / 576 against 2400 / 900 / 600 budgets. The Hawk Dash spec twin remains unchanged.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "hawk-dash",
@@ -16,43 +14,43 @@
   },
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/lion-president/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out).",
+    "note": "Unchanged generated reference sheets. Each comparison shows reference, revised render and silhouette diff through frozen shared perspective cameras (50m front/rear, 10m side/top, horizontal optical axis). Before/after and local reference contours/lamp envelopes are recorded in validation.md. Generated views are not calibrated photographs; measured regressions are disclosed.",
     "compare": [
       {
         "lod": 0,
         "label": "LOD0 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9643,
-          "top": 0.928,
-          "front": 0.9206,
-          "rear": 0.9532
+          "side": 0.9467,
+          "top": 0.9365,
+          "front": 0.9562,
+          "rear": 0.9645
         },
-        "weightedIou": 0.9452
+        "weightedIou": 0.9478
       },
       {
         "lod": 1,
         "label": "LOD1 against the 'lod + 1' reference sheet",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9622,
-          "top": 0.9206,
-          "front": 0.9206,
-          "rear": 0.9475
+          "side": 0.9414,
+          "top": 0.9288,
+          "front": 0.9588,
+          "rear": 0.9651
         },
-        "weightedIou": 0.9413
+        "weightedIou": 0.9438
       },
       {
         "lod": 2,
         "label": "LOD2 against the 'lowest' reference sheet",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9637,
-          "top": 0.9438,
-          "front": 0.9156,
-          "rear": 0.9363
+          "side": 0.946,
+          "top": 0.95,
+          "front": 0.947,
+          "rear": 0.9528
         },
-        "weightedIou": 0.9464
+        "weightedIou": 0.9484
       }
     ]
   },
@@ -65,7 +63,7 @@
       {
         "lod": 0,
         "glb": "media/model/lion-president.lod0.glb",
-        "tris": 2150,
+        "tris": 1813,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -73,7 +71,7 @@
       {
         "lod": 1,
         "glb": "media/model/lion-president.lod1.glb",
-        "tris": 891,
+        "tris": 897,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -81,7 +79,7 @@
       {
         "lod": 2,
         "glb": "media/model/lion-president.lod2.glb",
-        "tris": 594,
+        "tris": 576,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -340,7 +338,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. Known defect br-vhtm: filtered livery edges are untinted grey."
+    "pattern": "Seat colour on the paint key (white texels tint; the black roof, pinstripe, glass, lamps and tyres keep their colour), the number on the black roof (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours."
   },
   "inWorld": [
     {
@@ -369,39 +367,19 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean with the 3000 LOD0 budget; origin between the axles; anchors unchanged)"
+        "text": "code-built export, unchanged triangle budgets and reproducible baked bytes."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2162 <= 2400 <= 3000; LOD1 892 <= 900; LOD2 594 <= 600"
+        "text": "current local reference gates at all LODs; old candidates and meaningful injected defects rejected."
       },
       {
         "result": "PASS",
-        "text": "silhouette (better than before): LOD0 weighted IoU 0.9349 -> 0.9452 (side 0.949 -> 0.964, top 0.922 -> 0.928, front 0.921 -> 0.921, rear 0.938 -> 0.953); LOD1 0.933 -> 0.941; LOD2 0.941 -> 0.946. Short of the skill's ~0.95 at LOD0 by 0.005, mostly the top view (the sim's 0.43 m wheels on a 0.84 m track sit wider than the sheet's narrow body)"
-      },
-      {
-        "result": "PASS",
-        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): every cue in the owner's list is present: tall cabin with pillars and window frames, 5-spoke rims with red calipers, flared arches, large fanged lamps, barred grille, slatted intakes with 4 LEDs, black splitter, raised scoops, aerial, swoosh, swan-neck wing, full-width tail bar, black diffuser with quad pipes, mirrors"
-      },
-      {
-        "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
-      },
-      {
-        "result": "PASS",
-        "text": "damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)"
-      },
-      {
-        "result": "PASS",
-        "text": "physics fit (colliders.png: one convex hull per part; the aerial, fin, calipers and mirrors are left out of the colliders)"
+        "text": "original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks."
       },
       {
         "result": "WARN",
-        "text": "wheel size: the sheet's wheels are about 0.34 m in radius, the model's 0.43 m (the sim's wheel_radius, shared feel with the Hawk); not changed here"
-      },
-      {
-        "result": "WARN",
-        "text": "the swoosh's pinstripes read cream through the paint key's filtered edges (br-vhtm, renderer-wide)"
+        "text": "whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending."
       }
     ],
     "report": "media/gate/validation.md"

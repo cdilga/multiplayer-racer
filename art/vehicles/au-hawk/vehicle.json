@@ -1,6 +1,6 @@
 {
  "id": "au-hawk",
- "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into au-hawk.asset.json. The Cruz Missile's hinge layout (plan \u00a76.3): doors 0-70 degrees about the front edge, front (nose, bonnet, teardrop lamps, oval grille, bumper) and back (boot, wrap-around tail lamps, winged spoiler, bumper) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
+ "what": "Contract data the geometry doesn't carry (br-bwju.3): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into au-hawk.asset.json. The Cruz Missile's hinge layout (plan §6.3): doors 0-70 degrees about the front edge, front (nose, bonnet, teardrop lamps, oval grille, bumper) and back (boot, wrap-around tail lamps, winged spoiler, bumper) hang about their top edges, wheels +-6 degrees camber. +X is the car's left.",
  "lods": [
   {
    "maxTris": 3000
@@ -209,5 +209,6 @@
  },
  "colliderExclude": {
   "core": "The mirrors: decoration (model.js decor), not a collision surface, so the hull stays the body's width."
- }
+ },
+ "colliderPoints": "colliders.json"
 }

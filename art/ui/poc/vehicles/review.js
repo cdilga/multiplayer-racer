@@ -22,7 +22,17 @@ const img = (p, cap, alt) => `<figure><a href="${m(p)}"><img src="${m(p)}" alt="
 const f2 = (x) => (typeof x === 'number' ? x.toFixed(3) : '–');
 const sect = (n, title, why, body) => `<section id="item-${n}"><h2><span class="n">${n}</span> ${title}</h2><p class="why">${why}</p>${body}</section>`;
 
-const reference = r.reference.compare.map((c) => `
+const measured = r.reference.measured;
+const measuredBody = measured ? `
+  ${img(r.reference.sheet, 'Owner photograph: the actual tray, closed black canopy, rear lamps and left awning. Perspective night photo; not an orthographic sheet.', `${r.name}: actual owner vehicle`)}
+  <h3>Owner dimensions against current model</h3>
+  <p>${esc(measured.authority)} ${esc(measured.comparison)}</p>
+  <div class="meta">${chip(measured.pass ? 'pass' : 'fail')}<span>${measured.lods.map(l => `LOD${l.lod}: ${l.pass ? 'pass' : 'fail'}`).join(' · ')}</span></div>
+  <div class="scroll"><table><thead><tr><th>Dimension</th><th>Owner target</th>${measured.lods.map(l => `<th>LOD${l.lod} actual</th>`).join('')}</tr></thead><tbody>
+  ${measured.rows.map(row => `<tr><th>${esc(row.label)}</th><td class="num">${f2(row.target)} ${esc(row.unit)}</td>${measured.lods.map(l => `<td class="num">${f2(row.actual.find(a => a.lod === l.lod)?.value)} ${esc(row.unit)}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  <p><a class="btn" href="${m(measured.oracle)}">Measurements and provenance</a> <a class="btn" href="${m(measured.report)}">Current checks and defect results</a></p>` : '';
+const reference = measuredBody + r.reference.compare.map((c) => `
   <h3>${esc(c.label)}</h3>
   <div class="meta"><span class="big">${f2(c.weightedIou)}</span><span>weighted silhouette IoU</span></div>
   <div class="scroll"><table><thead><tr><th>View</th><th>Side</th><th>Top</th><th>Front</th><th>Rear</th></tr></thead><tbody>
@@ -47,7 +57,7 @@ const handlingRows = h ? [
 
 main.innerHTML = `
   <div class="how"><b>Feedback:</b> ${esc(r.feedback)} Look at the numbered items below in order; the viewer in item 2 also drives items 3 and 4.</div>
-  ${sect(1, 'Reference against model', 'The owner\'s reference sheet beside the model rendered from the same views, with the silhouette diff and IoU per view (the lowpoly-model-from-refs compose output). ' + esc(r.reference.note), reference + `<p><a class="btn" href="${m(r.reference.sheet)}">The reference sheet itself</a></p>`)}
+  ${sect(1, 'Reference against model', (measured ? 'The actual owner vehicle, with tape measurements checked against current geometry at every LOD. ' : 'The owner\'s reference sheet beside the model rendered from the same views, with the silhouette diff and IoU per view (the lowpoly-model-from-refs compose output). ') + esc(r.reference.note), reference + (measured ? '' : `<p><a class="btn" href="${m(r.reference.sheet)}">The reference sheet itself</a></p>`))}
   ${sect(2, 'Turntable at every LOD', 'The real baked GLBs: drag to turn, pinch or scroll to zoom. Triangles and draw calls are counted from the files against the contract budgets.',
     `<div class="stage" id="stage"><div class="msg" id="msg">Loading the model…</div></div><div id="controls"></div>
      <div class="scroll"><table><thead><tr><th>LOD</th><th>Triangles of budget</th><th></th><th>Draw calls</th><th></th></tr></thead><tbody>${lods}</tbody></table></div>

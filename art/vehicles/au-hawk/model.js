@@ -28,9 +28,9 @@ import * as THREE from 'three';
 import { swatchUV, REGION, SPAN } from './atlas.js';
 
 export const LODS = {
-  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 16, rim: 'spokes', bayBoxes: true, hub: true, tyreCap: true, cell: 0.1, lampCell: 0.06, lampOff: 0, oval: 16, lampRim: false, reflector: 10, lampTop: true, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
-  1: { arch: 4, nose: 2, curvePts: true, merge: 0.3, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 14, badge: 10, lampRim: false, reflector: 6, lampTop: true, fog: 6, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: true, seams: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, grilleCell: 0.22, lampOff: 0.045, oval: 10, badge: 6, lampRim: false, reflector: 4, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
+  0: { arch: 9, nose: 3, curvePts: true, merge: 0.08, doorMid: true, belly: true, dome: true, wheelSeg: 12, rim: 'flat', bayBoxes: true, hub: false, tyreCap: false, cell: 0.1, lampCell: 0.12, lampOff: 0, oval: 16, lampRim: false, reflector: 0, lampTop: false, fog: 8, slot: true, reverse: true, windows: true, paneCuts: 4, mirrors: 'stalk', posts: false, handles: true, seams: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.4, doorMid: false, belly: true, dome: true, wheelSeg: 6, rim: 'flat', bayBoxes: false, hub: false, tyreCap: false, cell: 0.4, lampCell: 0.18, tailCell: 0.26, grilleCell: 0.22, lampOff: 0.03, oval: 14, badge: 10, lampRim: false, reflector: 0, lampTop: false, fog: 6, slot: true, reverse: true, windows: true, mirrors: 'box', posts: false, handles: false, seams: false },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, doorMid: false, belly: false, wheelSeg: 8, rim: 'disc', bayBoxes: false, hub: false, tyreCap: false, cell: 0.5, lampCell: 0.24, grilleCell: 0.22, lampOff: 0.045, oval: 10, badge: 6, lampRim: false, reflector: 0, lampTop: false, fog: 0, slot: false, reverse: false, windows: 'flat', mirrors: 'box', posts: false, handles: false, seams: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -149,6 +149,11 @@ function makeSoups(P, lod) {
     pts.push([s * (hw - (T.belly ? P.tuckTop : 0)), y3, z], [s * (hw - P.shoulderIn), ysh, z]); // (without the belly the flank top keeps the full width, so a door's hinge stays on its skin at every LOD)
     if (T.dome) pts.push([s * (hw - P.shoulderIn) * P.dome.x, ycr - (ycr - ysh) * P.dome.y, z]); // the domed bonnet, roof-side and boot
     pts.push([0, ycr, z]);
+    // The arch clips the flank, not its original taper: prevent an upright guard bulge.
+    for (let i = 1; i < pts.length - 1; i++) {
+      const roll = Math.max(0, Math.min(1, (pts[i][1] - P.section.rollStart) / (ysh - P.section.rollStart)));
+      pts[i][0] = s * Math.min(Math.abs(pts[i][0]), hw - P.shoulderIn * roll);
+    }
     return pts;
   };
   const NR = 6 + (T.belly ? 1 : 0) + (T.dome ? 1 : 0), DECK = NR - 2 - (T.dome ? 1 : 0); // ring points; the shoulder point (deck segments from it to the crown)
@@ -217,21 +222,37 @@ function makeSoups(P, lod) {
     const L = Math.hypot(...best.n) || 1; let n = best.n.map((x) => x / L); if (dot(n, d) > 0) n = n.map((x) => -x);
     return { p: o.map((v, i) => v + d[i] * best.t), n };
   };
-  const decal = (so, poly, sw, off, ax, cell = T.cell) => {
-    const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
-    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    const nx = Math.max(1, Math.ceil((x1 - x0) / cell - 1e-6)), ny = Math.max(1, Math.ceil((y1 - y0) / cell - 1e-6));
-    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
-      let pc = poly;
-      if (i > 0) pc = clip(pc, x0 + (x1 - x0) * i / nx, 1, 0);
-      if (i < nx - 1) pc = clip(pc, x0 + (x1 - x0) * (i + 1) / nx, -1, 0);
-      if (j > 0) pc = clip(pc, y0 + (y1 - y0) * j / ny, 1, 1);
-      if (j < ny - 1) pc = clip(pc, y0 + (y1 - y0) * (j + 1) / ny, -1, 1);
-      if (pc.length < 3) continue;
-      const hits = pc.map(([a, b]) => ray(AX[ax].o(a, b), AX[ax].d));
-      if (hits.some((h) => !h || (ax === 'top' && h.n[1] < 0.35))) continue; // a top decal stays on the upward-facing skin
-      const n = hits.reduce((t, h) => t.map((v, k) => v + h.n[k]), [0, 0, 0]);
-      so.face(hits.map((h) => h.p.map((v, k) => v + h.n[k] * off)), sw, n);
+  // Clip graphics against the actual final facets. Subdividing an independent polygon into
+  // rectangles left holes where its corners missed the rolled guard and crossed mesh diagonals.
+  const decal = (so, poly, sw, off, ax) => {
+    const dims = ax === 'top' ? [0, 2] : [0, 1], depth = ax === 'top' ? 1 : 2;
+    const towards = ax === 'rear' ? -1 : 1;
+    const clipEdge = (pts, a, b, sign) => {
+      const side = p => sign * ((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]));
+      const out = [];
+      for (let i=0;i<pts.length;i++) {
+        const p=pts[i],q=pts[(i+1)%pts.length],dp=side(p),dq=side(q);
+        if(dp>=-1e-9)out.push(p);
+        if((dp>=0)!==(dq>=0)){const t=dp/(dp-dq);out.push([p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t]);}
+      }
+      return out;
+    };
+    for (const tri of hull) {
+      const uv=tri.map(v=>dims.map(k=>v[k])),[a,b,c]=uv;
+      const det=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      if(Math.abs(det)<1e-8)continue;
+      let pc=poly;
+      for(let i=0;i<3&&pc.length>=3;i++)pc=clipEdge(pc,uv[i],uv[(i+1)%3],Math.sign(det));
+      if(pc.length<3)continue;
+      const at=([u,v])=>{
+        const l=((u-a[0])*(c[1]-a[1])-(v-a[1])*(c[0]-a[0]))/det;
+        const m=((b[0]-a[0])*(v-a[1])-(b[1]-a[1])*(u-a[0]))/det;
+        return tri[0].map((x,k)=>x+l*(tri[1][k]-x)+m*(tri[2][k]-x));
+      };
+      const centre=pc.reduce((r,p)=>[r[0]+p[0]/pc.length,r[1]+p[1]/pc.length],[0,0]),hit=ray(AX[ax].o(...centre),AX[ax].d),cp=at(centre);
+      if(!hit||Math.abs(hit.p[depth]-cp[depth])>.002||(ax==='top'&&hit.n[1]<.35))continue;
+      const points=pc.map(p=>{const q=at(p);q[depth]+=towards*off;return q;});
+      so.face(points,sw,AX[ax].d.map(v=>-v));
     }
   };
   const mirrorX = (poly) => poly.map(([x, y]) => [-x, y]).reverse();
@@ -367,12 +388,13 @@ function makeSoups(P, lod) {
     const to = ringAt(xo, tyreR), ti = ringAt(xi, tyreR);
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ti[i], ti[j], to[j], to[i]], 'tyre', sub(mix(to[i], to[j], 0.5), [xo, yc, zc])); }
     if (T.tyreCap) Wh.face(ti, 'tyre', [-s, 0, 0]);
+    if (T.rim === 'disc') { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.006, rimR), 'rim', [s, 0, 0]); continue; }
     const ro = ringAt(xo, rimR), rd = ringAt(xo - s * depth, rimR);
     if (T.rim === 'spokes') {
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([to[i], to[j], ro[j], ro[i]], 'tyre', [s, 0, 0]); } // sidewall
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; Wh.face([ro[i], ro[j], rd[j], rd[i]], 'rim', sub([xo, yc, zc], mix(ro[i], ro[j], 0.5))); } // the rim lip, facing in
       Wh.face(rd, 'barrel', [s, 0, 0]); // the barrel, mid grey (the sheet's rims read silver)
-    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR, Math.min(n, 8)), 'barrel', [s, 0, 0]); } // a flat sidewall, the barrel drawn on it
+    } else { Wh.face(to, 'tyre', [s, 0, 0]); Wh.face(ringAt(xo + s * 0.003, rimR, Math.min(n, 8)), 'trim', [s, 0, 0]); } // a flat sidewall, the barrel drawn on it
     const hubR = P.rim.hubR, xf = T.rim === 'spokes' ? xo - s * 0.008 : xo + s * 0.006;
     for (let k = 0; k < 5; k++) { // a spoke: a tapered blade from the hub to the lip, its face and (LOD0) two sides
       const a = Math.PI / 2 + k * Math.PI * 2 / 5, ca = Math.cos(a), sa = Math.sin(a), pc = -sa, ps = ca;
@@ -404,6 +426,8 @@ function makeSoups(P, lod) {
 // they meet the body, at the shoulder line on the cut (they hang 0–25°). Wheels: the hub (±6° camber wobble). Core:
 // the vehicle origin. Measured on LOD0, because the contract wants one pivot per part at every LOD.
 export function pivots(P) {
+  // Visual refinement keeps the original hinges and wheel hubs fixed.
+  if (P.physicsPivots) return structuredClone(P.physicsPivots);
   const out = {};
   for (const [id, so] of Object.entries(makeSoups(P, 0).soups)) out[id] = pivotOf(P, id, so.p);
   return out;

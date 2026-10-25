@@ -12,9 +12,9 @@
    770
   ],
   "top": [
-   1240,
+   1220,
    0,
-   1600,
+   1640,
    810
   ],
   "front": [
@@ -31,14 +31,60 @@
   ],
   "rear": [
    1400,
-   820,
+   760,
    1740,
    1280
   ]
  },
  "segment": {
-  "bright": 0.06
+  "bright": 0.06,
+  "dark": 0.65
  },
  "open": 2,
- "keep": 0.03
+ "keep": 0.03,
+ "projection": "perspective",
+ "tilt": {
+  "front": 0,
+  "rear": 0
+ },
+ "camD": {
+  "front": 50,
+  "rear": 50,
+  "side": 10,
+  "top": 10
+ },
+ "hero": {
+  "az": 52,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 1
+ },
+ "heroRear": {
+  "az": 140,
+  "elev": 0,
+  "dist": 11,
+  "fov": 26,
+  "targetY": 1
+ },
+ "cameraNote": "Frozen diagnostic cameras: horizontal end views at bounding-box midpoint with long lens; identical mask/shading perspective. Generated refs are not calibrated photography. Side/top at 10 m. Baseline recaptured under these cameras before model edits.",
+ "exclude": {
+  "rear": [
+   [
+    1400,
+    750,
+    1505,
+    825
+   ]
+  ],
+  "top": [
+   [
+    1490,
+    768,
+    1640,
+    810
+   ]
+  ]
+ },
+ "segmentationNote": "2026-10-25 inspection: original rear crop at y820 cut half the helmet; original top crop at x1600 cut the right hand guard. Widened windows restore those photographed parts. Explicit exclusions remove the adjacent top-view front tyre from rear and adjacent rear-view helmet from top. dark=.65 restores silver forks/silencer that dark=.3 lost against the .85+ grey backdrop. Original masks and same-camera original baseline sheets preserved in docs/evidence/P1-V-roster-reference/pig-catcher/original-*. Updated baseline/current are both recaptured against identical corrected masks; wheel holes have separate geometry ray gates because silhouette fill intentionally fills enclosed holes."
 }

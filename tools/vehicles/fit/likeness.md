@@ -57,3 +57,26 @@ photograph; silhouette and feature projections cannot judge shading, depth visib
 graphics, or every interior curve. Keep the same-camera visual review and owner review. To add a
 new vehicle or cue, annotate its unchanged reference pixels, explain its tolerance, and include a
 defect injection that proves the check catches the intended failure.
+
+The roster tests discover every vehicle with `refs/likeness.json`. Each fixture pins the reference
+image, extracted masks and comparison cameras. Sedan fixtures cover shoulder rollover, cabin taper,
+nose width and lamps; bike fixtures cover rider/body sections and recognizable cues. Postie also
+checks daylight between wheel spokes and below the open motorcycle frame. The real Tradie Ute
+uses `refs/check-measured.mjs` against independently recorded owner measurements, with raised
+canopy/widened tray/roof defects at every LOD. These supplement visual review rather than proving
+complete resemblance from a handful of measurements.
+
+For exact baseline captures, `capture.mjs` accepts `--model`, `--params` and `--atlas` together.
+Browser routes substitute those files without editing the working tree; relative imports retain
+the vehicle's original URL. The source-check loader likewise resolves relative bike-kit imports
+against the original vehicle directory. Keep the baseline palette with its source when atlas
+indices have changed.
+
+Inspect the extraction itself before fitting. `refs/sheets.json` supplies crop `views`, segmentation,
+component `keep` and helmet `patch` settings. Optional `exclude: {rear: [[x0,y0,x1,y1]]}` rectangles
+use absolute sheet pixels and remove a neighboring view after segmentation/patching, before
+morphology. Pig's expanded rear crop needed this to retain its helmet without admitting the top
+view's tyre. Exclusions must never remove a mismatching part of the subject. Postie's silver engine
+needed a brighter dark threshold, and its separate top-view front tyre needed a lower component
+share. Pin the resulting masks, explain each correction, and recapture both baseline and candidate
+with the same settings; scores from different masks cannot demonstrate improvement.

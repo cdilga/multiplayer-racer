@@ -2,75 +2,64 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Tradie Ute",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
+    "br-rgw6",
     "br-bwju.11",
     "br-bwju.8",
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed. Rebuilt against its own contact sheet (br-bwju.11; it had none before, so Muse Image drew one from the Cruz layout and the br-bwju.8 render): 16-sided tyres on 8-spoke alloy rims in a dark barrel, widebody flares with a black lip, black-framed side glass in three panes with painted A, B and C pillars, a raised bonnet scoop with louvre vents, a chrome shield grille with seven dark slots under swept lamps, a solid bull bar with light bar, fog lamps, plate and winch hook, the tray painted in the seat colour with tall corner lamps and a black step bumper with reversing lamps and a tow ball, mirrors on stalks, and the canopy, rack and snorkel kept. LOD0 2080 triangles (qualified budget now 3000), LOD1 878, LOD2 596. The canopy's black sides, rack and awning keep their colours under every paint.",
+  "summary": "Owner-evidence rebuild: separate thin alloy flat tray, closed black TC-style canopy (no rear glazing or invented vents), horizontal amber/red/white tray lamps, checker guards and mudflaps, under-tray boxes and tow ball. The dual cab now follows the newer owner-model rake and narrower tapered roof; roof rack, left awning and right snorkel remain recognizable. Tray/canopy dimensions use the owner tape measurements of 2026-10-21. Existing wheel pivots, collider hull, anchors and handling are frozen. Cab/front styling remains a faceted interpretation, not a scan. LOD0/1/2 qualified budgets remain 2400/900/600; measured totals are recorded in validation.md.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
-    "sheet": "art/vehicles/tradie-ute/refs/lod-plus-1.png",
-    "compare": [
-      {
-        "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod0"
-      },
-      {
-        "lod": 1,
-        "label": "LOD1 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod1"
-      },
-      {
-        "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/tradie-ute/reference-lod2"
-      }
-    ],
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/tradie-ute/refs/prompts/), the Cruz Missile's sheet given as the layout example and the br-bwju.8 render as the content example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). The earlier comparison against the owner's Triton photo outline (IoU 0.717 at the side) stays in docs/evidence/br-bwju.8/."
+    "sheet": "art/vehicles/tradie-ute/refs/owner-2026-10-21/20261021_204514.jpg",
+    "compare": [],
+    "note": "Authoritative real night photos and owner tape dimensions supersede the earlier Muse sheet, whose score only measures resemblance to a generated composite. See refs/measured-reference.json, measured-check.json and the validation report. Real photos are perspective, occluded and uncalibrated: no photo silhouette IoU is claimed.",
+    "measured": {
+      "oracle": "art/vehicles/tradie-ute/refs/measured-reference.json",
+      "report": "docs/evidence/P1-V-roster-reference/tradie-ute/measured-check.json"
+    }
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-finish/tradie-ute/lods.png",
-    "validation": "docs/evidence/P1-V-finish/tradie-ute/validation.md"
+    "sheet": "docs/evidence/P1-V-roster-reference/tradie-ute/ladder.png",
+    "validation": "docs/evidence/P1-V-roster-reference/tradie-ute/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-finish/tradie-ute/damage-strip.png",
-    "overview": "docs/evidence/P1-V-finish/tradie-ute/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip.png",
+    "overview": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray and canopy) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-finish/tradie-ute/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-roster-reference/tradie-ute/paints-strip.png",
     "identity": "art/ui/tokens.json",
-    "pattern": "Seat colour on the paint key (white texels tint, the canopy's lid and the tray included; the black canopy sides, bull bar, flares, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. paints-strip.png shows white plus five player colours."
+    "pattern": "Player colour on cab/body paint key. Canopy including lid, alloy tray, rack, awning, bar, glass, tyres and lamps remain neutral; roof number remains above the cab."
   },
   "inWorld": [
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-1.png"
+      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-4.png"
+      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-finish/tradie-ute/grid-24.png"
+      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-finish/tradie-ute/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-roster-reference/tradie-ute/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-finish/tradie-ute/validation.md"
+    "report": "docs/evidence/P1-V-roster-reference/tradie-ute/validation.md"
   },
   "profile": "assets/profiles/tradie-ute.json",
   "handling": {

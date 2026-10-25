@@ -1,0 +1,142 @@
+{
+  "what": "Reference-derived section and cue gates for roster refinement. Pixel annotations are independent of params; tolerances allow generated-sheet disagreement and coarse faceting. Comparison masks still exclude bottom shadow band; no claim of complete likeness.",
+  "reference": "art/vehicles/cruz-missile/refs/lod-plus-1.png",
+  "referenceSha256": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73",
+  "notes": [
+    "Horizontal optical axes and identical perspective mask/shading; baseline recaptured before source edits. References are generated, not calibrated photographs.",
+    "Reference mask sections normalize full width by unchanged crop height, preserving aspect. Ground-shadow region below .875 is excluded by fitter.",
+    "Named local gates supplement whole-view score. Open bike spokes, shading, material visibility and unannotated contours require rendered review."
+  ],
+  "cameras": {
+    "projection": "perspective",
+    "tilt": {
+      "front": 0,
+      "rear": 0
+    },
+    "camD": {
+      "front": 50,
+      "rear": 50,
+      "side": 10,
+      "top": 10
+    },
+    "hero": {
+      "az": 52,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    },
+    "heroRear": {
+      "az": 140,
+      "elev": 0,
+      "dist": 11,
+      "fov": 26,
+      "targetY": 0.78
+    }
+  },
+  "contours": {
+    "front": [
+      {
+        "name": "front greenhouse tapers into the roof instead of staying broad",
+        "rows": [
+          0.12,
+          0.2
+        ],
+        "tolerance": [
+          0.12,
+          0.12,
+          0.13
+        ]
+      },
+      {
+        "name": "front body remains broad below the shoulders",
+        "rows": [
+          0.5,
+          0.6
+        ],
+        "tolerance": 0.115
+      }
+    ],
+    "top": [
+      {
+        "name": "nose tip narrows from the shoulder footprint",
+        "rows": [
+          0.9,
+          0.94,
+          0.98
+        ],
+        "tolerance": [
+          0.035,
+          0.04,
+          0.05
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "front angular lamp envelopes",
+      "view": "front",
+      "part": "front",
+      "uvs": [
+        [
+          0.8125,
+          0.8125
+        ]
+      ],
+      "size": [
+        338,
+        249
+      ],
+      "polygons": [
+        [
+          [
+            23,
+            108
+          ],
+          [
+            72,
+            117
+          ],
+          [
+            78,
+            140
+          ],
+          [
+            18,
+            133
+          ]
+        ],
+        [
+          [
+            320,
+            133
+          ],
+          [
+            260,
+            140
+          ],
+          [
+            266,
+            117
+          ],
+          [
+            315,
+            108
+          ]
+        ]
+      ],
+      "minIou": [
+        0.5,
+        0.45,
+        0.25
+      ]
+    }
+  ],
+  "maskSha256": {
+    "lod1_front.mask.png": "7e1be353503c2488a96af8a47c2ade7d9e244379c7bc7982073a841a52473d79",
+    "lod1_top.mask.png": "04463738f53824dbe05b94d731362c638c9ffff15e84954970ab8bfd0581a980",
+    "lowest_front.mask.png": "698801bf587b956d6ba5fee6ad09cf5c35db70d924e164171d4152851cafdd06",
+    "lowest_top.mask.png": "de74407e0eb497711dfbfdfb4d3c988703d5f085a84bb160136356f6c702f24e"
+  }
+}

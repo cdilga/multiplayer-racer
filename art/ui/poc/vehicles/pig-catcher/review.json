@@ -2,42 +2,55 @@
   "id": "pig-catcher",
   "name": "Pig Catcher",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
     "br-bwju.5",
     "br-bwju.11",
-    "br-bwju"
+    "br-bwju",
+    "br-rgw6"
   ],
-  "summary": "R123's Pig Catcher: a bubbly outback trail bike in the spirit of the DR-Z400E (no Suzuki branding): tall long-travel forks, a beaked front mudguard, wide plastics, a light bar with two spotlights, and a rear rack carrying a coiled rope and a hessian sack. The rider is part of the model, standing on the pegs in a green MX helmet, khaki shirt and jeans. Code-built from a generated reference sheet (R81), on the bike part set (core, front, back, rider, wheel_F, wheel_R). Rebuilt against its contact sheet (br-bwju.11): a lofted tank and radiator shrouds, 20-facet knobbly tyres on spoked rims with a brake disc and sprocket, a crash bar carrying two octagon spotlights and a headlamp, big black hand guards, a silvered silencer, a rack with a rope coil and sack, and a fuller rider with a peaked helmet, goggles, soled boots and gloves. LOD0 2736 triangles (qualified budget now 3000), LOD1 884, LOD2 588.",
+  "summary": "Real annular tyres and open spoke interiors at every LOD replace opaque wheel caps. The rider has a tapered LOD0 torso, neck clearance, narrower leg stance, lower and better placed elbows, and a helmet peak even at the smallest tier. A retained beak transition avoids a single unbroken plank. Engine reduction was rejected after broad-form comparison; the enclosing engine volume is retained. Original collision inputs are frozen in colliders.json. Exported intact triangles: 2514 / 898 / 596 against 2800 / 900 / 600. Front/rear whole-view silhouettes improve at every tier. LOD0/1 weighted scores improve; LOD2 weighted score regresses by 0.0049, with side/top losses. The bike remains visibly approximate: plastics, engine and low-tier limbs are blockier than the sheet, and the rack/rope/sack differ in detail. It does not meet the general ~0.95 reference-parity target. Open spokes are a real geometry improvement that filled silhouette IoU cannot measure.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/pig-catcher/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). Bikes are thin: the masks keep pale parts (segment.bright), use a small opening and keep detached components (refs/sheets.json), the same rules on both sides.",
+    "note": "Frozen same-camera reference | shaded candidate | silhouette diff. Horizontal end views use a 50 m long lens; side/top 10 m. These generated sheets are not calibrated photographs. Before/after captures and local reference-derived section/cue gates are in docs/evidence/P1-V-roster-reference/pig-catcher. Reference limits and any extraction correction are documented in validation.md.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "label": "LOD0 against lod+1 sheet; frozen perspective mask/shading cameras",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.894,
-          "top": 0.8271,
-          "front": 0.7772,
-          "rear": 0.765
+          "side": 0.8766,
+          "top": 0.8359,
+          "front": 0.8254,
+          "rear": 0.8343
         },
-        "weightedIou": 0.8371
+        "weightedIou": 0.8504
+      },
+      {
+        "lod": 1,
+        "label": "LOD1 against lod+1 sheet; frozen perspective mask/shading cameras",
+        "sheet": "media/reference-lod1/sheet.png",
+        "iou": {
+          "side": 0.8629,
+          "top": 0.8503,
+          "front": 0.8279,
+          "rear": 0.8352
+        },
+        "weightedIou": 0.8497
       },
       {
         "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
+        "label": "LOD2 against lowest-lod sheet; frozen perspective mask/shading cameras",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.863,
-          "top": 0.8151,
-          "front": 0.703,
-          "rear": 0.6887
+          "side": 0.8421,
+          "top": 0.8325,
+          "front": 0.8016,
+          "rear": 0.8133
         },
-        "weightedIou": 0.7985
+        "weightedIou": 0.8288
       }
     ]
   },
@@ -50,7 +63,7 @@
       {
         "lod": 0,
         "glb": "media/model/pig-catcher.lod0.glb",
-        "tris": 2451,
+        "tris": 2514,
         "draws": 6,
         "maxTris": 2800,
         "withinBudget": true
@@ -58,7 +71,7 @@
       {
         "lod": 1,
         "glb": "media/model/pig-catcher.lod1.glb",
-        "tris": 851,
+        "tris": 898,
         "draws": 6,
         "maxTris": 900,
         "withinBudget": true
@@ -66,7 +79,7 @@
       {
         "lod": 2,
         "glb": "media/model/pig-catcher.lod2.glb",
-        "tris": 579,
+        "tris": 596,
         "draws": 6,
         "maxTris": 600,
         "withinBudget": true
@@ -256,31 +269,19 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (origin between the axles; anchors, part ids, hinges, mass fractions unchanged)"
+        "text": "code-built export, unchanged triangle budgets and reproducible baked bytes."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2736 <= 2800 <= 3000; LOD1 884 <= 900; LOD2 588 <= 600"
+        "text": "current local reference gates at all LODs; old candidates and meaningful injected defects rejected."
+      },
+      {
+        "result": "PASS",
+        "text": "original collision geometry and damage attachments preserved; parent sim.json records fresh native settle/straight replay checks."
       },
       {
         "result": "WARN",
-        "text": "silhouette: LOD0 weighted IoU 0.8432 -> 0.8371 (side 0.906 -> 0.894, top 0.831 -> 0.827, front 0.805 -> 0.777, rear 0.739 -> 0.765); LOD1 0.8375 -> 0.8261; LOD2 0.8270 -> 0.7985. Below the skill's ~0.95, and slightly below the old bake: the sheet's detail (spokes, lugs, lamps, guards, rope) is not silhouette, and a bike's thin parts (guards, crash bar, spokes, lug dashes) cost pixels wherever they sit a centimetre off"
-      },
-      {
-        "result": "PASS",
-        "text": "by-eye cues (ladder-lod0.png): lofted tank and shrouds, two octagon spotlights and headlamp on a crash bar, hand guards, beaked mudguard, spoked rims on knobbly tyres, brake disc and sprocket, silvered silencer, rack with rope coil and sack, boots with soles, helmet peak and goggles"
-      },
-      {
-        "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
-      },
-      {
-        "result": "PASS",
-        "text": "damage: intact -> loose -> detached for front, back, rider, wheels (damage-strip.png)"
-      },
-      {
-        "result": "WARN",
-        "text": "LOD1 and LOD2 drop spokes, lugs, the rim ring and the gaiters; LOD2's wheels are octagon discs with a flat grey face"
+        "text": "whole-view score tradeoffs and remaining visual/production qualification limits are stated above. Owner review remains pending."
       }
     ],
     "report": "media/gate/validation.md"

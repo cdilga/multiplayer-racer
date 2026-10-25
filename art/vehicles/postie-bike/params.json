@@ -1,10 +1,10 @@
 {
- "what": "Postie Bike proportions (br-bwju.11), metres, measured off refs/lod-plus-1.png: side crop 0.00449 m per px with the axles 2.08 m apart; front and rear crops at the same scale; the plan crop at 0.0043 (each view mapped to the model's frame separately, because the sheet's bike is lower, longer and wider-barred than the sim's). +Z nose, origin on the ground between the axles. Wheels are the sim's: zF, rF, zR, rR are pinned.",
+ "what": "CB50-inspired delivery motorcycle from regenerated Muse reference and Honda primary image, 2026-10-25. All hub radii/positions and original physics pivots frozen; visible tank/frame/engine replace scooter floor and shield. Reference is stylized and uncalibrated.",
  "zF": 1.04,
  "rF": 0.4,
  "zR": -1.04,
  "rR": 0.36,
- "tyreW": 0.22,
+ "tyreW": 0.145,
  "pinned": [
   "zF",
   "rF",
@@ -60,24 +60,24 @@
   "hwBot": 0.22
  },
  "seat": {
-  "z0": -0.16,
-  "z1": -0.96,
-  "y0": 0.89,
-  "y1": 1.07,
-  "hw0": 0.24,
+  "z0": -0.06,
+  "z1": -1.12,
+  "y0": 0.96,
+  "y1": 1.06,
+  "hw0": 0.205,
   "hw1": 0.19
  },
  "engine": {
-  "z": -0.41,
-  "y": 0.36,
-  "hw": 0.14
+  "z": 0.02,
+  "y": 0.47,
+  "hw": 0.17
  },
  "exhaust": {
-  "x": 0.25,
+  "x": 0.27,
   "y": 0.36,
-  "z0": -0.53,
-  "z1": -1.46,
-  "r": 0.065
+  "z0": 0.1,
+  "z1": -1.35,
+  "r": 0.055
  },
  "column": {
   "bz": 0.72,
@@ -96,35 +96,35 @@
  },
  "head": {
   "z": 0.73,
-  "y": 1.34,
-  "r": 0.105,
+  "y": 1.4,
+  "r": 0.125,
   "depth": 0.25
  },
  "fork": {
-  "cz": 0.72,
-  "cy": 0.9,
+  "cz": 0.64,
+  "cy": 1.15,
   "x": 0.19
  },
  "fenderF": {
   "lift": 0.055,
   "hw": 0.13,
   "a0": 50,
-  "a1": -97
+  "a1": -70
  },
  "basket": {
-  "z0": 0.74,
-  "z1": 1.25,
+  "z0": 0.7,
+  "z1": 1.12,
   "hw": 0.25,
-  "yB": 0.93,
-  "yT": 1.11
+  "yB": 0.97,
+  "yT": 1.15
  },
  "pannier": {
   "z0": -0.91,
-  "z1": -1.64,
-  "y0": 0.61,
-  "y1": 1.13,
-  "xin": 0.31,
-  "xout": 0.76
+  "z1": -1.58,
+  "y0": 0.63,
+  "y1": 1.09,
+  "xin": 0.29,
+  "xout": 0.7
  },
  "parcels": {
   "h": 0.12
@@ -146,7 +146,7 @@
   "lift": 0.06,
   "hw": 0.135,
   "a0": 62,
-  "a1": -95
+  "a1": -70
  },
  "rider": {
   "hip": [
@@ -156,13 +156,13 @@
   ],
   "knee": [
    0.29,
-   0.97,
-   0.03
+   0.86,
+   0.0
   ],
   "foot": [
    0.3,
-   0.47,
-   0
+   0.43,
+   -0.075
   ],
   "shoulder": [
    0,
@@ -192,5 +192,83 @@
    "z1": -0.36,
    "hw": 0.23
   }
+ },
+ "physicsPivots": {
+  "core": [
+   0,
+   0,
+   0
+  ],
+  "front": [
+   0,
+   1.443797865477643,
+   0.48
+  ],
+  "back": [
+   0,
+   1.254,
+   -0.52
+  ],
+  "rider": [
+   0,
+   1.14,
+   -0.27
+  ],
+  "wheel_F": [
+   0,
+   0.4,
+   1.04
+  ],
+  "wheel_R": [
+   0,
+   0.36,
+   -1.04
+  ]
+ },
+ "tank": {
+  "sections": [
+   [
+    -0.08,
+    0.1,
+    0.94,
+    1.04
+   ],
+   [
+    -0.01,
+    0.19,
+    0.93,
+    1.16
+   ],
+   [
+    0.1,
+    0.23,
+    0.92,
+    1.25
+   ],
+   [
+    0.25,
+    0.235,
+    0.93,
+    1.26
+   ],
+   [
+    0.39,
+    0.2,
+    0.95,
+    1.22
+   ],
+   [
+    0.49,
+    0.14,
+    0.99,
+    1.15
+   ],
+   [
+    0.55,
+    0.08,
+    1.03,
+    1.1
+   ]
+  ]
  }
 }

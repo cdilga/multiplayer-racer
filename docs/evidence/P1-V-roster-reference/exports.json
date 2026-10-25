@@ -1,0 +1,152 @@
+[
+  {
+    "car": "au-hawk",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 2104,
+        "draws": 11,
+        "budget": 3000
+      },
+      {
+        "lod": 1,
+        "tris": 874,
+        "draws": 11,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 600,
+        "draws": 11,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/au-hawk/au-hawk.asset.json: ok (jj.vehicle.v1, triangles per LOD [2104, 874, 600])",
+    "reproducible": true
+  },
+  {
+    "car": "cruz-missile",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 1913,
+        "draws": 11,
+        "budget": 2800
+      },
+      {
+        "lod": 1,
+        "tris": 896,
+        "draws": 11,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 507,
+        "draws": 11,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/cruz-missile/cruz-missile.asset.json: ok (jj.vehicle.v1, triangles per LOD [1913, 896, 507])",
+    "reproducible": true
+  },
+  {
+    "car": "lion-president",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 1813,
+        "draws": 11,
+        "budget": 2400
+      },
+      {
+        "lod": 1,
+        "tris": 897,
+        "draws": 11,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 576,
+        "draws": 11,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/lion-president/lion-president.asset.json: ok (jj.vehicle.v1, triangles per LOD [1813, 897, 576])",
+    "reproducible": true
+  },
+  {
+    "car": "pig-catcher",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 2514,
+        "draws": 6,
+        "budget": 2800
+      },
+      {
+        "lod": 1,
+        "tris": 898,
+        "draws": 6,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 596,
+        "draws": 6,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/pig-catcher/pig-catcher.asset.json: ok (jj.vehicle.v1, triangles per LOD [2514, 898, 596])",
+    "reproducible": true
+  },
+  {
+    "car": "postie-bike",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 2287,
+        "draws": 6,
+        "budget": 2900
+      },
+      {
+        "lod": 1,
+        "tris": 877,
+        "draws": 6,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 593,
+        "draws": 6,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/postie-bike/postie-bike.asset.json: ok (jj.vehicle.v1, triangles per LOD [2287, 877, 593])",
+    "reproducible": true
+  },
+  {
+    "car": "tradie-ute",
+    "lods": [
+      {
+        "lod": 0,
+        "tris": 1402,
+        "draws": 11,
+        "budget": 2400
+      },
+      {
+        "lod": 1,
+        "tris": 896,
+        "draws": 11,
+        "budget": 900
+      },
+      {
+        "lod": 2,
+        "tris": 586,
+        "draws": 11,
+        "budget": 600
+      }
+    ],
+    "contract": "art/vehicles/tradie-ute/tradie-ute.asset.json: ok (jj.vehicle.v1, triangles per LOD [1402, 896, 586])",
+    "reproducible": true
+  }
+]

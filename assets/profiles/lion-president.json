@@ -4,7 +4,7 @@
   "source": {
     "sidecar": "art/vehicles/lion-president/lion-president.asset.json",
     "sidecar_sha256": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
-    "lod0_sha256": "fca3885506ccfc4646c64329cfbf80b16d32562a153a63113cba134b7a5e1329"
+    "lod0_sha256": "e7d9b5b9f59fb260abca4e793675d6a9b98b19bed24c5197a1059cc806773c2d"
   },
   "geometry": {
     "hull": [

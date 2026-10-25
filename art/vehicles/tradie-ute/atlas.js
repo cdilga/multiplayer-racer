@@ -58,55 +58,29 @@ function topShapes(c) {
   out.push({ poly: m([[-0.30, 1.50], [0.30, 1.50], [0.30, 1.56], [-0.30, 1.56]]), fill: c.trim }); // the cowl's vent strip
   return out;
 }
+// Actual canopy: broad plain gullwing side, two low round compression locks; a CLOSED unglazed rear.
+// Night photographs do not support the old generated vents, exposed struts, rear window or coloured lid.
 function canopyShapes(c) {
-  // u: 0 at the canopy's front, 1 at its back; v: 0 at the deck, 1 at the canopy's top (the model's canopyUV)
-  const [u0, v0, u1, v1] = REGION.canopy, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
-  const m = (pts) => pts.map(([u, v]) => [ox + u * px, oy + (1 - v) * py]);
-  const out = [{ rect: [ox, oy, px, py], fill: c.canopy }];
-  out.push({ poly: m([[0.02, 0.44], [0.98, 0.44], [0.98, 0.95], [0.02, 0.95]]), fill: c.canopyHi }); // the upper lift-up door
-  out.push({ poly: m([[0.02, 0.40], [0.98, 0.40], [0.98, 0.43], [0.02, 0.43]]), fill: '#0c0d0f' }); // seam over the lower boxes
-  out.push({ poly: m([[0.49, 0.04], [0.51, 0.04], [0.51, 0.40], [0.49, 0.40]]), fill: '#0c0d0f' }); // the lower doors' split
-  for (const u of [0.24, 0.76]) { // round locks
-    const r = 0.035, oct = Array.from({ length: 8 }, (_, i) => [u + r * Math.cos(i * Math.PI / 4) * py / px * 2, 0.24 + r * 2 * Math.sin(i * Math.PI / 4)]);
-    out.push({ poly: m(oct), fill: c.chrome });
+  const [u0,v0,u1,v1]=REGION.canopy, px=(u1-u0)*W,py=(v1-v0)*H, ox=u0*W,oy=(1-v1)*H;
+  const m=pts=>pts.map(([u,v])=>[ox+u*px,oy+(1-v)*py]);
+  const out=[{rect:[ox,oy,px,py],fill:c.canopy}];
+  out.push({poly:m([[.025,.08],[.975,.08],[.975,.965],[.025,.965]]),fill:c.canopyHi});
+  out.push({poly:m([[.025,.075],[.975,.075],[.975,.09],[.025,.09]]),fill:'#0c0d0f'});
+  for(const u of [.25,.75]) {
+    const oct=Array.from({length:8},(_,i)=>[u+.025*Math.cos(i*Math.PI/4),.28+.047*Math.sin(i*Math.PI/4)]);
+    out.push({poly:m(oct),fill:c.chrome});
+    out.push({poly:m([[u-.006,.25],[u+.006,.25],[u+.006,.30],[u-.006,.30]]),fill:c.trim});
   }
-  // br-bwju.8: the real canopy's hardware: the upper door's T-handles, its gas struts at each end, a louvred vent, the drip
-  // rail along the top, chrome corner protectors, and amber and red side reflectors.
-  for (const u of [0.30, 0.70]) out.push({ poly: m([[u - 0.035, 0.60], [u + 0.035, 0.60], [u + 0.035, 0.63], [u + 0.008, 0.63], [u + 0.008, 0.68], [u - 0.008, 0.68], [u - 0.008, 0.63], [u - 0.035, 0.63]]), fill: c.chrome });
-  for (const [a, b] of [[0.05, 0.11], [0.95, 0.89]]) out.push({ poly: m([[a, 0.50], [a + 0.012, 0.50], [b + 0.012, 0.88], [b, 0.88]]), fill: c.chrome });
-  for (let k = 0; k < 6; k++) out.push({ poly: m([[0.43, 0.83 - k * 0.045], [0.57, 0.83 - k * 0.045], [0.57, 0.85 - k * 0.045], [0.43, 0.85 - k * 0.045]]), fill: '#0c0d0f' });
-  out.push({ poly: m([[0, 0.96], [1, 0.96], [1, 1], [0, 1]]), fill: c.chrome }); // drip rail
-  for (const [a, b] of [[0, 0.025], [0.975, 1]]) out.push({ poly: m([[a, 0.04], [b, 0.04], [b, 1], [a, 1]]), fill: c.chrome }); // corner protectors
-  out.push({ poly: m([[0.03, 0.07], [0.07, 0.07], [0.07, 0.13], [0.03, 0.13]]), fill: c.indicator });
-  out.push({ poly: m([[0.93, 0.07], [0.97, 0.07], [0.97, 0.13], [0.93, 0.13]]), fill: c.tail });
   return out;
 }
-
-function canopyRearShapes(c, emissive) {
-  // u: 0 at the canopy's right (-X), 1 at its left; v: 0 at the deck, 1 at the canopy's top (the model's canopyRearUV)
-  const [u0, v0, u1, v1] = REGION.canopyRear, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
-  const m = (pts) => pts.map(([u, v]) => [ox + u * px, oy + (1 - v) * py]);
-  if (emissive) return [{ poly: m([[0.38, 0.92], [0.62, 0.92], [0.62, 0.96], [0.38, 0.96]]), fill: EMIT.tail }];
-  const out = [{ rect: [ox, oy, px, py], fill: c.canopy }];
-  out.push({ poly: m([[0.06, 0.08], [0.94, 0.08], [0.94, 0.90], [0.06, 0.90]]), fill: c.canopyHi }); // the rear door
-  out.push({ poly: m([[0.12, 0.50], [0.88, 0.50], [0.88, 0.84], [0.12, 0.84]]), fill: c.glass }); // its tinted window
-  out.push({ poly: m([[0.14, 0.78], [0.40, 0.84], [0.30, 0.84], [0.14, 0.80]]), fill: '#5a6470' }); // the glass's glint
-  out.push({ poly: m([[0.40, 0.40], [0.60, 0.40], [0.60, 0.44], [0.40, 0.44]]), fill: c.chrome }); // T-handle
-  out.push({ poly: m([[0.48, 0.34], [0.52, 0.34], [0.52, 0.40], [0.48, 0.40]]), fill: c.chrome });
-  out.push({ poly: m([[0.38, 0.92], [0.62, 0.92], [0.62, 0.96], [0.38, 0.96]]), fill: c.tail }); // the third brake light
-  for (const u of [0.02, 0.98]) out.push({ poly: m([[u - 0.02, 0], [u + 0.02, 0], [u + 0.02, 1], [u - 0.02, 1]]), fill: c.chrome }); // corner protectors
-  return out;
+function canopyRearShapes(c,emissive) {
+  if(emissive)return [];
+  const [u0,v0,u1,v1]=REGION.canopyRear;
+  return [{rect:[u0*W,(1-v1)*H,(u1-u0)*W,(v1-v0)*H],fill:c.canopy}];
 }
-
 function canopyTopShapes(c) {
-  // u across the lid (-X to +X), v along it (front to back): the seat colour with the tie-down rails along its edges. Wide
-  // pure-white areas only: thin lines every few texels would blend the white away in the mipmaps and the lid would stop
-  // taking the seat colour at a distance (the chase cam reads whose ute it is from the lid).
-  const [u0, v0, u1, v1] = REGION.canopyTop, px = (u1 - u0) * W, py = (v1 - v0) * H, ox = u0 * W, oy = (1 - v1) * H;
-  const m = (pts) => pts.map(([u, v]) => [ox + u * px, oy + v * py]);
-  const out = [{ rect: [ox, oy, px, py], fill: c.paint }];
-  for (const u of [0.02, 0.98]) out.push({ poly: m([[u - 0.02, 0], [u + 0.02, 0], [u + 0.02, 1], [u - 0.02, 1]]), fill: c.trim }); // tie-down rails along the edges
-  return out;
+  const [u0,v0,u1,v1]=REGION.canopyTop;
+  return [{rect:[u0*W,(1-v1)*H,(u1-u0)*W,(v1-v0)*H],fill:c.canopy}];
 }
 function swatchShapes(c, emissive) {
   return SW.flatMap((n, i) => {

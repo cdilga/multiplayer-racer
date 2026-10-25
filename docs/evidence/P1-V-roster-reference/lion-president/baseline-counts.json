@@ -1,0 +1,62 @@
+[
+  {
+    "lod": 0,
+    "tris": 2150,
+    "breakdown": {
+      "front": 508,
+      "core": 306,
+      "door_FL": 26,
+      "door_RL": 14,
+      "back": 576,
+      "door_FR": 26,
+      "door_RR": 14,
+      "wheel_FL": 170,
+      "wheel_FR": 170,
+      "wheel_RL": 170,
+      "wheel_RR": 170,
+      "interior_engine": 22,
+      "interior_cabin": 36,
+      "interior_boot": 32
+    }
+  },
+  {
+    "lod": 1,
+    "tris": 891,
+    "breakdown": {
+      "front": 228,
+      "core": 204,
+      "door_FL": 18,
+      "door_RL": 12,
+      "back": 231,
+      "door_FR": 18,
+      "door_RR": 12,
+      "wheel_FL": 42,
+      "wheel_FR": 42,
+      "wheel_RL": 42,
+      "wheel_RR": 42,
+      "interior_engine": 22,
+      "interior_cabin": 36,
+      "interior_boot": 32
+    }
+  },
+  {
+    "lod": 2,
+    "tris": 594,
+    "breakdown": {
+      "front": 138,
+      "core": 144,
+      "door_FL": 6,
+      "door_RL": 6,
+      "back": 136,
+      "door_FR": 6,
+      "door_RR": 6,
+      "wheel_FL": 38,
+      "wheel_FR": 38,
+      "wheel_RL": 38,
+      "wheel_RR": 38,
+      "interior_engine": 22,
+      "interior_cabin": 36,
+      "interior_boot": 32
+    }
+  }
+]

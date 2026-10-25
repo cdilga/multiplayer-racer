@@ -1,0 +1,117 @@
+{
+  "car": "cruz-missile",
+  "pass": true,
+  "baseline": "HEAD before roster refinement",
+  "sidecarUnchanged": true,
+  "colliders": {
+    "collider_core": {
+      "unchanged": true,
+      "sha256": "127aae01c35e974a30b491cde69d16e8c1e85fd0b2d8ac07addd5e5b1ea1c47a"
+    },
+    "collider_front": {
+      "unchanged": true,
+      "sha256": "c8f66370eebabd35749bc9d9859ed16fdae631851dd2e699d8358230cb0697a3"
+    },
+    "collider_back": {
+      "unchanged": true,
+      "sha256": "afded7322844713bfe4d788a2515d2496d7ec4dfd5bad04d80063a99e331b9be"
+    },
+    "collider_door_FL": {
+      "unchanged": true,
+      "sha256": "fcb63d56f34b567fa9b1dc7144036f97d9b2b249b00683e4ea61fc9d80c18708"
+    },
+    "collider_door_FR": {
+      "unchanged": true,
+      "sha256": "4d5cc584071e85d016539fee7adac74f94dd86f26758f1bcac2c56c9921d57a2"
+    },
+    "collider_door_RL": {
+      "unchanged": true,
+      "sha256": "6d16854aafcae16e81352751e5260c6e38cf17e605e4db49cb5b5ad3919ee9ba"
+    },
+    "collider_door_RR": {
+      "unchanged": true,
+      "sha256": "6d3cfed38c9f20f84452ce2b2cdb46ff6cbc888bacf0a9bce0ae9f11d2b6fbc5"
+    },
+    "collider_wheel_FL": {
+      "unchanged": true,
+      "sha256": "6651d83df3c3474a36dd479de34d08c00a83fa469780e8353f93b65436639686"
+    },
+    "collider_wheel_FR": {
+      "unchanged": true,
+      "sha256": "0b9dc88dd9ba44d62830b37a809f9935597aff3b421efd1474478d9646a26c5d"
+    },
+    "collider_wheel_RL": {
+      "unchanged": true,
+      "sha256": "4dfacbf0b7fa1a3c0af80291d0568ae26b47dd96d35c1bdbee8c13501d72ab45"
+    },
+    "collider_wheel_RR": {
+      "unchanged": true,
+      "sha256": "0302413321a1f0263eacbf6214d1caae4682fa4edda565d716d663bfb1331505"
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "triangles": 1913,
+      "maxTris": 2800,
+      "parts": {
+        "core": 264,
+        "front": 608,
+        "back": 373,
+        "door_FL": 32,
+        "door_FR": 32,
+        "door_RL": 26,
+        "door_RR": 26,
+        "wheel_FL": 138,
+        "wheel_FR": 138,
+        "wheel_RL": 138,
+        "wheel_RR": 138,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    },
+    {
+      "lod": 1,
+      "triangles": 896,
+      "maxTris": 900,
+      "parts": {
+        "core": 200,
+        "front": 273,
+        "back": 207,
+        "door_FL": 12,
+        "door_FR": 12,
+        "door_RL": 12,
+        "door_RR": 12,
+        "wheel_FL": 42,
+        "wheel_FR": 42,
+        "wheel_RL": 42,
+        "wheel_RR": 42,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    },
+    {
+      "lod": 2,
+      "triangles": 507,
+      "maxTris": 600,
+      "parts": {
+        "core": 144,
+        "front": 102,
+        "back": 137,
+        "door_FL": 6,
+        "door_FR": 6,
+        "door_RL": 6,
+        "door_RR": 6,
+        "wheel_FL": 25,
+        "wheel_FR": 25,
+        "wheel_RL": 25,
+        "wheel_RR": 25,
+        "interior_engine": 24,
+        "interior_cabin": 36,
+        "interior_boot": 32
+      }
+    }
+  ]
+}

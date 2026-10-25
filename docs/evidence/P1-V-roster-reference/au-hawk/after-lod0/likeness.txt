@@ -1,0 +1,24 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD.front
+PASS camera.camD.rear
+PASS camera.camD.side
+PASS camera.camD.top
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS front shoulder to flank transition error=0.0196 limit=0.06
+PASS front lower stance width error=0.0163 limit=0.065
+PASS rear lower stance width error=0.0161 limit=0.065
+PASS plan nose taper at three sections error=0.0061 limit=0.05
+PASS AU swept teardrop headlamps IoU=0.707 minimum=0.45
+PASS AU rounded corner rear lamps IoU=0.596 minimum=0.4

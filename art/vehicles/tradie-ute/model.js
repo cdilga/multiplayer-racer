@@ -2,28 +2,92 @@
 // build(P, lod) → { group, parts, stats } for three.js; soups(P, lod) → plain per-part triangle arrays for the bake
 // (tools/vehicles/bake.mjs). P comes from params.json.
 //
-// Provenance: the proportions come from the owner's Triton build script (home-digital-twin studies/landscape/catalog/vehicles/
-// build_vehicles.py: dual cab, 3.0 m wheelbase, 0.8 m tyres, tray behind the cab, TJM-style bull bar, snorkel on the driver's
-// A-pillar, roof rack, side steps), scaled into a caricature that sits in the roster beside the Cruz Missile: the same two-loft
-// construction (tub + greenhouse) as cruz-missile/model.js, flat-shaded, parts and pivots identical at every LOD.
-// R123 allowed importing the owner's mesh; porting the geometry to code kept R81's method and gives clean part splits.
-//
-// Frame: metres, +Z = nose, +Y up, origin on the ground between the axles (jj.vehicle.v1); +X is the vehicle's LEFT.
-// br-bwju.8 (owner 2026-10-11: "keep the rear canopy and the actual roof rack, and dual cab ... a little too generic"):
-// rebuilt against the owner's photos (eris morayfield-house-3d twin/site/sources/owner-inbox-2026-10-10/triton-reference.zip):
-// the black flat-top canopy on a flat tray, the platform rack with its wind deflector and rolled awning on the left, the MQ
-// Triton's chrome "dynamic shield" grille, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the right
-// (driver's) A-pillar, black wheels with a silver lip, the paint plain (no hi-vis: the owner's car is plain).
-//
-// Damage parts: front (bonnet, grille, bull bar), back (tray, canopy, tray lamps, tow bar), door_FL/FR/RL/RR, wheel_*;
-// everything else (cab, roof rack, snorkel, mirrors, steps) is core.
+// Authoritative evidence (2026-10-25): refs/measured-reference.json. Owner photos from 2026-10-21 and
+// tape dimensions supersede the earlier generated contact sheet. Geometry is authored here, borrowing proportions
+// from the newer home model build_triton(), not importing its smooth/bevelled mesh. Metres, +Z nose, +X vehicle left.
+// The cab/rack heights and positions are estimates; tray/canopy sizes and bar-to-tail distance are measured.
+// Physics remains the pre-rebuild hull and pivots (colliders.json/pivots.json), including the old wheel spacing.
+// Damage parts remain unchanged. Cab rack, left awning, right snorkel are core; tray/guards/canopy/hitch are back.
 import * as THREE from 'three';
 import { swatchUV, REGION } from './atlas.js';
+// Frozen attachment locations: visual refinement must not change simulation or damage articulation.
+const REST_PIVOTS = {
+  "front": [
+    0,
+    1.31,
+    0.7899999999999999
+  ],
+  "core": [
+    0,
+    0,
+    0
+  ],
+  "door_FL": [
+    1,
+    0.8605,
+    0.8999999999999999
+  ],
+  "door_RL": [
+    0.99,
+    0.8474999999999999,
+    0
+  ],
+  "back": [
+    0,
+    1.24,
+    -0.7899999999999999
+  ],
+  "door_FR": [
+    -1,
+    0.8605,
+    0.8999999999999999
+  ],
+  "door_RR": [
+    -0.99,
+    0.8474999999999999,
+    0
+  ],
+  "wheel_FL": [
+    0.88,
+    0.43,
+    1.45
+  ],
+  "wheel_FR": [
+    -0.88,
+    0.43,
+    1.45
+  ],
+  "wheel_RL": [
+    0.88,
+    0.43,
+    -1.45
+  ],
+  "wheel_RR": [
+    -0.88,
+    0.43,
+    -1.45
+  ],
+  "interior_engine": [
+    0,
+    0,
+    0
+  ],
+  "interior_cabin": [
+    0,
+    0,
+    0
+  ],
+  "interior_boot": [
+    0,
+    0,
+    0
+  ]
+};
 
 export const LODS = {
-  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 16, rim: 'spokes', hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, windows: true, scoop: true, vents: true, mirrors: 'stalk', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
-  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: true, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: true, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
-  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: false, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 0, rack: 'simple', steps: false, seams: false, tow: false, tailLamps: false },
+  0: { arch: 9, nose: 2, curvePts: true, merge: 0.08, doorMid: true, wheelSeg: 10, rim: 'flat', spokes: 6, hub: true, flare: 9, flareLip: true, flareEnds: true, tyreCap: true, windows: true, scoop: false, vents: false, mirrors: 'stalk', bar: 'full', grille: true, snorkel: 3, rack: 'full', steps: true, seams: true, tow: true, tailLamps: true },
+  1: { arch: 4, nose: 1, curvePts: true, merge: 0.25, doorMid: true, wheelSeg: 8, rim: 'flat', spokes: 5, hub: true, flare: 4, flareLip: false, flareEnds: true, tyreCap: false, windows: true, scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: true, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: true },
+  2: { arch: 3, nose: 1, curvePts: false, merge: 1, wheelSeg: 6, rim: 'decal', hub: false, flare: 4, flareLip: false, flareEnds: false, tyreCap: false, windows: 'flat', scoop: false, vents: false, mirrors: 'box', bar: 'simple', grille: false, snorkel: 1, rack: 'platform', steps: false, seams: false, tow: false, tailLamps: false },
 };
 
 const lerpCurve = (pts, z) => {
@@ -135,21 +199,24 @@ function canopyUV(P, y0) { const [u0, v0, u1, v1] = REGION.canopy, C = P.canopy;
 
 // ───────────────────────── build ─────────────────────────
 function makeSoups(P, lod) {
+  // Coarse cab retains windshield rake, roof crown and cab back; intermediate stations disappear.
+  if (lod===2) P={...P,cabin:P.cabin.filter((_,i)=>[0,1,3,5].includes(i))};
   const T = LODS[lod];
   const zA = P.zFA - P.archR, zC = P.zRA + P.archR; // door span = between the arches; front/back cut lines
-  const prot = [P.zNose, P.zTail, zA, zC, zC - 0.03, P.zB, P.zNose - 0.16];
-  for (let i = 1; i <= T.nose; i++) prot.push(P.zTail + 0.14 * i / T.nose);
-  if (T.doorMid) prot.push((zA + P.zB) / 2, (P.zB + zC) / 2);
+  const cabBack = P.cabin.at(-1).z;
+  const prot = [P.zNose, cabBack, zA, P.zB, P.zNose - 0.16];
+  for (let i = 1; i <= T.nose; i++) prot.push(cabBack + 0.14 * i / T.nose);
+  if (T.doorMid) prot.push((zA + P.zB) / 2, (P.zB + cabBack) / 2);
   for (let i = 2; i <= T.nose; i++) prot.push(P.zNose - 0.16 * (i - 1) / T.nose);
-  for (const zc of [P.zFA, P.zRA]) for (let i = 0; i < T.arch; i++) prot.push(+(zc + P.archR * Math.cos(Math.PI * i / (T.arch - 1))).toFixed(4));
+  for (const zc of [P.zFA]) for (let i = 0; i < T.arch; i++) prot.push(+(zc + P.archR * Math.cos(Math.PI * i / (T.arch - 1))).toFixed(4));
   const opt = T.curvePts ? [...new Set([...P.ySh, ...P.yCr, ...P.hw].map(([z]) => z))] : [];
   const Z = [];
-  for (const z of [...prot, ...opt]) if (z <= P.zNose && z >= P.zTail && !Z.some((k) => Math.abs(k - z) < (prot.includes(z) ? 1e-4 : T.merge))) Z.push(z);
+  for (const z of [...prot, ...opt]) if (z <= P.zNose && z >= cabBack && !Z.some((k) => Math.abs(k - z) < (prot.includes(z) ? 1e-4 : T.merge))) Z.push(z);
   Z.sort((a, b) => b - a);
 
   const archY = (z) => {
     let y = -1;
-    for (const zc of [P.zFA, P.zRA]) { const d = Math.abs(z - zc); if (d <= P.archR + 1e-6) y = Math.max(y, P.archBase + (P.archTop - P.archBase) * Math.sqrt(Math.max(0, 1 - (d / P.archR) ** 2))); }
+    for (const zc of [P.zFA]) { const d = Math.abs(z - zc); if (d <= P.archR + 1e-6) y = Math.max(y, P.archBase + (P.archTop - P.archBase) * Math.sqrt(Math.max(0, 1 - (d / P.archR) ** 2))); }
     return y;
   };
   const ring = (z, s) => {
@@ -171,7 +238,7 @@ function makeSoups(P, lod) {
   const soups = {}; const S = (id) => (soups[id] ??= new Soup());
   const partOfTub = (zm, seg, s) => {
     if (zm > zA + 1e-6) return 'front';
-    if (zm < zC - 1e-6) return 'back';
+    // The alloy tray is separate: no painted pickup tub behind the cab.
     if (seg >= 1 && seg <= 3) return (zm > P.zB ? 'door_F' : 'door_R') + (s > 0 ? 'L' : 'R'); // +X is the vehicle's left
     return 'core';
   };
@@ -197,7 +264,7 @@ function makeSoups(P, lod) {
     const c = [0, poly.reduce((t, v) => t + v[1], 0) / poly.length, z];
     for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; if (sign > 0) S(id).tri(c, p, q, sw); else S(id).tri(c, q, p, sw); }
   };
-  cap(P.zNose, 'front', 1, 'paint'); cap(P.zTail, 'back', -1, 'paint'); // the tailgate, painted
+  cap(P.zNose, 'front', 1, 'paint'); cap(cabBack, 'core', -1, 'paint'); // the tailgate, painted
 
   // greenhouse (the dual cab): ring per cabin station, one side: base(belt) → glass top → roof edge → crown. The sides are
   // painted (A, B, C pillars); the side glass is laid over them below (a black frame, then a pane per door and the quarter).
@@ -213,6 +280,10 @@ function makeSoups(P, lod) {
       const sw = k === 0 ? sUV : k === 1 ? sUV : c.roof === 'paint' ? 'paint' : 'glass';
       if (s > 0) S('core').quad(a[k], b[k], b[k + 1], a[k + 1], sw); else S('core').quad(a[k], a[k + 1], b[k + 1], b[k], sw);
     }
+  }
+  // Rear of the dual cab stays closed when the canopy/tray detaches.
+  { const c=P.cabin.at(-1),a=cring(c,1),b=cring(c,-1);
+    S('core').face([a[0],a[1],a[2],a[3],b[2],b[1],b[0]],'paint',[0,0,-1]);
   }
   const ghPoint = (z, t, s, off) => {
     let i = 0; while (i < nC - 2 && P.cabin[i + 1].z > z) i++;
@@ -239,7 +310,7 @@ function makeSoups(P, lod) {
 
   // ── flared wheel arches: a band round each arch cut, standing proud of the side by P.flare.out at its lip, its outer edge
   // flush with the body P.flare.w further out (front arch: part front; rear arch: part back) ──
-  if (T.flare) for (const [zc, id] of [[P.zFA, 'front'], [P.zRA, 'back']]) for (const s of [1, -1]) {
+  if (T.flare) for (const [zc, id] of [[P.zFA, 'front']]) for (const s of [1, -1]) {
     const So = S(id), n = T.flare, Fw = P.flare.w, Fo = P.flare.out, ht = P.archTop - P.archBase;
     const E = [], Ep = [], O = [], Ei = [];
     for (let i = 0; i < n; i++) {
@@ -256,19 +327,6 @@ function makeSoups(P, lod) {
     if (T.flareEnds) for (const i of [0, n - 1]) So.face([Ei[i], Ep[i], O[i]], 'trim', [0, -0.2, i === 0 ? 1 : -1]);
   }
 
-  // ── bonnet: the sheet's raised scoop with a black mouth, and two louvre vents (decals) ──
-  { const N = P.scoop, F0 = S('front');
-    const xa = -N.w / 2, xb = N.w / 2, z0 = N.z, z1 = N.z - N.l, ti = N.w * 0.14;
-    const g0 = topY(0, z0) + 0.004, g1 = topY(0, z1) - 0.012;
-    if (T.scoop) {
-      const top = g0 + N.h, bfa = [xa, g0, z0], bfb = [xb, g0, z0], tfa = [xa + ti, top, z0 - 0.04], tfb = [xb - ti, top, z0 - 0.04], ra = [xa + ti * 0.5, g1, z1], rb = [xb - ti * 0.5, g1, z1];
-      F0.face([tfa, tfb, rb, ra], tUV, [0, 1, 0.1]); F0.face([bfa, tfa, ra], tUV, [-1, 0.3, 0]); F0.face([bfb, tfb, rb], tUV, [1, 0.3, 0]); F0.face([bfa, bfb, tfb, tfa], tUV, [0, 0.2, 1]);
-      const mc = mix(mix(bfa, bfb, 0.5), mix(tfa, tfb, 0.5), 0.5), m = (p) => { const q = mix(p, mc, 0.16); return [q[0], q[1] - 0.008, q[2] + 0.006]; };
-      F0.face([m(bfa), m(bfb), m(tfb), m(tfa)], 'grille', [0, 0.2, 1]);
-    } else F0.face([[xa, g0 + 0.01, z0], [xb, g0 + 0.01, z0], [xb, g1 + 0.012, z1], [xa, g1 + 0.012, z1]], 'grille', [0, 1, 0]);
-    if (T.vents) for (const s of [1, -1]) for (let k = 0; k < 3; k++) { const x0 = s * (N.ventX - 0.1), x1 = s * (N.ventX + 0.1), z = N.ventZ - k * 0.05, y = topY(s * N.ventX, z) + 0.006;
-      F0.face([[x0, y, z + 0.012], [x1, y, z + 0.012], [x1, y, z - 0.012], [x0, y, z - 0.012]], 'grille', [0, 1, 0]); }
-  }
   // ── front (part: front): bonnet cap, fascia, grille, lamps, bull bar ──
   const F = S('front'), zn = P.zNose + 0.004, hwN = lerpCurve(P.hw, P.zNose), z1 = P.zNose - 0.16;
   const fq = (x0, y0, x1, y1, sw, dz = 0) => F.quad([x0, y0, zn + dz], [x1, y0, zn + dz], [x1, y1, zn + dz], [x0, y1, zn + dz], sw);
@@ -278,12 +336,15 @@ function makeSoups(P, lod) {
   // so the grille and headlights sit on the Triton's tall blunt front (br-bwju.8), below the bonnet's edge
   const fy = lerpCurve(P.ySh, P.zNose) - 1.0;
   const slopeQuad = (pts, sw, s = 1) => { const q = pts.map(([x, y]) => onSlope(s * x, y + fy)); if (s > 0) F.quad(q[0], q[1], q[2], q[3], sw); else F.quad(q[0], q[3], q[2], q[1], sw); };
-  slopeQuad([[-0.48, 0.70], [0.48, 0.70], [0.54, 0.98], [-0.54, 0.98]], 'chrome'); // grille: the MQ's tall chrome trapezoid, dark slots cut in it
-  slopeQuad([[-0.54, 0.98], [0.54, 0.98], [0.55, 1.01], [-0.55, 1.01]], 'chrome'); // chrome grille header
-  if (T.grille) for (let i = 0; i < 7; i++) { const x = -0.42 + i * 0.14; slopeQuad([[x - 0.045, 0.74], [x + 0.045, 0.74], [x + 0.045, 0.95], [x - 0.045, 0.95]], 'grille'); } // the vertical slots
-  for (const s of [1, -1]) slopeQuad([[0.58, 0.84], [0.95, 0.91], [0.97, 1.03], [0.58, 0.99]], 'head', s); // swept headlights
-  // the "dynamic shield": a chrome sweep from the grille's lower corner out under each headlight
-  if (T.grille) for (const s of [1, -1]) slopeQuad([[0.46, 0.72], [0.86, 0.82], [0.87, 0.86], [0.50, 0.77]], 'chrome', s);
+  // Two horizontal chrome rails and a black central aperture. No manufacturer badge.
+  slopeQuad([[-0.47,0.76],[0.47,0.76],[0.51,0.98],[-0.51,0.98]], 'grille');
+  for (const y of [0.86,0.96]) slopeQuad([[-0.49,y],[0.49,y],[0.50,y+0.035],[-0.50,y+0.035]], 'chrome');
+  // Lenses follow the actual nose/bonnet transition, never above the underlying facet.
+  for (const s of [1,-1]) {
+    const lens=[[.52,1.045],[.79,1.06],[.80,1.10],[.52,1.095]].map(([x,y])=>onSlope(s*x,y+fy));
+    for(const v of lens) v[1]=Math.min(v[1],topY(v[0],v[2])+0.008);
+    F.face(lens,'head',[0,.4,1]);
+  }
   const ybN = lerpCurve(P.yBot, P.zNose);
   fq(-0.66, ybN + 0.07, 0.66, 0.62 + fy, 'trim'); // lower intake behind the bull bar
   const B = P.bar, bumpT = B.y0 + 0.20, bz = B.z + 0.05; // the bar's solid bumper: B.y0 - 0.06 up to bumpT, face at bz
@@ -302,24 +363,38 @@ function makeSoups(P, lod) {
     F.quad([-0.4, bumpT + 0.03, bz + 0.002], [0.4, bumpT + 0.03, bz + 0.002], [0.4, bumpT + 0.10, bz + 0.002], [-0.4, bumpT + 0.10, bz + 0.002], 'led');
   }
 
-  // ── back (part: back): the flat tray, the owner's canopy on it, the tray's lamps and plate, tow bar ──
-  // The tub under the deck is the tray's black frame and under-tray boxes (atlas.js draws them black behind the cab).
-  const Bk = S('back'), zt = P.zTail - 0.004, hwT = lerpCurve(P.hw, P.zTail), deckY = lerpCurve(P.yCr, P.zTail), TR = P.tray, C = P.canopy;
-  const trayLen = TR.z0 - TR.z1, trayMid = (TR.z0 + TR.z1) / 2, deckTop = deckY + 0.06;
-  Bk.box(0, deckY + 0.03, trayMid, C.hw * 2 + 0.04, 0.06, trayLen + 0.08, 'under'); // the tray deck, wider than the cab
-  const cUV = canopyUV(P, deckTop);
-  Bk.box(0, (deckTop + C.y1) / 2, (C.z0 + C.z1) / 2, C.hw * 2, C.y1 - deckTop, C.z0 - C.z1, { all: 'canopy', px: cUV, nx: cUV, nz: canopyRearUV(P, deckTop), py: canopyTopUV(P) }); // the canopy: black like the owner's, its lid in the seat colour so the chase cam sees whose it is
-  const bq = (x0, y0, x1, y1, sw) => Bk.quad([x1, y0, zt], [x0, y0, zt], [x0, y1, zt], [x1, y1, zt], sw);
-  // the sheet's tray lamps: a tall red bar up each corner (amber and white at the foot), a black step bumper with two reversing lamps
-  for (const s of [1, -1]) {
-    const x0 = s * hwT * 0.70, x1 = s * hwT * 0.97;
-    bq(Math.min(x0, x1), 0.88, Math.max(x0, x1), 1.34, 'tail');
-    if (T.tailLamps) { const xa = s * hwT * 0.70, xb = s * hwT * 0.80; bq(Math.min(xa, xb), 0.80, Math.max(xa, xb), 0.88, 'indicator'); }
+  // ── actual alloy flat tray and closed black canopy (owner tape, 2026-10-21) ──
+  // Open space under the deck is deliberate: there is no painted pickup tub. Rectangular rear lamps sit in a
+  // horizontal rear beam, with checker guards, mudflaps and under-tray boxes beneath the thin deck.
+  const Bk = S('back'), TR = P.tray, C = P.canopy, deckTop=TR.y, zt=TR.z1-0.006;
+  Bk.box(0, deckTop-.025, (TR.z0+TR.z1)/2, TR.hw*2, .05, TR.z0-TR.z1, 'chrome');
+  Bk.box(0, deckTop-.11, TR.z1+.035, TR.hw*2, .12, .07, 'trim');
+  Bk.box(0, (deckTop+C.y1)/2, (C.z0+C.z1)/2, C.hw*2, C.y1-deckTop, C.z0-C.z1,
+    {all:'canopy',px:canopyUV(P,deckTop),nx:canopyUV(P,deckTop),nz:canopyRearUV(P,deckTop),py:canopyTopUV(P)});
+  // The checker guard has sloped shoulders either side of the rear tyre, unlike a pickup flare.
+  for (const sign of [1,-1]) {
+    const guard=[[P.zRA+.57,.62],[P.zRA+.41,1.035],[P.zRA-.42,1.035],[P.zRA-.60,.62],
+      [P.zRA-.53,.62],[P.zRA-.36,.975],[P.zRA+.36,.975],[P.zRA+.50,.62]];
+    if(lod<2) Bk.slab(guard,sign>0?.65:-.9675,sign>0?.9675:-.65,'trim','chrome');
+    else Bk.face(guard.map(([z,y])=>[sign*.9675,y,z]),'chrome',[sign,0,0]);
+    if(lod<2) Bk.box(sign*.80,.48,P.zRA-.58,.30,.34,.025,'tyre');
+    else Bk.face([[sign*.65,.31,P.zRA-.60],[sign*.95,.31,P.zRA-.60],[sign*.95,.65,P.zRA-.60],[sign*.65,.65,P.zRA-.60]],'tyre',[0,0,-1]);
+    if(lod<2) Bk.box(sign*.735,.83,(P.zRA-.65+TR.z1+.08)/2,.34,.26,(P.zRA-.65)-(TR.z1+.08),'trim');
+    else Bk.face([[sign*.9175,.70,TR.z1+.08],[sign*.9175,.96,TR.z1+.08],[sign*.9175,.96,P.zRA-.65],[sign*.9175,.70,P.zRA-.65]],'trim',[sign,0,0]);
+    // Three adjacent amber/red/white LED blocks, never tall vertical corners.
+    const x=sign*.73;
+    for (const [dx,sw] of [[-.10,'indicator'],[0,'tail'],[.10,'head']]) {
+      const cx=x+sign*dx;
+      Bk.quad([cx+.045,.945,zt],[cx-.045,.945,zt],[cx-.045,1.025,zt],[cx+.045,1.025,zt],sw);
+    }
   }
-  Bk.box(0, 0.56, zt - 0.04, hwT * 2 + 0.06, 0.24, 0.16, 'trim'); // the step bumper
-  if (T.tailLamps) { for (const s of [1, -1]) bq(s * 0.55 - 0.06, 0.52, s * 0.55 + 0.06, 0.60, 'head'); // reversing lamps
-    bq(-0.22, 0.60, 0.22, 0.72, 'white'); } // number plate
-  if (T.tow) { Bk.box(0, 0.42, zt - 0.06, 0.55, 0.10, 0.14, 'trim'); Bk.prism([0, 0.46, zt - 0.14], [0, 0.56, zt - 0.14], 0.04, 5, 'chrome', 'chrome'); }
+  // Chassis rails and rear hitch stay visible beneath the tray, including at coarse tiers.
+  if(lod<2) for (const sign of [1,-1]) Bk.box(sign*.40,.69,(TR.z0+TR.z1)/2,.10,.15,TR.z0-TR.z1,'under');
+  if(lod===0) Bk.box(0,.64,TR.z1+.015,.38,.15,.02,'white');
+  else Bk.face([[-.19,.565,TR.z1],[-.19,.715,TR.z1],[.19,.715,TR.z1],[.19,.565,TR.z1]],'white',[0,0,-1]);
+  if(lod===0) Bk.box(0,.50,TR.z1-.035,.55,.08,.07,'trim');
+  Bk.box(0,.49,TR.z1-.085,.07,.06,.14,'trim');
+  Bk.prism([0,.49,TR.z1-.135],[0,.55,TR.z1-.135],.025,5,'chrome','chrome');
 
   // ── core details: mirrors, steps, snorkel, roof rack ──
   const M = P.mirror; // decoration: the collider stays the body's width
@@ -345,17 +420,13 @@ function makeSoups(P, lod) {
   // The platform rack: rails, slats, a wind deflector over the windscreen and the rolled awning on the left (+X). The slats
   // bunch at the ends so the seat number painted on the roof (anchor roof_number) shows through the middle.
   if (T.rack) {
-    const R = P.rack, zm = (R.z0 + R.z1) / 2, len = R.z0 - R.z1, Co = S('core');
-    if (T.rack === 'full') {
-      for (const s of [1, -1]) Co.box(s * R.hw, R.y, zm, 0.06, 0.06, len, 'trim'); // side rails
-      for (const z of [R.z0 - 0.05, R.z0 - 0.20, R.z1 + 0.20, R.z1 + 0.05]) Co.box(0, R.y + 0.01, z, R.hw * 2, 0.03, 0.08, 'trim'); // slats
-      for (const s of [1, -1]) for (const z of [R.z0 - 0.12, R.z1 + 0.12]) Co.box(s * (R.hw - 0.03), R.y - 0.06, z, 0.05, 0.10, 0.05, 'trim'); // feet
-      Co.box(0, R.y + 0.03, R.z0 + 0.05, R.hw * 2, 0.12, 0.03, 'trim', [-0.6, 0, 0]); // wind deflector
-      Co.prism([R.hw + 0.07, R.y + 0.03, R.z0 - 0.02], [R.hw + 0.07, R.y + 0.03, R.z1 + 0.02], 0.10, 6, 'awning', 'awning'); // the rolled awning
-    } else {
-      Co.box(0, R.y, zm, R.hw * 2, 0.05, len, 'trim'); // the rack as one flat platform
-      if (T.rack === 'platform') Co.prism([R.hw + 0.07, R.y + 0.03, R.z0 - 0.02], [R.hw + 0.07, R.y + 0.03, R.z1 + 0.02], 0.10, 6, 'awning', 'awning');
-    }
+    const R=P.rack,Co=S('core'), zm=(R.z0+R.z1)/2;
+    for (const sign of [1,-1]) Co.box(sign*R.hw,R.y,zm,.04,.04,R.z0-R.z1,'trim');
+    for (const z of [R.z0,R.z1]) Co.box(0,R.y,z,R.hw*2,.04,.05,'trim');
+    // Slats leave the number anchor visible between them. The awning belongs on the LEFT (+X).
+    if (lod===0) for (const z of [R.z0-.14,R.z1+.14]) Co.box(0,R.y,z,R.hw*2,.025,.04,'trim');
+    Co.prism([R.hw+.07,R.y+.065,R.z0+.12],[R.hw+.07,R.y+.065,R.z1-.12],.075,lod===0?6:4,'awning','awning');
+    if (lod===0) for (const sign of [1,-1]) for(const z of [R.z0-.12,R.z1+.12]) Co.box(sign*(R.hw-.06),R.y-.075,z,.04,.12,.05,'trim');
   }
 
   // ── wheels: a tyre (tread, sidewall ring, inner cap), a dark barrel behind the rim lip, five spokes and a hex hub;
@@ -395,21 +466,17 @@ function makeSoups(P, lod) {
     I.box(0, 0.68, zm, 1.0, 0.46, 0.8, 'chrome'); I.box(0, 0.98, zm - 0.05, 0.6, 0.12, 0.5, { all: 'trim', py: 'pink' }); }
   { const I = S('interior_cabin'); // behind the doors: two front seats and the rear bench
     for (const s of [1, -1]) I.box(s * 0.44, 0.78, (zA + P.zB) / 2 - 0.12, 0.5, 0.62, 0.5, 'trim');
-    I.box(0, 0.76, (P.zB + zC) / 2 - 0.1, 1.4, 0.56, 0.48, 'trim'); }
+    I.box(0, 0.76, (P.zB + cabBack) / 2 - 0.1, 1.4, 0.56, 0.48, 'trim'); }
   { const I = S('interior_boot'), zm = (zC + P.zTail) / 2; // under the tray: ladder chassis, the spare and a jerry can
-    I.box(0, 0.58, zm, 0.9, 0.16, 1.5, 'trim'); I.prism([0.25, 0.46, zm + 0.1], [0.25, 0.72, zm + 0.1], 0.34, 6, 'tyre', 'rim'); I.box(-0.45, 0.78, zm - 0.1, 0.34, 0.4, 0.2, 'pink'); }
+    I.box(0, 0.58, zm, 0.9, 0.16, 1.5, 'trim'); I.prism([0.25, 0.46, zm + 0.1], [0.25, 0.72, zm + 0.1], 0.34, 6, 'tyre', 'rim'); I.box(-0.45, 0.78, zm - 0.1, 0.34, 0.4, 0.2, 'trim'); }
 
   return { soups, stations: Z.length };
 }
 
 // Each part's pivot is its hinge line (plan §6.3): a loose part turns about its hinge axis through the pivot.
 // Doors: the front edge on the outer skin. Front and back: their top edge where they meet the body, at the shoulder line.
-// Wheels: the hub. Core: the vehicle origin. Measured on LOD0, because the contract wants one pivot per part at every LOD.
-export function pivots(P) {
-  const out = {};
-  for (const [id, so] of Object.entries(makeSoups(P, 0).soups)) out[id] = pivotOf(P, id, so.p);
-  return out;
-}
+// Wheels: the hub. Core: the vehicle origin. Frozen from the pre-rebuild production car at every LOD.
+export function pivots(P) { return Object.fromEntries(Object.entries(REST_PIVOTS).map(([id,p])=>[id,p.slice()])); }
 
 function pivotOf(P, id, positions) {
   if (id === 'core' || id.startsWith('interior_')) return [0, 0, 0];

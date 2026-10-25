@@ -15,9 +15,9 @@ import { Soup, exportsFor } from '../_kit/bike.js';
 
 // n: tyre facets (a multiple of 4), lug: tread blocks, rim: rim-ring facets, spokes: wire diameters; detail 0..2 gates the small parts.
 export const LODS = {
-  0: { n: 20, lug: 20, rim: 16, spokes: 8, rider: 2, detail: 2, sackSeg: [8, 5], ropeSeg: 12, spotSeg: 8 },
-  1: { n: 12, lug: 0, rim: 0, spokes: 0, rider: 1, detail: 1, sackSeg: [6, 4], ropeSeg: 8, spotSeg: 6 },
-  2: { n: 8, lug: 0, rim: 0, spokes: 0, rider: 0, detail: 0, sackSeg: [5, 3], ropeSeg: 6, spotSeg: 4 },
+  0: { n: 16, lug: 16, rim: 12, spokes: 8, rider: 2, detail: 2, sackSeg: [8, 5], ropeSeg: 12, spotSeg: 8 },
+  1: { n: 8, lug: 0, rim: 8, spokes: 4, rider: 1, detail: 1, sackSeg: [6, 3], ropeSeg: 8, spotSeg: 6 },
+  2: { n: 8, lug: 0, rim: 6, spokes: 3, rider: 0, detail: 0, sackSeg: [5, 3], ropeSeg: 3, spotSeg: 4 },
 };
 
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -58,12 +58,21 @@ function plate(S, pts, off, sw, swEdge = sw) {
 
 function wheel(S, z, R, W, T, look, extra) {
   const n = T.n, lh = T.lug ? 0.035 : 0, Rt = R - lh, Rc = Rt / Math.cos(Math.PI / n), hw = W / 2;
-  S.prism([-hw, R, z], [hw, R, z], Rc, n, look.tyre, T.rim ? look.tyre : look.cap, Math.PI / n);
+  // The reference has daylight between real spokes. A capped cylinder hid the entire wheel opening.
+  const inner = Rt * 0.62, rings = [-hw, hw].map(x => Array.from({length:n}, (_, i) => {
+    const a = Math.PI / n + i * Math.PI * 2 / n;
+    return [[x, R + Math.cos(a) * Rc, z + Math.sin(a) * Rc], [x, R + Math.cos(a) * inner, z + Math.sin(a) * inner]];
+  }));
+  for (let i=0;i<n;i++) { const j=(i+1)%n, a=rings[0],b=rings[1];
+    face(S,[a[i][0],a[j][0],b[j][0],b[i][0]],look.tyre,sub(avg([a[i][0],a[j][0],b[j][0],b[i][0]]),[0,R,z]));
+    if (T.detail >= 2) face(S,[a[i][1],b[i][1],b[j][1],a[j][1]],look.tyre,sub([0,R,z],avg([a[i][1],b[i][1],b[j][1],a[j][1]])));
+    for (const [ring,s] of [[a,-1],[b,1]]) face(S,[ring[i][0],ring[i][1],ring[j][1],ring[j][0]],look.tyre,[s,0,0]);
+  }
   if (T.lug) for (let k = 0; k < T.lug; k++) {
     const th = (k / T.lug) * Math.PI * 2, r = Rt + lh / 2 - 0.004;
     S.box([0, R + Math.cos(th) * r, z + Math.sin(th) * r], [hw * 1.7, lh, 0.06], look.tyre, [th, 0, 0]);
   }
-  if (T.rim) {
+  if (T.rim && T.detail >= 2) {
     const a = Rt * 0.62, b = Rt * 0.74;
     for (const s of [1, -1]) {
       const x = s * (hw + 0.003), ra = [], rb = [];
@@ -77,7 +86,11 @@ function wheel(S, z, R, W, T, look, extra) {
       }
     });
   }
-  if (T.detail) S.prism([-hw - 0.025, R, z], [hw + 0.025, R, z], R * 0.17, 6, look.hub, look.hub);
+  if (T.detail < 2) for(let i=0;i<T.spokes;i++) { const a=i*Math.PI/T.spokes, r=inner, d=.009;
+    const p=[R+Math.cos(a)*r,z+Math.sin(a)*r],q=[R-Math.cos(a)*r,z-Math.sin(a)*r],dy=-Math.sin(a)*d,dz=Math.cos(a)*d;
+    for(const side of [-1,1]) { const x=side*(hw+.002);face(S,[[x,p[0]+dy,p[1]+dz],[x,q[0]+dy,q[1]+dz],[x,q[0]-dy,q[1]-dz],[x,p[0]-dy,p[1]-dz]],look.spokes,[side,0,0]); }
+  }
+  if (T.detail) S.prism([-hw - 0.025, R, z], [hw + 0.025, R, z], R * 0.17, T.detail >= 2 ? 6 : 4, look.hub, look.hub);
   if (extra) extra(S);
 }
 
@@ -103,9 +116,9 @@ function makeSoups(P, lod) {
     if (D >= 1) { if (D >= 2) C.limb([x.x * 0.4, e.y + e.s[1] / 2 + 0.1, e.z + 0.2], [x.x * 0.9, e.y + 0.1, e.z + e.s[2] / 2 + 0.03], 0.05, 0.05, 'chrome');
       C.limb([x.x * 0.9, e.y + 0.1, e.z + e.s[2] / 2 + 0.03], [x.x, x.y0 - 0.03, x.z0 + 0.04], 0.045, 0.045, 'chrome'); }
     const at = (t) => [x.x, x.y0 + (x.y1 - x.y0) * t, x.z0 + (x.z1 - x.z0) * t];
-    C.prism(at(0), at(0.86), x.r, D >= 2 ? 8 : 6, 'pipe', 'under');
+    C.prism(at(0), at(0.86), x.r, D >= 2 ? 8 : D ? 6 : 4, 'pipe', 'under');
     if (D >= 2) { C.prism(at(0.28), at(0.4), x.r * 1.08, 8, 'chrome'); C.prism(at(0.55), at(0.67), x.r * 1.08, 8, 'chrome'); }
-    C.prism(at(0.86), at(1), x.r, D >= 2 ? 6 : 4, 'chrome', 'under', 0, x.r * 0.55);
+    C.prism(at(0.86), at(1), x.r, D >= 2 ? 6 : D ? 4 : 3, 'chrome', 'under', 0, x.r * 0.55);
     if (D >= 2) C.limb([x.x, x.y0 - 0.02, x.z0 - 0.12], [x.x * 0.3, x.y0 - 0.2, x.z0 - 0.16], 0.03, 0.03, 'frame'); }
   // swingarm both sides, chain and rear shock
   for (const s of D >= 2 ? [1, -1] : [0]) C.limb([s * 0.1, P.swingarm.y0, P.swingarm.z0], [s * 0.1, P.rR, P.zR], D >= 2 ? 0.05 : 0.2, 0.09, 'hub');
@@ -155,18 +168,19 @@ function makeSoups(P, lod) {
     if (D >= 2) F.box([0, L(0.22)[0], L(0.22)[1]], [fx * 2 + 0.06, 0.03, 0.06], 'frame'); }
   { const k = P.beak, w = k.w, t = 0.025, yc = (f) => k.y0 + (k.y1 - k.y0) * f, zc = (f) => k.z0 + (k.z1 - k.z0) * f;
     const r = (hw, y) => hex(hw * 0.8, y + t, hw, y, hw * 0.7, y - t);
-    const st = [{ z: zc(0), ring: r(w * 1.05, yc(0)) }, { z: zc(0.5), ring: r(w * 1.1, yc(0.42)) }, { z: zc(1), ring: r(w * 0.7, yc(1)) }];
-    loft(F, D >= 2 ? st : [st[0], st[2]], 'paint');
+    const st = [{ z: zc(0), ring: r(w * 1.05, yc(0)) }, { z: zc(k.bend), ring: r(w * 1.1, yc(0.10)) }, { z: zc(1), ring: r(w * 0.7, yc(1)) }];
+    loft(F, st, 'paint');
     if (D >= 2) for (const s of [1, -1]) F.limb([s * P.fork.x, P.rF + 0.3, P.zF - 0.12], [s * w * 0.8, yc(0.46) - 0.02, zc(0.46)], 0.025, 0.025, 'frame'); }
   { const h = P.shroud, hw = h.w / 2;
-    plate(F, [[-hw, h.y1, h.z - 0.09], [hw, h.y1, h.z - 0.09], [hw * 0.8, h.y0 + 0.17, h.z + 0.04], [0, h.y0, h.z + 0.04], [-hw * 0.8, h.y0 + 0.17, h.z + 0.04]], [0, 0, 0.1], 'paint');
+    const shell=[[-hw, h.y1, h.z - 0.09], [hw, h.y1, h.z - 0.09], [hw * 0.8, h.y0 + 0.17, h.z + 0.04], [0, h.y0, h.z + 0.04], [-hw * 0.8, h.y0 + 0.17, h.z + 0.04]];
+    if (D) plate(F, shell, [0,0,.1], 'paint'); else { face(F,shell,'paint',[0,0,-1]);face(F,shell.map(([x,y,z])=>[x,y,z+.1]),'paint',[0,0,1]); }
     const yl = (h.y0 + h.y1) / 2 - 0.1, zl = h.z + 0.12;
-    F.box([0, yl, zl], [0.25, 0.14, 0.06], 'lightbar');
+    if (D) F.box([0, yl, zl], [0.25, 0.14, 0.06], 'lightbar'); else { const q=[[-.125,yl-.07,zl+.03],[.125,yl-.07,zl+.03],[.125,yl+.07,zl+.03],[-.125,yl+.07,zl+.03]];face(F,q,'lightbar',[0,0,1]);face(F,q,'lightbar',[0,0,-1]); }
     if (D >= 2) F.decor(() => F.prism([0, yl, zl + 0.03], [0, yl, zl + 0.045], 0.052, 8, 'head', 'head', Math.PI / 8)); }
   { const L = P.spots, rr = L.r;
     F.limb([-(L.x + rr + 0.03), L.y - rr - 0.03, L.z - 0.03], [L.x + rr + 0.03, L.y - rr - 0.03, L.z - 0.03], 0.035, 0.035, 'frame');
     for (const s of [1, -1]) {
-      F.prism([s * L.x, L.y, L.z - 0.07], [s * L.x, L.y, L.z + 0.01], rr * 1.12, T.spotSeg, 'lightbar', D >= 2 ? 'lightbar' : 'head', Math.PI / T.spotSeg);
+      if (D) F.prism([s * L.x, L.y, L.z - 0.07], [s * L.x, L.y, L.z + 0.01], rr * 1.12, T.spotSeg, 'lightbar', D >= 2 ? 'lightbar' : 'head', Math.PI / T.spotSeg); else { const q=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[s*L.x+x*rr*.8,L.y+y*rr*.8,L.z+.01]);face(F,q,'head',[0,0,1]);face(F,q,'lightbar',[0,0,-1]); }
       if (D >= 2) F.decor(() => F.prism([s * L.x, L.y, L.z + 0.01], [s * L.x, L.y, L.z + 0.028], rr * 0.84, T.spotSeg, 'head', 'head', Math.PI / T.spotSeg));
       if (D >= 2) F.limb([s * (L.x + rr + 0.03), L.y - rr - 0.03, L.z - 0.03], [s * (L.x + rr + 0.03), L.y - rr - 0.03 - 0.17, L.z - 0.2], 0.03, 0.03, 'frame');
     } }
@@ -181,7 +195,7 @@ function makeSoups(P, lod) {
     if (D >= 1) {
       for (const s of [1, -1]) B.limb([s * hw, y, r.z0], [s * hw, y, r.z1], 0.03, 0.03, 'lightbar');
       B.limb([-hw, y, r.z1], [hw, y, r.z1], 0.03, 0.03, 'lightbar'); if (D >= 2) B.limb([-hw, y, r.z0], [hw, y, r.z0], 0.03, 0.03, 'lightbar');
-    } else B.box([0, y, zm], [r.w, 0.03, r.z0 - r.z1], 'lightbar');
+    } else B.quad([-hw,y,r.z0],[hw,y,r.z0],[hw,y,r.z1],[-hw,y,r.z1],'lightbar');
     if (D >= 2) { B.limb([-hw, y, zm], [hw, y, zm], 0.025, 0.025, 'lightbar'); B.limb([0, y, r.z0], [0, y, r.z1], 0.025, 0.025, 'lightbar'); }
     if (D >= 2) for (const s of [1, -1]) B.limb([s * hw, y, r.z0], [s * 0.12, P.fenderR.y0 - 0.08, r.z0 - 0.03], 0.03, 0.03, 'lightbar'); }
   { const o = P.rope, y = P.rack.y + 0.02;
@@ -191,15 +205,18 @@ function makeSoups(P, lod) {
   { const k = P.sack;
     B.blob([k.x, k.y, k.z], [k.r * 0.95, k.r * 1.1, k.r], T.sackSeg[0], T.sackSeg[1], 'sack', 'sack2');
     if (D >= 2) B.prism([k.x, k.y + k.r * 0.95, k.z], [k.x, k.y + k.r * 1.2, k.z], k.r * 0.28, 6, 'sack', 'sack', 0, k.r * 0.16);
-    B.box([k.x, k.y + k.r * 1.22, k.z], [0.06, 0.08, 0.06], 'rope'); } // the tie is the back's top at every LOD (its hinge height)
+    if (D) B.box([k.x, k.y + k.r * 1.22, k.z], [0.06, 0.08, 0.06], 'rope'); else B.limb([k.x,k.y+k.r,k.z],[k.x,k.y+k.r*1.48,k.z],.04,.04,'rope'); } // the tie is the back's top at every LOD (its hinge height)
 
   // ── rider, standing on the pegs: an MX helmet with a peak, goggles and chin bar; khaki shirt; jeans; black boots ──
   const J = P.rider, R = S('rider'), rl = T.rider, r2 = rl >= 2, hr = J.headR;
-  R.limb(J.hip, J.shoulder, 0.36, 0.22, 'shirt');
-  if (r2) { R.limb([0, J.shoulder[1] - 0.15, J.shoulder[2]], [0, J.shoulder[1] - 0.06, J.shoulder[2]], 0.4, 0.24, 'shirt');
-    R.box([0, J.hip[1] - 0.02, J.hip[2]], [0.34, 0.2, 0.25], 'pants'); }
+  // Shirt hem, waist and shoulders are separate sections: the reference is a tapered human torso, not a plank.
+  const torso = [[J.waistY,J.waistZ,0.16,0.105],[J.shoulder[1]-0.18,J.shoulder[2]-0.02,0.17,0.115],[J.shoulder[1]-0.04,J.shoulder[2],0.22,0.11]];
+  const tr = torso.map(([y,z,w,d]) => [[-w*.76,y,z-d],[w*.76,y,z-d],[w,y,z-d*.55],[w,y,z+d*.55],[w*.76,y,z+d],[-w*.76,y,z+d],[-w,y,z+d*.55],[-w,y,z-d*.55]]);
+  if (r2) { for(let i=0;i<tr.length-1;i++) for(let k=0;k<8;k++) { const j=(k+1)%8; face(R,[tr[i][k],tr[i][j],tr[i+1][j],tr[i+1][k]],'shirt',sub(avg([tr[i][k],tr[i][j],tr[i+1][j],tr[i+1][k]]),[0,torso[i][0],torso[i][1]])); }
+  face(R,tr[0],'shirt',[0,-1,0]);face(R,tr.at(-1),'shirt',[0,1,0]); } else R.limb([0,J.waistY,J.waistZ],[0,J.shoulder[1]-.06,J.shoulder[2]],.34,.22,'shirt');
+  if (r2) R.box([0, J.waistY, J.waistZ], [0.30, 0.16, 0.22], 'pants');
   for (const s of [1, -1]) {
-    const m = (p) => [s * p[0], p[1], p[2]], hip = [s * 0.11, J.hip[1], J.hip[2]], knee = m(J.knee), foot = m(J.foot), el = m(J.elbow), ha = m(J.hand);
+    const m = (p) => [s * p[0], p[1], p[2]], hip = [s * 0.11, J.waistY, J.waistZ], knee = m(J.knee), foot = m(J.foot), el = m(J.elbow), ha = m(J.hand);
     const sh = [s * 0.22, J.shoulder[1] - 0.07, J.shoulder[2]];
     if (rl >= 1) {
       R.limb(hip, knee, 0.14, 0.14, 'pants');
@@ -217,8 +234,9 @@ function makeSoups(P, lod) {
   if (rl >= 1) R.limb([0, J.shoulder[1], J.shoulder[2]], [J.head[0], J.head[1] - hr * 0.8, J.head[2]], 0.09, 0.09, 'skin');
   R.blob(J.head, [hr * 0.98, hr, hr * 1.06], r2 ? 8 : rl ? 6 : 5, r2 ? 5 : rl ? 4 : 3, 'helmet');
   R.box([0, J.head[1] - hr * 0.08, J.head[2] + hr * 0.92], [hr * 1.45, hr * 0.62, 0.04], 'goggles', [0.1, 0, 0]);
-  if (rl >= 1) R.box([0, J.head[1] + hr * 0.55, J.head[2] + hr * 0.95], [hr * 1.4, 0.03, hr * 0.9], 'helmet', [-0.25, 0, 0]); // peak
-  if (r2) { R.box([0, J.head[1] - hr * 0.65, J.head[2] + hr * 0.8], [hr * 0.9, hr * 0.4, hr * 0.5], 'helmet');
+  if (rl) R.box([0, J.head[1] + hr * 0.55, J.head[2] + hr * 0.95], [hr * 1.4, 0.03, hr * 0.9], 'helmet', [-0.25, 0, 0]); else { const y=J.head[1]+hr*.55,z=J.head[2]+hr*.6,w=hr*.7;const a=[[-w,y-.012,z],[-w,y+hr*.1,z+hr*.9],[-w,y+.015,z]],b=a.map(([,y,z])=>[w,y,z]);face(R,a,'helmet',[-1,0,0]);face(R,b,'helmet',[1,0,0]);for(let i=0;i<3;i++) { const j=(i+1)%3;face(R,[a[i],b[i],b[j],a[j]],'helmet',sub(avg([a[i],b[i],b[j],a[j]]),[0,y,z])); } } // peak
+  if (rl) R.box([0, J.head[1] - hr * 0.65, J.head[2] + hr * 0.8], [hr * 0.9, hr * 0.4, hr * 0.5], 'helmet');
+  if (r2) {
     R.box([0, J.head[1] - hr * 0.08, J.head[2] + hr * 0.88], [hr * 1.62, hr * 0.74, 0.03], 'lightbar', [0.1, 0, 0]); }
 
   // ── wheels: a big 21-inch-style front and an 18-inch-style rear, knobblies on silver spoked rims ──

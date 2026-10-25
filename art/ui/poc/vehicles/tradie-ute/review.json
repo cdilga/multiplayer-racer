@@ -2,68 +2,585 @@
   "id": "tradie-ute",
   "name": "Tradie Ute",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
+    "br-rgw6",
     "br-bwju.11",
     "br-bwju.8",
     "br-bwju.2",
     "br-bwju"
   ],
-  "summary": "The owner's dual-cab Mitsubishi Triton (MQ) as a roster car (R123), rebuilt against the owner's photos after the 2026-10-11 review (br-bwju.8): the black flat-top canopy on a flat tray, the platform roof rack with a wind deflector and a rolled awning on the left, the chrome \"dynamic shield\" grille with swept headlights on a tall blunt nose, a solid black bull bar (light bar, fog lamps, winch hook), the snorkel on the driver's A-pillar, a small lift, plain paint. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed. Rebuilt against its own contact sheet (br-bwju.11; it had none before, so Muse Image drew one from the Cruz layout and the br-bwju.8 render): 16-sided tyres on 8-spoke alloy rims in a dark barrel, widebody flares with a black lip, black-framed side glass in three panes with painted A, B and C pillars, a raised bonnet scoop with louvre vents, a chrome shield grille with seven dark slots under swept lamps, a solid bull bar with light bar, fog lamps, plate and winch hook, the tray painted in the seat colour with tall corner lamps and a black step bumper with reversing lamps and a tow ball, mirrors on stalks, and the canopy, rack and snorkel kept. LOD0 2080 triangles (qualified budget now 3000), LOD1 878, LOD2 596. The canopy's black sides, rack and awning keep their colours under every paint.",
+  "summary": "Owner-evidence rebuild: separate thin alloy flat tray, closed black TC-style canopy (no rear glazing or invented vents), horizontal amber/red/white tray lamps, checker guards and mudflaps, under-tray boxes and tow ball. The dual cab now follows the newer owner-model rake and narrower tapered roof; roof rack, left awning and right snorkel remain recognizable. Tray/canopy dimensions use the owner tape measurements of 2026-10-21. Existing wheel pivots, collider hull, anchors and handling are frozen. Cab/front styling remains a faceted interpretation, not a scan. LOD0/1/2 qualified budgets remain 2400/900/600; measured totals are recorded in validation.md.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": null,
   "reference": {
-    "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/tradie-ute/refs/prompts/), the Cruz Missile's sheet given as the layout example and the br-bwju.8 render as the content example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (perspective camera, the same mask pipeline on both sides, the contact-shadow band left out). The earlier comparison against the owner's Triton photo outline (IoU 0.717 at the side) stays in docs/evidence/br-bwju.8/.",
-    "compare": [
-      {
-        "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
-        "sheet": "media/reference-lod0/sheet.png",
-        "iou": {
-          "side": 0.8669,
-          "top": 0.965,
-          "front": 0.8898,
-          "rear": 0.8843
+    "sheet": "media/reference/20261021_204514.jpg",
+    "note": "Authoritative real night photos and owner tape dimensions supersede the earlier Muse sheet, whose score only measures resemblance to a generated composite. See refs/measured-reference.json, measured-check.json and the validation report. Real photos are perspective, occluded and uncalibrated: no photo silhouette IoU is claimed.",
+    "compare": [],
+    "measured": {
+      "kind": "owner-measured",
+      "oracle": "media/reference/measured-reference.json",
+      "report": "media/reference/measured-check.json",
+      "authority": "Owner tape measurements 2026-10-21 and photographs; these supersede generated reference sheets for Tradie Ute.",
+      "comparison": "Independent measured geometry envelopes and photo-derived cues; no old generated-sheet IoU.",
+      "rows": [
+        {
+          "label": "Tray width",
+          "target": 1.835,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.835
+            },
+            {
+              "lod": 1,
+              "value": 1.835
+            },
+            {
+              "lod": 2,
+              "value": 1.835
+            }
+          ],
+          "unit": "m"
         },
-        "weightedIou": 0.9024
-      },
-      {
-        "lod": 1,
-        "label": "LOD1 against the 'lod + 1' reference sheet",
-        "sheet": "media/reference-lod1/sheet.png",
-        "iou": {
-          "side": 0.8696,
-          "top": 0.9571,
-          "front": 0.8878,
-          "rear": 0.8909
+        {
+          "label": "Tray length",
+          "target": 1.6199999999999999,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.62
+            },
+            {
+              "lod": 1,
+              "value": 1.62
+            },
+            {
+              "lod": 2,
+              "value": 1.62
+            }
+          ],
+          "unit": "m"
         },
-        "weightedIou": 0.9018
-      },
-      {
-        "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
-        "sheet": "media/reference-lod2/sheet.png",
-        "iou": {
-          "side": 0.9098,
-          "top": 0.9526,
-          "front": 0.8834,
-          "rear": 0.8933
+        {
+          "label": "Tray deck height",
+          "target": 1.09,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.09
+            },
+            {
+              "lod": 1,
+              "value": 1.09
+            },
+            {
+              "lod": 2,
+              "value": 1.09
+            }
+          ],
+          "unit": "m"
         },
-        "weightedIou": 0.9162
-      }
-    ]
+        {
+          "label": "Canopy width",
+          "target": 1.772,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.772
+            },
+            {
+              "lod": 1,
+              "value": 1.772
+            },
+            {
+              "lod": 2,
+              "value": 1.772
+            }
+          ],
+          "unit": "m"
+        },
+        {
+          "label": "Canopy length",
+          "target": 1.5,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.5
+            },
+            {
+              "lod": 1,
+              "value": 1.5
+            },
+            {
+              "lod": 2,
+              "value": 1.5
+            }
+          ],
+          "unit": "m"
+        },
+        {
+          "label": "Canopy height above deck",
+          "target": 0.845,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 0.8449999999999998
+            },
+            {
+              "lod": 1,
+              "value": 0.8449999999999998
+            },
+            {
+              "lod": 2,
+              "value": 0.8449999999999998
+            }
+          ],
+          "unit": "m"
+        },
+        {
+          "label": "Canopy top height",
+          "target": 1.935,
+          "actual": [
+            {
+              "lod": 0,
+              "value": 1.935
+            },
+            {
+              "lod": 1,
+              "value": 1.935
+            },
+            {
+              "lod": 2,
+              "value": 1.935
+            }
+          ],
+          "unit": "m"
+        }
+      ],
+      "pass": true,
+      "lods": [
+        {
+          "lod": 0,
+          "pass": true,
+          "checks": [
+            {
+              "name": "tray: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9175,
+                  1.0400000000000003,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.3899999999999997
+                ]
+              ],
+              "expected": [
+                [
+                  -0.9175,
+                  1.04,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.39
+                ]
+              ]
+            },
+            {
+              "name": "canopy: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.886,
+                  1.0900000000000003,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ],
+              "expected": [
+                [
+                  -0.886,
+                  1.09,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ]
+            },
+            {
+              "name": "cab: tapered roof",
+              "pass": true,
+              "actual": [
+                [
+                  -0.6559999999999999,
+                  1.806,
+                  -1.24
+                ],
+                [
+                  0.6559999999999999,
+                  1.864,
+                  0.08
+                ]
+              ],
+              "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+            },
+            {
+              "name": "canopy: black lid",
+              "pass": true,
+              "actual": true,
+              "expected": "UV-selected canopy roof RGB <65"
+            },
+            {
+              "name": "awning: left roof edge",
+              "pass": true,
+              "actual": [
+                [
+                  0.7325,
+                  2.045,
+                  -1.2200000000000002
+                ],
+                [
+                  0.845,
+                  2.109951905283833,
+                  0.62
+                ]
+              ],
+              "expected": "nonempty actual geometry x>.73,y>1.99"
+            },
+            {
+              "name": "snorkel: right A pillar",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9700000000000001,
+                  1.8103185451157637,
+                  0.07
+                ],
+                [
+                  -0.9518198051533947,
+                  1.99,
+                  0.21000000000000002
+                ]
+              ],
+              "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+            }
+          ],
+          "injections": [
+            {
+              "name": "canopy raised 15cm",
+              "detected": true,
+              "gate": "canopy: tape envelope"
+            },
+            {
+              "name": "tray width enlarged 20%",
+              "detected": true,
+              "gate": "tray: tape envelope"
+            },
+            {
+              "name": "cab roof widened 35%",
+              "detected": true,
+              "gate": "cab: tapered roof"
+            }
+          ]
+        },
+        {
+          "lod": 1,
+          "pass": true,
+          "checks": [
+            {
+              "name": "tray: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9175,
+                  1.0400000000000003,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.3899999999999997
+                ]
+              ],
+              "expected": [
+                [
+                  -0.9175,
+                  1.04,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.39
+                ]
+              ]
+            },
+            {
+              "name": "canopy: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.886,
+                  1.0900000000000003,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ],
+              "expected": [
+                [
+                  -0.886,
+                  1.09,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ]
+            },
+            {
+              "name": "cab: tapered roof",
+              "pass": true,
+              "actual": [
+                [
+                  -0.6559999999999999,
+                  1.806,
+                  -1.24
+                ],
+                [
+                  0.6559999999999999,
+                  1.864,
+                  0.08
+                ]
+              ],
+              "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+            },
+            {
+              "name": "canopy: black lid",
+              "pass": true,
+              "actual": true,
+              "expected": "UV-selected canopy roof RGB <65"
+            },
+            {
+              "name": "awning: left roof edge",
+              "pass": true,
+              "actual": [
+                [
+                  0.77,
+                  2.045,
+                  -1.2200000000000002
+                ],
+                [
+                  0.845,
+                  2.12,
+                  0.62
+                ]
+              ],
+              "expected": "nonempty actual geometry x>.73,y>1.99"
+            },
+            {
+              "name": "snorkel: right A pillar",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9700000000000001,
+                  1.8137791465337476,
+                  0.07
+                ],
+                [
+                  -0.9518198051533947,
+                  1.99,
+                  0.21000000000000002
+                ]
+              ],
+              "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+            }
+          ],
+          "injections": [
+            {
+              "name": "canopy raised 15cm",
+              "detected": true,
+              "gate": "canopy: tape envelope"
+            },
+            {
+              "name": "tray width enlarged 20%",
+              "detected": true,
+              "gate": "tray: tape envelope"
+            },
+            {
+              "name": "cab roof widened 35%",
+              "detected": true,
+              "gate": "cab: tapered roof"
+            }
+          ]
+        },
+        {
+          "lod": 2,
+          "pass": true,
+          "checks": [
+            {
+              "name": "tray: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9175,
+                  1.0400000000000003,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.3899999999999997
+                ]
+              ],
+              "expected": [
+                [
+                  -0.9175,
+                  1.04,
+                  -3.01
+                ],
+                [
+                  0.9175,
+                  1.09,
+                  -1.39
+                ]
+              ]
+            },
+            {
+              "name": "canopy: tape envelope",
+              "pass": true,
+              "actual": [
+                [
+                  -0.886,
+                  1.0900000000000003,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ],
+              "expected": [
+                [
+                  -0.886,
+                  1.09,
+                  -2.98
+                ],
+                [
+                  0.886,
+                  1.935,
+                  -1.48
+                ]
+              ]
+            },
+            {
+              "name": "cab: tapered roof",
+              "pass": true,
+              "actual": [
+                [
+                  -0.6559999999999999,
+                  1.806,
+                  -0.65
+                ],
+                [
+                  0.6559999999999999,
+                  1.864,
+                  0.08
+                ]
+              ],
+              "expected": "half width <= .79m at y1.75..1.89; newer source estimate .69m + facet tolerance"
+            },
+            {
+              "name": "canopy: black lid",
+              "pass": true,
+              "actual": true,
+              "expected": "UV-selected canopy roof RGB <65"
+            },
+            {
+              "name": "awning: left roof edge",
+              "pass": true,
+              "actual": [
+                [
+                  0.77,
+                  2.045,
+                  -1.2200000000000002
+                ],
+                [
+                  0.845,
+                  2.12,
+                  0.62
+                ]
+              ],
+              "expected": "nonempty actual geometry x>.73,y>1.99"
+            },
+            {
+              "name": "snorkel: right A pillar",
+              "pass": true,
+              "actual": [
+                [
+                  -0.9700000000000001,
+                  1.8137791465337476,
+                  0.07
+                ],
+                [
+                  -0.9518198051533947,
+                  1.99,
+                  0.21000000000000002
+                ]
+              ],
+              "expected": "nonempty actual geometry x<-.89,y>1.78,z.04...4"
+            }
+          ],
+          "injections": [
+            {
+              "name": "canopy raised 15cm",
+              "detected": true,
+              "gate": "canopy: tape envelope"
+            },
+            {
+              "name": "tray width enlarged 20%",
+              "detected": true,
+              "gate": "tray: tape envelope"
+            },
+            {
+              "name": "cab roof widened 35%",
+              "detected": true,
+              "gate": "cab: tapered roof"
+            }
+          ]
+        }
+      ]
+    }
   },
   "turntable": {
     "assetJson": "media/model/tradie-ute.asset.json",
     "atlas": "media/model/tradie-ute.atlas.png",
     "emissive": "media/model/tradie-ute.emissive.png",
-    "sheet": "media/turntable/lods.png",
+    "sheet": "media/turntable/ladder.png",
     "lods": [
       {
         "lod": 0,
         "glb": "media/model/tradie-ute.lod0.glb",
-        "tris": 2039,
+        "tris": 1402,
         "draws": 11,
         "maxTris": 2400,
         "withinBudget": true
@@ -71,7 +588,7 @@
       {
         "lod": 1,
         "glb": "media/model/tradie-ute.lod1.glb",
-        "tris": 860,
+        "tris": 896,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -79,7 +596,7 @@
       {
         "lod": 2,
         "glb": "media/model/tradie-ute.lod2.glb",
-        "tris": 582,
+        "tris": 586,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -338,7 +855,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (white texels tint, the canopy's lid and the tray included; the black canopy sides, bull bar, flares, rack, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, in the gap the rack's slats leave) and in the HUD badge. paints-strip.png shows white plus five player colours."
+    "pattern": "Player colour on cab/body paint key. Canopy including lid, alloy tray, rack, awning, bar, glass, tyres and lamps remain neutral; roof number remains above the cab."
   },
   "inWorld": [
     {
@@ -367,31 +884,19 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (origin between the axles; anchors unchanged; part ids and hinge layout unchanged; mass fractions unchanged)"
+        "text": "contract and byte-reproducible bake at unchanged budgets."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2080 <= 2400 <= 3000; LOD1 878 <= 900; LOD2 596 <= 600"
-      },
-      {
-        "result": "WARN",
-        "text": "silhouette: LOD0 weighted IoU 0.8729 -> 0.9024 (side 0.851 -> 0.867, top 0.939 -> 0.965, front 0.833 -> 0.890, rear 0.840 -> 0.884); LOD1 0.8725 -> 0.9018; LOD2 0.8847 -> 0.9162. Short of the skill's ~0.95: the sheet's body is taller and narrower than the sim's 0.43 m wheels on a 0.88 m track allow, and its tyres are bigger than the sim's"
+        "text": "independent owner-tape envelopes and named photo cues at all LODs; old candidate and injected defects rejected."
       },
       {
         "result": "PASS",
-        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): framed side glass, flares, 8-spoke rims, bonnet scoop, shield grille, swept lamps, bull bar with light bar, fog lamps, plate and winch hook, painted tray with tall lamps, step bumper with reversing lamps, canopy hardware, rack, snorkel, mirrors, J-line and shoulder line"
+        "text": "frozen collider bytes, part contract and anchors unchanged."
       },
       {
         "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
-      },
-      {
-        "result": "PASS",
-        "text": "damage: intact -> loose -> detached for every part (damage-strip.png); dark bays behind the missing panels"
-      },
-      {
-        "result": "WARN",
-        "text": "LOD1 and LOD2 drop the full rack, the snorkel's bends and the scoop's vents to fit their budgets; the grille's slots read as a grey block at those sizes"
+        "text": "standalone baked-loader visual review; no new host/device or driving measurement claimed."
       }
     ],
     "report": "media/gate/validation.md"

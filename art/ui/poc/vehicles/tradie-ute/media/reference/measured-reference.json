@@ -1,0 +1,95 @@
+{
+  "schema": "jj.vehicle.measured-reference.v1",
+  "authority": "Owner tape measurements 2026-10-21 and photographs; these supersede generated reference sheets for Tradie Ute.",
+  "sourceRepository": "eris:/home/cdilga/Work/dev/morayfield-house-3d",
+  "sourcePaths": {
+    "measurements": "studies/landscape/catalog/vehicles/fleet.json units.triton",
+    "code": "studies/landscape/catalog/vehicles/build_vehicles.py build_triton()",
+    "newerMesh": "studies/landscape/build/_vehicles/triton.glb",
+    "photos": "twin/house/interior/evidence/owner-garage-2026-10-21/small/"
+  },
+  "sourceSha256": {
+    "20261021_204514.jpg": "6c94df64d9b53fae539b43fcdf8337f677041f513489433fac28f0862e88359e",
+    "20261021_204532.jpg": "480ffa49ba533a4e16173ccc9c2b40d396da2317cf465e71c16ee31302d517e6",
+    "fleet.json": "90995fd44b244f13bb6e0b76a003feb16ea7c614e6d08c3e96b20140ceebb04f",
+    "build_vehicles.py": "9ae67de5ed529baaf6e8bde0e88cace332543317b301639efd93440d783fe163",
+    "triton.glb": "2393ebcd43e12b3f65376e8590eca03dec0a5b2fdf5a66ea031c88142eefff8e"
+  },
+  "measurement": {
+    "evidence": "measured (owner 2026-10-21), cm converted to m",
+    "bullbar_to_tray_lip": 5.43,
+    "bullbar_to_towball_tip": 5.59,
+    "tray_length": 1.62,
+    "tray_width": 1.835,
+    "tray_deck_height": 1.09,
+    "arches_proud_of_tray_each_side": 0.05,
+    "canopy_length": 1.5,
+    "canopy_width_max": 1.772,
+    "canopy_height_above_deck": 0.845,
+    "canopy_inset_rear": 0.03,
+    "canopy_inset_sides": 0.0315,
+    "canopy_front_behind_tray_front": 0.09,
+    "canopy_top_above_ground": 1.935,
+    "receiver_face_ahead_of_tray_lip": 0.03,
+    "towball_tip_behind_receiver_face": 0.19,
+    "derived_frame": "x from the rear axle: bull bar +3.92 (published wheelbase + overhang, estimated bar) -> tray lip 3.92-5.43 = -1.51, tray front -1.51+1.62 = +0.11 (3 cm behind the cab back at +0.14: consistent), canopy -1.48..+0.02, receiver face -1.48, ball tip -1.67, ball centre -1.645 (50 mm ball)",
+    "will_change": "tray deck height 1.09 is on the CURRENT suspension; the owner says it will change - every height above the deck moves with it",
+    "roof": "photo 20261021_204514: a roof rack with a rolled awning bag along the left (passenger) roof edge is visible; whether a roof bag is on top is not resolvable in the night photos. highest_point stays the owner's earlier 2.20 estimate (rack + bag) - NOT measured; the canopy top 1.935 is measured"
+  },
+  "frame": "Newer model forward x is mapped to game z=x-1.5; ground y is unchanged. Published 3.0m wheelbase is reference. Existing game wheel pivots stay z\u00b11.45, y .43 and x\u00b1.88 for unchanged handling; actual source tyre diameter .802m is therefore not a claimed match.",
+  "visualOracles": {
+    "tray": {
+      "bounds": [
+        [
+          -0.9175,
+          1.04,
+          -3.01
+        ],
+        [
+          0.9175,
+          1.09,
+          -1.39
+        ]
+      ],
+      "tolerance": 0.006
+    },
+    "canopy": {
+      "bounds": [
+        [
+          -0.886,
+          1.09,
+          -2.98
+        ],
+        [
+          0.886,
+          1.935,
+          -1.48
+        ]
+      ],
+      "tolerance": 0.006
+    },
+    "cab": {
+      "beltHeight": 1.311,
+      "roofHeight": 1.856,
+      "roofHalfWidth": 0.69,
+      "bodyHalfWidth": 0.885,
+      "tolerance": 0.055,
+      "evidence": "Published/estimated newer model dimensions; photo shows visibly tapered roof and MQ windshield rake, not orthographic calibration."
+    },
+    "awning": {
+      "side": "+x",
+      "evidence": "visible rolled bag on passenger/left roof edge"
+    },
+    "snorkel": {
+      "side": "-x",
+      "evidence": "earlier owner source right/driver A pillar"
+    }
+  },
+  "limits": [
+    "No photograph is orthographic; no claim of calibrated photo silhouette IoU.",
+    "Canopy rear is closed and unglazed; newer script comment describing a rear door is contradicted by owner photo evidence.",
+    "Rack highest point 2.20m is an earlier owner estimate including a possible roof bag; night photos do not resolve a roof bag, so none invented.",
+    "Body forward position, cab shape and rack height are estimates from newer code source; tray/canopy widths and sizes are tape measurements.",
+    "Frozen old collider hull deliberately differs from refined visual shell."
+  ]
+}
