@@ -4,7 +4,7 @@
   "source": {
     "sidecar": "art/vehicles/postie-bike/postie-bike.asset.json",
     "sidecar_sha256": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
-    "lod0_sha256": "34b9315c869d20e8c4b53c29eac8b679924331ee73515b5c05fe77ec4a50abad"
+    "lod0_sha256": "ea28c343325a274e2914d3b41314a930e1cf42409e3d9abba3361d581a880d3f"
   },
   "geometry": {
     "hull": [

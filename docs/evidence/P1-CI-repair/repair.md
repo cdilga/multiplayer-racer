@@ -825,3 +825,42 @@ The complete software file then passes both real-phone journeys:
 Chromium **70,805 ms**, WebKit **26,168 ms**, **97,882 ms** total; only the
 already GPU-only 1/4/24 draw-count case is skipped on software as before.
 Receipts: `r13-software-before.txt`, `r13-software-after.txt`.
+
+### Main 9400: roster profiles retained old LOD0 fingerprints
+
+Native rust-lint validates the new Cruz bake (**2052/897/590** triangles) but
+rejects its profile's source fingerprint. Local native validation reproduces
+the same error. The model author's explicit handoff (Agent Mail **3946**)
+asks to check all six revised vehicles while preserving their frozen physics.
+All six fail the same profile source-link check; unchanged Hawk Dash passes.
+
+Run the existing `jj vehicle sync` on those six profiles. A structured JSON
+differential proves each changes **only `source.lod0_sha256`** and its new
+fingerprint equals SHA-256 of the actual LOD0 GLB. Geometry, tuning and sidecar
+hashes are identical; Hawk Dash is byte-unchanged. A second sync is idempotent.
+The existing native gate now discovers every sidecar/profile pair from
+`web/shared/src/roster.json`, hydrates their LFS data and validates the complete
+roster, rather than checking only Cruz. No duplicate hash implementation or
+new validation helper is introduced.
+
+Validation: shell syntax passes; the exact new roster-collection function
+passes all **seven sidecars + seven profiles + surface-strips map** using the
+existing Mac native `jj` binary instead of compiling Cargo again. The native
+`idle-settle` scenario passes all envelopes, baselines and **600-tick** replay
+(`031125cb8fac91609f9853e0ffbe885872cd094a0b097d46b3cc098233bf4af3`).
+Receipts: `roster-source-validation.txt`, `roster-source-settle.json`.
+
+Vehicle Model Validation: **PASS for this fingerprint-only repair scope**.
+R81/R86, Playtest-1 §6 and master §12.3–12.5 apply; no model, mesh, collider,
+material, damage or rendering value changes. Reused visual/source evidence:
+`docs/evidence/P1-V-roster-visual/self-review.md` and the author's per-vehicle
+reports. Their existing global artistic FAIL/blockers remain explicit and
+are not waived or closed by this metadata repair. The prior 172 model checks
+and native sidecar checks missed profile coupling; this gate closes that gap.
+
+The same main batch also has a separate compiler SIGSEGV in rust-test partition
+2 on `truenas-ci`, while compiling unchanged Asupersync with rustc **1.99.0**.
+Its trace ends in generic-argument interning/trait solving and suggests a
+larger compiler stack; no stack/memory setting is changed without a measured
+reproduction. Native and WASM check/clippy passed elsewhere in the batch.
+This is not attributed to the vehicle metadata and remains under triage.
