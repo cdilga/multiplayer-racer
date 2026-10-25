@@ -1,0 +1,32 @@
+host signalling {"roomId":"rm-db50a0aaa9b0bb9f","code":"6YU9","sse":"open","sseReconnects":0,"reRegistrations":0,"peers":[{"endpointId":"c-ef59e70a29a4","gen":929269796,"pc":"connected","staleIgnored":0,"negotiation":{"gen":929269796,"stage":"done","startedAt":2607.699999988079,"stageAt":2904,"ageMs":79981.19999998808,"stageAgeMs":79684.89999997616},"channels":{"state":"open","cmd":"open"}},{"endpointId":"c-072871a0fd22","gen":929269814,"pc":"connected","staleIgnored":0,"negotiation":{"gen":929269814,"stage":"done","startedAt":4173.800000011921,"stageAt":4519.599999964237,"ageMs":78415.09999996424,"stageAgeMs":78069.30000001192},"channels":{"state":"open","cmd":"open"}}],"bytesIn":54428,"bytesOut":19849,"undeliverable":0}
+✖ chromium: identity matches real phones, car paint, HUD and other-view nameplates (90737.398958ms)
+✔ webkit: identity matches real phones, car paint, HUD and other-view nameplates (15396.380292ms)
+﹣ identity patterns add zero draws at 1/4/24 tiles; roof numbers and CVD sheet stay distinct (0.282916ms) # rendered 24-tile cohort needs GPU
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 106906.33625
+
+✖ failing tests:
+
+test at ../../../../../private/tmp/jj-ci-r13-ready-local.mjs:27:42
+✖ chromium: identity matches real phones, car paint, HUD and other-view nameplates (90737.398958ms)
+  locator.click: Timeout 30000ms exceeded.
+  Call log:
+  [2m  - waiting for locator('.jj-foot [data-act=menu]')[22m
+  [2m    - locator resolved to <button type="button" data-act="menu" class="foot-btn" aria-haspopup="dialog">Pause</button>[22m
+  [2m  - attempting click action[22m
+  [2m    - waiting for element to be visible, enabled and stable[22m
+  [2m    - element is visible, enabled and stable[22m
+  [2m    - scrolling into view if needed[22m
+  [2m    - done scrolling[22m
+  [2m    - performing click action[22m
+  
+      at TestContext.<anonymous> (/private/tmp/jj-ci-r13-ready-local.mjs:88:54) {
+    name: 'TimeoutError',
+    log: [ "  - waiting for locator('.jj-foot [data-act=menu]')", '    - locator resolved to <button type="button" data-act="menu" class="foot-btn" aria-haspopup="dialog">Pause</button>', '  - attempting click action', '    - waiting for element to be visible, enabled and stable', '    - element is visible, enabled and stable', '    - scrolling into view if needed', '    - done scrolling', '    - performing click action' ]
+  }

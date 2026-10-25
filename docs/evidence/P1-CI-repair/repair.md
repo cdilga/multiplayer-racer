@@ -809,3 +809,19 @@ status immediately after it still showed **2979 ms** countdown: that API treats
 the returned Promise as truthy here. The final setup explicitly awaits worker
 status inside a bounded page evaluation. That failed candidate is not counted
 as passing validation.
+
+### R13 software-only menu interaction after full-resolution rendering
+
+The full R13 candidate on software Chromium reaches the native Pause click at
+1080p, then times out **30 s** at “performing click action”; both real phones
+remain connected and all identity/resize assertions before the click pass.
+Chromium **90,737 ms** fails; WebKit **15,396 ms** passes.
+
+After the existing rendering/resize checks, stop continuous software drawing
+while keeping the sim live, then explicitly paint the fullscreen and exit
+captures. GPU mode remains continuously rendered, and every real button,
+fullscreen state, resolution, identity assertion and deadline stays intact.
+The complete software file then passes both real-phone journeys:
+Chromium **70,805 ms**, WebKit **26,168 ms**, **97,882 ms** total; only the
+already GPU-only 1/4/24 draw-count case is skipped on software as before.
+Receipts: `r13-software-before.txt`, `r13-software-after.txt`.

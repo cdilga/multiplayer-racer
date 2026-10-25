@@ -1,0 +1,11 @@
+✔ chromium: identity matches real phones, car paint, HUD and other-view nameplates (70804.598458ms)
+✔ webkit: identity matches real phones, car paint, HUD and other-view nameplates (26167.66475ms)
+﹣ identity patterns add zero draws at 1/4/24 tiles; roof numbers and CVD sheet stay distinct (8.651041ms) # rendered 24-tile cohort needs GPU
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 97881.545333

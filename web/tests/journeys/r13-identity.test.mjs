@@ -82,11 +82,18 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       await host.setViewportSize({width,height}); await host.waitForTimeout(200); await shot(host,`${engine.name()}-host-${width}x${height}`);
     }
     if(engine===chromium) {
+      // After the rendering checks, software draws at 1080p can starve input IPC.
+      // Keep the sim live and explicitly paint the menu captures; GPU stays live throughout.
+      if (!gpu) await host.evaluate(() => window.__jjRender.hold());
       await host.locator('.jj-foot [data-act=menu]').click();
       await host.getByRole('button',{name:'Display & sound',exact:true}).click();
       await host.getByRole('button',{name:'Full screen',exact:true}).click();
-      await wait(host,()=>!!document.fullscreenElement); await shot(host,'chromium-host-fullscreen');
-      await host.evaluate(()=>document.exitFullscreen()); await shot(host,'chromium-host-after-fullscreen');
+      await wait(host,()=>!!document.fullscreenElement);
+      if (!gpu) await host.evaluate(() => window.__jjRender.frame());
+      await shot(host,'chromium-host-fullscreen');
+      await host.evaluate(()=>document.exitFullscreen());
+      if (!gpu) await host.evaluate(() => window.__jjRender.frame());
+      await shot(host,'chromium-host-after-fullscreen');
     }
     assert.deepEqual(errors,[]);
   } catch(e) {console.log('host signalling',JSON.stringify(await host?.evaluate(()=>window.__jjNet?.inspect()).catch(()=>null)));throw e;}
