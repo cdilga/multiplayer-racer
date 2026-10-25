@@ -18,17 +18,18 @@ concurrency:
 jobs:
   publish:
     runs-on: jammers-deploy
+    # Already present on TrueNAS (the same image as main CI): browser + system libraries are baked in.
+    # Installing Chromium's apt dependencies in every fresh deploy container took over 12 minutes in run 9150.
+    container:
+      image: jj-ci:d161a07c0df4
     timeout-minutes: 40
     env:
-      PLAYWRIGHT_BROWSERS_PATH: /root/.cache/ms-playwright
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
       GITEA_TOKEN: ${{ github.token }}  # tags and commit statuses on this repo (the record)
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: infra
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 26.10.0
       # The tools take minutes; a poll with nothing to do skips them (and the publish).
       - name: Anything to do?
         id: work
@@ -47,7 +48,8 @@ jobs:
         run: |
           python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
           npm install --no-audit --no-fund --silent
-          npx playwright install --with-deps chromium >/dev/null
+          # Use the image's matching Chromium headless shell; no apt or browser download per publish.
+          test -d "$PLAYWRIGHT_BROWSERS_PATH"
       - name: Publish
         if: steps.work.outputs.go == 'true'
         env:

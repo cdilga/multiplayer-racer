@@ -52,3 +52,9 @@ On Mac with Chromium **software rendering**, G01 DOM stability and next-round cl
 On Linux/eris with software Chromium, the G07 disconnected-seat removal **passes, 92,000 ms**, and the R09 real-two-controller reel/automatic-next-round check **passes, 116,122 ms**. This confirms the round fixes on software GL as well as GPU.
 
 Launcher-only edits now select the always-on checks job, whose workflow regression suite already covers `scripts/agents/`. Dry selection of `start.py`, the OMP overlay and `test_workflow.py` selects no game/Rust/browser/image jobs; changes to the CI planner itself still select the full matrix for validation.
+
+### Preview tool installation
+
+Run 9148 built its image successfully. Scheduled publisher 9150 remained in Tools: inside its deployment container, `apt-get`/`dpkg` had spent over twelve minutes installing Chromium system packages (Publish had not started). The deploy runner already has `jj-ci:d161a07c0df4`, the same pinned Ubuntu 24/Node/Playwright image as main CI. Use that image and its `/ms-playwright` headless shell, dropping per-run apt/browser installation and redundant Node setup.
+
+Verified on TrueNAS in a fresh disposable container from that exact image: pip/websockets 15.0.1 installation, Playwright 1.62.1 installation, Chromium launch, a real page title and browser close all succeed. Deploy-secret isolation check and `git diff --check` pass. This changes deployment tooling only, not the running production app.
