@@ -35,7 +35,9 @@ const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { ti
 const shot = (page, name) => (process.env.JJ_CAPTURE_DIR ? page.screenshot({ path: join(out, `${name}.jpg`), type: 'jpeg', quality: 80 }) : null);
 const between = (host) => host.evaluate(() => window.__jjRoom.view().between);
 
-test('three phones vote the next track: most votes win, a tie is a Rematch, the host can choose; the TV flies the new track, and a press skips it', { timeout: 900_000 }, async () => {
+// Voting uses a ten-second game deadline and the flyover is measured frame by frame. On software GL, three phone
+// interactions consumed the vote window (CI 9116); preserve the real deadlines on the existing GPU lane.
+test('three phones vote the next track: most votes win, a tie is a Rematch, the host can choose; the TV flies the new track, and a press skips it', { timeout: 900_000, skip: !gpu && 'three-phone vote deadlines and flyover timing run on the GPU lane (CI 9116)' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));

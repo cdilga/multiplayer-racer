@@ -12,6 +12,10 @@ Owner: CalmLynx. Source run: http://192.168.11.12:3001/cdilga/multiplayer-racer/
 - Keep-track and JN3 results interactions raced the automatic results/vote/flyover deadline. Keep the existing controlled clock held during those interactions, then process the UI command and resume it. Player-facing deadlines are unchanged.
 - R09's automatic next-round budget omitted the new six-second flyover. Include `room.between.flyoverMs` in the simulated deadline.
 - R11 asserted a 300 ms animation duration, functional grid restoration, and a redundant 3-second wall time including software-GL scheduling/RPC. Preserve animation/functional assertions everywhere and end-to-end wall latency on the GPU lane.
+- CI 9116 additionally starved JN3's phone refreshes for 2,491 ms: `fresh:false`, `inputDropped:true`, so the idle-cue assertion was observing dropout. Route JN3 to the GPU lane without changing its freshness or idle policy. The already GPU-selected three-phone voting/flyover test now skips software GL too: its real ten-second vote window was consumed by three browser interactions there. Keep the actual game deadlines and full assertions on GPU.
+- W05 observed a live boomerang in the held simulation before the renderer consumed its snapshot. Return the frame's buffers, republish the same tick, and wait for the drawn instance before its screenshot/assertion; no extra flight ticks or relaxed instance count.
+- G01 results stability also released the controlled clock before clicking, allowing the intermission to end. Keep it held through the real click, process one worker boundary, then resume. Its DOM identity checks remain unchanged.
+- The set-piece file watchdog fired at 900 seconds after Chromium alone passed in 747,834 ms, leaving WebKit unfinished. Stop automatic 1080p drawing while searching six-tick simulation checkpoints; explicitly paint and verify the airborne and landed snapshots. Native/WASM hashes, all three kinds, geometry checks and both browser engines remain.
 
 ## Validation
 
@@ -24,3 +28,14 @@ C10's five-car/practice/native-replay test passes in 96,377 ms on the Mac GPU (v
 Preview `v02-72c51850` (built run 9116) was published at 2026-10-25T02:01:38Z. Its commit status `preview/smoke/v02-72c51850` is success: room, join-webrtc, input, resume, drive, hud, round. URL: https://jammers-preview.dilger.dev/p/v02-72c51850/
 
 Focused results and containing CI/preview receipts are recorded below when available. No tests are quarantined and no gameplay rules are relaxed.
+
+### Focused Linux validation, commit 86a9a888
+
+On eris (RTX 2080 Super), Playwright Chromium, `JJ_CHROMIUM_GPU=1`, CI 9116's matching WASM and native artifacts:
+
+- C10 practice + native full-state replay: **pass, 14,456 ms**. Three real-phone practice/join viewports: **pass, 38,468 ms**.
+- JN3 real two-phone round/idle/next-round loop: **pass, 119,285 ms**. Identify samples: **5, 8, 16, 4, 21 ms**.
+- Three-phone voting, host override, tie/rematch and flyover: **pass, 93,030 ms**.
+- R09 real two-controller reel and automatic next round: **pass, 12,640 ms** in CI-equivalent mode (`unset JJ_CAPTURE_DIR`). The extra capture-mode run failed the separate 375x667 results readability assertion; that optional visual check has not been claimed as passing or weakened.
+
+Local follow-up validation: W05 boomerang flight/draw/return **pass, 10,197 ms**; G01 results DOM stability and next-round click **pass, 15,644 ms**, both Chromium native Metal on Mac. JN3/voting skip only software mode, and selection includes both on GPU. Set-piece checkpoint change is awaiting its focused browser result.

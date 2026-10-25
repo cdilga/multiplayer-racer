@@ -93,6 +93,9 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
           await page.route('**/set-piece.json', r => r.fulfill({ contentType: 'application/json', body: c.mapJson }));
           await page.goto(`${server.origin}${BASE}host?test&tiles=1&look=on&camdist=mid&res=1&autores=off${extra}&mapUrl=${encodeURIComponent(server.origin + '/set-piece.json')}`);
           await page.waitForFunction(() => window.__jjTest && window.__jjRender);
+          // The replay advances explicit ticks below. Draw its checkpoints explicitly too: continuously repainting
+          // 1080p software GL between every six-tick RPC took 748 s for Chromium alone in CI 9116.
+          await page.evaluate(() => window.__jjRender.hold());
           return page;
         };
         const paint = async (page, frames = 2) => {
@@ -125,11 +128,13 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
         }
         assert.ok(air, `${c.kind}: the car is airborne for at least half a second`);
         assert.ok(air.cars[0].upY > .8, `${c.kind}: upright in the air`);
+        await paint(page);
         assert.deepEqual(await page.evaluate(() => window.__jjRender.jumpShapes()), c.jumpShapes, `${c.kind}: drawn kicker triangles match the native collision mesh`);
         await page.evaluate(async t => window.__jjTest.step(t), c.fixture.ticks - air.tick);
         const final = await page.evaluate(async () => ({ hash: await window.__jjTest.hash(), state: await window.__jjTest.observe() }));
         assert.equal(final.hash.stateHash, c.native.stateHash, `${c.kind}: WASM matches native`);
         assert.ok(final.state.cars[0].upY > .9, `${c.kind}: lands upright`);
+        await paint(page);
         await page.close();
         if (process.env.JJ_CAPTURE_DIR) {
           // Just off the lip (over the pit, the far rim ahead), from the chase camera and a side angle; then the

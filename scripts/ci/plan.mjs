@@ -45,7 +45,9 @@ const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // g-between-rounds: the flyover's path is measured frame by frame (br-qw28).
 // r11-overview: 24-car derbies drawn at 1080p and dpr 2 (P1-R11); SwiftShader took over half an hour.
 // c10-practice: five tiles plus a separate practice world took 785 s on SwiftShader (CI 8912).
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c10-practice|c12-many-controllers|jn5-churn|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview|g-between-rounds)\.test\.mjs$/.test(f));
+// jn3-round-loop: the idle cue requires continuously fresh real-phone input; CI 9116's software renderer starved
+// phone refreshes for 2491 ms, exercising dropout instead of idle takeover.
+const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c10-practice|c12-many-controllers|jn5-churn|jn3-round-loop|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview|g-between-rounds)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';

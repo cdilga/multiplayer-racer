@@ -96,6 +96,10 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   await flickCar(holder);
   const thrown = await items(host);
   assert.equal(thrown.boomerangs.length, 1, `the boomerang is in the air: ${JSON.stringify(thrown.refusals)}`);
+  // A held clock does not guarantee the renderer has consumed the final stepped snapshot. Once a frame returns
+  // its buffers, publish the same tick again; wait for the drawn fact, without consuming the flight's lifetime.
+  await host.evaluate(async () => { await new Promise(requestAnimationFrame); await window.__jjTest.step(0); });
+  await wait(host, () => window.__jjRender.props()['item/boomerang'] === 1, undefined, 15_000);
   await host.screenshot({ path: join(CAPTURE, 'boomerang-in-flight.png') });
   // The TV draws it: one boomerang instance in the frame on screen while it flies.
   assert.equal((await host.evaluate(() => window.__jjRender.props()))['item/boomerang'], 1, 'the TV draws the boomerang in the air');

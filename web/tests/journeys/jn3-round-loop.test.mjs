@@ -43,7 +43,9 @@ async function phone(url, name) {
   return { ctx, page };
 }
 
-test('JN3: two players race a 1-lap round, see results, and the next round starts', { timeout: 420_000 }, async () => {
+// The idle-cue case needs fresh 20 Hz phone samples. Software GL in CI 9116 starved both phones for 2.5 s and
+// triggered dropout instead; run this real-time multi-page journey on the GPU lane with the other latency checks.
+test('JN3: two players race a 1-lap round, see results, and the next round starts', { timeout: 420_000, skip: !gpu && 'real-time phone refresh and idle takeover run on the GPU lane (CI 9116)' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
