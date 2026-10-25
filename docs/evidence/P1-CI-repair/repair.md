@@ -864,3 +864,80 @@ Its trace ends in generic-argument interning/trait solving and suggests a
 larger compiler stack; no stack/memory setting is changed without a measured
 reproduction. Native and WASM check/clippy passed elsewhere in the batch.
 This is not attributed to the vehicle metadata and remains under triage.
+
+### Deployed R13 and containing runtime GPU receipt
+
+The exact published **v02-8b3a9211** passes the complete public R13 file on
+Mac native Chromium and WebKit: **3/3 tests, 30,322 ms**, including the real
+350 ms Ready presses, race, identity/paint/HUD/nameplates, resize/fullscreen
+and 1/4/24 pattern draw checks. No runtime substitution or asset interception
+is used. Its Gitea status `preview/smoke/v02-8b3a9211` is **success**.
+
+Preview: https://jammers-preview.dilger.dev/p/v02-8b3a9211/
+
+GPU run **9407**, commit **12f9a647**, is **success**, containing the Ready,
+resume-measurement and software R13 repairs. FL17 retains the original budgets:
+**301 samples**, worker-to-tick **8.6 ms p99**, tick-to-drawn **43.6 ms p99**,
+render lag **3.1 ticks p99**. This run predates only the metadata-only fingerprint
+repair; main **9415** and GPU **9416** contain that repair and are still pending
+at this receipt. No final green-main claim is made here.
+
+Run: http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9407
+
+### Paused Identify cooldown: native and real renderer-loss reproduction
+
+GPU **9416** repeats the settings Identify event timeout; its other checks pass.
+Ten isolated Linux settings trials and twelve Help/Settings pairs pass against
+the published build. Another twelve pairs pass against main **9415**'s exact
+archive, key `7f98011ca5dac94537da46de`, verified SHA-256
+`4c70133bed2d17e1f1dc6fd64ccc8f00bbbb06dd7899a0df43acaba1789c4247`.
+The original failed GPU run has no captured pause status; its trigger remains
+unproven rather than being assigned to a successful repetition.
+
+Controlled real WebGL context loss just after joining reproduces a genuine
+runtime defect: Settings Identify receives all native pointer/mouse/click events,
+increments commands to **11**, drops **0**, and keeps both channels connected,
+but emits no host Identify after the unchanged **3,300 ms** wait. Host pause mask
+is **4**; the seat clock stays frozen with physics, so the join flash's cooldown
+never expires. The native regression also fails on the old implementation at
+`Identify while Manual`, **1** flash instead of **2**. A fresh browser regression
+on the exact main9415 compiled web build fails the original **10 s** event wait.
+
+Advance only the seat timer clock from elapsed pause/countdown time, accumulating
+fractional ticks. Pending join/withdraw/return changes still commit only on the
+next actual simulation tick. Faults and the explicit test hold keep their freeze
+semantics. Identify's anti-spam limit, physics step, resume delay and every
+existing browser acceptance remain unchanged. The settings journey additionally
+exercises real context loss and asserts the same paused physics tick/hash after
+Identify.
+
+Validation:
+
+- Native regression passes **Manual/HostHidden/RendererUnavailable**, including
+  one-millisecond wakeups, a second rate-limited press, a later resume-countdown
+  press, unchanged physics hash/tick, and a second claimed seat with no car yet.
+- **47 session tests**, **69 host tests** with `testing` pass; the host suite's
+  **one pre-existing ignored test** remains explicitly ignored. Affected-crate
+  clippy with `-D warnings`, formatting and JS syntax pass.
+- Entire **four-case** browser file passes: Mac native Chromium **30,577 ms**;
+  eris RTX 2080 Super Chromium/Vulkan **26,038 ms**. Normal Help, normal Settings,
+  renderer-lost Settings and real keyboard/race Identify all pass. The lost
+  renderer case takes **4,448/4,208 ms**, with the physics hash frozen.
+- Browser candidates reuse every JS/data/native-server byte from the exact
+  main9415 archive and replace only its testing WASM, whose imports/exports are
+  identical. Native/candidate WASM compilation uses the shared Mac tree, including
+  existing unrelated procgen/race WIP; only this repair's paths are staged.
+  Containing CI must still qualify the committed-source build.
+- RCH refused before compilation because no worker was admissible under critical
+  pressure. The allowed per-crate Mac fallback ends at **2.8 GiB target/**,
+  below **15 GiB**. No workspace-wide local Cargo is run.
+
+Receipts: `paused-identify-before.txt`, `paused-identify-after.txt`.
+
+Main9415 separately passes roster lint and the previously crashed Rust-test2.
+Its image job **20104** crashes in rustc/LLVM. The managed core and matching
+library symbols show a non-canonical, bit-63-set pointer dereference in
+`computeKnownBits`, not a stack-overflow trace; Git also segfaults on that host.
+No Rust inputs differ from the prior successful image. Hardware versus software
+corruption remains unproven; no stack/memory/toolchain patch or infrastructure
+retry is made. Focused facts are in `compiler-crashes.txt`; no core is committed.

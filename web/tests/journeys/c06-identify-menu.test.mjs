@@ -59,7 +59,7 @@ test("the phone's menu (Help card) has an Identify that the host receives for th
   await wait(host, (n) => window.__jjRoom.events().filter((e) => e.event?.Identify).length > n, again, 10_000);
 });
 
-test("the settings sheet's Identify sends the same command for that seat and the sheet stays open", { timeout: 120_000 }, async () => {
+for (const renderLost of [false, true]) test(`the settings sheet's Identify sends the same command for that seat and the sheet stays open${renderLost ? ' while the renderer is unavailable' : ''}`, { timeout: 120_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
@@ -75,6 +75,17 @@ test("the settings sheet's Identify sends the same command for that seat and the
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await confirmInitialVehicle(page);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
+  let frozen;
+  if (renderLost) {
+    await host.evaluate(() => {
+      const gl = document.querySelector('canvas').getContext('webgl2');
+      const loss = gl?.getExtension('WEBGL_lose_context');
+      if (!loss) throw new Error('the renderer cannot exercise real context loss');
+      loss.loseContext();
+    });
+    await wait(host, () => window.__jjTest.pauseReasons().includes('renderer-unavailable'));
+    frozen = await host.evaluate(() => window.__jjTest.hash());
+  }
   await page.waitForTimeout(3300);
   await page.locator('[data-act=settings]').click();
   const before = (await identifies(host)).length;
@@ -84,6 +95,7 @@ test("the settings sheet's Identify sends the same command for that seat and the
   await wait(host, (n) => window.__jjRoom.events().filter((e) => e.event?.Identify).length > n, before, 10_000);
   assert.equal((await identifies(host)).at(-1), seat, "the settings sheet's Identify reaches the host for this seat");
   assert.equal(await page.locator('.settings-body').count(), 1, 'the sheet is still open');
+  if (renderLost) assert.deepEqual(await host.evaluate(() => window.__jjTest.hash()), frozen, 'Identify leaves paused physics frozen');
 });
 
 test("keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile", { timeout: 180_000 }, async () => {

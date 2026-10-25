@@ -220,6 +220,8 @@ pub struct Host {
     /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
     /// after every round start (owner playtest 1, br-gw74.1).
     session_tick: u64,
+    /// Fractional session ticks accumulated while physics is paused or counting down to resume.
+    paused_session_acc: u128,
     /// The roster's vehicles in roster order, `(id, profile)` (R123): every round's world is built with all of them, as the
     /// owner tuning menu left them, and each car takes the one its seat picked. `Vehicles` from main replaces this table;
     /// until then it is the Cruz Missile alone.
@@ -378,6 +380,7 @@ impl Host {
             seen_item_events: 0,
             sent_inventory: BTreeMap::new(),
             session_tick: 0,
+            paused_session_acc: 0,
             vehicles: vec![("cruz-missile".into(), VehicleProfile::cruz())],
             tuning_vehicle: 0,
             tuning_error: None,
@@ -516,6 +519,13 @@ impl Host {
             self.set_pause(Pause::PerformanceStall, false);
         }
         if !self.pauses.is_empty() || self.resume_at_us.is_some_and(|at| now_us < at) {
+            if !self.pauses.contains(&Pause::Fault) {
+                self.paused_session_acc +=
+                    u128::from(now_us.saturating_sub(last.unwrap_or(now_us))) * u128::from(TICK_HZ);
+                self.session_tick += (self.paused_session_acc / 1_000_000) as u64;
+                self.paused_session_acc %= 1_000_000;
+                self.seats.advance_clock(Tick(self.session_tick));
+            }
             // The room stays open while the race is held (P1-R07c): pausing is how a host lets someone join mid-race.
             self.session_while_paused();
         }

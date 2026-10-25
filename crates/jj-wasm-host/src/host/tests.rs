@@ -3864,6 +3864,84 @@ fn lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source() {
 }
 
 #[test]
+fn identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics() {
+    for reason in [Pause::Manual, Pause::HostHidden, Pause::RendererUnavailable] {
+        let mut h = driving_host();
+        let join = |h: &mut Host, endpoint: &str| {
+            for cmd in [
+                ControllerCmd::Hello {
+                    protocol: PROTOCOL_VERSION,
+                    build: BuildId("t".into()),
+                    endpoint: EndpointId(endpoint.into()),
+                    resume: Some(format!("s-{endpoint}")),
+                },
+                ControllerCmd::Claim {
+                    request: RequestId(1),
+                    name: endpoint.into(),
+                },
+            ] {
+                h.handle(&net(endpoint, Channel::Cmd, cmd.encode()))
+                    .unwrap();
+            }
+        };
+        join(&mut h, "pa");
+        h.advance(0);
+        h.advance(20_000);
+        let seat = h.seats.seats().next().unwrap().id;
+        let flashes = |h: &Host| {
+            h.events
+                .iter()
+                .filter(|e| matches!(e, SimEvent::Identify { seat: s } if *s == seat))
+                .count()
+        };
+        let before = flashes(&h);
+        assert_eq!(before, 1, "the join flash starts the cooldown");
+        h.set_pause(reason, true);
+        let frozen_tick = h.tick();
+        let frozen_hash = h.state_hash();
+        join(&mut h, "pb");
+        // Sub-tick wakeups must accumulate: rounding each wakeup down would freeze this clock too.
+        let mut now = 20_000;
+        for _ in 0..3300 {
+            now += 1000;
+            h.advance(now);
+        }
+        let identify = net("pa", Channel::Cmd, ControllerCmd::Identify.encode());
+        h.handle(&identify).unwrap();
+        now += 1000;
+        h.advance(now);
+        assert_eq!(flashes(&h), before + 1, "Identify while {reason:?}");
+        h.handle(&identify).unwrap();
+        now += 1000;
+        h.advance(now);
+        assert_eq!(flashes(&h), before + 1, "the anti-spam limit still applies");
+        h.set_pause(reason, false);
+        for _ in 0..1100 {
+            now += 1000;
+            h.advance(now);
+        }
+        assert!(h.countdown_us() > 0);
+        h.handle(&identify).unwrap();
+        now += 1000;
+        h.advance(now);
+        assert_eq!(flashes(&h), before + 2, "Identify during resume countdown");
+        assert_eq!(h.tick(), frozen_tick);
+        assert_eq!(
+            h.state_hash(),
+            frozen_hash,
+            "no physics ran during the pause"
+        );
+        assert_eq!(h.seats.seats().count(), 2);
+        let pending = h.seats.seats().find(|s| s.id != seat).unwrap();
+        assert!(
+            !pending.has_car,
+            "a paused claim still waits for a sim tick"
+        );
+        assert!(h.inputs[&pending.id].car.is_none());
+    }
+}
+
+#[test]
 fn controllers_menu_actions_apply_while_paused_and_survive_resume_sample_discard() {
     let mut h = driving_host();
     h.handle(&pad(4, [0, 20_000], 0)).unwrap();

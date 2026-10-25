@@ -1,0 +1,270 @@
+Session suite, Mac per-crate
+   Compiling getrandom v0.3.4
+   Compiling thiserror v2.0.21
+   Compiling num-traits v0.2.19
+   Compiling ppv-lite86 v0.2.21
+   Compiling unarray v0.1.4
+   Compiling regex-syntax v0.8.11
+   Compiling rand_core v0.9.5
+   Compiling cobs v0.3.0
+   Compiling rand v0.9.5
+   Compiling rand_xorshift v0.4.0
+   Compiling rand_chacha v0.9.0
+   Compiling postcard v1.1.3
+   Compiling jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+   Compiling proptest v1.11.0
+   Compiling jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+   Compiling jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.16s
+     Running unittests src/lib.rs (target/debug/deps/jj_session-c697e307b6d86e23)
+
+running 47 tests
+test director::tests::a_join_during_countdown_does_not_restart_it_and_rides_in_the_round ... ok
+test director::tests::a_round_without_a_limit_is_the_rules_to_end_and_the_limit_applies_from_the_next_round ... ok
+test director::tests::a_map_still_preparing_when_intermission_ends_shows_preparing_then_counts_down ... ok
+test director::tests::a_failed_map_retries_once_with_the_fallback_then_settles ... ok
+test director::tests::a_manual_pause_freezes_the_countdown_too ... ok
+test director::tests::a_pause_during_intermission_freezes_its_timer ... ok
+test director::tests::a_late_joiner_unreadying_does_not_cancel_and_neither_does_unready_in_an_auto_start ... ok
+test director::tests::a_three_minute_derby_ends_on_game_time_not_on_the_presentation_clock ... ok
+test director::tests::an_early_start_cancelled_in_intermission_returns_with_the_time_it_had_left ... ok
+test director::tests::an_emptied_party_settles_in_lobby_and_never_auto_starts ... ok
+test director::tests::an_original_seat_unreadying_cancels_a_ready_based_countdown ... ok
+test director::tests::end_during_preparation_cancels_the_job_and_returns_to_lobby ... ok
+test director::tests::end_voids_an_unfinished_round ... ok
+test director::tests::everyone_leaving_during_a_start_settles_instead_of_starting ... ok
+test director::tests::finalising_never_spins_forever ... ok
+test director::tests::force_start_warns_not_ready_seats_for_five_seconds_then_starts_everyone ... ok
+test director::tests::game_time_outside_a_running_round_counts_for_nothing ... ok
+test director::tests::lobby_holds_every_car_unless_free_drive_and_disband_is_terminal ... ok
+test director::tests::reroll_during_countdown_waits_for_the_new_map_and_keeps_the_cohort ... ok
+test director::tests::reroll_during_preparation_fences_the_stale_preparation_id ... ok
+test director::tests::stale_ready_taps_cannot_restart_a_disarmed_lobby ... ok
+test director::tests::start_now_again_skips_the_countdown_but_never_the_map ... ok
+test director::tests::the_game_clock_pauses_with_the_sim ... ok
+test director::tests::the_party_runs_itself_round_after_round ... ok
+test director::tests::the_warning_length_is_host_configurable_within_three_to_fifteen_seconds ... ok
+test results::tests::a_derby_commit_is_idempotent_conflicts_with_other_facts_and_never_counts_as_a_race_finish ... ok
+test results::tests::a_derby_ranks_by_raw_points_with_ties_sharing_and_the_race_table_without_a_finish_bonus ... ok
+test results::tests::a_late_joiner_ranks_on_raw_points_alone_and_a_seat_that_left_keeps_what_it_scored ... ok
+test results::tests::a_repeated_commit_is_idempotent_and_a_conflicting_one_is_refused ... ok
+test results::tests::an_all_stuck_race_ranks_by_legal_progress_then_the_tick_it_was_reached ... ok
+test results::tests::every_derby_rank_past_ten_gets_one_point_and_there_is_no_cap ... ok
+test results::tests::every_rank_past_ten_gets_a_point_and_finishers_get_the_bonus ... ok
+test results::tests::late_joiners_and_leave_return_produce_the_specified_records ... ok
+test results::tests::simultaneous_finishes_and_exact_ties_share_place_and_points ... ok
+test results::tests::the_session_table_adds_up_rounds_and_shares_tied_places ... ok
+test seats::tests::a_duplicate_tab_fences_the_older_one_and_a_wrong_secret_is_refused ... ok
+test seats::tests::a_reconnect_welcomes_every_source_back_and_a_dropout_keeps_them_all ... ok
+test seats::names::tests::names_are_cleaned_and_bounded ... ok
+test seats::tests::identify_rate_limit_table ... ok
+test seats::tests::one_endpoint_holds_a_seat_per_source_and_each_acts_alone ... ok
+test seats::tests::opening_never_claims_and_one_car_per_seat ... ok
+test seats::tests::retries_and_reconnects_never_duplicate_a_seat ... ok
+test seats::tests::stale_input_is_neutralised ... ok
+test seats::tests::the_last_sit_out_choice_before_a_tick_wins_without_cancelling_leave ... ok
+test results::tests::classification_invariants ... ok
+test director::tests::invariants_hold_for_random_sequences ... ok
+test seats::tests::one_car_per_seat_no_phantoms_stable_numbers ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+
+Host suite with testing feature, Mac per-crate
+   Compiling jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4.99s
+     Running unittests src/lib.rs (target/debug/deps/jj_wasm_host-84b88dae50fe2637)
+
+running 70 tests
+test host::practice::tests::practice_cost ... ignored
+test host::prompts::tests::the_sequence_clears_one_control_at_a_time_in_order ... ok
+test host::prompts::tests::off_hides_it_and_on_again_repeats_from_the_start ... ok
+test host::between::unit::the_most_votes_win_and_a_tie_or_no_vote_is_a_rematch ... ok
+test host::testing::tests::bad_commands_say_why ... ok
+test host::testing::tests::a_delayed_observation_identifies_which_side_of_go_its_cars_are_on ... ok
+test host::tests::a_camera_distance_choice_is_an_event_for_that_seat ... ok
+test host::practice::tests::practice_is_optional_refused_in_the_lobby_and_ended_by_the_next_round ... ok
+test host::testing::tests::until_steps_to_the_predicate_and_observe_shows_controller_seats ... ok
+test host::testing::tests::journal_chunks_kept_by_main_replay_to_the_live_hash_across_worlds ... ok
+test host::tests::a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the_snapshot ... ok
+test host::tests::a_controller_cannot_remove_a_seat ... ok
+test host::tests::a_claim_while_paused_is_welcomed_and_seated_and_places_at_resume ... ok
+test host::tests::a_derby_rounds_facts_reach_the_phone_hud_and_the_room_view ... ok
+test host::tests::a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host ... ok
+test host::tests::a_hello_for_another_protocol_is_answered_with_claim_rejected_build_and_no_seat ... ok
+test host::tests::a_fault_stops_the_sim ... ok
+test host::tests::a_held_throttle_survives_a_300_ms_sample_gap_and_a_closed_peer_is_neutral_at_once ... ok
+test host::tests::a_hidden_host_still_tells_the_phones_why_the_room_is_paused ... ok
+test host::tests::a_host_pads_seat_names_its_source_and_runs_its_prompts ... ok
+test host::tests::a_host_pads_right_stick_steers_and_its_left_stick_drives ... ok
+test host::tests::a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat ... ok
+test host::tests::a_long_stall_pauses_at_the_last_tick_instead_of_catching_up ... ok
+test host::tests::a_pick_reaches_the_room_view_and_a_bad_id_does_not ... ok
+test host::practice::tests::the_next_countdown_puts_a_practiser_on_the_grid ... ok
+test host::tests::a_reloaded_controller_says_hello_again_and_gets_its_seat_back ... ok
+test host::tests::a_thrown_boomerang_is_a_debris_record_of_its_own_kind_in_the_snapshot ... ok
+test host::testing::tests::a_mixed_roster_through_the_host_hashes_to_the_committed_value ... ok
+test host::tests::a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event ... ok
+test host::tests::an_air_profile_change_reaches_the_sim_and_the_next_round ... ok
+test host::testing::tests::spawning_through_the_surface_and_stepping_held_matches_the_native_fixture_run ... ok
+test host::tests::a_hub_endpoint_claims_and_holds_a_seat_per_source_over_one_connection ... ok
+test host::tests::an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over ... ok
+test host::tests::an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_and_is_held ... ok
+test host::tests::an_input_profile_change_reaches_the_host_and_every_controller ... ok
+test host::tests::catch_up_is_a_round_rule_and_the_host_can_switch_it_off ... ok
+test host::tests::a_tuning_change_applies_at_a_tick_boundary_and_replays_bit_for_bit ... ok
+test host::tests::controllers_menu_actions_apply_while_paused_and_survive_resume_sample_discard ... ok
+test host::tests::each_seat_drives_the_vehicle_it_picked_and_tuning_follows_the_selected_vehicle ... ok
+test host::tests::controller_bytes_and_local_source_drive_identically ... ok
+test host::tests::hiding_pauses_with_no_catch_up_and_resume_counts_down_with_neutral_input ... ok
+test host::tests::host_local_vehicle_choice_uses_each_sources_existing_seat ... ok
+test host::tests::host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back ... ok
+test host::tests::finishing_the_race_on_demand_gives_intermission_with_standings_for_every_racer ... ok
+test host::tests::identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics ... ok
+test host::tests::identify_answers_every_press_after_a_long_lobby_and_a_round_start ... ok
+test host::tests::input_is_rearmed_at_neutral_after_a_pause ... ok
+test host::tests::item_inventory_events_and_use_refusals_follow_only_their_hub_source ... ok
+test host::tests::lobby_ready_button_is_reliable_and_requires_a_confirmed_existing_source ... ok
+test host::tests::loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_events ... ok
+test host::tests::r128_the_rim_is_not_a_boost_and_a_sideways_push_is_nothing ... ok
+test host::tests::race_classification_preserves_crossing_fraction_progress_and_exact_ties ... ok
+test host::tests::a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped ... ok
+test host::tests::replay_air_flag_uses_suspension_contacts_instead_of_terrain_height ... ok
+test host::tests::snapshot_transfers_compliant_rails_by_map_dressing_index ... ok
+test host::tests::snapshots_carry_cars_and_skip_when_the_buffer_is_short ... ok
+test host::tests::the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat ... ok
+test host::tests::the_input_and_vehicle_profiles_agree_on_the_launch ... ok
+test host::tests::render_and_worker_cadence_never_change_the_simulation ... ok
+test host::tests::the_old_layouts_action_stick_still_boosts_then_lets_go ... ok
+test host::tests::the_room_view_carries_a_wrecked_seats_hold_and_its_cause ... ok
+test host::tests::the_seats_assist_level_reaches_its_car_and_the_room_view ... ok
+test host::practice::tests::a_newcomer_practises_while_four_race_then_joins_at_the_tail_and_the_round_never_notices ... ok
+test host::tests::the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them ... ok
+test host::tests::thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats ... ok
+test host::tests::four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars ... ok
+test host::tests::a_derby_round_runs_to_results_on_game_time_and_the_next_starts_on_its_own ... ok
+test host::tests::bots_join_a_derby_round_on_the_autopilot_and_score ... ok
+test host::tests::a_kept_track_is_prepared_by_its_seed_and_recipe_and_a_rematch_keeps_its_recipe ... ok
+test host::tests::phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyover_precedes_the_countdown ... ok
+
+test result: ok. 69 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 5.61s
+
+
+
+Native Chromium Mac, exact9415 web build plus candidate testing WASM
+✔ the phone's menu (Help card) has an Identify that the host receives for that seat (9267.283375ms)
+✔ the settings sheet's Identify sends the same command for that seat and the sheet stays open (4409.136625ms)
+✔ the settings sheet's Identify sends the same command for that seat and the sheet stays open while the renderer is unavailable (4448.301208ms)
+✔ keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile (9725.024ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30576.505375
+
+
+Linux RTX2080Super Vulkan, same web artifact plus candidate testing WASM
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs 05341854de2d.
+✔ the phone's menu (Help card) has an Identify that the host receives for that seat (7992.551529ms)
+✔ the settings sheet's Identify sends the same command for that seat and the sheet stays open (4100.247819ms)
+✔ the settings sheet's Identify sends the same command for that seat and the sheet stays open while the renderer is unavailable (4208.367985ms)
+✔ keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile (9704.213035ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26037.956716
+
+
+Affected-crate clippy
+    Checking cfg-if v1.0.5
+    Checking libm v0.2.16
+    Checking serde_core v1.0.229
+    Checking libc v0.2.189
+    Checking typenum v1.20.1
+    Checking zmij v1.0.23
+    Checking thiserror v2.0.21
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+    Checking cobs v0.3.0
+    Checking bytemuck v1.25.2
+    Checking rawpointer v0.2.1
+    Checking byteorder v1.5.0
+    Checking matrixmultiply v0.3.11
+    Checking const-oid v0.10.2
+    Checking wide v1.7.1
+    Checking bitflags v2.13.2
+    Checking hash32 v0.3.1
+    Checking stable_deref_trait v1.2.1
+    Checking foldhash v0.2.0
+    Checking cpufeatures v0.3.1
+    Checking smallvec v1.16.2
+    Checking hybrid-array v0.4.15
+    Checking heapless v0.8.0
+    Checking equivalent v1.0.2
+    Checking hashbrown v0.17.1
+    Checking log v0.4.34
+    Checking num-traits v0.2.19
+    Checking getrandom v0.3.4
+    Checking ena v0.14.4
+    Checking static_assertions v1.1.0
+    Checking downcast-rs v2.0.2
+    Checking arrayvec v0.7.8
+    Checking tinyvec v1.13.3
+    Checking slab v0.4.12
+    Checking either v1.18.0
+    Checking crypto-common v0.2.2
+    Checking block-buffer v0.12.1
+    Checking profiling v1.0.18
+    Checking rand_core v0.9.5
+    Checking unicode-segmentation v1.13.3
+    Checking zerocopy v0.8.59
+    Checking approx v0.5.1
+    Checking num-complex v0.4.6
+    Checking num-integer v0.1.47
+    Checking glam v0.33.12
+    Checking rstar v0.13.0
+    Checking num-rational v0.4.2
+    Checking ordered-float v5.5.0
+    Checking serde v1.0.229
+    Checking serde_json v1.0.151
+    Checking digest v0.11.3
+    Checking indexmap v2.14.2
+    Checking unicode-normalization v0.1.25
+    Checking sha2 v0.11.0
+    Checking jj-types v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-types)
+    Checking postcard v1.1.3
+    Checking unicode-ident v1.0.26
+    Checking once_cell v1.21.4
+    Checking jj-contracts v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-contracts)
+    Checking wasm-bindgen-shared v0.2.129
+    Checking base64 v0.23.1
+    Checking rand_xorshift v0.4.0
+    Checking jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+    Checking jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+    Checking wasm-bindgen v0.2.129
+    Checking rand v0.9.5
+    Checking unarray v0.1.4
+    Checking regex-syntax v0.8.11
+    Checking jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+    Checking jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+    Checking ppv-lite86 v0.2.21
+    Checking rand_chacha v0.9.0
+    Checking jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+    Checking proptest v1.11.0
+    Checking simba v0.10.2
+    Checking nalgebra v0.35.0
+    Checking glamx v0.3.1
+    Checking parry3d v0.31.1 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/parry3d)
+    Checking rapier3d v0.36.0 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/rapier3d)
+    Checking jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+    Checking jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+    Checking jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 16.21s

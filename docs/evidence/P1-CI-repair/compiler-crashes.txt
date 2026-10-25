@@ -1,0 +1,28 @@
+main9400 rust-test2: rustc1.99.0 SIGSEGV compiling unchanged Asupersync0.5.0.
+Kernel: 2026-10-25 11:28:01 UTC, rustc2283350 general protection fault in generic argument interning/hashbrown.
+Correct coredump process PID2283315: COREFILE none.
+
+main9415 image20104: rustc1.99.0 SIGSEGV compiling jj-wasm-host testing WASM at opt-level3.
+Kernel: 2026-10-25 12:01:13 UTC, lto cgu.13 thread2904635 general protection fault in LLVM computeKnownBits.
+Correct coredump process PID2902480. coredumpctl debug used its managed temporary extraction; no core is committed.
+Matching Rust1.99 library symbols loaded from persistent ci-cache for GDB.
+Faulting instruction: cmpl $0x5b,0xc(%r9)
+R9: 0x80007f8697a5e4c0 (non-canonical address)
+Pointer array in core:
+0x7f8697bf43c8: 0x00007f8697a5e7f0 0x00007f8697a5ddb0
+0x7f8697bf43d8: 0x80007f8697a5e4c0 0x00007f8697a5e810
+Clearing bit63 points into a populated LLVM object:
+0x7f8697a5e4c0: 0x00007f8697b3a340 0x0000005e00000001
+0x7f8697a5e4d0: 0x0000000000000000 0x0000000000000000
+Stack: computeKnownBits -> computeKnownBitsFromOperator -> computeKnownBits -> InstCombinerImpl::visitCallInst -> InstCombinePass -> LLVM pass managers -> thin LTO.
+This is an invalid pointer dereference, not evidence of stack exhaustion. Software corruption versus hardware corruption is not established.
+
+git also segfaulted on the same host at12:00:34 UTC, PID2883494/thread, core process2883317 is missing.
+Browser5 checkout recovered from bad pack header. No objects or shared caches were manually deleted.
+The22:52AEDT/11:52UTC OOM belongs to a separate partifactory BuildKit cgroup; do not attribute these SIGSEGVs to it.
+At investigation:125GiB RAM,35GiB available; ZFS reports all pools healthy; no EDAC memory-controller records available.
+Other stored application crashes shown by coredumpctl were SIGABRT, not these SIGSEGVs.
+
+No Rust source/lock/toolchain/build-script/Dockerfile delta exists between successful image8b3a9211 and failed image05341854.
+Main9415 cached web build and Rust-test2 succeed with the same committed inputs.
+No compiler stack/memory settings or toolchain are changed; no infrastructure retry has been consumed.

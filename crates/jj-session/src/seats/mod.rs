@@ -241,6 +241,12 @@ impl Seats {
         self.now
     }
 
+    /// Advance timer time without committing pending car changes. Paused hosts still accept menu commands;
+    /// their cooldowns elapse, while joins, withdrawals and returns wait for the next simulation tick.
+    pub fn advance_clock(&mut self, now: Tick) {
+        self.now = Tick(self.now.0.max(now.0));
+    }
+
     pub fn seat(&self, id: SeatId) -> Option<&Seat> {
         self.seats.get(&id)
     }
@@ -509,7 +515,7 @@ impl Seats {
                 }
             }
             Input::Tick(t) => {
-                self.now = Tick(self.now.0.max(t.0));
+                self.advance_clock(t);
                 for seat in self.seats.values_mut() {
                     match seat.pending.take() {
                         Some(Pending::Join) | Some(Pending::Return) => {

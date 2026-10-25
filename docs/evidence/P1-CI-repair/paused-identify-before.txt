@@ -1,0 +1,76 @@
+Native regression, original implementation
+   Compiling syn v3.0.6
+   Compiling wasm-bindgen-shared v0.2.129
+   Compiling bumpalo v3.20.3
+   Compiling wasm-bindgen v0.2.129
+   Compiling once_cell v1.21.4
+   Compiling wasm-bindgen-macro-support v0.2.129
+   Compiling thiserror-impl v2.0.21
+   Compiling serde_derive v1.0.229
+   Compiling num-derive v0.5.1
+   Compiling thiserror v2.0.21
+   Compiling cobs v0.3.0
+   Compiling parry3d v0.31.1 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/parry3d)
+   Compiling serde v1.0.229
+   Compiling jj-types v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-types)
+   Compiling postcard v1.1.3
+   Compiling jj-contracts v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-contracts)
+   Compiling jj-map v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-map)
+   Compiling jj-protocol v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-protocol)
+   Compiling wasm-bindgen-macro v0.2.129
+   Compiling jj-input v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-input)
+   Compiling jj-procgen v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-procgen)
+   Compiling jj-session v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-session)
+   Compiling rapier3d v0.36.0 (/Users/cdilga/Documents/dev/multiplayer-racer/vendor/rapier3d)
+   Compiling jj-sim v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-sim)
+   Compiling jj-fixture v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-fixture)
+   Compiling jj-wasm-host v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-wasm-host)
+    Finished `test` profile [optimized + debuginfo] target(s) in 39.16s
+     Running unittests src/lib.rs (target/debug/deps/jj_wasm_host-74c9791e11f6a9db)
+
+running 1 test
+test host::tests::identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics ... FAILED
+
+failures:
+
+---- host::tests::identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics stdout ----
+
+thread 'host::tests::identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics' (24207133) panicked at crates/jj-wasm-host/src/host/tests.rs:3912:9:
+assertion `left == right` failed: Identify while Manual
+  left: 1
+ right: 2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    host::tests::identify_cooldown_elapses_during_a_pause_and_resume_countdown_without_stepping_physics
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p jj-wasm-host --lib`
+
+
+Exact main9415 web build, original WASM, new full browser file
+✔ the phone's menu (Help card) has an Identify that the host receives for that seat (10297.563917ms)
+✔ the settings sheet's Identify sends the same command for that seat and the sheet stays open (4422.073208ms)
+✖ the settings sheet's Identify sends the same command for that seat and the sheet stays open while the renderer is unavailable (14482.658209ms)
+✔ keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile (9689.133833ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40691.127167
+
+✖ failing tests:
+
+test at ../../../../../private/tmp/jj-ci-paused-identify-candidate.mjs:63:41
+✖ the settings sheet's Identify sends the same command for that seat and the sheet stays open while the renderer is unavailable (14482.658209ms)
+  page.waitForFunction: Timeout 10000ms exceeded.
+      at wait (/private/tmp/jj-ci-paused-identify-candidate.mjs:27:51)
+      at TestContext.<anonymous> (/private/tmp/jj-ci-paused-identify-candidate.mjs:96:9) {
+    name: 'TimeoutError',
+    log: []
+  }
