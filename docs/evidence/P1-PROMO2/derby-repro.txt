@@ -1,0 +1,19 @@
+
+running 1 test
+derby_can_throw_while_running_but_not_after_its_clock_expires --- FAILED
+
+failures:
+
+---- derby_can_throw_while_running_but_not_after_its_clock_expires stdout ----
+
+thread 'derby_can_throw_while_running_but_not_after_its_clock_expires' (22866490) panicked at crates/jj-sim/tests/promo_derby_items.rs:17:5:
+an active derby accepts the throw
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    derby_can_throw_while_running_but_not_after_its_clock_expires
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p jj-sim --test promo_derby_items`

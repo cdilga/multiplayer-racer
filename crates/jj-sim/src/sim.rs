@@ -943,10 +943,15 @@ impl Sim {
             } else {
                 jj_contracts::item::Mode::Race
             },
-            racing: self.race.started_at.is_some()
-                && self.race.over.is_none()
-                && !self.race.is_held(car.0, self.tick)
-                && !self.race.is_finished(car.0),
+            racing: self.derby.as_ref().map_or_else(
+                || {
+                    self.race.started_at.is_some()
+                        && self.race.over.is_none()
+                        && !self.race.is_held(car.0, self.tick)
+                        && !self.race.is_finished(car.0)
+                },
+                |derby| !derby.over(self.tick),
+            ),
             protected: c.protected_since.is_some(),
         })
     }
