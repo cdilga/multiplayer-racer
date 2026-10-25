@@ -1,0 +1,219 @@
+[
+  {
+    "id": "jump",
+    "scenario": "scenarios/lab/canyon-leap.json",
+    "seconds": 6,
+    "build": "0d6a29d6b0ce62d5391627e01bec9c2566084e0d",
+    "finalTick": 840,
+    "fixture": {
+      "autopilot": [
+        {
+          "car": 0,
+          "on": true,
+          "tick": 0
+        }
+      ],
+      "cars": [
+        {
+          "linvel": [
+            -22,
+            0,
+            0
+          ],
+          "pose": {
+            "headingDeg": -90,
+            "x": -43.796,
+            "y": 23.71,
+            "z": 45
+          }
+        }
+      ],
+      "expect": [
+        {
+          "car": 0,
+          "max": 4,
+          "metric": "airtimeS",
+          "min": 0.8
+        },
+        {
+          "car": 0,
+          "max": 3,
+          "metric": "landings",
+          "min": 1
+        },
+        {
+          "car": 0,
+          "max": 1.001,
+          "metric": "landingUpY",
+          "min": 0.9
+        },
+        {
+          "car": 0,
+          "max": 1.001,
+          "metric": "minUpY",
+          "min": 0.8
+        },
+        {
+          "car": 0,
+          "max": 0,
+          "metric": "wrecks",
+          "min": 0
+        },
+        {
+          "car": 0,
+          "max": 0,
+          "metric": "recoveries",
+          "min": 0
+        }
+      ],
+      "map": "maps/lab/canyon-leap.json",
+      "scenario": "canyon-leap",
+      "seed": 1,
+      "ticks": 1800,
+      "what": "The leap at design speed: the autopilot takes the car from the far straight's end over the pit and lands it upright on the far rim, with no wreck or recovery, and drives on.",
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "dirt",
+    "recipe": "outback-dirt",
+    "seed": 3,
+    "seconds": 7,
+    "build": "0d6a29d6b0ce62d5391627e01bec9c2566084e0d",
+    "finalTick": 960,
+    "fixture": {
+      "scenario": "promo-dirt",
+      "what": "Promotional gameplay capture",
+      "map": "promo.json",
+      "seed": 3,
+      "ticks": 1800,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Racer 1",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    }
+  },
+  {
+    "id": "town",
+    "recipe": "town",
+    "seed": 1,
+    "seconds": 7,
+    "build": "0d6a29d6b0ce62d5391627e01bec9c2566084e0d",
+    "finalTick": 960,
+    "fixture": {
+      "scenario": "promo-town",
+      "what": "Promotional gameplay capture",
+      "map": "promo.json",
+      "seed": 1,
+      "ticks": 1800,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Racer 1",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    }
+  },
+  {
+    "id": "rivals",
+    "recipe": "outback-bitumen",
+    "seed": 1,
+    "count": 4,
+    "seconds": 7,
+    "build": "76a5c6ea61b0feecea5b593dd605f864714961a8",
+    "finalTick": 960,
+    "fixture": {
+      "scenario": "promo-rivals",
+      "what": "Promotional gameplay capture",
+      "map": "promo.json",
+      "seed": 1,
+      "ticks": 1800,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        },
+        {
+          "routePoint": 11,
+          "lift": 0.5
+        },
+        {
+          "routePoint": 14,
+          "lift": 0.5
+        },
+        {
+          "routePoint": 17,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Racer 1",
+          "car": 0
+        },
+        {
+          "name": "Racer 2",
+          "car": 1
+        },
+        {
+          "name": "Racer 3",
+          "car": 2
+        },
+        {
+          "name": "Racer 4",
+          "car": 3
+        }
+      ],
+      "inputs": []
+    }
+  },
+  {
+    "id": "rocks",
+    "recipe": "rocks",
+    "seed": 1,
+    "seconds": 7,
+    "build": "76a5c6ea61b0feecea5b593dd605f864714961a8",
+    "finalTick": 960,
+    "fixture": {
+      "scenario": "promo-rocks",
+      "what": "Promotional gameplay capture",
+      "map": "promo.json",
+      "seed": 1,
+      "ticks": 1800,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Racer 1",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    }
+  }
+]

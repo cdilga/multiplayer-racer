@@ -1,0 +1,1038 @@
+{
+  "bead": "P1-A01",
+  "generated_utc": "2026-10-25T07:08:03Z",
+  "sheet": {
+    "path": "tools/promo/narration.tsv",
+    "sha256": "dfb97c7a71f8d8eed9451354d1e67706c64fa17d56b201468072b98bbdb3eaef",
+    "rows": 7
+  },
+  "model": {
+    "name": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    "dtype": "bfloat16",
+    "dtype_note": "the checkpoint ships in bfloat16, so bfloat16 is its full precision; float32 would need ~7.7 GB of weights and does not fit the 8 GB RTX 2080 SUPER",
+    "device": "RTX 2080 SUPER 8 GB (eris)",
+    "language": "English",
+    "seeds": "1000+k, one torch.manual_seed per take",
+    "clone_prompts": {
+      "excited": {
+        "source": "cached",
+        "file": "excited-58871e42204a-Qwen3-TTS-12Hz-1.7B-Base-bfloat16.pt",
+        "reference": "excited-ref-aussie-hype"
+      },
+      "owner": {
+        "source": "cached",
+        "file": "owner-1c86e63ac056-Qwen3-TTS-12Hz-1.7B-Base-bfloat16.pt",
+        "reference": "owner-ref-aussie-warm"
+      }
+    },
+    "asr": "faster-whisper large-v3, float16, beam 5",
+    "speaker_similarity": "cosine of Qwen3-TTS speaker embeddings (first 8 s) vs the owner reference",
+    "loudness": "ffmpeg ebur128 (ITU-R BS.1770 integrated LUFS, 4x-oversampled true peak)"
+  },
+  "references": {
+    "owner": {
+      "id": "owner-ref-aussie-warm",
+      "use": "warm rows; speaker-similarity target for every row",
+      "sha256_12": "1c86e63ac056",
+      "wer_vs_stored_transcript": 0.112,
+      "seconds": 25.1,
+      "median_hz": 160.0,
+      "transcript": "FrankenWhisper (fw transcribe, whisper.cpp backend, ggml-large-v3) on the Mac; the stored transcript matches it, and faster-whisper large-v3 on eris agrees at the WER shown (the text and audio stay private)"
+    },
+    "excited": {
+      "id": "excited-ref-aussie-hype",
+      "use": "hype rows",
+      "pipeline": "the owner's own performed announcer take from the Big Aussie Accent - True Blue Version reading (2026-10-06); no voice conversion",
+      "sha256_12": "58871e42204a",
+      "wer_vs_stored_transcript": 0.0,
+      "seconds": 22.15,
+      "median_hz": 200.0,
+      "selection": {
+        "chosen": "aussie-hype",
+        "evidence": "the owner's own performed announcer take (Aussie reading, 2026-10-06); no experiment needed"
+      }
+    },
+    "by_delivery": {
+      "hype": "excited",
+      "warm": "owner"
+    }
+  },
+  "export": {
+    "container": "Ogg/Opus",
+    "codec": "libopus",
+    "bitrate_kbps": 48,
+    "sample_rate": 48000,
+    "channels": 1,
+    "target_lufs": -16.0,
+    "target_true_peak_dbtp": -1.0,
+    "process": "trim silence (-42 dB rel. peak; 60 ms lead, 160 ms tail, 30 ms fade-out) -> gain to target + sample-peak limiter -> libopus -> decode and re-measure, iterate",
+    "m4a_twin": false
+  },
+  "screens": {
+    "thresholds": {
+      "wer_max": 0.0,
+      "speaker_sim_min": 0.93,
+      "duration_min_base_s": 0.4,
+      "duration_min_per_word_s": 0.15,
+      "duration_max_base_s": 2.0,
+      "duration_max_per_word_s": 0.6,
+      "raw_lufs_min": -45.0,
+      "raw_true_peak_max_dbtp": 0.0,
+      "export_lufs_target": -16.0,
+      "export_lufs_tolerance_lu": 1.0,
+      "export_true_peak_max_dbtp": -1.0
+    },
+    "score_weights": {
+      "words": 0.6,
+      "speaker_sim": 0.4,
+      "hype_energy": 0.1,
+      "energy_full_lift_st": 8.0
+    },
+    "asr_aliases": {
+      "struth": "strewth",
+      "gidday": "g'day"
+    },
+    "homophone_rules": [
+      "trailing 's -> s (door's = doors)",
+      "'all ready' -> 'already'"
+    ],
+    "tts_respellings": {
+      "G'day": "Gidday"
+    },
+    "pick_rule": "Among takes passing the wer, speaker_sim, duration and raw_loudness screens, the highest score = 0.6*(1-min(wer,1)) + 0.4*speaker_sim (+ 0.1*clip(lift_st/8,0,1) for hype rows); ties to the lower seed. If no take passes, the row fails and the best score overall is kept for the record. The export screen (decoded Opus LUFS and true peak) is checked on the picked take."
+  },
+  "candidates_per_row": {
+    "requested": 3,
+    "max": 11,
+    "rendered_min": 3,
+    "rendered_max": 7
+  },
+  "summary": {
+    "rows": 7,
+    "pass": 7,
+    "fail": 0,
+    "screen_pass_counts": {
+      "wer": 7,
+      "speaker_sim": 7,
+      "duration": 7,
+      "raw_loudness": 7,
+      "export_loudness": 7,
+      "export_true_peak": 7
+    },
+    "failing_rows": [],
+    "picked_pitch_lift_st": {
+      "hype": {
+        "rows": 7,
+        "min": -1.34,
+        "median": 0.52,
+        "max": 2.61
+      },
+      "warm": null
+    },
+    "reel": {
+      "file": "audition-reel.ogg",
+      "seconds": 37.1,
+      "bytes": 287605
+    }
+  },
+  "rows": [
+    {
+      "id": "promo-01",
+      "moment": "promo-01",
+      "variant": 1,
+      "delivery": "hype",
+      "text": "One screen. Your phones. And that friend who says they don't get competitive.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-01.ogg",
+      "bytes": 27028,
+      "sha256": "1828b033db310a7cb6d86e8573b6e4e4aacfd4f8edb3c92a036f03940e7d543c",
+      "seconds": 4.4,
+      "seed": 1005,
+      "candidates": 7,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.984,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 4.4,
+          "threshold": "2.35..9.80 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -19.3,
+            "true_peak_dbtp": -3.8
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.0,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.4,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.0,
+        "true_peak_dbtp": -1.4,
+        "gain_db": 3.7,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -19.3,
+        "master_true_peak_dbtp": -3.8,
+        "iterations": 2
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "One screen your phones and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9839,
+          "lufs": -19.1,
+          "true_peak_dbtp": -6.1,
+          "seconds": 4.16,
+          "median_hz": 158.4,
+          "lift_st": -0.17,
+          "score": 0.9936,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "One screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9826,
+          "lufs": -25.0,
+          "true_peak_dbtp": -6.0,
+          "seconds": 4.24,
+          "median_hz": 139.1,
+          "lift_st": -2.42,
+          "score": 0.993,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "One screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9842,
+          "lufs": -20.6,
+          "true_peak_dbtp": -2.0,
+          "seconds": 4.56,
+          "median_hz": 141.6,
+          "lift_st": -2.12,
+          "score": 0.9937,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1003,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "One screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9831,
+          "lufs": -21.4,
+          "true_peak_dbtp": -6.2,
+          "seconds": 4.32,
+          "median_hz": 150.9,
+          "lift_st": -1.01,
+          "score": 0.9932,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1004,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "one screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9837,
+          "lufs": -19.2,
+          "true_peak_dbtp": -1.5,
+          "seconds": 4.72,
+          "median_hz": 149.5,
+          "lift_st": -1.18,
+          "score": 0.9935,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1005,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "One screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.984,
+          "lufs": -19.3,
+          "true_peak_dbtp": -3.8,
+          "seconds": 4.4,
+          "median_hz": 161.6,
+          "lift_st": 0.17,
+          "score": 0.9958,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1006,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "One screen, your phones, and that friend who says they don't get competitive.",
+          "speaker_sim": 0.9772,
+          "lufs": -19.1,
+          "true_peak_dbtp": -1.7,
+          "seconds": 4.96,
+          "median_hz": 133.3,
+          "lift_st": -3.16,
+          "score": 0.9909,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-02",
+      "moment": "promo-02",
+      "variant": 2,
+      "delivery": "hype",
+      "text": "We set out to build a party racer. The cars took that personally.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-02.ogg",
+      "bytes": 22177,
+      "sha256": "5212d5d5ea91740ae72e291e3576c290c7e33d986664775b6c1ed60f17c13e9b",
+      "seconds": 3.59,
+      "seed": 1004,
+      "candidates": 7,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9725,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 3.84,
+          "threshold": "2.35..9.80 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -21.8,
+            "true_peak_dbtp": -4.9
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.1,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.7,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.1,
+        "true_peak_dbtp": -1.7,
+        "gain_db": 6.2,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -21.7,
+        "master_true_peak_dbtp": -4.9,
+        "iterations": 2
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9778,
+          "lufs": -22.7,
+          "true_peak_dbtp": -6.4,
+          "seconds": 4.0,
+          "median_hz": 142.9,
+          "lift_st": -1.96,
+          "score": 0.9911,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9819,
+          "lufs": -21.5,
+          "true_peak_dbtp": -4.8,
+          "seconds": 4.16,
+          "median_hz": 156.9,
+          "lift_st": -0.34,
+          "score": 0.9928,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9789,
+          "lufs": -21.1,
+          "true_peak_dbtp": -3.3,
+          "seconds": 4.24,
+          "median_hz": 161.6,
+          "lift_st": 0.17,
+          "score": 0.9937,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1003,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9775,
+          "lufs": -22.2,
+          "true_peak_dbtp": -4.7,
+          "seconds": 3.04,
+          "median_hz": 172.0,
+          "lift_st": 1.25,
+          "score": 1.0067,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1004,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9725,
+          "lufs": -21.8,
+          "true_peak_dbtp": -4.9,
+          "seconds": 3.84,
+          "median_hz": 186.0,
+          "lift_st": 2.61,
+          "score": 1.0216,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1005,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9778,
+          "lufs": -23.1,
+          "true_peak_dbtp": -8.1,
+          "seconds": 3.84,
+          "median_hz": 135.6,
+          "lift_st": -2.86,
+          "score": 0.9911,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1006,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "We set out to build a party racer. The cars took that personally.",
+          "speaker_sim": 0.9763,
+          "lufs": -28.0,
+          "true_peak_dbtp": -10.3,
+          "seconds": 3.92,
+          "median_hz": 165.8,
+          "lift_st": 0.62,
+          "score": 0.9982,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-03",
+      "moment": "promo-03",
+      "variant": 3,
+      "delivery": "hype",
+      "text": "Built from reference sheets. Rebuilt until the wheels finally got the message.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-03.ogg",
+      "bytes": 27157,
+      "sha256": "5d84bbb57b2166a8160d966c75fc73705633bb142d8225da38f7ba603333c1d1",
+      "seconds": 4.4,
+      "seed": 1002,
+      "candidates": 3,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9854,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 4.4,
+          "threshold": "2.20..9.20 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -19.9,
+            "true_peak_dbtp": -1.8
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.1,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.6,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.1,
+        "true_peak_dbtp": -1.6,
+        "gain_db": 4.6,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -19.9,
+        "master_true_peak_dbtp": -1.8,
+        "iterations": 2
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Built from reference sheets, rebuilt until the wheels finally got the message.",
+          "speaker_sim": 0.9841,
+          "lufs": -20.1,
+          "true_peak_dbtp": -1.6,
+          "seconds": 5.6,
+          "median_hz": 155.3,
+          "lift_st": -0.52,
+          "score": 0.9936,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Built from reference sheets, rebuilt until the wheels finally got the message.",
+          "speaker_sim": 0.9814,
+          "lufs": -19.9,
+          "true_peak_dbtp": -3.7,
+          "seconds": 3.44,
+          "median_hz": 158.4,
+          "lift_st": -0.17,
+          "score": 0.9926,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "Built from reference sheets, rebuilt until the wheels finally got the message.",
+          "speaker_sim": 0.9854,
+          "lufs": -19.9,
+          "true_peak_dbtp": -1.8,
+          "seconds": 4.4,
+          "median_hz": 164.9,
+          "lift_st": 0.52,
+          "score": 1.0007,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-04",
+      "moment": "promo-04",
+      "variant": 4,
+      "delivery": "hype",
+      "text": "Then we gave a sensible car some deeply unreasonable roads.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-04.ogg",
+      "bytes": 22980,
+      "sha256": "0cae4074e7074b832470d6976aa9324e1b99a982558921a7cbf5ba1c154fe889",
+      "seconds": 3.53,
+      "seed": 1000,
+      "candidates": 3,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9834,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 3.6,
+          "threshold": "1.90..8.00 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -22.0,
+            "true_peak_dbtp": -4.7
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -15.9,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.6,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -15.9,
+        "true_peak_dbtp": -1.6,
+        "gain_db": 6.4,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -22.2,
+        "master_true_peak_dbtp": -4.7,
+        "iterations": 2
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "Then we gave a sensible car some deeply unreasonable roads.",
+          "speaker_sim": 0.9834,
+          "lufs": -22.0,
+          "true_peak_dbtp": -4.7,
+          "seconds": 3.6,
+          "median_hz": 148.1,
+          "lift_st": -1.34,
+          "score": 0.9934,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Then we gave a sensible car some deeply unreasonable roads.",
+          "speaker_sim": 0.9782,
+          "lufs": -24.3,
+          "true_peak_dbtp": -6.6,
+          "seconds": 3.44,
+          "median_hz": 132.2,
+          "lift_st": -3.3,
+          "score": 0.9913,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Then we gave a sensible car some deeply unreasonable roads.",
+          "speaker_sim": 0.9827,
+          "lufs": -21.0,
+          "true_peak_dbtp": -3.4,
+          "seconds": 4.16,
+          "median_hz": 137.9,
+          "lift_st": -2.57,
+          "score": 0.9931,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-05",
+      "moment": "promo-05",
+      "variant": 5,
+      "delivery": "hype",
+      "text": "Take the risky line. Find your grip. Make the next corner somebody else's problem.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-05.ogg",
+      "bytes": 29375,
+      "sha256": "2c046d1bd2f60b7eb23a00aa1d172bc0143f1eb18bd1e33037fd7bfffd09c973",
+      "seconds": 4.73,
+      "seed": 1002,
+      "candidates": 3,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9859,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 5.04,
+          "threshold": "2.50..10.40 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -21.6,
+            "true_peak_dbtp": -2.2
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.0,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.6,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.0,
+        "true_peak_dbtp": -1.6,
+        "gain_db": 6.6,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -21.6,
+        "master_true_peak_dbtp": -2.2,
+        "iterations": 3
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Take the risky line, find your grip, make the next corner somebody else's problem.",
+          "speaker_sim": 0.9851,
+          "lufs": -22.7,
+          "true_peak_dbtp": -6.5,
+          "seconds": 4.24,
+          "median_hz": 173.9,
+          "lift_st": 1.44,
+          "score": 1.0121,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Take the risky line, find your grip, make the next corner somebody else's problem.",
+          "speaker_sim": 0.9849,
+          "lufs": -22.8,
+          "true_peak_dbtp": -7.2,
+          "seconds": 5.44,
+          "median_hz": 148.9,
+          "lift_st": -1.24,
+          "score": 0.994,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "Take the risky line, find your grip, make the next corner somebody else's problem.",
+          "speaker_sim": 0.9859,
+          "lufs": -21.6,
+          "true_peak_dbtp": -2.2,
+          "seconds": 5.04,
+          "median_hz": 183.9,
+          "lift_st": 2.41,
+          "score": 1.0245,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-06",
+      "moment": "promo-06",
+      "variant": 6,
+      "delivery": "hype",
+      "text": "No installs. Just open a browser, scan in, and race together.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-06.ogg",
+      "bytes": 32023,
+      "sha256": "b852cffd3403bae18e7e4e141251e987c04e53e95737164edf4cab50fdb24c2d",
+      "seconds": 5.26,
+      "seed": 1001,
+      "candidates": 3,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9838,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 5.44,
+          "threshold": "2.05..8.60 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -17.7,
+            "true_peak_dbtp": -0.6
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.1,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.5,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.1,
+        "true_peak_dbtp": -1.5,
+        "gain_db": 2.6,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -17.7,
+        "master_true_peak_dbtp": -0.6,
+        "iterations": 3
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "No installs, just open a browser, scan in and race together.",
+          "speaker_sim": 0.9818,
+          "lufs": -21.2,
+          "true_peak_dbtp": -3.6,
+          "seconds": 5.6,
+          "median_hz": 160.0,
+          "lift_st": 0.0,
+          "score": 0.9927,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "No installs, just open a browser, scan in and race together.",
+          "speaker_sim": 0.9838,
+          "lufs": -17.7,
+          "true_peak_dbtp": -0.6,
+          "seconds": 5.44,
+          "median_hz": 160.8,
+          "lift_st": 0.09,
+          "score": 0.9946,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "No installs, just open a browser, scan in and race together.",
+          "speaker_sim": 0.982,
+          "lufs": -23.3,
+          "true_peak_dbtp": -5.8,
+          "seconds": 5.04,
+          "median_hz": 144.1,
+          "lift_st": -1.81,
+          "score": 0.9928,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    },
+    {
+      "id": "promo-07",
+      "moment": "promo-07",
+      "variant": 7,
+      "delivery": "hype",
+      "text": "Joystick Jammers. Bring your friends. Leave your dignity at the starting line.",
+      "reference": "excited-ref-aussie-hype",
+      "file": "promo-07.ogg",
+      "bytes": 22851,
+      "sha256": "88e556527abc49ffa425d2f4864f7cf0a9836fa28787b1d223f56549fcf3812c",
+      "seconds": 3.66,
+      "seed": 1002,
+      "candidates": 3,
+      "take_screens_pass": true,
+      "screens": {
+        "wer": {
+          "value": 0.0,
+          "threshold": "<= 0.0",
+          "pass": true
+        },
+        "speaker_sim": {
+          "value": 0.9836,
+          "threshold": ">= 0.93",
+          "pass": true
+        },
+        "duration": {
+          "value": 4.16,
+          "threshold": "2.20..9.20 s",
+          "pass": true
+        },
+        "raw_loudness": {
+          "value": {
+            "lufs": -21.0,
+            "true_peak_dbtp": -7.1
+          },
+          "threshold": "LUFS >= -45.0, true peak <= 0.0 dBTP",
+          "pass": true
+        },
+        "pass": true,
+        "export": {
+          "lufs": {
+            "value": -16.0,
+            "threshold": "-16.0 +/- 1.0 LU",
+            "pass": true
+          },
+          "true_peak": {
+            "value": -1.6,
+            "threshold": "<= -1.0 dBTP",
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "export": {
+        "lufs": -16.0,
+        "true_peak_dbtp": -1.6,
+        "gain_db": 5.2,
+        "limiter_ceiling": 0.82,
+        "master_lufs": -20.8,
+        "master_true_peak_dbtp": -7.1,
+        "iterations": 2
+      },
+      "pass": true,
+      "takes": [
+        {
+          "seed": 1000,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Joystick, jammers, bring your friends, leave your dignity at the starting line.",
+          "speaker_sim": 0.984,
+          "lufs": -20.4,
+          "true_peak_dbtp": -5.3,
+          "seconds": 4.4,
+          "median_hz": 148.1,
+          "lift_st": -1.34,
+          "score": 0.9936,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1001,
+          "picked": false,
+          "wer": 0.0,
+          "heard": "Joystick Jammers, bring your friends, leave your dignity at the starting line.",
+          "speaker_sim": 0.9803,
+          "lufs": -19.3,
+          "true_peak_dbtp": -1.9,
+          "seconds": 3.44,
+          "median_hz": 137.9,
+          "lift_st": -2.57,
+          "score": 0.9921,
+          "pass": true,
+          "failed": []
+        },
+        {
+          "seed": 1002,
+          "picked": true,
+          "wer": 0.0,
+          "heard": "Joystick jammers, bring your friends, leave your dignity at the starting line.",
+          "speaker_sim": 0.9836,
+          "lufs": -21.0,
+          "true_peak_dbtp": -7.1,
+          "seconds": 4.16,
+          "median_hz": 170.2,
+          "lift_st": 1.07,
+          "score": 1.0068,
+          "pass": true,
+          "failed": []
+        }
+      ]
+    }
+  ],
+  "privacy_note": "Private reference transcript omitted; raw references and clone prompts remain on eris."
+}

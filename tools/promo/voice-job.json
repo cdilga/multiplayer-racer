@@ -1,0 +1,65 @@
+{
+  "sheet": {
+    "path": "tools/promo/narration.tsv",
+    "sha256": "dfb97c7a71f8d8eed9451354d1e67706c64fa17d56b201468072b98bbdb3eaef",
+    "rows": 7
+  },
+  "rows": [
+    {
+      "id": "promo-01",
+      "moment_id": "promo-01",
+      "variant": 1,
+      "text": "One screen. Your phones. And that friend who says they don't get competitive.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-02",
+      "moment_id": "promo-02",
+      "variant": 2,
+      "text": "We set out to build a party racer. The cars took that personally.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-03",
+      "moment_id": "promo-03",
+      "variant": 3,
+      "text": "Built from reference sheets. Rebuilt until the wheels finally got the message.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-04",
+      "moment_id": "promo-04",
+      "variant": 4,
+      "text": "Then we gave a sensible car some deeply unreasonable roads.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-05",
+      "moment_id": "promo-05",
+      "variant": 5,
+      "text": "Take the risky line. Find your grip. Make the next corner somebody else's problem.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-06",
+      "moment_id": "promo-06",
+      "variant": 6,
+      "text": "No installs. Just open a browser, scan in, and race together.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-07",
+      "moment_id": "promo-07",
+      "variant": 7,
+      "text": "Joystick Jammers. Bring your friends. Leave your dignity at the starting line.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    }
+  ]
+}

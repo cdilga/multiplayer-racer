@@ -1,0 +1,78 @@
+{
+  "seconds": 36.733,
+  "fps": 30,
+  "size": [
+    1280,
+    720
+  ],
+  "timeline": [
+    {
+      "start": 0,
+      "seconds": 5.266666666666667,
+      "shot": "rivals",
+      "voice": "promo-01.ogg",
+      "text": "One screen. Your phones. And that friend who says they don't get competitive.",
+      "title": "ONE SCREEN. ZERO PEACE.",
+      "label": "BRING YOUR FRIENDS"
+    },
+    {
+      "start": 5.267,
+      "seconds": 4.433333333333334,
+      "shot": "town",
+      "voice": "promo-02.ogg",
+      "text": "We set out to build a party racer. The cars took that personally.",
+      "title": "A PERFECTLY SENSIBLE IDEA.",
+      "label": "THEN THE CARS GOT INVOLVED"
+    },
+    {
+      "start": 9.7,
+      "seconds": 5.266666666666667,
+      "shot": "dirt",
+      "voice": "promo-03.ogg",
+      "text": "Built from reference sheets. Rebuilt until the wheels finally got the message.",
+      "title": "BUILT. BROKEN. REBUILT.",
+      "label": "FROM REFERENCE SHEETS TO RIVALRY"
+    },
+    {
+      "start": 14.967,
+      "seconds": 4.4,
+      "shot": "jump",
+      "voice": "promo-04.ogg",
+      "text": "Then we gave a sensible car some deeply unreasonable roads.",
+      "title": "DEEPLY UNREASONABLE ROADS.",
+      "label": "GRAVITY HAS ENTERED THE CHAT"
+    },
+    {
+      "start": 19.367,
+      "seconds": 5.6,
+      "shot": "rocks",
+      "voice": "promo-05.ogg",
+      "text": "Take the risky line. Find your grip. Make the next corner somebody else's problem.",
+      "title": "TAKE THE RISKY LINE.",
+      "label": "THERE IS ALWAYS ANOTHER CORNER"
+    },
+    {
+      "start": 24.967,
+      "seconds": 6.1,
+      "shot": "rivals",
+      "voice": "promo-06.ogg",
+      "text": "No installs. Just open a browser, scan in, and race together.",
+      "title": "YOUR PHONE IS THE CONTROLLER.",
+      "label": "OPEN A BROWSER. SCAN IN. RACE."
+    },
+    {
+      "start": 31.067,
+      "seconds": 5.666666666666667,
+      "shot": "town",
+      "voice": "promo-07.ogg",
+      "text": "Joystick Jammers. Bring your friends. Leave your dignity at the starting line.",
+      "title": "JOYSTICK JAMMERS",
+      "label": "BRING YOUR FRIENDS. LEAVE YOUR DIGNITY."
+    }
+  ],
+  "video_sha256": "14474a45ea9ef8f7fe40668cfd75e64b8a904ed6580e769a54cd63f664f7dd44",
+  "music": "assets/audio/music/race-2.ogg",
+  "music_sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
+  "engine_sha256": "aded492721be8323f8fc4f6beedb5aedcd28c571c6511caac051828cf7d7c813",
+  "audio_note": "Editorial mix of approved exports, not live synchronised gameplay audio. Voice + ducked instrumental score + engine/SFX bed; final loudnorm -16 LUFS/-1.5 dBTP."
+}

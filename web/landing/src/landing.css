@@ -56,7 +56,7 @@ body {
 }
 /* Short landscape phones: keep both panels on one screen. */
 @media (max-height: 480px) and (min-width: 720px) {
-  .stage { gap: var(--sp-5); padding-block: var(--sp-3); }
+  .stage { gap: var(--sp-5); padding-block: var(--sp-5); }
   .car { display: none; }
   .actions { gap: var(--sp-4); }
   .actions .panel { gap: var(--sp-2); padding: var(--sp-3); }
@@ -67,3 +67,15 @@ body {
 .foot { text-align: center; }
 .credits-link { display: inline-block; padding: .35em .9em; background: var(--c-paper); color: var(--c-ink); border: var(--outline) solid var(--c-ink); font-weight: 700; text-decoration: none; }
 .credits-link:hover, .credits-link:focus-visible { background: var(--c-saffron); }
+
+.trailer { min-width: 0; display: grid; gap: var(--sp-3); }
+.trailer-heading h2 { margin: 0 0 var(--sp-2); font: 900 italic var(--fs-heading)/1 var(--font-display); text-transform: uppercase; }
+.trailer-heading p, #trailer-note { color: var(--c-ink-soft); font-weight: 600; }
+.trailer video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--c-ink); border: var(--outline) solid var(--c-ink); }
+.trailer video:focus-visible { outline: 4px solid var(--c-saffron); outline-offset: 3px; }
+#trailer-note { margin: 0; font-size: var(--fs-label); }
+@media (min-width: 720px) and (orientation: landscape) {
+  .trailer, .foot { grid-column: 1 / -1; }
+  .trailer { grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); align-items: center; }
+  #trailer-note { grid-column: 2; }
+}

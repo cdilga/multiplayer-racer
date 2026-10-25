@@ -180,7 +180,14 @@ impl App {
             (_, r) if get && r.starts_with("j/") && RoomCode::parse(&r[2..]).is_some() => {
                 self.bundle.page(Page::Controller)
             }
-            (_, r) if get && r.starts_with("assets/") => self.bundle.file(r),
+            (_, r) if get && r.starts_with("assets/") => self.bundle.file_range(
+                r,
+                if req.method == "GET" {
+                    req.header("range")
+                } else {
+                    None
+                },
+            ),
             (_, r) if get && r.starts_with("downloads/") => self.bundle.download(r),
             (_, r) if get && r.starts_with("test/") => {
                 if self.cfg.realm == "production" {

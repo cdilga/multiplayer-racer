@@ -58,6 +58,8 @@ pub fn content_type(path: &str) -> &'static str {
         "glb" => "model/gltf-binary",
         "ogg" => "audio/ogg",
         "mp3" => "audio/mpeg",
+        "mp4" => "video/mp4",
+        "vtt" => "text/vtt; charset=utf-8",
         "txt" => "text/plain; charset=utf-8",
         _ => "application/octet-stream",
     }
@@ -66,7 +68,7 @@ pub fn content_type(path: &str) -> &'static str {
 /// Rewrites a page's relative asset references (`./assets/`, `../assets/`, `../../assets/` for the credits page, and the same for `test/`) to `{base}assets/`
 /// and adds the base meta tag. `base` starts and ends with `/`.
 ///
-/// With a public `origin`, `<meta content>` asset references (the share card's `og:image` and `twitter:image`) become
+/// With a public `origin`, `<meta content>` asset references (social images and `og:video`) become
 /// absolute URLs: link-preview scrapers don't resolve paths against the page, so a preview's card has to name its own host.
 pub fn rewrite_page(html: &str, base: &str, origin: Option<&str>) -> String {
     let mut out = html.to_owned();
@@ -167,10 +169,48 @@ impl Bundle {
 
     /// `assets/…` or `test/…`: immutable when found, a real 404 (never the SPA page) when not.
     pub fn file(&self, rel: &str) -> Response {
+        self.file_range(rel, None)
+    }
+
+    /// Single byte ranges let native video players seek without downloading the whole trailer.
+    /// Unsupported or malformed range syntax falls back to a full response (RFC 9110).
+    pub fn file_range(&self, rel: &str, range: Option<&str>) -> Response {
         match self.files.get(rel) {
-            Some(f) => Response::bytes(200, f.content_type, f.bytes.clone())
-                .cache(IMMUTABLE)
-                .with_header("x-content-type-options", "nosniff"),
+            Some(f) => {
+                let len = f.bytes.len();
+                let parsed = range
+                    .and_then(|r| r.strip_prefix("bytes="))
+                    .and_then(|r| r.split_once('-'))
+                    .and_then(|(start, end)| {
+                        if start.is_empty() {
+                            let suffix = end.parse::<usize>().ok()?;
+                            Some((len.saturating_sub(suffix), len.saturating_sub(1)))
+                        } else {
+                            let start = start.parse::<usize>().ok()?;
+                            let end = if end.is_empty() {
+                                len.saturating_sub(1)
+                            } else {
+                                end.parse::<usize>().ok()?.min(len.saturating_sub(1))
+                            };
+                            Some((start, end))
+                        }
+                    });
+                let response = match parsed {
+                    Some((start, end)) if len == 0 || start >= len || start > end => {
+                        Response::bytes(416, f.content_type, Vec::new())
+                            .with_header("content-range", &format!("bytes */{len}"))
+                    }
+                    Some((start, end)) => {
+                        Response::bytes(206, f.content_type, f.bytes[start..=end].to_vec())
+                            .with_header("content-range", &format!("bytes {start}-{end}/{len}"))
+                    }
+                    None => Response::bytes(200, f.content_type, f.bytes.clone()),
+                };
+                response
+                    .cache(IMMUTABLE)
+                    .with_header("accept-ranges", "bytes")
+                    .with_header("x-content-type-options", "nosniff")
+            }
             None => Response::not_found(),
         }
     }
@@ -277,5 +317,60 @@ mod tests {
         // Without an origin (local dev) the path is left rooted at the base.
         let dev = rewrite_page(html, "/p/z/", None);
         assert!(dev.contains("content=\"/p/z/assets/og-card.png\""), "{dev}");
+    }
+
+    #[test]
+    fn trailer_metadata_and_player_resolve_under_each_realm() {
+        let html = "<head><meta property=\"og:video\" content=\"../../assets/trailer.mp4\" />\
+                    <meta property=\"og:video:secure_url\" content=\"../../assets/trailer.mp4\" /></head>\
+                    <video poster=\"../../assets/poster.jpg\"><source src=\"../../assets/trailer.mp4\" />\
+                    <track src=\"../../assets/captions.vtt\" /></video>";
+        for base in ["/", "/p/trailer/"] {
+            let out = rewrite_page(html, base, Some("https://jammers.dilger.dev/"));
+            assert_eq!(
+                out.matches(&format!(
+                    "content=\"https://jammers.dilger.dev{base}assets/trailer.mp4\""
+                ))
+                .count(),
+                2,
+                "{out}"
+            );
+            for file in ["trailer.mp4", "captions.vtt", "poster.jpg"] {
+                assert!(out.contains(&format!("\"{base}assets/{file}\"")), "{out}");
+            }
+        }
+        assert_eq!(content_type("assets/trailer.mp4"), "video/mp4");
+        assert_eq!(
+            content_type("assets/captions.vtt"),
+            "text/vtt; charset=utf-8"
+        );
+    }
+
+    #[test]
+    fn media_ranges_cover_probes_seeking_suffixes_and_bad_requests() {
+        let mut bundle = Bundle::empty();
+        bundle.insert("assets/trailer.mp4", b"0123456789");
+        for (range, status, body, content_range) in [
+            ("bytes=0-1", 206, "01", Some("bytes 0-1/10")),
+            ("bytes=7-", 206, "789", Some("bytes 7-9/10")),
+            ("bytes=-3", 206, "789", Some("bytes 7-9/10")),
+            ("bytes=-20", 206, "0123456789", Some("bytes 0-9/10")),
+            ("bytes=7-999", 206, "789", Some("bytes 7-9/10")),
+            ("bytes=10-", 416, "", Some("bytes */10")),
+            ("bytes=-0", 416, "", Some("bytes */10")),
+            ("bytes=5-2", 416, "", Some("bytes */10")),
+            ("bytes=nope", 200, "0123456789", None),
+            ("bytes=0-1,4-5", 200, "0123456789", None),
+        ] {
+            let response = bundle.file_range("assets/trailer.mp4", Some(range));
+            assert_eq!(response.status, status, "{range}");
+            assert_eq!(
+                response.body,
+                crate::http::Body::Bytes(body.as_bytes().to_vec()),
+                "{range}"
+            );
+            assert_eq!(response.header("content-range"), content_range, "{range}");
+            assert_eq!(response.header("accept-ranges"), Some("bytes"));
+        }
     }
 }

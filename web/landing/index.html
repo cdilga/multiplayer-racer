@@ -17,6 +17,11 @@
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Joystick Jammers: the wordmark and a chunky blue rally car over outback red earth" />
+    <meta property="og:video" content="../../assets/promo/bring-your-friends.mp4" />
+    <meta property="og:video:secure_url" content="../../assets/promo/bring-your-friends.mp4" />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="1280" />
+    <meta property="og:video:height" content="720" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Joystick Jammers: the phone-controller party racer" />
     <meta name="twitter:description" content="Everyone races on one big screen, steering from their own phone. Grab your mates, open a browser, no installs." />
@@ -50,6 +55,18 @@
           <button class="btn btn-primary big wide display brush" id="join" type="submit">Join a room</button>
         </form>
       </div>
+      <section class="trailer panel" aria-labelledby="trailer-heading">
+        <div class="trailer-heading">
+          <h2 id="trailer-heading">Bring your friends.<br />Leave your dignity.</h2>
+          <p>One screen. Your phones. A very competitive night in.</p>
+        </div>
+        <video id="promo-video" controls playsinline preload="none" width="1280" height="720" poster="../../assets/promo/bring-your-friends.jpg" aria-label="Joystick Jammers promotional trailer" aria-describedby="trailer-note">
+          <source src="../../assets/promo/bring-your-friends.mp4" type="video/mp4" />
+          <track default kind="captions" srclang="en" label="English" src="../../assets/promo/bring-your-friends.vtt?no-inline" />
+          Your browser cannot play this video. <a href="../../assets/promo/bring-your-friends.mp4">Download the trailer</a>.
+        </video>
+        <p id="trailer-note">Watch the trailer · sound on for the full experience. Work-in-progress gameplay.</p>
+      </section>
       <footer class="foot"><a class="credits-link" id="credits-link" href="credits">Credits and licences</a></footer>
     </main>
     <script type="module" src="./src/main.ts"></script>
