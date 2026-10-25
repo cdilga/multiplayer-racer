@@ -21,3 +21,14 @@ mkdir -p "$hooks/hooks.d/pre-commit"
 printf '%s\n' "${shim/commit-msg/pre-commit-rustfmt}" >"$hooks/hooks.d/pre-commit/40-rustfmt"
 chmod +x "$hooks/hooks.d/pre-commit/40-rustfmt" "$repo/scripts/hooks/pre-commit-rustfmt"
 echo "install: pre-commit chain 40-rustfmt -> scripts/hooks/pre-commit-rustfmt"
+# Keep the installed Agent Mail reader/matcher outside the executable chain.
+# The versioned adapter checks each outgoing commit under its author's identity.
+guard=$hooks/hooks.d/pre-push/50-agent-mail.py
+if [[ -f $guard ]] && ! grep -q 'scripts/hooks/pre-push-agent-mail.py' "$guard"; then
+    cp "$guard" "$hooks/agent-mail-pre-push-base.py"
+fi
+if [[ -f $hooks/agent-mail-pre-push-base.py ]]; then
+    printf '%s\n' "${shim/commit-msg/pre-push-agent-mail.py}" >"$guard"
+    chmod +x "$guard" "$repo/scripts/hooks/pre-push-agent-mail.py"
+    echo "install: pre-push checks each commit's Agent trailer"
+fi

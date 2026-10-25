@@ -7,9 +7,4 @@
 #
 # Usage: scripts/push.sh [<branch>]   (default: the current branch). Needs AGENT_NAME for the pre-push hook.
 set -euo pipefail
-branch=${1:-$(git rev-parse --abbrev-ref HEAD)}
-for remote in gitea origin; do
-    git lfs push --all "$remote" "$branch" >/dev/null
-    git push -q "$remote" "$branch"
-    echo "push: $branch -> $remote ($(git rev-parse --short "$branch"))"
-done
+exec python3 "$(git rev-parse --show-toplevel)/scripts/agents/publish.py" "$@"

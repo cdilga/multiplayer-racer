@@ -46,8 +46,7 @@ Most important rules:
   architecture, protocols and the task graph are in `docs/plans/v0.2-playtest-1-plan.md`. A design
   POC (§3a, owner-gated) settles the UI look, grid layouts and phone controller first; the UI tasks
   wait for its verdict, everything else runs in parallel.
-- **Code:** the 0.2 code doesn't exist yet. The first bead (P1-F01) creates the Rust workspace and
-  `web/` packages. The 0.1 game was **removed** (R87); production has run 0.2 since 2026-10-19 and
+- **Code:** the 0.2 Rust workspace and `web/` packages are on `main`. The 0.1 game was **removed** (R87); production has run 0.2 since 2026-10-19 and
   `main` carries 0.2 since 2026-10-21. Read old code with `git show v0.1-final:<path>`, as evidence only. Never restore it.
 - **Infra:** `https://jammers-preview.dilger.dev/` is live (placeholder index until P1-D03/D05);
   coturn runs on TrueNAS. Audio is generated on **eris** (GPU box: `ssh eris`, workspace
@@ -97,39 +96,32 @@ Most important rules:
 
 ## Coordination
 
-- **One shared working tree.** Never create git worktrees or extra clones for agents (they caused an
-  integration nightmare). All agents edit the same tree and coordinate through native Claude
-  messaging and Agent Mail file reservations. Remote per-run directories are only for outputs,
-  browser profiles and server state, never code. eris keeps a clean clone kept in sync by `ru` (Jeffrey
-  Emanuel's Repo Updater) from pushed commits; nobody edits there (`scripts/remote/eris.sh` runs things in it).
-- Register with MCP Agent Mail at the start of every session using this project key:
-  `/Users/cdilga/Documents/dev/multiplayer-racer`
-- Use the exact Agent Mail name assigned in your prompt. If no name was assigned, register with an
-  auto-generated name and announce it. Commits need `AGENT_NAME=<your Agent Mail name>` (pre-commit guard).
-- With other agents running: check Agent Mail before claiming work, reserve files before editing
-  (specific paths or globs, not the whole repo), and announce claims, blockers and completion in a
-  thread named after the bead ID. **Solo, skip reservations and announcements**; register only for the
-  commit guard.
-- **NTM launches workers again** (owner, 2026-10-03, amends R91): native Claude Code sessions, or NTM
-  panes, including **OMP workers on GLM-5.3 at max thinking**
-  (`ntm spawn multiplayer-racer --omp=N:zai/glm-5.3:max --no-recovery --no-cass-context`). Never pass
-  `--worktrees`. Always pass `--no-recovery`: NTM's recovery prompt once made a new worker take over the
-  solo session's identity. OMP workers have no Claude hooks: they create their own Agent Mail identity
-  with the `am` CLI and follow the hooks' rules by hand (`docs/process/bead-workflow.md`, "OMP workers").
-  Agent Mail stays for file reservations and the commit guard.
-- **No agent cap, no roles (R93).** Run as many agents as the work and machines support. Agents are
-  fungible generalists: nobody owns a track; everyone picks the most useful ready work with
-  `bv --robot-triage`. Coupled systems (transport, sim, renderer) stay safe through narrow Agent Mail
-  file reservations, not assigned owners.
-- **Operating modes** (owner, 2026-10-03): **solo → 2 workers → 4 workers**, each step when the owner is
-  happy. **Solo:** one session (`JJ_ROLE=solo`) does the whole lot while the owner watches and cranks it
-  with `next`, `goal: …`, `verify` and `status`. **With workers:** each worker closes its own beads on
-  green CI, and a **verifier on call** handles hand-offs, red CI and evidence closes. The verifier runs
-  **on demand only** (no timers or `/loop`), so it costs nothing when work stops. Any session that
-  verifies **must register with Remote Control** (`claude --remote-control <name>`, or `/remote-control`
-  in a running session) so the owner can watch. Models: solo and workers on Opus 5.5 at medium effort,
-  delegating to their own Sonnet 5.5 subagents whenever it's faster (permitted without asking; ground rules in `docs/process/bead-workflow.md`, "Sonnet subagents"); the verifier on Sonnet 5.5. Start commands and the
-  crank table: `docs/process/bead-workflow.md`. NTM and Agent Mail can take over parts later.
+- **One shared working tree.** No worktrees or extra clones. All providers coordinate through Agent Mail
+  and narrow file reservations. Remote directories are for outputs/profiles/server state, never edited code.
+- **Provider-neutral sessions (owner, 2026-10-25, R140).** Claude Code, Codex and optional OMP GLM sessions
+  follow the same loop. Solo is the default; the owner may start a few concurrent sessions when useful.
+  No permanent coordinator, verifier or deploy session is required. A dedicated deploy session is optional.
+  Start with `python3 scripts/agents/start.py claude`, `… codex`, or `… omp`; add
+  `--mode worker` before the provider when joining other sessions. Models can be passed after `--`.
+  The launcher registers a fresh Agent Mail identity, exports `AGENT_NAME`/`JJ_ROLE`, pins Node and
+  sends the same startup instructions. Never reuse another live session's identity.
+- **Agent Mail:** project key `/Users/cdilga/Documents/dev/multiplayer-racer`. Native MCP tools or
+  `python3 scripts/agents/mail.py TOOL 'JSON'` reach the running server. The standalone `am` database
+  CLI conflicts with the server's activity lock; it is not a fallback. Never print local MCP credentials.
+  Existing sessions register once and prefix commits/pushes with their assigned `AGENT_NAME`.
+- **With other sessions active:** check inbox before claiming; reserve specific paths before editing;
+  announce claims/blockers/completion in a bead-ID thread. Solo skips reservations and announcements.
+  A model's native messages only reach its own helpers; use Agent Mail between independent sessions.
+- **Before every new bead:** reread this file, check inbox, then run
+  `AGENT_NAME=<name> python3 scripts/ci/pickup.py --claim`. A failed batch has one repair bead.
+  The first available agent claims it and fixes CI before taking fresh feature work. If another agent
+  owns the repair, continue disjoint game work. Never steal an active claim or abandon the current bead
+  merely because CI turned red. If the check fails, report it; do not assume CI is green.
+- **NTM is optional.** Use `--no-recovery --no-cass-context`, never `--worktrees`. All panes must use
+  the same bootstrap/identity/mail rules; see `docs/process/bead-workflow.md` for mixed-provider commands.
+- **Helpers:** permitted inside a claimed bead when faster, with disjoint files and parent reservations.
+  Helpers do not claim beads, mutate the tracker, commit or push. The parent verifies their work.
+  Claude Remote Control is optional visibility, never a requirement for Codex/OMP verification.
 - **Lean by default** (owner, 2026-10-03): no routine review rounds (CI and the bead's tests are the check);
   the bead is the contract, so don't read the whole plan, only the sections a bead cites; keep command
   output small (focused tests, long logs to files); a bead that proves bigger than one session is
@@ -144,49 +136,37 @@ Most important rules:
     (`.claude/hooks/session-env.sh`), so don't source nvm. Rust follows `rust-toolchain.toml`. Tools
     read their secrets from `~/.config/jammers/*.env` themselves; never source those files into a shell.
     Version checks are `scripts/doctor.sh`, run by CI and at machine setup, not mid-session.
-  - **Memory:** durable notes go in Claude Code's project memory: one fact per file plus the `MEMORY.md`
-    index, written with Write or Edit. `cm` isn't used in this project.
+  - **Memory:** shared durable facts go in `docs/learnings/<area>.md`; provider-local memory is optional.
+    Never rely on another provider reading private session memory. `cm` isn't used in this project.
 - Don't sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim
   it, reserve files, announce, and start.
 
-## CI has one owner, a budget, and never stands between the owner and the game (owner, 2026-10-17)
+## CI: next available agent owns the repair (owner, 2026-10-25, R140)
 
-**What went wrong (2026-10-16/17).** About 20 hours and half a week's usage went by with no new playable preview. Previews
-published only from a fully green run; with 8-9 agents pushing, each run took 35-60 min and every batch carried fresh
-failures (old tests asserting old behaviour, flaky journeys, data committed against another agent's uncommitted code), so
-it never went green. Every agent chased red lanes with diagnostic pushes that restarted the queue, and nobody owned the
-whole. The owner saw yesterday's build and concluded nothing had happened.
+This supersedes the permanent Haiku deploy worker, provider/model restrictions and two-session rule
+from 2026-10-17. Keep the lessons from the earlier CI churn: no diagnostic pushes, one repair owner,
+previews independent of green, focused reproduction, and bounded red time.
 
-**The rules that stop it happening again:**
-1. **One CI owner.** A single agent (the CI owner; since 2026-10-17 the Haiku deploy worker, `docs/process/deploy-worker.md`) is responsible for CI and the preview
-   flow end to end, and does whatever it takes to make them work for us. Every other agent stays on game work: it runs the
-   focused tests for what it touched before pushing, and fixes a red only when the CI owner hands it one with the cause.
-2. **The owner sees every build.** Previews publish from every CI run whose image built, red or not
-   (`publish.py --from-run <run>`, dispatched by the CI owner); the smoke marks it playable or not. Green is a quality
-   signal, never a gate on the owner seeing work. A day without a new playable preview is a P0 the CI owner fixes first.
-3. **Batches, fixed forward (R139).** A push starts a run; a run in progress finishes; everything since folds into one
-   batch. A red batch is fixed forward by reasoning (which change could cause it, reproduce, fix).
-4. **A red-time budget.** If CI has been red for 2 hours or 2 consecutive batches, the CI owner stops patching and
-   triages: quarantine the failing tests that block (skip with a P0 bead naming the test, the cause and the owner), revert
-   a breaking commit, or relax a timing assertion with a stated reason, until the batch is green. Never more than 2 hours
-   red.
-5. **No diagnostic pushes.** Reproduce on eris or locally (`scripts/remote/eris.sh`, focused journeys) and push only the
-   fix. Never commit data or code that only works with someone else's uncommitted changes.
-6. **Speed is part of the job.** The CI owner keeps a typical batch under 15 min (selective suites, caches, partitioning,
-   GPU runner for GL-heavy journeys), and records per-lane timings in `docs/evidence/P1-CI-speed/`.
-7. **Watch the spend.** The coordinator scales workers down when CI churn outweighs feature work, and reports usage to the
-   owner rather than letting it run silently.
-8. **Nobody waits on CI; every session moves the game forward** (owner, 2026-10-17). Finish a bead locally (every
-   acceptance item with its focused test or evidence, visual self-review committed), push, hand it off with
-   `close.sh <id> --tests "…" --pending`, and start the next bead straight away. Never sit on `ci-status.sh --wait`,
-   poll a run, or hold a bead open for a batch. The deploy worker closes `batch_pending` beads when their batch is green
-   and hands any red back to the bead's author with the cause; the author fixes it forward as their next task. An idle
-   session, or one waiting on CI, is the coordinator's bug to fix that tick.
-9. **Two sessions** (owner, 2026-10-17): one Opus worker churns beads to done, one light Haiku deploy worker owns CI,
-   previews and `batch_pending` closes; the coordinator works beads too, all the time, and only glances at the other two
-   between its own commits (owner 2026-10-17: "why are you checking in every 30 mins and not working on the beads?").
-   More sessions need the owner. Every session, and
-   every coordinator loop tick, rereads this file (`AGENTS.md`) before acting.
+1. **Check at bead boundaries.** `python3 scripts/ci/pickup.py --claim` checks Gitea once and
+   deduplicates/atomically claims a P0 `ci:repair` bead for the latest failed branch batch.
+   Any provider can own it. Other agents continue their own game work.
+2. **Fix forward.** Read the failed jobs and assertions, reproduce locally or on eris, then push the
+   actual fix. Do not bounce every red lane to authors or let several agents debug the same batch.
+   Ask the author for context when useful; repair ownership stays explicit in Beads.
+3. **Batches.** A push starts CI. A running batch finishes; intervening pushes fold into the next.
+   Do not dispatch repeatedly for an unchanged commit. An infrastructure-killed job can be rerun once
+   after its cause is understood. No diagnostic pushes or polling loops.
+4. **Previews.** Publish every built image, red or green; record its smoke result. A day without a
+   playable preview is P0. The repair owner handles this during the repair; solo handles it itself.
+5. **Red budget.** After 2 hours or 2 consecutive red batches, stop speculative patching and triage.
+   A quarantined test needs a P0 bead with the test, cause, owner and restoration condition; a timing
+   change needs measured evidence. Never weaken gameplay requirements or claim an unmet acceptance.
+6. **Finish locally, keep moving.** `scripts/beads/close.sh <id> --tests "AC1: …"` pushes and defaults
+   to `batch_pending`. It never waits. At the next boundary inspect pending handoffs; close green ones
+   with `--finalize --commit <handoff-sha>` and their recorded tests. This checks CI once, without
+   dispatching or waiting. A red repair handoff is resumed by the next available agent.
+7. **Small by default.** Usually one session does everything. Add sessions only when the owner wants
+   them, with narrow reservations and an explicit repair claim. No permanent model-specific roles.
 
 ## Beads (Physical Soccer's model)
 
@@ -201,13 +181,11 @@ whole. The owner saw yesterday's build and concluded nothing had happened.
   mechanics or models until they work. Before committing, check the paths you changed (affected crates
   through RCH, the specs and scenarios you touched); leave the workspace-wide matrix to CI unless you
   changed a shared contract (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core).
-- Commit with the P1 ID and bead ID, then **close your own bead with one command**:
-  `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`. It pushes the commit and its LFS
-  objects, waits for green CI (`scripts/ci-status.sh --wait`), ticks the acceptance boxes, records the
-  `batch_verify` gate and closes with the run as the receipt. A red lane on your change is yours to fix.
-  `--pending` hands off to the deploy worker instead (`batch_pending`) and is **the default** (CI rule 8: don't wait). `--receipt docs/evidence/<P1-ID>/<file>`
-  covers owner, deploy-repo and hardware evidence, and every close before CI exists (P1-D01, P1-F02):
-  the receipt is a committed record of the commands and their output.
+- Commit with the P1 ID and bead ID, then hand off:
+  `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"` (defaults to `batch_pending`;
+  `--pending` remains accepted). No session waits on CI.
+  `--finalize --commit <handoff-sha>` closes only when a containing CI run is green, checking once.
+  `--receipt docs/evidence/<P1-ID>/<file>` covers committed owner/deploy/hardware evidence.
 - `br sync --flush-only` exports the DB to `.beads/issues.jsonl` (mutations usually auto-flush). More
   `br`/`bv` usage: `br robot-docs guide`, `br <cmd> --help`, `bv --help` (robot flags only).
 - Each bead carries its task's contract, acceptance and evidence from the Playtest-1 plan §15, plus the
@@ -269,13 +247,13 @@ whole. The owner saw yesterday's build and concluded nothing had happened.
 - Keep file reservations narrow and release them when done.
 - **Commit and push freely** (owner, 2026-10-03). Every session commits, pushes and closes its own work
   as it goes: solo, worker and verifier alike. There's no separate committer and no asking.
-  - It's one shared tree, so anything else that's ready gets committed too: files another session left
-    behind, tracker exports, docs. Give it its own commit saying what it is. Leave only work that's
-    visibly mid-edit (it doesn't build, or a test it touches fails).
+  - Commit your reviewed paths. Another session's files require an explicit handoff before you commit
+    them; never infer readiness from a dirty tree. Tracker exports can be committed with your next change.
   - Mechanics: stage specific paths, and commit with `git commit -- <paths>` so half-staged work elsewhere
     stays out. `AGENT_NAME` is set by the start commands; it's needed for the commit guard and the
     pre-push hook.
-  - `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>` afterwards.
+  - Use `scripts/push.sh`: it serializes publication, pins one SHA for both remotes, and uploads LFS
+    first. The pre-push guard checks each commit's Agent trailer against reservations, not its pusher.
   - Only force-pushing or rewriting pushed history needs the owner.
   - Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
     (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.

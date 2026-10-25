@@ -2,16 +2,18 @@
 # Close a bead in one command: the whole of docs/process/bead-workflow.md steps 4-6 (push, CI, tick, gate, close).
 #
 #   scripts/beads/close.sh <bead|P1-ID> --tests "AC1: <test> AC2: <test> …" [--comment "<one line>"]
-#       green CI containing the newest commit naming the bead (scripts/ci/green-for.py --wait), then closes
+#       default: push and hand off as batch_pending, without waiting
+#   scripts/beads/close.sh <bead|P1-ID> --tests "…" --finalize [--commit <sha>]
+#       check green CI once, then close; pending/red returns immediately
 #   scripts/beads/close.sh <bead|P1-ID> --tests "…" --receipt docs/evidence/<P1-ID>/<file>
 #       an evidence close (ev:owner/deploy-repo/hardware), or any close before CI exists (P1-D01, P1-F02)
 #   scripts/beads/close.sh <bead|P1-ID> --tests "…" --pending
-#       hand off instead of waiting: batch_pending with the commit and tests; the verifier closes it on green
+#       explicit spelling of the default handoff
 #
 # It finds the newest commit naming the bead, pushes it (and its LFS objects) if needed, ticks every acceptance
 # box, records the batch_verify gate and closes. Needs AGENT_NAME (the commit guard and the br actor).
-# Contract for scripts/ci/green-for.py: `--wait` blocks until a completed ci.yml run containing the commit decides, prints the run URL as its
-# last stdout line, and exits 0 green, 1 red, 2 still pending.
+# Contract for scripts/ci/green-for.py: checks once, prints the run URL last,
+# and exits 0 green, 1 red, 2 still pending.
 # Exit: 0 closed or handed off, 1 a step failed or CI is red, 2 usage, 3 CI still pending.
 set -euo pipefail
 
@@ -20,13 +22,15 @@ die() { echo "close: $*" >&2; exit 1; }
 
 [[ $# -ge 1 ]] || usage
 ref=$1; shift
-tests="" comment="" receipt="" pending=0
+tests="" comment="" receipt="" pending=1 commit=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --tests) tests=${2:?--tests needs text}; shift ;;
         --comment) comment=${2:?--comment needs text}; shift ;;
-        --receipt) receipt=${2:?--receipt needs a path}; shift ;;
+        --receipt) receipt=${2:?--receipt needs a path}; pending=0; shift ;;
         --pending) pending=1 ;;
+        --finalize) pending=0 ;;
+        --commit) commit=${2:?--commit needs a revision}; shift ;;
         *) usage ;;
     esac
     shift
@@ -47,8 +51,10 @@ PY
     [[ -n $id ]] || die "no single open bead carries external_ref $ref"
 fi
 
-sha=$(git log -1 --format=%H --grep="$id" HEAD)
+sha=${commit:-$(git log -1 --format=%H --fixed-strings --grep="$id" HEAD)}
 [[ -n $sha ]] || die "no commit on this branch names $id: commit with the P1 ID and bead ID first"
+sha=$(git rev-parse --verify "$sha^{commit}")
+git merge-base --is-ancestor "$sha" HEAD || die "$sha is not on this branch"
 short=${sha:0:9}
 
 # Push the commit and its LFS objects when the bead's commit isn't on the upstream yet. Only then: in the shared tree the
@@ -91,8 +97,8 @@ for d in map(json.loads, open(".beads/issues.jsonl")):
 fi
 
 if [[ $pending == 1 ]]; then
-    br update "$id" --status batch_pending --transition-comment "commit:$short $tests" --actor "$AGENT_NAME" >/dev/null
-    echo "close: $id handed off (batch_pending, commit $short); the verifier closes it when CI is green"
+    br update "$id" --status batch_pending --transition-comment "commit:$sha $tests" --actor "$AGENT_NAME" >/dev/null
+    echo "close: $id handed off (batch_pending, commit $short); finalize at the next bead boundary when CI is green"
     exit 0
 fi
 
@@ -104,11 +110,8 @@ if [[ -n $receipt ]]; then
 else
     # Green = any completed, successful ci.yml run on a commit that contains $sha (scripts/ci/green-for.py): waiting
     # runs are replaced by newer pushes, so the bead's own commit often never gets a run of its own.
-    # R139: CI runs only on dispatch. If no run containing the commit is green or under way, start the selective batch.
-    set +e; scripts/ci/green-for.py "$sha" --branch "$branch" >/dev/null 2>&1; now=$?; set -e
-    if [[ $now -ne 0 && $now -ne 2 ]]; then scripts/ci/run.sh; fi
-    echo "close: waiting for a green CI run containing $short"
-    set +e; out=$(scripts/ci/green-for.py "$sha" --wait --branch "$branch"); rc=$?; set -e
+    # A push already starts CI. Finalization never dispatches a duplicate run or waits.
+    set +e; out=$(scripts/ci/green-for.py "$sha" --branch "$branch"); rc=$?; set -e
     case $rc in
         0) ;;
         2) echo "close: no completed CI run contains $short yet; rerun later or use --pending" >&2; exit 3 ;;

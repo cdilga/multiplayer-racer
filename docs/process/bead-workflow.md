@@ -1,93 +1,120 @@
 # Bead workflow
 
-> **2026-10-03 (owner): Physical Soccer's model.** A session takes a bead, builds it with its tests,
-> checks its own area, pushes, and **closes the bead itself once Gitea CI is green** on a commit that
-> contains it. A verifier stays on call for what CI can't do alone. This replaces the 2026-09-30
-> code-first/batch-verify doctrine (waves, `batch_pending` as the only route to closed, a dedicated
-> closer). Where older docs or the plan say "batch verifier", "wave" or `ev:wave`, read this file.
+**Owner 2026-10-25 (R140):** one shared loop for Claude Code, Codex and optional OMP GLM.
+Usually one session does feature work, CI repair and green closes. When the owner starts a few sessions,
+the next available agent claims a failed-batch repair; others continue disjoint work.
+This replaces the model-specific worker/verifier/deploy rules and CI waiting instructions.
 
-## The loop (every session: solo or worker)
+## Start a session
 
-1. **Pick.** `br ready --json`, or `bv --robot-next` for the graph's top pick. Claim with
-   `br update <id> --claim --actor <AgentMailName>` (the bead must have acceptance criteria). A session
-   may work one bead or a **goal** spanning several (R93): claim each as you start it.
-2. **Build it with its real tests.** Scenario banks for the sim (`scenarios/<area>/*.json` replayed bit
-   for bit by `crates/<crate>/tests/<area>.rs`), Playwright journeys through the real join path for
-   anything a player touches, unit tests only where the unit is the lowest level that shows the
-   behaviour (codecs, goldens, pure kernels). Hand mechanical work to Sonnet 5.5 subagents.
-3. **Check your own area before committing.** The checks for the paths you changed plus one fast smoke
-   of the feature: affected crates through RCH (`rch exec -- cargo test -p <crate>`), the specs and
-   scenarios you touched. Leave the workspace-wide matrix to CI, unless you changed a shared contract
-   (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core): then also run the workspace check through RCH.
-4. **Commit.** Commit with the P1 ID and the bead ID in the message.
-4a. **Visual self-review (`visual` beads; owner 2026-10-04).** If the outcome is something you can see, run the loop in
-   `docs/process/visual-self-review.md` first: capture the device/state matrix (`node art/ui/lib/live-check.mjs`), **look at
-   every screenshot**, fix, repeat, and commit `docs/evidence/<P1-ID>/self-review.md` with the images. `close.sh` refuses a
-   `visual` bead without it. The owner reviews taste, not breakage.
-   For TV/design beads the self-look run is `node art/ui/lib/live-check.mjs --local --tv --fullscreen` (every TV state on phone, tablet and TV, rechecked after a resize; it fails on text or controls cut off by the screen edge).
-5. **Close on green, in one command:** `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`
-   (run it in the background and keep working). It pushes the commit and `git lfs push --all`, waits on
-   `scripts/ci/green-for.py <commit> --wait` (green = any completed, successful ci.yml run on a commit that contains
-   yours: waiting runs are replaced by newer pushes, so your own commit may never get a run), ticks the acceptance boxes, records the gate
-   (`br gate report <id> --gate batch_verify --provider gitea-ci --status pass --to closed`) and closes
-   with the CI run as the receipt. Exit 1 means CI is red: a red lane on your change is yours to fix.
-   To move on without waiting, add `--pending`: the bead goes to `batch_pending` with the commit and
-   tests, and the verifier closes it when CI goes green.
-6. **Evidence that isn't a CI run** (`ev:owner`, `ev:deploy-repo`, `ev:hardware`): commit an evidence
-   record under `docs/evidence/<P1-ID>/` and close with
-   `scripts/beads/close.sh <id> --tests "…" --receipt docs/evidence/<P1-ID>/<file>` (the evidence close,
-   P1-F02).
-7. **Repair beads reproduce first:** a probe that fails before the fix, then the same probe passing.
-   After 2–3 identical remote or CI failures, stop retrying and reproduce in the smallest local harness.
+From the shared repository:
 
-**Before CI exists** (until P1-D01 and P1-F02 land), close on the local check with a committed receipt
-(the exact commands and their output) under `docs/evidence/<P1-ID>/`:
-`scripts/beads/close.sh <id> --tests "…" --receipt docs/evidence/<P1-ID>/<file>` (gate provider `local`).
-The bootstrap beads F01, D01 and F02 close that way.
+```bash
+python3 scripts/agents/start.py claude
+python3 scripts/agents/start.py codex
+python3 scripts/agents/start.py omp
+```
 
-## The verifier on call
+For additional sessions use `--mode worker` before the provider. Provider options follow `--`:
 
-A Claude session you start when you want it, for the things CI doesn't do by itself:
+```bash
+python3 scripts/agents/start.py --mode worker claude -- --model claude-opus-5-5 --effort medium
+python3 scripts/agents/start.py --mode worker codex
+python3 scripts/agents/start.py --mode worker omp -- --model zai/glm-5.3 --thinking max
+```
 
-- close `batch_pending` beads whose commits went green on CI (`scripts/ci/green-for.py <commit>`: a green run on a
-  commit containing theirs counts; a cancelled run on their own commit decides nothing);
-- turn a red CI lane into `rework` for the bead that caused it, with the failing assertion and file:line;
-- run the CI lanes locally when CI is down or not built yet, and close on that receipt:
-  `scripts/beads/batch-verify.sh plan --base <ref>` shows the lanes CI's planner (`scripts/ci/plan.mjs`) picks for the
-  range; `run` runs them on eris with CI's own scripts (`scripts/ci/verify-lanes.sh` through `scripts/remote/eris.sh`;
-  `--local` for this machine, but keep the Mac light) and writes `.beads/receipts/wave-NNN.json`; `close <bead>
-  --receipt <wave.json>` closes a `batch_pending` bead whose commits it covered;
-- evidence closes: `scripts/beads/batch-verify.sh close <bead> --evidence docs/evidence/<ID>/<record>.md` checks the
-  record against `docs/evidence/README.md` and closes through `close.sh --receipt`;
-- `status` summaries.
+The launcher registers a unique identity, exports `AGENT_NAME`, `BR_ACTOR` and `JJ_ROLE`,
+pins Node from .nvmrc, and supplies the startup prompt. It does not launch other sessions or choose
+a task for you. `--print-command` previews the provider command without registering or running it.
+Default Claude/Codex models follow the operator's settings; OMP defaults to GLM-5.3/max.
+Existing desktop sessions follow the same rules: register once with MCP, retain that name,
+prefix shell mutations with `AGENT_NAME=<name>`, and run pickup before selecting work.
+Remote Control is optional visibility for Claude, not a gate on another provider.
 
-Start it with `JJ_ROLE=verifier AGENT_NAME=<name> claude --remote-control "jj-verifier" --model claude-sonnet-5-5 --effort medium`.
-It's **on demand only**: no timers, `/loop` or heartbeat. It acts when a worker messages it or you say
-`verify` or `status`, reports in a few lines and goes idle, and an idle session costs nothing. In solo
-mode the solo session does all of this itself.
+## Agent Mail for every provider
 
-## Modes and models (owner, 2026-10-03)
+Use native Agent Mail MCP tools when available. Otherwise use the running server over HTTP:
 
-Scale in steps when you're happy: **solo → 2 workers → 4 workers** (no cap, R93).
+```bash
+python3 scripts/agents/mail.py fetch_inbox '{"project_key":"/Users/cdilga/Documents/dev/multiplayer-racer","agent_name":"<your-name>","include_bodies":true}'
+python3 scripts/agents/mail.py file_reservation_paths '{"project_key":"/Users/cdilga/Documents/dev/multiplayer-racer","agent_name":"<your-name>","paths":["<specific/path>"],"exclusive":true,"reason":"<bead-id>","ttl_seconds":3600}'
+python3 scripts/agents/mail.py release_file_reservations '{"project_key":"/Users/cdilga/Documents/dev/multiplayer-racer","agent_name":"<your-name>"}'
+```
 
-| Mode | Start |
-|---|---|
-| **Solo (hand crank)** | `JJ_ROLE=solo AGENT_NAME=<name> claude --remote-control "jj-solo" --model claude-opus-5-5 --effort medium` |
-| **Workers** | `JJ_ROLE=worker AGENT_NAME=<name> claude --model claude-opus-5-5 --effort medium`, plus the verifier on call above |
+The bridge reads the existing gitignored HTTP MCP config (.mcp.json or .claude/settings.local.json).
+It never starts a second mail runtime or prints credentials/registration tokens. The standalone
+`am` database CLI can fail while the server owns its activity lock; don't use it as a fallback.
+When other sessions are active, check inbox, reserve narrow paths and announce claims/blockers/completion
+in bead-ID threads. Solo skips reservations/announcements. Use Agent Mail across providers.
 
-Every mode commits, pushes and closes on its own (AGENTS.md, Code rules): the solo session needs no
-orchestrator or verifier to land its work, and it also commits anything else in the tree that's ready.
+## The loop
 
-Workers and the solo session run Opus 5.5 at medium effort and hand mechanical work to Sonnet 5.5
-subagents (the Agent tool with `model: "sonnet"`): code search, long logs, test scaffolding, capture
-review notes. Subagents help inside a bead; more beads in parallel means more worker sessions, each
-with its own Agent Mail name and file reservations. Any session that verifies registers with Remote
-Control so you can watch it.
+1. **Before picking:** reread AGENTS.md and check inbox, then
+   `AGENT_NAME=<name> python3 scripts/ci/pickup.py --claim`.
+   It checks CI once. `action: repair` gives you the repair bead: fix it before fresh feature work.
+   `repair_owned` means someone else is fixing it; continue disjoint work. No takeover of an active claim.
+   The default invocation without `--claim` is read-only. Errors are explicit, never a green verdict.
+2. **Settle green handoffs:** inspect `br list --status batch_pending --json --limit 0` and their
+   `br comments <id> --json`. For a containing green run, use the recorded tests and SHA:
+   `scripts/beads/close.sh <id> --tests "<recorded tests>" --finalize --commit <handoff-sha>`.
+   This checks once; pending/red returns immediately. No batch is dispatched. Don't block feature work
+   on pending CI. A dedicated deploy session may do this, but solo has no dependency on one.
+3. **Pick game work** if no repair is assigned: `br ready --json` or `bv --robot-next`, then
+   `br update <id> --claim --actor <name>`. Read the bead contract; reserve its actual files.
+   Never steal claims or assume an old assignee is dead. Ask for an explicit handoff before reassignment.
+4. **Build and prove:** fixtures/scenarios for simulation, real join-path journeys for player behaviour.
+   Reproduce repair failures first. Run focused checks for touched crates through RCH, and touched specs.
+   Shared contracts (`jj-types`, `jj-protocol`, `jj-map`, sim core) also earn the RCH workspace check.
+   After 2–3 identical remote failures, reproduce in the smallest local harness.
+5. **Visual review:** for anything visible, complete docs/process/visual-self-review.md; inspect
+   screenshots and commit docs/evidence/<P1-ID>/self-review.md. Required before handoff.
+6. **Commit and publish:** name the P1 ID and bead ID; stage specific paths and
+   `AGENT_NAME=<name> git commit -- <your paths>`. Keep other sessions' edits out.
+   Run `scripts/hooks/install.sh` once after upgrading the workflow. `scripts/push.sh` serializes
+   pushes, pins the same SHA for Gitea/GitHub and sends LFS first. The pre-push adapter checks
+   each outgoing commit under its own Agent trailer; reservations remain enforced.
+7. **Hand off:** `scripts/beads/close.sh <id> --tests "AC1: … AC2: …"` pushes if needed and defaults
+   to `batch_pending`, recording the full SHA and tests. `--pending` remains accepted.
+   No wait, CI dispatch, automatic acceptance ticking or close happens at handoff.
+   For committed owner/deploy/hardware evidence use `--receipt docs/evidence/<ID>/<record>`.
+8. **Next:** release reservations when edits are finished, check pickup and take the next useful task.
+   A hand-cranked `next` finishes one bead locally and hands it off; `goal: …` repeats to its goal.
+   `verify` settles green handoffs and picks up CI repair; `status` reports pickup plus tracker counts.
 
-## Sonnet subagents: use them when they make the work faster (owner, 2026-10-04)
+## CI repairs
 
-Opus workers (and the solo session) are **permitted and encouraged** to spawn their own Sonnet 5.5 subagents (the Agent
-tool with `model: "sonnet"`) whenever that finishes the bead faster or cheaper than doing it inline. Don't ask first.
+One P0 `ci:repair` bead covers the failed branch batch. Pickup deduplicates under a shared-tree lock
+and uses Beads' atomic claim. The owner is the agent named on that bead, regardless of provider or
+original author. Another free agent does not duplicate the repair. When a repair was handed off and
+its next batch fails, pickup returns it to rework and claims it for the next available agent.
+An actively claimed repair is never stolen; explicitly hand it back if ending the session.
+
+Read exact assertions and logs, reproduce on eris or locally, fix forward and push the fix.
+No diagnostic pushes, speculative retries or broad quarantine. After 2 hours/2 red batches, triage:
+a skipped test requires its own P0 restoration bead with cause, owner and restoration condition.
+No gameplay acceptance weakening. Publish built images even when CI is red; record preview smoke.
+See docs/process/deploy-worker.md for optional maintenance work.
+
+## Optional NTM panes
+
+Native terminal/desktop sessions are enough. For NTM, use its per-pane bootstrap to run this launcher,
+so every provider gets the same identity/env rules. For example, create a pane with tmux and run:
+
+```bash
+python3 scripts/agents/start.py --mode worker codex
+```
+
+If using `ntm spawn` directly, always pass `--no-recovery --no-cass-context`, never `--worktrees`.
+The injected startup prompt must require a fresh Agent Mail registration and the loop above;
+export `JJ_ROLE=worker` and pin Node before tools. NTM's native agent startup does not run our launcher
+automatically. Do not use recovery prompts to adopt an existing session's identity.
+An OMP pane uses the HTTP bridge when native MCP tools are unavailable. Claude hooks do not run in
+Codex/OMP: the no-workspace-wide-local-cargo and no-`br delete` rules still apply.
+
+## Helpers inside a bead
+
+Sessions may use their provider's helpers when they finish the bead faster or cheaper. Claude may use
+Sonnet; Codex uses its own helpers. No provider-specific helper is required.
 
 **Good uses:** code and doc search across many files; running a test or build matrix and summarising failures; reading long
 logs and reporting the first real error; scaffolding tests, fixtures and boilerplate to a spec you give; mechanical edits
@@ -113,59 +140,6 @@ owner's rulings judged, and the final close. Never delegate honesty about eviden
 - Keep the token win: don't spawn for something a single grep or edit does, and don't spawn a subagent that re-reads the
   whole project. Never more subagents than the work has independent pieces.
 
-**Hand-cranking.** The session stops after each instruction unless it's on a goal:
-
-| Say | The session |
-|---|---|
-| `next` / `next P1-XXX` | takes the top ready bead (or the named one), builds it with its tests, checks its area, commits, pushes, and reports in three lines; it closes the bead when CI goes green |
-| `goal: <what>` | works the beads that get there, one after another, and stops at the end or when blocked |
-| `verify` | closes whatever is green, turns red into rework (fixing it in solo mode), and reports |
-| `status` | ready count, beads waiting on CI, the next three picks |
-
-With one agent, skip Agent Mail reservations and announcements; register only for the commit guard.
-As soon as a second session runs (another Claude, or OMP workers), every session reserves files,
-the solo one included.
-
-## OMP workers (GLM-5.3 through NTM)
-
-Start them from the repo:
-
-```bash
-ntm spawn multiplayer-racer --omp=2:zai/glm-5.3:max --no-recovery --no-cass-context --ready-timeout 3m \
-  --prompt "You are a NEW OMP worker joining this repo. Read AGENTS.md, then the 'OMP workers' section of docs/process/bead-workflow.md, and follow it: create your own new Agent Mail identity first (never reuse an existing name), then take an unclaimed ready bead."
-```
-
-(`ntm add` has no `--no-recovery`, so grow by killing and respawning the NTM session rather than adding to it.)
-
-- `--omp=N:model:thinking` runs N OMP panes as `omp --auto-approve --model zai/glm-5.3 --thinking max`.
-- Never add `--worktrees`.
-- **Always pass `--no-recovery` and `--no-cass-context`.** Without them, NTM injects "continue where
-  you left off" plus the project's in-progress beads. On 2026-10-03 that made a new worker adopt the
-  solo session's identity and its claimed bead.
-- Watch them with `ntm attach multiplayer-racer`. Remote Control is Claude-only.
-
-**If you're an OMP worker**, you don't get Claude Code's hooks. You may get Agent Mail's MCP tools; the
-`am` CLI below always works. Before the loop above:
-
-1. **Identity:** create a new one; never take over an existing name, even the one on a claimed bead.
-   ```bash
-   am agents create --project /Users/cdilga/Documents/dev/multiplayer-racer --program omp --model glm-5.3 --task "<bead or goal>"
-   ```
-   It prints your name. Prefix every commit, push and `scripts/beads/close.sh` with `AGENT_NAME=<name>`,
-   and use the name as `--actor` for `br`. A bead claimed by someone else isn't yours: take another.
-2. **Reservations:** reserve before editing.
-   ```bash
-   am file_reservations reserve /Users/cdilga/Documents/dev/multiplayer-racer <name> <paths…> --exclusive --reason <bead-id>
-   ```
-   Release with `am file_reservations release /Users/cdilga/Documents/dev/multiplayer-racer <name>` when done.
-   Read and send mail with `am mail inbox` and `am mail send`, in a thread named after the bead.
-3. **The hooks' rules, by hand:**
-   - No workspace-wide cargo on the Mac: Rust goes through `rch exec -- cargo …`.
-   - Never `br delete`.
-   - The pinned Node is `.nvmrc` (26.10.0): put `$HOME/.nvm/versions/node/v26.10.0/bin` first on `PATH`
-     for npm, npx and Vite.
-
-Then run the loop like everyone else: `bv --robot-next`, claim, build with tests, commit, `scripts/beads/close.sh`.
 
 ## Lean by default
 
@@ -178,7 +152,7 @@ Then run the loop like everyone else: `bv --robot-next`, claim, build with tests
 - Commit only the evidence the acceptance names; recapture only what changed.
 - **Split a bead that's too big for a session**, Physical Soccer style: child beads with
   `br create --parent <id>` for the remaining slices, acceptance moved over verbatim (never weakened);
-  the parent closes after its children. The heaviest beads today are U01, N03, U02, F02 and F06.
+  the parent closes after its children. Split against the current bead's actual scope.
 - Milestone smokes and the full platform matrix run when that milestone is claimed, not on every bead.
 
 ## Enforcement

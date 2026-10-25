@@ -1,27 +1,20 @@
-# The deploy worker (owner, 2026-10-17)
+# Optional CI/deploy maintenance
 
-One light session (Haiku 5.5) owns CI, previews and `batch_pending` closes, so the bead churner never waits on CI
-(AGENTS.md, CI rules 1-9). It does no game work. Start:
+Owner 2026-10-25 (R140): a permanent deploy worker is optional. Claude, Codex or OMP may do this;
+solo handles it at task boundaries. No hardcoded agent names, model requirement, Remote Control gate
+or timer. The next available agent claims failed CI through `python3 scripts/ci/pickup.py --claim`.
 
-```
-tmux new-session -d -s multiplayer-racer--deploy -c ~/Documents/dev/multiplayer-racer \
-  'JJ_ROLE=worker AGENT_NAME=PurplePrairie claude --dangerously-skip-permissions --model claude-haiku-5-5 --effort medium'
-```
-
-then give it `/loop` with: "Reread AGENTS.md and docs/process/deploy-worker.md, then do one deploy round."
-
-## One deploy round (cheap; keep output small, long logs to files)
-
-1. **CI state.** `scripts/ci-status.sh` for `gitea/main`. Nothing new pushed since the last run and nothing
-   running: dispatch one batch with `scripts/ci/run.sh` (one at a time; it folds). A job killed by the runner (OOM,
-   SIGKILL, lost runner) gets a rerun of just that job (`tea api` POST `…/actions/jobs/<id>/rerun`), not a new push.
-2. **Previews.** Every run whose image built gets a preview, red or green: dispatch the `deploy-previews.yml` workflow
-   with mode `--from-run <run>` if the newest built run has no preview yet. Don't message the owner about previews.
-3. **Close green hand-offs.** For each bead in `br list --status batch_pending`: `scripts/ci/green-for.py <commit>`
-   (the commit and tests are in its hand-off comment). Green: `scripts/beads/close.sh <id> --tests "<its tests>"`.
-   Pending: leave it. Red: find the failing assertion and file:line in the run log, put it on the bead as a comment,
-   set it to `rework` for its author, and tell the churner in its tmux pane (`multiplayer-racer--maps` today, BrownHill).
-4. **Red budget (CI rule 4).** Red for 2 hours or 2 batches: quarantine the blocking test (skip it with a P0 bead naming
-   the test, cause and owner) or relax a timing assertion with a stated reason. Escalate anything else to the
-   coordinator (AmberSpring) rather than debugging deep yourself; no diagnostic pushes.
-5. Report in two or three lines and go idle until the next tick.
+1. Check pickup once. If it assigns a repair, read its failed job links, reproduce, fix forward and
+   publish the fix. If another session owns it, continue other work; don't debug the same batch.
+2. A push already starts CI. Do not dispatch when nothing changed. Use scripts/ci/run.sh only for an
+   explicit full check or a missing run after verifying that no queued/running run covers the push.
+   Retry an infrastructure-killed job only after diagnosing the cause; no diagnostic pushes.
+3. Every built image gets a preview, red or green. Dispatch deploy-previews.yml with `--from-run <run>`
+   if that built run has no preview. Record the smoke outcome. See docs/process/preview-publishing.md.
+4. For pending beads, read their handoff comments and use the exact commit/tests:
+   `scripts/beads/close.sh <id> --tests "<tests>" --finalize --commit <sha>`.
+   It checks green once; no waiting or dispatch. CI red on the batch becomes one claimable repair,
+   not a blanket rework assignment for every bead in it.
+5. After 2 hours/2 red batches, triage deliberately under AGENTS.md's red budget. Preserve gameplay
+   requirements. A quarantine needs a P0 bead naming test, cause, owner and restoration condition.
+6. Report briefly and return to useful work or end the requested task. No perpetual deploy loop is required.
