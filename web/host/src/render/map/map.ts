@@ -1,3 +1,4 @@
+import { Soup } from './soup';
 // The map renderer (P1-R03): draws a `jj.map.v1` map (plan §8.1; positions in mm, heights in cm) as the sim sees it.
 // - Terrain: the heightfield, each heightfield cell split into four quarters at its edge midpoints, every quarter
 //   painted by its nearest sample's surface: exactly the sim's surface lookup (jj-sim `surface_at`), so the colour
@@ -12,7 +13,6 @@ import { stationPad, stationSanga } from '../kit/generic/item-station';
 import {
   BufferAttribute,
   BufferGeometry,
-  Color,
   Group,
   InstancedMesh,
   Matrix4,
@@ -21,7 +21,6 @@ import {
   MeshLambertMaterial,
   Quaternion,
   Vector3,
-  type Material,
   type Scene,
 } from 'three';
 import { colliderSize, ENTRIES, MODULES, withDefaults } from '../kit/registry';
@@ -68,44 +67,6 @@ export const SURFACE_COLOURS: Record<string, string> = {
 const ROAD_SURFACES = new Set(['tarmac', 'packed-dirt', 'gravel']);
 
 const mm = (v: number) => v / 1000;
-const col = new Color();
-
-/** A triangle soup with flat vertex colours, built quad by quad. */
-class Soup {
-  pos: number[] = [];
-  colour: number[] = [];
-  /** Per-triangle shading normals that replace the computed face normal (relief.ts): one for the face (3) or per corner (9). */
-  normals = new Map<number, number[]>();
-  quad(a: number[], b: number[], c: number[], d: number[], colour: string): void {
-    col.set(colour);
-    for (const v of [a, b, c, a, c, d]) {
-      this.pos.push(v[0]!, v[1]!, v[2]!);
-      this.colour.push(col.r, col.g, col.b);
-    }
-  }
-  tri(a: number[], b: number[], c: number[], colour: string, normal?: number[]): void {
-    if (normal) this.normals.set(this.pos.length / 9, normal);
-    col.set(colour);
-    for (const v of [a, b, c]) {
-      this.pos.push(v[0]!, v[1]!, v[2]!);
-      this.colour.push(col.r, col.g, col.b);
-    }
-  }
-  mesh(material: Material): Mesh {
-    const g = new BufferGeometry();
-    g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
-    g.setAttribute('color', new BufferAttribute(new Float32Array(this.colour), 3));
-    g.computeVertexNormals();
-    if (this.normals.size) {
-      const n = g.getAttribute('normal') as BufferAttribute;
-      for (const [t, v] of this.normals) for (let k = 0; k < 3; k++) { const o = v.length === 9 ? 3 * k : 0; n.setXYZ(t * 3 + k, v[o]!, v[o + 1]!, v[o + 2]!); }
-    }
-    const m = new Mesh(g, material);
-    m.receiveShadow = true;
-    return m;
-  }
-}
-
 /** The sim's yaw: centidegrees, turned clockwise seen from above (jj-sim `yaw_rotation`). */
 export const yawQuat = (yaw: number, q = new Quaternion()) => q.setFromAxisAngle(new Vector3(0, 1, 0), -((yaw / 100) * Math.PI) / 180);
 

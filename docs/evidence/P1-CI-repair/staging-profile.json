@@ -1,0 +1,155 @@
+{
+  "at": "2026-10-25T05:04:27.941Z",
+  "host": {
+    "cpu": "Apple M1 Pro",
+    "cores": 8,
+    "ramBytes": 17179869184,
+    "kernel": "27.0.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v26.10.0",
+    "workload": "shared developer Mac; no kernel or power changes"
+  },
+  "build": {
+    "base": "d44c9093",
+    "renderer": "committed map.ts plus Soup extraction only; unrelated working-tree route edits excluded by Vite load override",
+    "simulation": "same local WASM packages for both local profiles; not a phone device measurement"
+  },
+  "scenario": {
+    "seed": 3,
+    "preparations": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "pageThrottle": 6,
+    "boundMs": 10000
+  },
+  "ci9217": {
+    "rerollToStagedMs": [
+      5283,
+      5974,
+      12806,
+      10170
+    ],
+    "generatorWorkerMs": [
+      838,
+      712,
+      3509,
+      1501
+    ]
+  },
+  "profileBefore": [
+    {
+      "name": "quad",
+      "selfMs": 1946
+    },
+    {
+      "name": "setStyle",
+      "selfMs": 379
+    },
+    {
+      "name": "mesh",
+      "selfMs": 365
+    },
+    {
+      "name": "terrain",
+      "selfMs": 276
+    }
+  ],
+  "profileAfter": [
+    {
+      "name": "terrain",
+      "selfMs": 390
+    },
+    {
+      "name": "quad",
+      "selfMs": 288
+    },
+    {
+      "name": "reserve",
+      "selfMs": 260
+    },
+    {
+      "name": "normalizeNormals",
+      "selfMs": 256
+    }
+  ],
+  "localRerollBeforeMs": [
+    1718,
+    1652,
+    4501,
+    2757
+  ],
+  "localRerollAfterMs": [
+    1128,
+    1088,
+    3051,
+    1970
+  ],
+  "assemblyBenchmark": {
+    "quads": 30000,
+    "warmups": 3,
+    "pairedSamples": {
+      "before": [
+        21.283707999999933,
+        81.77879100000007,
+        17.336041000000023,
+        18.885541999999987,
+        13.094124999999963,
+        17.597041999999988,
+        20.486083000000008,
+        47.4972919999999,
+        23.03145799999993,
+        19.826624999999922,
+        42.80945799999995,
+        22.732042000000092,
+        13.928499999999985,
+        26.782083000000057,
+        18.254957999999988,
+        11.41066600000022,
+        12.79424999999992,
+        37.483999999999924,
+        16.146124999999984,
+        28.932958999999983
+      ],
+      "after": [
+        43.533874999999966,
+        17.46108300000003,
+        7.321459000000004,
+        4.822250000000054,
+        7.5610000000000355,
+        5.272457999999915,
+        77.38595799999996,
+        3.7358749999999645,
+        13.759416999999985,
+        27.107999999999947,
+        8.065875000000005,
+        4.387624999999844,
+        5.475458000000117,
+        6.880625000000009,
+        12.680207999999993,
+        4.309917000000041,
+        4.152832999999873,
+        6.169458000000077,
+        4.541708000000199,
+        29.346874999999955
+      ]
+    },
+    "note": "Shared-host scheduler outliers: samples retained; full CI still decides readiness."
+  },
+  "outputHashes": {
+    "position": "181de591cc19002b356b757f2915133580d178e93a7f06e4062e48c7097fe6af",
+    "color": "ba9800958a4a10fefe7690f0098dce2711f0d316fed0dec1998792c9c1eb6b4d",
+    "normal": "804818203dce64df4036860cc1dbcf33ee573ae6bee3b4897f436a4ab045856c"
+  },
+  "proof": {
+    "ordering": "same a-b-c/a-c-d winding and emission order",
+    "rounding": "same Float32 conversion before normals; no arithmetic consumes unrounded position/colour buffers",
+    "normalOverrides": "same face/corner overrides, after Three.js computes normals",
+    "rng": "unchanged",
+    "geometry": "no triangles omitted, merged or decimated",
+    "cache": "per Soup; no count or lifetime cap"
+  }
+}

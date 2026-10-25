@@ -107,3 +107,30 @@ bytes (7.07 GiB)**; `memory.events` reports **zero max, OOM and OOM-kill events*
 9217 build also passes on a 16 GiB runner, consistent with the diagnosed resource limit.
 
 Containing CI and preview results follow when complete; no CI success is claimed in advance.
+
+### CI 9217: preparation staging cost
+
+The saved failing receipt reports reroll-to-staged **5,283 / 5,974 / 12,806 / 10,170 ms** with the page at 6×
+CPU throttle, against the unchanged **10,000 ms** half-intermission bound. Worker times are **838 / 712 /
+3,509 / 1,501 ms**. The first repair did not change this test or its deadline.
+
+CDP CPU profiling of the exact CI harness identifies quad emission, repeated CSS colour parsing and mesh assembly
+as the main-thread costs. A separate same-source comparison excludes unrelated uncommitted route-draping edits.
+`staging-profile.json` records hardware, build, raw samples, ranked hotspots and the output hashes.
+
+Extract the existing `Soup` API into its own module, cache each colour's linear RGB per builder, and write corner
+attributes directly into growing Float32 buffers. Growth follows all input geometry; it introduces no count cap.
+Float32 conversion moves earlier, before any geometry arithmetic, and the original Three.js normal computation and
+face/corner overrides remain. Triangle order, winding, colours and normal bytes match the pre-change golden exactly.
+
+On the shared Mac, 20 paired assembly samples (30,000 quads; three warmups) have nearest-rank medians **19.83 →
+6.88 ms**, with retained scheduler outliers. In the four-seed CDP profiles, quad self time falls **1,946 → 288 ms**
+(new buffer growth takes 260 ms). Reroll samples are **1,718 / 1,652 / 4,501 / 2,757 ms** before and **1,128 /
+1,088 / 3,051 / 1,970 ms** after. Worker time and scheduler load also vary; these are local measurements, not device
+qualification or a prediction that CI has passed.
+
+All **nine unchanged preparation tests pass** against the optimized harness (Chromium/macOS arm64, **30,708 ms**
+total; the throttled four-seed test takes 7,396 ms total). The byte-golden test and standalone strict typecheck of
+`soup.ts` pass. Whole-web typechecking currently finds errors in another session's uncommitted route-draping block;
+those hunks are neither reverted nor committed by this repair. The complete checks script passes on clean committed
+source on **eris/Linux** after `npm ci` refreshes its missing locked `three-mesh-bvh` dependency.
