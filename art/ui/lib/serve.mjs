@@ -10,7 +10,7 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.glb': 'model/gltf-binary', '.md': 'text/markdown; charset=utf-8',
-  '.jpg': 'image/jpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
+  '.jpg': 'image/jpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
 };
 
 export async function serveArtUi(port = 0) {
@@ -21,8 +21,27 @@ export async function serveArtUi(port = 0) {
     if (!file.startsWith(ROOT + sep)) return res.writeHead(403).end();
     try {
       const body = await readFile(file);
-      res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
-      res.end(body);
+      const headers = { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' };
+      // Native video controls seek with byte ranges; the deployed POC edge does this too.
+      if (extname(file) === '.mp4') {
+        headers['accept-ranges'] = 'bytes';
+        if (req.headers.range) {
+          const match = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+          let start = match?.[1] ? Number(match[1]) : 0;
+          let end = match?.[2] ? Number(match[2]) : body.length - 1;
+          if (match && !match[1] && match[2]) { start = Math.max(0, body.length - end); end = body.length - 1; }
+          if (!match || (!match[1] && !match[2]) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end || start >= body.length) {
+            res.writeHead(416, { ...headers, 'content-range': `bytes */${body.length}` }).end();
+            return;
+          }
+          end = Math.min(end, body.length - 1);
+          res.writeHead(206, { ...headers, 'content-range': `bytes ${start}-${end}/${body.length}`, 'content-length': end - start + 1 });
+          res.end(req.method === 'HEAD' ? undefined : body.subarray(start, end + 1));
+          return;
+        }
+      }
+      res.writeHead(200, { ...headers, 'content-length': body.length });
+      res.end(req.method === 'HEAD' ? undefined : body);
     } catch {
       res.writeHead(404).end();
     }

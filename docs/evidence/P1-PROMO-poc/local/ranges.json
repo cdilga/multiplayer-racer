@@ -1,0 +1,37 @@
+[
+  {
+    "range": "bytes=0-15",
+    "status": 206,
+    "bytes": 16,
+    "contentRange": "bytes 0-15/26456576"
+  },
+  {
+    "range": "bytes=-16",
+    "status": 206,
+    "bytes": 16,
+    "contentRange": "bytes 26456560-26456575/26456576"
+  },
+  {
+    "range": "bytes=26456512-",
+    "status": 206,
+    "bytes": 64,
+    "contentRange": "bytes 26456512-26456575/26456576"
+  },
+  {
+    "range": "bytes=26456576-",
+    "status": 416,
+    "bytes": 0,
+    "contentRange": "bytes */26456576"
+  },
+  {
+    "range": "bytes=0-1,4-5",
+    "status": 416,
+    "bytes": 0,
+    "contentRange": "bytes */26456576"
+  },
+  {
+    "method": "HEAD",
+    "status": 200,
+    "contentLength": 26456576
+  }
+]

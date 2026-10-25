@@ -29,6 +29,7 @@
   .chip.changes-asked, .chip.no-review-data { background: var(--c-danger-tint); color: var(--c-danger); }
   .how { background: var(--c-paper-shade); border: 2px solid var(--c-paper-line); border-radius: 10px; padding: 14px 16px; margin-top: 18px; }
   .entries > article { margin-bottom: 8px; }
+  .promo-player { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 3px solid var(--c-ink); border-radius: 10px; background: var(--c-ink); }
   @media (max-width: 600px) { header { padding: 20px 16px; } header img { height: 64px; } main { padding: 4px 16px 64px; } h2 { font-size: 34px; } h3 { font-size: 26px; } }
 </style>
 </head>
@@ -40,6 +41,20 @@
 </div></header>
 <main>
   <div class="how"><b>Keys:</b> in the TV mocks, <b>H</b> returns to their contents page; every state has its own link, so you can send one back by URL. The phone mock's <b>Mock ▾</b> button jumps between states and turns on the edge-safe and thumb-reach overlays. Open the TV items on the TV laptop (full screen, from the couch) and the phone items on your own phone, once in a dim room. Nothing here sends anything anywhere. Your checklist: <code>docs/playtests/owner-checklists.md</code> §1.</div>
+
+  <section class="group" data-group="promo">
+    <div class="entries">
+      <article data-entry="promo-picture">
+        <h3>Bring everyone — picture draft</h3>
+        <p class="why" id="promo-note">A one-minute preview with all seven vehicles, controller choices, roads, pileups and a weapons derby. Music and vehicle effects are included; Australian Maya1 narration is still pending.</p>
+        <video class="promo-player" controls playsinline preload="none" width="1280" height="720" poster="./promo/bring-everyone-picture-f2d4e0c3.jpg" aria-label="Bring everyone picture draft" aria-describedby="promo-note">
+          <source src="./promo/bring-everyone-picture-f2d4e0c3.mp4" type="video/mp4">
+          <p>Your browser cannot play this video. <a href="./promo/bring-everyone-picture-f2d4e0c3.mp4">Download the MP4</a> to watch it.</p>
+        </video>
+        <div class="links"><a href="./promo/bring-everyone-picture-f2d4e0c3.mp4" download>Download picture draft (MP4, 25 MB)</a></div>
+      </article>
+    </div>
+  </section>
 
   <section class="group" data-group="vehicles">
     <div class="entries" id="vehicle-entries"></div>
