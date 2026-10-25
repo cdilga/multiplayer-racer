@@ -4,16 +4,16 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { paintKeyGlsl } from '../shared/paint-key.js';
 
-// The paint key: pure-white atlas texels take the car colour, everything else keeps its colour (tools/vehicles/view/view.js).
+// Same premultiplied atlas rule as the host and model evidence viewers.
 function paintKeyMaterial(src) {
   const paint = { value: new THREE.Color('#22c3e6') };
   const m = new THREE.MeshStandardMaterial({ map: src.map, emissiveMap: src.emissiveMap, emissive: 0xffffff, emissiveIntensity: 1.2, flatShading: true, roughness: 0.55, metalness: 0.05 });
   m.onBeforeCompile = (sh) => {
     sh.uniforms.paint = paint;
     sh.fragmentShader = 'uniform vec3 paint;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-      float paintMask = step( 0.985, min( diffuseColor.r, min( diffuseColor.g, diffuseColor.b ) ) );
-      diffuseColor.rgb *= mix( vec3( 1.0 ), paint, paintMask );`);
+${paintKeyGlsl('paint')}`);
   };
   m.customProgramCacheKey = () => 'jj-paint-key';
   return { material: m, paint };
@@ -59,6 +59,28 @@ export class VehicleViewer {
   resize() {
     const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight);
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
+    this.frame();
+  }
+
+  // Fit the visible state at the canvas's actual aspect: portrait phones and detached parts need more room.
+  frame() {
+    if (!this.current) return;
+    const bounds = new THREE.Box3();
+    this.current.root.updateMatrixWorld(true);
+    this.current.root.traverseVisible((o) => {
+      if (!o.isMesh) return;
+      o.geometry.computeBoundingBox();
+      bounds.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+    });
+    if (bounds.isEmpty()) return;
+    const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+    const halfY = this.camera.fov * DEG / 2, halfX = Math.atan(Math.tan(halfY) * this.camera.aspect);
+    const distance = sphere.radius / Math.sin(Math.min(halfX, halfY)) * 1.08;
+    const direction = this.camera.position.clone().sub(this.controls.target).normalize();
+    this.controls.target.copy(sphere.center);
+    this.controls.maxDistance = Math.max(16, distance * 2);
+    this.camera.position.copy(sphere.center).addScaledVector(direction, distance);
+    this.controls.update();
   }
 
   // review: the car's review.json; base: the folder URL it was fetched from.
@@ -90,10 +112,11 @@ export class VehicleViewer {
     this.current?.root.removeFromParent();
     this.current = this.cache.get(key); this.scene.add(this.current.root);
     this.apply();
+    this.frame();
   }
 
-  setDamage(group, mode) { this.state.damage[group] = mode; this.apply(); }
-  setAllDamage(mode, groups) { for (const g of groups) this.state.damage[g] = mode; this.apply(); }
+  setDamage(group, mode) { this.state.damage[group] = mode; this.apply(); this.frame(); }
+  setAllDamage(mode, groups) { for (const g of groups) this.state.damage[g] = mode; this.apply(); this.frame(); }
   setPaint(hex) { this.state.paint = hex; this.apply(); }
 
   // intact -> loose (swung about the part's hinge, to near its limit) -> detached (lying beside the car).

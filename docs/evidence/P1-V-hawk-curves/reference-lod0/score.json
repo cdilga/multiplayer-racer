@@ -1,0 +1,53 @@
+{
+ "car": "hawk-dash",
+ "lod": 0,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 2813,
+  "draws": 14,
+  "breakdown": {
+   "front": 1033,
+   "core": 432,
+   "door_FL": 34,
+   "door_RL": 18,
+   "back": 984,
+   "door_FR": 34,
+   "door_RR": 18,
+   "wheel_FL": 44,
+   "wheel_FR": 44,
+   "wheel_RL": 44,
+   "wheel_RR": 44,
+   "interior_engine": 24,
+   "interior_cabin": 36,
+   "interior_boot": 24
+  },
+  "stations": 29
+ },
+ "views": {
+  "side": {
+   "iou": 0.9761,
+   "aspect": 1,
+   "miss": 0.0069,
+   "extra": 0.0169
+  },
+  "top": {
+   "iou": 0.9584,
+   "aspect": 0.946,
+   "miss": 0.0074,
+   "extra": 0.0343
+  },
+  "front": {
+   "iou": 0.9373,
+   "aspect": 0.952,
+   "miss": 0.0519,
+   "extra": 0.0108
+  },
+  "rear": {
+   "iou": 0.9773,
+   "aspect": 1,
+   "miss": 0.0122,
+   "extra": 0.0105
+  }
+ },
+ "score": 0.9652
+}

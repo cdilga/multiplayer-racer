@@ -1,0 +1,2 @@
+art/vehicles/hawk-dash/hawk-dash.asset.json: ok (jj.vehicle.v1, triangles per LOD [2689, 883, 597])
+assets/profiles/hawk-dash.json: ok (jj.vehicle-profile.v1, in sync with its sidecar)

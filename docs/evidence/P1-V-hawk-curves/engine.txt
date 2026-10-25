@@ -1,0 +1,97 @@
+ok   S1 no remote URLs in the served page, scripts or bundle (R70)
+ok   S2 the page CSS has no colour literals: every colour is a token variable
+ok   S3 committed engine-synth.js and profile.schema.json match a fresh build  [engine-synth.js, profile.schema.json, manifest and profiles are up to date]
+ok   S4 web/shared/audio/engine-synth type-checks (strict, noUncheckedIndexedAccess)
+ok   S5 lap.json regenerates byte for byte from make-lap.mjs
+ok   P1 cruz-missile.json passes the validator
+ok   P2 cruz-missile.json passes the JSON Schema  [""]
+ok   P3 the validator refuses every broken profile, naming the path
+ok   P4 the JSON Schema refuses every field-level break (cross-field rules are validator-only)  [[]]
+ok   P5 the validator refuses non-objects without throwing
+ok   P7 every profile in the vehicle-sound manifest validates against the validator and the JSON Schema (au-hawk.json, cruz-missile.json, hawk-dash.json, hay-hauler.json, lion-president.json, pig-catcher.json, postie-bike.json, tradie-ute.json)  [[]]
+ok   P6 turbo is per-vehicle data: the Cruz Missile has no boost section and the Hay Hauler has one; both pass the validator and the JSON Schema
+ok   M1 firing frequency is rpm / 60 x cylinders / 2 (3000 rpm, 4 cyl = 100 Hz)
+ok   M2 the firing oscillators track rpm exactly across the range
+ok   M3 throttle raises intake, exhaust, engine level and brightness; zero throttle means zero intake
+ok   M4 boost drives the whine on a car with a turbo (Hay Hauler): zero boost is silent, whine pitch and level rise
+ok   M10 the Cruz Missile has no turbo: full boost maps to no whine, no whoosh and a zero boost level (POC1-01)
+FAIL M5 drift drives the squeal, and only while moving
+ok   M6 surface rumble needs speed and changes with the surface (cutoff and crackle: tarmac < dirt < gravel)
+ok   M7 damage drives the rattle: zero damage is silent, rate follows revs
+ok   M8 a stopped engine is silent (rpm 0) and fades in with revs
+ok   M9 without a speed the state derives it from rpm and gear (and gear 0 means stopped)
+ok   D1 the drivetrain shifts through all five gears on the lap, up and down, with rpm inside the engine limits  [5 up, 5 down]
+ok   D2 the drivetrain is deterministic
+ok   B1 the gallery page loads with the tokens, fonts, profile and lap, no errors
+ok   B2 it is styled from the tokens: the display and body faces loaded, paper background  [{"display":true,"body":true,"h1":"\"Barlow Condensed\", system-ui, -apple-system, \"Segoe UI\", \"Noto Sans\", \"Noto Sans CJK SC\", \"Noto Sans Arabic\", \"Noto Sans Devanagari\", sans-serif","bg":"rgb(255, 244, 222)","ready":"true"}]
+ok   B3 the page has sliders for RPM, throttle, boost, surface and damage, a gear indicator and a "Play scripted lap" button  [["in-rpm","in-throttle","in-boost","in-surface","in-damage","in-drift","in-volume","gear","lap-btn"]]
+ok   B4b the lap opens with the engine start: the state API reports cranking, then settling, then running, in order (POC1-02)  [cranking > catching > settling > running]
+ok   B4 offline, "Play scripted lap" runs the audio graph: context running and its clock advancing  [clock +7.7 s]
+ok   B5 an AnalyserNode on the output shows non-silent audio all the way through the lap  [rms -31.3 to -19.1 dBFS]
+ok   B6 the dash follows the lap: rpm swings and the gear indicator changes  [rpm 220-3983, gears N,1,2,3]
+ok   B7 the analyser spectrum moves as the lap moves  [14 distinct peak bands]
+ok   B8 the page made no request outside the local server, and none failed while the network was off
+ok   B9 the lap ends on its own and hands the sliders back  [{"rpm":false,"btn":"Play scripted lap","key":"Start engine","phase":"off","rms":0}]
+ok   B9b the lap ends with the engine stop: stopping, then off, the output silent and the key ready to start again (POC1-02)  [running > stopping > off, end rms -180.0 dBFS]
+ok   B17 Start engine plays the start on the page: cranking (audible), then running, the status line following and the button becoming Stop engine (POC1-02)  [cranking > catching > settling > running; Cranking… / Caught! / Settling to idle / Engine running]
+FAIL B10 moving the RPM slider moves the engine note: the measured fundamental follows rpm / 60 x 2 within 3%  [1500rpm: 50Hz -> 75.0Hz; 3000rpm: 100Hz -> 150.0Hz; 5400rpm: 180Hz -> 270.0Hz]
+ok   B11 and a higher rpm sounds brighter  [1121 < 1837 < 2974]
+FAIL B12 each layer meter follows its own control (intake and exhaust: throttle, squeal: drift, rattle: damage; boost on a turbo car in SL8)  [{"throttle0":0,"throttle1":0.687689,"exhaust1":0.764098,"drift0":0,"drift1":0,"damage0":0,"damage1":0.771429}]
+ok   B18 the Cruz has no turbo: its boost slider is disabled and says why, and asking the voice for full boost sounds nothing (POC1-01)  [{"disabled":true,"note":"The AU Hawk has no turbo, so there is no boost to hear. Pick a car with one (or fit one) in the sound lab.","meter":0}]
+ok   B13 the surface slider changes the road rumble level (tarmac < dirt < gravel at the same speed)  [{"tarmac":0.141997,"dirt":0.243423,"gravel":0.324564}]
+ok   B14 shifting changes the gear indicator and dips the engine level  [gear 2->3, firing 1.00 -> 0.65]
+ok   B15 lifting off at revs fires the exhaust pops layer  [pops meter 0.50]
+ok   B16 solo mutes the other eight layers (starter included)  [{"off":8,"layers":9}]
+ok   B19 Stop engine plays the stop on the page: stopping (audible, status Stopping…), then Engine off and silence within stopS (1.1 s) (POC1-02)  [stopping > off, silent at +1.29 s, rms -180.0 dBFS]
+FAIL L1 firing layer: the fundamental follows rpm / 60 x cylinders / 2 offline (900, 3000, 6000 rpm)  [900: 30->45.0; 3000: 100->150.0; 6000: 200->275.0]
+ok   L2 firing layer: throttle load raises level and brightness
+ok   L3 intake layer: silent at zero throttle, audible at full  [-180.0 / -28.9 dBFS]
+ok   L4 exhaust layer: louder with revs and throttle  [-48.4 / -25.0 dBFS]
+ok   L5 boost layer (Hay Hauler): silent at zero boost, louder and higher in pitch as boost rises  [-180.0 / -23.3 / -14.8 / -6.4 dBFS, whine 1652 -> 3601 Hz]
+FAIL L6 squeal layer: silent without drift or without motion, a narrow-band whine of 1-3 kHz with drift  [-180.0 dBFS, band ratio NaNx]
+ok   L7 surface layer: silent when stopped; tarmac, dirt and gravel each audible and progressively brighter  [tarmac -36.1 dBFS @192Hz; dirt -30.5 dBFS @437Hz; gravel -31.6 dBFS @2486Hz]
+ok   L8 rattle layer: silent when intact, louder as more of the body comes loose  [-180.0 / -43.9 / -36.6 dBFS]
+ok   L9 pops layer: silent at steady throttle (and before the lift), crackles after a lift at revs  [-46.5 dBFS, peak -7.8 dBFS]
+ok   L10 gear-change dip: the engine ducks by 3 dB or more on a gear change and recovers  [before -19.1, dip -22.6, after -19.0 dBFS]
+ok   L11 an engine at rpm 0 with nothing else happening is silent
+ok   L12 the whole voice with every layer maxed leaves headroom (peak below -1 dBFS, no NaN)  [peak -2.6, rms -16.8 dBFS]
+ok   R1 the scripted lap renders the same twice in one page (max difference below -120 dBFS)  [max |diff| 1.19e-7 (-138.5 dBFS), 2007360 samples]
+ok   R1b a single layer of the lap renders bit-identically twice  [max |diff| 0]
+ok   R2 a different voice seed gives a clearly different (but still valid) render  [max |diff| 3.86e-1]
+ok   R3 and in a freshly loaded page (max difference below -120 dBFS)  [max |diff| 1.19e-7]
+ok   R4 the lap render has no NaN and no clipping (peak below -1 dBFS)  [peak -5.2, rms -20.2 dBFS]
+ok   R5 scripted-lap.wav is under 2 MB  [1.91 MB, 41.8 s, 24 kHz mono 16-bit]
+ok   T1 POC1-01 the Cruz Missile renders no turbo at full boost: boost 1 renders the same as boost 0 and the whine band gains nothing (the Hay Hauler gains plainly)  [Cruz max |diff| 1.19e-7, band -0.00 dB, boost solo -180.0 dBFS; Hay Hauler band +14.5 dB]
+ok   K1 POC1-02 engine start offline: silent before the key, the crank audible, then cranking, catching, settling and running on the state API at the profile's times (within 12 ms), with no set() calls after the key  [crank -20.7 dBFS; cranking@0.2507 catching@1.0107 settling@1.1307 running@1.7813 (stated 1.780 s)]
+FAIL K2 POC1-02 the start cranks at 260 rpm, flares toward 1900 and reaches idle within its stated time (crankS + catchS + 3 settleTauS = 1.53 s): rpm within 5% at the end of the settle, and the audio then matches a running idle (level within 1 dB, firing note at 30 Hz)  [flare peak 1879.1 rpm, 935.7 rpm at the end of the settle; tail -27.7 vs idle -26.6 dBFS, note 30.0 Hz]
+ok   K3 POC1-02 the start renders deterministically (twice: max difference below -120 dBFS, same trace)  [max |diff| 1.49e-8]
+ok   K4 POC1-02 engine stop offline: audible after the cut and fading (each window quieter), then exact silence from cut + stopS (1.1 s)  [-22.0 > -32.2 > -52.0 > -71.6 dBFS, then peak 0]
+ok   K5 POC1-02 the stop on the state API: stopping from the cut, off at cut + stopS (within 12 ms), the sounding rpm falling all the way from the revs  [stopping@0.4 off@1.5013 (stated 1.500), rpm 3000 -> 133.5]
+ok   K6 POC1-02 the stop renders deterministically (twice: max difference below -120 dBFS, same trace)  [max |diff| 0.00e+0]
+ok   K7 an interrupted start and stop (key off mid-crank, on again mid-stop) stays clean: no NaN, peak below -1 dBFS, and it ends running  [off > cranking > stopping > cranking > catching > settling > running, peak -9.7 dBFS]
+ok   K8 POC1-02 the scripted lap render opens with the start (the crank audible, the starter layer live) and closes with the stop (exact silence after it)  [pre-roll 2.22 s, stop 1.1 s, 41.82 s rendered]
+ok   W1 WebKit (Playwright build) renders the first 10 s of the lap with no NaN and the same level as Chromium (within 1.5 dB)  [WebKit -19.1 vs Chromium -19.2 dBFS]
+FAIL SL1 every schema field has a lab control, generated from the schema (110 fields) and every manifest profile is in the picker (8)  [missing  extra ]
+ok   SL2 a second vehicle profile, added through the manifest alone, is pickable and plays (analyser non-silent)  [id hay-hauler, rms -18.8 dBFS]
+ok   SL3 an edit changes the rendered audio and reset restores it (offline renders within -120 dBFS; the export reflects the edit)  [edit max |diff| 7.29e-1, reset max |diff| 2.38e-7]
+ok   SL4 export then import round-trips byte for byte (and import validates)  [stable]
+ok   SL5 the URL reproduces a tweak (?profile=…&p.…=…), arrays as comma lists  [{"id":"hay-hauler","modified":["firing.level","gearbox.ratios"],"level":2,"ratios":"4.7,2.9,1.9,1.3,1","url":"?profile=hay-hauler&p.firing.level=2&p.gearbox.ratios=4.7%2C2.9%2C1.9%2C1.3%2C1"}]
+ok   SL6 A/B switches live to the other slot without stopping playback, level-matched by an offline render  [live 1, gains 1.00/3.10, rms -19.3 dBFS]
+ok   SL7 the search box filters controls (whine: every visible row mentions it)  [5/110 rows: boost.whineBaseHz, boost.whineSweepHz, boost.whineRpmHz, boost.whooshLevel, ignition.starterHz]
+ok   SL8 POC1-01 in the lab: the Cruz's boost section is not fitted (its controls and the boost slider disabled); fitting a turbo enables them and the whine plays (URL p.boost=fit); taking it off restores the unmodified Cruz  [{"before":"Not fitted","fittedMeter":"1.00","fittedUrl":"?profile=cruz-missile&p.boost=fit","after":[]}]
+ok   SL9 A/B between two vehicles (Cruz Missile in A, Hay Hauler in B): one tap switches at the same state, level-matched, without stopping playback  [A cruz-missile -> B hay-hauler, B gain 0.184 (loudness ratio 0.184, not clamped), rms -33.1 dBFS]
+     cpu static idle: 1v 3.44 ms/s/voice, 8v 3.93 ms/s/voice, 24v 4.036 ms/s/voice, 32v 4.471 ms/s/voice
+     cpu static cruise: 1v 4.34 ms/s/voice, 8v 5.034 ms/s/voice, 24v 6.097 ms/s/voice, 32v 6.103 ms/s/voice
+     cpu static all layers: 1v 5.45 ms/s/voice, 8v 6.115 ms/s/voice, 24v 6.962 ms/s/voice, 32v 7.992 ms/s/voice
+     cpu lap: 1v 7.468 ms/s/voice, 8v 6.752 ms/s/voice, 24v 7.177 ms/s/voice, 32v 8.442 ms/s/voice
+ok   C1 per-voice audio-thread cost measured at 1, 8, 24 and 32 voices (idle, cruise, all layers, and the scripted lap)  [lap 7.468/6.752/7.177/8.442, all layers 5.45/6.115/6.962/7.992, idle 3.44/3.93/4.036/4.471 ms per audio-second per voice]
+ok   C2 a voice costs under 1.5% of one core in real time in every scenario and cost per voice does not blow up with count  [max 8.442 ms/s/voice]
+
+engine synth check: 7 failure(s)
+FAIL M5 drift drives the squeal, and only while moving
+FAIL B10 moving the RPM slider moves the engine note: the measured fundamental follows rpm / 60 x 2 within 3% (1500rpm: 50Hz -> 75.0Hz; 3000rpm: 100Hz -> 150.0Hz; 5400rpm: 180Hz -> 270.0Hz)
+FAIL B12 each layer meter follows its own control (intake and exhaust: throttle, squeal: drift, rattle: damage; boost on a turbo car in SL8) ({"throttle0":0,"throttle1":0.687689,"exhaust1":0.764098,"drift0":0,"drift1":0,"damage0":0,"damage1":0.771429})
+FAIL L1 firing layer: the fundamental follows rpm / 60 x cylinders / 2 offline (900, 3000, 6000 rpm) (900: 30->45.0; 3000: 100->150.0; 6000: 200->275.0)
+FAIL L6 squeal layer: silent without drift or without motion, a narrow-band whine of 1-3 kHz with drift (-180.0 dBFS, band ratio NaNx)
+FAIL K2 POC1-02 the start cranks at 260 rpm, flares toward 1900 and reaches idle within its stated time (crankS + catchS + 3 settleTauS = 1.53 s): rpm within 5% at the end of the settle, and the audio then matches a running idle (level within 1 dB, firing note at 30 Hz) (flare peak 1879.1 rpm, 935.7 rpm at the end of the settle; tail -27.7 vs idle -26.6 dBFS, note 30.0 Hz)
+FAIL SL1 every schema field has a lab control, generated from the schema (110 fields) and every manifest profile is in the picker (8) (missing  extra )

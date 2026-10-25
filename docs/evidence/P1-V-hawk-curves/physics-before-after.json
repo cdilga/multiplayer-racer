@@ -1,0 +1,6 @@
+{
+  "before": "041052accd8fec3b414ba4290a7347b488eed46b325eac7147dadfa7247af9b5",
+  "after": "041052accd8fec3b414ba4290a7347b488eed46b325eac7147dadfa7247af9b5",
+  "identical": true,
+  "note": "Original Cruz idle-settle fixture run with the Hawk profile: settle checks pass, two Cruz-specific minimum-pitch checks fail identically before/after. See settle-result.json for the focused asset load/settle fixture and sim.json for the passing Hawk straight-run fixture."
+}

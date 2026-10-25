@@ -1,0 +1,65 @@
+{
+  "commit": "798b7d8e0e4707e7980d058edb23447462106d01",
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 2448,
+      "wheels": 668,
+      "body": 1780,
+      "parts": {
+        "core": 284,
+        "front": 697,
+        "back": 719,
+        "door_FL": 26,
+        "door_FR": 26,
+        "door_RL": 14,
+        "door_RR": 14,
+        "wheel_FL": 167,
+        "wheel_FR": 167,
+        "wheel_RL": 167,
+        "wheel_RR": 167
+      },
+      "sha256": "0fcc77a91f9243f6ea730c80e8b76862c8eaaef255befc044a8e8fa3bae2c574"
+    },
+    {
+      "lod": 1,
+      "tris": 896,
+      "wheels": 152,
+      "body": 744,
+      "parts": {
+        "core": 216,
+        "front": 230,
+        "back": 226,
+        "door_FL": 24,
+        "door_FR": 24,
+        "door_RL": 12,
+        "door_RR": 12,
+        "wheel_FL": 38,
+        "wheel_FR": 38,
+        "wheel_RL": 38,
+        "wheel_RR": 38
+      },
+      "sha256": "eea34bbc45015351f3ceb1398a4a03949154f18af648c5d0e492f0099c8308df"
+    },
+    {
+      "lod": 2,
+      "tris": 596,
+      "wheels": 152,
+      "body": 444,
+      "parts": {
+        "core": 156,
+        "front": 130,
+        "back": 134,
+        "door_FL": 6,
+        "door_FR": 6,
+        "door_RL": 6,
+        "door_RR": 6,
+        "wheel_FL": 38,
+        "wheel_FR": 38,
+        "wheel_RL": 38,
+        "wheel_RR": 38
+      },
+      "sha256": "76d135ed613989308edde988be4b6252538065ca949ab712fc13ace030bf25b4"
+    }
+  ]
+}

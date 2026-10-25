@@ -1,0 +1,11 @@
+start 0.9563 side 0.9723 top 0.94 front 0.9273 rear 0.9755
+pass 1: 17 moves, score 0.9625 side 0.9728 top 0.9548 front 0.9342 rear 0.9788 156s
+pass 2: 7 moves, score 0.9632 side 0.9736 top 0.9563 front 0.9339 rear 0.9784 377s
+pass 3: 4 moves, score 0.9636 side 0.9741 top 0.9567 front 0.9343 rear 0.9784 554s
+{"sheet":"lod1","final":0.9636,"moved":[{"p":"ySh.1.1","from":0.91,"to":0.87},{"p":"ySh.3.1","from":1.09,"to":1.07},{"p":"ySh.5.1","from":1.08,"to":1.06},{"p":"yCr.0.1","from":0.88,"to":0.86},{"p":"yCr.1.1","from":0.96,"to":0.92},{"p":"yCr.3.1","from":1.09,"to":1.11},{"p":"yCr.4.1","from":1.16,"to":1.18},{"p":"hw.0.1","from":0.82,"to":0.8},{"p":"hw.1.1","from":0.86,"to":0.82},{"p":"hw.2.1","from":0.89,"to":0.87},{"p":"hw.3.1","from":0.98,"to":1},{"p":"hw.4.1","from":0.882,"to":0.902},{"p":"hw.7.1","from":0.81,"to":0.77},{"p":"cabin.1.wt","from":0.83,"to":0.85},{"p":"cabin.4.wt","from":0.722,"to":0.742},{"p":"cabin.5.yr","from":1.51,"to":1.49},{"p":"cabin.5.z","from":-0.74,"to":-0.82},{"p":"spoiler.span","from":0.58,"to":0.56},{"p":"roofCh","from":0.06,"to":0.07}]}
+
+Final fit after fascia/glass geometry:
+start 0.9615 side 0.9711 top 0.9553 front 0.9309 rear 0.9787
+pass 1: 16 moves, score 0.9644 side 0.9748 top 0.9578 front 0.9373 rear 0.9773 164s
+pass 2: 5 moves, score 0.9652 side 0.9761 top 0.9584 front 0.9373 rear 0.9773 354s
+{"sheet":"lod1","final":0.9652,"moved":[{"p":"ySh.0.1","from":0.86,"to":0.82},{"p":"ySh.1.1","from":0.87,"to":0.85},{"p":"ySh.3.1","from":1.07,"to":1.09},{"p":"ySh.4.1","from":1.08,"to":1.1},{"p":"yCr.0.1","from":0.86,"to":0.84},{"p":"yCr.1.1","from":0.92,"to":0.88},{"p":"yCr.3.1","from":1.11,"to":1.09},{"p":"hw.0.1","from":0.8,"to":0.78},{"p":"hw.1.1","from":0.82,"to":0.8},{"p":"hw.2.1","from":0.87,"to":0.89},{"p":"hw.3.1","from":1,"to":0.98},{"p":"cabin.1.yr","from":1.34,"to":1.32},{"p":"cabin.4.z","from":-0.42,"to":-0.38},{"p":"cabin.5.z","from":-0.82,"to":-0.86},{"p":"archR","from":0.51,"to":0.5},{"p":"spoiler.span","from":0.56,"to":0.54},{"p":"mirror.y","from":0.98,"to":1},{"p":"mirror.z","from":0.6,"to":0.58},{"p":"sideDrop","from":0.16,"to":0.17}]}

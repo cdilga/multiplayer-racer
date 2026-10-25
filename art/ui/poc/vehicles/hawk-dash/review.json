@@ -2,13 +2,14 @@
   "id": "hawk-dash",
   "name": "Hawk Dash",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
+    "br-8h3u.11.1",
     "br-bwju.11",
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "R123's Hawk Dash: a bubbly Aussie V8 sedan in the spirit of the Falcon XR8 Sprint. Rebuilt against its contact sheet (br-bwju.11): painted pillars with black-framed side glass in three panes and a black B pillar, the roof painted and carrying the twin stripes; swept headlamps wrapping round the corner; a black hexagonal upper grille; a big lower intake with mesh bars; vertical LED slots in black surrounds; a wide black splitter; the bonnet bulge and two louvred vents; widebody flares; dark 5-spoke rims; angular tail lamps with smoked centres; a body-colour wing on short posts with turned-down tips; a black diffuser with fins and four chrome pipes; big black mirrors on stalks; the twin stripes nose to tail and the side 'C' graphic with its pinstripe. LOD0 2459 triangles (qualified budget 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Lion President's spec twin.",
+  "summary": "Hawk Dash, 25 October: wheel budget moved into the body. The four LOD0 wheels fall from 668 to 176 triangles (74% less), with five-spoke rims drawn in the shared atlas and closed inner sidewalls at every tier. The body now has tucked sills and fuller flanks, rolled shoulders, a crowned bonnet and shaped power bulge, a rounded roof and bowed windscreen/backlight, a wider lower intake, contoured bumper and recessed boot panel. The diffuser, fins and wing tips are closed. The existing collision hulls and handling are retained. The labelled reference / before / after / diff sheets below show the change in the same blue paint and lighting. This is a review candidate; the owner judges the likeness.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -16,43 +17,43 @@
   },
   "reference": {
     "sheet": "media/reference/lod-plus-1.png",
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/hawk-dash/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out).",
+    "note": "Generated reference sheets are unchanged. The comparison columns are labelled REFERENCE, BEFORE (24 Oct), AFTER (25 Oct), and AFTER silhouette diff. The bottom row repeats reference / before / after in the front three-quarter view. Flat shading and paint are identical between the two model renders. Silhouette IoU measures the outline; the bonnet, shoulder, glass and bumper curves need the by-eye comparison too.",
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
+        "label": "LOD0: reference / before / after / silhouette diff",
         "sheet": "media/reference-lod0/sheet.png",
         "iou": {
-          "side": 0.9792,
-          "top": 0.953,
-          "front": 0.9335,
-          "rear": 0.9713
+          "side": 0.9761,
+          "top": 0.9584,
+          "front": 0.9373,
+          "rear": 0.9773
         },
-        "weightedIou": 0.9633
+        "weightedIou": 0.9652
       },
       {
         "lod": 1,
-        "label": "LOD1 against the 'lod + 1' reference sheet",
+        "label": "LOD1: reference / before / after / silhouette diff",
         "sheet": "media/reference-lod1/sheet.png",
         "iou": {
-          "side": 0.9795,
-          "top": 0.9447,
-          "front": 0.9295,
-          "rear": 0.9752
+          "side": 0.9755,
+          "top": 0.9506,
+          "front": 0.9339,
+          "rear": 0.9719
         },
-        "weightedIou": 0.9609
+        "weightedIou": 0.9612
       },
       {
         "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
+        "label": "LOD2: reference / before / after / silhouette diff",
         "sheet": "media/reference-lod2/sheet.png",
         "iou": {
-          "side": 0.9586,
-          "top": 0.9579,
-          "front": 0.9082,
-          "rear": 0.9562
+          "side": 0.9546,
+          "top": 0.9598,
+          "front": 0.9138,
+          "rear": 0.9476
         },
-        "weightedIou": 0.9505
+        "weightedIou": 0.949
       }
     ]
   },
@@ -65,7 +66,7 @@
       {
         "lod": 0,
         "glb": "media/model/hawk-dash.lod0.glb",
-        "tris": 2448,
+        "tris": 2689,
         "draws": 11,
         "maxTris": 2800,
         "withinBudget": true
@@ -73,7 +74,7 @@
       {
         "lod": 1,
         "glb": "media/model/hawk-dash.lod1.glb",
-        "tris": 896,
+        "tris": 883,
         "draws": 11,
         "maxTris": 900,
         "withinBudget": true
@@ -81,7 +82,7 @@
       {
         "lod": 2,
         "glb": "media/model/hawk-dash.lod2.glb",
-        "tris": 596,
+        "tris": 597,
         "draws": 11,
         "maxTris": 600,
         "withinBudget": true
@@ -115,7 +116,7 @@
         },
         "pivot": [
           0,
-          1.0702727272727273,
+          1.0696363636363637,
           0.9
         ]
       },
@@ -132,8 +133,8 @@
         },
         "pivot": [
           0,
-          1.0824500000000001,
-          -0.9099999999999999
+          1.0976000000000001,
+          -0.9199999999999999
         ]
       },
       {
@@ -148,9 +149,9 @@
           "max": 0
         },
         "pivot": [
-          0.9457,
-          0.601842105263158,
-          0.9099999999999999
+          0.9532571428571428,
+          0.6040921052631579,
+          0.9199999999999999
         ]
       },
       {
@@ -165,9 +166,9 @@
           "max": 70
         },
         "pivot": [
-          -0.9457,
-          0.601842105263158,
-          0.9099999999999999
+          -0.9532571428571428,
+          0.6040921052631579,
+          0.9199999999999999
         ]
       },
       {
@@ -182,8 +183,8 @@
           "max": 0
         },
         "pivot": [
-          0.8954294642857143,
-          0.6027500000000001,
+          0.9017857142857143,
+          0.6088,
           -0.3
         ]
       },
@@ -199,8 +200,8 @@
           "max": 70
         },
         "pivot": [
-          -0.8954294642857143,
-          0.6027500000000001,
+          -0.9017857142857143,
+          0.6088,
           -0.3
         ]
       },
@@ -340,7 +341,7 @@
         "hex": "#5EC8FF"
       }
     ],
-    "pattern": "Seat colour on the paint key (white texels tint; the black stripes, glass, lamps and tyres keep their colour), the number on the roof between the stripes (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. Known defect br-vhtm: filtered stripe edges are untinted grey, so at grid size the stripes read light grey."
+    "pattern": "Seat colour tints the paint; the twin stripes, C graphic, framed glass, lamps and atlas-drawn rims/tyres keep their own colours. White and five bright seat colours are shown below."
   },
   "inWorld": [
     {
@@ -369,39 +370,31 @@
     "findings": [
       {
         "result": "PASS",
-        "text": "contract + reproducibility (validator clean; origin between the axles; anchors unchanged)"
+        "text": "source/contract/reproducibility: bake.txt, reproducibility.txt (`node tools/vehicles/bake.mjs art/vehicles/hawk-dash --check`), contract.txt (`jj vehicle sync` and `jj validate`), no waivers."
       },
       {
         "result": "PASS",
-        "text": "budget: LOD0 2459 <= 2800 <= 3000; LOD1 896 <= 900; LOD2 596 <= 600"
+        "text": "geometry/budget: verify.mjs checks the shipped GLBs, all 11 part IDs, finite vertices/normals, nonzero triangles, one material and sealed manifold wheels at all tiers. Wheel bottoms meet ground and wheel pivots match sidecar. geometry.json records per-part counts."
       },
       {
         "result": "PASS",
-        "text": "silhouette (held, not raised): weighted IoU LOD0 0.9638 -> 0.9633, LOD1 0.9604 -> 0.9609, LOD2 0.9555 -> 0.9505 (iou.json). Side and rear rise at every LOD (LOD0 side 0.976 -> 0.979, rear 0.968 -> 0.971); front falls (0.948 -> 0.934, the evaluator's 8-degree front camera against the new flat fascia). Above the skill's ~0.95 at every LOD"
+        "text": "paint and hinges: `node --test tools/vehicles/test/{pivots,paint-key,spec-twins}.test.mjs`, 42 passed (paint-spec-tests.txt). Bright/white/near-black paint keeps tyres, rims, lamps and framed glass neutral (paints.png, paints-strip.png)."
       },
       {
         "result": "PASS",
-        "text": "by-eye cues (ladder-lod0.png, reference-lod0/sheet.png): painted pillars and black-framed side glass, striped roof, swept wrap-round headlamps, hexagonal grille, lower intake, LED slots, splitter, bulge and louvred vents, flares, dark 5-spoke rims, angular smoked tail lamps, body-colour wing, diffuser with quad pipes, big mirrors, door handles, twin stripes nose to tail, side C graphic"
+        "text": "damage geometry: damage-strip.png and damage-strip-overview.png show intact, loose, detached and stripped-shell poses with dark bays. This is the existing evidence viewer, not a new simulation test of debris lifetime; no damage runtime code changed."
       },
       {
         "result": "PASS",
-        "text": "paint key / one material; draws per tile unchanged (44 in the mixed grid)"
+        "text": "physics fit: final-sim.json, `jj sim --json --profile assets/profiles/hawk-dash.json settle.json scenarios/handling/roster-straight-hawk-dash.json`, both fixtures pass and replay matches. The focused settle fixture reuses the original idle-settle drops and settle checks verbatim. Original Cruz idle-settle asks for at least 2° pitch; Hawk reaches 1.6967° before and after and fails those two Cruz-specific checks identically (sim.json, physics-before-after.json). All other checks pass; before/after state hashes are identical. No fixture was relaxed to claim a handling improvement."
       },
       {
         "result": "PASS",
-        "text": "damage states (damage-strip.png: parts swing on their hinge lines, dark bays behind missing panels)"
-      },
-      {
-        "result": "PASS",
-        "text": "physics fit (colliders.png: one convex hull per part; mirrors and wing tips are left out of the colliders)"
+        "text": "visual inspection: views.png, lods.png, colliders.png, all three comparison sheets, damage and paint strips, grid-1/4/24.png. These grids use the model evidence viewer. Current roof-number anchor was raised to clear the new crown. Runtime identity and N×N draw benchmarks were not rerun because host loader/material/batching are unchanged; the grids do not prove roof-number readability. review-probe.mjs exercises all three LODs, three seat paints and intact/loose/detached states through the actual POC controls in Chromium and WebKit; screenshots and checks.json are in local-interactions/ and live-interactions/."
       },
       {
         "result": "WARN",
-        "text": "wheel size: the sheet's wheels are about 0.35 m in radius, the model's 0.40 m (the sim's wheel_radius); not changed here"
-      },
-      {
-        "result": "WARN",
-        "text": "the stripes' and C graphic's edges read light grey in the viewer and the host at small sizes (br-vhtm, renderer-wide filtered paint-key edges)"
+        "text": "engine gate: the unchanged Hawk sound profile passes schema validation (engine.txt P7). The broad sound-lab check reports seven failures: M5/B12/L6 squeal, B10/L1 firing pitch, K2 start and SL1 control inventory. These are outside this geometry change; tracked with br-8h3u.12. No sound files changed. This report does not certify the sound lab."
       }
     ],
     "report": "media/gate/validation.md"

@@ -1,0 +1,9 @@
+hawk-dash.lod0.glb: 2689 tris (budget 2800; optimiser flipped 65, dropped 40 unseen) {"core":432,"front":1009,"back":968,"door_FL":34,"door_FR":34,"door_RL":18,"door_RR":18,"wheel_FL":44,"wheel_FR":44,"wheel_RL":44,"wheel_RR":44,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+hawk-dash.lod1.glb: 883 tris (budget 900; optimiser flipped 2, dropped 2 unseen) {"core":236,"front":262,"back":225,"door_FL":18,"door_FR":18,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+hawk-dash.lod2.glb: 597 tris (budget 600; optimiser flipped 0, dropped 2 unseen) {"core":164,"front":164,"back":133,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":24}
+wrote art/vehicles/hawk-dash/hawk-dash.atlas.png 65322 B sha256 0ba139c9b79f6e8c7e0921109d95c13691332c2e409bb42b917c77ffef900987
+wrote art/vehicles/hawk-dash/hawk-dash.emissive.png 21273 B sha256 677ca266ff296ace5f109380b05d38159840119503574c28bea03a5c07c67b2c
+wrote art/vehicles/hawk-dash/hawk-dash.lod0.glb 395720 B sha256 7959210d50226b76be5263e0d78e50cb4282195e3e034b751bb0036abd56b185
+wrote art/vehicles/hawk-dash/hawk-dash.lod1.glb 190340 B sha256 ebdc19fd4895af61058e32143753338d3bfe8e3726b0d15d6d93153bed213aa8
+wrote art/vehicles/hawk-dash/hawk-dash.lod2.glb 162896 B sha256 79b89b6d8785e1bd4885629a60ccfa28cbf37452e14c26438a59aa367d25d05e
+wrote art/vehicles/hawk-dash/hawk-dash.asset.json 3489 B sha256 aaa80770ec8963cabd7b674c2cae00c567dca241a9e24c6390e9fd2cd2205023

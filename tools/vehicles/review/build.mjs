@@ -108,7 +108,8 @@ export function buildVehicle(id, copies) {
 }
 
 export function buildAll(write) {
-  const copies = [], texts = new Map(), problems = [];
+  // The POC deploy serves art/ui only. Copy the canonical shader, and check it for staleness with the review data.
+  const copies = [[path.join(REPO, 'web/shared/render/paint-key.js'), path.join(SITE, '../shared/paint-key.js')]], texts = new Map(), problems = [];
   const reviews = rosterIds().map((id) => buildVehicle(id, copies));
   for (const r of reviews) if (!r.missing) texts.set(path.join(SITE, r.id, 'review.json'), JSON.stringify(r, null, 2) + '\n');
   const roster = {

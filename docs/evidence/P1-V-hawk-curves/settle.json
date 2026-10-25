@@ -1,0 +1,98 @@
+{
+ "scenario": "hawk-dash-model-settle",
+ "what": "Hawk Dash visual rebuild: reuse idle-settle drops (0.6/0.2 m), with its settle checks verbatim. No input; all wheels contact, ride height within 4 cm, at most one rebound, nearly stationary and upright by tick 120. The original fixture also asks for Cruz-specific squat/roll amplitudes; this fixture checks asset load and settle only. Straight-throttle is checked separately with the existing Hawk fixture.",
+ "map": "maps/greybox-loop.json",
+ "seed": 1,
+ "ticks": 180,
+ "cars": [
+  {
+   "routePoint": 16,
+   "lateral": -3,
+   "lift": 0.6
+  },
+  {
+   "routePoint": 40,
+   "lateral": 3,
+   "lift": 0.2
+  }
+ ],
+ "inputs": [],
+ "observe": [
+  120,
+  300,
+  390,
+  480
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "rebounds",
+   "min": 0,
+   "max": 1
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "height",
+   "min": -0.04,
+   "max": 0.04
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.1
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 0,
+   "atTick": 120,
+   "metric": "upY",
+   "min": 0.99,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "rebounds",
+   "min": 0,
+   "max": 1
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "height",
+   "min": -0.04,
+   "max": 0.04
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "speed",
+   "min": 0,
+   "max": 0.1
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 1,
+   "atTick": 120,
+   "metric": "upY",
+   "min": 0.99,
+   "max": 1.001
+  }
+ ]
+}

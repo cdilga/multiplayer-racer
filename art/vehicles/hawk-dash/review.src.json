@@ -2,13 +2,14 @@
   "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
   "name": "Hawk Dash",
   "status": "awaiting-review",
-  "date": "2026-10-18",
+  "date": "2026-10-25",
   "beads": [
+    "br-8h3u.11.1",
     "br-bwju.11",
     "br-bwju.3",
     "br-bwju"
   ],
-  "summary": "R123's Hawk Dash: a bubbly Aussie V8 sedan in the spirit of the Falcon XR8 Sprint. Rebuilt against its contact sheet (br-bwju.11): painted pillars with black-framed side glass in three panes and a black B pillar, the roof painted and carrying the twin stripes; swept headlamps wrapping round the corner; a black hexagonal upper grille; a big lower intake with mesh bars; vertical LED slots in black surrounds; a wide black splitter; the bonnet bulge and two louvred vents; widebody flares; dark 5-spoke rims; angular tail lamps with smoked centres; a body-colour wing on short posts with turned-down tips; a black diffuser with fins and four chrome pipes; big black mirrors on stalks; the twin stripes nose to tail and the side 'C' graphic with its pinstripe. LOD0 2459 triangles (qualified budget 3000). Code-built from a generated reference sheet (R81). Rear drive, 1700 kg: the Lion President's spec twin.",
+  "summary": "Hawk Dash, 25 October: wheel budget moved into the body. The four LOD0 wheels fall from 668 to 176 triangles (74% less), with five-spoke rims drawn in the shared atlas and closed inner sidewalls at every tier. The body now has tucked sills and fuller flanks, rolled shoulders, a crowned bonnet and shaped power bulge, a rounded roof and bowed windscreen/backlight, a wider lower intake, contoured bumper and recessed boot panel. The diffuser, fins and wing tips are closed. The existing collision hulls and handling are retained. The labelled reference / before / after / diff sheets below show the change in the same blue paint and lighting. This is a review candidate; the owner judges the likeness.",
   "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
   "specTwin": {
     "id": "lion-president",
@@ -19,60 +20,60 @@
     "compare": [
       {
         "lod": 0,
-        "label": "LOD0 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/hawk-dash/reference-lod0"
+        "label": "LOD0: reference / before / after / silhouette diff",
+        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod0"
       },
       {
         "lod": 1,
-        "label": "LOD1 against the 'lod + 1' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/hawk-dash/reference-lod1"
+        "label": "LOD1: reference / before / after / silhouette diff",
+        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod1"
       },
       {
         "lod": 2,
-        "label": "LOD2 against the 'lowest' reference sheet",
-        "dir": "docs/evidence/P1-V-finish/hawk-dash/reference-lod2"
+        "label": "LOD2: reference / before / after / silhouette diff",
+        "dir": "docs/evidence/P1-V-hawk-curves/reference-lod2"
       }
     ],
-    "note": "The reference sheets were generated with Muse Image from a written brief (art/vehicles/hawk-dash/refs/prompts/), the Cruz Missile's sheet given as the layout example. Per view: the reference crop, the model shaded, and the silhouette diff (green is model only, red is reference only). Scored by tools/vehicles/fit (Spike J's method: perspective camera, the same mask pipeline on both sides, the contact-shadow band left out)."
+    "note": "Generated reference sheets are unchanged. The comparison columns are labelled REFERENCE, BEFORE (24 Oct), AFTER (25 Oct), and AFTER silhouette diff. The bottom row repeats reference / before / after in the front three-quarter view. Flat shading and paint are identical between the two model renders. Silhouette IoU measures the outline; the bonnet, shoulder, glass and bumper curves need the by-eye comparison too."
   },
   "turntable": {
-    "sheet": "docs/evidence/P1-V-finish/hawk-dash/lods.png",
-    "validation": "docs/evidence/P1-V-finish/hawk-dash/validation.md"
+    "sheet": "docs/evidence/P1-V-hawk-curves/lods.png",
+    "validation": "docs/evidence/P1-V-hawk-curves/validation.md"
   },
   "damage": {
-    "strip": "docs/evidence/P1-V-finish/hawk-dash/damage-strip.png",
-    "overview": "docs/evidence/P1-V-finish/hawk-dash/damage-strip-overview.png",
+    "strip": "docs/evidence/P1-V-hawk-curves/damage-strip.png",
+    "overview": "docs/evidence/P1-V-hawk-curves/damage-strip-overview.png",
     "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back detached; wheel_FL detached; both front doors and the back detached; a stripped shell. Posed in a three.js viewer about each part's hinge line (tools/vehicles/evidence)."
   },
   "paints": {
-    "sheet": "docs/evidence/P1-V-finish/hawk-dash/paints-strip.png",
+    "sheet": "docs/evidence/P1-V-hawk-curves/paints-strip.png",
     "identity": "art/ui/tokens.json",
-    "pattern": "Seat colour on the paint key (white texels tint; the black stripes, glass, lamps and tyres keep their colour), the number on the roof between the stripes (anchor roof_number) and in the HUD badge. paints-strip.png shows white plus five player colours. Known defect br-vhtm: filtered stripe edges are untinted grey, so at grid size the stripes read light grey."
+    "pattern": "Seat colour tints the paint; the twin stripes, C graphic, framed glass, lamps and atlas-drawn rims/tyres keep their own colours. White and five bright seat colours are shown below."
   },
   "inWorld": [
     {
       "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
       "size": "large",
-      "path": "docs/evidence/P1-V-finish/hawk-dash/grid-1.png"
+      "path": "docs/evidence/P1-V-hawk-curves/grid-1.png"
     },
     {
       "label": "Four tiles",
       "size": "medium",
-      "path": "docs/evidence/P1-V-finish/hawk-dash/grid-4.png"
+      "path": "docs/evidence/P1-V-hawk-curves/grid-4.png"
     },
     {
       "label": "24 tiles, small (each car about 100 px)",
       "size": "small",
-      "path": "docs/evidence/P1-V-finish/hawk-dash/grid-24.png"
+      "path": "docs/evidence/P1-V-hawk-curves/grid-24.png"
     },
     {
       "label": "From the Derby overview camera (top-down damage row)",
       "size": "overview",
-      "path": "docs/evidence/P1-V-finish/hawk-dash/damage-strip-overview.png"
+      "path": "docs/evidence/P1-V-hawk-curves/damage-strip-overview.png"
     }
   ],
   "gate": {
-    "report": "docs/evidence/P1-V-finish/hawk-dash/validation.md"
+    "report": "docs/evidence/P1-V-hawk-curves/validation.md"
   },
   "profile": "assets/profiles/hawk-dash.json",
   "handling": {
