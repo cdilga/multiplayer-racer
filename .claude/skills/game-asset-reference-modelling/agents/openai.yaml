@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Asset Reference Modelling"
+  short_description: "Match game assets to references within a budget"
+  default_prompt: "Use $game-asset-reference-modelling to build or refine this game asset against its references, preserve its constraints, and verify the result at gameplay scale."

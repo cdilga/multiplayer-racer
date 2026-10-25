@@ -193,6 +193,10 @@ previews independent of green, focused reproduction, and bounded red time.
 
 ## Skills
 
+- **`game-asset-reference-modelling`** (`.claude/skills/game-asset-reference-modelling/`): reference
+  likeness workflow for any game asset: consistent cameras, measured sections/transitions, geometry
+  allocation, local shape tests and target-renderer review. Hawk is a worked example; vehicle work
+  still follows the canonical method and validation gate below.
 - **`lowpoly-model-from-refs`** (`.claude/skills/lowpoly-model-from-refs/`): **the canonical vehicle
   modelling method (R81)**: per-tier reference sheets → silhouette masks → three.js model script →
   IoU score + optimiser → bake to contract. Use it for any new or redone roster vehicle.
