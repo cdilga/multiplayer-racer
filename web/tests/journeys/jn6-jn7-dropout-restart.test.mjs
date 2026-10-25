@@ -72,7 +72,15 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
     const { host, phones } = await raceWith(server.origin, ['Davo', 'Shazza']);
     const [a] = phones;
     await drive(a, -1);
-    await host.waitForTimeout(1500);
+    // Start the dropout measurement only after the host has received deliberate, fresh input and handed the car
+    // back. Startup rendering may already have put it on autopilot; a fixed sleep cannot acknowledge that handback
+    // (CI 9217 failed "A drives itself" before disconnecting anything). Match JN3's real-input baseline.
+    await wait(host, async (ep) => {
+      const state = await window.__jjTest.observe();
+      const seat = state.host.seats.find((s) => s.endpoint === ep);
+      const car = seat && state.cars.find((c) => c.car === seat.car);
+      return seat?.fresh && !seat.inputDropped && !seat.menuOpen && car?.autopilot == null && car?.input.throttle > 0.3;
+    }, a.ep);
     const before = carOf(await observe(host), a.ep);
     assert.ok(before && !before.autopilot, 'A drives itself');
     // The phone drops off (its page and connection gone: a dead network, a locked phone, a crashed tab). Playwright's

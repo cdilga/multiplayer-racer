@@ -134,3 +134,17 @@ total; the throttled four-seed test takes 7,396 ms total). The byte-golden test 
 `soup.ts` pass. Whole-web typechecking currently finds errors in another session's uncommitted route-draping block;
 those hunks are neither reverted nor committed by this repair. The complete checks script passes on clean committed
 source on **eris/Linux** after `npm ci` refreshes its missing locked `three-mesh-bvh` dependency.
+
+### CI 9217: acknowledge real input before dropout
+
+JN6 failed `A drives itself` before disconnecting the phone. Its fixed 1,500 ms sleep did not acknowledge
+the fresh deliberate input or handback after startup rendering. Match JN3's existing baseline: observe the seat
+fresh, outside the menu, without dropped input, and its car player-driven with throttle, before disconnecting.
+Dropout and reconnect bounds, same-car assertion and room continuity remain unchanged.
+
+Focused Linux/eris validation uses pinned Node 26.10.0, Playwright Chromium and the current GPU-lane
+`jj-server` binary against committed web source `9388bd30` plus the test supplied on stdin (no remote source edits).
+GPU run passes in **10,252 ms**, takeover after **2,121 ms**; software-GL run passes in **43,253 ms**,
+takeover observed after **5,261 ms** within its existing 6-second software bound. An initial reproduction
+accidentally used eris's stale October-18 debug server; it is excluded. Mac real-WebRTC setup remains blocked
+before joining, so it is not counted as journey validation.
