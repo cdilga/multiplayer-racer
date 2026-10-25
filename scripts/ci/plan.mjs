@@ -47,7 +47,15 @@ const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // c10-practice: five tiles plus a separate practice world took 785 s on SwiftShader (CI 8912).
 // jn3-round-loop: the idle cue requires continuously fresh real-phone input; CI 9116's software renderer starved
 // phone refreshes for 2491 ms, exercising dropout instead of idle takeover.
-const GPU = JOURNEYS.filter((f) => /\/(r06-identify|r13-identity|c06-identify-menu|c10-practice|c12-many-controllers|jn5-churn|jn3-round-loop|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview|g-between-rounds)\.test\.mjs$/.test(f));
+// These full-resolution journeys run wholly on hardware, without a second SwiftShader copy. R07b's unchanged matrix
+// passes in 24.6 s on RTX 2080; software stalls for 225.8 s on button stability. CI 9255 also spent 301.6 s in Overview
+// and timed out capturing the DPR-3 phone. Keep every test, viewport, cohort and assertion on the GPU lane.
+const GPU_ONLY = new Set([
+  'web/tests/journeys/r07b-join-card.test.mjs',
+  'web/tests/journeys/r08-phone-host.test.mjs',
+  'web/tests/journeys/r11-overview.test.mjs',
+]);
+const GPU = JOURNEYS.filter((f) => GPU_ONLY.has(f) || /\/(r06-identify|r13-identity|c06-identify-menu|c10-practice|c12-many-controllers|jn5-churn|jn3-round-loop|fl17-latency|fl02-gated-start|generated-jump|generated-loop|r11-overview|g-between-rounds)\.test\.mjs$/.test(f));
 const KIT = 'web/shared/ui/tests';
 const LANDING = 'web/landing/tests';
 const SSE = 'crates/jj-server/tests/sse.test.mjs';
@@ -240,14 +248,14 @@ const hostFiles = pick(sel.hostAll, sel.host, HOST);
 const transportFiles = pick(sel.transportAll, sel.transport, TRANSPORT);
 const journeyFiles = pick(sel.journeysAll, sel.journeys, JOURNEYS);
 const crates = sel.rustAll ? 'all' : [...sel.crates].sort().join(' ');
-// The CPU browser targets (every selected file; the GPU-gated journeys run here too, on SwiftShader, as they always
-// have: R06 skips itself there and C06's identify bound is loose) and, for gpu.yml, the GPU subset.
+// CPU browser targets and, for gpu.yml, the hardware subset. GPU_ONLY runs every case once on hardware; other
+// GPU-gated journeys retain their software checks too (R06 skips itself there and C06's identify bound is loose).
 const browser = [
   ...hostFiles,
   ...(sel.kit ? [KIT] : []),
   ...(sel.landing ? [LANDING] : []),
   ...transportFiles,
-  ...journeyFiles,
+  ...journeyFiles.filter((f) => !GPU_ONLY.has(f)),
   ...(sel.sse ? [SSE] : []),
 ];
 const gpu = journeyFiles.filter((f) => GPU.includes(f));

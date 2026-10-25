@@ -547,7 +547,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   });
   // The big card is sized to the screen: a resize (full screen, a display-mode change) redraws it.
   window.addEventListener('resize', () => {
-    if (state.menu && !state.confirm) renderMenu();
+    if (state.menu && !state.confirm) {
+      if (pressing) redrawLater = true;
+      else renderMenu();
+    }
   });
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;

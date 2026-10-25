@@ -169,8 +169,8 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     url.searchParams.set('seed', String(want));
     location.assign(url);
   });
-  const refresh = async () => {
-    const t = await client.tuning();
+  const refresh = async (confirmed?: TuningState) => {
+    const t = confirmed ?? await client.tuning();
     for (const [path, v] of allLeaves(t)) current.set(path, v);
     if (!genError) {
       errEl.hidden = !t.error;
@@ -226,6 +226,9 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     current.set(path, value);
     void refresh();
   };
+  // A lab edit sends several fields together. Read the resulting tuning once after the burst instead of queuing a
+  // worker request and a whole-panel DOM refresh for every field. All commands still land and journal independently.
+  let refreshTimer: ReturnType<typeof setTimeout> | undefined;
   const send = (path: string, value: Json) => {
     if (path.startsWith(GEN)) return sendGenerator(path, value);
     const text = JSON.stringify(value);
@@ -236,7 +239,8 @@ export async function mountTuningPanel(client: TuningClient, gen?: GeneratorHook
     const same = typeof value === 'number' && typeof shipped === 'number' ? Math.fround(value) === Math.fround(shipped) : JSON.stringify(shipped) === text;
     if (defaults.has(path) ? same : text === 'null') changed.delete(path);
     else changed.set(path, text);
-    setTimeout(() => void refresh(), 150);
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => { refreshTimer = undefined; void refresh(); }, 150);
   };
 
   const labPane = panel.querySelector<HTMLElement>('[data-tune-pane="lab"]')!;
@@ -356,7 +360,7 @@ function vehicleSelector(o: {
   defaults: Map<string, Json>;
   current: Map<string, Json>;
   changed: Map<string, string>;
-  refresh: () => Promise<void>;
+  refresh: (confirmed?: TuningState) => Promise<void>;
 }): { file(): string; selected(): string; choose(id: string): Promise<void>; others(): Array<{ profile: string; set: Array<[string, string]> }> } {
   let vehicle = o.first.vehicle ?? '';
   const isVehicleRow = (path: string) => !shared(path) && !path.startsWith(GEN);
@@ -404,7 +408,9 @@ function vehicleSelector(o: {
       if (el.type === 'checkbox') el.checked = v === true;
       else el.value = typeof v === 'number' ? shown(v) : JSON.stringify(v);
     }
-    await o.refresh();
+    // The confirmed switch already returned every tuning value. Reuse it for the rows rather than making a second
+    // worker round trip per vehicle (the lab switches through the whole roster for every edit).
+    await o.refresh(t);
   }
   return {
     selected: () => vehicle,

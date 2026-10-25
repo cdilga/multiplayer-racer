@@ -126,3 +126,17 @@ Measurements and reproductions: `docs/evidence/P1-CI-repair/repair.md` and `stag
   draws 0.7–1.4-second frames; R06's separate polling RPC missed the correct #108 tile/marker even
   though the post-timeout diagnostic saw both. A preinstalled MutationObserver records the same
   event, tile and billboard together, retaining the attempt timer and every original assertion.
+
+### Tuning bursts and full-resolution browser work (2026-10-25, br-dsq4)
+
+The Feel Lab's fourteen-field edit across seven vehicles scheduled 98 delayed tuning readbacks in
+addition to switch reads. Coalesce the field burst and reuse the read that confirmed the selected
+vehicle: the browser probe retains all 98 writes and seven exported profiles with 9 rather than 113
+worker reads. A display resize must defer menu DOM replacement during a pointer press, just as a
+room update does; otherwise Resume loses its click between down and up.
+
+Full-resolution live raster journeys belong on hardware when SwiftShader starves browser actions:
+the same R07b matrix takes 24.6 seconds on RTX 2080 and stalls for 225.8 seconds on software button
+stability. CI selection now schedules all of R07b/R08/R11 on GPU, with their assertions and cohorts
+intact. Audit the union of CPU and GPU selections when changing scheduling; all 87 journey/smoke
+files remain covered, with focused menu/tuning regressions still on CPU.

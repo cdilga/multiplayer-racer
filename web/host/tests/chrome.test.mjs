@@ -172,6 +172,24 @@ test('lobby and intermission: the menu has Disband but no End round, and does no
   }
 });
 
+test('a resize between pressing and releasing Resume preserves the click', async () => {
+  const page = await open('race-8');
+  try {
+    await page.evaluate(() => window.__jjChrome.openJoin());
+    const button = page.locator('[data-join-big] [data-act=resume]');
+    const rect = await button.boundingBox();
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    await page.mouse.down();
+    // A display/fullscreen resize can arrive while a real pointer press is in flight. Keep its target until click.
+    await page.evaluate(() => dispatchEvent(new Event('resize')));
+    await page.mouse.up();
+    assert.equal(await page.evaluate(() => window.__jjChrome.state.menu), false, 'Resume closes the join card');
+    assert.deepEqual((await inputs(page)).map(i => i.on), [true, false], 'the race pauses, then resumes');
+  } finally {
+    await page.close();
+  }
+});
+
 test('Remove (G07): from the menu list and from a lobby card, after a confirmation naming the player; backing out sends nothing', async () => {
   const page = await open('lobby-8');
   try {

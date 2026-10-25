@@ -261,3 +261,50 @@ Preview **v02-f48e668b** passes public smoke: room **2M3N**, isolation from eigh
 join (host, 0 ms), input, resume, drive, HUD and round. Published by run **9260**:
 https://jammers-preview.dilger.dev/p/v02-f48e668b/ . Main 9255's checks, lint, three Rust shards,
 build, image and browser slots 1/2/4 pass at this recording; remaining browser slots are running.
+
+### Main 9255: tuning readback fan-out, resize clicks and raster scheduling
+
+Main 9255 eventually reports four failures on its software-rendered slots: R07b's post-Resume
+5-second observation, FL03's Grip application at **10,721 ms** against **10,500 ms**, R11's
+post-keyboard Overview observation, and R08's DPR-3 portrait screenshot after fonts loaded.
+GPU **9268** at `0d6a29d6` is **green**, including FL17, R06's full 24/120 cohort and all R13
+Chromium/WebKit/pattern checks; no GPU failure is waived.
+
+Two runtime defects are reproduced and repaired:
+
+- The lab sends fourteen fields for each of seven vehicles, and every send scheduled an independent
+  worker tuning read plus whole-panel refresh. A real-browser panel regression records **113 reads**
+  for **98 field writes** before the fix. Coalescing each burst and reusing the tuning response that
+  confirms a vehicle switch reduces this to **9 reads**. All 98 writes, every vehicle's values,
+  return to the selected vehicle and all seven vehicles' exported patch fields are checked.
+- A resize between pointer-down and pointer-up on Resume replaced its DOM node, losing the click.
+  `chrome.test.mjs` reproduces this with real Playwright mouse events: the old code leaves the menu
+  open; the repaired resize handler uses the existing deferred-redraw protection and resumes.
+  The focused software-browser regression passes in **5,100 ms** on the loaded Mac.
+
+Focused full journeys on Linux/eris, Chromium (Playwright), RTX 2080 Super:
+
+- R07b's original whole file passes in **33,590 ms**, including a real phone joining the decoded QR,
+  pause/resume, all sixteen viewport/display-mode pairs and full screen. The matrix takes **21,844 ms**.
+- R08's original whole file passes in **35,599 ms**: DPR 2 and 3, portrait and landscape, every capture
+  and original layout/backing-store assertion. DPR-3 portrait takes **6,463 ms**.
+- FL03's full 1080p software journey passes in **242,119 ms** with the burst-coalescing candidate:
+  its five edits take **5,600 / 9,361 / 3,612 / 4,764 / 2,303 ms**, all below the unchanged 10,500 ms
+  bound. The final confirmed-response reuse is additionally covered by the nine-read regression.
+- The final candidate passes the complete FL03 file on Linux GPU in **85,838 ms**: no owner flag,
+  1280×720 and 1920×1080, all vehicles and native patch validation. The 1080p edits take
+  **479 / 556 / 515 / 749 / 572 ms**; the 720p edits take **492 / 673 / 517 / 523 / 512 ms**.
+
+Hardware scheduling is explicit: R07b, R08 and R11 now run their **whole unmodified files** on the GPU
+lane instead of repeating their full-resolution raster work on SwiftShader. The unchanged R07b
+matrix passes in **24,624 ms** on GPU even before the resize fix; an isolated Linux software run
+stalls for **225,837 ms** and times out waiting for Display & sound to become stable. Main 9255
+spent **301,600 ms** in R11 and exhausted the 30-second DPR-3 screenshot deadline. No timeout,
+cohort, gameplay requirement, screenshot or assertion is removed or relaxed. A full-selection audit
+proves all **87 journey/smoke files** still run, these three whole files are in GPU selection, and
+the tuning and menu regressions remain CPU targets.
+
+The Vite candidate build uses committed `map.ts` through a load hook to preserve another session's
+dirty route-draping edits. Local pinned whole-web typecheck reports only those dirty map edits
+(`lo`/`hi` possibly undefined, lines 377–387); the author sessions were notified. There are no
+diagnostics in the owned repair paths. Exact committed-source typechecking remains a CI check.
