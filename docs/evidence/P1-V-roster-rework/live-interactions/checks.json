@@ -1,0 +1,305 @@
+{
+  "base": "https://jammers-preview.dilger.dev",
+  "results": [
+    {
+      "id": "au-hawk",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-au-hawk-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "cruz-missile",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-cruz-missile-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "lion-president",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-lion-president-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "pig-catcher",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-pig-catcher-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "postie-bike",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-postie-bike-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "tradie-ute",
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/chromium-tradie-ute-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "au-hawk",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-au-hawk-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "cruz-missile",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-cruz-missile-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "lion-president",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-lion-president-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "pig-catcher",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-pig-catcher-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "postie-bike",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-postie-bike-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    },
+    {
+      "id": "tradie-ute",
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-lod0.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-lod1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-lod2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-paint1.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-paint2.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-loose.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-detached.png",
+        "docs/evidence/P1-V-roster-rework/live-interactions/webkit-tradie-ute-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": []
+      },
+      "problems": []
+    }
+  ]
+}

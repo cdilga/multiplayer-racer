@@ -1,0 +1,65 @@
+FAIL /poc/vehicles/ 412x915 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     cut off by the screen edge: "A smoother arched glassh"
+     after resize: cut off by the screen edge: "A smoother arched glassh"
+FAIL /poc/vehicles/ 915x412 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_915x412.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     cut off by the screen edge: "The roster"
+     after resize: cut off by the screen edge: "The roster"
+FAIL /poc/vehicles/ 375x667 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_375x667.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     cut off by the screen edge: "AU Hawk"
+     after resize: cut off by the screen edge: "AU Hawk"
+FAIL /poc/vehicles/ 1920x1080 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_1920x1080.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     cut off by the screen edge: "A smoother arched glassh", "Reworked the actual body"
+     after resize: cut off by the screen edge: "A smoother arched glassh", "Reworked the actual body"
+FAIL /poc/vehicles/ 1366x768 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_1366x768.png
+     cut off by the screen edge: "A smoother arched glassh", "Reworked the actual body", "Third likeness pass: wid"
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb
+     after resize: cut off by the screen edge: "A smoother arched glassh", "Reworked the actual body", "Third likeness pass: wid"
+FAIL /poc/vehicles/review.html?v=cruz-missile 412x915 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_review_html_v_cruz_missile_412x915.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     cut off by the screen edge: "1 Reference against mode", "1"
+     after resize: cut off by the screen edge: "1 Reference against mode", "1"
+FAIL /poc/vehicles/review.html?v=cruz-missile 915x412 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_review_html_v_cruz_missile_915x412.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+FAIL /poc/vehicles/review.html?v=cruz-missile 375x667 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_review_html_v_cruz_missile_375x667.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-4.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     cut off by the screen edge: "Design site / Vehicles
+ ", "Reworked the actual body"
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+     after resize: cut off by the screen edge: "Design site / Vehicles
+ ", "Reworked the actual body"
+FAIL /poc/vehicles/review.html?v=cruz-missile 1920x1080 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_review_html_v_cruz_missile_1920x1080.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     cut off by the screen edge: ""
+     after resize: cut off by the screen edge: ""
+FAIL /poc/vehicles/review.html?v=cruz-missile 1366x768 -> docs/evidence/P1-V-roster-rework/live-layout/poc_vehicles_review_html_v_cruz_missile_1366x768.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod0/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod1/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/reference-lod2/sheet.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/turntable/ladder.png
+     image did not load: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/in-world/grid-24.png
+     request failed: https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb
+Now LOOK at every screenshot above (Read the PNGs) and write docs/evidence/<id>/self-review.md.

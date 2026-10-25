@@ -30,3 +30,7 @@ AU retains its deliberate no-wing variant, coarse window specks and partially oc
 ## Not covered
 
 No new physical-device/network session, host race capture, dynamic debris-lifetime qualification, runtime roof-number readability proof or 24×24 performance benchmark. Rendering/batching/audio implementation and handling were unchanged. Fresh native settle and existing straight-run fixtures for every revised vehicle pass with exact journal replay. Owner feedback decides final likeness.
+
+
+## Owner-requested deeper rework, 2026-10-25
+The first pass below was rejected. Current review and limitations are in `docs/evidence/P1-V-roster-rework/self-review.md` and `docs/evidence/P1-V-roster-rework/validation.md`. The parent inspected `docs/evidence/P1-V-roster-rework/local-interactions-contact-1.jpg` through the complete six-sheet set plus large per-vehicle comparisons. The new review candidate supersedes the previous roster assets; Hawk remains unchanged.

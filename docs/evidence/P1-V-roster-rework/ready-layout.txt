@@ -1,0 +1,1 @@
+PASS10 page/viewport combinations, all assets ready, before/after resize;20 screenshots.

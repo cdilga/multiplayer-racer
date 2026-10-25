@@ -19,6 +19,10 @@ for car in cars:
         paths += [prefix + r['reference']['measured'][k] for k in ['oracle', 'report']]
     paths.append(prefix + r['gate']['report'])
 
+# Verify every generated per-car payload too, including damage, paints and grids.
+for car in cars:
+    paths += [str(p.relative_to('art/ui')) for p in (Path('art/ui/poc/vehicles') / car).rglob('*') if p.is_file()]
+
 def check(path):
     body = subprocess.check_output(['curl', '-fsS', '--max-time', '30', base + path])
     sha = hashlib.sha256(body).hexdigest()

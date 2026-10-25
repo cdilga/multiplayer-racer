@@ -1,0 +1,1 @@
+The first deployed probe ran before Actions finished, read the previous published triangle count and timed out as designed. This is not a candidate browser failure.

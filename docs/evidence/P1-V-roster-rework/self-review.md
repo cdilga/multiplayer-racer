@@ -23,3 +23,16 @@ The whole-view and coarse-tier limitations in validation.md remain under owner r
 
 ## Not covered
 Physical devices, exact photographic camera recovery, fresh host GPU/draw-cost and dynamic damage qualification. WebKit is Playwright WebKit, not Safari on a real iPhone. Public-byte and browser verification follows publication.
+
+## Deployed captures inspected
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-1.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-2.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-3.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-4.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-5.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-interactions-contact-6.jpg`: all16 constituent live stage captures inspected.
+- `docs/evidence/P1-V-roster-rework/live-layout-contact-1.jpg`: full-page live-check captures inspected; initial WAN image loading remains visible before resize.
+- `docs/evidence/P1-V-roster-rework/live-layout-contact-2.jpg`: full-page live-check captures inspected; initial WAN image loading remains visible before resize.
+
+- `docs/evidence/P1-V-roster-rework/ready-layout-contact-1.jpg`: ready-state public matrix after all images/model controls loaded, before/after resize.
+- `docs/evidence/P1-V-roster-rework/ready-layout-contact-2.jpg`: ready-state public matrix after all images/model controls loaded, before/after resize.

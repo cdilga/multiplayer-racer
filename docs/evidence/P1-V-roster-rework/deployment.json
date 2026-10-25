@@ -1,0 +1,994 @@
+{
+  "utc": "2026-10-25T07:46:36.090794+00:00",
+  "commit": "56252cf52639d654f2e9916cc9572fcabde534f5",
+  "base": "https://jammers-preview.dilger.dev/",
+  "files": [
+    {
+      "path": "poc/vehicles/review.js",
+      "bytes": 10068,
+      "sha256": "7803002b4a4cfcab4f67338d95d8d436d0de3e3eb0da580552c0b84502fcd982",
+      "expected": "7803002b4a4cfcab4f67338d95d8d436d0de3e3eb0da580552c0b84502fcd982",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/viewer.js",
+      "bytes": 11958,
+      "sha256": "48f6f44c6cbd667a22d7f8213111841dc084db70d787c6a61067193f339adf15",
+      "expected": "48f6f44c6cbd667a22d7f8213111841dc084db70d787c6a61067193f339adf15",
+      "match": true
+    },
+    {
+      "path": "poc/shared/paint-key.js",
+      "bytes": 1224,
+      "sha256": "26bba45e37e4316d59b4e566ad1d5090362a9340cce5ade5e1a23c1961045ce3",
+      "expected": "26bba45e37e4316d59b4e566ad1d5090362a9340cce5ade5e1a23c1961045ce3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/review.json",
+      "bytes": 10799,
+      "sha256": "70e97f7cb92c0bc1734b973a0d035db30813275c902529953e7d4b934949ea25",
+      "expected": "70e97f7cb92c0bc1734b973a0d035db30813275c902529953e7d4b934949ea25",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.asset.json",
+      "bytes": 3360,
+      "sha256": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
+      "expected": "a2104f83450774a814a342ff6f11b3a5b0552f36b1f4aaa432b4bdbb96d434ad",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.atlas.png",
+      "bytes": 28737,
+      "sha256": "ad1b21a286177dde69afcddc2b40579fa67a204a8b21e20406693ed133718d1f",
+      "expected": "ad1b21a286177dde69afcddc2b40579fa67a204a8b21e20406693ed133718d1f",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.emissive.png",
+      "bytes": 21337,
+      "sha256": "aaf025e87d3fa8db35d5f115c379408744c8ca10a54dec8d2f1b3111d44048a8",
+      "expected": "aaf025e87d3fa8db35d5f115c379408744c8ca10a54dec8d2f1b3111d44048a8",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb",
+      "bytes": 336216,
+      "sha256": "895c91bcd10c688767ec2070c6b953b8653425a19fb3d5e15000aa809312fd1b",
+      "expected": "895c91bcd10c688767ec2070c6b953b8653425a19fb3d5e15000aa809312fd1b",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.lod1.glb",
+      "bytes": 155280,
+      "sha256": "1a2843632d19752d2c3e6e7da46cb2a2928c960fec226f52d543be4abc47da87",
+      "expected": "1a2843632d19752d2c3e6e7da46cb2a2928c960fec226f52d543be4abc47da87",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/model/au-hawk.lod2.glb",
+      "bytes": 125656,
+      "sha256": "939176dbdd6e4aaaa25127756908a24dcf9b845ec956506daa98a89600c07310",
+      "expected": "939176dbdd6e4aaaa25127756908a24dcf9b845ec956506daa98a89600c07310",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/reference/lod-plus-1.png",
+      "bytes": 1481692,
+      "sha256": "ac75b33528199c675e7f7446074656875e0fd02e000e63457109494754d81af1",
+      "expected": "ac75b33528199c675e7f7446074656875e0fd02e000e63457109494754d81af1",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/reference-lod0/sheet.png",
+      "bytes": 865199,
+      "sha256": "72121771368373c27037f5b1b148f7062aa346f8dd5b60b866c5263c762c6b24",
+      "expected": "72121771368373c27037f5b1b148f7062aa346f8dd5b60b866c5263c762c6b24",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/reference-lod1/sheet.png",
+      "bytes": 846102,
+      "sha256": "7998568c920bfaf0e771ef1e27970cde9877e9b635bbcf4901cc6a014ea339d3",
+      "expected": "7998568c920bfaf0e771ef1e27970cde9877e9b635bbcf4901cc6a014ea339d3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/reference-lod2/sheet.png",
+      "bytes": 671262,
+      "sha256": "b423452d4d8ef514c2a58a044ca50a93393873e770837972c532cf9536bfa316",
+      "expected": "b423452d4d8ef514c2a58a044ca50a93393873e770837972c532cf9536bfa316",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/gate/validation.md",
+      "bytes": 5155,
+      "sha256": "e30b6270523b89eab77f162a46efd26c1ef6d33b7d669c2dfd68874a4cc47bd1",
+      "expected": "e30b6270523b89eab77f162a46efd26c1ef6d33b7d669c2dfd68874a4cc47bd1",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/review.json",
+      "bytes": 11139,
+      "sha256": "50813677946aab923c4cf0da55caa5dcf7af13d237bd72e1747165d8789302ff",
+      "expected": "50813677946aab923c4cf0da55caa5dcf7af13d237bd72e1747165d8789302ff",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.asset.json",
+      "bytes": 3520,
+      "sha256": "5b8cdc5befc70bc4e0f9d5fa5d0a1fa9a992289912790e5f7940e4d591cf8313",
+      "expected": "5b8cdc5befc70bc4e0f9d5fa5d0a1fa9a992289912790e5f7940e4d591cf8313",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.atlas.png",
+      "bytes": 97040,
+      "sha256": "2c08e01223aa11a286f6629fc3cd6b1d6ea43066f51cf01aecf29dce3ab3560f",
+      "expected": "2c08e01223aa11a286f6629fc3cd6b1d6ea43066f51cf01aecf29dce3ab3560f",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.emissive.png",
+      "bytes": 20033,
+      "sha256": "cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d",
+      "expected": "cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb",
+      "bytes": 358396,
+      "sha256": "9fe27e567c3e11eccb579343ffcd03adfce37048283c3dd7542d0b8f3b07f391",
+      "expected": "9fe27e567c3e11eccb579343ffcd03adfce37048283c3dd7542d0b8f3b07f391",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.lod1.glb",
+      "bytes": 222448,
+      "sha256": "9e20c318f4b7b078335241d22ec7a23a85c8365423ea63fb4f52e9d2fc2231a4",
+      "expected": "9e20c318f4b7b078335241d22ec7a23a85c8365423ea63fb4f52e9d2fc2231a4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/model/cruz-missile.lod2.glb",
+      "bytes": 192200,
+      "sha256": "01f1608f7ed60ebfbe95dd053548acfee5723bf440dd872129efdbe5adf408dc",
+      "expected": "01f1608f7ed60ebfbe95dd053548acfee5723bf440dd872129efdbe5adf408dc",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/reference/lod-plus-1.png",
+      "bytes": 1631927,
+      "sha256": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73",
+      "expected": "b6ddfdfaeac6fadac1aaedc177a29031d9094cba790e3b58fe55b6963cba7e73",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/reference-lod0/sheet.png",
+      "bytes": 1161546,
+      "sha256": "54b05e683b0425651feee5db759d821e3b8097bc05d8efcc054d534ada283dff",
+      "expected": "54b05e683b0425651feee5db759d821e3b8097bc05d8efcc054d534ada283dff",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/reference-lod1/sheet.png",
+      "bytes": 1137840,
+      "sha256": "652447114064bf653b3f91bf8a7dbf965a3b575b4686f0b98d85e0b0eb68d6b0",
+      "expected": "652447114064bf653b3f91bf8a7dbf965a3b575b4686f0b98d85e0b0eb68d6b0",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/reference-lod2/sheet.png",
+      "bytes": 1063462,
+      "sha256": "795d3989a451bd088e00a9d3172986e675f3f4924d343f0d9198192dee8215e9",
+      "expected": "795d3989a451bd088e00a9d3172986e675f3f4924d343f0d9198192dee8215e9",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/gate/validation.md",
+      "bytes": 3039,
+      "sha256": "e2f9a28d79c52e609072546ca66c850f46c542bacf37f2c846b6bcfb5d6d7dde",
+      "expected": "e2f9a28d79c52e609072546ca66c850f46c542bacf37f2c846b6bcfb5d6d7dde",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/review.json",
+      "bytes": 11593,
+      "sha256": "1442a18b9cdf98f3658b08af7f7912f1b261196be4105a894b0996d8efb28c35",
+      "expected": "1442a18b9cdf98f3658b08af7f7912f1b261196be4105a894b0996d8efb28c35",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.asset.json",
+      "bytes": 3545,
+      "sha256": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
+      "expected": "f6bf19666b4818fcbcf2c86ac5bea28eca9ceea3edf6a85a8a6f7ceaf817976b",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.atlas.png",
+      "bytes": 37020,
+      "sha256": "a156d40da85bb2cef57e5313436fe8b7a7aa575d1229607b72da7b2e8909e1c2",
+      "expected": "a156d40da85bb2cef57e5313436fe8b7a7aa575d1229607b72da7b2e8909e1c2",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.emissive.png",
+      "bytes": 19849,
+      "sha256": "1558ba0302525cfd6201e2fb47910cad708d91f4e7bc458de4e404282b33f00c",
+      "expected": "1558ba0302525cfd6201e2fb47910cad708d91f4e7bc458de4e404282b33f00c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.lod0.glb",
+      "bytes": 325888,
+      "sha256": "8a8011eaf9dd4e13c2e0a0c701342b6d2ab9167524a58ef0c4937cf7640aebe4",
+      "expected": "8a8011eaf9dd4e13c2e0a0c701342b6d2ab9167524a58ef0c4937cf7640aebe4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.lod1.glb",
+      "bytes": 163144,
+      "sha256": "3bfe064dc7784448246965e028ad0ff32b2f46e2f913080313130691f3c0d6a2",
+      "expected": "3bfe064dc7784448246965e028ad0ff32b2f46e2f913080313130691f3c0d6a2",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/model/lion-president.lod2.glb",
+      "bytes": 133564,
+      "sha256": "9885bfbbebd7c1efaf1cc43498a452afa5b2997eb4f4717fec02cd21fd932f8c",
+      "expected": "9885bfbbebd7c1efaf1cc43498a452afa5b2997eb4f4717fec02cd21fd932f8c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/reference/lod-plus-1.png",
+      "bytes": 1442887,
+      "sha256": "44dd9fbab0d96ff229dd5fc986f1d7664d2e0b20580b1afbd5c0d211cc796443",
+      "expected": "44dd9fbab0d96ff229dd5fc986f1d7664d2e0b20580b1afbd5c0d211cc796443",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/reference-lod0/sheet.png",
+      "bytes": 871152,
+      "sha256": "295903e6437d1471a2c3873f3e6919a619a59061c2a2cc8553da30fe6b9d966d",
+      "expected": "295903e6437d1471a2c3873f3e6919a619a59061c2a2cc8553da30fe6b9d966d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/reference-lod1/sheet.png",
+      "bytes": 852153,
+      "sha256": "94ed20fd761bc2ee28bde34deda5f130ed0a011e49547b64cf78562106f110c0",
+      "expected": "94ed20fd761bc2ee28bde34deda5f130ed0a011e49547b64cf78562106f110c0",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/reference-lod2/sheet.png",
+      "bytes": 786140,
+      "sha256": "745c9f17c8c229400d821a2653e548978a8ad8a76e25383de76a27480fb01d1d",
+      "expected": "745c9f17c8c229400d821a2653e548978a8ad8a76e25383de76a27480fb01d1d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/gate/validation.md",
+      "bytes": 5398,
+      "sha256": "c75bb9c5dfc6ff1706ec4603e2d506c3f7efe1de39982986c4855d595a914bea",
+      "expected": "c75bb9c5dfc6ff1706ec4603e2d506c3f7efe1de39982986c4855d595a914bea",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/review.json",
+      "bytes": 8557,
+      "sha256": "1e4c9e42696d491209f8f9ce779e6e107e814ea31a201656584db4e1ea1ae05b",
+      "expected": "1e4c9e42696d491209f8f9ce779e6e107e814ea31a201656584db4e1ea1ae05b",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.asset.json",
+      "bytes": 1957,
+      "sha256": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
+      "expected": "2c9e98f267f5cd14705c166a2b64ade64d5eb70a54eb8fadfc9010d62748f9e4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.atlas.png",
+      "bytes": 24393,
+      "sha256": "ee012ca578bc209e1436b47ce9cf93544c86f088eb2a5f8e76a7798488f7a8e3",
+      "expected": "ee012ca578bc209e1436b47ce9cf93544c86f088eb2a5f8e76a7798488f7a8e3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.emissive.png",
+      "bytes": 17401,
+      "sha256": "88f5a8924527ec92d6be57b92004ea7d41a882b856b5a80579c7ebe94b82615c",
+      "expected": "88f5a8924527ec92d6be57b92004ea7d41a882b856b5a80579c7ebe94b82615c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.lod0.glb",
+      "bytes": 329228,
+      "sha256": "5f0c446691e42e1860943b09a5b07cf7c5e80db91bfa06f7c8c84285591ad7d5",
+      "expected": "5f0c446691e42e1860943b09a5b07cf7c5e80db91bfa06f7c8c84285591ad7d5",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.lod1.glb",
+      "bytes": 131908,
+      "sha256": "7ffaa28404b7f29fe7393ee1f594f59fc7790f385c3843797794194e50f89b56",
+      "expected": "7ffaa28404b7f29fe7393ee1f594f59fc7790f385c3843797794194e50f89b56",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/model/pig-catcher.lod2.glb",
+      "bytes": 104756,
+      "sha256": "2cf412846bdb05f6de80e50562f1601b1c97527abda94df203f4b5ccbdb0c11e",
+      "expected": "2cf412846bdb05f6de80e50562f1601b1c97527abda94df203f4b5ccbdb0c11e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/reference/lod-plus-1.png",
+      "bytes": 1180666,
+      "sha256": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+      "expected": "994a995591c2eaf637a352936b7d149397f52601ca75d4f73371b0e65ed85e7c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/reference-lod0/sheet.png",
+      "bytes": 601910,
+      "sha256": "a56d64759e5495b5835ddb9ac9d5a7e9ccac11ceff5fd17cb6818161c5517e9c",
+      "expected": "a56d64759e5495b5835ddb9ac9d5a7e9ccac11ceff5fd17cb6818161c5517e9c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/reference-lod1/sheet.png",
+      "bytes": 562713,
+      "sha256": "86cd7cdd7559c1bd69a74f0e461640ba782c36fe332ca8ca5c0f9a490ed65d33",
+      "expected": "86cd7cdd7559c1bd69a74f0e461640ba782c36fe332ca8ca5c0f9a490ed65d33",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/reference-lod2/sheet.png",
+      "bytes": 561209,
+      "sha256": "795d22952e73cd099a8937e15c540c77ba1ed63cfa8e0c500c15d11ecf78af24",
+      "expected": "795d22952e73cd099a8937e15c540c77ba1ed63cfa8e0c500c15d11ecf78af24",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/gate/validation.md",
+      "bytes": 656,
+      "sha256": "64156ac9ec43c7f7476494c1492be732f8ca5a7df72ad5c3376525defae089d9",
+      "expected": "64156ac9ec43c7f7476494c1492be732f8ca5a7df72ad5c3376525defae089d9",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/review.json",
+      "bytes": 8676,
+      "sha256": "9494b9a15563e34a182e0eab2c6a3c45ddb9d5d40711e9ab04e7d5ef1df04bf9",
+      "expected": "9494b9a15563e34a182e0eab2c6a3c45ddb9d5d40711e9ab04e7d5ef1df04bf9",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.asset.json",
+      "bytes": 1962,
+      "sha256": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
+      "expected": "c0152bd5bc09ae55554f0553e7559a9f66df8914e93dfe2403c472688f2eb499",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.atlas.png",
+      "bytes": 25289,
+      "sha256": "cd14f3896ade5312ea88f74924148975ee683d333b5baa71f9f9b117a4bedb43",
+      "expected": "cd14f3896ade5312ea88f74924148975ee683d333b5baa71f9f9b117a4bedb43",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.emissive.png",
+      "bytes": 17785,
+      "sha256": "e54f845802fed9909b3e19cca9254b7ab59252f30ecd7d06d868bed62cfe56d6",
+      "expected": "e54f845802fed9909b3e19cca9254b7ab59252f30ecd7d06d868bed62cfe56d6",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.lod0.glb",
+      "bytes": 325636,
+      "sha256": "34b9315c869d20e8c4b53c29eac8b679924331ee73515b5c05fe77ec4a50abad",
+      "expected": "34b9315c869d20e8c4b53c29eac8b679924331ee73515b5c05fe77ec4a50abad",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.lod1.glb",
+      "bytes": 134280,
+      "sha256": "5ece55ef029291616728296e8e54117444753722b2547d360fa3477eb4435976",
+      "expected": "5ece55ef029291616728296e8e54117444753722b2547d360fa3477eb4435976",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/model/postie-bike.lod2.glb",
+      "bytes": 105956,
+      "sha256": "42aeeef9b3001ed52805a4077bcfe3d26d8c05e9017b0b6f0c65cf6501f0f773",
+      "expected": "42aeeef9b3001ed52805a4077bcfe3d26d8c05e9017b0b6f0c65cf6501f0f773",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/reference/lod-plus-1.png",
+      "bytes": 1266754,
+      "sha256": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+      "expected": "06505b41248d9ef1427cd2e8a02f5869dea8c9cc2f582732ae213e222794a6e8",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/reference-lod0/sheet.png",
+      "bytes": 655787,
+      "sha256": "595b88b8af8b46bacc525cf574b12ead1faea97f67d439ffd0e0cf9070020ee8",
+      "expected": "595b88b8af8b46bacc525cf574b12ead1faea97f67d439ffd0e0cf9070020ee8",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/reference-lod1/sheet.png",
+      "bytes": 611681,
+      "sha256": "385eab606abc893d6fb678ea114b59bb1b514a874043ee856f660466cd72bc4d",
+      "expected": "385eab606abc893d6fb678ea114b59bb1b514a874043ee856f660466cd72bc4d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/reference-lod2/sheet.png",
+      "bytes": 584621,
+      "sha256": "5b5f0b10464128919cf0b6023918b98b0cd2c01d2dbe532f55c1f3d2b325d674",
+      "expected": "5b5f0b10464128919cf0b6023918b98b0cd2c01d2dbe532f55c1f3d2b325d674",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/gate/validation.md",
+      "bytes": 656,
+      "sha256": "64156ac9ec43c7f7476494c1492be732f8ca5a7df72ad5c3376525defae089d9",
+      "expected": "64156ac9ec43c7f7476494c1492be732f8ca5a7df72ad5c3376525defae089d9",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/review.json",
+      "bytes": 22778,
+      "sha256": "b3c27deb8fbcb950273cc0eb8489ca8fb915800c743f0d8caeec7859284a8be2",
+      "expected": "b3c27deb8fbcb950273cc0eb8489ca8fb915800c743f0d8caeec7859284a8be2",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.asset.json",
+      "bytes": 3413,
+      "sha256": "57f65448925b21bf1a6989216d8e6044cf357c1d41ef7d8e8c86797786542032",
+      "expected": "57f65448925b21bf1a6989216d8e6044cf357c1d41ef7d8e8c86797786542032",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.atlas.png",
+      "bytes": 38184,
+      "sha256": "fbde29dbd4a70c367e3854157e4314874ba9bef027d3a7d0349ab0a154b29043",
+      "expected": "fbde29dbd4a70c367e3854157e4314874ba9bef027d3a7d0349ab0a154b29043",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.emissive.png",
+      "bytes": 20033,
+      "sha256": "cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d",
+      "expected": "cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.lod0.glb",
+      "bytes": 274384,
+      "sha256": "448048ea86615771b8730808946292c9f6064067fc0b908cb60cbe497cff28a1",
+      "expected": "448048ea86615771b8730808946292c9f6064067fc0b908cb60cbe497cff28a1",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.lod1.glb",
+      "bytes": 165184,
+      "sha256": "023d6623fbc4c80ec98c9c9a6e7baff78a46a65ed22bd223bd5ae2c5f093d0c5",
+      "expected": "023d6623fbc4c80ec98c9c9a6e7baff78a46a65ed22bd223bd5ae2c5f093d0c5",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/model/tradie-ute.lod2.glb",
+      "bytes": 136748,
+      "sha256": "da6cc3978336d17d767f3d96eaa73da495ab136ba6e7fc4bdfd0aaea5e3ca0f1",
+      "expected": "da6cc3978336d17d767f3d96eaa73da495ab136ba6e7fc4bdfd0aaea5e3ca0f1",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference/20261021_204514.jpg",
+      "bytes": 245659,
+      "sha256": "6c94df64d9b53fae539b43fcdf8337f677041f513489433fac28f0862e88359e",
+      "expected": "6c94df64d9b53fae539b43fcdf8337f677041f513489433fac28f0862e88359e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference/measured-reference.json",
+      "bytes": 4313,
+      "sha256": "1e439ef1b3f067712c2bc04d5aa41307a1507ff79d9d093a38db3abc4ffa1ef5",
+      "expected": "1e439ef1b3f067712c2bc04d5aa41307a1507ff79d9d093a38db3abc4ffa1ef5",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference/measured-check.json",
+      "bytes": 12786,
+      "sha256": "5e27e5b6ba82e05f4f3120ae67bebac15c8c221fffdcc472dfad8c9dd4c44f09",
+      "expected": "5e27e5b6ba82e05f4f3120ae67bebac15c8c221fffdcc472dfad8c9dd4c44f09",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/gate/validation.md",
+      "bytes": 8173,
+      "sha256": "0026803000c11a676c522811bd6758a6b98d0b110d76183872987b6ab362cf8c",
+      "expected": "0026803000c11a676c522811bd6758a6b98d0b110d76183872987b6ab362cf8c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/paints/paints-strip.png",
+      "bytes": 95112,
+      "sha256": "2365cfa4d238b1a445fc4a18baf9406d4ce04111b67a87e90775b1b70b871ba3",
+      "expected": "2365cfa4d238b1a445fc4a18baf9406d4ce04111b67a87e90775b1b70b871ba3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/turntable/lods.png",
+      "bytes": 173184,
+      "sha256": "20f7a1a61fdf214ab3591d718903670cc859eed4124213561acc8a892aa021a8",
+      "expected": "20f7a1a61fdf214ab3591d718903670cc859eed4124213561acc8a892aa021a8",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/damage/damage-strip-overview.png",
+      "bytes": 100225,
+      "sha256": "c4975af3e6a3eba8ec37585b5b1b5ee9f8b82bb63688d45819495aa7b1b7c882",
+      "expected": "c4975af3e6a3eba8ec37585b5b1b5ee9f8b82bb63688d45819495aa7b1b7c882",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/damage/damage-strip.png",
+      "bytes": 73304,
+      "sha256": "2beb7b177e69478fe65854124520569e52ccc7eedc3627dc3a2b8677d901b1a6",
+      "expected": "2beb7b177e69478fe65854124520569e52ccc7eedc3627dc3a2b8677d901b1a6",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/in-world/damage-strip-overview.png",
+      "bytes": 100225,
+      "sha256": "c4975af3e6a3eba8ec37585b5b1b5ee9f8b82bb63688d45819495aa7b1b7c882",
+      "expected": "c4975af3e6a3eba8ec37585b5b1b5ee9f8b82bb63688d45819495aa7b1b7c882",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/in-world/grid-1.png",
+      "bytes": 164560,
+      "sha256": "cc90a6b591cddf71bb035fbd01de7add01686819eeac39abb98bddef9c98ec2c",
+      "expected": "cc90a6b591cddf71bb035fbd01de7add01686819eeac39abb98bddef9c98ec2c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/in-world/grid-24.png",
+      "bytes": 405708,
+      "sha256": "99f036780f888aff93574726adbe94011202a0ec1e256f5b88dfadba52ed019d",
+      "expected": "99f036780f888aff93574726adbe94011202a0ec1e256f5b88dfadba52ed019d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/au-hawk/media/in-world/grid-4.png",
+      "bytes": 205197,
+      "sha256": "7d7b519f1b424c63dbb8acbd128ce625ac9fed51825899f3a2a6ede2ae21ec15",
+      "expected": "7d7b519f1b424c63dbb8acbd128ce625ac9fed51825899f3a2a6ede2ae21ec15",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/paints/paints.jpg",
+      "bytes": 103230,
+      "sha256": "c39eae43c72bc613540b1c96d9f182d4a50c22725a6e8818f46c8ff29345ceee",
+      "expected": "c39eae43c72bc613540b1c96d9f182d4a50c22725a6e8818f46c8ff29345ceee",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/paints/paints-strip.png",
+      "bytes": 131942,
+      "sha256": "33fcd93533515894f6ab4a3c672ebc07c9890ed0825329b1a9c58b321fe2dcde",
+      "expected": "33fcd93533515894f6ab4a3c672ebc07c9890ed0825329b1a9c58b321fe2dcde",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/turntable/ladder.png",
+      "bytes": 891459,
+      "sha256": "341c64b368fb70e552a1f8a2dabaf8f241dd86f7d693a8bcead948df1cb5785a",
+      "expected": "341c64b368fb70e552a1f8a2dabaf8f241dd86f7d693a8bcead948df1cb5785a",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/turntable/lods.png",
+      "bytes": 242148,
+      "sha256": "fe8730b36c2999c2fc6281ddf60f3b857354f4abccae47c3efa4aa9cfab4dd4a",
+      "expected": "fe8730b36c2999c2fc6281ddf60f3b857354f4abccae47c3efa4aa9cfab4dd4a",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/turntable/lods.jpg",
+      "bytes": 93591,
+      "sha256": "9d992bdbb31c5cf647c4aa235d1b98336fd9bedc9c18a75376c5a46bf5bfbea3",
+      "expected": "9d992bdbb31c5cf647c4aa235d1b98336fd9bedc9c18a75376c5a46bf5bfbea3",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/damage/damage-strip-overview.jpg",
+      "bytes": 109267,
+      "sha256": "273247ae28b931ada557eaff72878f1a0ae12580ba6e5616fc6c62dbc5687363",
+      "expected": "273247ae28b931ada557eaff72878f1a0ae12580ba6e5616fc6c62dbc5687363",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/damage/damage-strip-overview.png",
+      "bytes": 134468,
+      "sha256": "c5bc5322e3127c27411bc953027ab7cc98053867e421258507f488bb0b136e4d",
+      "expected": "c5bc5322e3127c27411bc953027ab7cc98053867e421258507f488bb0b136e4d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/damage/damage-strip.jpg",
+      "bytes": 264920,
+      "sha256": "384b3c18a5897f1642090e574fef3b0328ba11c484a3b6c349093e9833de65fe",
+      "expected": "384b3c18a5897f1642090e574fef3b0328ba11c484a3b6c349093e9833de65fe",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/damage/damage-strip.png",
+      "bytes": 104993,
+      "sha256": "3ee001e24d84b805f55b14220597a274c4c5886d78b5eaf4152105fb0a066cea",
+      "expected": "3ee001e24d84b805f55b14220597a274c4c5886d78b5eaf4152105fb0a066cea",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/damage-strip-overview.jpg",
+      "bytes": 109267,
+      "sha256": "273247ae28b931ada557eaff72878f1a0ae12580ba6e5616fc6c62dbc5687363",
+      "expected": "273247ae28b931ada557eaff72878f1a0ae12580ba6e5616fc6c62dbc5687363",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/damage-strip-overview.png",
+      "bytes": 134468,
+      "sha256": "c5bc5322e3127c27411bc953027ab7cc98053867e421258507f488bb0b136e4d",
+      "expected": "c5bc5322e3127c27411bc953027ab7cc98053867e421258507f488bb0b136e4d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-1.jpg",
+      "bytes": 74631,
+      "sha256": "d70f311819f340e9883a090ef4496ae69ed9f9e30c384ddf445627fe3a686268",
+      "expected": "d70f311819f340e9883a090ef4496ae69ed9f9e30c384ddf445627fe3a686268",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-1.png",
+      "bytes": 240274,
+      "sha256": "d278d104db7155b6f0f0d58b9dbfb4700913e8881568c699174f0dbd72e03a45",
+      "expected": "d278d104db7155b6f0f0d58b9dbfb4700913e8881568c699174f0dbd72e03a45",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-24.jpg",
+      "bytes": 170950,
+      "sha256": "514060722ca0df715900fef5e9b3a70ee8dbaff6bb89766bd39031fdcd7a1ff4",
+      "expected": "514060722ca0df715900fef5e9b3a70ee8dbaff6bb89766bd39031fdcd7a1ff4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-24.png",
+      "bytes": 542144,
+      "sha256": "c3c6961d68a651d00ea56e01cb4caaa48c696e3bf7f1f885b5591905eace614b",
+      "expected": "c3c6961d68a651d00ea56e01cb4caaa48c696e3bf7f1f885b5591905eace614b",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-4.jpg",
+      "bytes": 87214,
+      "sha256": "f6dd6ff7fd3bfd01041bcefe6c9e29f5106c79d32a219659bb2e69ee7e8bb996",
+      "expected": "f6dd6ff7fd3bfd01041bcefe6c9e29f5106c79d32a219659bb2e69ee7e8bb996",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/cruz-missile/media/in-world/grid-4.png",
+      "bytes": 292462,
+      "sha256": "a5061ef86fb16004f62f1a157aaf0767ab71847afb39c0ba6d496dcccd8b2460",
+      "expected": "a5061ef86fb16004f62f1a157aaf0767ab71847afb39c0ba6d496dcccd8b2460",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/paints/paints-strip.png",
+      "bytes": 88417,
+      "sha256": "f2a9489305c48a9edd97f99bf864918762e1ab27e9f68c2b73088bc35ed0833d",
+      "expected": "f2a9489305c48a9edd97f99bf864918762e1ab27e9f68c2b73088bc35ed0833d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/turntable/lods.png",
+      "bytes": 213135,
+      "sha256": "d1f3b5838ed805cc6589f95bbf3a6b3fad5cc67d16c659f6f3be639dcb79f066",
+      "expected": "d1f3b5838ed805cc6589f95bbf3a6b3fad5cc67d16c659f6f3be639dcb79f066",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/damage/damage-strip-overview.png",
+      "bytes": 105922,
+      "sha256": "df9e9a07138852ca39c9f43b06a426444e78b435008d8076bedfe6cf6b0bd541",
+      "expected": "df9e9a07138852ca39c9f43b06a426444e78b435008d8076bedfe6cf6b0bd541",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/damage/damage-strip.png",
+      "bytes": 80092,
+      "sha256": "ebe43f4f3cfa8b0e0caec2fffcd7f4732baccbfa76104cee303321302a68f855",
+      "expected": "ebe43f4f3cfa8b0e0caec2fffcd7f4732baccbfa76104cee303321302a68f855",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/in-world/damage-strip-overview.png",
+      "bytes": 105922,
+      "sha256": "df9e9a07138852ca39c9f43b06a426444e78b435008d8076bedfe6cf6b0bd541",
+      "expected": "df9e9a07138852ca39c9f43b06a426444e78b435008d8076bedfe6cf6b0bd541",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/in-world/grid-1.png",
+      "bytes": 194761,
+      "sha256": "76b2c3a671fbb653473c3e46366526e368156d07692be15b6de61764cd4c2772",
+      "expected": "76b2c3a671fbb653473c3e46366526e368156d07692be15b6de61764cd4c2772",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/in-world/grid-24.png",
+      "bytes": 447596,
+      "sha256": "390b5722e74dbb3a6161b486bcd35d13ca97fa80e57e18f4384e0f0caed251a9",
+      "expected": "390b5722e74dbb3a6161b486bcd35d13ca97fa80e57e18f4384e0f0caed251a9",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/lion-president/media/in-world/grid-4.png",
+      "bytes": 236737,
+      "sha256": "92e6f064d3eba495e4bc15b563eae99aabff7ab64e632bc2904ba6521cd20cd0",
+      "expected": "92e6f064d3eba495e4bc15b563eae99aabff7ab64e632bc2904ba6521cd20cd0",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/paints/paints-strip.png",
+      "bytes": 52787,
+      "sha256": "b97971d33fd067214f15a577e8fdb85687be73bbc13c68b5479129c264b5e8b1",
+      "expected": "b97971d33fd067214f15a577e8fdb85687be73bbc13c68b5479129c264b5e8b1",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/turntable/ladder.png",
+      "bytes": 587781,
+      "sha256": "abc77e791f880f98b16318f93f8bcb003d94bb10b8a5c5d9b8dd50466b60e59e",
+      "expected": "abc77e791f880f98b16318f93f8bcb003d94bb10b8a5c5d9b8dd50466b60e59e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/turntable/lods.png",
+      "bytes": 113346,
+      "sha256": "f8f24b1fdb3cf5d75c050327a76e4818df0d0ee9dea2a2510b54a55da509f961",
+      "expected": "f8f24b1fdb3cf5d75c050327a76e4818df0d0ee9dea2a2510b54a55da509f961",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/damage/damage-strip-overview.png",
+      "bytes": 78603,
+      "sha256": "bb43d1912f72357b5764757ea2bf236af1c4ef472cb212559e1504d4c3cdfb20",
+      "expected": "bb43d1912f72357b5764757ea2bf236af1c4ef472cb212559e1504d4c3cdfb20",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/damage/damage-strip.png",
+      "bytes": 65949,
+      "sha256": "7cefacaa3ec36e3748154456fbf98b97c4beb3771fd346e0ef66893a1edd1822",
+      "expected": "7cefacaa3ec36e3748154456fbf98b97c4beb3771fd346e0ef66893a1edd1822",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/in-world/damage-strip-overview.png",
+      "bytes": 78603,
+      "sha256": "bb43d1912f72357b5764757ea2bf236af1c4ef472cb212559e1504d4c3cdfb20",
+      "expected": "bb43d1912f72357b5764757ea2bf236af1c4ef472cb212559e1504d4c3cdfb20",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/in-world/grid-1.png",
+      "bytes": 157750,
+      "sha256": "5fa6dbeb7180aa1f1d39958d3877c2b0e7518c3868187cc22bab006554b93d92",
+      "expected": "5fa6dbeb7180aa1f1d39958d3877c2b0e7518c3868187cc22bab006554b93d92",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/in-world/grid-24.png",
+      "bytes": 303334,
+      "sha256": "1a12586412d984e836b9bf9a11376753ac1c71c14cd76d93f27c35c22733e8ff",
+      "expected": "1a12586412d984e836b9bf9a11376753ac1c71c14cd76d93f27c35c22733e8ff",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/pig-catcher/media/in-world/grid-4.png",
+      "bytes": 187666,
+      "sha256": "830f3b1f053eab78d9f570d98bfc011aab3c2ded5fab9fc67baa24a838673ac4",
+      "expected": "830f3b1f053eab78d9f570d98bfc011aab3c2ded5fab9fc67baa24a838673ac4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/paints/paints-strip.png",
+      "bytes": 59646,
+      "sha256": "61a4081b0207ec2bd9ca315c1b76eea7a188855b5dc3e7727f8d9c09aa9d7002",
+      "expected": "61a4081b0207ec2bd9ca315c1b76eea7a188855b5dc3e7727f8d9c09aa9d7002",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/turntable/ladder.png",
+      "bytes": 586580,
+      "sha256": "33c549b13a3f85cc11047292eb6af8b3e988360a0d528b82bae42ab0cc71d6ea",
+      "expected": "33c549b13a3f85cc11047292eb6af8b3e988360a0d528b82bae42ab0cc71d6ea",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/turntable/lods.png",
+      "bytes": 119000,
+      "sha256": "eae25debffd9c27167bc1031df43c0f519f1bc5220f2f0d05b257e2dd9ba1851",
+      "expected": "eae25debffd9c27167bc1031df43c0f519f1bc5220f2f0d05b257e2dd9ba1851",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/damage/damage-strip-overview.png",
+      "bytes": 86379,
+      "sha256": "17ce6f84328d29e34613e888a7b58175cba55cd573464e83405c31824bdcc344",
+      "expected": "17ce6f84328d29e34613e888a7b58175cba55cd573464e83405c31824bdcc344",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/damage/damage-strip.png",
+      "bytes": 68888,
+      "sha256": "791089200e44676971ddb3ade3e78ffe6ffcfd55ef5195c14b5ad455efbba939",
+      "expected": "791089200e44676971ddb3ade3e78ffe6ffcfd55ef5195c14b5ad455efbba939",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/in-world/damage-strip-overview.png",
+      "bytes": 86379,
+      "sha256": "17ce6f84328d29e34613e888a7b58175cba55cd573464e83405c31824bdcc344",
+      "expected": "17ce6f84328d29e34613e888a7b58175cba55cd573464e83405c31824bdcc344",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/in-world/grid-1.png",
+      "bytes": 169165,
+      "sha256": "bf8d52546e5b4ab5f42eca67bfab2041b9ddb67add0610c0a96435cc49624931",
+      "expected": "bf8d52546e5b4ab5f42eca67bfab2041b9ddb67add0610c0a96435cc49624931",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/in-world/grid-24.png",
+      "bytes": 332095,
+      "sha256": "3c483a0d55dbdc37cf687fa8d28590dbf9c1bccf9675c2aaa10e27a9e8a4688d",
+      "expected": "3c483a0d55dbdc37cf687fa8d28590dbf9c1bccf9675c2aaa10e27a9e8a4688d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/postie-bike/media/in-world/grid-4.png",
+      "bytes": 198077,
+      "sha256": "caca88ecd648232b413eb43a1a992f08902804280bae203a515cfc5a49bf46f4",
+      "expected": "caca88ecd648232b413eb43a1a992f08902804280bae203a515cfc5a49bf46f4",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference-lod2/sheet.png",
+      "bytes": 636397,
+      "sha256": "8f77656bb17690f68b545a46c302290511658c0643531bc4275a9dae0a933268",
+      "expected": "8f77656bb17690f68b545a46c302290511658c0643531bc4275a9dae0a933268",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/paints/paints.png",
+      "bytes": 208487,
+      "sha256": "e4b77fe11f96d2225c7194c2c5abe00173ac58a7a7a99b8d7d42f215ba6de02c",
+      "expected": "e4b77fe11f96d2225c7194c2c5abe00173ac58a7a7a99b8d7d42f215ba6de02c",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/paints/paints-strip.png",
+      "bytes": 82114,
+      "sha256": "4756fcbd7a0f3178355dc94de9e42673082c8be70af9c4e3c17490ae49ba1528",
+      "expected": "4756fcbd7a0f3178355dc94de9e42673082c8be70af9c4e3c17490ae49ba1528",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference-lod1/sheet.png",
+      "bytes": 617023,
+      "sha256": "094e5c25a0ee7aff7e35a73ce8ea5d479189835e1b630810491050ca32605347",
+      "expected": "094e5c25a0ee7aff7e35a73ce8ea5d479189835e1b630810491050ca32605347",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference-lod0/sheet.png",
+      "bytes": 646281,
+      "sha256": "5208e41c39ef6e5e923cada22c2d56eaccdeb4f17604fd2198dca59d959bba8e",
+      "expected": "5208e41c39ef6e5e923cada22c2d56eaccdeb4f17604fd2198dca59d959bba8e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/turntable/views.png",
+      "bytes": 205608,
+      "sha256": "e646ad20a4bb9ddf009258ea73cbb9b565a59f58fe165442ad0e50fe61a39222",
+      "expected": "e646ad20a4bb9ddf009258ea73cbb9b565a59f58fe165442ad0e50fe61a39222",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/turntable/ladder.png",
+      "bytes": 543954,
+      "sha256": "b64894bfb1582f332be98a79527dd61bd27c7b1aae851df9620efbfd9ad2960d",
+      "expected": "b64894bfb1582f332be98a79527dd61bd27c7b1aae851df9620efbfd9ad2960d",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/turntable/lods.png",
+      "bytes": 197522,
+      "sha256": "eca9499fae9f275cb99e0943a9676d575750f4e3df80a416f7f2291eb052c4fd",
+      "expected": "eca9499fae9f275cb99e0943a9676d575750f4e3df80a416f7f2291eb052c4fd",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/damage/damage-strip-overview.png",
+      "bytes": 94779,
+      "sha256": "b9f53b5325bfee180f1667d72855c6dd24d4deb521e3a1dad1f311e47c190f17",
+      "expected": "b9f53b5325bfee180f1667d72855c6dd24d4deb521e3a1dad1f311e47c190f17",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/damage/damage-strip.png",
+      "bytes": 75330,
+      "sha256": "f24cd537fb597ee8b27b9068131b9c2a82f11cdb7c6dc551448cc3c79f9d3d10",
+      "expected": "f24cd537fb597ee8b27b9068131b9c2a82f11cdb7c6dc551448cc3c79f9d3d10",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference/lod-plus-1.png",
+      "bytes": 838005,
+      "sha256": "29574b60bb0096433aa2cb796e2f12b932435d0edb9c0998deada32e9bfc1526",
+      "expected": "29574b60bb0096433aa2cb796e2f12b932435d0edb9c0998deada32e9bfc1526",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/reference/sheet.png",
+      "bytes": 30604,
+      "sha256": "b991cf63472ecb3d4fa2ac7794160a85a2427ec15a1347dbd7467e6f8b7f8845",
+      "expected": "b991cf63472ecb3d4fa2ac7794160a85a2427ec15a1347dbd7467e6f8b7f8845",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/in-world/damage-strip-overview.png",
+      "bytes": 94779,
+      "sha256": "b9f53b5325bfee180f1667d72855c6dd24d4deb521e3a1dad1f311e47c190f17",
+      "expected": "b9f53b5325bfee180f1667d72855c6dd24d4deb521e3a1dad1f311e47c190f17",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/in-world/grid-1.png",
+      "bytes": 226470,
+      "sha256": "30c47185add25caf154208d0bd292ec9c0e9f2cbcb8c833b5281a75bda2bdc7e",
+      "expected": "30c47185add25caf154208d0bd292ec9c0e9f2cbcb8c833b5281a75bda2bdc7e",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/in-world/grid-24.png",
+      "bytes": 522843,
+      "sha256": "f5969004e3a787e6b3bb879536f0238758e97bd80e7acd8caf133610c114a782",
+      "expected": "f5969004e3a787e6b3bb879536f0238758e97bd80e7acd8caf133610c114a782",
+      "match": true
+    },
+    {
+      "path": "poc/vehicles/tradie-ute/media/in-world/grid-4.png",
+      "bytes": 273369,
+      "sha256": "250b06381f6a391e337ebc48227915dd7b34de72cab63fb399e830ed5f884fc8",
+      "expected": "250b06381f6a391e337ebc48227915dd7b34de72cab63fb399e830ed5f884fc8",
+      "match": true
+    }
+  ]
+}

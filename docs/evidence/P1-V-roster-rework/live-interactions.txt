@@ -1,0 +1,1 @@
+PASS 12 vehicle/browser combinations; inspect all stage captures.

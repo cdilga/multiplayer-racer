@@ -1,0 +1,187 @@
+{
+  "browser": "Chromium",
+  "results": [
+    {
+      "path": "/poc/vehicles/",
+      "width": 412,
+      "height": 915,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-412x915-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 412,
+      "height": 915,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-412x915-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 915,
+      "height": 412,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-915x412-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 915,
+      "height": 412,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-915x412-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": []
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 375,
+      "height": 667,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-375x667-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 375,
+      "height": 667,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-375x667-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/au-hawk/media/model/au-hawk.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 1920,
+      "height": 1080,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-1920x1080-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-1920x1080-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": []
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 1366,
+      "height": 768,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-1366x768-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/",
+      "width": 1366,
+      "height": 768,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/index-1366x768-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": []
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 412,
+      "height": 915,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-412x915-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 412,
+      "height": 915,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-412x915-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 915,
+      "height": 412,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-915x412-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 915,
+      "height": 412,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-915x412-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 375,
+      "height": 667,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-375x667-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 375,
+      "height": 667,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-375x667-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 1920,
+      "height": 1080,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-1920x1080-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 1920,
+      "height": 1080,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-1920x1080-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": [
+        "https://jammers-preview.dilger.dev/poc/vehicles/cruz-missile/media/model/cruz-missile.lod0.glb net::ERR_ABORTED"
+      ]
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 1366,
+      "height": 768,
+      "state": "ready",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-1366x768-ready.png",
+      "overflow": 0
+    },
+    {
+      "path": "/poc/vehicles/review.html?v=cruz-missile",
+      "width": 1366,
+      "height": 768,
+      "state": "resized",
+      "file": "docs/evidence/P1-V-roster-rework/ready-layout/cruz-1366x768-resized.png",
+      "overflow": 0,
+      "successfulModelLoadCancellations": []
+    }
+  ]
+}
