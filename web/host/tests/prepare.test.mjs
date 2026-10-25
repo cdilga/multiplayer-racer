@@ -267,13 +267,17 @@ test('two rounds back to back play two different generated biome mixes', { timeo
   // The cars race one lap hands-off (the test surface's autopilot), the sim stepped ahead of the wall clock; the round
   // ends on the lap and the director parks in Intermission, preparing the next track while the results show.
   await api('command', { cmd: 'autopilot', on: true });
-  for (let k = 0; k < 40 && (await phase(page)) !== 'Intermission'; k++) {
-    await api('command', { cmd: 'step', ticks: 1200 });
-    await sleep(100);
+  // A 1,200-tick jump can consume the first 20 seconds of Intermission after crossing the finish.
+  // Observe in two-second increments so the test itself cannot spend the preparation margin.
+  for (let k = 0; k < 400 && (await phase(page)) !== 'Intermission'; k++) {
+    await api('command', { cmd: 'step', ticks: 120 });
+    await sleep(10);
   }
   assert.equal(await phase(page), 'Intermission', 'the lap ended the round');
   await waitFor(page, () => window.__prep.stats().delivered === 2, 'the next track to be prepared during the Intermission', PREPARE_MS);
-  const { remainingMs: remaining, intermissionMs } = await page.evaluate(() => window.__prep.room());
+  const { remainingMs: remaining, between } = await api('room');
+  // intermissionMs is the host's results hold only; the director also allows the following vote window.
+  const intermissionMs = between.resultsMs + between.voteMs;
   assert.ok(remaining > intermissionMs / 2, `the next track was ready with ${remaining} of ${intermissionMs} ms of the Intermission to spare`);
   await api('startRound'); // Start now
   await waitFor(page, () => window.__prep.presented().committed === 2, 'the second track to be shown', 30_000);
@@ -310,15 +314,16 @@ test('preparation finishes well inside the intermission with the page CPU thrott
   }
   const seeds = await api('seeds');
   const workerMs = seeds.map((s) => s.ms);
-  const intermissionMs = await page.evaluate(() => window.__prep.room().intermissionMs);
+  const { between } = await api('room');
+  const intermissionMs = between.resultsMs + between.voteMs;
   // The page's main thread ran 6x slower (the staging of the map's meshes included); the generator's own worker thread
   // isn't throttled by this emulation, so its measured time is also shown multiplied by 6 as the stand-in estimate.
   const worst = Math.max(...times);
+  evidence.runs.throttled6x = { rerollToStagedMs: times, generatorWorkerMs: workerMs, generatorScaledBy6Ms: workerMs.map((m) => m * 6), intermissionMs, resultsMs: between.resultsMs, voteMs: between.voteMs, note: 'Emulation.setCPUThrottlingRate=6 on the page; the procgen worker thread is not throttled by it' };
   assert.ok(worst < intermissionMs / 2, `reroll to staged map took ${worst} ms under 6x throttle`);
   // CDP throttles the page, not this worker. A scaled wall duration also multiplies scheduler contention and
   // cannot prove phone performance; retain that estimate in evidence, assert the real preparation deadline.
   assert.ok(Math.max(...workerMs) < intermissionMs / 2, `the generator: ${Math.max(...workerMs)} ms`);
   assert.deepEqual(errors, []);
-  evidence.runs.throttled6x = { rerollToStagedMs: times, generatorWorkerMs: workerMs, generatorScaledBy6Ms: workerMs.map((m) => m * 6), intermissionMs, note: 'Emulation.setCPUThrottlingRate=6 on the page; the procgen worker thread is not throttled by it' };
   await page.close();
 });
