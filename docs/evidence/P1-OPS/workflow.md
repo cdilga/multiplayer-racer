@@ -9,3 +9,5 @@
 - AC5: bash -n, Python compilation, git diff --check and scripts/beads/canary.sh pass (37 policy checks). CI runs the portable workflow regressions; the real-Beads race runs where br is installed and skips explicitly in images without it. Publication regression uses the Mac's installed guard and runs locally.
 
 Limits: Claude-only PreToolUse hooks do not become Codex/OMP hooks; shared cargo/delete rules still apply. Existing desktop sessions register once and follow the same pickup/reservation loop. This proves coordination mechanisms; the previously red game CI is the owner's next separately tracked task.
+
+Follow-up: installed Claude/Codex/OMP CLI help confirms prompt/model arguments. OMP's startup source honors its `autoResume` setting, so the launcher supplies an explicit `autoResume: false` config overlay: a fresh Agent Mail identity must not inherit an old conversation. Its dry command and all eight workflow/publication regressions pass. No provider sessions were launched as part of validation.

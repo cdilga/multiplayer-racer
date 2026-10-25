@@ -36,6 +36,9 @@ class Commands(unittest.TestCase):
             self.assertIn("pickup.py --claim", command[-1])
             self.assertIn("HTTP bridge", command[-1])
         self.assertIn("zai/glm-5.3", start.launch("omp", [], "GreenLake", "worker"))
+        omp = start.launch("omp", [], "GreenLake", "worker")
+        overlay = Path(omp[omp.index("--config") + 1])
+        self.assertIn("autoResume: false", overlay.read_text())
 
     def test_mail_sse_decodes_tool_result(self):
         from io import BytesIO

@@ -21,7 +21,8 @@ def launch(provider, extra, name, mode):
               "Do not wait on CI. Check pickup again before your next bead. "
               "No worktrees or extra clones. "
               f"Operating mode: {mode}.")
-    defaults = {"claude": [], "codex": [], "omp": ["--model", "zai/glm-5.3", "--thinking", "max"]}
+    defaults = {"claude": [], "codex": [], "omp": ["--config", str(ROOT / "scripts/agents/omp.yml"),
+                "--model", "zai/glm-5.3", "--thinking", "max"]}
     return [provider, *defaults[provider], *extra, prompt]
 
 

@@ -1,0 +1,3 @@
+# A fresh Agent Mail identity must start a fresh provider session, even when the
+# operator normally enables OMP's automatic continuation in their user settings.
+autoResume: false
