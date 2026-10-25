@@ -1,23 +1,24 @@
 {
   "sheet": {
     "path": "tools/promo/narration.tsv",
-    "sha256": "dfb97c7a71f8d8eed9451354d1e67706c64fa17d56b201468072b98bbdb3eaef",
-    "rows": 7
+    "sha256": "291ee5e318e6664e4ffcda2ab5d0d4f876a4b9d871287c5889376fc9156f0d22",
+    "rows": 11
   },
   "rows": [
     {
       "id": "promo-01",
       "moment_id": "promo-01",
       "variant": 1,
-      "text": "One screen. Your phones. And that friend who says they don't get competitive.",
+      "text": "G'day! We built a party racer. Then the whole neighbourhood rocked up.",
       "delivery": "hype",
-      "trigger_event": "trailer.narration"
+      "trigger_event": "trailer.narration",
+      "tts_text": "Gidday! We built a party racer. Then the whole neighbourhood rocked up."
     },
     {
       "id": "promo-02",
       "moment_id": "promo-02",
       "variant": 2,
-      "text": "We set out to build a party racer. The cars took that personally.",
+      "text": "No player cap. Bring the whole mob. Yeah, even old mate.",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     },
@@ -25,7 +26,7 @@
       "id": "promo-03",
       "moment_id": "promo-03",
       "variant": 3,
-      "text": "Built from reference sheets. Rebuilt until the wheels finally got the message.",
+      "text": "Phones, keyboards, gamepads on phones or laptops. Bring what you've got, legend.",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     },
@@ -33,7 +34,7 @@
       "id": "promo-04",
       "moment_id": "promo-04",
       "variant": 4,
-      "text": "Then we gave a sensible car some deeply unreasonable roads.",
+      "text": "Same wi-fi? Your phones can talk straight to the host browser. Too easy.",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     },
@@ -41,7 +42,7 @@
       "id": "promo-05",
       "moment_id": "promo-05",
       "variant": 5,
-      "text": "Take the risky line. Find your grip. Make the next corner somebody else's problem.",
+      "text": "Cruz missile. A u hawk. Tradie ute. Lion president. Pick your pride and joy, mate.",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     },
@@ -49,7 +50,7 @@
       "id": "promo-06",
       "moment_id": "promo-06",
       "variant": 6,
-      "text": "No installs. Just open a browser, scan in, and race together.",
+      "text": "Pig catcher. Postie bike. Hawk dash. You little beauties!",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     },
@@ -57,7 +58,39 @@
       "id": "promo-07",
       "moment_id": "promo-07",
       "variant": 7,
-      "text": "Joystick Jammers. Bring your friends. Leave your dignity at the starting line.",
+      "text": "One shared screen. A massive pileup. That'll buff right out, mate.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-08",
+      "moment_id": "promo-08",
+      "variant": 8,
+      "text": "Race ridiculous roads. Or settle it in the derby. She'll be right.",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-09",
+      "moment_id": "promo-09",
+      "variant": 9,
+      "text": "Boomerangs everywhere! Panels flying! It's absolute bedlam out there!",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-10",
+      "moment_id": "promo-10",
+      "variant": 10,
+      "text": "Most damage wins. Get amongst it! You beauty, we've got a champion!",
+      "delivery": "hype",
+      "trigger_event": "trailer.narration"
+    },
+    {
+      "id": "promo-11",
+      "moment_id": "promo-11",
+      "variant": 11,
+      "text": "Joystick Jammers. Bring everyone. Have a crack at jammers dot dilger dot dev.",
       "delivery": "hype",
       "trigger_event": "trailer.narration"
     }

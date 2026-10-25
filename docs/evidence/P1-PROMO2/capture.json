@@ -1,0 +1,3548 @@
+{
+  "build": "d9a795cc0905d06d3b547503c3e0fd8fc894d381",
+  "cohort": 64,
+  "controllers": "Synthetic inputs through real host controller path; not 64 human players",
+  "shots": [
+    {
+      "id": "crowd",
+      "seconds": 4,
+      "tick": 1267,
+      "cars": 64,
+      "debris": 0
+    },
+    {
+      "id": "pileup",
+      "seconds": 8,
+      "tick": 2307,
+      "cars": 64,
+      "debris": 232
+    },
+    {
+      "id": "derby",
+      "seconds": 10,
+      "tick": 3987,
+      "cars": 64,
+      "debris": 313
+    },
+    {
+      "id": "rivalry",
+      "seconds": 5,
+      "tick": 4637,
+      "cars": 64,
+      "debris": 330
+    },
+    {
+      "id": "winner",
+      "seconds": 5,
+      "tick": 6496,
+      "cars": 64,
+      "debris": 330
+    }
+  ],
+  "lobbySeats": 64,
+  "volleys": [
+    {
+      "tick": 2687,
+      "accepted": 63,
+      "fired": 64,
+      "boomerangs_total": 63,
+      "boomerangs_active": 63,
+      "item_refusals": []
+    },
+    {
+      "tick": 2947,
+      "accepted": 63,
+      "fired": 64,
+      "boomerangs_total": 126,
+      "boomerangs_active": 63,
+      "item_refusals": []
+    },
+    {
+      "tick": 3207,
+      "accepted": 62,
+      "fired": 64,
+      "boomerangs_total": 188,
+      "boomerangs_active": 62,
+      "item_refusals": []
+    },
+    {
+      "tick": 3467,
+      "accepted": 63,
+      "fired": 64,
+      "boomerangs_total": 251,
+      "boomerangs_active": 63,
+      "item_refusals": []
+    },
+    {
+      "tick": 3727,
+      "accepted": 60,
+      "fired": 64,
+      "boomerangs_total": 311,
+      "boomerangs_active": 60,
+      "item_refusals": []
+    }
+  ],
+  "result": {
+    "armed": true,
+    "between": {
+      "active": true,
+      "bySeat": {},
+      "decided": null,
+      "flyoverLeftMs": null,
+      "flyoverMs": 6000,
+      "hostChoice": null,
+      "leading": "rematch",
+      "resultsLeftMs": 9350,
+      "resultsMs": 10000,
+      "voteLeftMs": null,
+      "voteMs": 10000,
+      "voteOpen": false,
+      "votes": {
+        "new": 0,
+        "rematch": 0,
+        "surprise": 0
+      }
+    },
+    "bots": 0,
+    "catchUp": true,
+    "derbyLeftMs": 0,
+    "derbyMs": 45000,
+    "freeDrive": false,
+    "intermissionMs": 10000,
+    "laps": 5,
+    "mode": "derby",
+    "nextMode": "derby",
+    "phase": "Intermission",
+    "preparation": {
+      "current": 2,
+      "currentRecipe": null,
+      "external": true,
+      "favourite": null,
+      "pending": {
+        "id": 2,
+        "seed": 3
+      },
+      "prepared": false,
+      "staleDropped": 0,
+      "verdict": "ok"
+    },
+    "raceEndsInMs": null,
+    "rejectedFrames": 0,
+    "remainingMs": 19350,
+    "results": [
+      {
+        "name": "Mate 2",
+        "number": 2,
+        "place": 1,
+        "points": 25,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 3",
+        "number": 3,
+        "place": 2,
+        "points": 18,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 31",
+        "number": 31,
+        "place": 3,
+        "points": 15,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 27",
+        "number": 27,
+        "place": 4,
+        "points": 12,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 24",
+        "number": 24,
+        "place": 5,
+        "points": 10,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 32",
+        "number": 32,
+        "place": 6,
+        "points": 8,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 18",
+        "number": 18,
+        "place": 7,
+        "points": 6,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 4",
+        "number": 4,
+        "place": 8,
+        "points": 4,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 5",
+        "number": 5,
+        "place": 9,
+        "points": 2,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 28",
+        "number": 28,
+        "place": 10,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 15",
+        "number": 15,
+        "place": 11,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 23",
+        "number": 23,
+        "place": 12,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 46",
+        "number": 46,
+        "place": 13,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 40",
+        "number": 40,
+        "place": 14,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 26",
+        "number": 26,
+        "place": 15,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 10",
+        "number": 10,
+        "place": 16,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Davo",
+        "number": 1,
+        "place": 17,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 48",
+        "number": 48,
+        "place": 18,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 17",
+        "number": 17,
+        "place": 19,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 14",
+        "number": 14,
+        "place": 20,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 21",
+        "number": 21,
+        "place": 21,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 16",
+        "number": 16,
+        "place": 22,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 30",
+        "number": 30,
+        "place": 23,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 34",
+        "number": 34,
+        "place": 24,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 11",
+        "number": 11,
+        "place": 25,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 6",
+        "number": 6,
+        "place": 26,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 25",
+        "number": 25,
+        "place": 27,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 12",
+        "number": 12,
+        "place": 28,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 41",
+        "number": 41,
+        "place": 29,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 22",
+        "number": 22,
+        "place": 30,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 33",
+        "number": 33,
+        "place": 31,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 45",
+        "number": 45,
+        "place": 32,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 20",
+        "number": 20,
+        "place": 33,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 44",
+        "number": 44,
+        "place": 34,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 47",
+        "number": 47,
+        "place": 35,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 9",
+        "number": 9,
+        "place": 36,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 29",
+        "number": 29,
+        "place": 37,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 13",
+        "number": 13,
+        "place": 38,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 35",
+        "number": 35,
+        "place": 39,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 19",
+        "number": 19,
+        "place": 40,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 36",
+        "number": 36,
+        "place": 41,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 43",
+        "number": 43,
+        "place": 42,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 7",
+        "number": 7,
+        "place": 43,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 38",
+        "number": 38,
+        "place": 44,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 37",
+        "number": 37,
+        "place": 45,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 8",
+        "number": 8,
+        "place": 46,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 51",
+        "number": 51,
+        "place": 47,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 61",
+        "number": 61,
+        "place": 48,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 54",
+        "number": 54,
+        "place": 49,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 57",
+        "number": 57,
+        "place": 50,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 52",
+        "number": 52,
+        "place": 51,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 60",
+        "number": 60,
+        "place": 52,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 56",
+        "number": 56,
+        "place": 53,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 55",
+        "number": 55,
+        "place": 54,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 39",
+        "number": 39,
+        "place": 55,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 50",
+        "number": 50,
+        "place": 56,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 53",
+        "number": 53,
+        "place": 57,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 49",
+        "number": 49,
+        "place": 58,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 63",
+        "number": 63,
+        "place": 59,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 59",
+        "number": 59,
+        "place": 60,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 64",
+        "number": 64,
+        "place": 61,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 42",
+        "number": 42,
+        "place": 62,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 62",
+        "number": 62,
+        "place": 63,
+        "points": 1,
+        "time_ms": null
+      },
+      {
+        "name": "Mate 58",
+        "number": 58,
+        "place": 64,
+        "points": 1,
+        "time_ms": null
+      }
+    ],
+    "round": 1,
+    "seats": [
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 0,
+        "choosing": false,
+        "colourIndex": 0,
+        "derby": {
+          "points": 331.104,
+          "rank": 17
+        },
+        "endpoint": "crowd-0",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Davo",
+        "number": 1,
+        "position": 1,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 0,
+        "seat": 1,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 1,
+        "choosing": false,
+        "colourIndex": 1,
+        "derby": {
+          "points": 632.355,
+          "rank": 1
+        },
+        "endpoint": "crowd-1",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 2",
+        "number": 2,
+        "position": 2,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 1,
+        "seat": 2,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 2,
+        "choosing": false,
+        "colourIndex": 2,
+        "derby": {
+          "points": 549.583,
+          "rank": 2
+        },
+        "endpoint": "crowd-2",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 3",
+        "number": 3,
+        "position": 3,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 2,
+        "seat": 3,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 3,
+        "choosing": false,
+        "colourIndex": 3,
+        "derby": {
+          "points": 415.968,
+          "rank": 8
+        },
+        "endpoint": "crowd-3",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 4",
+        "number": 4,
+        "position": 4,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 3,
+        "seat": 4,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 4,
+        "choosing": false,
+        "colourIndex": 4,
+        "derby": {
+          "points": 382.813,
+          "rank": 9
+        },
+        "endpoint": "crowd-4",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 5",
+        "number": 5,
+        "position": 5,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          210,
+          63
+        ],
+        "roundCar": 4,
+        "seat": 5,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 5,
+        "choosing": false,
+        "colourIndex": 5,
+        "derby": {
+          "points": 298.145,
+          "rank": 26
+        },
+        "endpoint": "crowd-5",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 6",
+        "number": 6,
+        "position": 6,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          79,
+          163
+        ],
+        "roundCar": 5,
+        "seat": 6,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 6,
+        "choosing": false,
+        "colourIndex": 6,
+        "derby": {
+          "points": 183.362,
+          "rank": 43
+        },
+        "endpoint": "crowd-6",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 7",
+        "number": 7,
+        "position": 7,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          42,
+          45,
+          52
+        ],
+        "roundCar": 6,
+        "seat": 7,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 7,
+        "choosing": false,
+        "colourIndex": 7,
+        "derby": {
+          "points": 155.27,
+          "rank": 46
+        },
+        "endpoint": "crowd-7",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 8",
+        "number": 8,
+        "position": 8,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          34,
+          164,
+          71
+        ],
+        "roundCar": 7,
+        "seat": 8,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 8,
+        "choosing": false,
+        "colourIndex": 8,
+        "derby": {
+          "points": 219.048,
+          "rank": 36
+        },
+        "endpoint": "crowd-8",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 9",
+        "number": 9,
+        "position": 9,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          244,
+          241,
+          234
+        ],
+        "roundCar": 8,
+        "seat": 9,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 9,
+        "choosing": false,
+        "colourIndex": 9,
+        "derby": {
+          "points": 332.043,
+          "rank": 16
+        },
+        "endpoint": "crowd-9",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 10",
+        "number": 10,
+        "position": 10,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          139,
+          63,
+          217
+        ],
+        "roundCar": 9,
+        "seat": 10,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 10,
+        "choosing": false,
+        "colourIndex": 10,
+        "derby": {
+          "points": 299.043,
+          "rank": 25
+        },
+        "endpoint": "crowd-10",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 11",
+        "number": 11,
+        "position": 11,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          142,
+          27,
+          63
+        ],
+        "roundCar": 10,
+        "seat": 11,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 11,
+        "choosing": false,
+        "colourIndex": 11,
+        "derby": {
+          "points": 288.413,
+          "rank": 28
+        },
+        "endpoint": "crowd-11",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 12",
+        "number": 12,
+        "position": 12,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          94,
+          200,
+          255
+        ],
+        "roundCar": 11,
+        "seat": 12,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 12,
+        "choosing": false,
+        "colourIndex": 12,
+        "derby": {
+          "points": 206.821,
+          "rank": 38
+        },
+        "endpoint": "crowd-12",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 13",
+        "number": 13,
+        "position": 13,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 12,
+        "seat": 13,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 13,
+        "choosing": false,
+        "colourIndex": 13,
+        "derby": {
+          "points": 317.076,
+          "rank": 20
+        },
+        "endpoint": "crowd-13",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 14",
+        "number": 14,
+        "position": 14,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 13,
+        "seat": 14,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 14,
+        "choosing": false,
+        "colourIndex": 14,
+        "derby": {
+          "points": 357.097,
+          "rank": 11
+        },
+        "endpoint": "crowd-14",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 15",
+        "number": 15,
+        "position": 15,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 14,
+        "seat": 15,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 15,
+        "choosing": false,
+        "colourIndex": 15,
+        "derby": {
+          "points": 310.084,
+          "rank": 22
+        },
+        "endpoint": "crowd-15",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 16",
+        "number": 16,
+        "position": 16,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 15,
+        "seat": 16,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 16,
+        "choosing": false,
+        "colourIndex": 16,
+        "derby": {
+          "points": 318.727,
+          "rank": 19
+        },
+        "endpoint": "crowd-16",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 17",
+        "number": 17,
+        "position": 17,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          210,
+          63
+        ],
+        "roundCar": 16,
+        "seat": 17,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 17,
+        "choosing": false,
+        "colourIndex": 17,
+        "derby": {
+          "points": 428.736,
+          "rank": 7
+        },
+        "endpoint": "crowd-17",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 18",
+        "number": 18,
+        "position": 18,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          79,
+          163
+        ],
+        "roundCar": 17,
+        "seat": 18,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 18,
+        "choosing": false,
+        "colourIndex": 18,
+        "derby": {
+          "points": 198.666,
+          "rank": 40
+        },
+        "endpoint": "crowd-18",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 19",
+        "number": 19,
+        "position": 19,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          42,
+          45,
+          52
+        ],
+        "roundCar": 18,
+        "seat": 19,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 19,
+        "choosing": false,
+        "colourIndex": 19,
+        "derby": {
+          "points": 241.538,
+          "rank": 33
+        },
+        "endpoint": "crowd-19",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 20",
+        "number": 20,
+        "position": 20,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          34,
+          164,
+          71
+        ],
+        "roundCar": 19,
+        "seat": 20,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 20,
+        "choosing": false,
+        "colourIndex": 20,
+        "derby": {
+          "points": 313.738,
+          "rank": 21
+        },
+        "endpoint": "crowd-20",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 21",
+        "number": 21,
+        "position": 21,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          244,
+          241,
+          234
+        ],
+        "roundCar": 20,
+        "seat": 21,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 21,
+        "choosing": false,
+        "colourIndex": 21,
+        "derby": {
+          "points": 265.929,
+          "rank": 30
+        },
+        "endpoint": "crowd-21",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 22",
+        "number": 22,
+        "position": 22,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          139,
+          63,
+          217
+        ],
+        "roundCar": 21,
+        "seat": 22,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 22,
+        "choosing": false,
+        "colourIndex": 22,
+        "derby": {
+          "points": 354.843,
+          "rank": 12
+        },
+        "endpoint": "crowd-22",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 23",
+        "number": 23,
+        "position": 23,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          142,
+          27,
+          63
+        ],
+        "roundCar": 22,
+        "seat": 23,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 23,
+        "choosing": false,
+        "colourIndex": 23,
+        "derby": {
+          "points": 443.707,
+          "rank": 5
+        },
+        "endpoint": "crowd-23",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 24",
+        "number": 24,
+        "position": 24,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          94,
+          200,
+          255
+        ],
+        "roundCar": 23,
+        "seat": 24,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 24,
+        "choosing": false,
+        "colourIndex": 24,
+        "derby": {
+          "points": 295.699,
+          "rank": 27
+        },
+        "endpoint": "crowd-24",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 25",
+        "number": 25,
+        "position": 25,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 24,
+        "seat": 25,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 25,
+        "choosing": false,
+        "colourIndex": 25,
+        "derby": {
+          "points": 340.073,
+          "rank": 15
+        },
+        "endpoint": "crowd-25",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 26",
+        "number": 26,
+        "position": 26,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 25,
+        "seat": 26,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 26,
+        "choosing": false,
+        "colourIndex": 26,
+        "derby": {
+          "points": 458.742,
+          "rank": 4
+        },
+        "endpoint": "crowd-26",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 27",
+        "number": 27,
+        "position": 27,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 26,
+        "seat": 27,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 27,
+        "choosing": false,
+        "colourIndex": 27,
+        "derby": {
+          "points": 379.032,
+          "rank": 10
+        },
+        "endpoint": "crowd-27",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 28",
+        "number": 28,
+        "position": 28,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 27,
+        "seat": 28,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 28,
+        "choosing": false,
+        "colourIndex": 28,
+        "derby": {
+          "points": 206.864,
+          "rank": 37
+        },
+        "endpoint": "crowd-28",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 29",
+        "number": 29,
+        "position": 29,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          210,
+          63
+        ],
+        "roundCar": 28,
+        "seat": 29,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 29,
+        "choosing": false,
+        "colourIndex": 29,
+        "derby": {
+          "points": 307.333,
+          "rank": 23
+        },
+        "endpoint": "crowd-29",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 30",
+        "number": 30,
+        "position": 30,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          79,
+          163
+        ],
+        "roundCar": 29,
+        "seat": 30,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 30,
+        "choosing": false,
+        "colourIndex": 30,
+        "derby": {
+          "points": 485.066,
+          "rank": 3
+        },
+        "endpoint": "crowd-30",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 31",
+        "number": 31,
+        "position": 31,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          42,
+          45,
+          52
+        ],
+        "roundCar": 30,
+        "seat": 31,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 31,
+        "choosing": false,
+        "colourIndex": 31,
+        "derby": {
+          "points": 436.794,
+          "rank": 6
+        },
+        "endpoint": "crowd-31",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 32",
+        "number": 32,
+        "position": 32,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          34,
+          164,
+          71
+        ],
+        "roundCar": 31,
+        "seat": 32,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 32,
+        "choosing": false,
+        "colourIndex": 32,
+        "derby": {
+          "points": 265.635,
+          "rank": 31
+        },
+        "endpoint": "crowd-32",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 33",
+        "number": 33,
+        "position": 33,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          244,
+          241,
+          234
+        ],
+        "roundCar": 32,
+        "seat": 33,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 33,
+        "choosing": false,
+        "colourIndex": 33,
+        "derby": {
+          "points": 307.176,
+          "rank": 24
+        },
+        "endpoint": "crowd-33",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 34",
+        "number": 34,
+        "position": 34,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          139,
+          63,
+          217
+        ],
+        "roundCar": 33,
+        "seat": 34,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 34,
+        "choosing": false,
+        "colourIndex": 34,
+        "derby": {
+          "points": 199.95,
+          "rank": 39
+        },
+        "endpoint": "crowd-34",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 35",
+        "number": 35,
+        "position": 35,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          142,
+          27,
+          63
+        ],
+        "roundCar": 34,
+        "seat": 35,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 35,
+        "choosing": false,
+        "colourIndex": 35,
+        "derby": {
+          "points": 198.416,
+          "rank": 41
+        },
+        "endpoint": "crowd-35",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 36",
+        "number": 36,
+        "position": 36,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          94,
+          200,
+          255
+        ],
+        "roundCar": 35,
+        "seat": 36,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 36,
+        "choosing": false,
+        "colourIndex": 36,
+        "derby": {
+          "points": 177.551,
+          "rank": 45
+        },
+        "endpoint": "crowd-36",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 37",
+        "number": 37,
+        "position": 37,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 36,
+        "seat": 37,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 37,
+        "choosing": false,
+        "colourIndex": 37,
+        "derby": {
+          "points": 179.133,
+          "rank": 44
+        },
+        "endpoint": "crowd-37",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 38",
+        "number": 38,
+        "position": 38,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 37,
+        "seat": 38,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 38,
+        "choosing": false,
+        "colourIndex": 38,
+        "derby": {
+          "points": 118.433,
+          "rank": 55
+        },
+        "endpoint": "crowd-38",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 39",
+        "number": 39,
+        "position": 39,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 38,
+        "seat": 39,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 39,
+        "choosing": false,
+        "colourIndex": 39,
+        "derby": {
+          "points": 342.312,
+          "rank": 14
+        },
+        "endpoint": "crowd-39",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 40",
+        "number": 40,
+        "position": 40,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 39,
+        "seat": 40,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 40,
+        "choosing": false,
+        "colourIndex": 40,
+        "derby": {
+          "points": 271.542,
+          "rank": 29
+        },
+        "endpoint": "crowd-40",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 41",
+        "number": 41,
+        "position": 41,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          210,
+          63
+        ],
+        "roundCar": 40,
+        "seat": 41,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 41,
+        "choosing": false,
+        "colourIndex": 41,
+        "derby": {
+          "points": 74.176,
+          "rank": 62
+        },
+        "endpoint": "crowd-41",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 42",
+        "number": 42,
+        "position": 42,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          79,
+          163
+        ],
+        "roundCar": 41,
+        "seat": 42,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 42,
+        "choosing": false,
+        "colourIndex": 42,
+        "derby": {
+          "points": 196.608,
+          "rank": 42
+        },
+        "endpoint": "crowd-42",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 43",
+        "number": 43,
+        "position": 43,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          42,
+          45,
+          52
+        ],
+        "roundCar": 42,
+        "seat": 43,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 43,
+        "choosing": false,
+        "colourIndex": 43,
+        "derby": {
+          "points": 235.708,
+          "rank": 34
+        },
+        "endpoint": "crowd-43",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 44",
+        "number": 44,
+        "position": 44,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          34,
+          164,
+          71
+        ],
+        "roundCar": 43,
+        "seat": 44,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 44,
+        "choosing": false,
+        "colourIndex": 44,
+        "derby": {
+          "points": 242.351,
+          "rank": 32
+        },
+        "endpoint": "crowd-44",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 45",
+        "number": 45,
+        "position": 45,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          244,
+          241,
+          234
+        ],
+        "roundCar": 44,
+        "seat": 45,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 45,
+        "choosing": false,
+        "colourIndex": 45,
+        "derby": {
+          "points": 353.301,
+          "rank": 13
+        },
+        "endpoint": "crowd-45",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 46",
+        "number": 46,
+        "position": 46,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          139,
+          63,
+          217
+        ],
+        "roundCar": 45,
+        "seat": 46,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 46,
+        "choosing": false,
+        "colourIndex": 46,
+        "derby": {
+          "points": 221.759,
+          "rank": 35
+        },
+        "endpoint": "crowd-46",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 47",
+        "number": 47,
+        "position": 47,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          142,
+          27,
+          63
+        ],
+        "roundCar": 46,
+        "seat": 47,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 47,
+        "choosing": false,
+        "colourIndex": 47,
+        "derby": {
+          "points": 323.575,
+          "rank": 18
+        },
+        "endpoint": "crowd-47",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 48",
+        "number": 48,
+        "position": 48,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          94,
+          200,
+          255
+        ],
+        "roundCar": 47,
+        "seat": 48,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 48,
+        "choosing": false,
+        "colourIndex": 48,
+        "derby": {
+          "points": 105,
+          "rank": 58
+        },
+        "endpoint": "crowd-48",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 49",
+        "number": 49,
+        "position": 49,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 48,
+        "seat": 49,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 49,
+        "choosing": false,
+        "colourIndex": 49,
+        "derby": {
+          "points": 110.924,
+          "rank": 56
+        },
+        "endpoint": "crowd-49",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 50",
+        "number": 50,
+        "position": 50,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 49,
+        "seat": 50,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 50,
+        "choosing": false,
+        "colourIndex": 50,
+        "derby": {
+          "points": 139.721,
+          "rank": 47
+        },
+        "endpoint": "crowd-50",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 51",
+        "number": 51,
+        "position": 51,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 50,
+        "seat": 51,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 51,
+        "choosing": false,
+        "colourIndex": 51,
+        "derby": {
+          "points": 125.6,
+          "rank": 51
+        },
+        "endpoint": "crowd-51",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 52",
+        "number": 52,
+        "position": 52,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 51,
+        "seat": 52,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 52,
+        "choosing": false,
+        "colourIndex": 52,
+        "derby": {
+          "points": 107.359,
+          "rank": 57
+        },
+        "endpoint": "crowd-52",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 53",
+        "number": 53,
+        "position": 53,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          210,
+          63
+        ],
+        "roundCar": 52,
+        "seat": 53,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 53,
+        "choosing": false,
+        "colourIndex": 53,
+        "derby": {
+          "points": 130.118,
+          "rank": 49
+        },
+        "endpoint": "crowd-53",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 54",
+        "number": 54,
+        "position": 54,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          79,
+          163
+        ],
+        "roundCar": 53,
+        "seat": 54,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 54,
+        "choosing": false,
+        "colourIndex": 54,
+        "derby": {
+          "points": 118.472,
+          "rank": 54
+        },
+        "endpoint": "crowd-54",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 55",
+        "number": 55,
+        "position": 55,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          42,
+          45,
+          52
+        ],
+        "roundCar": 54,
+        "seat": 55,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 55,
+        "choosing": false,
+        "colourIndex": 55,
+        "derby": {
+          "points": 120.764,
+          "rank": 53
+        },
+        "endpoint": "crowd-55",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 56",
+        "number": 56,
+        "position": 56,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          34,
+          164,
+          71
+        ],
+        "roundCar": 55,
+        "seat": 56,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 56,
+        "choosing": false,
+        "colourIndex": 56,
+        "derby": {
+          "points": 127.244,
+          "rank": 50
+        },
+        "endpoint": "crowd-56",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 57",
+        "number": 57,
+        "position": 57,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          244,
+          241,
+          234
+        ],
+        "roundCar": 56,
+        "seat": 57,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 57,
+        "choosing": false,
+        "colourIndex": 57,
+        "derby": {
+          "points": 51.558,
+          "rank": 64
+        },
+        "endpoint": "crowd-57",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 58",
+        "number": 58,
+        "position": 58,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          139,
+          63,
+          217
+        ],
+        "roundCar": 57,
+        "seat": 58,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 58,
+        "choosing": false,
+        "colourIndex": 58,
+        "derby": {
+          "points": 87.859,
+          "rank": 60
+        },
+        "endpoint": "crowd-58",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 59",
+        "number": 59,
+        "position": 59,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          142,
+          27,
+          63
+        ],
+        "roundCar": 58,
+        "seat": 59,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 59,
+        "choosing": false,
+        "colourIndex": 59,
+        "derby": {
+          "points": 125.397,
+          "rank": 52
+        },
+        "endpoint": "crowd-59",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 60",
+        "number": 60,
+        "position": 60,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          94,
+          200,
+          255
+        ],
+        "roundCar": 59,
+        "seat": 60,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 60,
+        "choosing": false,
+        "colourIndex": 60,
+        "derby": {
+          "points": 133.994,
+          "rank": 48
+        },
+        "endpoint": "crowd-60",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 61",
+        "number": 61,
+        "position": 61,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "roundCar": 60,
+        "seat": 61,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 61,
+        "choosing": false,
+        "colourIndex": 61,
+        "derby": {
+          "points": 72.14,
+          "rank": 63
+        },
+        "endpoint": "crowd-61",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 62",
+        "number": 62,
+        "position": 62,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          37,
+          99,
+          235
+        ],
+        "roundCar": 61,
+        "seat": 62,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 62,
+        "choosing": false,
+        "colourIndex": 62,
+        "derby": {
+          "points": 103.754,
+          "rank": 59
+        },
+        "endpoint": "crowd-62",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 63",
+        "number": 63,
+        "position": 63,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          255,
+          122,
+          26
+        ],
+        "roundCar": 62,
+        "seat": 63,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      },
+      {
+        "assist": 0,
+        "boost": 255,
+        "car": 63,
+        "choosing": false,
+        "colourIndex": 63,
+        "derby": {
+          "points": 83.875,
+          "rank": 61
+        },
+        "endpoint": "crowd-63",
+        "finishMs": null,
+        "finished": false,
+        "inventory": {
+          "back": null,
+          "front": null
+        },
+        "lapMs": [],
+        "laps": 0,
+        "local": false,
+        "localSource": null,
+        "name": "Mate 64",
+        "number": 64,
+        "position": 64,
+        "practice": false,
+        "presence": "Active",
+        "prompt": null,
+        "ready": false,
+        "rgb": [
+          0,
+          181,
+          184
+        ],
+        "roundCar": 63,
+        "seat": 64,
+        "unpluggedMs": null,
+        "vehicle": null,
+        "wreckMs": null,
+        "wreckWhy": null
+      }
+    ],
+    "standings": [
+      {
+        "place": 1,
+        "points": 25,
+        "seat": 2,
+        "wins": 1
+      },
+      {
+        "place": 2,
+        "points": 18,
+        "seat": 3,
+        "wins": 0
+      },
+      {
+        "place": 3,
+        "points": 15,
+        "seat": 31,
+        "wins": 0
+      },
+      {
+        "place": 4,
+        "points": 12,
+        "seat": 27,
+        "wins": 0
+      },
+      {
+        "place": 5,
+        "points": 10,
+        "seat": 24,
+        "wins": 0
+      },
+      {
+        "place": 6,
+        "points": 8,
+        "seat": 32,
+        "wins": 0
+      },
+      {
+        "place": 7,
+        "points": 6,
+        "seat": 18,
+        "wins": 0
+      },
+      {
+        "place": 8,
+        "points": 4,
+        "seat": 4,
+        "wins": 0
+      },
+      {
+        "place": 9,
+        "points": 2,
+        "seat": 5,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 1,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 6,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 7,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 8,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 9,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 10,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 11,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 12,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 13,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 14,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 15,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 16,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 17,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 19,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 20,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 21,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 22,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 23,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 25,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 26,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 28,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 29,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 30,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 33,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 34,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 35,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 36,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 37,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 38,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 39,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 40,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 41,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 42,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 43,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 44,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 45,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 46,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 47,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 48,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 49,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 50,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 51,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 52,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 53,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 54,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 55,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 56,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 57,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 58,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 59,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 60,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 61,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 62,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 63,
+        "wins": 0
+      },
+      {
+        "place": 10,
+        "points": 1,
+        "seat": 64,
+        "wins": 0
+      }
+    ],
+    "vehicles": [
+      "cruz-missile",
+      "tradie-ute",
+      "hawk-dash",
+      "lion-president",
+      "au-hawk",
+      "postie-bike",
+      "pig-catcher"
+    ]
+  },
+  "joining_source": {
+    "file": "/tmp/jj-promo-crowd/joining.mp4",
+    "sha256": "dcb6e372557b50d8368761c5f02eca69bc98e11d5beff09d77ceb134250b149b",
+    "note": "Original actual64seat lobby capture; reused with same real Hello/Claim flow."
+  },
+  "fix_commit": "d8ee872a3",
+  "testing_wasm_sha256": "92cb298637bf7d6b5debacbcfb6513b87ed94cb7609353bf7dd97117d7c5dd58"
+}

@@ -1,0 +1,6534 @@
+[
+  {
+    "vehicle": {
+      "id": "cruz-missile",
+      "name": "Cruz Missile",
+      "cls": "Aussie classic",
+      "blurb": "Honest all-rounder. Loves a kerb.",
+      "stats": [
+        6,
+        6,
+        7,
+        5
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-cruz-missile",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "cruz-missile",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 1,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.00043810493662022054,
+        -0.02560112625360489,
+        0.030613860115408897
+      ],
+      "authorisedJ": 932951.1737738552,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 26.35462760925293,
+        "mode": "driving",
+        "routePoint": 35,
+        "steer": -0.015814775601029396,
+        "stuckTicks": 0,
+        "target": [
+          381.5159912109375,
+          -208
+        ],
+        "targetSpeed": 35.45448684692383,
+        "throttle": 0.6278009414672852
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 1709682.7725830104,
+      "forwardSpeed": 32.962276458740234,
+      "headingDeg": 89.76559448242188,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.01580858789384365,
+        "throttle": 0.6277962327003479
+      },
+      "linvel": [
+        32.9820556640625,
+        0.4383138418197632,
+        0.16121569275856018
+      ],
+      "massKg": 1200,
+      "maxEngineForce": 14000,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RR",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        356.958740234375,
+        13.689692497253418,
+        -207.9356689453125
+      ],
+      "progress": {
+        "distanceM": 87.958740234375,
+        "fraction": 0.03582921795131974,
+        "lateralM": 0.0643310546875,
+        "routePoint": 35
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.01794438436627388,
+        0.7054325342178345,
+        0.01790185086429119,
+        0.7083237767219543
+      ],
+      "speed": 32.9853630065918,
+      "upY": 0.9987151622772217,
+      "vehicle": 0,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 18.262845993041992,
+          "sideImpulse": 0,
+          "slipDeg": 0.08321844786405563,
+          "steering": -0.00307214236818254,
+          "suspensionForce": 4080.981689453125,
+          "suspensionLength": 0.22749170660972595
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 18.262845993041992,
+          "sideImpulse": 0,
+          "slipDeg": 0.08307978510856628,
+          "steering": -0.00307214236818254,
+          "suspensionForce": 4078.599365234375,
+          "suspensionLength": 0.2275831401348114
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 18.262845993041992,
+          "sideImpulse": 0,
+          "slipDeg": 0.026380810886621475,
+          "steering": 0,
+          "suspensionForce": 4309.5927734375,
+          "suspensionLength": 0.1307351291179657
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 18.262845993041992,
+          "sideImpulse": 0,
+          "slipDeg": 0.026399631053209305,
+          "steering": 0,
+          "suspensionForce": 4311.1513671875,
+          "suspensionLength": 0.1307484209537506
+        }
+      ],
+      "wheelsInContact": 4
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 8,
+      "hulls": 24,
+      "fx": {
+        "spawned": {
+          "dust": 32,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 364
+        },
+        "alive": {
+          "dust": 16,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 20,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": null,
+        "impactCars": [],
+        "impactsByCar": {},
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 16,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 4,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "cruz-missile",
+          "position": [
+            356.326,
+            13.682,
+            -207.939
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "cruz-missile",
+          "position": [
+            357.11,
+            14.825,
+            -207.936
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "cruz-missile",
+          "position": [
+            355.428,
+            14.817,
+            -207.942
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FL",
+          "type": "door_FL",
+          "vehicle": "cruz-missile",
+          "position": [
+            357.137,
+            14.344,
+            -208.901
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FR",
+          "type": "door_FR",
+          "vehicle": "cruz-missile",
+          "position": [
+            357.13,
+            14.344,
+            -206.97
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RL",
+          "type": "door_RL",
+          "vehicle": "cruz-missile",
+          "position": [
+            356.078,
+            14.309,
+            -208.895
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RR",
+          "type": "door_RR",
+          "vehicle": "cruz-missile",
+          "position": [
+            356.071,
+            14.309,
+            -206.983
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FL",
+          "type": "wheel",
+          "vehicle": "cruz-missile",
+          "position": [
+            357.647,
+            14.149,
+            -208.784
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FR",
+          "type": "wheel",
+          "vehicle": "cruz-missile",
+          "position": [
+            357.641,
+            14.148,
+            -207.084
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RL",
+          "type": "wheel",
+          "vehicle": "cruz-missile",
+          "position": [
+            354.971,
+            14.014,
+            -208.793
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RR",
+          "type": "wheel",
+          "vehicle": "cruz-missile",
+          "position": [
+            354.965,
+            14.014,
+            -207.093
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "tradie-ute",
+      "name": "Tradie Ute",
+      "cls": "Work horse",
+      "blurb": "Heavy, torquey and tough. Hauls itself out of anything.",
+      "shape": "ute",
+      "stats": [
+        4,
+        7,
+        4,
+        8
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-tradie-ute",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "tradie-ute",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 1,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.0007312517846003175,
+        -0.01899595372378826,
+        0.029540566727519035
+      ],
+      "authorisedJ": 1517588.2809216268,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 25.555395126342773,
+        "mode": "driving",
+        "routePoint": 35,
+        "steer": -0.016785185784101486,
+        "stuckTicks": 0,
+        "target": [
+          381.5159912109375,
+          -208
+        ],
+        "targetSpeed": 34.38967514038086,
+        "throttle": 0.6113576889038086
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 2128427.7100830106,
+      "forwardSpeed": 31.95465087890625,
+      "headingDeg": 89.83952331542969,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.01678518019616604,
+        "throttle": 0.6113467812538147
+      },
+      "linvel": [
+        31.99968719482422,
+        0.3309253454208374,
+        0.10905642807483673
+      ],
+      "massKg": 1900.0001220703125,
+      "maxEngineForce": 23000,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 200,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 150,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 70,
+          "part": "door_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 70,
+          "part": "door_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 70,
+          "part": "door_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 70,
+          "part": "door_RR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 140,
+          "part": "wheel_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 140,
+          "part": "wheel_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 140,
+          "part": "wheel_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 140,
+          "part": "wheel_RR",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        356.1878356933594,
+        13.680826187133789,
+        -207.9346466064453
+      ],
+      "progress": {
+        "distanceM": 87.18783569335938,
+        "fraction": 0.03551519677791375,
+        "lateralM": 0.0653533935546875,
+        "routePoint": 34
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.022820807993412018,
+        0.7057490348815918,
+        0.02278263308107853,
+        0.7077277302742004
+      ],
+      "speed": 32.001583099365234,
+      "upY": 0.9979203939437866,
+      "vehicle": 1,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 29.293701171875,
+          "sideImpulse": 0,
+          "slipDeg": 0.11758164316415787,
+          "steering": -0.0034227375872433186,
+          "suspensionForce": 2808.402587890625,
+          "suspensionLength": 0.28926992416381836
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 29.293701171875,
+          "sideImpulse": 0,
+          "slipDeg": 0.11749063432216644,
+          "steering": -0.0034227375872433186,
+          "suspensionForce": 2815.6748046875,
+          "suspensionLength": 0.28927356004714966
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 29.293701171875,
+          "sideImpulse": 0,
+          "slipDeg": 0.020274732261896133,
+          "steering": 0,
+          "suspensionForce": 8299.1806640625,
+          "suspensionLength": 0.13758617639541626
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 29.293701171875,
+          "sideImpulse": 0,
+          "slipDeg": 0.020286185666918755,
+          "steering": 0,
+          "suspensionForce": 8306.4248046875,
+          "suspensionLength": 0.1375904083251953
+        }
+      ],
+      "wheelsInContact": 4
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 8,
+      "hulls": 48,
+      "fx": {
+        "spawned": {
+          "dust": 62,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 34,
+          "impact": 5,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 728
+        },
+        "alive": {
+          "dust": 15,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 19,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            293.6372428493391,
+            14.884496307373047,
+            -207.99539892679894
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            293.6372428493391,
+            14.884496307373047,
+            -207.99539892679894
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 15,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 4,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "tradie-ute",
+          "position": [
+            354.506,
+            13.665,
+            -207.94
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "tradie-ute",
+          "position": [
+            355.214,
+            15.021,
+            -207.938
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "tradie-ute",
+          "position": [
+            353.641,
+            14.854,
+            -207.941
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FL",
+          "type": "door_FL",
+          "vehicle": "tradie-ute",
+          "position": [
+            355.353,
+            14.579,
+            -208.938
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FR",
+          "type": "door_FR",
+          "vehicle": "tradie-ute",
+          "position": [
+            355.349,
+            14.579,
+            -206.938
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RL",
+          "type": "door_RL",
+          "vehicle": "tradie-ute",
+          "position": [
+            354.456,
+            14.51,
+            -208.93
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RR",
+          "type": "door_RR",
+          "vehicle": "tradie-ute",
+          "position": [
+            354.452,
+            14.51,
+            -206.95
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FL",
+          "type": "wheel",
+          "vehicle": "tradie-ute",
+          "position": [
+            355.928,
+            14.183,
+            -208.817
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FR",
+          "type": "wheel",
+          "vehicle": "tradie-ute",
+          "position": [
+            355.925,
+            14.183,
+            -207.057
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RL",
+          "type": "wheel",
+          "vehicle": "tradie-ute",
+          "position": [
+            353.034,
+            14.005,
+            -208.822
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RR",
+          "type": "wheel",
+          "vehicle": "tradie-ute",
+          "position": [
+            353.031,
+            14.005,
+            -207.062
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "hawk-dash",
+      "name": "Hawk Dash",
+      "cls": "Aussie V8",
+      "blurb": "Rear-drive V8 with twin stripes. Punch it and the tail steps out.",
+      "shape": "sedan",
+      "spec": "aussie-v8",
+      "stats": [
+        8,
+        6,
+        5,
+        6
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-hawk-dash",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "hawk-dash",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 1,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.00035483998362906277,
+        -0.023522313684225082,
+        0.06275156140327454
+      ],
+      "authorisedJ": 1323665.155740611,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 26.57366943359375,
+        "mode": "driving",
+        "routePoint": 36,
+        "steer": -0.016297802329063416,
+        "stuckTicks": 0,
+        "target": [
+          384.0159912109375,
+          -208
+        ],
+        "targetSpeed": 34.2519416809082,
+        "throttle": 0.2587137222290039
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 2062730.3350830104,
+      "forwardSpeed": 33.202232360839844,
+      "headingDeg": 89.80194854736328,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.016296884045004845,
+        "throttle": 0.25870540738105774
+      },
+      "linvel": [
+        33.206939697265625,
+        0.5607109069824219,
+        0.14051730930805206
+      ],
+      "massKg": 1700.0001220703125,
+      "maxEngineForce": 20000,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RR",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        358.2397155761719,
+        13.709870338439941,
+        -207.93539428710938
+      ],
+      "progress": {
+        "distanceM": 89.23971557617188,
+        "fraction": 0.0363510119718936,
+        "lateralM": 0.064605712890625,
+        "routePoint": 35
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.014538591727614403,
+        0.70573490858078,
+        0.014511898159980774,
+        0.7081781625747681
+      ],
+      "speed": 33.211971282958984,
+      "upY": 0.99915611743927,
+      "vehicle": 2,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 10.77939224243164,
+          "sideImpulse": 0,
+          "slipDeg": 0.09183753281831741,
+          "steering": -0.0031848340295255184,
+          "suspensionForce": 5134.46142578125,
+          "suspensionLength": 0.20403483510017395
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.77939224243164,
+          "sideImpulse": 0,
+          "slipDeg": 0.09171561896800995,
+          "steering": -0.0031848340295255184,
+          "suspensionForce": 5132.0517578125,
+          "suspensionLength": 0.20411726832389832
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.77939224243164,
+          "sideImpulse": 0,
+          "slipDeg": 0.02464340254664421,
+          "steering": 0,
+          "suspensionForce": 5098.34814453125,
+          "suspensionLength": 0.14551934599876404
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.77939224243164,
+          "sideImpulse": 0,
+          "slipDeg": 0.02466008998453617,
+          "steering": 0,
+          "suspensionForce": 5101.1865234375,
+          "suspensionLength": 0.1455375850200653
+        }
+      ],
+      "wheelsInContact": 4
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        },
+        {
+          "vehicle": "hawk-dash",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 8,
+      "hulls": 72,
+      "fx": {
+        "spawned": {
+          "dust": 100,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 68,
+          "impact": 10,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 1092
+        },
+        "alive": {
+          "dust": 16,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 20,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            293.6370120266226,
+            14.88584098815918,
+            -207.99798230885364
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            293.6370120266226,
+            14.88584098815918,
+            -207.99798230885364
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 16,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 4,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "hawk-dash",
+          "position": [
+            358.24,
+            13.71,
+            -207.935
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "hawk-dash",
+          "position": [
+            359.095,
+            14.816,
+            -207.932
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "hawk-dash",
+          "position": [
+            357.275,
+            14.769,
+            -207.939
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FL",
+          "type": "door_FL",
+          "vehicle": "hawk-dash",
+          "position": [
+            359.137,
+            14.351,
+            -208.902
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FR",
+          "type": "door_FR",
+          "vehicle": "hawk-dash",
+          "position": [
+            359.131,
+            14.351,
+            -206.963
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RL",
+          "type": "door_RL",
+          "vehicle": "hawk-dash",
+          "position": [
+            357.918,
+            14.306,
+            -208.886
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RR",
+          "type": "door_RR",
+          "vehicle": "hawk-dash",
+          "position": [
+            357.912,
+            14.306,
+            -206.986
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FL",
+          "type": "wheel",
+          "vehicle": "hawk-dash",
+          "position": [
+            359.645,
+            14.168,
+            -208.771
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FR",
+          "type": "wheel",
+          "vehicle": "hawk-dash",
+          "position": [
+            359.639,
+            14.168,
+            -207.091
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RL",
+          "type": "wheel",
+          "vehicle": "hawk-dash",
+          "position": [
+            356.807,
+            14.051,
+            -208.78
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RR",
+          "type": "wheel",
+          "vehicle": "hawk-dash",
+          "position": [
+            356.802,
+            14.051,
+            -207.1
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0,
+        "hawk-dash.engine": 0,
+        "hawk-dash.cabin": 0,
+        "hawk-dash.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "lion-president",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "lion-president",
+      "name": "Lion President",
+      "cls": "Aussie V8",
+      "blurb": "The Hawk's old rival: the same V8 and the same grunt under a different body.",
+      "shape": "sedan",
+      "spec": "aussie-v8",
+      "stats": [
+        8,
+        6,
+        5,
+        6
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-lion-president",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "lion-president",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 1,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.0003779672260861844,
+        -0.02415533922612667,
+        0.06170996278524399
+      ],
+      "authorisedJ": 1323643.7193935865,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 26.573217391967773,
+        "mode": "driving",
+        "routePoint": 36,
+        "steer": -0.016279175877571106,
+        "stuckTicks": 0,
+        "target": [
+          384.0159912109375,
+          -208
+        ],
+        "targetSpeed": 34.2519416809082,
+        "throttle": 0.25885486602783203
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 2062783.8350830104,
+      "forwardSpeed": 33.201690673828125,
+      "headingDeg": 89.7957534790039,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.016266366466879845,
+        "throttle": 0.25885799527168274
+      },
+      "linvel": [
+        33.2078857421875,
+        0.5597758889198303,
+        0.1438571810722351
+      ],
+      "massKg": 1700.0001220703125,
+      "maxEngineForce": 20000,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RR",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        358.2411193847656,
+        13.709928512573242,
+        -207.93325805664062
+      ],
+      "progress": {
+        "distanceM": 89.24111938476562,
+        "fraction": 0.036351583800957245,
+        "lateralM": 0.066741943359375,
+        "routePoint": 35
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.015160809271037579,
+        0.705683708190918,
+        0.015134886838495731,
+        0.7082031965255737
+      ],
+      "speed": 33.21291732788086,
+      "upY": 0.9990823268890381,
+      "vehicle": 3,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 10.785749435424805,
+          "sideImpulse": 0,
+          "slipDeg": 0.09237730503082275,
+          "steering": -0.0031789036002010107,
+          "suspensionForce": 5116.7802734375,
+          "suspensionLength": 0.20585006475448608
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.785749435424805,
+          "sideImpulse": 0,
+          "slipDeg": 0.09225326031446457,
+          "steering": -0.0031789036002010107,
+          "suspensionForce": 5114.61962890625,
+          "suspensionLength": 0.20592737197875977
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.785749435424805,
+          "sideImpulse": 0,
+          "slipDeg": 0.025294553488492966,
+          "steering": 0,
+          "suspensionForce": 5110.38134765625,
+          "suspensionLength": 0.14427077770233154
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 10.785749435424805,
+          "sideImpulse": 0,
+          "slipDeg": 0.025311337783932686,
+          "steering": 0,
+          "suspensionForce": 5113.685546875,
+          "suspensionLength": 0.1442793607711792
+        }
+      ],
+      "wheelsInContact": 4
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        },
+        {
+          "vehicle": "hawk-dash",
+          "count": 1
+        },
+        {
+          "vehicle": "lion-president",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 8,
+      "hulls": 96,
+      "fx": {
+        "spawned": {
+          "dust": 126,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 102,
+          "impact": 15,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 1456
+        },
+        "alive": {
+          "dust": 15,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 19,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            293.6375222963752,
+            14.885833358764648,
+            -207.9957014811414
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            293.6375222963752,
+            14.885833358764648,
+            -207.9957014811414
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 15,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 4,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "lion-president",
+          "position": [
+            357.045,
+            13.69,
+            -207.938
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "lion-president",
+          "position": [
+            357.75,
+            14.797,
+            -207.936
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "lion-president",
+          "position": [
+            356.248,
+            14.818,
+            -207.94
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FL",
+          "type": "door_FL",
+          "vehicle": "lion-president",
+          "position": [
+            357.872,
+            14.327,
+            -208.823
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FR",
+          "type": "door_FR",
+          "vehicle": "lion-president",
+          "position": [
+            357.867,
+            14.327,
+            -207.049
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RL",
+          "type": "door_RL",
+          "vehicle": "lion-president",
+          "position": [
+            356.742,
+            14.304,
+            -208.832
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RR",
+          "type": "door_RR",
+          "vehicle": "lion-president",
+          "position": [
+            356.737,
+            14.304,
+            -207.046
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FL",
+          "type": "wheel",
+          "vehicle": "lion-president",
+          "position": [
+            358.409,
+            14.176,
+            -208.774
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FR",
+          "type": "wheel",
+          "vehicle": "lion-president",
+          "position": [
+            358.404,
+            14.176,
+            -207.094
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RL",
+          "type": "wheel",
+          "vehicle": "lion-president",
+          "position": [
+            355.651,
+            14.063,
+            -208.782
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RR",
+          "type": "wheel",
+          "vehicle": "lion-president",
+          "position": [
+            355.646,
+            14.063,
+            -207.102
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0,
+        "hawk-dash.engine": 0,
+        "hawk-dash.cabin": 0,
+        "hawk-dash.boot": 0,
+        "lion-president.engine": 0,
+        "lion-president.cabin": 0,
+        "lion-president.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "au-hawk",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "au-hawk",
+      "name": "AU Hawk",
+      "cls": "Burnout king",
+      "blurb": "Big round family sedan with a big grin. Loves a burnout and a doughnut, and it is a touch slower.",
+      "shape": "sedan",
+      "stats": [
+        6,
+        5,
+        8,
+        6
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-au-hawk",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "au-hawk",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 1,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        -0.00004539887231658213,
+        -0.023141739889979362,
+        0.08050556480884552
+      ],
+      "authorisedJ": 1214656.1893099989,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 25.52178192138672,
+        "mode": "driving",
+        "routePoint": 34,
+        "steer": -0.016347866505384445,
+        "stuckTicks": 0,
+        "target": [
+          379.0159912109375,
+          -208
+        ],
+        "targetSpeed": 35.68214797973633,
+        "throttle": 0.9449801445007324
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 1992227.5850830104,
+      "forwardSpeed": 31.94098472595215,
+      "headingDeg": 89.80757904052734,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.016357921063899994,
+        "throttle": 0.9449751377105713
+      },
+      "linvel": [
+        31.95099639892578,
+        0.23520928621292114,
+        0.1329716295003891
+      ],
+      "massKg": 1700.0001220703125,
+      "maxEngineForce": 19000,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "door_RR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_FR",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RL",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_RR",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        354.7344055175781,
+        13.664827346801758,
+        -207.94003295898438
+      ],
+      "progress": {
+        "distanceM": 85.73440551757812,
+        "fraction": 0.03492315479997806,
+        "lateralM": 0.059967041015625,
+        "routePoint": 34
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.011959915049374104,
+        0.7058177590370178,
+        0.01192442700266838,
+        0.7081921696662903
+      ],
+      "speed": 31.952138900756836,
+      "upY": 0.9994295835494995,
+      "vehicle": 4,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 32.70649719238281,
+          "sideImpulse": 0,
+          "slipDeg": 0.09413761645555496,
+          "steering": -0.0032777469605207443,
+          "suspensionForce": 3978.247802734375,
+          "suspensionLength": 0.21565359830856323
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 32.70649719238281,
+          "sideImpulse": 0,
+          "slipDeg": 0.09400967508554459,
+          "steering": -0.0032777469605207443,
+          "suspensionForce": 3975.814208984375,
+          "suspensionLength": 0.21570968627929688
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 32.70649719238281,
+          "sideImpulse": 0,
+          "slipDeg": 0.024205602705478668,
+          "steering": 0,
+          "suspensionForce": 7375.9296875,
+          "suspensionLength": 0.15570974349975586
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 32.70649719238281,
+          "sideImpulse": 0,
+          "slipDeg": 0.02422129549086094,
+          "steering": 0,
+          "suspensionForce": 7373.52197265625,
+          "suspensionLength": 0.1557648777961731
+        }
+      ],
+      "wheelsInContact": 4
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        },
+        {
+          "vehicle": "hawk-dash",
+          "count": 1
+        },
+        {
+          "vehicle": "lion-president",
+          "count": 1
+        },
+        {
+          "vehicle": "au-hawk",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 8,
+      "hulls": 120,
+      "fx": {
+        "spawned": {
+          "dust": 150,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 136,
+          "impact": 20,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 1820
+        },
+        "alive": {
+          "dust": 16,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 0,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 20,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            293.48585478657185,
+            14.885837173461914,
+            -207.99702769964682
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            293.48585478657185,
+            14.885837173461914,
+            -207.99702769964682
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 16,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 4,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "au-hawk",
+          "position": [
+            353.59,
+            13.657,
+            -207.944
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "au-hawk",
+          "position": [
+            354.516,
+            14.78,
+            -207.942
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "au-hawk",
+          "position": [
+            352.598,
+            14.699,
+            -207.947
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FL",
+          "type": "door_FL",
+          "vehicle": "au-hawk",
+          "position": [
+            354.532,
+            14.333,
+            -208.942
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_FR",
+          "type": "door_FR",
+          "vehicle": "au-hawk",
+          "position": [
+            354.527,
+            14.333,
+            -206.942
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RL",
+          "type": "door_RL",
+          "vehicle": "au-hawk",
+          "position": [
+            353.193,
+            14.287,
+            -208.945
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "door_RR",
+          "type": "door_RR",
+          "vehicle": "au-hawk",
+          "position": [
+            353.188,
+            14.287,
+            -206.945
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FL",
+          "type": "wheel",
+          "vehicle": "au-hawk",
+          "position": [
+            355,
+            14.065,
+            -208.781
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_FR",
+          "type": "wheel",
+          "vehicle": "au-hawk",
+          "position": [
+            354.996,
+            14.065,
+            -207.101
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RL",
+          "type": "wheel",
+          "vehicle": "au-hawk",
+          "position": [
+            352.162,
+            13.979,
+            -208.788
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_RR",
+          "type": "wheel",
+          "vehicle": "au-hawk",
+          "position": [
+            352.157,
+            13.979,
+            -207.108
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0,
+        "hawk-dash.engine": 0,
+        "hawk-dash.cabin": 0,
+        "hawk-dash.boot": 0,
+        "lion-president.engine": 0,
+        "lion-president.cabin": 0,
+        "lion-president.boot": 0,
+        "au-hawk.engine": 0,
+        "au-hawk.cabin": 0,
+        "au-hawk.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "postie-bike",
+          "loaded": false,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "postie-bike",
+      "name": "Postie Bike",
+      "cls": "Delivery run",
+      "blurb": "Nippy step-through with a full mail run on the back. Gets everywhere, eventually.",
+      "shape": "bike",
+      "stats": [
+        3,
+        7,
+        8,
+        4
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-postie-bike",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "postie-bike",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 0.9799938201904297,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.0061278133653104305,
+        -0.035904597491025925,
+        0.046542879194021225
+      ],
+      "authorisedJ": 162672.99000951182,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 23.561691284179688,
+        "mode": "driving",
+        "routePoint": 42,
+        "steer": -0.013004211708903313,
+        "stuckTicks": 0,
+        "target": [
+          396.51800537109375,
+          -208
+        ],
+        "targetSpeed": 28.475507736206055,
+        "throttle": 0
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 1007503.3350830105,
+      "forwardSpeed": 29.41057777404785,
+      "headingDeg": 89.5841064453125,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.013000885024666786,
+        "throttle": 0
+      },
+      "linvel": [
+        29.36203956604004,
+        1.7103006839752197,
+        0.22940321266651154
+      ],
+      "massKg": 200,
+      "maxEngineForce": 4400,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "rider",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_F",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_R",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        374.77911376953125,
+        14.384794235229492,
+        -207.9217987060547
+      ],
+      "progress": {
+        "distanceM": 105.77911376953125,
+        "fraction": 0.04308819012013119,
+        "lateralM": 0.0782012939453125,
+        "routePoint": 42
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.016135113313794136,
+        0.7043537497520447,
+        0.01650943048298359,
+        0.7094736695289612
+      ],
+      "speed": 29.412702560424805,
+      "upY": 0.9989341497421265,
+      "vehicle": 5,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 0,
+          "sideImpulse": 0.8705958724021912,
+          "slipDeg": 0.05536983907222748,
+          "steering": -0.0025132824666798115,
+          "suspensionForce": 1112.408935546875,
+          "suspensionLength": 0.09335052967071533
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 0,
+          "sideImpulse": 0.9165546298027039,
+          "slipDeg": 0.058097388595342636,
+          "steering": 0,
+          "suspensionForce": 1207.6732177734375,
+          "suspensionLength": 0.07677257061004639
+        }
+      ],
+      "wheelsInContact": 2
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        },
+        {
+          "vehicle": "hawk-dash",
+          "count": 1
+        },
+        {
+          "vehicle": "lion-president",
+          "count": 1
+        },
+        {
+          "vehicle": "au-hawk",
+          "count": 1
+        },
+        {
+          "vehicle": "postie-bike",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 6,
+      "hulls": 138,
+      "fx": {
+        "spawned": {
+          "dust": 186,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 171,
+          "impact": 25,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 2184
+        },
+        "alive": {
+          "dust": 15,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 1,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 20,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            295.4603733742938,
+            14.906362152099609,
+            -207.99012899554074
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            295.4603733742938,
+            14.906362152099609,
+            -207.99012899554074
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 16,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "rider",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "wheel_F",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "wheel_R",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "postie-bike",
+          "position": [
+            373.547,
+            14.313,
+            -207.93
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "postie-bike",
+          "position": [
+            373.963,
+            15.777,
+            -207.927
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "postie-bike",
+          "position": [
+            372.972,
+            15.543,
+            -207.933
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "rider",
+          "type": "rider",
+          "vehicle": "postie-bike",
+          "position": [
+            373.227,
+            15.44,
+            -207.932
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_F",
+          "type": "wheel_F",
+          "vehicle": "postie-bike",
+          "position": [
+            374.568,
+            14.759,
+            -207.924
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_R",
+          "type": "wheel_R",
+          "vehicle": "postie-bike",
+          "position": [
+            372.492,
+            14.627,
+            -207.936
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0,
+        "hawk-dash.engine": 0,
+        "hawk-dash.cabin": 0,
+        "hawk-dash.boot": 0,
+        "lion-president.engine": 0,
+        "lion-president.cabin": 0,
+        "lion-president.boot": 0,
+        "au-hawk.engine": 0,
+        "au-hawk.cabin": 0,
+        "au-hawk.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": true,
+          "cars": 1
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": false,
+          "cars": 0
+        }
+      ]
+    }
+  },
+  {
+    "vehicle": {
+      "id": "pig-catcher",
+      "name": "Pig Catcher",
+      "cls": "Outback trail bike",
+      "blurb": "Tall, light and hungry for air. Wheelies on request.",
+      "shape": "bike",
+      "stats": [
+        6,
+        8,
+        6,
+        3
+      ]
+    },
+    "fixture": {
+      "scenario": "promo-roster-pig-catcher",
+      "what": "Actual selectable roster gameplay",
+      "map": "promo.json",
+      "vehicle": "pig-catcher",
+      "seed": 1,
+      "ticks": 1200,
+      "cars": [
+        {
+          "routePoint": 8,
+          "lift": 0.5
+        }
+      ],
+      "seats": [
+        {
+          "name": "Driver",
+          "car": 0
+        }
+      ],
+      "inputs": []
+    },
+    "car": {
+      "action": {
+        "boost": 0.9799938201904297,
+        "boosting": false,
+        "cones": 0,
+        "oi": 0,
+        "slide": 0,
+        "wheelie": false
+      },
+      "air": {
+        "boostS": 0,
+        "flying": false,
+        "landings": 0,
+        "last": null,
+        "righting": false
+      },
+      "angvel": [
+        0.006350226234644651,
+        -0.03367055580019951,
+        -0.08996071666479111
+      ],
+      "authorisedJ": 197549.98132206872,
+      "autopilot": {
+        "brake": 0,
+        "lookAheadM": 22.101457595825195,
+        "mode": "driving",
+        "routePoint": 44,
+        "steer": -0.012471478432416916,
+        "stuckTicks": 0,
+        "target": [
+          399.01800537109375,
+          -208
+        ],
+        "targetSpeed": 26.661489486694336,
+        "throttle": 0
+      },
+      "car": 0,
+      "derby": null,
+      "energyJ": 1013828.3350830105,
+      "forwardSpeed": 27.5881404876709,
+      "headingDeg": 89.59697723388672,
+      "husks": 0,
+      "input": {
+        "brake": 0,
+        "steer": -0.012482070364058018,
+        "throttle": 0
+      },
+      "linvel": [
+        27.54476547241211,
+        1.536725401878357,
+        0.2055959701538086
+      ],
+      "massKg": 230.00001525878906,
+      "maxEngineForce": 5200,
+      "parts": [
+        {
+          "angleDeg": 0,
+          "health": 0,
+          "part": "core",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "front",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 100,
+          "part": "back",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 60,
+          "part": "rider",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_F",
+          "state": "intact"
+        },
+        {
+          "angleDeg": 0,
+          "health": 80,
+          "part": "wheel_R",
+          "state": "intact"
+        }
+      ],
+      "position": [
+        380.0894775390625,
+        14.68847370147705,
+        -207.92430114746094
+      ],
+      "progress": {
+        "distanceM": 111.0894775390625,
+        "fraction": 0.0452513200193583,
+        "lateralM": 0.0756988525390625,
+        "routePoint": 44
+      },
+      "race": {
+        "anchorRoutePoint": null,
+        "assisting": false,
+        "finishedAt": null,
+        "gatesPassed": 0,
+        "ghost": false,
+        "held": false,
+        "laps": 0,
+        "late": false,
+        "progressM": 0,
+        "protected": false,
+        "recoveries": 0,
+        "wrecks": 0
+      },
+      "rotation": [
+        -0.020917607471346855,
+        0.704309344291687,
+        0.02130797505378723,
+        0.7092649340629578
+      ],
+      "speed": 27.58836555480957,
+      "upY": 0.9982168078422546,
+      "vehicle": 6,
+      "wheels": [
+        {
+          "contact": true,
+          "forwardImpulse": 0,
+          "sideImpulse": 0.8476459383964539,
+          "slipDeg": 0.05200507119297981,
+          "steering": -0.0022888800594955683,
+          "suspensionForce": 786.0103759765625,
+          "suspensionLength": 0.12830111384391785
+        },
+        {
+          "contact": true,
+          "forwardImpulse": 0,
+          "sideImpulse": 0.9492558240890503,
+          "slipDeg": 0.05677403509616852,
+          "steering": 0,
+          "suspensionForce": 983.4779663085938,
+          "suspensionLength": 0.09357789158821106
+        }
+      ],
+      "wheelsInContact": 2
+    },
+    "renderer": {
+      "capacity": 16,
+      "cars": 1,
+      "patternsEnabled": true,
+      "materials": [
+        {
+          "vehicle": "cruz-missile",
+          "count": 1
+        },
+        {
+          "vehicle": "tradie-ute",
+          "count": 1
+        },
+        {
+          "vehicle": "hawk-dash",
+          "count": 1
+        },
+        {
+          "vehicle": "lion-president",
+          "count": 1
+        },
+        {
+          "vehicle": "au-hawk",
+          "count": 1
+        },
+        {
+          "vehicle": "postie-bike",
+          "count": 1
+        },
+        {
+          "vehicle": "pig-catcher",
+          "count": 1
+        }
+      ],
+      "drawsPerTile": 6,
+      "hulls": 156,
+      "fx": {
+        "spawned": {
+          "dust": 218,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 210,
+          "impact": 30,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 2548
+        },
+        "alive": {
+          "dust": 16,
+          "tyre-smoke": 0,
+          "landing": 0,
+          "boost": 0,
+          "sparks": 5,
+          "impact": 0,
+          "detach": 0,
+          "damage-smoke": 0,
+          "wreck-fire": 0,
+          "lamp": 4
+        },
+        "particles": 25,
+        "capacity": 512,
+        "drawsPerTile": 2,
+        "reducedMotion": false,
+        "lastImpact": {
+          "car": 0,
+          "at": [
+            296.0173847696517,
+            14.891465759277343,
+            -207.98708761044395
+          ]
+        },
+        "impactCars": [
+          0
+        ],
+        "impactsByCar": {
+          "0": [
+            296.0173847696517,
+            14.891465759277343,
+            -207.98708761044395
+          ]
+        },
+        "impactSample": [],
+        "drawnBursts": {
+          "count": 21,
+          "visible": true,
+          "first": []
+        }
+      },
+      "types": [
+        {
+          "vehicle": "cruz-missile",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "cruz-missile",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "tradie-ute",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "hawk-dash",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "lion-president",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_FR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RL",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "door_RR",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "au-hawk",
+          "id": "wheel",
+          "slotsPerCar": 4,
+          "instances": 0,
+          "capacity": 64,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "rider",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "wheel_F",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "postie-bike",
+          "id": "wheel_R",
+          "slotsPerCar": 1,
+          "instances": 0,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "core",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "front",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "back",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "rider",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "wheel_F",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        },
+        {
+          "vehicle": "pig-catcher",
+          "id": "wheel_R",
+          "slotsPerCar": 1,
+          "instances": 1,
+          "capacity": 16,
+          "shared": true,
+          "layers": [
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "part": "core",
+          "type": "core",
+          "vehicle": "pig-catcher",
+          "position": [
+            378.635,
+            14.603,
+            -207.934
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "part": "front",
+          "type": "front",
+          "vehicle": "pig-catcher",
+          "position": [
+            378.94,
+            16.086,
+            -207.932
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "back",
+          "type": "back",
+          "vehicle": "pig-catcher",
+          "position": [
+            377.817,
+            16.053,
+            -207.937
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "rider",
+          "type": "rider",
+          "vehicle": "pig-catcher",
+          "position": [
+            378.338,
+            15.626,
+            -207.935
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_F",
+          "type": "wheel_F",
+          "vehicle": "pig-catcher",
+          "position": [
+            379.587,
+            15.065,
+            -207.929
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "part": "wheel_R",
+          "type": "wheel_R",
+          "vehicle": "pig-catcher",
+          "position": [
+            377.672,
+            14.927,
+            -207.939
+          ],
+          "colour": "#ffffff",
+          "pattern": "stripes",
+          "numberChunks": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "interiors": {
+        "cruz-missile.engine": 0,
+        "cruz-missile.cabin": 0,
+        "cruz-missile.boot": 0,
+        "tradie-ute.engine": 0,
+        "tradie-ute.cabin": 0,
+        "tradie-ute.boot": 0,
+        "hawk-dash.engine": 0,
+        "hawk-dash.cabin": 0,
+        "hawk-dash.boot": 0,
+        "lion-president.engine": 0,
+        "lion-president.cabin": 0,
+        "lion-president.boot": 0,
+        "au-hawk.engine": 0,
+        "au-hawk.cabin": 0,
+        "au-hawk.boot": 0
+      },
+      "identities": [
+        {
+          "car": 0,
+          "number": 1,
+          "pattern": "stripes"
+        }
+      ],
+      "vehicles": [
+        {
+          "id": "cruz-missile",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "tradie-ute",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "hawk-dash",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "lion-president",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "au-hawk",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "postie-bike",
+          "loaded": true,
+          "cars": 0
+        },
+        {
+          "id": "pig-catcher",
+          "loaded": true,
+          "cars": 1
+        }
+      ]
+    }
+  }
+]

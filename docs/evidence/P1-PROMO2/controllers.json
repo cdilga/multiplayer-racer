@@ -1,0 +1,91 @@
+{
+  "phone": {
+    "source": "Current controller R90 state opener, no network connection",
+    "url": "http://127.0.0.1:62771/p/promo/j/TEST#state=playing&round=racing&seat=1&name=Davo&boost=75",
+    "state": {
+      "phase": "playing",
+      "code": "TEST",
+      "you": {
+        "seat": 1,
+        "number": 1,
+        "rgb": [
+          229,
+          50,
+          45
+        ],
+        "source": 1
+      },
+      "hud": {
+        "position": 3,
+        "lap": [
+          2,
+          3
+        ],
+        "boost": 75,
+        "pause": null,
+        "derby": null
+      },
+      "inventory": {
+        "front": null,
+        "back": null
+      },
+      "itemUseRefusal": null,
+      "lastItemEvent": null,
+      "roomPhase": "Racing",
+      "practising": false,
+      "ready": false,
+      "countdownMs": null,
+      "results": null,
+      "persisted": true,
+      "cameraDistance": "host",
+      "assist": "off",
+      "carChoice": "",
+      "sticks": {
+        "drive": {
+          "x": 0,
+          "y": 0,
+          "touch": false
+        },
+        "action": {
+          "x": 0,
+          "y": 0,
+          "touch": false
+        }
+      },
+      "stats": {
+        "batches": 0,
+        "stateBytes": 0,
+        "actions": 0,
+        "cmds": 0,
+        "records": 0,
+        "dropped": 1
+      },
+      "link": null,
+      "source": null,
+      "kids": [],
+      "inputProfile": null,
+      "inputAgeMs": null,
+      "launchOutcome": null,
+      "takedowns": 0,
+      "launch": {
+        "preloading": false,
+        "cooldown": 0,
+        "lastDetectedAction": null
+      },
+      "drive": null
+    }
+  },
+  "inserts": [
+    {
+      "file": "controller-pad-phone.jpg",
+      "source": "docs/evidence/P1-C08/captures/c08-phone-with-pad-phone-landscape-844x390.png",
+      "sha256": "a9eb13d1f3547c110e8debd761fc7e6ef4f231f50939f26a652bf9a2f5436042"
+    },
+    {
+      "file": "controller-keyboard.jpg",
+      "source": "docs/evidence/P1-C12/frames/keyboard-actions-1366x768.jpg",
+      "sha256": "0cf7db08cb835dd22684b04ac5e96d3dabbc7c4144e135381b722508679475a8"
+    }
+  ],
+  "limitations": "Fresh Mac Chromium/Chrome WebRTC joins returned ICE no-route with STUN disabled, including mDNS-disabled runs. Controller inserts reuse committed real journey captures; no new device qualification is claimed."
+}

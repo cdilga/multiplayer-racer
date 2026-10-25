@@ -1,0 +1,122 @@
+{
+  "seconds": 59.8,
+  "fps": 30,
+  "size": [
+    1280,
+    720
+  ],
+  "canonical_voice_id": null,
+  "timeline": [
+    {
+      "start": 0,
+      "seconds": 5.1,
+      "source": "opening.mp4",
+      "voice": null,
+      "text": "G'day! We built a party racer. Then the whole neighbourhood rocked up.",
+      "title": "THE WHOLE MOB ROCKED UP.",
+      "label": "WE BUILT A PARTY RACER. THE PARTY GOT OUT OF HAND."
+    },
+    {
+      "start": 5.1,
+      "seconds": 4.733333333333333,
+      "source": "/tmp/jj-promo-crowd4/crowd.mp4",
+      "voice": null,
+      "text": "No player cap. Bring the whole mob. Yeah, even old mate.",
+      "title": "NO PLAYER CAP.",
+      "label": "64-CAR GAMEPLAY SAMPLE / KEEP INVITING MATES"
+    },
+    {
+      "start": 9.833,
+      "seconds": 5.1,
+      "source": "controllers.mp4",
+      "voice": null,
+      "text": "Phones, keyboards, gamepads on phones or laptops. Bring what you've got, legend.",
+      "title": "BRING WHAT YOU HAVE.",
+      "label": "PHONES / GAMEPADS ON PHONES OR LAPTOPS / KEYBOARDS"
+    },
+    {
+      "start": 14.933,
+      "seconds": 5.433333333333334,
+      "source": "controller0.mp4",
+      "voice": null,
+      "text": "Same wi-fi? Your phones can talk straight to the host browser. Too easy.",
+      "title": "SAME WI-FI? TOO EASY.",
+      "label": "DIRECT LOCAL CONNECTIONS WHEN THE NETWORK ALLOWS"
+    },
+    {
+      "start": 20.367,
+      "seconds": 6.166666666666667,
+      "source": "roster0.mp4",
+      "voice": null,
+      "text": "Cruz missile. A u hawk. Tradie ute. Lion president. Pick your pride and joy, mate.",
+      "title": "PICK YOUR PRIDE AND JOY.",
+      "label": "CRUZ MISSILE / AU HAWK / TRADIE UTE / LION PRESIDENT"
+    },
+    {
+      "start": 26.533,
+      "seconds": 4.0,
+      "source": "roster1.mp4",
+      "voice": null,
+      "text": "Pig catcher. Postie bike. Hawk dash. You little beauties!",
+      "title": "YOU LITTLE BEAUTIES.",
+      "label": "PIG CATCHER / POSTIE BIKE / HAWK DASH"
+    },
+    {
+      "start": 30.533,
+      "seconds": 4.733333333333333,
+      "source": "/tmp/jj-promo-crowd4/pileup.mp4",
+      "voice": null,
+      "text": "One shared screen. A massive pileup. That'll buff right out, mate.",
+      "title": "THAT WILL BUFF RIGHT OUT.",
+      "label": "ONE SHARED SCREEN. A MASSIVE PILEUP."
+    },
+    {
+      "start": 35.267,
+      "seconds": 8.8,
+      "source": "roads.mp4",
+      "voice": null,
+      "text": "Race ridiculous roads. Or settle it in the derby. She'll be right.",
+      "title": "RACE. DERBY. REMATCH.",
+      "label": "DIRT / TOWN / ROCKS / BITUMEN / UNREASONABLE AIRTIME"
+    },
+    {
+      "start": 44.067,
+      "seconds": 4.0,
+      "source": "/tmp/jj-promo-crowd4/derby.mp4",
+      "voice": null,
+      "text": "Boomerangs everywhere! Panels flying! It's absolute bedlam out there!",
+      "title": "ABSOLUTE BEDLAM.",
+      "label": "BOOMERANGS / TAKEDOWNS / LOOSE BODYWORK"
+    },
+    {
+      "start": 48.067,
+      "seconds": 5.1,
+      "source": "winner.mp4",
+      "voice": null,
+      "text": "Most damage wins. Get amongst it! You beauty, we've got a champion!",
+      "title": "MATE 2 TAKES THE WIN.",
+      "label": "64-CAR DERBY / 632 DAMAGE POINTS / ACTUAL ROUND RESULT"
+    },
+    {
+      "start": 53.167,
+      "seconds": 6.633333333333334,
+      "source": "/tmp/jj-promo-crowd4/pileup.mp4",
+      "voice": null,
+      "text": "Joystick Jammers. Bring everyone. Have a crack at jammers dot dilger dot dev.",
+      "title": "JOYSTICK JAMMERS",
+      "label": "BRING EVERYONE. PLAY IN YOUR BROWSER."
+    }
+  ],
+  "winner": {
+    "name": "Mate 2",
+    "number": 2,
+    "place": 1,
+    "points": 25,
+    "time_ms": null
+  },
+  "damage_points": 632.355,
+  "video_sha256": "ca4d216a817076df374b7e4741536a7c80c37117cc59480037162381d9aea57c",
+  "music_sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
+  "engine_sha256": "aded492721be8323f8fc4f6beedb5aedcd28c571c6511caac051828cf7d7c813",
+  "audio_note": "Editorial mix: Maya1 voice, ducked race-2 score, committed Jammers engine/SFX lap bed. Effects are not telemetry-synchronised."
+}

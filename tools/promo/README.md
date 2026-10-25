@@ -1,69 +1,48 @@
-# Bring your friends
+# Bring everyone
 
-Owner request, 2026-10-25: a Steam-audience promotional video, including a brief development story,
-announcer voiceover and sound effects, playable on the index. The owner's steering is player appeal
-first. This is a 37-second work-in-progress browser-game trailer, not a Steam availability announcement.
+Owner feedback, 25 October 2026: a fun Steam-audience trailer for the things that make Joystick Jammers different. Lead on actual carnage and a growing crowd, name and show every selectable vehicle, explain controllers and local Wi-Fi, then a huge weapons derby with a real winner. End with a spoken and visible **jammers.dilger.dev** invitation. No Steam release/wishlist claim.
 
-The edit opens on four racers sharing one screen. The joke moves from a sensible party-racer idea,
-through reference-built cars and repeated handling work, to unreasonable roads and friendly rivalry.
-It ends with the actual entry route: open a browser, scan in and race. There is no wishlist CTA or
-unshipped feature claim. Seven narrated lines have corresponding English captions.
+**Preparation checkpoint:** the owner's later full-roster visual rework gates final video publication. Preserve queued narration and this edit, recapture the reviewed models, then finish the mix and index playback checks. The current index trailer is unchanged. `--silent-preview` reviews pictures under `/tmp` without replacing website media; its placeholder timing and silent narration are not a deliverable.
 
-## Narration
+## Voice: Aussie Maya1 v1
 
-`narration.tsv` uses the existing A00 cue-sheet schema and row guards. Promotional narration is a fixed
-passage, so the in-game required-moment coverage and random-callout variant floors do not apply. No
-in-game sheet or event mapping is changed. Generate its job with:
+Refer to this voice as **Aussie Maya1 v1**, project recipe ID `aussie-maya1-v1`. The canonical recipe is `tools/audio/maya1-voice.json`: Maya1, the exact Physical Soccer live broad Australian male prompt, temperature 0.3, 48 kHz. This is a project recipe ID, not a provider speaker ID; generated performances can vary. It supersedes the first trailer's Qwen owner-clone voice. Historical Qwen provenance remains in commit b43febb2; do not relabel it.
+
+`narration.tsv` has eleven short, Australian lines with matching captions, including all seven names in the current selectable roster. Capitalisation follows the cue guard; “A u hawk” is the AU model code spoken as letters. Each line is validated through the shared cue guard. The trailer has fixed narration rather than random gameplay callouts, so gameplay moment/variant floors do not apply.
 
 ```sh
 python3 tools/promo/voice-job.py
-scp tools/promo/voice-job.json eris:Work/dev/jammers-audio/jobs/promo-job.json
+python3 tools/audio/maya1.py --job tools/promo/voice-job.json --batch maya1-promo --local
 ```
 
-Run the existing `bin/voice_render_eris.py` on eris under `flock .gpu.lock`, with
-`--job jobs/promo-job.json --candidates 3 --extra 4 --max-candidates 11 --export-dir exports/promo`.
-Use the Qwen3-TTS 1.7B Base bfloat16 pipeline and the existing owner's performed hype reference.
-Follow `.claude/skills/jammers-audio/SKILL.md`; no generation occurs on the Mac. If voxtype prevents
-the native-precision model fitting, stop its user service for the batch and restore it afterwards,
-as the existing music runner does. Fetch only the seven picked `promo-*.ogg` exports. Remove the
-private excited-reference `text` field before saving `promo-manifest.json`; references, prompts,
-raw takes and their private transcripts stay on eris. Do not overwrite the game's `manifest.json`.
+Generation and ASR run on eris using the shared Maya renderer. See its canonical identity and generated manifest for the actual backend/model revision and audio measurements. No private references, credentials or raw generation inputs belong in this repository. Fetch/install only passing `promo-*.ogg` exports and `promo-manifest.json`. The editor refuses any other canonical voice ID or failing row.
 
-The first run hit GPU OOM while voxtype and a CI browser occupied VRAM. After stopping voxtype, the
-existing worker's extra-seed round recovered both affected lines. All seven selected lines passed
-every screen; voxtype was restarted. The manifest records the selected seeds and measurements.
+## Actual game footage
 
-## Pictures and edit
-
-Use the pinned repository Node. `capture.mjs` builds and serves the real host, loads fixtures/maps
-through its existing test surface and records 1280x720 frames at 30 fps. Four simulation ticks per
-frame preserve the 120 Hz simulation speed. Autopilot drives the cars; these are staged gameplay
-captures, not footage of human opponents. Joining/debug chrome is excluded; world content is intact.
+Use pinned Node 26.10.0. The scripts build and serve the real host and record 1280×720 at 30 fps, advancing the Rust/WASM simulation four ticks per frame (120 Hz). They stage gameplay through the existing R90 test surface; they are not footage of human opponents or a real-time performance benchmark.
 
 ```sh
-JJ_PROMO_CAPTURE=/tmp/jj-promo node tools/promo/capture.mjs
-git show 76a5c6ea:docs/evidence/P1-A04c/scripted-lap.wav > /tmp/jj-promo-engine.wav
-uv run --with 'fonttools[woff]' python tools/promo/render.py --captures /tmp/jj-promo
+JJ_PROMO_CAPTURE=/tmp/jj-promo-crowd node tools/promo/capture-crowd.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo-crowd node tools/promo/capture-controllers.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo-roster node tools/promo/capture-roster.mjs
+JJ_PROMO_CAPTURE=/tmp/jj-promo3 node tools/promo/capture.mjs
 ```
 
-The FFmpeg edit uses project fonts (expanded from WOFF2 to TTF for FreeType), the seven approved
-voice exports, existing `assets/audio/music/race-2.ogg`, and the committed A04c engine/SFX lap export.
-The engine is an editorial sound bed, not synchronised engine telemetry from these captures. Music
-ducks under speech; the finished AAC mix measures -16.2 LUFS integrated and -4.3 dBTP. No new music,
-voice impersonation provider or asset licence is introduced; see the existing music manifest for
-its provenance and licence. The media is self-hosted H.264/AAC with faststart, and is stored in LFS.
+The crowd capture uses **64 as a sample, never a gameplay limit**. Synthetic controller Hello/Claim messages fill the actual lobby. The real room enters Derby, all 64 cars are present, journalled poses stage a pileup, and journalled real boomerang pickups/throws produce volleys. Detached bodies stay dynamic through the round. The actual derby clock awards the winner by damage; the editor reads that result, rather than inventing a winner. Its editorial winner card reads the actual winner, seat number and damage points from the complete result data and overlays those facts on the battle aftermath.
 
-`docs/evidence/P1-PROMO/capture.json` records the capture build and fixtures; `timeline.json` records
-the cut, captions and source/output hashes. The capture used the shared working tree's current lab
-map and renderer, including changes already present from other sessions; it is labelled WIP. Raw
-capture frames stay in `/tmp/jj-promo3`, and can be regenerated with the script.
+An actual bug discovered during filming refused every derby item as `notRacing`; br-r1ma.1 fixes the mode-specific eligibility, retains protection/end checks and verifies exact replay. The capture uses that rebuilt testing WASM. See `docs/evidence/P1-PROMO2/derby-weapons.md`.
 
-## Integration checks
+The roster script drives each selectable model individually. The editor labels all seven and builds readable mosaics. The road montage reuses the first film's actual jump, dirt, town, rocks and bitumen captures. `mapUrl` supplies the same map to the renderer and simulation; loading only a simulation fixture does not update the rendered world.
 
-`web/landing/tests/trailer.test.mjs` fetches scraper-visible HTML from the real Rust server at root
-and preview bases, validates media MIME/ranges, then plays and seeks in Chromium and WebKit. The
-landing remains light: `preload=none`, no autoplay, native controls, local poster and WebVTT captions.
-The video, poster and captions use Vite's fingerprinted URLs. `?no-inline` keeps WebVTT as a served
-asset so its MIME type and preview-base routing are exercised. `og:video` and `og:video:secure_url`
-are rewritten to the configured public origin; the existing image card remains the fallback.
-Whether a social platform actually embeds video is that platform's policy, not an OG guarantee.
+Controller inserts use the current controller's explicit UI-state opener and committed C08/C12 journey captures. Fresh Mac Chromium/Chrome WebRTC attempts with STUN disabled returned ICE no-route; these inserts do not certify a new connection or physical gamepad. The local-play narration says phones **can** connect directly on the same Wi-Fi, matching the architecture, not a universal network guarantee. Existing TURN remains the connectivity fallback.
+
+## Edit and index
+
+```sh
+git show 76a5c6ea:docs/evidence/P1-A04c/scripted-lap.wav > /tmp/jj-promo-engine.wav
+uv run --with 'fonttools[woff]' python tools/promo/render.py --captures /tmp/jj-promo-crowd4 --roster /tmp/jj-promo-roster --roads /tmp/jj-promo3
+```
+
+FFmpeg expands project Barlow WOFF2 fonts to TTF, edits the eleven narration beats, adds readable titles and an extended website end card, then mixes the voice with ducked `race-2.ogg` and the committed Jammers engine/SFX lap export. That sound bed is editorial, not telemetry-synchronised. All runtime media is self-hosted H.264/AAC with faststart, local WebVTT captions and a local poster. The MP4/JPEG use LFS.
+
+The index uses an explicit play button, no autoplay, no video request before interaction, native controls after play and fingerprinted media. `og:video` retains the existing image fallback; actual social video embedding depends on the platform. `web/landing/tests/trailer.test.mjs` checks the real Rust server's MIME/ranges and Chromium/WebKit playback/captions/seek at root and preview bases. Evidence and feature-to-timestamp coverage live in `docs/evidence/P1-PROMO2/`.
