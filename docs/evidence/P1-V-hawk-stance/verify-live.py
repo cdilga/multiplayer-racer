@@ -14,7 +14,7 @@ def check(path):
     expected=hashlib.sha256((Path('art/ui')/path).read_bytes()).hexdigest()
     return dict(path=path,bytes=len(body),sha256=sha,expected=expected,match=sha==expected)
 with ThreadPoolExecutor(max_workers=5) as pool: files=list(pool.map(check,paths))
-result=dict(utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),commit='e1d8a900',base=base,files=files)
+result=dict(utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),commit='8430ec49',base=base,files=files)
 (root/'deployment.json').write_text(json.dumps(result,indent=2)+'\n')
 print(f'{sum(x["match"] for x in files)}/{len(files)} deployed files match')
 raise SystemExit(0 if all(x['match'] for x in files) else 1)

@@ -10,4 +10,8 @@ Local page: local-page/*.png includes 375×667, 412×915, 915×412, 1366×768 an
 
 Automated evidence: 54 focused tests, reproducible bake, contract/profile validation, shipped-GLB hygiene/budget audit, settle and straight-run fixtures. New reference-based checks cover current geometry at every LOD and deliberate defects. The actual previous published source fails 8 / 7 / 4 named local checks; current source and captured contours pass at all three tiers. Reproduce with baseline-checks/reproduce.mjs. Tests cannot judge every depth/occlusion or artistic choice; same-camera visual review remains necessary.
 
-Publication verification will be appended after the Gitea POC workflow publishes this candidate.
+Deployed: https://jammers-preview.dilger.dev/poc/vehicles/review.html?v=hawk-dash
+
+Gitea POC deploy run 9184 completed successfully for 8430ec49731c9016d23a28e53d4902d9f743818f. deployment.json verifies all ten public assets byte-for-byte against the committed candidate (review JSON, three GLBs, atlas, shared viewer/shader, three comparison sheets). Live Chromium and WebKit controls pass every LOD/paint/damage state, with no page errors, broken images or horizontal overflow (live-interactions/checks.json). Inspected all interaction captures and the five full-page viewport/resize pairs through their contact sheets.
+
+The live-check harness exits 1: it records an aborted initial LOD0 fetch despite the model rendering and subsequent successful all-LOD interaction probes, plus the same normal scroll-boundary element warnings as local. That raw result is retained in live-page-check.txt, not reported as green. Independent public hash checks and both browser-engine probes pass. The public candidate is ready for owner likeness review.

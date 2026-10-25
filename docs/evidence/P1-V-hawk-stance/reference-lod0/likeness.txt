@@ -1,0 +1,30 @@
+PASS camera.projection
+PASS camera.tilt.front
+PASS camera.tilt.rear
+PASS camera.camD.front
+PASS camera.camD.rear
+PASS camera.camD.side
+PASS camera.camD.top
+PASS camera.hero.az
+PASS camera.hero.elev
+PASS camera.hero.dist
+PASS camera.hero.fov
+PASS camera.hero.targetY
+PASS camera.heroRear.az
+PASS camera.heroRear.elev
+PASS camera.heroRear.dist
+PASS camera.heroRear.fov
+PASS camera.heroRear.targetY
+PASS canonical reference hash
+PASS front shoulder widens at the reference height error=0.0167 limit=0.045
+PASS front lower base retains its width error=0.0067 limit=0.018
+PASS front body width bands error=0.0201 limit=0.045
+PASS rear shoulder widens at the reference height error=0.0167 limit=0.04
+PASS rear lower base retains its width error=0.0134 limit=0.018
+PASS rear body width bands error=0.0134 limit=0.045
+PASS rounded nose tapers towards its centre error=0.0159 limit=0.035
+PASS nose curvature continues to the tip error=0.0049 limit=0.035
+PASS swept front lamp envelopes IoU=0.769 minimum=0.5
+PASS angled rear lamp envelopes IoU=0.871 minimum=0.5
+PASS rear exhaust surround envelope IoU=0.815 minimum=0.5
+PASS four exhaust outlet positions and size IoU=0.693 minimum=0.32

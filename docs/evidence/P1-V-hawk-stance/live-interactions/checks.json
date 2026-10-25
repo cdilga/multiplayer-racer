@@ -1,0 +1,57 @@
+{
+  "base": "https://jammers-preview.dilger.dev",
+  "results": [
+    {
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "files": [
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-lod0.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-lod1.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-lod2.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-paint1.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-paint2.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-paint3.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-loose.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-detached.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/chromium-intact.png"
+      ],
+      "layout": {
+        "viewport": 1366,
+        "scrollWidth": 1366,
+        "brokenImages": [],
+        "controls": 24
+      },
+      "problems": []
+    },
+    {
+      "browser": "webkit",
+      "version": "26.5",
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "files": [
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-lod0.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-lod1.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-lod2.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-paint1.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-paint2.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-paint3.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-loose.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-detached.png",
+        "docs/evidence/P1-V-hawk-stance/live-interactions/webkit-intact.png"
+      ],
+      "layout": {
+        "viewport": 412,
+        "scrollWidth": 412,
+        "brokenImages": [],
+        "controls": 24
+      },
+      "problems": []
+    }
+  ]
+}
