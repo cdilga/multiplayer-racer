@@ -1,0 +1,15 @@
+# Complete raw generation and private export — br-8h3u.13
+
+All **70 gameplay +11 promo** canonical Maya1 announcements have now been generated, transcribed and mastered into private review packets. Recipe remains `aussie-maya1-v1`; no derivative or legacy voice was substituted. Estimated combined spend, including Soccer and the owner's separate reusable FrankenTTS derivative references: **$0.750426/$2**. No paid retakes made.
+
+Packets: `private/voice/maya1-gameplay/review/` and `private/voice/maya1-promo/review/`, each containing the Opus clips, complete manifest, audition reel and cue timing index. Every exported clip hash verified. All81 pass raw duration/loudness/clipping and decoded mono48kHz Opus loudness (−16LUFS±1) and peak (≤−1dBTP) checks. See `candidate-qc.json` for exact hashes, measurements/screen results and unresolved transcripts.
+
+ASR ran independently on the Mac with FrankenWhisper0.9.3 native large-v3, avoiding the GPU timing CI on eris. Short cues were grouped to amortize the encoder. Only exact normalized hypothesis spans were accepted: any edited row, and both neighbouring rows of a boundary insertion, required an isolated transcription. Raw group text, word span, run ID, model and raw SHA remain in the manifest. Every unresolved group row then received an isolated pass. Expected text was never substituted into ASR output. Only the inaudible neighborhood/neighbourhood spelling variant was additionally folded.
+
+CPU-only eris mastering was run with `--cached-only --cached-asr-only --review-only`: no key, provider submissions, CUDA/Whisper initialization or game-asset installation. This proves the cached CPU path; it does **not** verify the earlier GPU CUDA12 compatibility repair in actual inference.
+
+Result: gameplay **61 pass,9 transcript flags**; promo **7 pass,4 flags**. Names/orthographic spellings (Cruz/Cruise, Postie/Posty, Cooee/Coo-ee, galah variants), word differences and the spoken URL remain explicitly flagged. Some are potentially ASR spelling issues; others need a genuine pronunciation/text assessment, particularly first-finisher2, lead-change2 and promo7. ASR does not certify Aussie accent, performance or proper-name pronunciation. No new alias was added to force a pass; no claim of heard approval.
+
+The owner's vehicle hold was released in Agent Mail3929/3934 after reviewed f3c175d9 assets. This audio packet has been handed to the ongoing promo session for private timing/edit preparation. Final installation/publication remains incomplete because the13 transcript flags need resolution. Existing assets and public media remain unchanged. The bead stays in progress; no CI-green or finished-game-replacement claim.
+
+Separately, the new **`aussie-maya1-frankentts-v1`** local QUALITY ICL pack in `/Users/cdilga/Documents/dev/Voices` is usable and documented, with20.309s synthetic reference/4,064 codec frames and four real local test renders. Exact tagline and next-round lines pass independent ASR; initial greeting probes retain flags. Base-model weights are unchanged; this is a reusable reference-conditioned derivative, not checkpoint fine-tuning. Original Maya1 remains canonical.

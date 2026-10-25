@@ -4,6 +4,8 @@ Canonical announcer, owner selection 25 October 2026: **`aussie-maya1-v1`**, the
 
 The renderer can read the saved macOS Keychain service `fal-api-key`. For the already-generated batch, `--cached-only --review-only` audits and fetches private results without any paid submissions or asset installation. Local inference is available with `--local` on eris; it uses original pinned Maya1 FP16 weights, not the historical clone model.
 
+Add `--cached-asr-only` when transcripts have already been independently recorded and synced with their raw SHA; missing records fail without GPU ASR initialization. This allows CPU-only mastering while eris timing CI owns the GPU.
+
 > **Licence rider:** `franken_tts` and `franken_whisper` (`ftts`, `fw`) are MIT with an OpenAI/Anthropic rider. The owner confirmed on 2026-10-04 that their use, including by agents, is approved without reservation; agents may run them. Keep the author's permission, if any, in `docs/evidence/P1-A01d/permission.md`.
 
 Generation happens on **eris** (`ssh eris`, RTX 2080 SUPER 8 GB, Arch Linux), never on the Mac and

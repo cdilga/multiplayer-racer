@@ -1,0 +1,1394 @@
+{
+  "canonical_voice_id": "aussie-maya1-v1",
+  "recipe_sha256": "6d43cc70a833a04325ef5d976543b2ea8c8e0f7a1b7ea7838b4d87af795777b2",
+  "estimated_combined_api_spend_usd": 0.75042601,
+  "owner_total_limit_usd": 2,
+  "human_listening": "not performed; ASR flags not silently approved",
+  "installed": false,
+  "publication": false,
+  "batches": {
+    "maya1-gameplay": {
+      "summary": {
+        "rows": 70,
+        "pass": 61,
+        "fail": 9,
+        "failing_rows": [
+          "welcome-4",
+          "first-finisher-2",
+          "first-finisher-3",
+          "wheel-off-2",
+          "wheel-off-4",
+          "wreck-4",
+          "lead-change-2",
+          "late-joiner-5",
+          "off-course-1"
+        ]
+      },
+      "asr": {
+        "models": [
+          "FrankenWhisper 0.9.3 whisper.cpp-native large-v3; Mac"
+        ],
+        "note": "automated sanity check, not listening approval"
+      },
+      "manifest_sha256": "7c9d6cd39152f098e59f0d511340721da8f615bd1980649db392e8a90a41492b",
+      "audio_screens": {
+        "duration": true,
+        "raw_loudness": true,
+        "export_loudness": true,
+        "export_true_peak": true
+      },
+      "rows": [
+        {
+          "id": "welcome-1",
+          "file": "welcome-1.ogg",
+          "sha256": "e5076f083350e8ee08aa3b4d680432569268c0010d4303e88bea970eabab0036",
+          "raw_sha256": "afadee6a65530301bcc5eca8b305c80b7435af0b57e9ed56c4f26714c7ddb358",
+          "seconds": 5.12,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "welcome-2",
+          "file": "welcome-2.ogg",
+          "sha256": "817c350c8793ba12a8e0fc3c0bc6dab49ad284be0f9d79c5ee10b8589fb6bdc6",
+          "raw_sha256": "b6260af0e64e52d0e1e3e502893f186babb73b70a6e2c104d786c7cecd37fb9e",
+          "seconds": 3.84,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "welcome-3",
+          "file": "welcome-3.ogg",
+          "sha256": "fe1e7f938a47d4c0a5c71f00c38883bd135936623bbcc971d920c0dbe0889506",
+          "raw_sha256": "35e8a47d4925bbf72a158d07e4cc32b5130c0a7e07c2ea03303413687d719f1b",
+          "seconds": 5.291,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "welcome-4",
+          "file": "welcome-4.ogg",
+          "sha256": "e9ed225ab3c8baacc4ad9748486823b905444db98bfdd2906bf7fd999cae62bb",
+          "raw_sha256": "e887b7f36dc41e794721bc42e5a9f3fa705cad898def49938578bcef1c57486d",
+          "seconds": 4.864,
+          "wer": 0.1667,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Welcome, blokes and sheilas! Grab a controller, this arvo's racing is on.",
+          "heard": "Welcome blokes and sheilas. Grab a controller. Visavo's racing is on."
+        },
+        {
+          "id": "all-ready-1",
+          "file": "all-ready-1.ogg",
+          "sha256": "44ae6ed99b79b1e0b4214cf4b294c45b993ec0968ca0975976056c20147c8932",
+          "raw_sha256": "79dca40595b4d9d718f1280b4c299133ac1d5c29401403b9bc5b8dc2a8aeff32",
+          "seconds": 3.755,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "all-ready-2",
+          "file": "all-ready-2.ogg",
+          "sha256": "eb776a97cb761f1f1e087d21bdabeb0fbc61443884ffbbaa577f881faf2d4b0e",
+          "raw_sha256": "1c72d3b0c0a99c0a6d15439663d5295738056767a62f71e7f757c20d90242252",
+          "seconds": 3.755,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "all-ready-3",
+          "file": "all-ready-3.ogg",
+          "sha256": "2e6123484e6ee480a6fa2663b04e00922e73e21f9716bc9b07f89cf7a2a8c501",
+          "raw_sha256": "fc26c0e960ee74a3bae2fea5d945674bb19ae4216cccabde93494f3159e503d3",
+          "seconds": 2.645,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "countdown-1",
+          "file": "countdown-1.ogg",
+          "sha256": "e34161df1782abcc2f4e414cc1d6c29de02b3ef7a5a5ebb6f5adac80cb740a21",
+          "raw_sha256": "46e9f7063a449afd20575bd95ce6e149b2a14caf5e0617bb0b37620e938ec53d",
+          "seconds": 5.205,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "countdown-2",
+          "file": "countdown-2.ogg",
+          "sha256": "3b843e3a0859d18f44f6850737b45c54e40ca44f6bb717076e69ded07876ca64",
+          "raw_sha256": "2cba474a38a7dcf27827f55409d6277f02f3dfcf8d08ed5d98fb0c7229bdc677",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "countdown-3",
+          "file": "countdown-3.ogg",
+          "sha256": "b34194c8818505c08d60e45a0e04e16c2d8a873d4a91a20169621bbcad7f58cc",
+          "raw_sha256": "1cdef4b1bb69df086196c9e2970928c4d7fa9ac008ba40c87cba59efb90f2c3f",
+          "seconds": 5.632,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "final-lap-1",
+          "file": "final-lap-1.ogg",
+          "sha256": "adfba7ffaf9615aee382f2a19b249747d749d75a4f1aeb0bcf43a9ed762f265b",
+          "raw_sha256": "d8fdb927769476921f9b0b19ddf01a8668f61e9281cd6835459434cb8fa3fd99",
+          "seconds": 3.755,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "final-lap-2",
+          "file": "final-lap-2.ogg",
+          "sha256": "c0e61daa9d7334f4944ab56fd1ff33d7fb343d8316e8072f4957be4ca4198906",
+          "raw_sha256": "bb9fb052fecd0766c2fef8abec697944753fd8f6105484f2e52f5b45b2131297",
+          "seconds": 3.243,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "final-lap-3",
+          "file": "final-lap-3.ogg",
+          "sha256": "33a390b935b553adf1a95913fe7d0515d22a54c62323e28f3f4bb6335c9abf9f",
+          "raw_sha256": "9ad01c639a2ce11cbac63f155e3fc2446d18dcdb660c71d38b90b67fbc2617ee",
+          "seconds": 3.243,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "first-finisher-1",
+          "file": "first-finisher-1.ogg",
+          "sha256": "2b5192efa8767c20cd5ae4b179763cd0f98142e8ca16127105dab5f5952c604a",
+          "raw_sha256": "07e6b26b4715a1893f619ada0015a1c7c604e5b6a9663f51f8aa89fbcdec6ae0",
+          "seconds": 2.645,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "first-finisher-2",
+          "file": "first-finisher-2.ogg",
+          "sha256": "7c41106dfd85e98f5e0cb9183b9381b0a16f79803b358a37af978144bb59d3b8",
+          "raw_sha256": "71af6585c77174719b4d8efa1df96087e3a6706dd9cfe252ace6186b57279426",
+          "seconds": 2.56,
+          "wer": 0.2222,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "We've got a finisher! Who's next across the line?",
+          "heard": "We've got a finisher. Who's next to cross the line?"
+        },
+        {
+          "id": "first-finisher-3",
+          "file": "first-finisher-3.ogg",
+          "sha256": "c232ce2be6013d83e7118456e710605bdaea1893548eb0dbdfff29189ccf3e8a",
+          "raw_sha256": "5ffc009b80fdb9caa4bdc25c14f5e8b2fc8b43f3e62abe07268fa45b12760b8b",
+          "seconds": 2.816,
+          "wer": 0.1429,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "First one's across! Hurry up, you galahs!",
+          "heard": "First ones across, hurry up you gallers."
+        },
+        {
+          "id": "photo-finish-1",
+          "file": "photo-finish-1.ogg",
+          "sha256": "1e2382698dbfbfe12662b9ecf013df984f41f1694353baa493b34ad825a7dd4f",
+          "raw_sha256": "ba8e8deeeffed0bcade75e25b88bd13182b503bacbe3247a9fe6c881d2532e0c",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "photo-finish-2",
+          "file": "photo-finish-2.ogg",
+          "sha256": "40fdbd16cddfd052244e174e3377a4d837f2a60837fb41cb239f591dcf71d21d",
+          "raw_sha256": "58320679f09d593290731ff8913f1e37184b0e7aaf17af039880d7ba4f653e94",
+          "seconds": 2.731,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "photo-finish-3",
+          "file": "photo-finish-3.ogg",
+          "sha256": "c9e94a366210c589f3e8faa0bfecd9bd7709af429742d89d1feac36ac4d86894",
+          "raw_sha256": "467cb5c06431827c6d598491e1592cc52eb52b4dc5b6c0fea5e9f203055e6a19",
+          "seconds": 2.304,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "photo-finish-4",
+          "file": "photo-finish-4.ogg",
+          "sha256": "4179cae1808e2f3d64fcdb363afe8464917495a98a9da498aaa0756286a32378",
+          "raw_sha256": "f3138505495753a838c836a68b59bfdebeed1fe0da2249bf498415cc47242a51",
+          "seconds": 3.413,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "time-up-1",
+          "file": "time-up-1.ogg",
+          "sha256": "2115dd6d14c698dc060309a754e2721d18008f8203870bb1bb150c9b0f89a404",
+          "raw_sha256": "0caf1c658fea67eb4d416a54ab36b7ce5b1a9d366784367bc48c1e2644483041",
+          "seconds": 2.901,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "time-up-2",
+          "file": "time-up-2.ogg",
+          "sha256": "dee47803cfce0f562b6bca7d584718e180d0d4e37a3b7045dbffd3f82a37d0d6",
+          "raw_sha256": "98d41349f05ae168b19e833a4b821dc929cdc8dfc2da79a85c6fdb207f0a122c",
+          "seconds": 2.901,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "time-up-3",
+          "file": "time-up-3.ogg",
+          "sha256": "8503e796ad40e3f5f3c0e1f1a487ff8512d1ad83e0b9d69ec195b4013e5beb91",
+          "raw_sha256": "5954e1100a74cf70caec3e70b7a8946d9c90dc185b1914097eeaafe561aa5a3a",
+          "seconds": 3.072,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "time-up-4",
+          "file": "time-up-4.ogg",
+          "sha256": "21ec9b520b2b8b655dfd25dfd32968ed7717bd8bb1ec7964dabd5c686079d72c",
+          "raw_sha256": "fe5aaf6df460d111cb7d97dd79bfd391411d3f87c1fe25c4d23b84058da08271",
+          "seconds": 5.376,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "winner-1",
+          "file": "winner-1.ogg",
+          "sha256": "b78a9db6cb71281eec1b97dbca033e44c076cf4a715397519c0d60ac1a2dff1e",
+          "raw_sha256": "5bf4e51142cc170d69a31b29ff0f742d94bb4f9d1a945f8611d2b458cc5db355",
+          "seconds": 4.011,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "winner-2",
+          "file": "winner-2.ogg",
+          "sha256": "d88375dd230cb4eb32cf56db7580dd41cb2add9b22e8e0e1e2dd9c49bc174783",
+          "raw_sha256": "6a018476b3f95d7a43c7380a4e1b31dd616ae3b0bce57eba67180f0066935f9f",
+          "seconds": 4.096,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "winner-3",
+          "file": "winner-3.ogg",
+          "sha256": "8b2d7aff7144b4f9ed2a888849ae8e8e2ac2731d6e2d5e2526726fafddc74569",
+          "raw_sha256": "7424a26ff72b4b19ffaad239cfa1433e373aaeca206e71f0e1942b740e8f6c88",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "winner-4",
+          "file": "winner-4.ogg",
+          "sha256": "cd5190446b09b721ed48218eb2cf935209eeff5cd66f6e3443d452027c404334",
+          "raw_sha256": "da1dd271312fe75b50ca1ad81e9e5d90cbc502553589997cd1c0e33f9ccde62b",
+          "seconds": 3.413,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "next-round-1",
+          "file": "next-round-1.ogg",
+          "sha256": "731752f9340e8237a8e21994fb291bc6ae7a85a03a80291452a045636db51cd8",
+          "raw_sha256": "0589ac01ca65a3f02ae811de6bd3b1b99579731e8a34e1412c03defcdca7480f",
+          "seconds": 2.901,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "next-round-2",
+          "file": "next-round-2.ogg",
+          "sha256": "af680ee7bd43dcf9b90fef8e1b7d3900b38298d0cd0390499ee984847c3871e9",
+          "raw_sha256": "fc29c703ed8b22c43ee2ca97f4a7270fb6eac3e47d0f60cd754f9eba91a34ce2",
+          "seconds": 3.584,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "next-round-3",
+          "file": "next-round-3.ogg",
+          "sha256": "f0814074d1c11aa56280cca00e228ff61e9c659d3e98321d824b0e8da5874410",
+          "raw_sha256": "678005e589cc2ae8bd2a6c5f6c3cd154b53042165571d63ef54602bc4a297bea",
+          "seconds": 3.072,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "next-round-4",
+          "file": "next-round-4.ogg",
+          "sha256": "cc5202a024674635467acd05b8eb8658dd288ca475b4aa73e7a7f373f196a5ff",
+          "raw_sha256": "0e4fcb35cdc4abf64e484b818d769523a87da1e9c60f9d683c198dd452dda5de",
+          "seconds": 3.243,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "next-round-5",
+          "file": "next-round-5.ogg",
+          "sha256": "3fa7ec723d123f77b3a9c55739d6781f7b419fb4b4dcc1cccf9dab0dc5e32710",
+          "raw_sha256": "9947d99aaeaa4d4113925a8c2ffb7efb253897f84d66fd348144eb9bba169dab",
+          "seconds": 3.328,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "door-off-1",
+          "file": "door-off-1.ogg",
+          "sha256": "931f2bb2d571454fa0e3a5243b21ce1f9a9d96d9891673e1c267d87afb243c83",
+          "raw_sha256": "af2ae6e381f5e104d3e13f4ff77b5b55881d6cc016cc8811755ea1e8b91bddc9",
+          "seconds": 2.304,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "door-off-2",
+          "file": "door-off-2.ogg",
+          "sha256": "8e5292d2aa3cd2ffab22c6ac1c671af6daac3ddb322866a2bead871c218bb092",
+          "raw_sha256": "665e01a98650022d1ac179d082bf016d47d45b594fe6aa1c7cdfd80f8bb98e10",
+          "seconds": 2.304,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "door-off-3",
+          "file": "door-off-3.ogg",
+          "sha256": "02aa7e4ae8d2f7efa0f550b759cc2d87dbb40544a1ee1adc49ef36b0716911bf",
+          "raw_sha256": "ded8cc8525d7296a0b1aeef7930775037fbd0dc6c9242e6ee51086eef561cec7",
+          "seconds": 1.365,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "door-off-4",
+          "file": "door-off-4.ogg",
+          "sha256": "2ad734de867d9bd63fc8b301ee4fa789f5ff52260d790250a39a56c9b38aee32",
+          "raw_sha256": "5048dee44695d50fcb1edf4de5c3f8af56b40caaf52e168838f14c3497417bde",
+          "seconds": 2.389,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "door-off-5",
+          "file": "door-off-5.ogg",
+          "sha256": "30ed94a5afb75ed40d65fc6a46e8a2b062a81eed16dbd65b474099fdc40f9b88",
+          "raw_sha256": "a0c30800ebb13ad58ce7470ae370b4c352a1c8ba9446f21bafbc693d9c552bee",
+          "seconds": 2.389,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wheel-off-1",
+          "file": "wheel-off-1.ogg",
+          "sha256": "79fdc31b2e221b98bb0909266ce49cf127296621e335269190291b0d49b2f952",
+          "raw_sha256": "18823b5b71cdc451525ebd4b08b82c88c22a06331c6f424a3b8ac040bfa72748",
+          "seconds": 2.645,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wheel-off-2",
+          "file": "wheel-off-2.ogg",
+          "sha256": "54a02696b99bc6cf5716cc20c6595a0917f545bd825aa4c0e71bcd9f986859ce",
+          "raw_sha256": "7115fe3410cdf20d5a0ef22626b850b79ec4e871012570a4db0ea5cbb3948446",
+          "seconds": 2.731,
+          "wer": 0.125,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "A wheel's shot through like a Bondi tram!",
+          "heard": "A wheel shot through like a Bondi tram."
+        },
+        {
+          "id": "wheel-off-3",
+          "file": "wheel-off-3.ogg",
+          "sha256": "829b8dc10c4af9ea9ab0d0a7f8eb5e74c5803383a574d9ac1e1d5f7769bc17ae",
+          "raw_sha256": "3d851730f35dfe1390970eca8f86c2e357a97801c6c3261b80aeb64e2b85a94e",
+          "seconds": 2.731,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wheel-off-4",
+          "file": "wheel-off-4.ogg",
+          "sha256": "51ee28d835e43e2261a6834d6ff5d7c93a764cdb0f662c538925a7e565419807",
+          "raw_sha256": "fc94baef8bf11d217bec82c80b0ae796b80e85ee3f7b8fd1d23301d1236a196e",
+          "seconds": 3.328,
+          "wer": 0.25,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Wheel's flown the coop! Hard yakka, keep going!",
+          "heard": "wheels flow in the coop hard yakka keep going"
+        },
+        {
+          "id": "wheel-off-5",
+          "file": "wheel-off-5.ogg",
+          "sha256": "6b7444d471fafe293f6a0566f949347e1d8334f3591a8fc54327a596c61ad6e5",
+          "raw_sha256": "34240b14d2a3ab647353ca8a66a8867bf88a2ba52177fe9156024448618b3c7a",
+          "seconds": 1.877,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "bodywork-off-1",
+          "file": "bodywork-off-1.ogg",
+          "sha256": "03bf683f49690af5093e86c0e1b365f8c387a553224f564ca655cdecee0de0e3",
+          "raw_sha256": "8144670d93eb4a1bfe848bdd85fae43c127c5f6a56337d4a0f61dfd57386a5da",
+          "seconds": 3.328,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "bodywork-off-2",
+          "file": "bodywork-off-2.ogg",
+          "sha256": "47614dff6654a72f0cd21c906d6c5d0a29625a717ecbec12a197a6f95efdfdc9",
+          "raw_sha256": "1a48e74574a117b9a7c70bc56f1ad973bfb45071eaaaf154c6cba0c0c5fe4f95",
+          "seconds": 2.133,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "bodywork-off-3",
+          "file": "bodywork-off-3.ogg",
+          "sha256": "cce57eb146bdf768559069e0c781dd0f3563d98cb1a95cd3cc31ef3066c647aa",
+          "raw_sha256": "08dc4ed779c3bfd84dfb13adab29004f9f577d2a13ce6cc4a3cbccffd8ae423b",
+          "seconds": 1.877,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "bodywork-off-4",
+          "file": "bodywork-off-4.ogg",
+          "sha256": "a950fee8b5c9667f2ebe4aa737cf076e4c752eebcac6c05e9af4e826d9722e4c",
+          "raw_sha256": "f88755203371636e8cc29efb89669babdff0f0f919bae2573e0b65f436f957d9",
+          "seconds": 2.475,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "big-air-1",
+          "file": "big-air-1.ogg",
+          "sha256": "475e40efa418579798999d359b5afd0544188d83c255dbaac1a37a28d6d35f54",
+          "raw_sha256": "e98a37ca3d146e621afc7d181976ecea0c00f24b9de698480b52aba7b2ad6056",
+          "seconds": 1.792,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "big-air-2",
+          "file": "big-air-2.ogg",
+          "sha256": "b1fe5cf2e6a791651f123e8de9d028fb0e564c1346f1d5c5a191d355b7b5782b",
+          "raw_sha256": "0e7d8c5dee490ec83c11a9a106ffd9d62d8b03d067dae20d98186737584960bf",
+          "seconds": 2.389,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "big-air-3",
+          "file": "big-air-3.ogg",
+          "sha256": "dc8dc21e23cb584141830795d5eabd285223a2277f97ced177187dc873c06895",
+          "raw_sha256": "3524b18fabceeece2e0564758da081cc1831eca5e044128a04bd2d617c81e02a",
+          "seconds": 2.304,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "big-air-4",
+          "file": "big-air-4.ogg",
+          "sha256": "dff2176bf800f53c96fedfd16f74a2851f791eb7a07bcd0e2ede13792cf459ba",
+          "raw_sha256": "7ff0664ee2bbc87b83b735c2b5fe13be228acd95076b84396874d82ebd5ba6d3",
+          "seconds": 1.621,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wreck-1",
+          "file": "wreck-1.ogg",
+          "sha256": "30d1b30e57bc3321b639198870f17f04bd958883f14edaca8c61376c348bcc55",
+          "raw_sha256": "c8ddd8dd829bd3a6b7df31b78746f2128956419956ad8b1cee163608c871a860",
+          "seconds": 1.365,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wreck-2",
+          "file": "wreck-2.ogg",
+          "sha256": "f6bf5de9cb8de88635aac1dcfe5f49f8d6a89a12e05dd7d85ec8a363913c4758",
+          "raw_sha256": "e7ed88b1c584a82c1c7f2d3d74ac6d4450d093b9f9ec04e24147053abcb62161",
+          "seconds": 2.816,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wreck-3",
+          "file": "wreck-3.ogg",
+          "sha256": "c8843e122166a7fa8af83fd16bf49d3c8b13a87521ea779300af73c7983fcffc",
+          "raw_sha256": "4baaa4330c50555e3ee33443f82e926b77185ad8b8ee67285986b762cb6030f1",
+          "seconds": 2.901,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "wreck-4",
+          "file": "wreck-4.ogg",
+          "sha256": "6203b058740a3d5b9bcc5ef6f76d168486cd3211d644dacc67e735a335009193",
+          "raw_sha256": "ea19e19490f3da080526995f7be5aba2e507299d5731129773d87cff0ae66b0b",
+          "seconds": 2.133,
+          "wer": 0.4286,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Come a gutser there, you big galah!",
+          "heard": "Come a-guts-a there, you big guller!"
+        },
+        {
+          "id": "wreck-5",
+          "file": "wreck-5.ogg",
+          "sha256": "aff1ce99ab8f008fea5b1913e06c05795279fbba8d59121fe89df039132e58bb",
+          "raw_sha256": "4673c1253642f0c5608afd5f8f0f79226f93f9e7843edddc5e2d908765ada314",
+          "seconds": 3.499,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "lead-change-1",
+          "file": "lead-change-1.ogg",
+          "sha256": "df82f2361d49ef6fdf78b1229b92e1c63d5ae813719f10d08084558f0549b0bb",
+          "raw_sha256": "23e38608be122275a3be3fc3ec0d5c3ced5037467cdc8cfaf20aad6cec4ed34f",
+          "seconds": 1.365,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "lead-change-2",
+          "file": "lead-change-2.ogg",
+          "sha256": "01617254677a343cbfe05d15634fe0fcd526884ffb1c175a041b1500e709d5f5",
+          "raw_sha256": "c1b2fec8b7fc50e64ce0e531a55881f2d3846fdfa6810fe8210b83d72945977c",
+          "seconds": 3.072,
+          "wer": 0.25,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "The lead has changed hands! Fair dinkum thriller!",
+          "heard": "The leaders changed hands. Fair dinkum thriller."
+        },
+        {
+          "id": "lead-change-3",
+          "file": "lead-change-3.ogg",
+          "sha256": "1ae65c00d525eff499e8ecdbdd3543d351041de0c50eb135e5e5b2b9ac751592",
+          "raw_sha256": "c4563c35cc0bdbaeffa3baa7fc619f8189f6925fa1ef88d670ab9ea9a94fca7f",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "lead-change-4",
+          "file": "lead-change-4.ogg",
+          "sha256": "836e436cf1331a318250fc2053fea04b5bd5ab2e2ce4708c539a36ebae62395a",
+          "raw_sha256": "41a9ec74bd172609529baee6db7d32683c4eb62a85c13c0206edee8ec22c88e5",
+          "seconds": 3.072,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "lead-change-5",
+          "file": "lead-change-5.ogg",
+          "sha256": "ad405a175f03d35158b77881498d04c65b1a72e17ee4cbd2a0d3bb704c440709",
+          "raw_sha256": "096b07ff7fe88f819c779192a04384ccf95550b8067a2859265438cb2aa75374",
+          "seconds": 2.731,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "late-joiner-1",
+          "file": "late-joiner-1.ogg",
+          "sha256": "dd3f0bbe9fec98af1f6a45f689b169bc82162045854da12b20e8f4de81cf9928",
+          "raw_sha256": "37483852a5d42ac816db86acdcabbe2341b30fbad5b9cacbccbe237e79d87d68",
+          "seconds": 3.499,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "late-joiner-2",
+          "file": "late-joiner-2.ogg",
+          "sha256": "363bfb3745c6514e11802ce90e8275905b9584d245d79fc308e32a2095cecdb2",
+          "raw_sha256": "d418618396795503b9f38507803c93cf11775b8530eba1ca53537cce77d38709",
+          "seconds": 2.987,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "late-joiner-3",
+          "file": "late-joiner-3.ogg",
+          "sha256": "1a1137622619b003c4aa5546d5ad686b46242ae606203955c757a2eb9f48b036",
+          "raw_sha256": "b9f9bcccd1acf77ae856a174bd2a71db2d5fc33d8acf875a54c967582c30b6b5",
+          "seconds": 2.389,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "late-joiner-4",
+          "file": "late-joiner-4.ogg",
+          "sha256": "c0a0df22d7dd1cbd171b02f3c131636b99814ab49af5b5f02d19b7fe5c0f76ba",
+          "raw_sha256": "b22a262f5f542bcc680f5c1effdce204a9ac08d27b6aae8cc24b0a5eb6ead950",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "late-joiner-5",
+          "file": "late-joiner-5.ogg",
+          "sha256": "840792cfa12f3a2d1e1bb48d033eaa6df3fedf2b7d3e5a43481ff8aacc6cb730",
+          "raw_sha256": "58b54b17ed09d93526b7159572c2a9d96a0d9b6fe29d1a6e8e67573a58079d4f",
+          "seconds": 3.584,
+          "wer": 0.3333,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Cooee! Another driver joins the chase!",
+          "heard": "Coo-ee! Another driver joins the chase."
+        },
+        {
+          "id": "off-course-1",
+          "file": "off-course-1.ogg",
+          "sha256": "1c7735191c965271a519d38fe3792e433f6e915fdb92803a4cb9cbad65e9b56a",
+          "raw_sha256": "b5829b340e67b5edbaf6c13888574948550e684d61772bfb117629ce955ba6b1",
+          "seconds": 3.072,
+          "wer": 0.1111,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Out past whoop whoop! Drive back onto the track.",
+          "heard": "Out pass Whoop Whoop, drive back onto the track."
+        },
+        {
+          "id": "off-course-2",
+          "file": "off-course-2.ogg",
+          "sha256": "e8de4891ed90642532b31982a1872cc621b1cc51fbd96d3406824a58dd1875b9",
+          "raw_sha256": "9d7aad139eabbc872939ddd107445d194bcad1802c89d01e65492b4d1554ac8c",
+          "seconds": 2.987,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "off-course-3",
+          "file": "off-course-3.ogg",
+          "sha256": "9344d5e30407ceb8431ddbc755e7f6d5f15dcb918b4da477104fe2d2b7af49b0",
+          "raw_sha256": "df5aa4105c68ef50dc93bcc89cc8d03a6bfea57035fb41d177408f1b22946acc",
+          "seconds": 3.413,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "off-course-4",
+          "file": "off-course-4.ogg",
+          "sha256": "dc3844dfd9fd44174a1db58324e825c91ae550db5438adce2f4ebc020aa3da96",
+          "raw_sha256": "4f0e4b472c3bcd41cc7d5c404d8757f0bb1b904cad7104935941746cb5f6cf07",
+          "seconds": 3.157,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        }
+      ]
+    },
+    "maya1-promo": {
+      "summary": {
+        "rows": 11,
+        "pass": 7,
+        "fail": 4,
+        "failing_rows": [
+          "promo-05",
+          "promo-06",
+          "promo-07",
+          "promo-11"
+        ]
+      },
+      "asr": {
+        "models": [
+          "FrankenWhisper 0.9.3 whisper.cpp-native large-v3; Mac"
+        ],
+        "note": "automated sanity check, not listening approval"
+      },
+      "manifest_sha256": "2a7690862e9a2346fc6069963979219e1bb921145a1ea5160638c38276bc2d1e",
+      "audio_screens": {
+        "duration": true,
+        "raw_loudness": true,
+        "export_loudness": true,
+        "export_true_peak": true
+      },
+      "rows": [
+        {
+          "id": "promo-01",
+          "file": "promo-01.ogg",
+          "sha256": "118fdddf30595ef83f15c21fcaa192c2f63acc3730731f0d3f02f82ff6a6f38d",
+          "raw_sha256": "0d07d02ec59dea5c1412e622073a5fc4f1341b9cbc8e073a1af01898ac566266",
+          "seconds": 5.035,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-02",
+          "file": "promo-02.ogg",
+          "sha256": "a9b3555f493371fbd73d8691620fda7765dad4441de5ba2dea86531fc059056f",
+          "raw_sha256": "e3a88d34a9dad385fc9fb12335274d1b21ebe9ae590acffc765aca52ce80bc0d",
+          "seconds": 4.096,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-03",
+          "file": "promo-03.ogg",
+          "sha256": "ae395c502f3c106f7cca010456968eb1ae8bd3b7dcc4dd02d468578ab8b8c802",
+          "raw_sha256": "041a21c32e411c57da9f45a6fe002938593d4525fc0ba2fe29f90c7cf3a40f98",
+          "seconds": 6.571,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-04",
+          "file": "promo-04.ogg",
+          "sha256": "daf0f72aa48cfc5961d413af9ac16a28dc423995c69a4572a6880812a5e3cccd",
+          "raw_sha256": "3a198e5554aa4ac7103a1f9fd22673dcde4ace9f7bf09cede387db6fac288a34",
+          "seconds": 4.864,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-05",
+          "file": "promo-05.ogg",
+          "sha256": "be9e675b95ebc3f5008ee63f92073dece2113fd062ee98ca3498b23768f30a23",
+          "raw_sha256": "bd4c88d44380b19a0f6ea5305b257d9fe161e577e2aebcdf44532d1eac017651",
+          "seconds": 6.229,
+          "wer": 0.0667,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Cruz missile. A u hawk. Tradie ute. Lion president. Pick your pride and joy, mate.",
+          "heard": "Cruise missile, a U-Hawk, tradie ute, lion president. Pick your pride and joy, mate."
+        },
+        {
+          "id": "promo-06",
+          "file": "promo-06.ogg",
+          "sha256": "0fe94f6b3a32a0c871d1e64df1654fe17767857270102057fc8aacff178171d9",
+          "raw_sha256": "27d30a3ce7c45bbad7176b1f03a632842528faaefd6ef8efeb1899ef16575534",
+          "seconds": 4.693,
+          "wer": 0.1111,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Pig catcher. Postie bike. Hawk dash. You little beauties!",
+          "heard": "Pig Catcher. Posty Bike. Hawk Dash. You Little Beauties."
+        },
+        {
+          "id": "promo-07",
+          "file": "promo-07.ogg",
+          "sha256": "2c34f5662fd3ecd7244fb29c1eaea3ef8bf98fdbdf8ab6d304cd3047fcf3ec18",
+          "raw_sha256": "eaabcfd00ed5c56cdeb8fec6ebbb2a8f098d05592e5835bcd9bc23ddc399e947",
+          "seconds": 5.205,
+          "wer": 0.0909,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "One shared screen. A massive pileup. That'll buff right out, mate.",
+          "heard": "One shared screen. A massive pileup. Battle buff right out, mate."
+        },
+        {
+          "id": "promo-08",
+          "file": "promo-08.ogg",
+          "sha256": "d9cf5c1e62032de367424c16bc30f3b9ff151f8d3d5f413c378baf6fca5fa0fb",
+          "raw_sha256": "51988da0144159e672a3095134a20b2b0f5bf6b54849d094d75918701a300906",
+          "seconds": 5.547,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-09",
+          "file": "promo-09.ogg",
+          "sha256": "0c8b9da26458ed8da4c8977b074195a29034951cecd5f799d47d69c53230da64",
+          "raw_sha256": "9a447a84cd45ba6d74480a11bf24343f590287c7d578d1097a268dc880953a6b",
+          "seconds": 4.181,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-10",
+          "file": "promo-10.ogg",
+          "sha256": "36810fff3c04d136d7ce5beb99e28c54a91b8a7a3d03e36df3742b950a34e5f8",
+          "raw_sha256": "98415cdcfc756ff3a43e512f6c5d12597b042226b89a445c4dfba407b13d3b82",
+          "seconds": 4.779,
+          "wer": 0.0,
+          "screens": {
+            "wer": true,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": true
+        },
+        {
+          "id": "promo-11",
+          "file": "promo-11.ogg",
+          "sha256": "c98d868b9245954d4e0e41024a58c78656d16ba46413377c44b0c5e9ebc9587f",
+          "raw_sha256": "68672bc52be5bd9abbea8b71c4c7583a3e1946ae4162d0c4559f26e3d46225b1",
+          "seconds": 4.949,
+          "wer": 0.2308,
+          "screens": {
+            "wer": false,
+            "duration": true,
+            "raw_loudness": true,
+            "export_loudness": true,
+            "export_true_peak": true
+          },
+          "pass": false,
+          "text": "Joystick Jammers. Bring everyone. Have a crack at jammers dot dilger dot dev.",
+          "heard": "Joystick Jammers. Bring everyone. Have a crack at jammers.dilja.dev."
+        }
+      ]
+    }
+  }
+}

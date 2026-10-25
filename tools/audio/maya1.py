@@ -164,15 +164,16 @@ def worker(args):
     with (base / ".gpu.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         os.environ.setdefault("HF_HOME", str(base / "hf-cache"))
-        from faster_whisper import WhisperModel
-        # ctranslate2 needs CUDA12 libraries; torch in this shared venv uses
-        # CUDA13, so importing torch alone does not expose the matching SONAMEs.
-        import ctypes
-        libroot = Path(sys.prefix) / "lib/python3.12/site-packages/nvidia"
-        for lib in [libroot/"cublas/lib/libcublasLt.so.12", libroot/"cublas/lib/libcublas.so.12",
-                    libroot/"cudnn/lib/libcudnn.so.9"]:
-            if lib.exists():
-                ctypes.CDLL(str(lib), mode=ctypes.RTLD_GLOBAL)
+        if not args.cached_asr_only:
+            from faster_whisper import WhisperModel
+            # ctranslate2 needs CUDA12 libraries; torch in this shared venv uses
+            # CUDA13, so importing torch alone does not expose matching SONAMEs.
+            import ctypes
+            libroot = Path(sys.prefix) / "lib/python3.12/site-packages/nvidia"
+            for lib in [libroot/"cublas/lib/libcublasLt.so.12", libroot/"cublas/lib/libcublas.so.12",
+                        libroot/"cudnn/lib/libcudnn.so.9"]:
+                if lib.exists():
+                    ctypes.CDLL(str(lib), mode=ctypes.RTLD_GLOBAL)
         asr = None
         for row, raw in zip(rows, raws):
             record = raw.with_name("asr.json")
@@ -181,6 +182,8 @@ def worker(args):
                 heard[row["id"]] = cached["text"]
                 asr_models.add(cached["model"])
                 continue
+            if args.cached_asr_only:
+                raise ValueError("Cached-ASR-only audit is missing transcript: " + row["id"])
             if asr is None:
                 asr = WhisperModel("large-v3", device="cuda", compute_type="float16")
             # Match the existing Qwen audit path: ffmpeg -> 16k float samples.
@@ -252,6 +255,7 @@ def main():
     parser.add_argument("--estimate", action="store_true")
     parser.add_argument("--fetch-only", action="store_true")
     parser.add_argument("--cached-only", action="store_true", help="audit existing fal.ai raw takes; no key or paid requests")
+    parser.add_argument("--cached-asr-only", action="store_true", help="require matching cached transcripts; never initialize a GPU ASR model")
     parser.add_argument("--review-only", action="store_true", help="fetch review exports without replacing game assets")
     parser.add_argument("--worker", action="store_true")
     parser.add_argument("--local", action="store_true", help="non-quantized Maya1 on eris; no API key or spend")
@@ -298,6 +302,8 @@ def main():
             cmd = f"bash ~/{remote_dir}/maya1-local-run.sh ~/{remote_dir}/maya1.py --worker --batch {args.batch} --job ~/{remote_dir}/job.json --config ~/{remote_dir}/{args.config.name} --local"
         if args.cached_only:
             cmd += " --cached-only"
+        if args.cached_asr_only:
+            cmd += " --cached-asr-only"
         cuda12 = "/home/cdilga/Work/dev/jammers-audio/.venv/lib/python3.12/site-packages/nvidia"
         cmd = f"env LD_LIBRARY_PATH={cuda12}/cublas/lib:{cuda12}/cudnn/lib " + cmd
         result = subprocess.run([*ssh, cmd], input=key, text=True)
