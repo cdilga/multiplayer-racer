@@ -76,3 +76,34 @@ The full focused file then exposed a second test-clock issue: its 1,200-tick man
 After both corrections, all **nine preparation checks pass** against that CI artifact (Chromium 151/macOS arm64, 91,794 ms total on the shared Mac). The next track is ready with **18,925 / 20,000 ms** remaining. Throttled reroll-to-staged samples: **1,773 / 1,607 / 4,075 / 4,318 ms**; worker samples: **306 / 246 / 1,491 / 3,219 ms**. `python3 -m unittest discover -s scripts/agents -p 'test_*.py'` also passes all eight checks, including the real Beads concurrent-claim canary.
 
 Publisher **9169** used the baked browser image and completed successfully, from runner start 02:55:58Z to cleanup 03:00:44Z. At **2026-10-25T03:00:38Z**, preview **v02-1d3eb78f** passed smoke: room ARVR, isolation from four other previews, join-webrtc (host, 2 ms), input, resume, drive, HUD and round. URL: https://jammers-preview.dilger.dev/p/v02-1d3eb78f/ . Image source: CI 9148. Preview remains independent of the red batch.
+
+### CI 9187: LFS references and native build memory (TurquoiseSnow)
+
+Repair resumed after NobleMoose explicitly released it. Source run:
+http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/9187 at `a13a9b3f`.
+
+- Checks: seven Hawk likeness tests read Git LFS pointers as PNGs. The observed reference hash
+  `d73a19a503bbb4a4ef1239046210701e318c388916d1c0b48c62e81d187f9eb0` exactly matches
+  `git show HEAD:art/vehicles/hawk-dash/refs/lod-plus-1.png` (the pointer). Its object ID is the expected
+  `409e7e0edbca72dd5784c116e1fadb6381a4f09cd9f87b8d0b8f1958942541aa`. The mask PNG parse failures
+  have the same cause. Pull `art/vehicles/**` before vehicle checks; keep all hashes and shape/defect assertions.
+- Build: TrueNAS kernel journal confirms a memory-cgroup OOM for container `7833c7aa490f…`, the exact
+  run-9187 build container. At 03:50:30 UTC, its 8 GiB limit was exhausted and `rustc` was killed
+  (8,311,628 KiB anonymous RSS). Browser slots then failed fetching that absent build, before running tests.
+  Share the existing small-container Cargo policy between Rust tests and the web/native build: four compile
+  jobs below 12 GiB; larger/unlimited runners keep Cargo defaults, and explicit settings take precedence.
+
+Focused checks use the pinned Node 26.10.0 on macOS arm64: all 12 Hawk likeness tests and all four Cargo-memory
+policy regressions pass. Shell syntax and whitespace checks pass. A full local checks attempt intersects
+NobleMoose's actively changing roster files: Tradie Ute bake/vehicle-review fail; the other completed checks pass.
+Those uncommitted roster changes are outside this repair and are not reverted or included. An initial run with
+the desktop's unpinned Node 26.7.0 could not discover test directories; that setup failure is not CI evidence.
+
+Native reproduction: TrueNAS, image `jj-ci:d161a07c0df4`, pinned Rust 1.99.0, same `ci-cache` target directory
+as the failed build, clean committed source at `dac0fcf8` mounted read-only. With **8 GiB memory and swap
+limits** and `CARGO_BUILD_JOBS=4`, `cargo build --locked -p jj-server --bin jj-server` **passes in 6m 55s**.
+It recompiles Asupersync rather than reading a previously successful library. Cgroup peak is **7,586,271,232
+bytes (7.07 GiB)**; `memory.events` reports **zero max, OOM and OOM-kill events**. The newer unmodified CI
+9217 build also passes on a 16 GiB runner, consistent with the diagnosed resource limit.
+
+Containing CI and preview results follow when complete; no CI success is claimed in advance.

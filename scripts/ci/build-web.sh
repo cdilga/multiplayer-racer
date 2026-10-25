@@ -38,6 +38,7 @@ fi
 git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
 scripts/ci/toolchain.sh >&2
 [[ -n ${CARGO_HOME:-} && -d ${CARGO_HOME:-/nonexistent}/bin ]] && export PATH="$CARGO_HOME/bin:$PATH"
+source scripts/ci/cargo-memory.sh
 
 t() { local s=$SECONDS; "$@"; echo "build-web: $((SECONDS - s))s  $*" >&2; }
 t scripts/build-host-wasm.sh >&2

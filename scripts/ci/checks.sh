@@ -17,6 +17,9 @@ t "Engine synth bundle and profile copy are current (P1-A04)" node art/ui/poc/au
 t "jammers-look recipes match the rendered code (P1-F11)" node .claude/skills/jammers-look/example/check-recipes.mjs
 t "The surface-strips test map is what its generator writes (P1-S03a)" bash -c 'python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json'
 t "The skidpad test map is what its generator writes (P1-FL04)" bash -c 'python3 tools/maps/skidpad.py && git diff --exit-code maps/test/skidpad.json'
+# The likeness gates read the canonical reference PNGs and masks, not just model source. A fresh CI checkout
+# contains LFS pointers until explicitly pulled; hashes and PNG parsing must see the actual committed objects.
+t "Vehicle references and baked asset LFS objects" git lfs pull --include "art/vehicles/**"
 t "Vehicle bakes are reproducible and committed; load in three.js (P1-V02, every art/vehicles car since br-bwju.3)" bash -c 'printf "%s\n" art/vehicles/*/ | xargs -P 8 -I{} sh -c "[ -f {}vehicle.json ] || exit 0; node tools/vehicles/bake.mjs --check {} >/dev/null || { echo \"bake --check failed: {}\"; exit 1; }" && node --test tools/vehicles/test/'
 t "Design site Vehicles pages: generated from the roster, every Vehicles-contract item present for every roster vehicle (P1-D03b, R126)" bash -c 'node tools/vehicles/review/check.mjs && node --test tools/vehicles/review/'
 t "The N08 qualification harness logic (tools/net)" node --test tools/net/qualify.test.mjs
@@ -24,6 +27,7 @@ t "The committed emulator receipts show what the beads cite (P1-F08)" node --tes
 t "Deploy secrets appear only in deploy workflows (R117)" scripts/ci/check-deploy-secrets.sh
 t "Native artifacts reject zero-filled and malformed executables (br-hytm)" node --test scripts/ci/native-check.test.mjs
 t "Artifact fetch uses this run's build verdict (br-56d5)" node --test scripts/ci/fetch-web.test.mjs
+t "Cargo parallelism respects job memory and explicit settings (br-dsq4)" node --test scripts/ci/cargo-memory.test.mjs
 t "Provider-neutral startup, CI repair claims and nonblocking handoffs (P1-OPS)" python3 scripts/agents/test_workflow.py -q
 t "Preview publisher, record, retention and index (infra/previews, P1-D04..D06)" python3 -m unittest discover -s infra/previews/tests -p 'test_*.py' -q
 exit $rc
