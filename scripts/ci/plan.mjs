@@ -127,6 +127,7 @@ const rules = [
   [/^tools\/(maps|vehicles|turn-guard)\//, () => (sel.tools = true)], // the checks job's bake and validators (lane `tools`)
   [/^tools\/licences\//, () => (sel.tools = true)], // the licence list's own check and generator (br-15gd: was unmapped, so everything)
   [/^scripts\/(beads|emulators|remote|hooks)\//, () => {}], // hooks run on the Mac at commit time, never in CI
+  [/^scripts\/agents\//, () => {}], // session bootstrap: its regressions always run in checks; no game/build inputs
   // The test runner's config (the quarantine's default-filter): every Rust test, not the browser matrix.
   [/^\.config\/nextest\.toml$/, (p) => ((sel.rustAll = true), sel.reason.push(`nextest config ${p}`))],
   [/^scripts\/(beads-live|ci-status|doctor|plan-ref|poc-publish|prune-caches|push|reclaim-target|reconcile_[a-z_]+)\.(sh|py|txt)$/, () => {}],

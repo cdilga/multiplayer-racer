@@ -47,4 +47,8 @@ The main CI uses software rendering and does not depend on the optional GPU work
 
 On eris with **JJ_CHROMIUM_GPU unset**, CI-matching native/WASM artifacts, no capture-only extras: all three set-piece kinds, airborne/landing render checkpoints, triangle fingerprints and full-state replay parity **pass in Chromium (69,556 ms) and WebKit (37,103 ms)**. Whole file: **121,027 ms**, versus the CI 9116 file watchdog at 900 seconds (Chromium alone 747,834 ms). A repeat of the old Chromium implementation was deliberately stopped after over two minutes to avoid repeating that already recorded expensive failure.
 
-On Mac with Chromium **software rendering**, G01 DOM stability and next-round click **pass, 83,316 ms**. The eight workflow/publication regressions also pass.
+On Mac with Chromium **software rendering**, G01 DOM stability and next-round click **pass, 83,316 ms**, and W05 boomerang pickup/flight/draw/return **pass, 216,578 ms**. The eight workflow/publication regressions also pass.
+
+On Linux/eris with software Chromium, the G07 disconnected-seat removal **passes, 92,000 ms**, and the R09 real-two-controller reel/automatic-next-round check **passes, 116,122 ms**. This confirms the round fixes on software GL as well as GPU.
+
+Launcher-only edits now select the always-on checks job, whose workflow regression suite already covers `scripts/agents/`. Dry selection of `start.py`, the OMP overlay and `test_workflow.py` selects no game/Rust/browser/image jobs; changes to the CI planner itself still select the full matrix for validation.
