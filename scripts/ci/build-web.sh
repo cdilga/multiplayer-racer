@@ -34,8 +34,8 @@ if [[ $store == on && -f $cache/$key.tar.zst ]]; then
     echo "build-web: cached native executables are unusable; rebuilding" >&2
 fi
 
-# A miss: the LFS objects the pages bundle (vehicles, brand, audio) and the pinned toolchain, then the build.
-git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+# A miss: the LFS objects the pages bundle (vehicles, brand, audio, trailer) and the pinned toolchain, then the build.
+git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**,assets/promo/**"
 scripts/ci/toolchain.sh >&2
 [[ -n ${CARGO_HOME:-} && -d ${CARGO_HOME:-/nonexistent}/bin ]] && export PATH="$CARGO_HOME/bin:$PATH"
 source scripts/ci/cargo-memory.sh

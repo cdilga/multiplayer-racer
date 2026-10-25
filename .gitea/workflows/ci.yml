@@ -154,9 +154,9 @@ jobs:
       - name: The web build (this host's cache, else the store; waits for the build job only when it's new)
         if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
         run: scripts/ci/fetch-web.sh
-      - name: Vehicle, brand and audio LFS objects
+      - name: Vehicle, brand, audio and trailer LFS objects
         if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
-        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**,assets/promo/**"
       - name: Slot ${{ matrix.slot }}
         if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
         env:

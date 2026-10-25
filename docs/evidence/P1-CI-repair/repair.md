@@ -444,3 +444,27 @@ Focused validation with pinned Node 26.10.0:
   total), Identify samples **47, 52, 41, 41, 38 ms**. This is a Mac Chromium receipt, not a Linux
   pass or a diagnosis of the isolated 1609 ms Linux sample. That latency failure remains under
   investigation; the 150 ms assertion is retained.
+
+### Main 9297: hydrate the new trailer before bundling and source-based journeys
+
+Browser shard 6/job **19495** fails all four new trailer cases at the MP4 signature assertion:
+**`'ion ' !== 'ftyp'`**. The response is the Git LFS pointer's `version …` text, not a video.
+The committed trailer `assets/promo/bring-your-friends.mp4` is an LFS pointer for
+**25,715,991 bytes**, SHA-256 `14474a45ea9ef8f7fe40668cfd75e64b8a904ed6580e769a54cd63f664f7dd44`.
+The three browser/build hydration lists include vehicle, brand and audio objects but omit promo
+media. The image's independent full `art/**,assets/**` hydration already includes it.
+
+Add **assets/promo/** to the cached web builder, CPU browser and native GPU hydration lists. The
+browser source-based journeys rebuild Vite pages, so hydrating only the cached bundle is insufficient.
+Changing `scripts/ci/build-web.sh` also changes its content-addressed build key and prevents reuse
+of the old pointer-containing archive. The existing trailer tests and media bytes are unchanged.
+
+On the Mac, with the real hydrated assets and real `jj-server`, all **four original trailer
+journeys pass in 59,170 ms**: Chromium and WebKit at both `/` and `/p/trailer/`. They retain MP4
+signature, media MIME, byte-range responses, scraper-visible metadata, deferred download, native
+playback, captions, seeking and layout assertions. This verifies the hydrated candidate's behaviour;
+the containing Linux CI run still must prove the repaired hydration pipeline itself.
+
+A second full native Mac Chromium JN3 run passes in **123,356 ms** (152,445 ms total), samples
+**39, 46, 45, 41, 44 ms**. Event-loop diagnostics record startup tasks up to 332 ms, but do not
+reproduce the Linux press spike. No speculative latency patch or relaxed limit is introduced.
