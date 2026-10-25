@@ -68,7 +68,25 @@ export class Soup {
     const g = new BufferGeometry();
     g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
     g.setAttribute('color', new BufferAttribute(new Float32Array(this.colour), 3));
-    g.computeVertexNormals();
+    // Soup is unindexed: each face owns its three corners, so its normal is calculated and
+    // normalised once. The general BufferGeometry path repeats normalisation for every corner.
+    // Keep its Float32 rounding before normalisation, including zero-area faces.
+    const p = this.pos;
+    const normals = new Float32Array(p.length);
+    for (let i = 0; i < p.length; i += 9) {
+      const cbx = p[i + 6]! - p[i + 3]!, cby = p[i + 7]! - p[i + 4]!, cbz = p[i + 8]! - p[i + 5]!;
+      const abx = p[i]! - p[i + 3]!, aby = p[i + 1]! - p[i + 4]!, abz = p[i + 2]! - p[i + 5]!;
+      const x = Math.fround(cby * abz - cbz * aby);
+      const y = Math.fround(cbz * abx - cbx * abz);
+      const z = Math.fround(cbx * aby - cby * abx);
+      const inverseLength = 1 / (Math.sqrt(x * x + y * y + z * z) || 1);
+      for (let k = 0; k < 9; k += 3) {
+        normals[i + k] = x * inverseLength;
+        normals[i + k + 1] = y * inverseLength;
+        normals[i + k + 2] = z * inverseLength;
+      }
+    }
+    g.setAttribute('normal', new BufferAttribute(normals, 3));
     if (this.normals.size) {
       const n = g.getAttribute('normal') as BufferAttribute;
       for (const [t, v] of this.normals) for (let k = 0; k < 3; k++) { const o = v.length === 9 ? 3 * k : 0; n.setXYZ(t * 3 + k, v[o]!, v[o + 1]!, v[o + 2]!); }

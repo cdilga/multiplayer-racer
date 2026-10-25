@@ -1,0 +1,17 @@
+✔ a round races the map the procgen worker prepared, and its track names its seed (1034.939042ms)
+✔ a reroll replaces a prepared map: the old one is dropped and the new seed races (1067.103125ms)
+✔ a stale job never commits: a superseded preparation is dropped before the renderer and the sim (1623.380542ms)
+✔ reroll during preparation: the round starts on the new seed, not the one in flight (1935.991958ms)
+✔ failure: the conservative retry runs, and if that fails the room settles in the Lobby with nothing loaded (3316.154292ms)
+✔ a preparation failure shows Retry / Lobby, keeps the room, and Retry prepares again (3376.278916ms)
+✔ a dev map goes through the validator: a good one races, a broken one is refused with the validator's message (768.041416ms)
+✔ two rounds back to back play two different generated biome mixes (7220.687333ms)
+✔ preparation finishes well inside the intermission with the page CPU throttled 6x (phone-host stand-in) (4901.070667ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25497.455125

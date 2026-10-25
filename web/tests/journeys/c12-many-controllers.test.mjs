@@ -47,6 +47,16 @@ const observe = async (p) => {
 };
 const seats = async (p) => (await observe(p)).host.seats.filter((s) => s.presence !== 'Left');
 const rows = (p) => p.evaluate(() => window.__jjSources.inspect());
+const claimedSource = async (p, id) => {
+  let row;
+  // The host can already count a new seat before its claim acknowledgement reaches this
+  // endpoint. Never record the still-null seat/source as a member of the measured cohort.
+  await until(p, async () => {
+    row = (await rows(p)).find((s) => s.id === id);
+    return Number.isSafeInteger(row?.seat) && Number.isSafeInteger(row?.source);
+  }, `${id} receives its claimed seat and source`);
+  return row;
+};
 const carOf = (o, n) => o.cars.find((c) => c.car === o.host.seats.find((s) => s.number === n)?.car);
 const shot = async (p, name) => {
   if (!process.env.JJ_CAPTURE_DIR) return;
@@ -180,7 +190,7 @@ test('24 press-claimed seats on host, two joined laptops and two phones keep inp
       assert.equal((await seats(host)).length, before, 'plugging in alone claims nothing');
       await page.evaluate((i) => window.__padSet(i, [0, 1, 0, 0]), i); // hold brake: deliberate input, no idle takeover
       await until(host, async () => (await seats(host)).length === before + 1, `endpoint ${endpoint} pad ${i} claims`);
-      const seat = endpoint === 0 ? (await seats(host)).find((s) => s.endpoint === `local:${100 + i}`) : (await rows(page)).find((s) => s.id === `pad${i + 1}`);
+      const seat = endpoint === 0 ? (await seats(host)).find((s) => s.endpoint === `local:${100 + i}`) : await claimedSource(page, `pad${i + 1}`);
       sources.push({ endpoint, page, pad: i, number: seat.number ?? seat.seat, source: endpoint === 0 ? 100 + i : seat.source, id: `pad${i + 1}` });
     }
     if (endpoint < 3) {
@@ -188,7 +198,7 @@ test('24 press-claimed seats on host, two joined laptops and two phones keep inp
         const before = (await seats(host)).length;
         await page.keyboard.down(down);
         await until(host, async () => (await seats(host)).length === before + 1, `endpoint ${endpoint} keys ${id} claims`);
-        const seat = endpoint === 0 ? (await seats(host)).find((s) => s.endpoint === `local:${id}`) : (await rows(page)).find((s) => s.id === `keys${id}`);
+        const seat = endpoint === 0 ? (await seats(host)).find((s) => s.endpoint === `local:${id}`) : await claimedSource(page, `keys${id}`);
         sources.push({ endpoint, page, up, down, number: seat.number ?? seat.seat, source: endpoint === 0 ? id : seat.source, id: `keys${id}` });
       }
     }
@@ -293,8 +303,10 @@ test('24 press-claimed seats on host, two joined laptops and two phones keep inp
   await until(host, async () => {
     const o = await observe(host);
     if (!unplug.every((s) => carOf(o, s.number)?.autopilot != null)) return false;
-    for (const s of sources.filter((s) => !unplug.includes(s))) assert.equal(carOf(o, s.number).autopilot, null, `only unplugged seats autopilot: ${s.number}`);
-    return true;
+    // A scheduler stall can briefly drop other inputs too. Their fresh presses clear inputDropped
+    // before the sim's 30-tick handback finishes; wait for the whole isolated state, as above for
+    // takeover, rather than asserting halfway through that blend. Every connected car must return.
+    return sources.filter((s) => !unplug.includes(s)).every((s) => carOf(o, s.number)?.autopilot === null);
   }, 'one unplug per endpoint autopilots only those five seats');
   assert.equal((await seats(host)).length, 24, 'unplug holds all seats');
   for (const s of unplug) await s.page.evaluate(() => window.__padAdd(0));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { MeshBasicMaterial } from 'three';
+import { BufferGeometry, Float32BufferAttribute, MeshBasicMaterial } from 'three';
 import { Soup } from '../src/render/map/soup.ts';
 
 test('map triangle assembly retains every position, linear colour and shading normal byte', () => {
@@ -30,5 +30,23 @@ test('map triangle assembly retains every position, linear colour and shading no
   } finally {
     mesh.geometry.dispose();
     material.dispose();
+  }
+});
+
+test('flat normals match three.js for zero-area, tiny and large-coordinate triangles', () => {
+  const soup = new Soup();
+  for (const scale of [0, 1e-10, 1, 1e10]) {
+    soup.tri([scale, 0, 0], [0, scale, 0], [0, 0, scale], '#fff');
+    soup.tri([scale, scale, scale], [scale, scale, scale], [scale, scale, scale], '#fff');
+  }
+  const material = new MeshBasicMaterial();
+  const mesh = soup.mesh(material);
+  const reference = new BufferGeometry();
+  try {
+    reference.setAttribute('position', new Float32BufferAttribute(soup.pos, 3));
+    reference.computeVertexNormals();
+    assert.deepEqual(mesh.geometry.getAttribute('normal').array, reference.getAttribute('normal').array);
+  } finally {
+    reference.dispose(); mesh.geometry.dispose(); material.dispose();
   }
 });

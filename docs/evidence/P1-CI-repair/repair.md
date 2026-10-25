@@ -691,3 +691,74 @@ loop and jump outputs are appended to `frame-sync-after.txt`. These executions r
 candidate helper/test harness through stdin; eris's code checkout is unmodified. `ERIS_MIN` is
 used after another session commits `d8ee872a` on the shared Mac tree; the remote SHA, rather
 than eris.sh's Mac-HEAD note, identifies the runtime that actually ran.
+
+### Main 9345 / GPU 9357: preparation cost and transient observation states
+
+Main 9345's preparation test failed its unchanged half-intermission bound at **11,402 ms**
+under the page's 6x CPU throttle. Its exact `87aa2bf8ec4409355f3a99d6` compiled web archive was
+downloaded from the CI store. A Mac Chromium CPU profile of that artifact identifies repeated
+normal calculation/normalisation in `Soup.mesh` among its largest staging costs. The soup has
+unshared corners: calculate and normalise once per triangle, then copy to its three corners.
+The Float32 rounding before normalisation is retained, as are all override normals. No map
+geometry, detail, gameplay budget or timing requirement changes.
+
+- The original complete map-soup SHA-256 golden passes unchanged for **all position, colour and
+  normal bytes**. A differential test also matches three.js exactly for zero-area triangles and
+  scales **0, 1e-10, 1, 1e10** (two tests pass).
+- Exact compiled harness, Mac arm64 Chromium, page throttle **6x**, seeds **4/5/6/7**:
+  original **1284/1146/2756/2022 ms**; candidate **1096/795/2170/1252 ms**, with the same maps.
+  The candidate scratch artifact substitutes only the tested normal calculation in the CI
+  chunk; unrelated dirty local procgen/map sources are excluded. These are Mac measurements,
+  not a Linux or physical-phone qualification.
+- All **nine** preparation checks on that candidate artifact pass in **25,497 ms**, including
+  stale jobs, rerolls, failure/retry, validation and two complete rounds. Its final throttle
+  samples are **844/703/1966/1121 ms**; intermission remains **20,000 ms**. Receipts:
+  `prepare-normals.txt` and `prepare-normals.json`.
+
+The G07 failures in main 9345 are browser input/scroll IPC timeouts: even the existing force-click
+of Pause stalls at “scrolling into view”; the phone-host case stalls after scrolling for **120 s**.
+The removal/debris assertions were not reached. This functional journey now stops only the
+continuous draw loop and explicitly paints each inspected tile/capture state. The simulation
+keeps running, with the same real clicks, seat cohorts, full resolutions, tick-based handback,
+debris persistence and screenshots. The exact d9 runtime plus candidate test harness passes
+**all four** tests in **40,147 ms** on Mac software Chromium, with each inspected frame also
+synchronized to the observed simulation tick. All **five** captured states were
+inspected (three correctly reflowed race tiles, confirmations, Lobby and the eight-seat phone
+menu); no UI/runtime change or assertion/timeout relaxation. Receipt: `g07-explicit-paint.txt`.
+
+GPU 9357's C12 failure snapshot has exactly the intended **five** `inputDropped` seats
+(**1/7/15/23/24**), all four peers/channels connected, and **19** connected sources with fresh
+input aged **41–91 ms**. Those 19 still have raw autopilot state during the intentional **30-tick**
+control handback: their brake is about **1/6** and autopilot controls about **5/6**. The old
+polling predicate waits for takeover of the five unplugged seats but immediately asserts that
+every other blend has already finished.
+
+A focused real-source reproduction on the exact d9 runtime claims **24 local emulated pads**,
+unplugs five, then stalls the host main thread **2250 ms**. At tick **453** all **19** connected
+sources have `inputDropped:false` while raw autopilot state is still present; at tick **535**
+only the five unplugged seats autopilot. The predicate now waits for that complete isolated
+state within its **unchanged 90 s** deadline. Every connected source must return to player
+control; none is exempted. Receipt: `c12-handback.txt`. This local-source proof supplements the
+full real-WebRTC cohort; it does not replace it.
+
+An additional Mac public-preview C12 run establishes all 24 distinct seats and four connections
+but fails the first drive-signature phase, before unplug/handback. Its diagnostic proves another
+test race: controller pad3 is recorded with **null seat/source** after the host has counted its
+new seat, before the endpoint receives the claim acknowledgement. The other 23 sources and all
+24 actual car inputs match the first signature; the recorded null source can never match it.
+Both network pad and keyboard setup now wait for their own acknowledged integer seat/source.
+No participant, source, signature or applied-age check is removed.
+
+With that acknowledgement wait, the **complete** public-preview journey passes **35,084 ms**
+on Mac native Chromium: host, two joined laptops, two phones, **24 distinct sources**, all five
+drive signatures, measured payload/applied ages, five isolated unplugs, same-car handbacks,
+Leave, Remove and the leave chord. This run also injects the **2250 ms** main-thread stall
+immediately after the five unplugs. Runtime is the published **v02-d9a795cc**; only the test
+harness is the candidate. Receipt: `c12-public-fixed.txt`. The unchanged full Linux C12 cohort
+also passes GPU 9367 in **32,724 ms**, which is not claimed as validation of the candidate fix.
+
+GPU 9357 also misses the first WebKit Ready click in R13 (first phone **5** commands, second
+**6**, both connections/channels healthy). A traced run of the complete public WebKit identity
+journey passes **13,221 ms**; the missed native event remains unreproduced, so there is no
+speculative patch, retry of an unchanged batch, or quarantine. Containing main/GPU receipts
+are still required before closing this repair.

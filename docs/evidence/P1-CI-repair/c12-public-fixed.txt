@@ -1,0 +1,18 @@
+C12: 24 distinct seats/cars claimed through the real join path
+C12: four joined endpoints each use one connection
+C12: distinct drive pattern 1/5
+C12: distinct drive pattern 2/5
+C12: distinct drive pattern 3/5
+C12: distinct drive pattern 4/5
+C12: distinct drive pattern 5/5
+C12: all 24 sources drive only their own car
+C12: all 24 sources have measured payload and matched applied-input ages
+✔ 24 press-claimed seats on host, two joined laptops and two phones keep input, unplug, resume and leaving isolated (35083.767083ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35523.884334

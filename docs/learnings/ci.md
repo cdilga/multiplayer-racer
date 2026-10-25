@@ -201,3 +201,17 @@ JN5's return to Lobby opens a car sheet asynchronously. Selecting Leave once wit
 retain the play-screen action after that sheet covers it. Use a locator that resolves the sheet's
 Leave or the uncovered play-screen action at click time; keep both confirmation taps and the host
 seat-removal assertion. A passing drop-in timing sample alone does not qualify the full churn loop.
+
+C12's raw sim autopilot state persists during its 30-tick handback after the host has already
+cleared `inputDropped`. A 2250 ms main-thread stall with 24 local pad sources reproduces 19 fresh
+connected sources temporarily in that blend. Poll for the entire expected isolated state, keeping
+the existing deadline and every source; don't assert null midway through another source's return.
+
+Host seat count and controller claim acknowledgement arrive independently. C12 on the real
+public preview recorded pad3 with null seat/source after the host counted it, permanently
+poisoning its drive-signature lookup. Wait for each network source's acknowledged IDs before
+recording the cohort; a distinct-set count can accidentally accept a single null ID.
+
+Flat triangle soup has no shared vertices: computing and normalising its face normal once avoids
+three repeated corner normalisations. Match three.js's Float32 rounding before normalisation;
+the byte golden plus zero-area/small/large-coordinate differential checks protect shading.

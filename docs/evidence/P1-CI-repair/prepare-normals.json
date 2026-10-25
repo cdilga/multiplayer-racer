@@ -1,0 +1,312 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), darwin/arm64",
+  "runs": {
+    "commit": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 256,
+          "attempts": 1,
+          "lengthM": 1524.438,
+          "reliefM": 44.03
+        }
+      ],
+      "presented": {
+        "staged": 1,
+        "committed": 1,
+        "disposed": 0,
+        "commitMaps": [
+          "4"
+        ],
+        "commitSegments": [
+          [
+            "rocks",
+            "outback-bitumen",
+            "rocks"
+          ]
+        ]
+      },
+      "preparation": {
+        "current": 4,
+        "currentRecipe": null,
+        "external": true,
+        "favourite": null,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      }
+    },
+    "reroll": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 257,
+          "attempts": 1,
+          "lengthM": 1524.438,
+          "reliefM": 44.03
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "recipe": "",
+          "plan": "redrawn-1",
+          "ms": 219,
+          "attempts": 2,
+          "lengthM": 1465.204,
+          "reliefM": 43.099
+        }
+      ],
+      "presented": {
+        "staged": 2,
+        "committed": 1,
+        "disposed": 1,
+        "commitMaps": [
+          "5"
+        ],
+        "commitSegments": [
+          [
+            "outback-bitumen",
+            "rocks",
+            "outback-bitumen"
+          ]
+        ]
+      }
+    },
+    "stale": {
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 1,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 254,
+          "attempts": 1,
+          "lengthM": 1524.438,
+          "reliefM": 44.03
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "recipe": "",
+          "plan": "redrawn-1",
+          "ms": 218,
+          "attempts": 2,
+          "lengthM": 1465.204,
+          "reliefM": 43.099
+        }
+      ],
+      "room": {
+        "current": 5,
+        "currentRecipe": null,
+        "external": true,
+        "favourite": null,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 1,
+        "verdict": "ok"
+      }
+    },
+    "rerollDuringPreparation": {
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 1,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 254,
+          "attempts": 1,
+          "lengthM": 1524.438,
+          "reliefM": 44.03
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "recipe": "",
+          "plan": "redrawn-1",
+          "ms": 218,
+          "attempts": 2,
+          "lengthM": 1465.204,
+          "reliefM": 43.099
+        }
+      ]
+    },
+    "conservativeRetry": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 274,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "recipe": "greybox",
+          "plan": "redrawn-5",
+          "ms": 690,
+          "attempts": 17,
+          "lengthM": 1547.409,
+          "reliefM": 10.302
+        }
+      ],
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 1,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-5",
+        "lastError": "no valid map for seed 4: "
+      }
+    },
+    "failure": {
+      "stats": {
+        "requested": 2,
+        "delivered": 0,
+        "superseded": 0,
+        "failed": 2,
+        "refused": 0,
+        "committed": 0,
+        "lastPlan": "redrawn-5",
+        "lastError": "no valid map for seed 5: "
+      },
+      "room": {
+        "current": null,
+        "currentRecipe": null,
+        "external": true,
+        "favourite": null,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "schema"
+      }
+    },
+    "retryLobbyScreen": {
+      "shown": {
+        "title": "No track this time",
+        "acts": [
+          "Retry",
+          "Lobby"
+        ],
+        "detail": "no valid map for seed 5: ",
+        "room": "Lobby",
+        "seats": 1
+      },
+      "requestedBefore": 2
+    },
+    "brokenDevMap": {
+      "message": "gates route.gates: 0 gates; at least 3\ngates route.gates: 0 finish gates; exactly one",
+      "stats": {
+        "requested": 2,
+        "delivered": 0,
+        "superseded": 0,
+        "failed": 2,
+        "refused": 2,
+        "committed": 0,
+        "lastPlan": "",
+        "lastError": "gates route.gates: 0 gates; at least 3\ngates route.gates: 0 finish gates; exactly one"
+      }
+    },
+    "twoRounds": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "recipe": "",
+          "plan": "requested",
+          "ms": 266,
+          "attempts": 1,
+          "lengthM": 1524.438,
+          "reliefM": 44.03
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "recipe": "",
+          "plan": "redrawn-1",
+          "ms": 220,
+          "attempts": 2,
+          "lengthM": 1465.204,
+          "reliefM": 43.099
+        }
+      ],
+      "presented": {
+        "staged": 2,
+        "committed": 2,
+        "disposed": 0,
+        "commitMaps": [
+          "4",
+          "5"
+        ],
+        "commitSegments": [
+          [
+            "rocks",
+            "outback-bitumen",
+            "rocks"
+          ],
+          [
+            "outback-bitumen",
+            "rocks",
+            "outback-bitumen"
+          ]
+        ]
+      },
+      "firstTrackReadyMs": 462,
+      "intermissionRemainingWhenReadyMs": 19734
+    },
+    "throttled6x": {
+      "rerollToStagedMs": [
+        844,
+        703,
+        1966,
+        1121
+      ],
+      "generatorWorkerMs": [
+        263,
+        223,
+        1212,
+        460
+      ],
+      "generatorScaledBy6Ms": [
+        1578,
+        1338,
+        7272,
+        2760
+      ],
+      "intermissionMs": 20000,
+      "resultsMs": 10000,
+      "voteMs": 10000,
+      "note": "Emulation.setCPUThrottlingRate=6 on the page; the procgen worker thread is not throttled by it"
+    }
+  }
+}

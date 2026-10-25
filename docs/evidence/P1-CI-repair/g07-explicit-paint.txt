@@ -1,0 +1,12 @@
+✔ G07: the host removes a player in the lobby, after a confirmation naming them; backing out keeps them (3097.506708ms)
+✔ G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on (20130.888167ms)
+✔ G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay (7396.931792ms)
+✔ G07: the pause menu at eight players on a phone-sized host lists everyone with Remove (9216.0485ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40146.675291

@@ -35,6 +35,14 @@ closeContextsAfterEach(() => browser);
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s) => s.number));
+const paint = async (host) => {
+  const tick = await host.evaluate(async () => (await window.__jjTest.observe()).tick);
+  await host.waitForFunction((tick) => {
+    window.__jjRender.frame();
+    return window.__jjRender.stats().tick >= tick;
+  }, tick, { polling: 100 });
+};
+const shot = async (host, options) => { await paint(host); await host.screenshot(options); };
 
 async function join(host, from, to) {
   for (let k = from; k <= to; k++) {
@@ -50,6 +58,10 @@ async function openHost(width, height) {
   host.on('pageerror', (e) => host.errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=2`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
+  // Removal is asserted against the live sim and explicitly painted states. Continuous software
+  // draws at 1080p can block the browser's input/scroll IPC even for force-clicks (CI 9345).
+  // Keep simulation time running; draw every state whose tiles or screenshot we inspect.
+  await host.evaluate(() => window.__jjRender.hold());
   return host;
 }
 
@@ -62,7 +74,7 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     // The card opens the confirmation; Keep them closes it and nothing changes.
     await host.locator('.lcard[data-number="3"]').click();
     assert.match(await host.locator('[data-confirm=remove]').innerText(), /remove #3 racer 3/i);
-    await host.screenshot({ path: `${CAPTURE}/lobby-confirm-remove@1080p.png` });
+    await shot(host, { path: `${CAPTURE}/lobby-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Keep them' }).click();
     await host.keyboard.press('Escape');
     assert.deepEqual(await seats(host), [1, 2, 3, 4]);
@@ -74,7 +86,7 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     assert.deepEqual(await seats(host), [1, 2, 4], 'the card goes; the others keep their numbers');
     await host.keyboard.press('Escape');
     assert.equal(await host.locator('.lcard').count(), 3);
-    await host.screenshot({ path: `${CAPTURE}/lobby-after-remove@1080p.png` });
+    await shot(host, { path: `${CAPTURE}/lobby-after-remove@1080p.png` });
     // Idempotent: the seat is gone, asking again for it does nothing harmful.
     await host.evaluate(() => window.__jjTest.input({ type: 'ui', ui: 'remove-seat:3' }));
     assert.deepEqual(await seats(host), [1, 2, 4]);
@@ -96,6 +108,7 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     for (let k = 1; k <= 4; k++) await frame(host, `syn${k}`, { ready: true });
     await wait(host, () => window.__jjRoom.view().phase === 'Running');
     await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+    await paint(host);
     await wait(host, () => document.querySelectorAll('.hud-tile[data-seat]').length === 4);
     // Racer 2's bumper comes off before the removal: debris, a dynamic body of the world.
     const car2 = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.number === 2).car);
@@ -108,11 +121,12 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await host.locator('[data-act=menu]').click({ force: true });
     await host.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
     assert.match(await host.locator('[data-confirm=remove]').innerText(), /debris stays/i);
-    await host.screenshot({ path: `${CAPTURE}/race-confirm-remove@1080p.png` });
+    await shot(host, { path: `${CAPTURE}/race-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Remove player' }).click();
     await host.getByRole('button', { name: 'Resume' }).click();
     const removedAt = (await host.evaluate(() => window.__jjTest.observe())).tick;
     await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 2), null, 10_000);
+    await paint(host);
     await wait(host, () => document.querySelectorAll('.hud-tile[data-seat]').length === 3);
     assert.deepEqual((await seats(host)).sort(), [1, 3, 4]);
     assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race goes on');
@@ -126,7 +140,7 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     assert.equal(after.cars.find((c) => c.car === car2)?.input?.throttle ?? 0, 0, 'and it no longer drives');
     // Nothing is deleted or merged by the removal (the others, racing on, may shed parts of their own meanwhile: never fewer).
     assert.ok(after.debris.filter((d) => d.kind === 'Part').length >= debrisBefore, "the removed car's debris stays");
-    await host.screenshot({ path: `${CAPTURE}/race-after-remove@1080p.png` });
+    await shot(host, { path: `${CAPTURE}/race-after-remove@1080p.png` });
     assert.deepEqual(host.errors, []);
   } finally {
     await host.context().close();
@@ -181,7 +195,7 @@ test('G07: the pause menu at eight players on a phone-sized host lists everyone 
     await host.locator("[data-act=menu]").click({ timeout: 120_000 }); // 8 tiles on a slow CI runner: see jn5 (runs 2839-2869)
     await wait(host, () => document.querySelectorAll('[data-players] li').length === 8);
     assert.equal(await host.locator('[data-players] [data-act=ask-remove]').count(), 8);
-    await host.screenshot({ path: `${CAPTURE}/menu-race-8@phone.jpg`, type: 'jpeg', quality: 80 });
+    await shot(host, { path: `${CAPTURE}/menu-race-8@phone.jpg`, type: 'jpeg', quality: 80 });
     assert.deepEqual(host.errors, []);
   } finally {
     await host.context().close();
