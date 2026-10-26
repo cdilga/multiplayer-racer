@@ -4,8 +4,8 @@ br-r1ma.3. Owner direction 25–26 Oct: race-led, the free shared Stevo voice, v
 generated tracks, a loop-the-loop, all seven vehicles, then "dynamically adding screens from 1 all the way to 64,
 stopping at a few tweened, nice points to narrate", "rendered at 60fps with no lag", published on the POC page.
 
-Trailer: `art/ui/poc/promo/bring-everyone-stevo-a8d821e0.mp4` (58.76 s, 1920×1080, H.264 High 60/1 fps, AAC 48 kHz,
-faststart, 61.8 MB), poster `.jpg`, captions `.vtt`, edit receipt `.json`, cadence receipt `-cadence.json`.
+Trailer: `art/ui/poc/promo/bring-everyone-stevo-7454d16b.mp4` (58.76 s, 1920×1080, H.264 High 60/1 fps, AAC 48 kHz,
+faststart, 61.3 MB), poster `.jpg`, captions `.vtt`, edit receipt `.json`, cadence receipt `-cadence.json`.
 Watch: https://jammers-preview.dilger.dev/poc/#g-promo
 
 ## What it shows, and how it was made
@@ -17,7 +17,7 @@ Watch: https://jammers-preview.dilger.dev/poc/#g-promo
 | 24–30 s | Four generated biomes: dirt, bitumen, town, rocks | `capture-tracks.mjs`, `jj procgen --recipe` |
 | 30–36 s | A car carried round a generated loop (the host camera cuts to its side view) | `capture-loop.mjs`, `jj procgen --seed 1 --mix`; asserts the car goes inverted on camera (min up −0.999, frames 389–402) |
 | 36–48 s | All seven vehicles, each named while it drives | `capture-roster60.mjs`, 1920×1080 |
-| 48–54 s | Phone, pad-on-phone and keyboard controller pages | the reviewed P1-PROMO2 inserts |
+| 48–54 s | Phone, pad-on-phone and keyboard controller pages | P1-PROMO2's phone and pad inserts; the keyboard is fresh (`capture-keyboard.mjs`: a real lobby, Keys A seated through its Add button, Host menu → Controllers, served as jammers.dilger.dev) |
 | 54–59 s | End card over the 64-tile grid, jammers.dilger.dev | editor |
 
 Every capture is frame-stepped: 2 sim ticks (120 Hz) and exactly 1/60 s of page clock per frame (`performance.now` is
@@ -63,11 +63,20 @@ over `race-2.ogg` ducked by the voice and the engine lap bed, final −16.2 LUFS
 repeated frames outside the two deliberate stills (controller pages, end card); the detector does drop 223 of 360
 frames over the still section, so it is sensitive. Encoded CRF 20 capped at 11 Mb/s.
 
+## Owner review round 2 (26 Oct)
+
+The owner rejected the floating rival name badges over the race ("NO such badges floating", derby only if at all):
+R141. `world.nameplatesOn` is set from the room's mode and only a derby draws nameplates (grid tiles and the arena
+Overview); race tiles, practice and replays draw none. The R13 identity journey checks the rings in a derby room
+(switching to Grid with the real Camera button) and the synthetic 1/4/24-tile check asserts no nameplates outside a
+derby. Grow and race shots were recaptured on the fixed build (`review/grow-no-nameplates.jpg`), everything else kept.
+Also fixed: the keyboard insert's `127.0.0.1` room address (fresh capture, `review/keyboard-insert.jpg`). The earlier
+`a8d821e0` render is in git history (8633d219).
+
 ## Remaining defects
 
-- br-roit: name-pill leader lines draw outside their tile into an empty grid cell (`pill-lines-leak.jpg`); visible
-  for a few frames while the grid has an empty cell. A host bug, filmed as it is.
-- The keyboard controller insert (from P1-PROMO2) still shows its capture's `127.0.0.1` room address under the QR.
+- br-roit (pill leader lines leaving their tile) no longer shows in a race since R141; it can still occur in a derby grid.
+- The trailer title box covers the top of the Controllers panel's heading in the keyboard insert.
 - The 64-car pack is dense: many takedowns and wrecks in the opening shots. That is the real sim.
 
 ## Not covered
@@ -77,7 +86,7 @@ hardware (this is a staged, frame-stepped capture, not a performance measurement
 
 ## Deployed
 
-Pushed 8633d219; the POC deploy published it. https://jammers-preview.dilger.dev/poc/promo/bring-everyone-stevo-a8d821e0.mp4
-serves HTTP 200 video/mp4, 61,807,616 bytes with byte ranges, SHA-256 a8d821e0c865f6ed…, matching the committed file;
+Round 1: 8633d219 (a8d821e0). Round 2 replaces it with 7454d16b; `deployed/` is re-run after that deploy.
+The public MP4 serves HTTP 200 video/mp4 with byte ranges and the committed file's SHA-256;
 the VTT serves as text/vtt. `node docs/evidence/P1-PROMO3/check-playback.mjs --base https://jammers-preview.dilger.dev`
 passes in Chromium and WebKit at 412×915 and 1920×1080 (`deployed/playback.json`, `deployed/*.png`).

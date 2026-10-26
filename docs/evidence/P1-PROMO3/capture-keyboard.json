@@ -1,0 +1,11 @@
+{
+  "origin": "https://jammers.dilger.dev (JJ_PUBLIC_ORIGIN)",
+  "seats": [
+    {
+      "number": 1,
+      "name": "Player 1",
+      "local": true
+    }
+  ],
+  "how": "KeyW press on the host keyboard, then Host menu -> Controllers"
+}

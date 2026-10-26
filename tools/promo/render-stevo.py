@@ -70,6 +70,7 @@ def main():
     ap.add_argument('--roster', type=Path, required=True)
     ap.add_argument('--voice', type=Path, required=True, help='Directory holding promo3-manifest.json and its takes')
     ap.add_argument('--controllers', type=Path, default=Path('/tmp/jj-promo-crowd-reviewed-f3c175d9'))
+    ap.add_argument('--keyboard', type=Path, default=Path('/tmp/jj-promo3-keyboard/controllers-menu.jpg'), help='capture-keyboard.mjs: the host Controllers panel with a keyboard player seated')
     ap.add_argument('--engine', type=Path, default=Path('/tmp/jj-promo-engine.wav'))
     ap.add_argument('--out', type=Path, default=ROOT / 'art/ui/poc/promo')
     ap.add_argument('--name', default='bring-everyone-stevo')
@@ -157,8 +158,8 @@ def main():
 
         # 7. The actual controller pages.
         def controllers(d):
-            for f in ['controller-phone.jpg', 'controller-pad-phone.jpg', 'controller-keyboard.jpg']:
-                seg(f[:-4], args.controllers / f, d / 3, still=True)
+            for name, f in [('phone', args.controllers / 'controller-phone.jpg'), ('pad', args.controllers / 'controller-pad-phone.jpg'), ('keyboard', args.keyboard)]:
+                seg(name, f, d / 3, still=True)
         scene('controllers', controllers, minimum=6.0)
 
         # 8. End card over the full 64-car grid.
@@ -238,7 +239,7 @@ def main():
         'fps': FPS, 'size': [W, H], 'voice': {k: manifest[k] for k in ['canonical_voice_id', 'pack_sha256', 'engine', 'api_cost_usd']},
         'cues': [{'start': round(a, 3), 'end': round(sub_end[s], 3), 'id': s, 'text': scenes[s]['text']} for a, s in sorted(cues)],
         'titles': [{'start': round(a, 3), 'end': round(b, 3), 'title': ti, 'label': la} for a, b, ti, la in titles],
-        'sources': {'grow': grow, 'loop': json.loads((args.loop / 'capture.json').read_text()), 'tracks': tracks, 'roster': sorted(roster), 'controllers': str(args.controllers)},
+        'sources': {'grow': grow, 'loop': json.loads((args.loop / 'capture.json').read_text()), 'tracks': tracks, 'roster': sorted(roster), 'controllers': str(args.controllers), 'keyboard': digest(args.keyboard)},
         'music': 'assets/audio/music/race-2.ogg', 'engine': digest(args.engine),
     }
     (args.out / f'{args.name}-{short}.json').write_text(json.dumps(receipt, indent=2) + '\n')

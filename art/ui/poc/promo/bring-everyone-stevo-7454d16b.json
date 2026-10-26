@@ -1,7 +1,7 @@
 {
-  "mp4": "bring-everyone-stevo-a8d821e0.mp4",
-  "sha256": "a8d821e0c865f6edf606edf047e3282396990479aecbbbcdd5553bfb38b5bdaa",
-  "bytes": 61807616,
+  "mp4": "bring-everyone-stevo-7454d16b.mp4",
+  "sha256": "7454d16bd7338b3d061919859760aef1bcf68893072a296e2e167c9991241a13",
+  "bytes": 61330188,
   "seconds": 58.76,
   "fps": 60,
   "size": [
@@ -202,10 +202,9 @@
   ],
   "sources": {
     "grow": {
-      "head": "327e0aaa1202f74d47b80de01786562c4ed4383c",
+      "head": "784d86fb9ba4f98817ae2db627fa0767ce4e368a",
       "dirty": [
         "M .beads/issues.jsonl",
-        " M art/ui/lib/serve.mjs",
         " M assets/profiles/generator.json",
         " M assets/profiles/overpass.json",
         " M assets/profiles/set-pieces.json",
@@ -239,20 +238,13 @@
         " M scenarios/lab/canyon-leap.json",
         " M scripts/ci/durations.json",
         " M tools/maps/review-landscape.mjs",
+        " M web/host/src/main.ts",
         " M web/host/src/render/map/map.ts",
-        " M web/host/src/testing/messages.ts",
-        " M web/host/src/testing/testing.worker.ts",
+        " M web/host/src/render/world.ts",
+        " M web/tests/journeys/r13-identity.test.mjs",
         "?? crates/jj-procgen/tests/fun_jumps.rs",
         "?? docs/evidence/P1-FL20.3/",
-        "?? docs/evidence/P1-M-presets/workspace-matrix.txt",
-        "?? docs/evidence/P1-PROMO3/",
-        "?? tools/promo/capture-grow.mjs",
-        "?? tools/promo/capture-loop.mjs",
-        "?? tools/promo/capture-roster60.mjs",
-        "?? tools/promo/capture-tracks.mjs",
-        "?? tools/promo/render-stevo.py",
-        "?? tools/promo/stevo-storyboard.json",
-        "?? tools/promo/stevo-voice.py"
+        "?? docs/evidence/P1-M-presets/workspace-matrix.txt"
       ],
       "testingWasm": "92cb298637bf7d6b5debacbcfb6513b87ed94cb7609353bf7dd97117d7c5dd58",
       "cohort": 64,
@@ -309,7 +301,7 @@
           "id": "grow",
           "frames": 1204,
           "seconds": 20.066666666666666,
-          "tick": 5297,
+          "tick": 5262,
           "cars": 64,
           "tiles": 64
         },
@@ -317,7 +309,7 @@
           "id": "pack",
           "frames": 420,
           "seconds": 7,
-          "tick": 7966,
+          "tick": 7931,
           "cars": 64,
           "tiles": 4
         }
@@ -510,7 +502,8 @@
       "postie-bike",
       "tradie-ute"
     ],
-    "controllers": "/tmp/jj-promo-crowd-reviewed-f3c175d9"
+    "controllers": "/tmp/jj-promo-crowd-reviewed-f3c175d9",
+    "keyboard": "fc545b6383b145d8218886862626dc3c65eed13295b6a87b5d0835bb5646f277"
   },
   "music": "assets/audio/music/race-2.ogg",
   "engine": "aded492721be8323f8fc4f6beedb5aedcd28c571c6511caac051828cf7d7c813"

@@ -370,6 +370,7 @@ async function boot(): Promise<void> {
     }
     // The page knows the round's phase (the input drawer folds away while racing so it covers no tile).
     document.body.dataset.jjPhase = room.phase;
+    world.nameplatesOn = room.mode === 'derby';
     // In a room the grid's tiles are the seated cars in seat-number order: a car withdrawn by Leave or Sit out stays in
     // the world as scenery but loses its tile, so the grid reflows (G02).
     if (world.tiles?.auto) {

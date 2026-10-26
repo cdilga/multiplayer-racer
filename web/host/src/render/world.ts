@@ -187,6 +187,9 @@ export class World {
   /** Called with the grid's layout (device pixels) and the device pixel ratio when the tiles move. */
   onLayout: (layout: Layout | null, dpr: number) => void = () => {};
   onNameplates: (points: NameplatePoint[]) => void = () => {};
+  /** Rival nameplates (P1-R13) float only in a derby, to tell cars apart in the melee (R141: no badges
+   *  floating over a race). The room sets it from the round's mode. */
+  nameplatesOn = false;
   private nameplatePoints: NameplatePoint[] = [];
   map: MapRenderer | null = null;
   /** P1-C10: the practice courses (`round/practice`), drawn from each snapshot's practice trailer far from the round's map.
@@ -672,7 +675,7 @@ export class World {
       r.setViewport(0, 0, st.width, st.height);
       this.launchCallouts.fit(this.camera);
       this.backend.render(this.scene, this.camera, this.replayCamera || fly ? undefined : { hazeBeyond: this.overviewDepth });
-      if (!fly) this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
+      if (!fly && this.nameplatesOn) this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
       st.lods = [lod];
     }
     st.frames++;
@@ -777,7 +780,7 @@ export class World {
       }
       this.launchCallouts.fit(cam);
       this.backend.render(this.scene, cam);
-      this.nameplates(s, cam, t, t.seat, i);
+      if (this.nameplatesOn) this.nameplates(s, cam, t, t.seat, i);
       if (mode === 'fp' && i >= 0) {
         // Segmented first person: the rear-view mirror in its strip of the tile (rects are fractions, top-down).
         const M = CAMERA.firstPerson.mirror;

@@ -33,7 +33,8 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
     host = await b.newPage({viewport:{width:1366,height:768}});
     host.on('pageerror', e=>errors.push(e.message));
     host.on('console', m=>{if (m.type()==='error' && /shader|WebGLProgram/i.test(m.text())) errors.push(m.text());});
-    await host.goto(`${s.origin}${BASE}host?room&test=live&autores=off`);
+    // Nameplates float only in a derby (owner 2026-10-26), so the other-view rings are checked in a derby room.
+    await host.goto(`${s.origin}${BASE}host?room&test=live&mode=derby&autores=off`);
     await wait(host,()=>window.__jjNet?.code() && window.__jjRoom?.view()?.phase==='Lobby');
     const url=await host.evaluate(()=>window.__jjNet.joinUrl());
     const phones=[];
@@ -67,6 +68,9 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       for (const p of phones) console.log('phone after Ready', JSON.stringify(await p.evaluate(()=>({c:window.__jjController?.inspect(), ready:document.querySelector('[data-act=ready]')?.outerHTML?.slice(0,300)})).catch((x)=>String(x))));
       throw e;
     });
+    // A derby opens in the arena Overview; the tile badges and other-view rings are the Grid's, so switch as a host would.
+    await wait(host,()=>document.querySelector('.jj-foot [data-act=camera]')?.dataset.view==='overview');
+    await host.locator('.jj-foot [data-act=camera]').click();
     await wait(host,()=>window.__jjRender.vehicles()?.cars===2 && document.querySelectorAll('.hud-badge[data-identity-pattern]').length===2);
     const identity=await host.evaluate(()=>({render:window.__jjRender.vehicles(),badges:[...document.querySelectorAll('.hud-badge')].map(b=>({text:b.textContent,pattern:b.dataset.identityPattern}))}));
     for (let i=0;i<2;i++) {
@@ -74,7 +78,7 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: identity matche
       assert.equal(identity.badges[i].pattern,pattern(i+1));
     }
     assert.ok(identity.render.materials.every(m=>m.count===1),'one material per vehicle kind, shared by all its cars');
-    // A real other-player view: both cars start on the grid; the nameplate ring belongs to the car it labels.
+    // A real other-player view in the derby: the nameplate ring belongs to the car it labels.
     await wait(host,()=>document.querySelector('.identity-nameplate[data-identity-pattern]'));
     const rings=await host.locator('.identity-nameplate').evaluateAll(els=>els.map(el=>({number:Number(el.dataset.number),pattern:el.dataset.identityPattern,text:el.textContent})));
     for (const ring of rings) { assert.equal(ring.pattern,pattern(ring.number)); assert.match(ring.text,new RegExp(`#${ring.number}`)); }
@@ -123,11 +127,9 @@ test('identity patterns add zero draws at 1/4/24 tiles; roof numbers and CVD she
       for(const id of on.vehicles.identities)assert.equal(id.pattern,pattern(id.number));
       const largeNumbers = await p.evaluate(() => [108, 10000, 16777217, 4294967295].map(number => ({ number, chunks: Array.from(new Float32Array(window.__jjRender.identityNumberChunks(number))) })));
       for (const { number, chunks } of largeNumbers) assert.equal(chunks[0] + chunks[1] * 10000 + chunks[2] * 100000000, number, 'GPU attributes retain every digit beyond float integer precision');
+      // Outside a derby no rival nameplates float over the tiles (owner 2026-10-26).
       const bounds = await p.locator('.identity-nameplate').evaluateAll(els => els.map(el => ({tile:el.dataset.tile,...el.getBoundingClientRect().toJSON()})));
-      for(let i=0;i<bounds.length;i++) for(let j=i+1;j<bounds.length;j++) if(bounds[i].tile===bounds[j].tile) {
-        const a=bounds[i], z=bounds[j];
-        assert.ok(a.right<=z.left+.1 || z.right<=a.left+.1 || a.bottom<=z.top+.1 || z.bottom<=a.top+.1, 'all visible nameplates fit without intersecting');
-      }
+      assert.deepEqual(bounds, [], 'no nameplates outside a derby');
       assert.deepEqual(errors,[]);report.push({n,on:on.stats,off,vehicles:on.vehicles,largeNumbers,bounds});await p.close();
     }
     // The complete colour×pattern cycle and its wrap, plus large labels; the number remains distinct on repeated combinations.
