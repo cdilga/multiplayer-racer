@@ -1,6 +1,6 @@
 {
   "base": "https://jammers-preview.dilger.dev",
-  "checkedAt": "2026-10-25T23:12:21.065Z",
+  "checkedAt": "2026-10-26T00:07:28.501Z",
   "results": [
     {
       "browser": "Chromium",
@@ -100,46 +100,6 @@
         {
           "status": 206,
           "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
         }
       ],
       "vtt": [
@@ -168,46 +128,6 @@
         "activeCue": "Sixty-four drivers. One shared screen. And there's no player cap."
       },
       "videoResponses": [
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
-        {
-          "status": 206,
-          "type": "video/mp4"
-        },
         {
           "status": 206,
           "type": "video/mp4"
