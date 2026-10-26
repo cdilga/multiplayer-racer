@@ -24,6 +24,7 @@ Run by .gitea/workflows/deploy-prod.yml (scripts/promote.sh dispatches it).
 import asyncio
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
@@ -40,6 +41,9 @@ LAN = os.environ.get("PROD_LAN_URL", f"http://192.168.11.12:{PORT}")
 PUBLIC = "https://jammers.dilger.dev"
 # Cloudflare answers 403 to urllib's default "Python-urllib" User-Agent (run 7062/7065).
 UA = {"User-Agent": "jammers-promote/1"}
+# The production game smoke (smoke.mjs, SMOKE_REALM=production): the real party loop through the public URL with
+# WebRTC between two phones, no test surface.
+SMOKE_STEPS = "room,join-webrtc,input,resume,race,hud"
 
 
 def compose(build: str, digest: str, secrets: dict) -> dict:
@@ -139,8 +143,8 @@ def wait_serving(base: str, build: str, timeout_s: int) -> dict | None:
 
 def checks(base: str, build: str, timeout_s: int) -> list[str]:
     """Production smoke: serves this build in realm production, the pages answer, the test chunk is gone. (The full
-    WebRTC smoke ran on these exact bytes as the preview; it drives the game through the test surface production
-    hides.)"""
+    WebRTC smoke ran on these exact bytes as the preview; production's own game smoke, game_smoke, runs after the
+    record.)"""
     v = wait_serving(base, build, timeout_s)
     if not v:
         return [f"{base}/version never reported build {build}"]
@@ -153,6 +157,21 @@ def checks(base: str, build: str, timeout_s: int) -> list[str]:
         if got != want:
             bad.append(f"{path} answered {got}, want {want}")
     return bad
+
+
+def game_smoke() -> str | None:
+    """Runs the production game smoke against the public URL; returns the FAIL line, or None on a pass."""
+    try:
+        r = subprocess.run(["node", os.path.join(os.path.dirname(__file__), "smoke.mjs"), f"{PUBLIC}/", SMOKE_STEPS],
+                           capture_output=True, text=True, timeout=420, env=dict(os.environ, SMOKE_REALM="production"))
+    except subprocess.TimeoutExpired:
+        return "smoke: FAIL the smoke script timed out after 7 minutes"
+    except OSError as e:
+        return f"smoke: FAIL could not start node ({e.strerror})"
+    tail = (r.stdout + r.stderr).strip().splitlines()[-12:]
+    print("\n".join(tail))
+    line = next((x for x in reversed(tail) if x.startswith("smoke:")), tail[-1] if tail else "no output")
+    return None if r.returncode == 0 and line.startswith("smoke: PASS") else line[:400]
 
 
 async def promote(row: dict, rels: list[dict], secrets: dict):
@@ -182,7 +201,12 @@ async def promote(row: dict, rels: list[dict], secrets: dict):
         record.create_tag(f"pin/{build}", row["sha"], "Production")
     if public:
         raise SystemExit("promote: production runs the build on the LAN but the public URL doesn't serve it yet (tunnel?)")
-    print(f"promote: PASS {build} is production")
+    # After the record: production serves this build whatever the game smoke says, and --rollback needs the tag.
+    bad = game_smoke()
+    if bad:
+        raise SystemExit(f"promote: {build} is production but its game smoke failed: {bad}"
+                         + ("; roll back with scripts/promote.sh --rollback" if previous else ""))
+    print(f"promote: PASS {build} is production and its game smoke passed")
 
 
 def main():

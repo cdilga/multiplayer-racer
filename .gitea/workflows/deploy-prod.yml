@@ -14,15 +14,23 @@ concurrency:
 jobs:
   promote:
     runs-on: jammers-deploy
-    timeout-minutes: 15
+    # The same image as the preview publish: Node, Chromium and its libraries for the production game smoke.
+    container:
+      image: jj-ci:d161a07c0df4
+    timeout-minutes: 20
     env:
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
       GITEA_TOKEN: ${{ github.token }}  # release/<stamp> and pin/<id> tags (the record)
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: infra
       - name: Tools
-        run: python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+        working-directory: infra/previews
+        run: |
+          python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+          npm install --no-audit --no-fund --silent
+          test -d "$PLAYWRIGHT_BROWSERS_PATH"
       - name: Promote
         env:
           TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}

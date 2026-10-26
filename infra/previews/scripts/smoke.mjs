@@ -10,18 +10,24 @@
 //   SMOKE_MANDATORY=a,b    steps a bundle's smoke.json must declare (default: all seven, P1-D07). A bundle that drops
 //                          one fails here, naming it, and so is marked "not playable". `SMOKE_MANDATORY=` (empty) = none.
 //   SMOKE_JSON=1           the last line is a JSON result ({ok, steps, path, code}) instead of the PASS/FAIL text.
+//   SMOKE_REALM=production the production smoke (https://jammers.dilger.dev/, run by promote.py): production hides the
+//                          test surface, so `drive` and `round` are refused and `race` (two phones join the real room,
+//                          pick a car, Ready, the race runs) with `hud` stands in; the mandatory default becomes
+//                          room,join-webrtc,input,resume,race,hud, and a host page exposing __jjTest fails.
 const [base, list] = process.argv.slice(2);
 if (!base || !/^https?:\/\/.+\/$/.test(base)) {
   console.log('smoke: FAIL usage: smoke.mjs <preview base url ending in /> <step,step,…>');
   process.exit(2);
 }
 const steps = new Set((list ?? '').split(',').filter(Boolean));
-const KNOWN = ['room', 'join-webrtc', 'input', 'resume', 'drive', 'hud', 'round'];
+const KNOWN = ['room', 'join-webrtc', 'input', 'resume', 'race', 'drive', 'hud', 'round'];
+const production = process.env.SMOKE_REALM === 'production';
 const relay = process.env.SMOKE_ICE === 'relay';
 const others = (process.env.SMOKE_OTHERS ?? '').split(',').filter(Boolean);
 const q = relay ? '?hello&ice=relay' : '?hello';
-const mandatory = (process.env.SMOKE_MANDATORY ?? KNOWN.join(',')).split(',').filter(Boolean);
-const gameSteps = ['drive', 'hud', 'round'].filter((s) => steps.has(s));
+const MANDATORY = production ? 'room,join-webrtc,input,resume,race,hud' : 'room,join-webrtc,input,resume,drive,hud,round';
+const mandatory = (process.env.SMOKE_MANDATORY ?? MANDATORY).split(',').filter(Boolean);
+const gameSteps = ['race', 'drive', 'hud', 'round'].filter((s) => steps.has(s));
 const passed = [];
 let code = null;
 let pathKind = null;
@@ -36,6 +42,7 @@ function fail(why, step = current) {
 if (!steps.size) fail('no steps given', 'manifest');
 for (const s of steps) if (!KNOWN.includes(s)) fail(`unknown step ${s}`, 'manifest');
 for (const s of mandatory) if (!steps.has(s)) fail(`mandatory step ${s} is missing from smoke.json`, s);
+if (production) for (const s of ['drive', 'round']) if (steps.has(s)) fail(`step ${s} needs the test surface production hides`, 'manifest');
 
 const { chromium } = await import('playwright'); // after the manifest checks, which need no browser
 const browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] });
@@ -50,8 +57,8 @@ async function gameFlow() {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
-  current = steps.has('drive') ? 'drive' : gameSteps[0];
-  const res = await host.goto(`${base}host?room&test=live&laps=1${gq}`);
+  current = steps.has('race') ? 'race' : steps.has('drive') ? 'drive' : gameSteps[0];
+  const res = await host.goto(production ? `${base}host?room${gq}` : `${base}host?room&test=live&laps=1${gq}`);
   if (!res || !res.ok()) fail(`game host page answered ${res ? res.status() : 'nothing'}`);
   await until(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
@@ -74,6 +81,11 @@ async function gameFlow() {
     await page.getByRole('button', { name: /^Ready/ }).click();
   }
   await until(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
+  if (steps.has('race')) {
+    if (production && (await host.evaluate(() => window.__jjTest !== undefined))) fail('the host page exposes the test surface (__jjTest)');
+    for (const page of phones) if ((await page.evaluate(() => window.__jjController.inspect().phase)) !== 'playing') fail('a phone left the race as it started');
+    passed.push('race');
+  }
 
   const observe = () => host.evaluate(() => window.__jjTest.observe());
   if (steps.has('drive')) {

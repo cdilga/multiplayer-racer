@@ -33,6 +33,15 @@ class SmokeManifest(unittest.TestCase):
         _, line = run("room,join-webrtc,input,resume", SMOKE_MANDATORY="room,join-webrtc,input,resume")
         self.assertNotIn("mandatory step", line)
 
+    def test_production_needs_its_own_steps_and_refuses_the_test_surface(self):
+        prod = "room,join-webrtc,input,resume,race,hud"
+        self.assertEqual(run("room,join-webrtc,input,resume,hud", SMOKE_REALM="production")[1],
+                         "smoke: FAIL step race: mandatory step race is missing from smoke.json")
+        self.assertEqual(run(prod + ",drive", SMOKE_REALM="production")[1],
+                         "smoke: FAIL step manifest: step drive needs the test surface production hides")
+        self.assertEqual(run(prod + ",round", SMOKE_REALM="production")[1],
+                         "smoke: FAIL step manifest: step round needs the test surface production hides")
+
 
 if __name__ == "__main__":
     unittest.main()
