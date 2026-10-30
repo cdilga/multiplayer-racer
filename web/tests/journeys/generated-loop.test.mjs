@@ -132,7 +132,10 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       assert.deepEqual(r.lost,[],`${n} tiles: the car leaves a tile's frame`);
       assert.ok(maxRoll<.01,`${n} tiles: the camera stays world-up (max roll ${maxRoll} deg)`);
       assert.ok(inLoop.length&&before&&maxZoom<before.zoomM,`${n} tiles: the camera zooms in through the loop (${maxZoom} m vs ${before?.zoomM} m before it)`);
-      assert.ok(after.loop===null&&after.loopIn<.05&&Math.abs(after.zoomM-before.zoomM)<1,`${n} tiles: the camera eases back out after the loop (${after.zoomM} m, ease ${after.loopIn})`);
+      // The ride ends about a second past the exit: the ease out is under way (web/host/tests/loop-camera.test.mjs rides
+      // it all the way back to the road framing).
+      const tail=r.cams.filter(c=>c.seat===after.seat).slice(-4).map(c=>c.loopIn);
+      assert.ok(after.loop===null&&after.loopIn<.5&&tail.every((v,k)=>!k||v<tail[k-1]),`${n} tiles: the camera eases back out after the loop (ease ${tail})`);
       await page.close();
     }
     if(process.env.JJ_CAPTURE_DIR)writeFileSync(join(out,'in-frame.json'),JSON.stringify({browser:'chromium',viewport:'1366x768',rows},null,2)+'\n');
