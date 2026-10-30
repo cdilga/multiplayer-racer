@@ -78,7 +78,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
                 return window.__jjRender.tilesSee(s.cars.map(c=>[c.position[0],c.position[1],c.position[2]]));
               });
               assert.ok(sees.length&&sees[0].sees.every(Boolean),'the car at the top is in the tile camera frustum');
-              if(view==='chase')assert.equal((await page.evaluate(()=>window.__jjRender.cameras()))[1].loop,0,'the chase has cut to the loop shot');
+              if(view==='chase')assert.equal((await page.evaluate(()=>window.__jjRender.cameras()))[1].loop,0,'the chase is on the loop framing');
               const file=`${name}-top-${view}-${width}x${height}.jpg`;
               if(process.env.JJ_CAPTURE_DIR)await page.screenshot({path:join(out,file),type:'jpeg',quality:85});
               rows.push({file,width,height,view});
@@ -92,7 +92,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
         assert.ok(last.upY>.9&&last.position[1]<2,`the car is back on the road, upright: ${JSON.stringify(last)}`);
         if(view==='chase') {
           await paint();
-          assert.equal((await page.evaluate(()=>window.__jjRender.cameras()))[1].loop,null,'out of the loop, the chase is back behind the car');
+          assert.equal((await page.evaluate(()=>window.__jjRender.cameras()))[1].loop,null,'out of the loop, the chase is easing back behind the car');
           if(process.env.JJ_CAPTURE_DIR)await page.screenshot({path:join(out,`${name}-out-chase-1366x768.jpg`),type:'jpeg',quality:85});
         }
         hash=await page.evaluate(()=>window.__jjTest.hash());

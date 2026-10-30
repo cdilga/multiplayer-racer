@@ -10,10 +10,11 @@
 // - First person: an eye over the bonnet riding the car body (its pitch and roll, damped for comfort, are the
 //   suspension's head-bob), a speed FOV kick, and a rear-view mirror in a strip of the tile (segmented first person).
 // - A respawn cuts: the camera jumps straight to its new place, never swoops across the map.
-// - A loop (br-xlvx.6): a chase camera behind the car would end up outside the deck at the top, looking at the deck's
-//   underside, with its heading swinging round as the car turns over. While the car is up on a loop the chase cuts to a
-//   loop shot instead: side-on, level with the loop's middle, far enough out to frame the whole loop, panning to follow
-//   the car round; at the exit it cuts back to the chase behind the car.
+// - A loop (br-xlvx.6, br-8h3u.2): a chase camera behind the car would end up outside the deck at the top, looking at the
+//   deck's underside, with its heading swinging round as the car turns over. While the car is up on a loop the chase
+//   holds the loop's heading and eases in towards the car, to a point part of the way from the car to the loop's axis
+//   and a little behind it, so it sees the car from inside the loop all the way round; it eases back out after the
+//   exit. It never cuts and never rolls: up stays world-up (the owner found the cut to a side-on shot disconcerting).
 // The mode and distance never touch input: held steering means the same in either camera (master §4.1).
 import { Quaternion, Vector3, type PerspectiveCamera } from 'three';
 import profile from '../../../../assets/profiles/camera.json';
@@ -73,8 +74,16 @@ interface SeatState {
   /** The reversing camera's state and the car's signed longitudinal speed (m/s, negative backwards). */
   rev: ReverseState;
   signedMps: number;
-  /** The loop (index into `loops`) whose loop shot this seat shows, or null. */
+  /** The loop (index into `loops`) the car is up on, or null; the last one it rode (the ease out follows it); and how
+   *  far the chase has eased in towards the car (0 the chase, 1 the loop framing). */
   loop: number | null;
+  lastLoop: number | null;
+  loopIn: number;
+  /** The chase's distance to its car (m) and the distance at the preset's FOV that frames the car the same (its zoom). */
+  gapM: number;
+  zoomM: number;
+  /** The chase's roll (degrees, its right vector off level): 0 on the ground and round a loop alike. */
+  rollDeg: number;
   /** How far (m) the chase stands above its preset height to clear the ground, and how fast that changes (m/s): a
    *  spring, quick up and slow down, never under the line-of-sight floor, so relief never makes it pop (br-gw74.14.1). */
   groundLift: number;
@@ -104,11 +113,13 @@ export class CameraRig {
   private v = new Vector3();
   private w = new Vector3();
   private q = new Quaternion();
+  private loopPos = new Vector3();
+  private loopLook = new Vector3();
 
   private seat(id: number): SeatState {
     let s = this.seats.get(id);
     if (!s) {
-      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null, groundLift: 0, groundLiftRate: 0, groundWant: 0 };
+      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0, loop: null, lastLoop: null, loopIn: 0, gapM: 0, zoomM: 0, rollDeg: 0, groundLift: 0, groundLiftRate: 0, groundWant: 0 };
       this.seats.set(id, s);
     }
     return s;
@@ -177,45 +188,43 @@ export class CameraRig {
     return null;
   }
 
-  /** From the exit's side of the loop, `loop.azimuthDeg` round from side-on towards the way out, `loop.upOfTop` of the
-   *  way up to the top, far enough out to frame all of it; the aim pans `loop.panToCar` of the way from the loop's middle
-   *  to the car. Side-on, the barrier walls hang down at the top exactly as far as the car does and hide it; the oblique
-   *  view looks in under the deck (raycast against the loop mesh: clear from about 20° to 55° up to 1.4 R high). */
-  private loopShot(s: SeatState, cam: PerspectiveCamera, car: CarView, l: LoopShot, fovDeg: number): void {
+  /** The loop framing. The loop's centre travels with the car (along = A·t, up = R, sideways with the car), and the
+   *  camera rides beside it on the exit's side, `loop.azimuthDeg` round from side-on (+ towards the way out), `loop.outRadii`
+   *  radii out and `loop.upOfTop` of the way up to the top, aiming `loop.lookToCar` of the way from that centre to the car. A
+   *  camera behind the car can't follow it round: over the top the car runs backwards and on the way down it is on the
+   *  deck's forward face. Side-on, the barriers at the top hide the car; the oblique view looks in under the deck. The car's
+   *  place round the helix comes from its sideways progress (lateral = S(t − sin 2πt / 2π) rises monotonically). */
+  private loopFrame(car: CarView, l: LoopShot, pos: Vector3, look: Vector3): void {
     const L = profile.loop;
-    const tanV = Math.tan((fovDeg * Math.PI) / 360);
-    const out = Math.max((l.radius + L.marginM) / tanV, (l.runOut / 2 + l.radius + L.marginM) / (tanV * cam.aspect));
-    const middle = this.w.copy(l.entry).addScaledVector(l.forward, l.runOut / 2).addScaledVector(l.left, l.shift / 2);
-    middle.y += l.rise / 2;
-    const a = (L.azimuthDeg * Math.PI) / 180;
-    const reach = out + Math.abs(l.shift) / 2 + l.halfWidth;
-    s.pos.copy(middle).addScaledVector(l.left, (l.shift < 0 ? -1 : 1) * Math.cos(a) * reach).addScaledVector(l.forward, Math.sin(a) * reach);
-    s.pos.y += 2 * l.radius * L.upOfTop;
-    middle.y += l.radius;
-    s.look.copy(middle).lerp(car.pos, L.panToCar);
-    if (cam.fov !== fovDeg) {
-      cam.fov = fovDeg;
-      cam.updateProjectionMatrix();
+    const d = this.v.copy(car.pos).sub(l.entry);
+    let t = Math.min(Math.max(d.dot(l.forward) / l.runOut, 0), 1);
+    if (Math.abs(l.shift) > 1e-3) {
+      const g = Math.min(Math.max(d.dot(l.left) / l.shift, 0), 1);
+      let lo = 0, hi = 1;
+      for (let k = 0; k < 24; k++) {
+        const m = (lo + hi) / 2;
+        if (m - Math.sin(2 * Math.PI * m) / (2 * Math.PI) < g) lo = m;
+        else hi = m;
+      }
+      t = (lo + hi) / 2;
     }
-    cam.position.copy(s.pos);
-    cam.up.copy(UP);
-    cam.lookAt(s.look);
+    const centre = this.w.copy(l.entry).addScaledVector(l.forward, l.runOut * t).addScaledVector(l.left, d.dot(l.left));
+    centre.y += l.rise * t;
+    const a = (L.azimuthDeg * Math.PI) / 180;
+    pos.copy(centre).addScaledVector(l.left, (l.shift < 0 ? -1 : 1) * Math.cos(a) * L.outRadii * l.radius).addScaledVector(l.forward, Math.sin(a) * L.outRadii * l.radius);
+    pos.y += 2 * l.radius * L.upOfTop;
+    centre.y += l.radius;
+    look.copy(centre).lerp(car.pos, L.lookToCar);
   }
 
   private chase(s: SeatState, cam: PerspectiveCamera, car: CarView, dt: number, cut: boolean): void {
     const R = profile.chase[this.distance(s.id)];
-    const want = Math.atan2(this.fwd.x, this.fwd.z);
     const loop = this.loopAt(car.pos);
-    if (loop !== null) {
-      s.loop = loop;
-      this.loopShot(s, cam, car, this.loops[loop]!, R.fovDeg);
-      return;
-    }
-    if (s.loop !== null) {
-      // Out of the loop: cut back to the chase behind the car (it leaves heading the way it went in).
-      s.loop = null;
-      cut = true;
-    }
+    s.loop = loop;
+    if (loop !== null) s.lastLoop = loop;
+    // Up on a loop the car's own heading flips over the top: the chase holds the loop's.
+    const l = loop !== null ? this.loops[loop]! : null;
+    const want = l ? Math.atan2(l.forward.x, l.forward.z) : Math.atan2(this.fwd.x, this.fwd.z);
     if (cut) {
       s.heading = want;
       s.headingRate = 0;
@@ -242,13 +251,34 @@ export class CameraRig {
     s.look.set(Math.sin(lookYaw), 0, Math.cos(lookYaw)).multiplyScalar(ahead).add(car.pos);
     const flat = Math.hypot(s.look.x - s.pos.x, s.look.z - s.pos.z);
     s.look.y = s.pos.y - Math.tan(pitch) * flat;
-    if (cam.fov !== R.fovDeg) {
-      cam.fov = R.fovDeg;
+    // Ease in towards the car on a loop and back out after it (exponential, `loop.easeInS` / `loop.easeOutS`).
+    const L = profile.loop;
+    const goal = loop !== null ? 1 : 0;
+    s.loopIn = cut ? goal : goal + (s.loopIn - goal) * Math.exp(-dt / (goal ? L.easeInS : L.easeOutS));
+    if (s.loopIn < 1e-3) s.loopIn = 0;
+    let fov = R.fovDeg;
+    if (s.loopIn > 0 && s.lastLoop !== null) {
+      this.loopFrame(car, this.loops[s.lastLoop]!, this.loopPos, this.loopLook);
+      s.pos.lerp(this.loopPos, s.loopIn);
+      // Part way between the two, neither aim need hold the car: the aim comes onto the car over the first quarter of
+      // the ease and goes on to the loop's aim over the rest.
+      s.look.lerp(this.v.copy(car.pos).setY(car.pos.y + profile.rig.pullInEyeUpM), Math.min(1, 4 * s.loopIn));
+      s.look.lerp(this.loopLook, Math.max(0, (4 * s.loopIn - 1) / 3));
+      // Zoom in: the car fills the frame as it would from `loop.zoomM` away at the preset's FOV (never under `loop.minFovDeg`).
+      const tan0 = Math.tan((R.fovDeg * Math.PI) / 360);
+      const zoomed = Math.max(L.minFovDeg, (360 / Math.PI) * Math.atan((tan0 * L.zoomM) / Math.max(s.pos.distanceTo(car.pos), L.zoomM)));
+      fov += (zoomed - R.fovDeg) * s.loopIn * s.loopIn; // the aim settles on the car before the frame tightens
+    }
+    if (cam.fov !== fov) {
+      cam.fov = fov;
       cam.updateProjectionMatrix();
     }
     cam.position.copy(s.pos);
     cam.up.copy(UP);
     cam.lookAt(s.look);
+    s.gapM = s.pos.distanceTo(car.pos);
+    s.zoomM = (s.gapM * Math.tan((fov * Math.PI) / 360)) / Math.tan((R.fovDeg * Math.PI) / 360);
+    s.rollDeg = (Math.asin(Math.min(1, Math.max(-1, this.v.set(1, 0, 0).applyQuaternion(cam.quaternion).y))) * 180) / Math.PI;
   }
 
   /** Big air reads as big air (br-gw74.13.1.1): how far (m) the chase stays below its usual height over the car while the
@@ -369,7 +399,7 @@ export class CameraRig {
     return Object.fromEntries(
       [...this.seats].map(([id, s]) => [
         id,
-        { mode: s.mode, distance: this.distance(id), cuts: s.cuts, loop: s.loop, maxGapM: +s.maxGapM.toFixed(2), speed: +s.speed.toFixed(2), pulledIn: s.pulledIn,
+        { mode: s.mode, distance: this.distance(id), cuts: s.cuts, loop: s.loop, loopIn: +s.loopIn.toFixed(3), gapM: +s.gapM.toFixed(2), zoomM: +s.zoomM.toFixed(2), rollDeg: +s.rollDeg.toFixed(2), maxGapM: +s.maxGapM.toFixed(2), speed: +s.speed.toFixed(2), pulledIn: s.pulledIn,
           reverse: { reversing: s.rev.reversing, blend: +s.rev.t.toFixed(3), yawDeg: +((reverseYaw(s.rev) * 180) / Math.PI).toFixed(1), signedMps: +s.signedMps.toFixed(2) } },
       ]),
     );

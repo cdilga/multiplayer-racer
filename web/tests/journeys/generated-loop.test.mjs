@@ -110,8 +110,8 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
   } finally {await browser.close();}
 });
 
-// br-l4v5 (R125): at every tile size the race camera keeps the car in frame all the way round the loop (the loop shot
-// and the cuts in and out), checked 20 times a second.
+// br-l4v5 (R125), br-8h3u.2: at every tile size the race camera keeps the car in frame all the way round the loop and
+// through the eases in and out, never rolls, and zooms in on the car in the loop; checked 20 times a second.
 // On the gpu runner (gpu.yml): nine SwiftShader tiles a frame are too slow for a CPU slot's budget.
 test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',{timeout:600_000,skip:!gpu&&'needs the gpu runner (JJ_CHROMIUM_GPU)'},async()=>{
   const browser=await chromium.launch({args:chromiumArgs});
@@ -124,8 +124,16 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       await page.waitForFunction(()=>window.__jjTest&&window.__jjRender);
       await page.evaluate(async({fixture,mapJson})=>{window.__jjRender.hold();await window.__jjTest.load(fixture,mapJson);},{fixture,mapJson});
       const r=await inFrameRide(page,{ticks:TICKS});
-      rows.push({tiles:n,frames:r.frames,lost:r.lost.length});console.log(`# ${n} tiles: ${r.frames} checks, ${r.lost.length} lost`);
+      // br-8h3u.2: no roll anywhere; once eased into the loop the car is framed closer than the chase frames it on the
+      // road before the loop, and after the exit the chase eases back out to that framing.
+      const road=r.cams.filter(c=>c.loop===null&&c.loopIn===0),before=road.find(c=>c.tick>0)??road[0],inLoop=r.cams.filter(c=>c.loopIn>.9);
+      const maxRoll=Math.max(...r.cams.map(c=>Math.abs(c.rollDeg))),maxZoom=Math.max(...inLoop.map(c=>c.zoomM)),after=road.at(-1);
+      rows.push({tiles:n,frames:r.frames,lost:r.lost.length,maxRollDeg:maxRoll,chaseZoomM:before?.zoomM,maxLoopZoomM:maxZoom,afterZoomM:after?.zoomM});
+      console.log(`# ${n} tiles: ${r.frames} checks, ${r.lost.length} lost, roll ${maxRoll} deg, zoom ${before?.zoomM} m -> ${maxZoom} m -> ${after?.zoomM} m`);
       assert.deepEqual(r.lost,[],`${n} tiles: the car leaves a tile's frame`);
+      assert.ok(maxRoll<.01,`${n} tiles: the camera stays world-up (max roll ${maxRoll} deg)`);
+      assert.ok(inLoop.length&&before&&maxZoom<before.zoomM,`${n} tiles: the camera zooms in through the loop (${maxZoom} m vs ${before?.zoomM} m before it)`);
+      assert.ok(after&&after.tick>inLoop.at(-1).tick&&Math.abs(after.zoomM-before.zoomM)<1.5,`${n} tiles: the camera eases back out after the loop (${after?.zoomM} m)`);
       await page.close();
     }
     if(process.env.JJ_CAPTURE_DIR)writeFileSync(join(out,'in-frame.json'),JSON.stringify({browser:'chromium',viewport:'1366x768',rows},null,2)+'\n');
