@@ -1,0 +1,33 @@
+{
+  "browser": "chromium",
+  "viewport": "1366x768",
+  "rows": [
+    {
+      "tiles": 1,
+      "frames": 70,
+      "lost": 0,
+      "maxRollDeg": 0,
+      "chaseZoomM": 9.48,
+      "maxLoopZoomM": 8.49,
+      "afterZoomM": 6.87
+    },
+    {
+      "tiles": 4,
+      "frames": 70,
+      "lost": 0,
+      "maxRollDeg": 0,
+      "chaseZoomM": 9.48,
+      "maxLoopZoomM": 8.43,
+      "afterZoomM": 7.05
+    },
+    {
+      "tiles": 9,
+      "frames": 70,
+      "lost": 0,
+      "maxRollDeg": 0,
+      "chaseZoomM": 9.48,
+      "maxLoopZoomM": 8.43,
+      "afterZoomM": 6.98
+    }
+  ]
+}
