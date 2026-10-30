@@ -168,9 +168,9 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
             for (let i = 0; i < 20; i++) { window.__jjRender.frame(); await new Promise(r => setTimeout(r, 16)); }
             window.__jjRender.hold();
           });
+          // R141 (owner, 2026-10-26): a race draws no name badges (only a derby does), so nothing covers the car or its jump.
           const lab = await labelClear(ov);
-          assert.ok(lab.labelled, 'the overview labels the car');
-          assert.deepEqual(lab.covered, [], `${width}x${height}: the label covers neither the car nor the jump around it: ${JSON.stringify(lab)}`);
+          assert.equal(lab.labelled, false, `a race draws no name badge over the car: ${JSON.stringify(lab)}`);
           const file = `${name}-overview-air-${width}x${height}.jpg`;
           await ov.screenshot({ path: join(out, file), type: 'jpeg', quality: 85 });
           rows.push({ file, state: 'overview-air', width, height, tick: air.tick });
