@@ -29,7 +29,7 @@ const centre = (t) => {
   const along = fr.runOut * t + R * Math.sin(TAU * t), up = R * (1 - Math.cos(TAU * t)), lat = fr.shift * (t - Math.sin(TAU * t) / TAU);
   return new Vector3(fr.e[0] + fr.forward[0] * along + fr.left[0] * lat, fr.e[1] + (fr.yExit - fr.e[1]) * t + up, fr.e[2] + fr.forward[1] * along + fr.left[1] * lat);
 };
-// The ride: 30 m of road in, the loop, 50 m out; each sample has the car's position, up (the deck's normal) and forward.
+// The ride: 30 m of road in, the loop, 90 m out; each sample has the car's position, up (the deck's normal) and forward.
 const path = [];
 for (let s = -30; s < 0; s += 0.02) path.push({ p: new Vector3(...fr.e).addScaledVector(F, s), up: new Vector3(0, 1, 0), fw: F.clone() });
 for (let k = 0; k <= 8000; k++) {
@@ -39,7 +39,7 @@ for (let k = 0; k <= 8000; k++) {
   const bend = centre(m + h).sub(centre(m)).normalize().sub(centre(m).sub(centre(m - h)).normalize());
   path.push({ p: centre(t), up: bend.lengthSq() > 1e-12 ? bend.normalize() : new Vector3(0, 1, 0), fw });
 }
-for (let s = 0.02; s < 50; s += 0.02) path.push({ p: centre(1).addScaledVector(F, s), up: new Vector3(0, 1, 0), fw: F.clone() });
+for (let s = 0.02; s < 90; s += 0.02) path.push({ p: centre(1).addScaledVector(F, s), up: new Vector3(0, 1, 0), fw: F.clone() });
 
 const loopMeshObject = (() => {
   const m = loopMesh(map, params), g = new BufferGeometry(), pos = [];
@@ -84,12 +84,13 @@ for (const speed of [14, 20, 26]) for (const [name, aspect] of [['wide', 16 / 9]
     assert.deepEqual(hidden, [], 'the loop never hides the car');
     assert.ok(Math.max(...f.map((x) => x.roll)) < 1e-6, 'the camera never rolls');
     assert.equal(f.at(-1).cuts, 0, 'no cut into or out of the loop');
-    const road = f.filter((x) => x.loop === null && x.loopIn === 0), before = road[10], after = road.at(-1);
+    const before = f[10], after = f.at(-1);
+    assert.ok(before.loop === null && before.loopIn === 0, 'the ride starts on the road behind the car');
     const zoomed = f.filter((x) => x.loopIn > 0.9).map((x) => x.zoomM);
     assert.ok(zoomed.length > 0, 'the chase eases into the loop framing');
     assert.ok(Math.max(...zoomed) < before.zoomM - 1, `in the loop the car is framed closer (${Math.max(...zoomed)} m) than on the road (${before.zoomM} m)`);
     const settled = f.filter((x) => x.loopIn > 0.97).map((x) => x.zoomM);
     assert.ok(Math.max(...settled) <= PROFILE.loop.zoomM + 1, `eased fully in, about the loop's zoom (${PROFILE.loop.zoomM} m): ${Math.max(...settled)} m`);
-    assert.ok(Math.abs(after.zoomM - before.zoomM) < 0.05, `after the exit the chase is back to its road framing (${after.zoomM} m)`);
+    assert.ok(after.loop === null && after.loopIn < 0.01 && Math.abs(after.zoomM - before.zoomM) < 0.1, `after the exit the chase eases back to its road framing (${after.zoomM} m, ease ${after.loopIn})`);
   });
 }

@@ -188,7 +188,7 @@ export class CameraRig {
     return null;
   }
 
-  /** The loop framing. The loop's centre travels with the car (along = A·t, up = R, sideways with the car), and the
+  /** The loop framing. The loop's centre travels with the car (along A·t, up R, sideways with the car), and the
    *  camera rides beside it on the exit's side, `loop.azimuthDeg` round from side-on (+ towards the way out), `loop.outRadii`
    *  radii out and `loop.upOfTop` of the way up to the top, aiming `loop.lookToCar` of the way from that centre to the car. A
    *  camera behind the car can't follow it round: over the top the car runs backwards and on the way down it is on the
@@ -208,7 +208,10 @@ export class CameraRig {
       }
       t = (lo + hi) / 2;
     }
-    const centre = this.w.copy(l.entry).addScaledVector(l.forward, l.runOut * t).addScaledVector(l.left, d.dot(l.left));
+    // The centre is the car less its offset round the circle (A·t inside the loop), so before the entry and after the exit
+    // it travels with the car and an ease never drags the camera back towards the loop.
+    const along = d.dot(l.forward) - l.radius * Math.sin(2 * Math.PI * t);
+    const centre = this.w.copy(l.entry).addScaledVector(l.forward, along).addScaledVector(l.left, d.dot(l.left));
     centre.y += l.rise * t;
     const a = (L.azimuthDeg * Math.PI) / 180;
     pos.copy(centre).addScaledVector(l.left, (l.shift < 0 ? -1 : 1) * Math.cos(a) * L.outRadii * l.radius).addScaledVector(l.forward, Math.sin(a) * L.outRadii * l.radius);

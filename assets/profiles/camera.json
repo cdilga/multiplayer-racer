@@ -18,7 +18,7 @@
     "fovDeg": 72,
     "mirror": { "x": 0.32, "y": 0.04, "w": 0.36, "h": 0.17, "fovDeg": 46, "eyeUpM": 2.3, "lookBackM": 30, "lookUpM": 0.4 }
   },
-  "loop": { "enterUpM": 0.5, "marginM": 3, "azimuthDeg": 40, "outRadii": 1.5, "upOfTop": 0.45, "lookToCar": 0.9, "zoomM": 7, "minFovDeg": 24, "easeInS": 0.5, "easeOutS": 0.8 },
+  "loop": { "enterUpM": 0.5, "marginM": 3, "azimuthDeg": 40, "outRadii": 1.5, "upOfTop": 0.45, "lookToCar": 0.9, "zoomM": 7, "minFovDeg": 24, "easeInS": 0.5, "easeOutS": 0.6 },
   "reverse": { "enterMps": 1.5, "enterHoldS": 0.35, "exitMps": 2, "exitHoldS": 0.25, "blendS": 0.7 },
   "rig": {
     "lookAheadPerMps": 0.35,

@@ -84,10 +84,9 @@ test('chromium: a generated loop is ridden upside down at the top, out upright, 
             });
             if(view==='chase')assert.ok(sees.length&&sees[0].sees.every(Boolean),'the car at the top is in the tile camera frustum');
             if(view==='overview'){
-              // br-gw74.13.1.1.1: at whole-lap scale the car's label stands beside the car, over neither it nor the loop it is on.
+              // R141 (owner, 2026-10-26): a race draws no name badges (only a derby does), so nothing covers the car or its loop.
               const lab=await labelClear(page);
-              assert.ok(lab.labelled,'the overview labels the car');
-              assert.deepEqual(lab.covered,[],`${width}x${height}: the label covers neither the car nor the loop around it: ${JSON.stringify(lab)}`);
+              assert.equal(lab.labelled,false,`a race draws no name badge over the car: ${JSON.stringify(lab)}`);
             }
             const file=`top-${view}-${width}x${height}.jpg`;
             if(process.env.JJ_CAPTURE_DIR)await page.screenshot({path:join(out,file),type:'jpeg',quality:85});
@@ -126,14 +125,14 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       const r=await inFrameRide(page,{ticks:TICKS});
       // br-8h3u.2: no roll anywhere; once eased into the loop the car is framed closer than the chase frames it on the
       // road before the loop, and after the exit the chase eases back out to that framing.
-      const road=r.cams.filter(c=>c.loop===null&&c.loopIn===0),before=road.find(c=>c.tick>0)??road[0],inLoop=r.cams.filter(c=>c.loopIn>.9);
-      const maxRoll=Math.max(...r.cams.map(c=>Math.abs(c.rollDeg))),maxZoom=Math.max(...inLoop.map(c=>c.zoomM)),after=road.at(-1);
+      const before=r.cams.find(c=>c.tick>0&&c.loop===null&&c.loopIn===0),inLoop=r.cams.filter(c=>c.loopIn>.9),after=r.cams.at(-1);
+      const maxRoll=Math.max(...r.cams.map(c=>Math.abs(c.rollDeg))),maxZoom=Math.max(...inLoop.map(c=>c.zoomM));
       rows.push({tiles:n,frames:r.frames,lost:r.lost.length,maxRollDeg:maxRoll,chaseZoomM:before?.zoomM,maxLoopZoomM:maxZoom,afterZoomM:after?.zoomM});
       console.log(`# ${n} tiles: ${r.frames} checks, ${r.lost.length} lost, roll ${maxRoll} deg, zoom ${before?.zoomM} m -> ${maxZoom} m -> ${after?.zoomM} m`);
       assert.deepEqual(r.lost,[],`${n} tiles: the car leaves a tile's frame`);
       assert.ok(maxRoll<.01,`${n} tiles: the camera stays world-up (max roll ${maxRoll} deg)`);
       assert.ok(inLoop.length&&before&&maxZoom<before.zoomM,`${n} tiles: the camera zooms in through the loop (${maxZoom} m vs ${before?.zoomM} m before it)`);
-      assert.ok(after&&after.tick>inLoop.at(-1).tick&&Math.abs(after.zoomM-before.zoomM)<1.5,`${n} tiles: the camera eases back out after the loop (${after?.zoomM} m)`);
+      assert.ok(after.loop===null&&after.loopIn<.05&&Math.abs(after.zoomM-before.zoomM)<1,`${n} tiles: the camera eases back out after the loop (${after.zoomM} m, ease ${after.loopIn})`);
       await page.close();
     }
     if(process.env.JJ_CAPTURE_DIR)writeFileSync(join(out,'in-frame.json'),JSON.stringify({browser:'chromium',viewport:'1366x768',rows},null,2)+'\n');
