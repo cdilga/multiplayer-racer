@@ -6,7 +6,8 @@
 //! plan-given or TUNE; nothing caps cars (R36).
 //!
 //! - **Gates in order.** The route's gates, starting at the finish line, must be crossed in order (forward through the
-//!   gate's line, within the road's half-width plus [`GATE_MARGIN_M`]). Only the next expected gate counts, so a
+//!   gate's line, within its window: half way to the nearest other part of the course, [`GATE_MARGIN_M`] to
+//!   [`GATE_CORRIDOR_M`] past the road's edge). Only the next expected gate counts, so a
 //!   shortcut across the infield earns nothing. Teleports (placements, respawns) never cross a gate.
 //! - **Legal progress** is the route distance at the last gate passed, plus how far along the route the car is towards
 //!   the next one. That second term comes from projecting only onto the route between those two gates, never the
@@ -66,8 +67,15 @@ pub const RESPAWN_ROLL_PLAN: crate::autopilot::SpeedPlan = crate::autopilot::Spe
 pub const ANCHOR_CLEAR_M: f32 = 15.0;
 pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
-/// Lateral slack beyond the road's half-width for a gate crossing.
+/// Lateral slack beyond the road's half-width for a gate crossing: the least a gate's window reaches.
 pub const GATE_MARGIN_M: f32 = 2.0;
+/// The most a gate's window reaches beyond the road's half-width, m (owner 2026-10-31: wide lines, cut merges and corner
+/// cuts at arcade speed lost gates and laps never counted). Each gate reaches out to half way to the nearest other part
+/// of the course (route points more than [`GATE_OTHER_ROAD_M`] round the lap), so a car anywhere on the drivable ground
+/// beside its own road gets it, and a cut across the infield onto another part of the lap still meets no gate it can take.
+pub const GATE_CORRIDOR_M: f32 = 20.0;
+/// Route points at least this far round the lap from a gate are another part of the course, m.
+pub const GATE_OTHER_ROAD_M: f32 = 80.0;
 /// A car that misses a gate (ran wide, flew past) still gets it by crossing a later one at most this far round the route
 /// past it (m): gates stand about 40-55 m apart, so a missed gate or two never strands a lap, and an infield shortcut,
 /// which meets the road hundreds of metres further round, still earns nothing.
@@ -90,7 +98,8 @@ struct Gate {
     /// Unit route tangent (x, z) at the gate.
     tx: f32,
     tz: f32,
-    half_width: f32,
+    /// How far either side of the route the gate's line counts a car, m (see [`GATE_CORRIDOR_M`]).
+    reach: f32,
     /// Route distance from the finish line.
     from_finish: f32,
     anchor: SpawnPose,
@@ -182,6 +191,22 @@ impl Course {
                 .min_by(|a, b| a.0.total_cmp(&b.0))
                 .map(|(_, j)| m.route.points[j].y as f32 / 1000.0)
         };
+        // A gate's window: half way to the nearest other part of the course, between the road's edge plus
+        // GATE_MARGIN_M and plus GATE_CORRIDOR_M.
+        let reach_at = |at: usize| {
+            let half = m.route.points[at].width as f32 / 2000.0;
+            let clear = (0..n)
+                .filter(|&j| {
+                    let d = libm::fabsf(s[j] - s[at]);
+                    d.min(total - d) > GATE_OTHER_ROAD_M
+                })
+                .map(|j| {
+                    libm::hypotf(pts[j].0 - pts[at].0, pts[j].1 - pts[at].1)
+                        - m.route.points[j].width as f32 / 2000.0
+                })
+                .fold(f32::INFINITY, f32::min);
+            (clear / 2.0).clamp(half + GATE_MARGIN_M, half + GATE_CORRIDOR_M)
+        };
         let gates = sorted
             .iter()
             .map(|g| {
@@ -205,7 +230,7 @@ impl Course {
                     },
                     tx: dx / len,
                     tz: dz / len,
-                    half_width: m.route.points[at].width as f32 / 2000.0,
+                    reach: reach_at(at),
                     from_finish: (s[at] - finish_s).rem_euclid(total),
                     anchor: route_spawn(map, anchor_at(at), 0.0, RESPAWN_LIFT_M),
                 }
@@ -240,6 +265,11 @@ impl Course {
     /// The route point of gate `i` in race order (0 = the finish line).
     pub fn gate_route_point(&self, i: usize) -> usize {
         self.gates[i].at
+    }
+
+    /// How far either side of the route gate `i` counts a car, m.
+    pub fn gate_reach_m(&self, i: usize) -> f32 {
+        self.gates[i].reach
     }
 
     /// Where a respawn at gate `i` lands.
@@ -513,6 +543,10 @@ impl Race {
         if let Some(c) = self.cars.get_mut(car as usize) {
             c.gates_passed = gates;
             c.last_gate = (gates > 0 && n > 0).then(|| (gates as usize - 1) % n);
+            // A wreck respawns at the last gate passed, as in a race (not back on the grid).
+            if let Some(g) = c.last_gate {
+                c.anchor = self.course.gates[g].anchor;
+            }
             c.last = None;
         }
     }
@@ -766,13 +800,13 @@ impl Race {
         effects
     }
 
-    /// Whether the move from `prev` to `now` crosses gate `g` forward (within the road's half-width plus
-    /// [`GATE_MARGIN_M`], on its layer): where in the step it was crossed, 0..=1.
+    /// Whether the move from `prev` to `now` crosses gate `g` forward (within its window, on its layer): where in the step
+    /// it was crossed, 0..=1.
     fn crossing(g: &Gate, prev: CarView, now: CarView) -> Option<f32> {
         let f = |p: [f32; 3]| (p[0] - g.x) * g.tx + (p[2] - g.z) * g.tz;
         let lateral = ((now.position[0] - g.x) * -g.tz + (now.position[2] - g.z) * g.tx).abs();
         let (before, after) = (f(prev.position), f(now.position));
-        if !(before < 0.0 && after >= 0.0 && lateral <= g.half_width + GATE_MARGIN_M) {
+        if !(before < 0.0 && after >= 0.0 && lateral <= g.reach) {
             return None;
         }
         let t = (-before / (after - before)).clamp(0.0, 1.0);

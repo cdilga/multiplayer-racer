@@ -632,3 +632,53 @@ fn finishes_carry_a_crossing_fraction_and_progress_keeps_its_high_water_mark() {
         vec![0, 1]
     );
 }
+
+/// Owner 2026-10-31 (br-8h3u.18): "many issues with not counting laps". A car running a wide line, off the road beside
+/// it, still takes the gate: each gate counts out to half way to the nearest other part of the course (well past the
+/// road's edge on the greybox's straights), and nothing past its window.
+#[test]
+fn a_wide_line_beside_the_road_still_takes_the_gate() {
+    let map = greybox();
+    for i in [1, 2] {
+        let mut s = sim(&map, 5);
+        let car = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+        s.start_race(3);
+        steps(&mut s, S);
+        drive_through(&map, &mut s, car, 0);
+        let (x, z, tx, tz) = gate(&map, &s, i);
+        let reach = s.race().course.gate_reach_m(i);
+        let at = s.race().course.gate_route_point(i);
+        let half = map.map.route.points[at].width as f32 / 2000.0;
+        assert!(
+            reach > half + 3.0,
+            "gate {i}: the window reaches past the road's edge ({reach} m, half width {half} m)"
+        );
+        for (off, counts) in [(reach - 1.0, true), (reach + 3.0, false)] {
+            let mut s2 = sim(&map, 5);
+            let car2 = s2.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+            s2.start_race(3);
+            steps(&mut s2, S);
+            drive_through(&map, &mut s2, car2, 0);
+            for k in 1..i {
+                drive_through(&map, &mut s2, car2, k);
+            }
+            let before = s2.race().car(0).unwrap().gates_passed;
+            // Beside the road on the left (-tz, tx is the route's left), heading along it through the gate's line.
+            let pose = SpawnPose {
+                x: x - 6.0 * tx - off * tz,
+                y: 0.85,
+                z: z - 6.0 * tz + off * tx,
+                heading: tx.atan2(tz),
+            };
+            s2.place_car(car2, pose, 0.0, [14.0 * tx, 0.0, 14.0 * tz]);
+            steps(&mut s2, S);
+            let after = s2.race().car(0).unwrap().gates_passed;
+            assert_eq!(
+                after > before,
+                counts,
+                "gate {i} at {off:.1} m off the line (window {reach:.1} m): before {before} after {after}"
+            );
+        }
+        let _ = car;
+    }
+}
