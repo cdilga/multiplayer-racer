@@ -1,6 +1,7 @@
 //! Between rounds (br-qw28, R125). The results stay up for `results_ms`, then the phones vote for `vote_ms`: Rematch (the
 //! same track: the same seed and recipe), New track (the same style: the next seed, the same recipe) or Surprise me (a
-//! new seed whose style main draws at random). The most votes win; a tie, or no votes, is a Rematch; the host may choose
+//! new seed whose style main draws at random). The most votes win; a tie, or no votes, is a New track (owner 2026-10-31:
+//! every match gets a new map unless the room asks for the same one); the host may choose
 //! instead (`UiCommand::SetNextTrack`). Then, before the countdown, the TV flies along the new track for `flyover_ms`:
 //! any press skips it, and seats can still change car until it ends (the grid is built at the countdown).
 //!
@@ -62,7 +63,7 @@ pub(super) struct BetweenState {
     sent: Option<Sent>,
 }
 
-/// The vote's result: the most votes, a tie (or none) is a Rematch.
+/// The vote's result: the most votes, a tie (or none) is a New track (a Rematch only when it wins outright).
 pub(super) fn tally(votes: &BTreeMap<SeatId, NextTrack>) -> ([u32; 3], NextTrack) {
     let mut n = [0u32; 3];
     for v in votes.values() {
@@ -73,7 +74,7 @@ pub(super) fn tally(votes: &BTreeMap<SeatId, NextTrack>) -> ([u32; 3], NextTrack
     let choice = if max > 0 && winners.len() == 1 {
         [NextTrack::Rematch, NextTrack::NewTrack, NextTrack::Surprise][winners[0]]
     } else {
-        NextTrack::Rematch
+        NextTrack::NewTrack
     };
     (n, choice)
 }
@@ -335,15 +336,27 @@ mod unit {
     use super::*;
 
     #[test]
-    fn the_most_votes_win_and_a_tie_or_no_vote_is_a_rematch() {
+    fn the_most_votes_win_and_a_tie_or_no_vote_is_a_new_track() {
         let mut v = BTreeMap::new();
-        assert_eq!(tally(&v).1, NextTrack::Rematch);
+        assert_eq!(tally(&v).1, NextTrack::NewTrack, "no votes: a new map");
         v.insert(SeatId(1), NextTrack::Surprise);
         v.insert(SeatId(2), NextTrack::Surprise);
         v.insert(SeatId(3), NextTrack::NewTrack);
         assert_eq!(tally(&v), ([0, 1, 2], NextTrack::Surprise));
         v.insert(SeatId(3), NextTrack::NewTrack);
         v.insert(SeatId(4), NextTrack::NewTrack);
-        assert_eq!(tally(&v).1, NextTrack::Rematch, "two each: a tie");
+        assert_eq!(
+            tally(&v).1,
+            NextTrack::NewTrack,
+            "two each: a tie, a new map"
+        );
+        v.insert(SeatId(5), NextTrack::Rematch);
+        v.insert(SeatId(6), NextTrack::Rematch);
+        v.insert(SeatId(7), NextTrack::Rematch);
+        assert_eq!(
+            tally(&v).1,
+            NextTrack::Rematch,
+            "a Rematch that wins outright"
+        );
     }
 }

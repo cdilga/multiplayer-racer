@@ -339,7 +339,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       card.classList.toggle('host', b.hostChoice === k);
       card.setAttribute('aria-pressed', String(b.hostChoice === k));
     }
-    const foot = b.hostChoice ? `Host's pick · ${choiceName(b.hostChoice)} (tap again for the vote)` : 'Most votes wins · a tie is a Rematch · host: tap to choose';
+    const foot = b.hostChoice ? `Host's pick · ${choiceName(b.hostChoice)} (tap again for the vote)` : 'Most votes wins · a tie is a new track · host: tap to choose';
     const footEl = el.querySelector<HTMLElement>('.vfoot')!;
     if (footEl.textContent !== foot) footEl.textContent = foot;
   };

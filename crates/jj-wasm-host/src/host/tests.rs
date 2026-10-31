@@ -4061,10 +4061,11 @@ fn a_thrown_boomerang_is_a_debris_record_of_its_own_kind_in_the_snapshot() {
 /// br-qw28 (R125): between rounds. Three phones race, the results hold, then they vote: two for Surprise me and one for
 /// New track, so Surprise wins and the next preparation asks main to draw the style; the phones are told the vote and
 /// the result. After it, the TV flies over the new track before the countdown (the director's clock waits) and a press
-/// skips it. The next Intermission: nobody votes (a tie at zero), so it's a Rematch: the same seed again. The one after,
-/// the host chooses New track over the phones' Rematch votes: the next seed.
+/// skips it. The next Intermission: nobody votes (a tie at zero), so it's a New track: a different seed (owner
+/// 2026-10-31, br-8h3u.7: the same map came back). The one after, the host chooses New track over the phones' Rematch
+/// votes: the next seed.
 #[test]
-fn phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyover_precedes_the_countdown()
+fn phones_vote_the_next_track_ties_are_a_new_track_the_host_overrides_and_a_flyover_precedes_the_countdown()
  {
     use jj_protocol::cmd::{HostCmd, NextTrack};
     use jj_session::director::Phase;
@@ -4253,7 +4254,7 @@ fn phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyove
         "round 2 starts after the flyover",
     );
 
-    // Round 2 ends; nobody votes: a tie at none is a Rematch of round 2's own seed.
+    // Round 2 ends; nobody votes: a tie at none is a New track, never round 2's own seed again.
     assert!(h.sim.end_race_now());
     until(
         &mut h,
@@ -4271,14 +4272,12 @@ fn phones_vote_the_next_track_ties_are_a_rematch_the_host_overrides_and_a_flyove
         "round 3 starts (the flyover runs out on its own)",
     );
     assert_eq!(room(&h)["round"], 3);
-    let rematch = log.requests[before..]
-        .iter()
-        .map(|r| r.1)
-        .collect::<Vec<_>>();
-    assert_eq!(
-        rematch.last(),
-        Some(&seed2),
-        "no votes: a Rematch on the same seed: {rematch:?}"
+    // A New track races the next preparation's own seed (already prepared while the results were up).
+    let racing = room(&h)["preparation"]["current"].as_u64();
+    assert!(
+        racing.is_some_and(|s| s != seed2),
+        "no votes: a new seed, not round 2's {seed2} again: racing {racing:?}, asked {:?}",
+        &log.requests[before..]
     );
 
     // Round 3: the phones vote Rematch, the host chooses New track: the session seed plus the preparation id.
@@ -4395,8 +4394,19 @@ fn a_kept_track_is_prepared_by_its_seed_and_recipe_and_a_rematch_keeps_its_recip
     let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
     assert_eq!(room["preparation"]["current"], 777_000);
     assert_eq!(room["preparation"]["currentRecipe"], "rocks,town");
-    // The race ends; nobody votes: a Rematch, which asks for the kept track's seed and recipe again.
+    // The race ends; the host chooses Rematch (no votes would be a New track), which asks for the kept track's seed and
+    // recipe again.
     assert!(h.sim.end_race_now());
+    let mut guard = 0;
+    while h.phase() != Phase::Intermission {
+        step(&mut h, 1, &mut now, &mut asked);
+        guard += 1;
+        assert!(guard < 60 * 120, "round 1's results: {:?}", h.phase());
+    }
+    h.handle(&ui(UiCommand::SetNextTrack {
+        choice: Some(jj_protocol::cmd::NextTrack::Rematch),
+    }))
+    .unwrap();
     let before = asked.len();
     guard = 0;
     while !(h.phase() == Phase::Running && asked.len() > before) {

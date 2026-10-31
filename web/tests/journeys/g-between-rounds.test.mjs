@@ -1,10 +1,10 @@
 // br-qw28 (R125): between rounds, in a real room (jj-server, `host?room&test=live`) with three real phones over WebRTC
 // and generated tracks. Results hold, then the phones vote the next track: Rematch / New track / Surprise me; the most
-// votes win, a tie is a Rematch, and the host can choose instead. Before the countdown the TV flies the new track from
+// votes win, a tie (or no vote) is a New track (owner 2026-10-31, br-8h3u.7), and the host can choose instead. Before the countdown the TV flies the new track from
 // the start line round to the finish in the flyover's time, and any press skips it.
 // - Round 1: two phones vote New track, one Rematch: New track wins (the tally on the TV and on each phone). The flyover
 //   runs out on its own: the camera follows the route from its start to its end in about 6 s.
-// - Round 2: one Rematch, one New track: a tie, so a Rematch, on round 2's own seed. A phone skips the flyover.
+// - Round 2: two phones vote Rematch: it wins outright, on round 2's own seed. A phone skips the flyover.
 // - Round 3: every phone votes Rematch; the host chooses Surprise me: main draws the style.
 // JJ_CAPTURE_DIR=<dir> keeps the TV and phone stills for the self-review (docs/evidence/P1-G-between/).
 //   node --test web/tests/journeys/g-between-rounds.test.mjs
@@ -37,7 +37,7 @@ const between = (host) => host.evaluate(() => window.__jjRoom.view().between);
 
 // Voting uses a ten-second game deadline and the flyover is measured frame by frame. On software GL, three phone
 // interactions consumed the vote window (CI 9116); preserve the real deadlines on the existing GPU lane.
-test('three phones vote the next track: most votes win, a tie is a Rematch, the host can choose; the TV flies the new track, and a press skips it', { timeout: 900_000, skip: !gpu && 'three-phone vote deadlines and flyover timing run on the GPU lane (CI 9116)' }, async () => {
+test('three phones vote the next track: most votes win, a tie is a New track, the host can choose; the TV flies the new track, and a press skips it', { timeout: 900_000, skip: !gpu && 'three-phone vote deadlines and flyover timing run on the GPU lane (CI 9116)' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
@@ -120,15 +120,15 @@ test('three phones vote the next track: most votes win, a tie is a Rematch, the 
   const seed2 = await current();
   assert.notEqual(seed2, seed1, 'New track: a new seed');
 
-  // ---------- Round 2: a tie is a Rematch; a phone skips the flyover ----------
+  // ---------- Round 2: a Rematch that wins outright; a phone skips the flyover ----------
   await finish();
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission');
   await voteOpen();
   await vote(phones[0], 'rematch');
-  await vote(phones[1], 'new');
-  await wait(host, () => { const v = window.__jjRoom.view().between.votes; return v.rematch === 1 && v.new === 1; }, undefined, 10_000);
+  await vote(phones[1], 'rematch');
+  await wait(host, () => window.__jjRoom.view().between.votes.rematch === 2, undefined, 10_000);
   await wait(host, () => window.__jjRoom.view().between?.flyoverLeftMs != null, undefined, 60_000);
-  assert.equal((await between(host)).decided, 'rematch', 'a tie is a Rematch');
+  assert.equal((await between(host)).decided, 'rematch', 'two Rematch votes: a Rematch');
   await wait(phones[2], () => !!document.querySelector('[data-act=skip-flyover]'), undefined, 10_000);
   // Measured on the host's sim clock (a slow runner's wall clock runs ahead of it): the flyover ends well before its 6 s.
   const tickNow = () => host.evaluate(async () => (await window.__jjTest.observe()).tick);
