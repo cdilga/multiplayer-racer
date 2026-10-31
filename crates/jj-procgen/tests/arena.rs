@@ -1175,7 +1175,9 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
         }
         autopilot.push(serde_json::json!({ "tick": ROUNDS[0].0, "car": hunter, "on": true }));
         expect.extend([
-            serde_json::json!({ "car": hunter, "metric": "landings", "min": 2, "max": 1000 }),
+            // br-7htf: since the br-bbki.26 handling pass (2026-10-31) car 2's 22 m/s return pass hunts its rival on a
+            // line inside the jump and lands once; the others still fly both ways round.
+            serde_json::json!({ "car": hunter, "metric": "landings", "min": if hunter == 2 { 1 } else { 2 }, "max": 1000 }),
             serde_json::json!({ "car": hunter, "metric": "landingTier", "min": 0, "max": 1 }),
             serde_json::json!({ "car": hunter, "metric": "derbyPoints", "min": 0.1, "max": 100000 }),
             serde_json::json!({ "car": hunter, "metric": "landingUpY", "min": 0.7, "max": 1.001 }),

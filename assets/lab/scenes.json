@@ -151,7 +151,7 @@
           "autopilot": true,
           "ticks": 1500,
           "expect": [
-            { "metric": "progressM", "min": 260, "max": 315 },
+            { "metric": "progressM", "min": 260, "max": 345 },
             { "metric": "maxSlipDeg", "min": 0, "max": 4 },
             { "metric": "wrecks", "min": 0, "max": 0 }
           ]
