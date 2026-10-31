@@ -107,6 +107,8 @@ export class CameraRig {
   obstacles: Obstacle[] = [];
   /** The ground's height (m) under (x, z): the chase stays above it and keeps its line of sight to the car over it. */
   groundAt: ((x: number, z: number) => number) | null = null;
+  /** Over a jump's flight or landing (camera/flights.ts), or null: the relief look-ahead caps falling ground there. */
+  inFlight: ((x: number, z: number) => boolean) | null = null;
   /** The map's loops: a car up on one gets the loop shot. */
   loops: LoopShot[] = [];
   private fwd = new Vector3();
@@ -284,10 +286,10 @@ export class CameraRig {
     s.rollDeg = (Math.asin(Math.min(1, Math.max(-1, this.v.set(1, 0, 0).applyQuaternion(cam.quaternion).y))) * 180) / Math.PI;
   }
 
-  /** Big air reads as big air (br-gw74.13.1.1): how far (m) the chase stays below its usual height over the car while the
-   *  car is off the ground. It holds `rig.airHold` of the car's height above `rig.airFromM` to the ground instead of
-   *  rising with the car (up to `rig.airHoldMaxM`), and keeps its pitch, so the car climbs in frame and the road falls
-   *  away under it; on the ground it is 0 and the chase is unchanged. Continuous in the height, so no pop at the lip. */
+  /** How far (m) the chase stays below its usual height over the car while the car is off the ground: `rig.airHold` of
+   *  the car's height above `rig.airFromM` (up to `rig.airHoldMaxM`). br-gw74.13.1.1 held it low so the car climbed in
+   *  frame; the owner (2026-10-24, br-8h3u.1) wants the car to keep its grounded screen position, so it ships at 0
+   *  (tunable). Continuous in the height, so no pop at the lip. */
   private airHold(car: CarView): number {
     const ground = this.groundAt;
     if (!ground) return 0;
@@ -307,9 +309,14 @@ export class CameraRig {
     const R = profile.rig;
     const eye = car.pos.y + R.pullInEyeUpM;
     // `ahead` s from now, both points carried along the car's travel and the car riding the ground (relief look-ahead).
+    // Over a jump's flight or landing (`inFlight`) ground that falls away counts at most `rig.lookAheadDropM`: the car
+    // flies there rather than following the ground down, and pre-raising for the fall sank it out of the frame before
+    // the lip (br-8h3u.1). Elsewhere the car rides the ground and the pre-raise keeps the chase smooth (br-gw74.14.1).
+    const flight = this.inFlight;
     const solve = (margin: number, ahead = 0) => {
       const dx = vx * ahead, dz = vz * ahead;
-      const rise = ahead ? ground(car.pos.x + dx, car.pos.z + dz) - ground(car.pos.x, car.pos.z) : 0;
+      const d = ahead ? ground(car.pos.x + dx, car.pos.z + dz) - ground(car.pos.x, car.pos.z) : 0;
+      const rise = d < 0 && flight?.(car.pos.x + dx, car.pos.z + dz) ? Math.max(d, -R.lookAheadDropM) : d;
       const b = base + rise, e = eye + rise, tx = target.x + dx, tz = target.z + dz, cx = car.pos.x + dx, cz = car.pos.z + dz;
       let need = Math.max(b, ground(tx, tz) + R.groundClearM);
       for (let k = 1; k < 8; k++) {
@@ -321,9 +328,13 @@ export class CameraRig {
     // The lift follows what the ground needs (with headroom) on a critically damped spring, quick up and slow down, so
     // its acceleration stays continuous through every crest and dip; the floor (the line of sight 0.2 m over the
     // ground) holds whatever the spring does, so the car is never hidden.
-    let want = 0;
-    for (let k = 0; k <= 4; k++) want = Math.max(want, solve(0.2 + R.groundHeadroomM, (k / 4) * R.groundLookAheadS));
     const floor = solve(0.2);
+    // In the air (br-8h3u.1, owner 2026-10-24: "should just remain in the normal screen position") the lift aims only at
+    // what the line of sight needs now, without headroom or the look-ahead over the landing ground, so the chase keeps the
+    // car where it sits on the ground instead of rising over it and sinking it out of the frame.
+    const airborne = car.pos.y - ground(car.pos.x, car.pos.z) > profile.rig.airFromM;
+    let want = airborne ? floor : 0;
+    if (!airborne) for (let k = 0; k <= 4; k++) want = Math.max(want, solve(0.2 + R.groundHeadroomM, (k / 4) * R.groundLookAheadS));
     if (cut) {
       s.groundWant = want;
       s.groundLift = want;

@@ -263,9 +263,9 @@ test('the chase point stays clear of undulating ground (and would not without it
   assert.ok(control.worstClear < 0 || control.worstLos < 0, `without the ground the same drive buries the camera or hides the car (${JSON.stringify(control)})`);
 });
 
-// br-gw74.13.1.1: big air reads as big air. Off the ground the chase holds part of its height to the ground, so the car
-// climbs in frame (its screen height rises) and the ground under it shows; on the ground nothing changes.
-test('big air: the chase holds to the ground so a car in the air climbs in frame; on the ground it is unchanged', async () => {
+// br-gw74.13.1.1, amended by br-8h3u.1 (owner 2026-10-24): off the ground the chase holds `rig.airHold` of the car's
+// height to the ground (0 as shipped, so the car keeps its grounded screen position); on the ground nothing changes.
+test('big air: the chase keeps the car at its grounded screen height in the air; on the ground it is unchanged', async () => {
   const { CameraRig } = await loadRig();
   const { Vector3, Quaternion, PerspectiveCamera } = await import('three');
   const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
@@ -287,8 +287,7 @@ test('big air: the chase holds to the ground so a car in the air climbs in frame
   const air = shot(flat, 6.4), rideAlong = shot(null, 6.4);
   const hold = Math.min(prof.rig.airHoldMaxM, (6.4 - prof.rig.airFromM) * prof.rig.airHold);
   assert.ok(Math.abs(rideAlong.camY - air.camY - hold) < 1e-6, `held ${hold} m below its usual height (${JSON.stringify({ air, rideAlong })})`);
-  assert.ok(air.carScreenY > rideAlong.carScreenY + 0.15, `the car climbs in frame: ${rideAlong.carScreenY.toFixed(2)} -> ${air.carScreenY.toFixed(2)}`);
-  assert.ok(air.carScreenY < 0.9, `and stays in frame (${air.carScreenY.toFixed(2)})`);
+  assert.ok(Math.abs(air.carScreenY - onGround[0].carScreenY) < 0.05, `the car holds its grounded screen height: ${onGround[0].carScreenY.toFixed(2)} -> ${air.carScreenY.toFixed(2)}`);
   const top = shot(flat, 40);
   assert.ok(top.carScreenY < 1, `at the hold's limit the car is still in frame (${top.carScreenY.toFixed(2)})`);
   // No pop at the lip or the landing: through a 2.5 s flight (14 m/s up, 9.81 down) the camera's frame-to-frame vertical

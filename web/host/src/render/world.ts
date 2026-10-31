@@ -3,6 +3,7 @@
 // instanced vehicle renderer's (P1-R02) and the map and props the map renderer's (P1-R03); the grid of player tiles is P1-R04 and
 // the cameras P1-R05 (`tiles` is a plain chase-camera view until then). Instance buffers grow with the field: there is
 // no car or debris cap.
+import { flightZones } from '../camera/flights';
 import {
   type Camera,
   Color,
@@ -352,6 +353,7 @@ export class World {
     const ground = this.map.groundAt;
     this.rig.groundAt = (x, z) => this.practice?.groundAt(x, z) ?? ground(x, z);
     this.rig.loops = this.map.loopShots();
+    this.rig.inFlight = flightZones(map);
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
