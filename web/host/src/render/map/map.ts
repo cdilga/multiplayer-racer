@@ -903,6 +903,9 @@ export class PropRenderer {
     if (kind === DEBRIS_BOOMERANG) return { id: 'item/boomerang', params: {} };
     if (kind === STATION_BOOMERANG) return { id: 'generic/item-station', params: {} };
     if (kind === STATION_SANGA) return { id: 'item/station-sanga', params: {} };
+    if (kind === STATION_TINNIE) return { id: 'item/station-tinnie', params: {} };
+    if (kind === STATION_ESKY) return { id: 'item/station-esky', params: {} };
+    if (kind === DEBRIS_ESKY) return { id: 'item/esky', params: {} };
     if (kind === STATION_RECHARGING) return { id: 'item/station-charging', params: {} };
     return this.mapProps[i] ?? { id: 'debris', params: {} };
   }
@@ -917,6 +920,9 @@ export class PropRenderer {
       const special: Record<string, () => BufferGeometry> = {
         'item/boomerang': boomerangGeometry,
         'item/station-sanga': stationSanga,
+        'item/station-tinnie': stationTinnie,
+        'item/station-esky': stationEsky,
+        'item/esky': eskyGeometry,
         'item/station-charging': stationPad,
       };
       im = new InstancedMesh(mod ? mod.geometry() : (special[id] ?? debrisGeometry)(), this.material, cap);
@@ -965,6 +971,35 @@ const DEBRIS_BOOMERANG = 4;
 const STATION_BOOMERANG = 5;
 const STATION_RECHARGING = 6;
 const STATION_SANGA = 7;
+/** ... ready with a tinnie, ready with an esky; and a dropped esky (a dynamic prop that stays for the round). */
+const STATION_TINNIE = 8;
+const STATION_ESKY = 9;
+const DEBRIS_ESKY = 10;
+
+/** A dropped esky: a red cooler box with a white lid and a latch, matching the sim's 1.1 x 0.76 x 0.8 m body. */
+function eskyGeometry(): BufferGeometry {
+  const s = new Soup();
+  const [hx, hy, hz] = [0.55, 0.38, 0.4];
+  const box = (y0: number, y1: number, x: number, z: number, colour: string) => {
+    const f: number[][][] = [
+      [[-x, y0, z], [x, y0, z], [x, y1, z], [-x, y1, z]],
+      [[x, y0, -z], [-x, y0, -z], [-x, y1, -z], [x, y1, -z]],
+      [[-x, y1, z], [x, y1, z], [x, y1, -z], [-x, y1, -z]],
+      [[-x, y0, -z], [x, y0, -z], [x, y0, z], [-x, y0, z]],
+      [[x, y0, z], [x, y0, -z], [x, y1, -z], [x, y1, z]],
+      [[-x, y0, -z], [-x, y0, z], [-x, y1, z], [-x, y1, -z]],
+    ];
+    for (const q of f) s.quad(q[0]!, q[1]!, q[2]!, q[3]!, colour);
+  };
+  box(-hy, hy * 0.35, hx, hz, '#d8452f');
+  box(hy * 0.35, hy, hx + 0.02, hz + 0.02, '#f4f1ea');
+  box(hy * 0.2, hy * 0.6, 0.1, hz + 0.04, '#3b3a40');
+  const g = new BufferGeometry();
+  g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
+  g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
+  g.computeVertexNormals();
+  return g;
+}
 
 /** A code-built boomerang (R81): two flat wooden arms at 100 degrees with painted stripes, about 2.4 m tip to tip
  *  (cartoon-sized so it reads on a TV across the room), centred on its spin axis. */
@@ -994,9 +1029,6 @@ function boomerangGeometry(): BufferGeometry {
   g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
   g.computeVertexNormals();
   return g;
-    if (kind === STATION_TINNIE) return { id: 'item/station-tinnie', params: {} };
-    if (kind === STATION_ESKY) return { id: 'item/station-esky', params: {} };
-    if (kind === DEBRIS_ESKY) return { id: 'item/esky', params: {} };
 }
 
 /** Spawned debris has no kit piece: a dark half-metre chunk. */
@@ -1011,39 +1043,7 @@ function debrisGeometry(): BufferGeometry {
     [[h, -h, h], [h, -h, -h], [h, h, -h], [h, h, h]],
     [[-h, -h, -h], [-h, -h, h], [-h, h, h], [-h, h, -h]],
   ];
-        'item/station-tinnie': stationTinnie,
-        'item/station-esky': stationEsky,
-        'item/esky': eskyGeometry,
   for (const f of faces) s.quad(f[0]!, f[1]!, f[2]!, f[3]!, '#3b3a40');
-  const g = new BufferGeometry();
-  g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
-  g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
-  g.computeVertexNormals();
-  return g;
-}
-/** ... ready with a tinnie, ready with an esky; and a dropped esky (a dynamic prop that stays for the round). */
-const STATION_TINNIE = 8;
-const STATION_ESKY = 9;
-const DEBRIS_ESKY = 10;
-
-/** A dropped esky: a red cooler box with a white lid and a latch, matching the sim's 1.1 x 0.76 x 0.8 m body. */
-function eskyGeometry(): BufferGeometry {
-  const s = new Soup();
-  const [hx, hy, hz] = [0.55, 0.38, 0.4];
-  const box = (y0: number, y1: number, x: number, z: number, colour: string) => {
-    const f: number[][][] = [
-      [[-x, y0, z], [x, y0, z], [x, y1, z], [-x, y1, z]],
-      [[x, y0, -z], [-x, y0, -z], [-x, y1, -z], [x, y1, -z]],
-      [[-x, y1, z], [x, y1, z], [x, y1, -z], [-x, y1, -z]],
-      [[-x, y0, -z], [x, y0, -z], [x, y0, z], [-x, y0, z]],
-      [[x, y0, z], [x, y0, -z], [x, y1, -z], [x, y1, z]],
-      [[-x, y0, -z], [-x, y0, z], [-x, y1, z], [-x, y1, -z]],
-    ];
-    for (const q of f) s.quad(q[0]!, q[1]!, q[2]!, q[3]!, colour);
-  };
-  box(-hy, hy * 0.35, hx, hz, '#d8452f');
-  box(hy * 0.35, hy, hx + 0.02, hz + 0.02, '#f4f1ea');
-  box(hy * 0.2, hy * 0.6, 0.1, hz + 0.04, '#3b3a40');
   const g = new BufferGeometry();
   g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
   g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
