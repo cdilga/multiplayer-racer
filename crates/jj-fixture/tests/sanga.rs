@@ -109,7 +109,7 @@ fn tank_push_and_ram_immunity_are_physical_and_replay() {
 }
 
 #[test]
-fn six_seconds_refresh_without_stacking_and_no_speed_boost() {
+fn six_seconds_refresh_without_stacking_and_no_mass_change() {
     let mut fx = fixture(include_bytes!(
         "../../../scenarios/items/sanga-refresh.json"
     ));
@@ -147,7 +147,8 @@ fn six_seconds_refresh_without_stacking_and_no_speed_boost() {
     fx.pickups.clear();
     let control = run_fixture(&fx);
     for (shield, control) in rows.iter().zip(&control.recorded.observations) {
-        for field in ["position", "linvel", "angvel", "massKg", "maxEngineForce"] {
+        // Owner 2026-10-31: a sanga now adds drive (items::boost), so position and velocity differ; the car itself does not.
+        for field in ["massKg", "maxEngineForce"] {
             assert_eq!(
                 car(shield, 0)[field],
                 car(control, 0)[field],

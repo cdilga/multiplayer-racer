@@ -972,7 +972,9 @@ impl Sim {
                     self.tick,
                     |effect| {
                         match effect.item {
-                            jj_types::items::ItemId::Sanga => Ok(()),
+                            jj_types::items::ItemId::Sanga
+                            | jj_types::items::ItemId::Tinnie
+                            | jj_types::items::ItemId::Esky => Ok(()),
                             // P1-W02a: the flight starts below, once the use is committed.
                             jj_types::items::ItemId::Boomerang => Ok(()),
                         }
@@ -986,6 +988,9 @@ impl Sim {
                 if effect.item == jj_types::items::ItemId::Boomerang {
                     self.throw_boomerang(car, &effect);
                 }
+                if effect.item == jj_types::items::ItemId::Esky {
+                    self.drop_esky(car);
+                }
                 self.sync_sanga_dominance();
                 true
             }
@@ -994,6 +999,50 @@ impl Sim {
                 false
             }
         }
+    }
+
+    /// Whether a tinnie boost is running on this car.
+    pub fn tinnie_active(&self, car: CarId) -> bool {
+        crate::items::boost::remaining(
+            &self.items,
+            car.0,
+            jj_types::items::ItemId::Tinnie,
+            self.tick,
+        )
+        .is_some()
+    }
+
+    /// Drops an esky behind the car: a heavy dynamic box, tossed back a little, that stays for the round.
+    fn drop_esky(&mut self, car: CarId) {
+        use crate::items::esky::{BEHIND_M, DENSITY, HALF, TOSS_MPS};
+        let Some(c) = self.cars.get(car.0 as usize) else {
+            return;
+        };
+        let Some(b) = self.world.bodies.get(c.body) else {
+            return;
+        };
+        let iso = *b.position();
+        let rear_z = self.profiles[c.model].hull_bounds().0[2];
+        let base = iso * Vector::new(0.0, 0.0, rear_z - BEHIND_M - HALF[2]);
+        let fwd = iso.rotation * Vector::Z;
+        let f = Vector::new(fwd.x, 0.0, fwd.z).normalize_or_zero();
+        let heading = libm::atan2f(fwd.x, fwd.z);
+        let v = b.linvel() - f * TOSS_MPS;
+        let body = RigidBodyBuilder::dynamic()
+            .translation(Vector::new(base.x, base.y + HALF[1] + 0.05, base.z))
+            .rotation(Vector::new(0.0, heading, 0.0))
+            .linvel(v)
+            .user_data(TAG_PROP | self.props.len() as u128);
+        let collider = ColliderBuilder::cuboid(HALF[0], HALF[1], HALF[2])
+            .density(DENSITY)
+            .friction(0.8)
+            .collision_groups(PROP_GROUPS);
+        let (h, _) = self.world.insert(body, collider);
+        if let Some(nb) = self.world.bodies.get(h) {
+            self.ledger += f64::from(0.5 * nb.mass() * v.length_squared());
+        }
+        self.props.push(h);
+        self.prop_kinds.push(PropKind::Esky);
     }
 
     /// This car's active buff, exposed to fixtures and the host as data.
@@ -1472,7 +1521,49 @@ impl Sim {
             .setup
             .push((self.tick, Setup::StartDerby { limit_ticks }));
         self.derby = Some(crate::derby::Ledger::new(self.tick, limit_ticks));
+        self.scatter_arena_boxes();
         self.update_derby();
+    }
+
+    /// A derby's item boxes: scattered over the bowl's floor by the run's seed (deterministic; replayed with the
+    /// journalled `StartDerby`), one per `ARENA_AREA_PER_BOX_M2`, clear of the island. Each is a recharging station.
+    fn scatter_arena_boxes(&mut self) {
+        use crate::items::stations::{
+            ARENA_AREA_PER_BOX_M2, ARENA_BASE, ARENA_SPREAD, HOVER_M, Station,
+        };
+        let Some(arena) = self.hunt_arena else {
+            return;
+        };
+        let reach = arena.floor_r * ARENA_SPREAD;
+        let n = (core::f32::consts::PI * reach * reach / ARENA_AREA_PER_BOX_M2) as u32;
+        let mut rng = Rng::stream(self.journal.seed, "derby-boxes");
+        let mut placed = 0u32;
+        let mut tries = 0u32;
+        while placed < n && tries < n * 20 {
+            tries += 1;
+            // Uniform over the disc.
+            let r = reach * libm::sqrtf(rng.next_f32());
+            let a = core::f32::consts::TAU * rng.next_f32();
+            let (x, z) = (arena.x + r * libm::cosf(a), arena.z + r * libm::sinf(a));
+            if let Some(o) = arena.obstacle {
+                let (abx, abz) = (o.b[0] - o.a[0], o.b[1] - o.a[1]);
+                let len2 = (abx * abx + abz * abz).max(1e-6);
+                let t = (((x - o.a[0]) * abx + (z - o.a[1]) * abz) / len2).clamp(0.0, 1.0);
+                let d = libm::hypotf(x - (o.a[0] + abx * t), z - (o.a[1] + abz * t));
+                if d < o.r + 3.0 {
+                    continue;
+                }
+            }
+            let y = jj_map::jump::ground_height_m(&self.terrain, f64::from(x), f64::from(z)) as f32
+                + HOVER_M;
+            self.stations.push(Station {
+                dressing: ARENA_BASE + placed,
+                position: [x, y, z],
+                ready_at: 0,
+                taken: 0,
+            });
+            placed += 1;
+        }
     }
 
     /// The derby ledger: points, ranks, the clock and the scored events. `None` until [`Sim::start_derby`].
@@ -1951,6 +2042,16 @@ impl Sim {
         let tick = self.tick;
         let mut stuck = Vec::new();
         let catch_shares = self.catch_up_shares();
+        // Sanga and tinnie: the extra drive each car has this tick (items::boost).
+        let item_gains: Vec<f32> = self
+            .cars
+            .iter()
+            .enumerate()
+            .map(|(c, car)| {
+                let throttle = vehicle::stick(car.applied).0;
+                crate::items::boost::active_gain(&self.items, c as u32, tick, throttle)
+            })
+            .collect();
         // br-bbki.11: in a derby the bots hunt: every car's place and motion, and whether a hit on it would score.
         let rivals: Vec<crate::autopilot::Rival> = match (self.derby.as_ref(), self.hunt_arena) {
             (Some(l), Some(_)) => self
@@ -2283,6 +2384,18 @@ impl Sim {
                 let thrust = vehicle::boost_thrust(p, car.action, forward_speed) * catch_scale;
                 if thrust > 0.0 && !airborne {
                     let impulse = Vector::new(fwd.x, 0.0, fwd.z) * (thrust * DT);
+                    self.ledger += f64::from(impulse.dot(b.linvel()));
+                    b.apply_impulse(impulse, true);
+                }
+                // A tanked-up or tinnie'd car drives harder (items::boost), along the same level heading.
+                let item_thrust = crate::items::boost::thrust(
+                    item_gains.get(i).copied().unwrap_or(0.0),
+                    p.tuning.max_engine_force,
+                    p.tuning.max_engine_power_w,
+                    forward_speed,
+                );
+                if item_thrust > 0.0 && !airborne {
+                    let impulse = Vector::new(fwd.x, 0.0, fwd.z) * (item_thrust * DT);
                     self.ledger += f64::from(impulse.dot(b.linvel()));
                     b.apply_impulse(impulse, true);
                 }
@@ -2796,19 +2909,15 @@ impl Sim {
 
     /// Each station for the renderer: its position and snapshot kind (a box printed with the item it holds, or recharging).
     pub fn station_poses(&self) -> Vec<([f32; 3], u32)> {
-        use crate::items::stations::{
-            SNAPSHOT_KIND_READY_BOOMERANG, SNAPSHOT_KIND_READY_SANGA, SNAPSHOT_KIND_RECHARGING,
-        };
+        use crate::items::stations::{SNAPSHOT_KIND_RECHARGING, ready_kind};
         self.stations
             .iter()
             .enumerate()
             .map(|(i, s)| {
                 let kind = if !s.ready(self.tick) {
                     SNAPSHOT_KIND_RECHARGING
-                } else if s.draw(self.journal.seed, i) == jj_types::items::ItemId::Sanga {
-                    SNAPSHOT_KIND_READY_SANGA
                 } else {
-                    SNAPSHOT_KIND_READY_BOOMERANG
+                    ready_kind(s.draw(self.journal.seed, i))
                 };
                 (s.position, kind)
             })
@@ -2841,7 +2950,8 @@ impl Sim {
     fn offer_stations(&mut self) {
         use crate::items::stations::{Offer, RADIUS_M, REACH_Y_M};
         self.station_offers.clear();
-        let racing = self.race.started_at.is_some() && self.race.over.is_none();
+        let racing = (self.race.started_at.is_some() && self.race.over.is_none())
+            || self.derby.as_ref().is_some_and(|d| !d.over(self.tick));
         if !racing {
             return;
         }
@@ -2900,7 +3010,7 @@ impl Sim {
     /// Starts a boomerang flight for a committed use: from the car's front or back, at the throw speed relative to the
     /// car plus a little sideways spin.
     fn throw_boomerang(&mut self, car: CarId, effect: &crate::items::Effect) {
-        use crate::items::boomerang::{Flight, HEIGHT_M, Leg, SIDE_MPS, SPEED_MPS};
+        use crate::items::boomerang::{Flight, HEIGHT_M, Leg, OMEGA, SIDE_MPS, SPEED_MPS};
         let Some(c) = self.cars.get(car.0 as usize) else {
             return;
         };
@@ -2917,7 +3027,41 @@ impl Sim {
         };
         let half_l = self.profiles[c.model].chassis_half()[2];
         let at = pose.translation + f * (sign * (half_l + 0.6));
-        let rel = f * (sign * SPEED_MPS) + side * SIDE_MPS;
+        let mut rel = f * (sign * SPEED_MPS) + side * SIDE_MPS;
+        // Auto-aim: the nearest rival in the cone ahead (or behind, for a rear throw) is led and thrown at, with the
+        // loop stretched so its peak is just beyond the target. No rival in the cone: the plain throw.
+        let (me_p, me_v) = (pose.translation, b.linvel());
+        let mut best: Option<(f32, Vector)> = None;
+        for (j, o) in self.cars.iter().enumerate() {
+            if j as u32 == car.0 || o.protected_since.is_some() || self.race.is_finished(j as u32) {
+                continue;
+            }
+            let ob = &self.world.bodies[o.body];
+            let d = ob.position().translation - me_p;
+            let flat = Vector::new(d.x, 0.0, d.z);
+            let dist = flat.length();
+            if dist < 1.0 || dist > crate::items::boomerang::AIM_RANGE_M {
+                continue;
+            }
+            if flat.dot(f * sign) / dist < crate::items::boomerang::AIM_COS {
+                continue;
+            }
+            if best.is_none_or(|(bd, _)| dist < bd) {
+                let rv = ob.linvel() - me_v;
+                best = Some((
+                    dist,
+                    flat + Vector::new(rv.x, 0.0, rv.z) * crate::items::boomerang::AIM_LEAD_S,
+                ));
+            }
+        }
+        if let Some((_, aim)) = best {
+            let len = aim.length();
+            if len > 1.0 {
+                let speed = (OMEGA * (len + crate::items::boomerang::AIM_PAST_M))
+                    .clamp(SPEED_MPS, crate::items::boomerang::AIM_MAX_SPEED_MPS);
+                rel = aim / len * speed;
+            }
+        }
         let y = self.boomerang_y(at.x, at.z, pose.translation.y + HEIGHT_M, half_l + 0.6);
         self.boomerangs.push(Flight {
             effect: effect.id,

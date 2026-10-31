@@ -4,6 +4,8 @@
 //! Neither operation owns or deletes physics debris.
 
 pub mod boomerang;
+pub mod boost;
+pub mod esky;
 pub mod sanga;
 pub mod stations;
 
@@ -22,32 +24,64 @@ use crate::utility::UtilityKind;
 pub struct Cards {
     boomerang: Card,
     sanga: Card,
+    tinnie: Card,
+    esky: Card,
 }
 
 impl Cards {
     /// Load the same validated, versioned cards as `jj validate`, without runtime asset I/O.
     pub fn shipped() -> Result<Self, Vec<String>> {
-        Self::parse(
+        Self::parse_all(
             include_bytes!("../../../../assets/items/boomerang.json"),
             include_bytes!("../../../../assets/items/sanga.json"),
+            include_bytes!("../../../../assets/items/tinnie.json"),
+            include_bytes!("../../../../assets/items/esky.json"),
         )
     }
 
+    /// The boomerang and sanga cards given, the other two as shipped.
     pub fn parse(boomerang: &[u8], sanga: &[u8]) -> Result<Self, Vec<String>> {
+        Self::parse_all(
+            boomerang,
+            sanga,
+            include_bytes!("../../../../assets/items/tinnie.json"),
+            include_bytes!("../../../../assets/items/esky.json"),
+        )
+    }
+
+    pub fn parse_all(
+        boomerang: &[u8],
+        sanga: &[u8],
+        tinnie: &[u8],
+        esky: &[u8],
+    ) -> Result<Self, Vec<String>> {
         let boomerang = jj_contracts::item::parse(boomerang)?;
         let sanga = jj_contracts::item::parse(sanga)?;
-        if boomerang.id != "boomerang" || sanga.id != "sanga" {
+        let tinnie = jj_contracts::item::parse(tinnie)?;
+        let esky = jj_contracts::item::parse(esky)?;
+        if boomerang.id != "boomerang"
+            || sanga.id != "sanga"
+            || tinnie.id != "tinnie"
+            || esky.id != "esky"
+        {
             return Err(vec![
                 "item cards must match their registered identities".into(),
             ]);
         }
-        Ok(Self { boomerang, sanga })
+        Ok(Self {
+            boomerang,
+            sanga,
+            tinnie,
+            esky,
+        })
     }
 
     pub fn get(&self, item: ItemId) -> &Card {
         match item {
             ItemId::Boomerang => &self.boomerang,
             ItemId::Sanga => &self.sanga,
+            ItemId::Tinnie => &self.tinnie,
+            ItemId::Esky => &self.esky,
         }
     }
 }

@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "esky",
+  "version": 1,
+  "class": "projectile",
+  "activation": "sector-entry",
+  "direction": "forward-rear",
+  "uses": 1,
+  "offensive": true,
+  "timing": { "arming_ms": 0, "cooldown_ms": 0, "lifetime_ms": 500, "duration_ms": null },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Steer around it", "Hit it slowly", "Eat a sanga"],
+  "presentation": { "vfx": "esky-thud", "sfx": "esky-drop", "comic": "THUD!" },
+  "rationale": "An esky dropped behind the car: a heavy dynamic box that stays on the road for the round (debris persists). The ledger entry only marks the drop; the esky itself is never expired or removed."
+}

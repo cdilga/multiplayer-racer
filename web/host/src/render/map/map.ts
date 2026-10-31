@@ -9,7 +9,7 @@ import { Soup } from './soup';
 //   them as shapes (P1-M03d). One draw.
 // - Dressing: one InstancedMesh per kit-piece type (render/kit), so draws scale with types, not placements.
 // Props are dynamic: PropRenderer draws them from the snapshot's debris records with the same kit modules.
-import { stationPad, stationSanga } from '../kit/generic/item-station';
+import { stationEsky, stationPad, stationSanga, stationTinnie } from '../kit/generic/item-station';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -994,6 +994,9 @@ function boomerangGeometry(): BufferGeometry {
   g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
   g.computeVertexNormals();
   return g;
+    if (kind === STATION_TINNIE) return { id: 'item/station-tinnie', params: {} };
+    if (kind === STATION_ESKY) return { id: 'item/station-esky', params: {} };
+    if (kind === DEBRIS_ESKY) return { id: 'item/esky', params: {} };
 }
 
 /** Spawned debris has no kit piece: a dark half-metre chunk. */
@@ -1008,7 +1011,39 @@ function debrisGeometry(): BufferGeometry {
     [[h, -h, h], [h, -h, -h], [h, h, -h], [h, h, h]],
     [[-h, -h, -h], [-h, -h, h], [-h, h, h], [-h, h, -h]],
   ];
+        'item/station-tinnie': stationTinnie,
+        'item/station-esky': stationEsky,
+        'item/esky': eskyGeometry,
   for (const f of faces) s.quad(f[0]!, f[1]!, f[2]!, f[3]!, '#3b3a40');
+  const g = new BufferGeometry();
+  g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
+  g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));
+  g.computeVertexNormals();
+  return g;
+}
+/** ... ready with a tinnie, ready with an esky; and a dropped esky (a dynamic prop that stays for the round). */
+const STATION_TINNIE = 8;
+const STATION_ESKY = 9;
+const DEBRIS_ESKY = 10;
+
+/** A dropped esky: a red cooler box with a white lid and a latch, matching the sim's 1.1 x 0.76 x 0.8 m body. */
+function eskyGeometry(): BufferGeometry {
+  const s = new Soup();
+  const [hx, hy, hz] = [0.55, 0.38, 0.4];
+  const box = (y0: number, y1: number, x: number, z: number, colour: string) => {
+    const f: number[][][] = [
+      [[-x, y0, z], [x, y0, z], [x, y1, z], [-x, y1, z]],
+      [[x, y0, -z], [-x, y0, -z], [-x, y1, -z], [x, y1, -z]],
+      [[-x, y1, z], [x, y1, z], [x, y1, -z], [-x, y1, -z]],
+      [[-x, y0, -z], [x, y0, -z], [x, y0, z], [-x, y0, z]],
+      [[x, y0, z], [x, y0, -z], [x, y1, -z], [x, y1, z]],
+      [[-x, y0, -z], [-x, y0, z], [-x, y1, z], [-x, y1, -z]],
+    ];
+    for (const q of f) s.quad(q[0]!, q[1]!, q[2]!, q[3]!, colour);
+  };
+  box(-hy, hy * 0.35, hx, hz, '#d8452f');
+  box(hy * 0.35, hy, hx + 0.02, hz + 0.02, '#f4f1ea');
+  box(hy * 0.2, hy * 0.6, 0.1, hz + 0.04, '#3b3a40');
   const g = new BufferGeometry();
   g.setAttribute('position', new BufferAttribute(new Float32Array(s.pos), 3));
   g.setAttribute('color', new BufferAttribute(new Float32Array(s.colour), 3));

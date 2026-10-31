@@ -2,6 +2,7 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
+import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
 import { TAKEDOWN_SHOWN_MS, TAKEDOWN_TEXT } from '../../../shared/src/takedown';
 import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
@@ -202,7 +203,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour};--seat-on:${seatColor(you.number).on}">
-      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span><span class="item display" data-hud="item" role="status" hidden></span></div>
+      <div class="strip" data-box="strip"><div class="who"><span class="seatno badge">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span><span class="item display" data-hud="item" role="status" hidden></span><span class="item buff display" data-hud="buff" role="status" hidden></span></div>
 </div>
     </section>`;
     // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
@@ -466,6 +467,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       set('lap', `${pts} pts · ${Math.floor(h.derby.left_s / 60)}:${String(h.derby.left_s % 60).padStart(2, '0')}`);
     } else set('lap', h?.lap ? (h.lap[0] > h.lap[1] ? 'Finished' : `Lap ${h.lap[0]}/${h.lap[1]}`) : '');
     paintItem();
+    paintBuff();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
     updateFullscreen();
@@ -478,11 +480,32 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const { front, back } = session.inventory;
     el.hidden = !front;
     if (!front) return;
-    const what = front === 'boomerang' ? 'Boomerang' : 'Sanga';
-    const how = front === 'boomerang' ? 'flick ↑ throw · ↓ back' : 'flick to eat';
+    const { name: what, how } = ITEM_INFO[front];
     el.dataset.item = front;
     el.setAttribute('aria-label', `${what}: ${how}${back ? ', one more held' : ''}`);
     el.innerHTML = `${what}${back ? ' <b>+1</b>' : ''} <small>${how}</small>`;
+  };
+
+  /** A tank-up or tinnie in force: its shout and a countdown, from the used-event (the phone counts its own clock). */
+  let buff: { item: ItemId; until: number } | null = null;
+  const paintBuff = () => {
+    const el = app.querySelector<HTMLElement>('[data-hud=buff]');
+    if (!el) return;
+    const left = buff ? buff.until - performance.now() : 0;
+    if (!buff || left <= 0) {
+      buff = null;
+      el.hidden = true;
+      return;
+    }
+    const info = ITEM_INFO[buff.item];
+    el.hidden = false;
+    el.dataset.item = buff.item;
+    el.textContent = `${info.comic} ${(left / 1000).toFixed(1)}s`;
+  };
+  session.onItemEvent = (e) => {
+    const info = ITEM_INFO[e.item];
+    if (info.buffMs && typeof e.kind === 'object' && 'Used' in e.kind) buff = { item: e.item, until: performance.now() + info.buffMs };
+    paintBuff();
   };
 
   /** The full-screen tool's state, its Add to Home Screen note, and the "Back to full screen" prompt (P1-C02b). */

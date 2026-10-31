@@ -173,9 +173,6 @@ fn draws_are_the_run_s_alone_not_the_race_order() {
     };
     assert_eq!(draws(11, 0), draws(11, 1));
     // Both items come out of the pool across seeds.
-    let all: Vec<_> = (0..8).flat_map(|s| draws(s, 0)).flatten().collect();
-    assert!(
-        all.contains(&ItemId::Boomerang) && all.contains(&ItemId::Sanga),
-        "{all:?}"
-    );
+    let all: Vec<_> = (0..16).flat_map(|s| draws(s, 0)).flatten().collect();
+    assert!(ItemId::ALL.iter().all(|i| all.contains(i)), "{all:?}");
 }

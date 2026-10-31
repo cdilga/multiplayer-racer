@@ -1880,7 +1880,7 @@ impl Host {
     /// one 40 B record per part that isn't intact, P1-S04b: car u32, part u16 (the sidecar's `parts` order), state u16
     /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
-    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 sliding (an arcade slide past half), bits 6-7 the ground under it: 0
+    /// flags u32 (1 protected, bit 9 tanked up (sanga), bit 10 tinnie boost, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 sliding (an arcade slide past half), bits 6-7 the ground under it: 0
     /// tarmac, 1 dirt, 2 gravel; bits 16-31 the car's roster vehicle, R123: an index into the room's `vehicles`), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
     /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
     /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
@@ -1930,6 +1930,9 @@ impl Host {
                 | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6)
                 // Presentation contact readout for P1-R09 air clips: raised ramps/bridges are ground too.
                 | (u32::from(s.wheels_in_contact == 0) << 8)
+                // Bits 9 and 10: tanked up on a sanga, boosted by a tinnie (items; drives the TV's steam and glow).
+                | (u32::from(self.sim.sanga_state(car).is_some()) << 9)
+                | (u32::from(self.sim.tinnie_active(car)) << 10)
                 // Bits 16-31: the car's roster vehicle (R123), an index into the room's `vehicles`.
                 | ((self.sim.vehicle_of(car).unwrap_or(0) as u32 & 0xFFFF) << 16);
             let throttle = self.sim.applied_input(car).map_or(0.0, |i| {

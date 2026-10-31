@@ -21,6 +21,26 @@ pub const HOVER_M: f32 = 1.1;
 pub const SNAPSHOT_KIND_READY_BOOMERANG: u32 = 5;
 pub const SNAPSHOT_KIND_RECHARGING: u32 = 6;
 pub const SNAPSHOT_KIND_READY_SANGA: u32 = 7;
+/// ... and its box holding a tinnie or an esky (the dropped esky itself is kind 10).
+pub const SNAPSHOT_KIND_READY_TINNIE: u32 = 8;
+pub const SNAPSHOT_KIND_READY_ESKY: u32 = 9;
+
+/// A derby arena box's `dressing` is this plus its index (it is not map dressing).
+pub const ARENA_BASE: u32 = 1_000_000;
+/// One derby item box per this much floor area, m^2, scattered by the run's seed.
+pub const ARENA_AREA_PER_BOX_M2: f32 = 100.0;
+/// Arena boxes stay inside this share of the floor radius.
+pub const ARENA_SPREAD: f32 = 0.88;
+
+/// The snapshot kind of a ready box holding `item`.
+pub fn ready_kind(item: ItemId) -> u32 {
+    match item {
+        ItemId::Boomerang => SNAPSHOT_KIND_READY_BOOMERANG,
+        ItemId::Sanga => SNAPSHOT_KIND_READY_SANGA,
+        ItemId::Tinnie => SNAPSHOT_KIND_READY_TINNIE,
+        ItemId::Esky => SNAPSHOT_KIND_READY_ESKY,
+    }
+}
 /// Recharge after a pickup: 5 s of game time.
 pub const RECHARGE_TICKS: u64 = 5 * crate::TICK_HZ as u64;
 
@@ -41,14 +61,11 @@ impl Station {
         tick >= self.ready_at
     }
 
-    /// The item its next box holds, from the pool {boomerang, sanga}.
+    /// The item its next box holds, from the pool of every item.
     pub fn draw(&self, seed: u64, index: usize) -> ItemId {
         let key = seed ^ ((index as u64) << 32) ^ u64::from(self.taken);
-        if Rng::stream(key, "station").next_u64() & 1 == 0 {
-            ItemId::Boomerang
-        } else {
-            ItemId::Sanga
-        }
+        let pick = Rng::stream(key, "station").next_u64() >> 8;
+        ItemId::ALL[(pick % ItemId::ALL.len() as u64) as usize]
     }
 }
 

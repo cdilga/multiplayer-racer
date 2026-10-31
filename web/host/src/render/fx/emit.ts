@@ -10,6 +10,9 @@ import { envelope, Pool, rng, type Spawn } from './particles';
 
 export const FLAG_BOOSTING = 16;
 export const FLAG_SLIDING = 32;
+/** Bit 9: tanked up on a sanga (steam and a hot glow). Bit 10: a tinnie's fizzing blue boost. */
+export const FLAG_TANKED = 512;
+export const FLAG_TINNIE = 1024;
 /** Bits 6-7 of the flags: the ground under the car (0 tarmac, 1 dirt, 2 gravel). */
 export const surfaceOf = (flags: number) => (flags >> 6) & 3;
 
@@ -241,6 +244,29 @@ export class Emitter {
               family: 'boost', blend: 'alpha', x: e[0], y: e[1], z: e[2],
               vx: back[0] * 9 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 9 + vel[2] * 0.92 + this.jitter(0.4),
               life: 0.26 + this.rand() * 0.08, size0: 0.42, size1: 0.1, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15, rim: HOT,
+            });
+          });
+      }
+
+      // ---- Tanked up / tinnie: steam off the bonnet and a glow trail, so the buff reads on a TV across the room ---------
+      if (flags & (FLAG_TANKED | FLAG_TINNIE)) {
+        const tinnie = (flags & FLAG_TINNIE) !== 0;
+        this.rate(st, 'steam', 50, dt, () => {
+          const e = at(this.jitter(0.5), 1.0, 1.2);
+          this.spawn({
+            family: 'tyre-smoke', blend: 'alpha', x: e[0], y: e[1], z: e[2],
+            vx: vel[0] * 0.5 + this.jitter(0.6), vy: 1.6 + this.rand(), vz: vel[2] * 0.5 + this.jitter(0.6),
+            life: 0.7 + this.rand() * 0.3, size0: 0.35, size1: 1.1, c0: C.smoke, c1: C.smokeEnd, alpha: 0.7, drag: 0.5,
+          });
+        });
+        for (const side of [0.7, -0.7])
+          this.rate(st, `tank${side}`, 70, dt, () => {
+            const e = at(side, 0.35, -1.0);
+            const back = rotate(0, 0, -1);
+            this.spawn({
+              family: 'boost', blend: 'alpha', x: e[0], y: e[1], z: e[2],
+              vx: back[0] * 6 + vel[0] * 0.9 + this.jitter(0.5), vy: this.jitter(0.3), vz: back[2] * 6 + vel[2] * 0.9 + this.jitter(0.5),
+              life: 0.3 + this.rand() * 0.1, size0: 0.5, size1: 0.12, c0: tinnie ? C.blue : C.spark, c1: tinnie ? C.blueEnd : C.sparkEnd, alpha: 0.9, drag: 0.15, rim: HOT,
             });
           });
       }

@@ -81,6 +81,8 @@ pub enum PropKind {
     Part,
     /// A wrecked car's chassis (P1-S04c): its core hull as a dynamic body that stays on the track for the round.
     Husk,
+    /// A dropped esky (an item): a heavy dynamic box that stays for the round.
+    Esky,
 }
 
 impl PropKind {
@@ -91,6 +93,7 @@ impl PropKind {
             Self::Cone => 1,
             Self::Part => 2,
             Self::Husk => 3,
+            Self::Esky => crate::items::esky::SNAPSHOT_KIND,
         }
     }
 }

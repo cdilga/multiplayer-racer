@@ -37,6 +37,24 @@ function sangaPrint() {
   ];
 }
 
+/** A tinnie: a blue can with a silver top. */
+function tinniePrint() {
+  const z = S / 2 + 0.006;
+  return [
+    drum(0.1, -0.22, 0.22, '#2f8fd8', 10).translate(0, S / 2 + 0.1, z).scale(1, 1, 0.12),
+    drum(0.1, 0.22, 0.25, '#d9dde2', 10).translate(0, S / 2 + 0.1, z + 0.002).scale(1, 1, 0.12),
+  ];
+}
+
+/** An esky: a red cooler with a white lid. */
+function eskyPrint() {
+  const z = S / 2 + 0.006;
+  return [
+    slab(0.56, -0.2, 0.12, 0.01, '#d8452f').translate(0, S / 2 + 0.1, z),
+    slab(0.6, 0.12, 0.2, 0.012, '#f4f1ea').translate(0, S / 2 + 0.1, z + 0.001),
+  ];
+}
+
 function box(print: () => import('three').BufferGeometry[]) {
   return merge([
     slab(S, 0, S, S, CARD),
@@ -63,3 +81,7 @@ export const stationSanga = (): import('three').BufferGeometry => box(sangaPrint
 
 /** A recharging station: a flat cardboard pad on the road. */
 export const stationPad = (): import('three').BufferGeometry => slab(S, 0, 0.05, S, CARD).translate(0, -HOVER, 0);
+
+/** The ready station holding a tinnie, and one holding an esky. */
+export const stationTinnie = (): import('three').BufferGeometry => box(tinniePrint).translate(0, -HALF_COLLIDER, 0);
+export const stationEsky = (): import('three').BufferGeometry => box(eskyPrint).translate(0, -HALF_COLLIDER, 0);

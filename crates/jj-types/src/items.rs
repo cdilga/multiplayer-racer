@@ -7,6 +7,20 @@ use serde::{Deserialize, Serialize};
 pub enum ItemId {
     Boomerang,
     Sanga,
+    /// A self-use speed boost (a cold tinnie).
+    Tinnie,
+    /// A hazard dropped behind the car: persistent dynamic debris.
+    Esky,
+}
+
+impl ItemId {
+    /// Every item, in the order a station's draw indexes them.
+    pub const ALL: [ItemId; 4] = [
+        ItemId::Boomerang,
+        ItemId::Sanga,
+        ItemId::Tinnie,
+        ItemId::Esky,
+    ];
 }
 
 /// A refused use retains the front item; these describe why, rather than silently consuming it.

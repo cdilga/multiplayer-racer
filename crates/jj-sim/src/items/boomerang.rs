@@ -16,7 +16,15 @@ pub const OMEGA: f32 = 1.428;
 /// Flight height above the thrower's body origin, m.
 pub const HEIGHT_M: f32 = 0.8;
 /// A car within this of the boomerang (body origin to boomerang, in plan) is hit.
-pub const HIT_RADIUS_M: f32 = 1.8;
+pub const HIT_RADIUS_M: f32 = 3.0;
+/// Auto-aim: the nearest rival within this cone of the throw direction (half-angle cosine, 30 degrees) and range is the target.
+pub const AIM_COS: f32 = 0.866;
+pub const AIM_RANGE_M: f32 = 90.0;
+/// The aimed throw leads the target by this long, s, and overshoots it by `AIM_PAST_M` so the loop's peak is beyond it.
+pub const AIM_LEAD_S: f32 = 0.7;
+pub const AIM_PAST_M: f32 = 4.0;
+/// The aimed throw's fastest launch, m/s (its loop reaches `SPEED / OMEGA`, about 49 m).
+pub const AIM_MAX_SPEED_MPS: f32 = 70.0;
 /// The thrower catches it on the way back within this.
 pub const CATCH_RADIUS_M: f32 = 2.5;
 /// The speed change one hit gives a car, m/s (inside the card's 10 m/s envelope), with a little lift.

@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "tinnie",
+  "version": 1,
+  "class": "buff",
+  "activation": "sector-entry",
+  "direction": "self-use",
+  "uses": 1,
+  "offensive": false,
+  "timing": { "arming_ms": 0, "cooldown_ms": 0, "lifetime_ms": null, "duration_ms": 2500 },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Wait for the visible timer to end", "Cut across behind the car while it holds a straight line"],
+  "presentation": { "vfx": "tinnie-fizz", "sfx": "tinnie-crack", "comic": "PSSST!" },
+  "rationale": "A cold tinnie: a short, strong self-use speed boost (2.5 s of extra drive force). A second tinnie refreshes the timer rather than stacking."
+}
