@@ -110,7 +110,19 @@ export class CameraRig {
   /** Over a jump's flight or landing (camera/flights.ts), or null: the relief look-ahead caps falling ground there. */
   inFlight: ((x: number, z: number) => boolean) | null = null;
   /** The map's loops: a car up on one gets the loop shot. */
-  loops: LoopShot[] = [];
+  get loops(): LoopShot[] {
+    return this.loopShots;
+  }
+  /** A new map's loops: every seat's loop state goes with the old map's (g01: round 2's map has other loops, or none). */
+  set loops(shots: LoopShot[]) {
+    this.loopShots = shots;
+    for (const s of this.seats.values()) {
+      s.loop = null;
+      s.lastLoop = null;
+      s.loopIn = 0;
+    }
+  }
+  private loopShots: LoopShot[] = [];
   private fwd = new Vector3();
   private v = new Vector3();
   private w = new Vector3();
@@ -262,8 +274,9 @@ export class CameraRig {
     s.loopIn = cut ? goal : goal + (s.loopIn - goal) * Math.exp(-dt / (goal ? L.easeInS : L.easeOutS));
     if (s.loopIn < 1e-3) s.loopIn = 0;
     let fov = R.fovDeg;
-    if (s.loopIn > 0 && s.lastLoop !== null) {
-      this.loopFrame(car, this.loops[s.lastLoop]!, this.loopPos, this.loopLook);
+    const easing = s.lastLoop !== null ? this.loopShots[s.lastLoop] : undefined;
+    if (s.loopIn > 0 && easing) {
+      this.loopFrame(car, easing, this.loopPos, this.loopLook);
       s.pos.lerp(this.loopPos, s.loopIn);
       // Part way between the two, neither aim need hold the car: the aim comes onto the car over the first quarter of
       // the ease and goes on to the loop's aim over the rest.

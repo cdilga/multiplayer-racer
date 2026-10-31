@@ -94,3 +94,18 @@ for (const speed of [14, 20, 26]) for (const [name, aspect] of [['wide', 16 / 9]
     assert.ok(after.loop === null && after.loopIn < 0.01 && Math.abs(after.zoomM - before.zoomM) < 0.1, `after the exit the chase eases back to its road framing (${after.zoomM} m, ease ${after.loopIn})`);
   });
 }
+
+// g01 (CI 11676): a new map replaces the loops while a seat is still easing out of one; the next frame must not reach
+// for the old map's loop.
+test('a new map mid-loop resets the loop framing and the chase carries on', () => {
+  const rig = new CameraRig();
+  rig.loops = [{ entry: new Vector3(...fr.e), forward: F.clone(), left: new Vector3(fr.left[0], 0, fr.left[1]), runOut: fr.runOut, shift: fr.shift, radius: R, halfWidth: fr.halfWidth, rise: fr.yExit - fr.e[1] }];
+  const cam = new PerspectiveCamera(60, 16 / 9, 0.1, 2000);
+  const top = path[Math.floor(path.length / 2)];
+  const rot = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(new Vector3().crossVectors(top.up, top.fw).normalize(), top.up, top.fw));
+  for (let k = 0; k < 30; k++) rig.update(0, cam, { pos: top.p, rot, life: 1 }, 1 / 60);
+  assert.ok(rig.inspect()[0].loopIn > 0.5, 'eased into the loop framing');
+  rig.loops = [];
+  assert.doesNotThrow(() => rig.update(0, cam, { pos: top.p, rot, life: 1 }, 1 / 60));
+  assert.equal(rig.inspect()[0].loopIn, 0, 'the old map\'s loop framing is gone');
+});
