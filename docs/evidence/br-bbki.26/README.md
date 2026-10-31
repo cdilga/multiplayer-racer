@@ -100,3 +100,12 @@ Re-baselined (more steering authority is the point; each moved the way the chang
 The bikes' (Rapier) steering falloff was not changed. The ute's high-speed lift is modest (+25 %) because of
 `scenarios/assist/over-driven.json` (its Some-level slip max rises past 45 with a stronger ute). The preview publish
 and TV self-review captures in the bead's last acceptance line are not part of this helper's work.
+
+## Fix forward after CI 11651 (2026-10-31)
+
+- **AU Hawk:** `turn_g` 5.2 -> 4.6, `steer_falloff_mps` 26 -> 22. At 5.2 its body touched the road holding a
+  25 m/s turn (R122 bank `a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over_au_hawk`: 3 dives, clearance
+  -5 to -9 mm on seeds 3/5/6). 4.6/22 gives 0 dives over 549 runs. It is still +39 % over the AU Hawk's old 3.3.
+- **Air pitch restored:** `pitchRateDps` 75 -> 100 and `responseS` 0.14 -> 0.08. The owner asked about *turning*
+  in the air, so only yaw stays reduced (90 -> 50 deg/s). At 75 deg/s a pinned stick could no longer over-rotate a
+  leap into a bad landing (`skill_jump.rs`: Ok where Bad was asked), and the stick must still decide the landing.

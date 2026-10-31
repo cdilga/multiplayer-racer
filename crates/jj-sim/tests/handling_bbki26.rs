@@ -311,9 +311,11 @@ fn air_control_turns_the_car_in_flight_gently() {
         let (yaw, pitch) = air_rates(&map, &p);
         eprintln!("{id:16} air yaw {yaw:.1} deg/s, pitch {pitch:.1} deg/s");
         table.push((id, yaw, pitch));
-        // br-bbki.26: a car in the air turns noticeably less than the 90 / 100 deg/s of before (owner 2026-10-31).
+        // br-bbki.26: a car in the air turns (yaws) noticeably less than the 90 deg/s of before (owner 2026-10-31: "the
+        // turning in the air is a little bit too aggressive"); pitch keeps its 100 deg/s, so the stick still decides a
+        // clean, bad or crashed landing (skill_jump.rs).
         assert!(yaw <= 60.0, "air yaw {yaw:.1} deg/s");
-        assert!(pitch <= 80.0, "air pitch {pitch:.1} deg/s");
+        assert!(pitch <= 105.0, "air pitch {pitch:.1} deg/s");
         assert!(
             yaw >= 25.0 && pitch >= 25.0,
             "air control still answers: {yaw:.1} {pitch:.1}"

@@ -5239,7 +5239,7 @@
     "reverse_below_mps": 1.0,
     "max_brake_force": 20000.0,
     "max_steer_rad": 0.52,
-    "steer_falloff_mps": 26.0,
+    "steer_falloff_mps": 22.0,
     "drive": "Rear",
     "linear_damping": 0.14,
     "angular_damping": 0.85,
@@ -5297,7 +5297,7 @@
       "detach_clear_ms": 250.0
     },
     "arcade": {
-      "turn_g": 5.2,
+      "turn_g": 4.6,
       "yaw_max_deg_s": 125.0,
       "turn_in_s": 0.06,
       "yaw_accel_deg_s2": 750.0,
