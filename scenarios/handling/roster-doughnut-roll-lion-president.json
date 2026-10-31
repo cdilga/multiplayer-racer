@@ -1,6 +1,6 @@
 {
  "scenario": "roster-doughnut-roll-lion-president",
- "what": "AU Hawk tuning (br-bwju.12): the doughnut from a roll. As roster-doughnut but lion-president starts rolling at 6 m/s, so the Hawk Dash, which can only start a power slide above 2 m/s, gets its slide too: the AU Hawk still out-circles it.",
+ "what": "AU Hawk tuning (br-bwju.12): the doughnut from a roll. As roster-doughnut but lion-president starts rolling at 6 m/s, so the Hawk Dash, which can only start a power slide above 2 m/s, gets its slide too: the AU Hawk still out-circles it. Rebaselined 2026-10-31 (br-bbki.26: stronger, easier high-speed steering and corner-entry slides; owner: 'high speed steering ... more forceful and impactful', 2WD drift): maxYawRateDegS max 190 -> 215 (measured with the new defaults; the car rotates harder / covers more ground, still no wreck).",
  "map": "maps/test/skidpad.json",
  "seed": 3,
  "ticks": 1020,
@@ -40,7 +40,7 @@
    "car": 0,
    "metric": "maxYawRateDegS",
    "min": 0,
-   "max": 190
+   "max": 215
   },
   {
    "car": 0,

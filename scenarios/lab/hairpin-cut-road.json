@@ -24,7 +24,7 @@
   "expect": [
     {
       "car": 0,
-      "max": 315,
+      "max": 345,
       "metric": "progressM",
       "min": 260
     },
@@ -45,5 +45,5 @@
   "scenario": "hairpin-cut-road",
   "seed": 4,
   "ticks": 1500,
-  "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip). br-4tbo (2026-10-18): 287 m at the new autopilot pace (was 180-230)."
+  "what": "The road: the same start, but the autopilot stays on the tarmac round the hairpin (sim seed 4). It is behind the cut's car at 1500 ticks, and grips (under 4 degrees of slip). br-4tbo (2026-10-18): 287 m at the new autopilot pace (was 180-230). Rebaselined 2026-10-31 (br-bbki.26: stronger, easier high-speed steering and corner-entry slides; owner: 'high speed steering ... more forceful and impactful', 2WD drift): progressM max 315 -> 345 (measured with the new defaults; the car rotates harder / covers more ground, still no wreck)."
 }

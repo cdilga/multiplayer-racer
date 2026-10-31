@@ -93,8 +93,8 @@
    "car": 2,
    "atTick": 60,
    "metric": "headingChangeDeg",
-   "min": 8,
-   "max": 22
+   "min": 8.0,
+   "max": 29
   },
   {
    "car": 0,

@@ -88,26 +88,26 @@
   {
    "car": 0,
    "metric": "headingChangeDeg",
-   "min": 82.61,
-   "max": 86.85
+   "min": 95.08,
+   "max": 100.96
   },
   {
    "car": 3,
    "metric": "headingChangeDeg",
-   "min": 78.35,
-   "max": 82.37
+   "min": 90.24,
+   "max": 95.82
   },
   {
    "car": 1,
    "metric": "headingChangeDeg",
-   "min": 68.81,
-   "max": 72.33
+   "min": 79.39,
+   "max": 84.3
   },
   {
    "car": 2,
    "metric": "headingChangeDeg",
-   "min": 61.36,
-   "max": 64.5
+   "min": 74.17,
+   "max": 78.76
   },
   {
    "car": 0,

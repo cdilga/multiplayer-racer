@@ -1,6 +1,6 @@
 {
  "scenario": "roster-doughnut-hawk-dash",
- "what": "AU Hawk tuning (br-bwju.12): the doughnut. hawk-dash on the flat tarmac skidpad, from rest, full left lock and full throttle for 8 s (closed throttle for the first 0.5 s while the car settles on its wheels, so the throttle is a punch). Compare the same fixture across the roster: the AU Hawk is the burnout king (its tail hangs out furthest, longest, round the tightest circle); every other car sits below it. Envelopes are per car; docs/evidence/P1-V-au-hawk/tuning.md has the table.",
+ "what": "AU Hawk tuning (br-bwju.12): the doughnut. hawk-dash on the flat tarmac skidpad, from rest, full left lock and full throttle for 8 s (closed throttle for the first 0.5 s while the car settles on its wheels, so the throttle is a punch). Compare the same fixture across the roster: the AU Hawk is the burnout king (its tail hangs out furthest, longest, round the tightest circle); every other car sits below it. Envelopes are per car; docs/evidence/P1-V-au-hawk/tuning.md has the table. Rebaselined 2026-10-31 (br-bbki.26: stronger, easier high-speed steering and corner-entry slides; owner: 'high speed steering ... more forceful and impactful', 2WD drift): maxYawRateDegS max 200 -> 250, maxSlipDeg max 69 -> 80 (measured with the new defaults; the car rotates harder / covers more ground, still no wreck).",
  "map": "maps/test/skidpad.json",
  "seed": 3,
  "ticks": 1020,
@@ -40,13 +40,13 @@
    "car": 0,
    "metric": "maxYawRateDegS",
    "min": 0,
-   "max": 200
+   "max": 250
   },
   {
    "car": 0,
    "metric": "maxSlipDeg",
    "min": 0,
-   "max": 69
+   "max": 80
   },
   {
    "car": 0,

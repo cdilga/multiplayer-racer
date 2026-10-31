@@ -450,7 +450,10 @@ impl AssistState {
         let catch = lv.slide_catch * excess;
         if catch > 0.0 {
             let counter = -(drift_deg / sl.full_deg).clamp(-1.0, 1.0);
-            steer += catch * (counter - steer);
+            // It only adds counter-steer: a player already counter-steering harder keeps their own lock.
+            if steer * -drift_deg.signum() < counter * -drift_deg.signum() {
+                steer += catch * (counter - steer);
+            }
             let t = dequantise_axis(out.throttle);
             if t > sl.lift_to {
                 out.throttle = quantise_axis(t + catch * (sl.lift_to - t));

@@ -1,5 +1,5 @@
 {
-  "what": "R125 learner assists (br-2mxa): a scripted novice (throttle pinned, steering toward the line at a fraction of what is needed plus seeded stick noise) drives the greybox loop at each assist level, and the same seeds replay bit for bit. Envelopes are what the tests assert; the real numbers are in docs/evidence/br-2mxa/.",
+  "what": "R125 learner assists (br-2mxa): a scripted novice (throttle pinned, steering toward the line at a fraction of what is needed plus seeded stick noise) drives the greybox loop at each assist level, and the same seeds replay bit for bit. Envelopes are what the tests assert; the real numbers are in docs/evidence/br-2mxa/. offMinCrashesOverSome 40 -> 35 (br-bbki.26, owner 2026-10-31: stronger, easier high-speed steering; Off now crashes 39 against Some 0 and Lots 0, every novice finishes, so skill still shows).",
   "map": "maps/greybox-loop.json",
   "laps": 2,
   "maxSeconds": 120,
@@ -20,6 +20,6 @@
   "expect": {
     "someMinFinished": 6,
     "lotsMinFinished": 6,
-    "offMinCrashesOverSome": 40
+    "offMinCrashesOverSome": 35
   }
 }

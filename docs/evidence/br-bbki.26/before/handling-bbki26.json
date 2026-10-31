@@ -1,0 +1,182 @@
+[
+  {
+    "car": "cruz-missile",
+    "turn_in_deg_s": [
+      [
+        89.67816,
+        96.3812,
+        91.17215
+      ],
+      [
+        62.668167,
+        67.10288,
+        63.483303
+      ],
+      [
+        53.362534,
+        56.977715,
+        53.999336
+      ]
+    ],
+    "entry_lift": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.9999164,
+      "exit_speed_mps": 15.998559
+    },
+    "entry_brake": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99982524,
+      "exit_speed_mps": 13.840523
+    }
+  },
+  {
+    "car": "tradie-ute",
+    "turn_in_deg_s": [
+      [
+        60.091015,
+        72.49227,
+        64.86353
+      ],
+      [
+        40.031185,
+        47.987453,
+        43.193996
+      ],
+      [
+        34.1919,
+        40.87934,
+        36.861927
+      ]
+    ],
+    "entry_lift": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99965566,
+      "exit_speed_mps": 13.797487
+    },
+    "entry_brake": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99965775,
+      "exit_speed_mps": 11.910642
+    }
+  },
+  {
+    "car": "hawk-dash",
+    "turn_in_deg_s": [
+      [
+        79.622696,
+        88.84038,
+        82.094894
+      ],
+      [
+        53.29797,
+        59.056984,
+        54.960297
+      ],
+      [
+        45.595707,
+        50.426476,
+        46.994957
+      ]
+    ],
+    "entry_lift": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99995935,
+      "exit_speed_mps": 16.432295
+    },
+    "entry_brake": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99989694,
+      "exit_speed_mps": 14.210392
+    }
+  },
+  {
+    "car": "lion-president",
+    "turn_in_deg_s": [
+      [
+        79.61666,
+        88.83246,
+        82.10313
+      ],
+      [
+        53.288193,
+        59.05528,
+        54.95206
+      ],
+      [
+        45.586727,
+        50.425476,
+        46.986595
+      ]
+    ],
+    "entry_lift": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.9999544,
+      "exit_speed_mps": 16.419405
+    },
+    "entry_brake": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99988514,
+      "exit_speed_mps": 14.197372
+    }
+  },
+  {
+    "car": "au-hawk",
+    "turn_in_deg_s": [
+      [
+        79.48092,
+        88.82101,
+        81.94841
+      ],
+      [
+        53.121643,
+        58.899693,
+        54.746944
+      ],
+      [
+        45.280773,
+        49.989647,
+        46.584064
+      ]
+    ],
+    "entry_lift": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99995935,
+      "exit_speed_mps": 16.413294
+    },
+    "entry_brake": {
+      "to_20_s": null,
+      "hold_min_deg": 3.4028235e+38,
+      "hold_max_deg": -3.4028235e+38,
+      "caught_s": null,
+      "min_up_y": 0.99989605,
+      "exit_speed_mps": 14.1913595
+    }
+  }
+]

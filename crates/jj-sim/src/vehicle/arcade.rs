@@ -73,6 +73,24 @@ pub struct Arcade {
     /// `let_go_authority` of itself: wrecks spin, and still scrub their spin off like sliding tyres would.
     pub let_go_deg: f32,
     pub let_go_authority: f32,
+    /// Corner-entry slide (br-bbki.26, R138), for every car whatever it drives: a lift-off (the throttle from at least
+    /// `entry_lift_from` to under `entry_lift_to` within `entry_window_s`) or a brake of at least `entry_brake`, with
+    /// at least `entry_steer` of stick at `entry_min_mps` or faster, sets a slide of `entry_slide` (0: never). While the
+    /// stick stays past 0.2 (and isn't against the slide) it is held at `entry_angle_deg` × stick with `entry_grip` of
+    /// the grip left, so the car keeps turning with its tail out; centring or countersteering catches it, as does
+    /// falling under `entry_exit_mps`.
+    pub entry_slide: f32,
+    pub entry_steer: f32,
+    pub entry_min_mps: f32,
+    pub entry_exit_mps: f32,
+    pub entry_brake: f32,
+    pub entry_lift_from: f32,
+    pub entry_lift_to: f32,
+    pub entry_window_s: f32,
+    pub entry_grip: f32,
+    pub entry_angle_deg: f32,
+    /// How fast the yaw closes on the entry slide's drift angle, per s (`slide_hold_per_s` for the other slides).
+    pub entry_hold_per_s: f32,
     /// Roll-rate damping while on the wheels, per s (0 none).
     pub roll_damping: f32,
     /// Below this speed (m/s) the stick's turn is asked as if the car rolled at `pivot_mps` × the drive it's given
@@ -94,6 +112,10 @@ pub struct ArcadeState {
     pub load_shift: f32,
     /// Ticks since the throttle was last under `punch_from` (saturating).
     pub since_low: u32,
+    /// Ticks since the throttle was last at `entry_lift_from` or more (saturating).
+    pub since_high: u32,
+    /// The slide in progress is a corner-entry slide (its own grip and angle).
+    pub entry: bool,
     /// The drift angle (deg, + nose left of travel) and the yaw rate asked, last tick: observations for probes.
     pub angle_deg: f32,
     pub yaw_ask_deg_s: f32,
@@ -106,6 +128,8 @@ impl Default for ArcadeState {
             slide: 0.0,
             load_shift: 0.0,
             since_low: u32::MAX,
+            since_high: u32::MAX,
+            entry: false,
             angle_deg: 0.0,
             yaw_ask_deg_s: 0.0,
         }
@@ -182,8 +206,23 @@ impl Arcade {
             && st.since_low <= window
             && steering
             && (self.punch_min_mps..=self.punch_max_mps).contains(&speed);
+        if c.throttle >= self.entry_lift_from {
+            st.since_high = 0;
+        } else {
+            st.since_high = st.since_high.saturating_add(1);
+        }
+        let lifted = c.throttle < self.entry_lift_to
+            && st.since_high <= libm::ceilf(self.entry_window_s / dt) as u32;
+        let entering = self.entry_slide > 0.0
+            && (lifted || c.brake >= self.entry_brake)
+            && c.steer.abs() >= self.entry_steer
+            && speed >= self.entry_min_mps;
         if punch {
+            st.entry = false;
             st.slide = st.slide.max(self.punch_slide);
+        } else if entering {
+            st.entry = true;
+            st.slide = st.slide.max(self.entry_slide);
         }
         // Steering against the slide (past a few degrees of it) catches it: grip comes back twice as fast and a power
         // slide no longer holds.
@@ -192,9 +231,15 @@ impl Arcade {
             && c.throttle >= self.slide_hold_throttle
             && c.steer.abs() >= 0.2
             && !catching;
-        if !(punch || held) {
+        // A corner-entry slide holds while the stick does (and the car is still moving); nothing else keeps it.
+        let entry_held =
+            st.entry && !catching && c.steer.abs() >= 0.2 && speed >= self.entry_exit_mps;
+        if !(punch || held || entry_held || entering) {
             let rate = if catching { 2.0 } else { 1.0 };
             st.slide = (st.slide - rate * dt / self.slide_recover_s.max(dt)).max(0.0);
+            if st.slide <= 0.0 {
+                st.entry = false;
+            }
         }
         let target = (c.brake - c.throttle).clamp(-1.0, 1.0);
         st.load_shift += (target - st.load_shift) * (dt / self.transfer_s.max(dt)).min(1.0);
@@ -259,7 +304,12 @@ pub fn apply(
             );
     let authority = ground.loaded * let_go;
     // Grip: sideways velocity goes at up to grip_g, less while sliding and less again far sideways.
-    let slide_share = 1.0 - st.slide * (1.0 - a.slide_grip);
+    let (slide_grip, slide_angle, hold_per_s) = if st.entry {
+        (a.entry_grip, a.entry_angle_deg, a.entry_hold_per_s)
+    } else {
+        (a.slide_grip, a.slide_angle_deg, a.slide_hold_per_s)
+    };
+    let slide_share = 1.0 - st.slide * (1.0 - slide_grip);
     let sideways = smoothstep(
         a.slide_angle_deg,
         a.slide_angle_deg + 30.0,
@@ -271,7 +321,7 @@ pub fn apply(
         * ground.side
         * ground.loaded
         * slide_share
-        * (1.0 - sideways * (1.0 - a.slide_grip));
+        * (1.0 - sideways * (1.0 - slide_grip));
     let cut = vs_rear.clamp(-grip * dt, grip * dt);
     let vs2 = vs - cut;
     let vf2 = if libm::fabsf(vf) > 1.0 {
@@ -313,9 +363,9 @@ pub fn apply(
     let want = if c.steer * angle < 0.0 && libm::fabsf(angle_deg) > 3.0 {
         0.0
     } else {
-        c.steer * a.slide_angle_deg.to_radians()
+        c.steer * slide_angle.to_radians()
     };
-    let r_slide = r_travel + (want - angle) * a.slide_hold_per_s;
+    let r_slide = r_travel + (want - angle) * hold_per_s;
     let ask = r_grip + (r_slide - r_grip) * st.slide;
     st.yaw_ask_deg_s = ask.to_degrees();
     // Stalled, the controller works at its full authority (wall friction under a full-throttle push out-torques the

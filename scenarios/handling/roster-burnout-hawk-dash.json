@@ -1,6 +1,6 @@
 {
  "scenario": "roster-burnout-hawk-dash",
- "what": "AU Hawk tuning (br-bwju.12): the burnout. hawk-dash from rest on the skidpad, throttle punched with half lock for 3 s (brake and throttle together cannot be asked: brake overrides drive, and the drive stick is one axis, so the burnout is the rear-led power slide launch). How far the tail comes round and how long it hangs out.",
+ "what": "AU Hawk tuning (br-bwju.12): the burnout. hawk-dash from rest on the skidpad, throttle punched with half lock for 3 s (brake and throttle together cannot be asked: brake overrides drive, and the drive stick is one axis, so the burnout is the rear-led power slide launch). How far the tail comes round and how long it hangs out. Rebaselined 2026-10-31 (br-bbki.26: stronger, easier high-speed steering and corner-entry slides; owner: 'high speed steering ... more forceful and impactful', 2WD drift): maxYawRateDegS max 145 -> 260, maxSlipDeg max 80 -> 95 (measured with the new defaults; the car rotates harder / covers more ground, still no wreck).",
  "map": "maps/test/skidpad.json",
  "seed": 3,
  "ticks": 420,
@@ -40,13 +40,13 @@
    "car": 0,
    "metric": "maxYawRateDegS",
    "min": 0,
-   "max": 145
+   "max": 260
   },
   {
    "car": 0,
    "metric": "maxSlipDeg",
    "min": 0,
-   "max": 80
+   "max": 95
   },
   {
    "car": 0,

@@ -130,7 +130,7 @@
    "car": 0,
    "metric": "routeOffsetM",
    "min": 0,
-   "max": 5
+   "max": 6.5
   },
   {
    "car": 0,
@@ -142,7 +142,7 @@
    "car": 1,
    "metric": "routeOffsetM",
    "min": 0,
-   "max": 5
+   "max": 6.5
   },
   {
    "car": 1,

@@ -552,6 +552,9 @@ mod tests {
             std::fs::write(&patch, body.to_string()).unwrap();
         };
         let original = std::fs::read_to_string(&air).unwrap();
+        let yaw_before = jj_sim::air::AirProfile::from_json(&original)
+            .unwrap()
+            .yaw_rate_dps;
         // A bad band past the crash band is refused, nothing written.
         write(json!([["bands.badDeg", "60"]]));
         assert!(tune(&patch, false).is_err());
@@ -562,7 +565,7 @@ mod tests {
             .expect("the written file validates");
         assert_eq!(after.pitch_rate_dps, 140.0);
         assert_eq!(after.bands.clean_deg, 10.0);
-        assert_eq!(after.yaw_rate_dps, 90.0, "the rest is kept");
+        assert_eq!(after.yaw_rate_dps, yaw_before, "the rest is kept");
     }
 
     #[test]
