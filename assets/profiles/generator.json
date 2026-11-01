@@ -421,7 +421,7 @@
   },
   "itemStations": {
     "firstM": 160.0,
-    "spacingM": 320.0,
+    "spacingM": 160.0,
     "lateralM": [
       -3.5,
       0.0,
