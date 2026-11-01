@@ -41,6 +41,12 @@ pub mod limits {
     pub const MAX_CORE_TURN: f64 = 0.10;
     /// A car's centre this far below the take-off ground inside the gap is in the pit.
     pub const PIT_TRIGGER_M: f64 = 2.0;
+    /// A car flying the gap is over it no longer than the band floor's straight crossing (`gap_m / min_speed`) times
+    /// this plus [`STRANDED_SLACK_S`] (the kicker's climb and the air damping slow the crossing well under 1.5x). One
+    /// still over it after that fell short and came to rest above the trigger (on a face or against the far abutment):
+    /// it has missed too (br-n1xx, R16).
+    pub const STRANDED_FACTOR: f64 = 1.5;
+    pub const STRANDED_SLACK_S: f64 = 0.5;
     /// Slowest speed band floor a piece may declare, m/s (below it a car can barely climb out of the approach).
     pub const MIN_BAND_SPEED_CMPS: i64 = 1_200;
     /// Height of a car's centre above the ground on its wheels, m: the flight is the centre's.
@@ -474,7 +480,8 @@ fn overpass_problems(map: &Map, f: &Feature, d: &GapLeap) -> Vec<String> {
 }
 
 /// A pit as a respawn volume, in the lip's straight frame: a car whose centre is inside the gap's plan rectangle and
-/// more than [`limits::PIT_TRIGGER_M`] below the take-off ground has missed.
+/// more than [`limits::PIT_TRIGGER_M`] below the take-off ground has missed, and so has one over the rectangle for
+/// longer than `stranded_s`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Pit {
     pub origin: [f64; 3],
@@ -487,13 +494,17 @@ pub struct Pit {
     /// The route span the pit belongs to (an overpass leap's upper road): only a car racing that stretch has missed;
     /// cars on the lower road under it pass through. `None`: every car inside it has fallen in.
     pub span: Option<(u32, u32)>,
+    /// The longest a car flying the gap stays over its plan rectangle, s (see [`limits::STRANDED_FACTOR`]).
+    pub stranded_s: f64,
 }
 
 impl Pit {
     pub fn contains(&self, x: f64, y: f64, z: f64) -> bool {
-        if y >= self.trigger_y {
-            return false;
-        }
+        y < self.trigger_y && self.over(x, z)
+    }
+
+    /// Whether a point is over the gap's plan rectangle, at any height.
+    pub fn over(&self, x: f64, z: f64) -> bool {
         let (dx, dz) = (x - self.origin[0], z - self.origin[2]);
         let u = dx * self.dir[0] + dz * self.dir[1];
         let lat = -dx * self.dir[1] + dz * self.dir[0];
@@ -526,6 +537,8 @@ pub fn pits(map: &Map) -> Vec<Pit> {
                 right_m: d.pit_right_m,
                 trigger_y: floor - limits::PIT_TRIGGER_M,
                 span: (d.kind == PieceKind::OverpassLeap).then_some((d.from, d.to)),
+                stranded_s: d.gap_m / d.min_speed * limits::STRANDED_FACTOR
+                    + limits::STRANDED_SLACK_S,
             })
         })
         .collect()

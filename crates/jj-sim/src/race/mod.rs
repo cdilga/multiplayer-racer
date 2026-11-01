@@ -303,6 +303,22 @@ impl Course {
             })
     }
 
+    /// The stranded limit (ticks) of the pit a car racing between race-order gates `window` is over (in plan, at any
+    /// height), if any: one over it longer than that has fallen short of the leap (br-n1xx).
+    pub fn over_pit_for(&self, p: [f32; 3], window: Option<(usize, usize)>) -> Option<u64> {
+        self.pits
+            .iter()
+            .find(|pit| {
+                let racing = match (pit.span, window) {
+                    (None, _) => true,
+                    (Some(span), Some((a, b))) => self.window_takes_in(a, b, span),
+                    (Some(_), None) => false,
+                };
+                racing && pit.over(f64::from(p[0]), f64::from(p[2]))
+            })
+            .map(|pit| (pit.stranded_s * TICK_HZ as f64).ceil() as u64)
+    }
+
     /// Whether the route between race-order gates `a` and `b` (going forward) takes in route span `span`.
     fn window_takes_in(&self, a: usize, b: usize, span: (u32, u32)) -> bool {
         let n = self.pts.len();
@@ -477,6 +493,8 @@ pub struct CarRace {
     history: Vec<ProgressSample>,
     rest_inverted: u64,
     slow: u64,
+    /// Ticks in a row over a pit it is racing (see [`Course::over_pit_for`]).
+    over_pit: u64,
     last: Option<CarView>,
 }
 
@@ -532,6 +550,7 @@ impl Race {
             history: Vec::new(),
             rest_inverted: 0,
             slow: 0,
+            over_pit: 0,
             last: None,
         });
     }
@@ -689,6 +708,7 @@ impl Race {
         c.assist_since = None;
         c.rest_inverted = 0;
         c.slow = 0;
+        c.over_pit = 0;
         c.last = None;
         match why {
             Respawned::Recover => c.recoveries += 1,
@@ -745,6 +765,16 @@ impl Race {
             if self.course.out_of_bounds_for(v.position, window) {
                 effects.push(self.respawn(tick, car, Respawned::OutOfBounds));
                 continue;
+            }
+            match self.course.over_pit_for(v.position, window) {
+                Some(limit) => {
+                    self.cars[i].over_pit += 1;
+                    if self.cars[i].over_pit > limit {
+                        effects.push(self.respawn(tick, car, Respawned::OutOfBounds));
+                        continue;
+                    }
+                }
+                None => self.cars[i].over_pit = 0,
             }
             // Flip assist: 1 s at rest inverted starts it; righted ends it; 3 s later still not righted is a wreck.
             let c = &mut self.cars[i];
@@ -1012,6 +1042,7 @@ impl Race {
             out.extend(c.finished_at.unwrap_or(u64::MAX).to_le_bytes());
             out.extend(c.rest_inverted.to_le_bytes());
             out.extend(c.slow.to_le_bytes());
+            out.extend(c.over_pit.to_le_bytes());
             out.extend(c.wrecks.to_le_bytes());
             out.extend(c.recoveries.to_le_bytes());
             out.extend(c.finish_fraction.to_le_bytes());
