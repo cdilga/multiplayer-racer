@@ -16,6 +16,9 @@ import {inFrameRide,labelClear,tilesFollowing} from './lib/in-frame.mjs';
 const BASE='/p/genloop/';
 const out=process.env.JJ_CAPTURE_DIR ?? evidencePath('br-xlvx.6.4');
 const TICKS=420;
+// The in-frame ride runs twice as long (the throttle input runs on past the fixture's end; native stops at TICKS): a
+// 12-14 m loop (br-8h3u.3) takes longer to ride than the old 7.5-9 m ones, and the camera eases out after it.
+const RIDE=2*TICKS;
 // The first rocks seed from 1 that gets a loop at loopsPerLap 1 (crates/jj-procgen/tests/loops.rs prints the bank): a
 // fixed seed broke whenever a generator change moved its loop (seed 1 lost its loop in October 2026).
 const RECIPE='rocks';
@@ -42,7 +45,7 @@ before(async()=>{
   const p=loop.params,i=p.entry-10,a=map.route.points[i],b=map.route.points[i+1],h=Math.atan2(b.x-a.x,b.z-a.z),v=22;
   fixture={scenario:'generated-loop',what:'A Cruz rides a generator-placed loop at speed: over the top upside down, out along the road.',
     map:join(dir,'map.json'),seed:Number(SEED),ticks:TICKS,cars:[{routePoint:i,lift:.3,linvel:[v*Math.sin(h),0,v*Math.cos(h)]}],
-    race:{laps:1,atTick:0},seats:[{name:'Loopy',car:0}],inputs:[{car:0,fromTick:0,toTick:TICKS,throttle:1}],
+    race:{laps:1,atTick:0},seats:[{name:'Loopy',car:0}],inputs:[{car:0,fromTick:0,toTick:RIDE,throttle:1}],
     expect:[{car:0,metric:'wrecks',min:0,max:0},{car:0,metric:'recoveries',min:0,max:0}]};
   const path=join(scratch,'fixture.json');writeFileSync(path,JSON.stringify(fixture,null,2)+'\n');
   [native]=JSON.parse(execFileSync(bin,[...args,'sim','--json','--out',join(scratch,'native'),path],{encoding:'utf8'}));
@@ -122,7 +125,7 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       await page.goto(`${server.origin}${BASE}host?test&${tilesFollowing(n)}&look=on&res=1&autores=off&mapUrl=${encodeURIComponent(server.origin+'/generated-loop.json')}`);
       await page.waitForFunction(()=>window.__jjTest&&window.__jjRender);
       await page.evaluate(async({fixture,mapJson})=>{window.__jjRender.hold();await window.__jjTest.load(fixture,mapJson);},{fixture,mapJson});
-      const r=await inFrameRide(page,{ticks:TICKS});
+      const r=await inFrameRide(page,{ticks:RIDE});
       // br-8h3u.2: no roll anywhere; once eased into the loop the car is framed closer than the chase frames it on the
       // road before the loop, and after the exit the chase eases back out to that framing.
       const before=r.cams.find(c=>c.tick>0&&c.loop===null&&c.loopIn===0),inLoop=r.cams.filter(c=>c.loopIn>.9),after=r.cams.at(-1);
