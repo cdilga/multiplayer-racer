@@ -10,8 +10,8 @@ use crate::DecodeError;
 use crate::cmd::{CameraMode, ResultRow};
 
 /// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
-/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19). 7: `MainToSim::PeerGone` (br-f3rz).
-pub const ABI_VERSION: u16 = 11;
+/// `PartLoose` and the contact-episode records join (P1-S04a). 4: `SimEvent::Landed` joins (R129, P1-FL07); 5: it carries the car (every car's landing shows). 6: `SimEvent::Takedown` (R134, P1-FL19). 7: `MainToSim::PeerGone` (br-f3rz). 12: the host's bot and learner commands (br-8h3u.14).
+pub const ABI_VERSION: u16 = 12;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -119,6 +119,25 @@ pub enum UiCommand {
     /// br-bbki.11 (the Feel Lab): this many bots on the autopilot join each round's grid after the seats (any number).
     SetBots {
         n: u32,
+    },
+    /// br-8h3u.14: bot `index`'s skill, 0 Easy, 1 Normal, 2 Hard (`assist.json` `autopilot.botSkills`).
+    SetBotSkill {
+        index: u32,
+        skill: u8,
+    },
+    /// br-8h3u.14: bot `index` drives with learner assists (R125: 0 Off, 1 Some, 2 Lots), an L-plater.
+    SetBotAssist {
+        index: u32,
+        level: u8,
+    },
+    /// br-8h3u.14: take bot `index` out of the next rounds (the ones after it move up).
+    RemoveBot {
+        index: u32,
+    },
+    /// br-8h3u.14: the host sets a seat's learner level (R125: 0 Off, 1 Some, 2 Lots), as the seat's phone can.
+    SetSeatAssist {
+        seat: u32,
+        level: u8,
     },
 }
 

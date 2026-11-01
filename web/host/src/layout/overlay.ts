@@ -33,7 +33,9 @@ function playersCard(list: Position[], w: number, h: number): string {
   if (!list.length) return `<div class="jj-players">${head}<p class="jj-pl-none">Places show once the race is on.</p></div>`;
   const { cols, fs } = playersFit(list.length, w * 0.84, h * 0.7);
   const items = list
-    .map((p) => `<li><b class="tnum">${p.place}</b><span class="badge" style="--b:var(--id-${p.colour});--on:var(--id-${p.colour}-on)">#${p.number}</span><span class="nm">${esc(p.name)}</span></li>`)
+    .map((p) => p.bot
+      ? `<li class="bot"><b class="tnum">${p.place}</b><span class="badge bot">#${p.number}</span><span class="nm">${esc(p.name)}</span><span class="bot-tag">Bot</span></li>`
+      : `<li><b class="tnum">${p.place}</b><span class="badge" style="--b:var(--id-${p.colour});--on:var(--id-${p.colour}-on)">#${p.number}</span><span class="nm">${esc(p.name)}</span></li>`)
     .join('');
   const rows = Math.ceil(list.length / cols);
   return `<div class="jj-players" style="--pl-fs:${fs.toFixed(2)}px">${head}<ol style="grid-template-columns:repeat(${cols},minmax(0,1fr));grid-template-rows:repeat(${rows},auto)">${items}</ol></div>`;

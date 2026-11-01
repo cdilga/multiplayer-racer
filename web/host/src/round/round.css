@@ -447,3 +447,13 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .mn-tracks .tk-code { font: 900 italic 1.05em/1 var(--font-display); letter-spacing: .04em; }
 .mn-tracks .tk-when { opacity: .7; margin-right: auto; }
 .tk-add input { flex: 1 1 12em; min-width: 0; font: inherit; padding: .35em .6em; border: var(--outline) solid var(--c-ink); border-radius: var(--radius); background: var(--c-paper); color: var(--c-ink); text-transform: uppercase; }
+/* br-8h3u.14: the host's bots. A bot has no seat colour: an ink badge with a paper number, and a small "Bot" tag beside its
+   name wherever the field is listed (positions, Players cell, lobby, results). An L-plater carries the tile's L-plate. */
+.badge.bot { --b: var(--c-ink-raised); --on: var(--c-paper); --bz-fill: var(--c-ink-raised); color: var(--c-paper); }
+.bot-tag { flex: none; padding: .12em .4em .16em; border: .1em solid currentColor; border-radius: .3em; font: 800 .62em/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: currentColor; opacity: .72; }
+.mn-lp { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1.3em; height: 1.3em; font: 900 .9em/1 var(--font-display); color: var(--c-danger); background: var(--c-white); border: calc(3px * var(--k)) solid var(--c-ink); border-radius: calc(5px * var(--k)); padding-bottom: .06em; }
+.mn-bots li { flex-wrap: wrap; }
+.mn-bots .btn { flex: none; min-width: calc(150px * var(--k)); }
+.lcard.bot { border-style: dashed; }
+.lcard.bot .chip { --cbg: var(--c-paper-shade); }
+.rcard.bot .pts { visibility: hidden; }

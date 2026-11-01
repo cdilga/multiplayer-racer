@@ -171,6 +171,12 @@ pub enum Setup {
     FalseStart {
         car: u32,
     },
+    /// A bot's pace (br-8h3u.14): its autopilot plans at `milli`/1000 of the shipped speed plan (the host's skill
+    /// levels, `assist.json` `botSkills`). Appended: variant indices stay stable.
+    BotPace {
+        car: u32,
+        milli: u16,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

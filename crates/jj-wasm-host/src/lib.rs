@@ -174,6 +174,13 @@ pub mod codec {
     use jj_map::load_json;
     use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, UiCommand};
     use jj_types::{CommandId, EndpointId, LocalSourceId};
+
+    /// `<u32>:<u8>` from a UI string's tail (an index or seat and a level); a malformed part reads as an index nothing
+    /// has and level 0.
+    fn pair(tail: &str) -> (u32, u8) {
+        let (a, b) = tail.split_once(':').unwrap_or((tail, "0"));
+        (a.parse().unwrap_or(u32::MAX), b.parse().unwrap_or(0))
+    }
     use wasm_bindgen::prelude::*;
 
     /// Validates a `jj.map.v1` JSON document and returns its canonical bytes (what `Init` carries).
@@ -302,6 +309,23 @@ pub mod codec {
             l if l.starts_with("bots:") => UiCommand::SetBots {
                 n: l[5..].parse().unwrap_or(0),
             },
+            // br-8h3u.14: `bot-skill:<index>:<0|1|2>`, `bot-assist:<index>:<0|1|2>`, `bot-remove:<index>` and
+            // `seat-assist:<seat>:<0|1|2>`.
+            l if l.starts_with("bot-skill:") => {
+                let (index, skill) = pair(&l[10..]);
+                UiCommand::SetBotSkill { index, skill }
+            }
+            l if l.starts_with("bot-assist:") => {
+                let (index, level) = pair(&l[11..]);
+                UiCommand::SetBotAssist { index, level }
+            }
+            l if l.starts_with("bot-remove:") => UiCommand::RemoveBot {
+                index: l[11..].parse().unwrap_or(u32::MAX),
+            },
+            l if l.starts_with("seat-assist:") => {
+                let (seat, level) = pair(&l[12..]);
+                UiCommand::SetSeatAssist { seat, level }
+            }
             l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
                 ms: l[16..].parse().unwrap_or(60_000),
             },

@@ -66,12 +66,40 @@ pub(super) struct RoundState {
     pub current_recipe: Option<String>,
     /// br-m1xe: the host chose a kept track for the next round (its seed and recipe).
     pub favourite: Option<(u64, String)>,
-    /// br-bbki.11: bots on the autopilot on each round's grid after the seats (the Feel Lab's carnage bowl).
-    pub bots: u32,
+    /// br-bbki.11: bots on the autopilot on each round's grid after the seats (the Feel Lab's carnage bowl); br-8h3u.14:
+    /// the host adds them from the lobby, each with a skill and a learner level.
+    pub bots: Vec<BotSpec>,
+    /// br-8h3u.14: the last race's bots in the results (they score no points), for the host's results screen.
+    pub bot_results: Vec<BotResult>,
     /// This round's bot cars, held with the grid through the countdown (P1-FL08).
     pub bot_cars: Vec<CarId>,
     /// br-m1xe: the tick each seat's laps ended this round (its lap times).
     pub lap_ticks: std::collections::BTreeMap<SeatId, Vec<u64>>,
+}
+
+/// A bot the host added (br-8h3u.14): its skill (0 Easy, 1 Normal, 2 Hard: `assist.json` `autopilot.botSkills`) and
+/// learner level (an L-plater when it isn't Off).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct BotSpec {
+    pub skill: u8,
+    pub assist: jj_sim::assist::AssistLevel,
+}
+
+impl Default for BotSpec {
+    fn default() -> Self {
+        Self {
+            skill: 1,
+            assist: jj_sim::assist::AssistLevel::Off,
+        }
+    }
+}
+
+/// A bot's row in a race's results (br-8h3u.14): which bot, its place among every car, its time if it finished.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct BotResult {
+    pub index: u32,
+    pub place: u32,
+    pub time_ms: Option<u32>,
 }
 
 /// The shortest derby round the host may set (a round of a few hits), ms.
@@ -99,7 +127,8 @@ impl RoundState {
             current_recipe: None,
             favourite: None,
             lap_ticks: Default::default(),
-            bots: 0,
+            bots: Vec::new(),
+            bot_results: Vec::new(),
             bot_cars: Vec::new(),
             standings: Standings::default(),
             laps: None,
@@ -198,7 +227,7 @@ impl Host {
                 let arena_cars = self
                     .round
                     .derby_next
-                    .then(|| (self.inputs.len() as u32 + self.round.bots).max(2));
+                    .then(|| (self.inputs.len() as u32 + self.round.bots.len() as u32).max(2));
                 self.events.push(SimEvent::PrepareRequested {
                     preparation: id,
                     seed,
@@ -218,7 +247,7 @@ impl Host {
                     .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
                 self.round.prepared_seed = Some(seed);
                 if self.round.derby_next {
-                    let cars = (self.inputs.len() + self.round.bots as usize).max(2);
+                    let cars = (self.inputs.len() + self.round.bots.len()).max(2);
                     self.round.prepared =
                         jj_procgen::arena::prepare(seed, cars, &jj_procgen::registry()).ok();
                 }
@@ -336,9 +365,18 @@ impl Host {
         }
         // br-bbki.11: the bots, on the grid after the seats, each on the autopilot (no seat: they're in the world and the
         // derby ledger, not the results).
-        self.round.bot_cars = self.sim.spawn_grid_as(&vec![0; self.round.bots as usize]);
-        for &bot in &self.round.bot_cars {
+        self.round.bot_cars = self.sim.spawn_grid_as(&vec![0; self.round.bots.len()]);
+        // br-8h3u.14: each at its skill's pace, an L-plater on its learner level.
+        let skills = self.sim.assist_profile().autopilot.bot_skills;
+        for (&bot, spec) in self.round.bot_cars.iter().zip(&self.round.bots) {
             self.sim.set_autopilot(bot, true);
+            let pace = skills.pace_milli(spec.skill);
+            if pace != 1000 {
+                self.sim.set_bot_pace(bot, pace);
+            }
+            if spec.assist != jj_sim::assist::AssistLevel::Off {
+                self.sim.set_assist(bot, spec.assist);
+            }
         }
         self.session_rev += 1;
     }
@@ -438,6 +476,22 @@ impl Host {
         let result = match committed {
             jj_session::results::Committed::New(r) | jj_session::results::Committed::Again(r) => r,
         };
+        // br-8h3u.14: with bots in the race every car takes its place among all of them, finishers in finish order (an
+        // unfinished car has none); the bots score nothing, and the seats keep their points.
+        let race = self.sim.race();
+        let finishers: Vec<u32> = race
+            .standings()
+            .iter()
+            .filter(|r| r.finished_at.is_some())
+            .map(|r| r.car)
+            .collect();
+        let with_bots = !self.round.bot_cars.is_empty();
+        let place_of = |car: CarId| {
+            finishers
+                .iter()
+                .position(|&o| o == car.0)
+                .map_or(0, |p| p as u32 + 1)
+        };
         let rows: Vec<ResultRow> = result
             .rows
             .iter()
@@ -449,15 +503,38 @@ impl Host {
                     .find(|e| e.seat == c.seat)
                     .and_then(|e| e.finish)
                     .map(|f| tick_ms(f.tick.saturating_sub(start)) as u32);
+                let place = if with_bots {
+                    self.inputs
+                        .get(&c.seat)
+                        .and_then(|i| i.car)
+                        .map_or(0, place_of)
+                } else {
+                    c.place.unwrap_or(0)
+                };
                 Some(ResultRow {
                     number: seat.number,
                     name: self.seats.display_name(c.seat).unwrap_or_default(),
-                    place: c.place.unwrap_or(0),
+                    place,
                     time_ms,
                     points: c.points,
                 })
             })
             .collect();
+        let bot_results: Vec<BotResult> = self
+            .round
+            .bot_cars
+            .iter()
+            .enumerate()
+            .map(|(i, &car)| BotResult {
+                index: i as u32,
+                place: place_of(car),
+                time_ms: race
+                    .car(car.0)
+                    .and_then(|c| c.finished_at)
+                    .map(|t| tick_ms(t.saturating_sub(start)) as u32),
+            })
+            .collect();
+        self.round.bot_results = bot_results;
         self.events.push(SimEvent::Results { rows: rows.clone() });
         self.round.results = Some(rows);
         true
@@ -466,6 +543,7 @@ impl Host {
     /// P1-G06: a derby round's results from the ledger (P1-S10): ranked by raw points, ties sharing, the championship
     /// table without a finish bonus.
     fn commit_derby(&mut self, round: RoundId) -> bool {
+        self.round.bot_results.clear();
         let Some(ledger) = self.sim.derby() else {
             return false;
         };
@@ -703,7 +781,14 @@ impl Host {
             // P1-S10: a derby round's game time left (null outside a derby).
             "derbyLeftMs": self.sim.derby().map(|l| super::tick_ms(l.time_left_ticks(self.sim.tick()))),
             "freeDrive": self.round.free_drive,
-            "bots": self.round.bots,
+            "bots": self.round.bots.len(),
+            // br-8h3u.14: each bot's skill (0 Easy, 1 Normal, 2 Hard) and learner level, and the last race's bot rows.
+            // A bot's race position (null outside a round) counts every car, as a seat's does.
+            "botList": self.round.bots.iter().enumerate().map(|(i, b)| {
+                let position = self.round.bot_cars.get(i).and_then(|c| order.iter().position(|&o| o == c.0)).map(|p| p + 1);
+                serde_json::json!({ "skill": b.skill, "assist": b.assist.as_u8(), "position": position })
+            }).collect::<Vec<_>>(),
+            "botResults": self.round.bot_results.iter().map(|b| serde_json::json!({ "index": b.index, "place": b.place, "timeMs": b.time_ms })).collect::<Vec<_>>(),
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
             // The roster's vehicle ids in table order: a snapshot car's vehicle (flags bits 16-31) indexes this (R123).
             "vehicles": self.vehicles.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
@@ -795,7 +880,31 @@ impl Host {
             }
             UiCommand::SetNextTrack { choice } => self.set_next_track(choice),
             UiCommand::SetBots { n } => {
-                self.round.bots = n;
+                self.round.bots.resize(n as usize, BotSpec::default());
+                self.session_rev += 1;
+            }
+            UiCommand::SetBotSkill { index, skill } => {
+                if let Some(b) = self.round.bots.get_mut(index as usize) {
+                    b.skill = skill.min(2);
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::SetBotAssist { index, level } => {
+                if let Some(b) = self.round.bots.get_mut(index as usize) {
+                    b.assist = jj_sim::assist::AssistLevel::from_u8(level);
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::RemoveBot { index } => {
+                if (index as usize) < self.round.bots.len() {
+                    self.round.bots.remove(index as usize);
+                }
+                self.session_rev += 1;
+            }
+            UiCommand::SetSeatAssist { seat, level } => {
+                if let Some(input) = self.inputs.get_mut(&SeatId(seat)) {
+                    input.assist = jj_sim::assist::AssistLevel::from_u8(level);
+                }
                 self.session_rev += 1;
             }
             // br-m1xe: a kept track for the next round. A preparation already made for it is superseded.

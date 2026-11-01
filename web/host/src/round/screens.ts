@@ -14,7 +14,7 @@ import { onProfileChange, screenScale } from '../layout/profile';
 import { esc, raceTime, secs, shortName } from './format';
 import { bestLaps, currentKey, keepCurrent, kept, keyOf, noteLaps } from './favourites';
 import type { PathStats } from '../../../shared/transport/stats';
-import { type Chrome, type HostStats, mountChrome } from './chrome';
+import { type Chrome, type HostStats, HELP, SKILLS, botRows, mountChrome } from './chrome';
 import { fitGrid, type Fit, type Tier } from './fit';
 import { mountHud, type Hud } from './hud';
 import './round.css';
@@ -241,6 +241,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         tier === 'full' ? `${badge}${nm}<span class="chip lb-state ${st}">${esc(labelOf(st, s))}</span>` : tier === 'name' ? `${badge}${nm}${tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
       return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${esc(labelOf(st, s))} (select to remove)">${body}</div>`;
     };
+    const botCardHtml = (b: ReturnType<typeof botRows>[number], tier: string) => {
+      const badge = `<span class="badge bot">#${b.number}</span>`;
+      const lp = b.assist ? '<span class="mn-lp" aria-label="L-plater">L</span>' : '';
+      const label = `Bot · ${SKILLS[b.skill]}${b.assist ? ` · L ${HELP[b.assist]}` : ''}`;
+      const body =
+        tier === 'full' ? `${badge}<span class="nm">Bot</span>${lp}<span class="chip lb-state">${SKILLS[b.skill]}</span>` : tier === 'name' ? `${badge}<span class="nm">Bot</span>${lp}` : badge;
+      return `<div class="lcard bot" data-bot="${b.index}" data-number="${b.number}" title="#${b.number} ${label} (Host menu → Bots)">${body}</div>`;
+    };
     relayout = () => {
       const k = screenK();
       const portrait = window.innerWidth / window.innerHeight <= 1.1;
@@ -248,10 +256,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const r = box.getBoundingClientRect();
       const gap = 8 * k;
       const tiers = LOBBY.map((t) => ({ ...t, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
-      const f = fitGrid(n, r.width, r.height, gap, tiers, 40 * k);
+      // br-8h3u.14: the host's bots line up after the seats, marked as bots (no Ready: they never hold up the start).
+      const bots = botRows(room);
+      const f = fitGrid(n + bots.length, r.width, r.height, gap, tiers, 40 * k);
       applyFit(box, f, gap);
       box.className = `lb-roster t-${f.tier.id}`;
-      box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('');
+      box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('') + bots.map((b) => botCardHtml(b, f.tier.id)).join('');
       paintKit(box);
     };
     relayout();
@@ -389,7 +399,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
 
   // ---------- Round complete ----------
   const results = (room: RoomView) => {
-    const rows = [...(room.results ?? [])].sort((a, b) => (a.place || 1e9) - (b.place || 1e9));
+    // br-8h3u.14: the race's bots in their places among the seats, marked as bots, with no points.
+    const botNos = botRows(room);
+    const rows = [
+      ...(room.results ?? []).map((r) => ({ ...r, bot: false })),
+      ...(room.mode === 'derby' ? [] : (room.botResults ?? [])).map((b) => ({ number: botNos[b.index]?.number ?? 0, name: 'Bot', place: b.place, time_ms: b.timeMs, points: 0, bot: true })),
+    ].sort((a, b) => (a.place || 1e9) - (b.place || 1e9));
     const seatOf = (num: number) => room.seats.find((s) => s.number === num);
     const winner = rows[0];
     const ws = winner ? seatOf(winner.number) : undefined;
@@ -399,7 +414,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       <div class="rs-reel" data-reel>
         <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
           <span class="strip">${derby ? 'Most damage dealt wins · everyone keeps their number' : 'Vote for the next track · everyone keeps their number'}</span></header>
-        ${winner ? `<div class="rs-winner"><small>Winner</small><span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span></div>` : ''}
+        ${winner ? `<div class="rs-winner"><small>Winner</small>${winner.bot ? `<span class="badge bot">#${winner.number}</span><b class="display">Bot</b>` : `<span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span>`}</div>` : ''}
       </div>
       <div class="rs-side">
         <div class="rs-list" data-results data-count="${rows.length}"></div>
@@ -415,15 +430,15 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const rowHtml = (r: (typeof rows)[number], tier: string, i: number) => {
       const s = seatOf(r.number);
       const place = r.place || '–';
-      const badge = `<span class="badge" style="${colourVars(s?.colourIndex ?? r.number - 1)}">#${r.number}</span>`;
+      const badge = r.bot ? `<span class="badge bot">#${r.number}</span>` : `<span class="badge" style="${colourVars(s?.colourIndex ?? r.number - 1)}">#${r.number}</span>`;
       const pts = `<span class="pts">+${r.points}</span>`;
-      const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>`;
+      const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>${r.bot ? '<span class="bot-tag">Bot</span>' : ''}`;
       const body =
         tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? '' : raceTime(r.time_ms)}</span>${pts}`
         : tier === 'name' ? `<span class="pl display">${place}</span>${badge}${nm}${pts}`
         : tier === 'seat' ? `<span class="pl display">${place}</span>${badge}${pts}`
         : `<span class="pl display">${place}</span>${badge}`;
-      return `<div class="rcard ${i < 3 && r.place ? `top top-${i + 1}` : ''}" data-row data-place="${r.place}" data-number="${r.number}">${body}</div>`;
+      return `<div class="rcard ${i < 3 && r.place ? `top top-${i + 1}` : ''}${r.bot ? ' bot' : ''}" data-row${r.bot ? ' data-bot' : ''} data-place="${r.place}" data-number="${r.number}">${body}</div>`;
     };
     relayout = () => {
       const k = screenK();
@@ -473,7 +488,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
     // The lobby's Race/Derby choice, its hint (laps or derby length) and the results' derby layout are part of what's drawn.
-    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}:${JSON.stringify(room.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (room.between?.flyoverLeftMs != null) return flyover(room);
@@ -482,7 +497,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       // The results screen shows the round's results and nothing of the roster's churn: it is rebuilt only when the results
       // themselves change. Keyed on the seats (ready, presence) it rebuilt every time a phone's heartbeat flapped, which on
       // a slow host replaced the "Start next round now" button faster than a click could find it still.
-      const rkey = `${phase}:${room.round}:${(room.results ?? []).map((r) => `${r.number}:${r.place}:${r.points}:${r.time_ms}`).join()}`;
+      const rkey = `${phase}:${room.round}:${(room.results ?? []).map((r) => `${r.number}:${r.place}:${r.points}:${r.time_ms}`).join()}:${JSON.stringify(room.botResults ?? [])}`;
       if (shown === rkey) {
         const next = screen.querySelector('[data-next]');
         if (next) next.textContent = `Next race in ${secs(room.remainingMs)} s`;

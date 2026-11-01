@@ -1,6 +1,6 @@
 {
   "contract": "jj-assist/1",
-  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side (P1-FL06: they carry the stability on the arcade handling; Lots catches slides, Some damps them, Off is the raw car): they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input with the line pull (the slide catch alone acts on a slide under any stick), and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. The autopilot (bots, idle and finished cars) plans up to topSpeedShare of each car's own top speed and holds to takeoffMps on a jump's ramp (br-4tbo). Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
+  "what": "R125 learner assists and gentle catch-up, as data (br-2mxa). Assists are input-side (P1-FL06: they carry the stability on the arcade handling; Lots catches slides, Some damps them, Off is the raw car): they edit the player's DRIVE/ACTION input before the normal vehicle path, never fight a deliberate full-lock input with the line pull (the slide catch alone acts on a slide under any stick), and never add force that the engine, brakes and tyres don't. Catch-up scales the engine force of a car behind the leader. The autopilot (bots, idle and finished cars) plans up to topSpeedShare of each car's own top speed and holds to takeoffMps on a jump's ramp (br-4tbo); the host's bots race at a botSkills share of that plan (hard is the plan itself, br-8h3u.14). Every number is a starting value tunable in the owner tuning menu (br-2sdu); crates/jj-sim validates this file at load.",
   "line": {
     "lookAheadS": 0.8,
     "minLookAheadM": 6.0,
@@ -54,7 +54,8 @@
     "planBrake": 10.0,
     "minSpeed": 4.0,
     "topSpeedShare": 0.85,
-    "takeoffMps": 34.0
+    "takeoffMps": 34.0,
+    "botSkills": { "easy": 0.8, "normal": 0.9, "hard": 1.0 }
   },
   "catchUp": {
     "referenceSpeedMps": 20.0,

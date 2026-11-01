@@ -18,6 +18,16 @@ import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileC
 import { addCode, forget, kept, keyOf } from './favourites';
 
 type Seat = RoomView['seats'][number];
+
+/** br-8h3u.14: the bot skill and learner-help words, by level. */
+export const SKILLS = ['Easy', 'Normal', 'Hard'];
+export const HELP = ['Off', 'Some', 'Lots'];
+
+/** The room's bots with their car numbers: after every seat's, as the world numbers them (main.ts `botNumber`). */
+export const botRows = (room: RoomView) => {
+  const first = Math.max(0, ...room.seats.map((s) => s.number)) + 1;
+  return (room.botList ?? []).map((b, index) => ({ ...b, index, number: first + index }));
+};
 type UiInput = Extract<SimInput, { type: 'ui' }>['ui'];
 
 export interface ChromeOptions {
@@ -122,15 +132,21 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     // A derby ranks by damage points (P1-S10), a race by position.
     const derby = room?.mode === 'derby';
     const placeOf = (s: Seat) => (derby ? (s.derby?.rank ?? null) : s.position);
-    const order = racing() && room ? room.seats.filter((s) => placeOf(s) !== null && s.presence !== 'Left').sort((a, b) => placeOf(a)! - placeOf(b)! || a.number - b.number) : [];
-    const key = order.map((s) => `${s.seat}:${placeOf(s)}`).join();
+    const seatsIn = racing() && room ? room.seats.filter((s) => placeOf(s) !== null && s.presence !== 'Left') : [];
+    // br-8h3u.14: a race's bots take their places among the seats, marked as bots (a derby's ledger ranks seats only).
+    const botsIn = racing() && room && !derby ? botRows(room).filter((b) => b.position !== null) : [];
+    const order = [
+      ...seatsIn.map((s) => ({ place: placeOf(s)!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length, style: colour(s), bot: false })),
+      ...botsIn.map((b) => ({ place: b.position!, number: b.number, name: 'Bot', colour: -1, style: '', bot: true })),
+    ].sort((a, b) => a.place - b.place || a.number - b.number);
+    const key = order.map((o) => `${o.number}:${o.place}`).join();
     if (key === posKey) return;
     posKey = key;
     // The grid's Players cell reads the same list (layout/overlay.ts).
-    setPositions(order.map((s) => ({ place: placeOf(s)!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length })));
+    setPositions(order.map(({ place, number, name, colour, bot }) => ({ place, number, name, colour, bot })));
     posEl.dataset.count = String(order.length);
     posTrack.innerHTML = order.length
-      ? `<span class="fp-run">${order.map((s) => `<span class="fp-item"><b>${placeOf(s)}</b><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s)))}</span></span>`).join('')}</span>`
+      ? `<span class="fp-run">${order.map((o) => `<span class="fp-item${o.bot ? ' bot' : ''}"><b>${o.place}</b><span class="badge${o.bot ? ' bot' : ''}" style="${o.style}">#${o.number}</span><span class="nm">${esc(o.name)}</span>${o.bot ? '<span class="bot-tag">Bot</span>' : ''}</span>`).join('')}</span>`
       : '';
     fitTicker();
   };
@@ -191,7 +207,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
   // What the open menu shows: when this is unchanged, update() leaves the buttons alone (br-b2sv).
-  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${JSON.stringify(r.preparation?.favourite ?? null)}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${JSON.stringify(r.preparation?.favourite ?? null)}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}${s.assist ?? 0}`).join()}:${JSON.stringify(r.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
   let pressing = false;
   let redrawLater = false;
   const renderMenu = () => {
@@ -257,6 +273,20 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
             renderMenu();
           });
       });
+    } else if (state.page === 'bots') {
+      // br-8h3u.14: bots race on the autopilot from the next round, each at a skill and, as an L-plater, with learner help.
+      // They have no Ready, never hold up the start and score no points.
+      const bots = botRows(room!);
+      const rows = bots.length
+        ? bots.map((b) => `<li data-bot="${b.index}" data-number="${b.number}"><span class="badge bot">#${b.number}</span><span class="nm">Bot</span>
+            <button class="btn brush" type="button" data-act="bot-skill" data-index="${b.index}" data-value="${(b.skill + 1) % 3}" aria-label="Bot #${b.number} skill: ${SKILLS[b.skill]}. Change">${SKILLS[b.skill]}</button>
+            <button class="btn brush${b.assist ? ' primary' : ''}" type="button" data-act="bot-assist" data-index="${b.index}" data-value="${(b.assist + 1) % 3}" aria-label="Bot #${b.number} learner help: ${HELP[b.assist]}. Change">L · ${HELP[b.assist]}</button>
+            <button class="btn brush quiet" type="button" data-act="bot-remove" data-index="${b.index}" aria-label="Remove bot #${b.number}">Remove</button></li>`).join('')
+        : '<li class="none">No bots. Add one to race against.</li>';
+      menuEl.innerHTML = `<section class="mn-panel controls" data-bots-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Bo<span class="acc">ts</span></h2>
+        <p>Bots race on the autopilot from the next round. They don't need to ready up, never hold up the start and score no points.</p>
+        <ul class="mn-players mn-bots" data-bots>${rows}</ul>
+        <div class="mn-acts"><button class="btn brush primary" type="button" data-act="bot-add">Add a bot</button><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
     } else if (state.page === 'rules') {
       // P1-G06: the next round's mode, laps, derby length and intermission, from the next round (laps never mid-race),
       // remembered on this device.
@@ -305,13 +335,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
         <h3 class="display">Host settings</h3><div class="mn-acts main">
-        <button class="btn brush" data-act="rules">Race rules</button><button class="btn brush" data-act="tracks">Tracks</button><button class="btn brush" data-act="controllers">Controllers</button><button class="btn brush" data-act="display">Display &amp; sound</button><button class="btn brush quiet" data-act="advanced">Advanced</button></div>
+        <button class="btn brush" data-act="rules">Race rules</button><button class="btn brush" data-act="bots">Bots${room.botList?.length ? ` <span class="acc">${room.botList.length}</span>` : ''}</button><button class="btn brush" data-act="tracks">Tracks</button><button class="btn brush" data-act="controllers">Controllers</button><button class="btn brush" data-act="display">Display &amp; sound</button><button class="btn brush quiet" data-act="advanced">Advanced</button></div>
         <h3 class="display">Players <span class="acc">${seats.length}</span></h3>
         <ul class="mn-players" data-players>${
           seats.length
             ? seats
                 .map(
-                  (s) => `<li data-seat="${s.seat}" data-number="${s.number}"><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s), 18))}</span><span class="st">${s.presence === 'Left' ? 'Away' : s.presence === 'SittingOut' ? 'Autopilot' : s.ready ? 'Ready' : ''}</span><button class="btn brush" type="button" data-act="ask-remove" data-seat="${s.seat}" aria-label="Remove #${s.number} ${esc(seatName(s))}">Remove</button></li>`,
+                  (s) => `<li data-seat="${s.seat}" data-number="${s.number}"><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s), 18))}</span><span class="st">${s.presence === 'Left' ? 'Away' : s.presence === 'SittingOut' ? 'Autopilot' : s.ready ? 'Ready' : ''}</span><button class="btn brush${s.assist ? ' primary' : ''}" type="button" data-act="seat-assist" data-seat="${s.seat}" data-value="${((s.assist ?? 0) + 1) % 3}" aria-label="Learner help for #${s.number} ${esc(seatName(s))}: ${HELP[s.assist ?? 0]}. Change">L · ${HELP[s.assist ?? 0]}</button><button class="btn brush" type="button" data-act="ask-remove" data-seat="${s.seat}" aria-label="Remove #${s.number} ${esc(seatName(s))}">Remove</button></li>`,
                 )
                 .join('')
             : '<li class="none">Nobody has joined yet.</li>'
@@ -413,6 +443,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         state.page = '';
         return renderMenu();
       case 'rules':
+      case 'bots':
       case 'tracks':
       case 'controllers':
       case 'display':
@@ -436,6 +467,22 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         return renderMenu();
       case 'catch-up':
         send('catch-up', b.dataset.on === 'true');
+        return;
+      // br-8h3u.14: the redraw follows the room update that carries the change.
+      case 'bot-add':
+        send(`bots:${(room?.botList?.length ?? 0) + 1}`);
+        return;
+      case 'bot-skill':
+        send(`bot-skill:${b.dataset.index}:${b.dataset.value}`);
+        return;
+      case 'bot-assist':
+        send(`bot-assist:${b.dataset.index}:${b.dataset.value}`);
+        return;
+      case 'bot-remove':
+        send(`bot-remove:${b.dataset.index}`);
+        return;
+      case 'seat-assist':
+        send(`seat-assist:${b.dataset.seat}:${b.dataset.value}`);
         return;
       case 'rule': {
         const rule = b.dataset.rule as 'mode' | 'laps' | 'derbyMs' | 'intermissionMs';

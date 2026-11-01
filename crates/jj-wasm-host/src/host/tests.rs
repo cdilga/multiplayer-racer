@@ -4528,3 +4528,137 @@ fn the_room_view_carries_a_wrecked_seats_hold_and_its_cause() {
     step(&mut h, 150);
     assert!(seat(&h)["wreckMs"].is_null(), "the hold is over");
 }
+
+/// br-8h3u.14: bots from the host's lobby in a race. One seat and six bots (Easy, Normal and Hard, one an L-plater) race
+/// a lap: every car takes its place among all of them, the bots spread across the field (each skill finishes where its
+/// pace puts it), score nothing and never hold up the start; the host sets a seat's learner level as its phone can.
+#[test]
+fn host_bots_race_at_their_skill_and_take_places_among_the_seats() {
+    use jj_session::director::Phase;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetLaps { laps: 1 })).unwrap();
+    h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
+    for (i, skill) in [0u8, 0, 1, 1, 2, 2].into_iter().enumerate() {
+        h.handle(&ui(UiCommand::SetBotSkill {
+            index: i as u32,
+            skill,
+        }))
+        .unwrap();
+    }
+    h.handle(&ui(UiCommand::SetBotAssist { index: 1, level: 2 }))
+        .unwrap();
+    // Removing a bot and adding one back leaves six, the rest in order.
+    h.handle(&ui(UiCommand::RemoveBot { index: 5 })).unwrap();
+    h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
+    h.handle(&ui(UiCommand::SetBotSkill { index: 5, skill: 2 }))
+        .unwrap();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("p1".into()),
+            resume: Some("s".into()),
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&net("p1", Channel::Cmd, c.encode())).unwrap();
+    }
+    // UI commands apply at a tick boundary.
+    let mut now = 0u64;
+    let tick = |h: &mut Host, now: &mut u64| {
+        for _ in 0..4 {
+            *now += 8_334;
+            h.advance(*now);
+            while h.next_message().is_some() {}
+        }
+    };
+    tick(&mut h, &mut now);
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let seat = room["seats"][0]["seat"]
+        .as_u64()
+        .unwrap_or_else(|| panic!("a seat: {room}")) as u32;
+    h.handle(&ui(UiCommand::SetSeatAssist { seat, level: 2 }))
+        .unwrap();
+    tick(&mut h, &mut now);
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(
+        room["seats"][0]["assist"], 2,
+        "the host set the seat's L-plate"
+    );
+    assert_eq!(room["bots"], 6);
+    let list: Vec<(u64, u64)> = room["botList"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| (b["skill"].as_u64().unwrap(), b["assist"].as_u64().unwrap()))
+        .collect();
+    assert_eq!(list, [(0, 0), (0, 2), (1, 0), (1, 0), (2, 0), (2, 0)]);
+    // Nobody readies: the start isn't held for the bots (they have no Ready).
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    let mut guard = 0;
+    let mut checked = false;
+    while h.phase() != Phase::Intermission {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+        if h.phase() == Phase::Running && !checked {
+            checked = true;
+            assert_eq!(h.sim.cars().count(), 7, "one seat's car and six bots");
+            let paces: Vec<u16> = h
+                .round
+                .bot_cars
+                .iter()
+                .map(|&c| h.sim.bot_pace(c).unwrap())
+                .collect();
+            assert_eq!(paces, [800, 800, 900, 900, 1000, 1000]);
+            assert_eq!(
+                h.sim.assist_level(h.round.bot_cars[1]),
+                jj_sim::assist::AssistLevel::Lots,
+                "the L-plater bot"
+            );
+        }
+        guard += 1;
+        assert!(guard < 600 * 120, "the race ends");
+    }
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let bots = room["botResults"].as_array().unwrap();
+    let place = |i: usize| bots[i]["place"].as_u64().unwrap();
+    eprintln!("results {} bots {bots:?}", room["results"]);
+    assert_eq!(bots.len(), 6);
+    let mut places: Vec<u64> = bots.iter().map(|b| b["place"].as_u64().unwrap()).collect();
+    places.push(room["results"][0]["place"].as_u64().unwrap());
+    let finished: Vec<u64> = places.iter().copied().filter(|&p| p > 0).collect();
+    let mut distinct = finished.clone();
+    distinct.sort_unstable();
+    distinct.dedup();
+    assert_eq!(
+        distinct.len(),
+        finished.len(),
+        "one car to a place: {places:?}"
+    );
+    assert!(finished.len() >= 5, "the field finishes: {places:?}");
+    // Spread by skill: the Hard bots beat the Easy ones.
+    let mean = |a: usize, b: usize| {
+        let (pa, pb) = (place(a), place(b));
+        let p = |v: u64| if v == 0 { 8 } else { v };
+        (p(pa) + p(pb)) as f64 / 2.0
+    };
+    assert!(
+        mean(4, 5) < mean(0, 2) || mean(4, 5) < mean(0, 1),
+        "Hard ahead of Easy: {bots:?}"
+    );
+    assert!(
+        bots.iter().all(|b| b.get("points").is_none()),
+        "bots score nothing"
+    );
+}

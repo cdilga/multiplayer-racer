@@ -229,5 +229,10 @@ export interface RoomView {
   armed: boolean;
   seats: Array<{ /** P1-S10: the seat's derby standing while a derby round is on. */ derby?: { points: number; rank: number } | null; seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; /** P1-C14: the host pad, wheel or key cluster (its source id) that holds this seat; null for a joined controller. */ localSource?: number | null; /** The transport endpoint (not for host pads). */ endpoint?: string | null; car: number | null; laps: number | null; position: number | null; finished: boolean; /** R119: ms this seat's pad has been unplugged (null while plugged); the seat is held, nothing expires it. */ unpluggedMs?: number | null; /** br-m1xe: this round's lap times (ms). */ lapMs?: number[]; /** R125: the seat's learner assist, 0 Off, 1 Some, 2 Lots (an L-plate shows on its tile while it is not 0). */ assist?: number; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null; /** P1-C10: practising in its own world (`car` is then its practice car), and its round car if it has one (on the autopilot meanwhile). */ practice?: boolean; roundCar?: number | null }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
+  /** br-8h3u.14: the host's bots (any number): each one's skill (0 Easy, 1 Normal, 2 Hard), learner level (0 Off, 1 Some,
+   *  2 Lots: an L-plater) and race position (null outside a round); and the last race's bot rows (no points). */
+  bots?: number;
+  botList?: Array<{ skill: number; assist: number; position: number | null }>;
+  botResults?: Array<{ index: number; place: number; timeMs: number | null }>;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

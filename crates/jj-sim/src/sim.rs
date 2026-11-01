@@ -179,6 +179,8 @@ struct Car {
     wheel_lost_at: Option<u64>,
     /// The player's learner assist (R125).
     assist: AssistState,
+    /// A bot's pace, per mille of the autopilot's speed plan (br-8h3u.14; 1000 for every other car).
+    bot_pace_milli: u16,
     /// The flight, the landing being judged and what the last landing earned (R129, P1-FL07).
     air: AirState,
     /// Each wheel's ground slip-curve factor this tick (R124), for the arcade handling layer (P1-FL04).
@@ -1901,6 +1903,7 @@ impl Sim {
             last_detach: None,
             wheel_lost_at: None,
             assist: AssistState::default(),
+            bot_pace_milli: 1000,
             air: AirState::placed(),
         });
     }
@@ -1917,6 +1920,21 @@ impl Sim {
         if let Some(c) = self.cars.get_mut(car.0 as usize) {
             c.assist.set_level(level);
         }
+    }
+
+    /// Sets a bot's pace (br-8h3u.14): its autopilot plans at `milli`/1000 of the speed plan. A journaled setup command.
+    pub fn set_bot_pace(&mut self, car: CarId, milli: u16) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::BotPace { car: car.0, milli }));
+        if let Some(c) = self.cars.get_mut(car.0 as usize) {
+            c.bot_pace_milli = milli;
+        }
+    }
+
+    /// A car's pace, per mille of the autopilot's speed plan (1000 unless [`Sim::set_bot_pace`] set it).
+    pub fn bot_pace(&self, car: CarId) -> Option<u16> {
+        self.cars.get(car.0 as usize).map(|c| c.bot_pace_milli)
     }
 
     /// Sets the lobby's catch-up (R125). A journaled setup command.
@@ -2122,9 +2140,11 @@ impl Sim {
                             wheelbase,
                             tick,
                             &crate::autopilot::SpeedPlan {
-                                scale: 1.0
+                                scale: (1.0
                                     + self.assist_profile.catch_up.top_speed_gain
-                                        * catch_shares.get(i).copied().unwrap_or(0.0),
+                                        * catch_shares.get(i).copied().unwrap_or(0.0))
+                                    * f32::from(car.bot_pace_milli)
+                                    / 1000.0,
                                 ..self.assist_profile.speed_plan(p)
                             },
                         ),
@@ -4197,6 +4217,13 @@ impl Sim {
         if self.catch_up != CatchUp::Off {
             assist.push(1);
         }
+        // br-8h3u.14: only a paced bot adds bytes, so every other sim keeps its hash.
+        for (id, c) in self.cars.iter().enumerate() {
+            if c.bot_pace_milli != 1000 {
+                assist.extend((id as u64).to_le_bytes());
+                assist.extend(c.bot_pace_milli.to_le_bytes());
+            }
+        }
         h.update(&assist);
         for c in &self.cars {
             for f in [c.action.boost, c.action.slide()] {
@@ -4291,6 +4318,7 @@ impl Sim {
                     Setup::FalseStart { car } => {
                         sim.false_start(CarId(*car));
                     }
+                    Setup::BotPace { car, milli } => sim.set_bot_pace(CarId(*car), *milli),
                     Setup::Utility { car, kind } => {
                         sim.utility(CarId(*car), *kind);
                     }

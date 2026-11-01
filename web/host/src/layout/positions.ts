@@ -5,8 +5,10 @@ export interface Position {
   place: number;
   number: number;
   name: string;
-  /** The seat's identity colour index (tokens --id-N). */
+  /** The seat's identity colour index (tokens --id-N); a bot has none. */
   colour: number;
+  /** br-8h3u.14: one of the host's bots (marked as one wherever the list shows). */
+  bot?: boolean;
 }
 
 let list: Position[] = [];

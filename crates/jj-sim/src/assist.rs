@@ -163,6 +163,29 @@ pub struct AutopilotTuning {
     /// The plan's ceiling as a share of the car's top speed (`VehicleProfile::top_speed_mps`).
     pub top_speed_share: f32,
     pub takeoff_mps: f32,
+    /// The host's bot skill levels (br-8h3u.14): a bot's pace as a share of this plan ([`crate::Sim::set_bot_pace`]).
+    pub bot_skills: BotSkills,
+}
+
+/// Bot skill levels, each a share (0..=1.5) of the autopilot's speed plan: `hard` is the plan itself.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BotSkills {
+    pub easy: f32,
+    pub normal: f32,
+    pub hard: f32,
+}
+
+impl BotSkills {
+    /// A skill level's pace per mille for [`crate::Sim::set_bot_pace`]: 0 easy, 1 normal, 2 hard (others hard).
+    pub fn pace_milli(&self, level: u8) -> u16 {
+        let share = match level {
+            0 => self.easy,
+            1 => self.normal,
+            _ => self.hard,
+        };
+        (share * 1000.0).round() as u16
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -296,8 +319,11 @@ impl AssistProfile {
             || a.min_speed <= 0.0
             || !(a.top_speed_share > 0.0 && a.top_speed_share <= 1.5)
             || a.takeoff_mps <= a.min_speed
+            || [a.bot_skills.easy, a.bot_skills.normal, a.bot_skills.hard]
+                .iter()
+                .any(|&k| !(k > 0.0 && k <= 1.5))
         {
-            return Err("assist autopilot needs positive grip, skill, planBrake, minSpeed, 0 < topSpeedShare <= 1.5 and takeoffMps > minSpeed".into());
+            return Err("assist autopilot needs positive grip, skill, planBrake, minSpeed, 0 < topSpeedShare <= 1.5, takeoffMps > minSpeed and botSkills in 0..1.5".into());
         }
         let c = &self.catch_up;
         if c.reference_speed_mps <= 0.0
