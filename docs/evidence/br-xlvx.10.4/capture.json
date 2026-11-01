@@ -1,0 +1,339 @@
+{
+  "maps": {
+    "bridge": "speedway seed 4",
+    "leap": "speedway seed 0"
+  },
+  "bridge": {
+    "barrierHeightMm": 750,
+    "barrierWidthMm": 350,
+    "clearanceMm": 5000,
+    "lowerFrom": 298,
+    "lowerTo": 357,
+    "maxGradeMilli": 200,
+    "thicknessMm": 400,
+    "upperFrom": 465,
+    "upperTo": 540
+  },
+  "leap": {
+    "blendMm": 10000,
+    "detourOffsetMm": 0,
+    "detourSide": 1,
+    "detourWidthMm": 0,
+    "fromAt": 850,
+    "gapLengthMm": 26087,
+    "landingLengthMm": 37628,
+    "lipHeightCm": 300,
+    "lowerFrom": 603,
+    "lowerTo": 673,
+    "maxSpeedCmps": 2670,
+    "minSpeedCmps": 1980,
+    "piece": 4,
+    "pitDepthCm": 665,
+    "pitLeftMm": 12000,
+    "pitRightMm": 12000,
+    "rampLengthMm": 16000,
+    "rampWidthMm": 9000,
+    "runOutTo": 964,
+    "sharp": 1,
+    "toAt": 918
+  },
+  "rows": [
+    {
+      "file": "overview-bridge-1920x1080.jpg",
+      "map": "speedway seed 4"
+    },
+    {
+      "file": "overview-bridge-1366x768.jpg",
+      "map": "speedway seed 4"
+    },
+    {
+      "file": "overview-leap-1920x1080.jpg",
+      "map": "speedway seed 0"
+    },
+    {
+      "file": "overview-leap-1366x768.jpg",
+      "map": "speedway seed 0"
+    },
+    {
+      "file": "bridge-lower-chase-1920x1080.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "bridge-lower-chase-1366x768.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "bridge-deck-chase-1920x1080.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "bridge-deck-chase-1366x768.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "bridge-side-1920x1080.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "bridge-side-1366x768.jpg",
+      "map": "speedway seed 4",
+      "tick": 321,
+      "d": 0.09740878012233499,
+      "lower": [
+        -34.96067810058594,
+        1.5262303352355957,
+        79.93484497070312
+      ],
+      "upper": [
+        -35.03308868408203,
+        8.06594467163086,
+        80
+      ]
+    },
+    {
+      "file": "leap-chase-1920x1080.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "leap-chase-1366x768.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "leap-side-1920x1080.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "leap-side-1366x768.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "leap-grid-1920x1080.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "leap-grid-1366x768.jpg",
+      "map": "speedway seed 0",
+      "tick": 214,
+      "leaper": [
+        -148.63897705078125,
+        13.2400484085083,
+        176.0108642578125
+      ],
+      "under": [
+        -157.36953735351562,
+        0.7282060384750366,
+        215.00682067871094
+      ],
+      "u": 10.929022949218762,
+      "aboveLowerM": 12.511842370033264
+    },
+    {
+      "file": "sight-bridge-deck-10s-1920x1080.jpg",
+      "map": "speedway seed 4",
+      "kind": "bridge deck",
+      "seconds": 10
+    },
+    {
+      "file": "sight-bridge-lower-road-10s-1920x1080.jpg",
+      "map": "speedway seed 4",
+      "kind": "bridge lower road",
+      "seconds": 10
+    },
+    {
+      "file": "sight-leap-10s-1920x1080.jpg",
+      "map": "speedway seed 0",
+      "kind": "leap",
+      "seconds": 10
+    }
+  ],
+  "sight": [
+    {
+      "kind": "bridge deck",
+      "map": "speedway seed 4",
+      "seconds": 10,
+      "metres": 250,
+      "inFrame": false
+    },
+    {
+      "kind": "bridge deck",
+      "map": "speedway seed 4",
+      "seconds": 7,
+      "metres": 175,
+      "inFrame": false
+    },
+    {
+      "kind": "bridge deck",
+      "map": "speedway seed 4",
+      "seconds": 4,
+      "metres": 100,
+      "inFrame": true
+    },
+    {
+      "kind": "bridge lower road",
+      "map": "speedway seed 4",
+      "seconds": 10,
+      "metres": 250,
+      "inFrame": true
+    },
+    {
+      "kind": "bridge lower road",
+      "map": "speedway seed 4",
+      "seconds": 7,
+      "metres": 175,
+      "inFrame": true
+    },
+    {
+      "kind": "bridge lower road",
+      "map": "speedway seed 4",
+      "seconds": 4,
+      "metres": 100,
+      "inFrame": true
+    },
+    {
+      "kind": "leap",
+      "map": "speedway seed 0",
+      "seconds": 10,
+      "metres": 250,
+      "inFrame": false
+    },
+    {
+      "kind": "leap",
+      "map": "speedway seed 0",
+      "seconds": 7,
+      "metres": 175,
+      "inFrame": true
+    },
+    {
+      "kind": "leap",
+      "map": "speedway seed 0",
+      "seconds": 4,
+      "metres": 100,
+      "inFrame": true
+    }
+  ]
+}
