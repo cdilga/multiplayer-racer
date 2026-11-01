@@ -151,6 +151,18 @@ pub fn select_avoiding(
     rng: &mut Rng,
     avoid: &[(f64, f64)],
 ) -> Result<Selection, SelectError> {
+    select_avoiding_hard(pts, recipe, rng, avoid, &[])
+}
+
+/// [`select_avoiding`], and the `hard` spans (loops' footprints, br-8h3u.3) are kept off even when no straight is left
+/// clear of `avoid`: a boundary on a loop would put its transition on the deck.
+pub fn select_avoiding_hard(
+    pts: &[(f64, f64)],
+    recipe: &[Biome],
+    rng: &mut Rng,
+    avoid: &[(f64, f64)],
+    hard: &[(f64, f64)],
+) -> Result<Selection, SelectError> {
     let mut lap: Vec<Biome> = Vec::new();
     for &b in recipe {
         if lap.last() != Some(&b) {
@@ -189,11 +201,12 @@ pub fn select_avoiding(
                     }
                     // Judged at the point the boundary snaps to, with margin for the map's millimetre rounding.
                     let c = s[index_at(c)];
-                    if keep_off
-                        && avoid
+                    let near = |spans: &[(f64, f64)]| {
+                        spans
                             .iter()
                             .any(|&(a, b)| c > a - TRANSITION_M / 2.0 && c < b + TRANSITION_M / 2.0)
-                    {
+                    };
+                    if (keep_off && near(avoid)) || near(hard) {
                         continue;
                     }
                     let (i0, i1) = (index_at(c - STRAIGHT_M), index_at(c + STRAIGHT_M));
