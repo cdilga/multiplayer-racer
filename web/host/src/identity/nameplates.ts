@@ -87,9 +87,15 @@ export function mountNameplates(root: HTMLElement, world: World): void {
       for (const item of items) {
         item.mark.style.transform = `translate(-50%, -100%) scale(${scale})`;
         item.mark.style.left = `${item.x}px`; item.mark.style.top = `${item.y}px`;
-        // The leader runs from the label's bottom centre to the car, at whatever angle that is.
+        // The leader runs from the label's bottom centre to the car, at whatever angle that is, and stops at the tile's
+        // edge when the car projects outside it (br-roit: it ran on into the empty cell below).
         const dx = item.point.carX - item.x, dy = item.point.carY - item.y;
-        item.mark.style.setProperty('--lead', `${Math.max(0, Math.hypot(dx, dy) - 2) / scale}px`);
+        let reach = 1;
+        if (dx > 0) reach = Math.min(reach, (clip.right - item.x) / dx);
+        if (dx < 0) reach = Math.min(reach, (clip.left - item.x) / dx);
+        if (dy > 0) reach = Math.min(reach, (clip.bottom - item.y) / dy);
+        if (dy < 0) reach = Math.min(reach, (clip.top - item.y) / dy);
+        item.mark.style.setProperty('--lead', `${Math.max(0, Math.hypot(dx, dy) * Math.max(0, reach) - 2) / scale}px`);
         item.mark.style.setProperty('--lead-angle', `${Math.atan2(-dx, dy)}rad`);
       }
     }
