@@ -266,12 +266,14 @@ export function arenaRelief(map: MapJson, floor: string, rock: string): ReliefPa
         return Math.max(...us) > J.foot[0] - sp && Math.min(...us) < J.foot[1] + sp && Math.max(...vs) > J.side[0] - sp && Math.min(...vs) < J.side[1] + sp;
       });
       if (!jump) {
+        const r = (p: V3) => Math.hypot(p[0] - bowl.cx, p[2] - bowl.cz);
         // Bare rock on the floor is only ever a jump's: one the fit missed is drawn as floor, never as stair-stepped rock.
-        const onFloor = [a, b, c].some((p) => Math.hypot(p[0] - bowl.cx, p[2] - bowl.cz) < bowl.floorR);
-        // A mound or dip is lit by the heightfield's smooth normal at each corner, so the toon ramp's band edge runs as a
-        // curve round it rather than flipping facet by facet (a stair-stepped patch from the Overview).
-        const relief = onFloor && [a, b, c].some((p) => Math.abs(p[1] - bowl.baseY) > 0.005);
-        emit(a, b, c, onFloor && base === rock ? floor : base, relief ? [...normalAt(a), ...normalAt(b), ...normalAt(c)] : undefined);
+        const onFloor = [a, b, c].some((p) => r(p) < bowl.floorR);
+        // A mound or dip, and the bank, are lit by the heightfield's smooth normal at each corner, so the toon ramp's band
+        // edge runs as a curve rather than flipping facet by facet: a stair-stepped patch from the Overview, and half-metre
+        // light/dark steps up the bank (br-pmam).
+        const smooth = !onFloor || [a, b, c].some((p) => Math.abs(p[1] - bowl.baseY) > 0.005);
+        emit(a, b, c, onFloor && base === rock ? floor : base, smooth ? [...normalAt(a), ...normalAt(b), ...normalAt(c)] : undefined);
         return;
       }
       const J = jump;
