@@ -76,13 +76,19 @@ fn a_dropped_esky_hits_the_follower_and_stays_forever() {
         "the esky knocked the follower about"
     );
     // 60 s on: it is still there, still a dynamic body.
-    let n = sim.prop_kinds().len();
-    let at = sim.debris_poses()[esky].0;
+    // Nothing is taken away; a part the hit loosened may come off the follower meanwhile and join them (R58).
+    let before: Vec<PropKind> = sim.prop_kinds().to_vec();
     for _ in 0..(60 * S) {
         sim.step();
     }
-    assert_eq!(sim.prop_kinds().len(), n);
-    let _ = at;
+    let n = sim.prop_kinds().len();
+    assert!(n >= before.len(), "{:?}", sim.prop_kinds());
+    assert_eq!(&sim.prop_kinds()[..before.len()], &before[..]);
+    assert!(
+        sim.prop_kinds()[before.len()..]
+            .iter()
+            .all(|k| *k == PropKind::Part)
+    );
     assert_eq!(sim.prop_kinds()[esky], PropKind::Esky);
     assert_eq!(sim.debris_poses().len(), n);
     let replay = Sim::replay(
