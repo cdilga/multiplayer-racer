@@ -15,10 +15,13 @@ import {inFrameRide,labelClear,tilesFollowing} from './lib/in-frame.mjs';
 
 const BASE='/p/genloop/';
 const out=process.env.JJ_CAPTURE_DIR ?? evidencePath('br-xlvx.6.4');
-const TICKS=420;
+// br-8h3u.5: the ride takes the body's drag, so a car no longer gains speed for free on the way round; on rocks seed 4
+// (GENERATOR_VERSION 36) it is over the top at about 330 and back upright on the road by 480 (it was out by 420).
+const TICKS=510;
 // The in-frame ride runs twice as long (the throttle input runs on past the fixture's end; native stops at TICKS): a
 // 12-14 m loop (br-8h3u.3) takes longer to ride than the old 7.5-9 m ones, and the camera eases out after it.
-const RIDE=2*TICKS;
+// 840 ticks: out of the loop by 480 and on along the road past the eases (the ride it ran as 2 x 420 before br-8h3u.5).
+const RIDE=840;
 // The first rocks seed from 1 that gets a loop at loopsPerLap 1 (crates/jj-procgen/tests/loops.rs prints the bank): a
 // fixed seed broke whenever a generator change moved its loop (seed 1 lost its loop in October 2026).
 const RECIPE='rocks';
