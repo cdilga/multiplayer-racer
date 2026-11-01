@@ -1441,11 +1441,14 @@ impl Sim {
                 throttle
             };
             let mass = b.mass().max(1.0);
+            // The body's own drag too (Rapier's linear damping, which the ride's set velocity bypasses): without it a car
+            // on the throttle left a loop at twice its entry speed and flew off the road after it (br-8h3u.5).
             let drive = throttle
                 * p.tuning
                     .max_engine_force
                     .min(p.tuning.max_engine_power_w / ride.speed.max(1.0))
-                / mass;
+                / mass
+                - p.tuning.linear_damping * ride.speed;
             let brake_accel = brake * p.tuning.max_brake_force / mass;
             let (next, out, too_slow) = match rail.advance(ride, g, drive, brake_accel, DT) {
                 crate::looping::RideStep::On(r) => (r, false, false),

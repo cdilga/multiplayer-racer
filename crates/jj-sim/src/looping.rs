@@ -2,7 +2,7 @@
 //! and a loop at speed asks 6-11 g of the deck, so a car on a loop is carried like a coaster: once it reaches the deck
 //! near the entry, heading along it and faster than the loop's `minSpeedMms`, the loop holds it on the deck's centre
 //! line at the lateral offset and ride height it arrived with. Its speed along the line changes with gravity along the
-//! curve, its own throttle (the profile's engine force, capped by its power) and brake; its pose follows the deck's frame,
+//! curve, its own throttle (the profile's engine force, capped by its power), its body's drag and its brake; its pose follows the deck's frame,
 //! upside down at the top. At the exit the loop lets it go along the road. If its speed drops below `minSpeedMms` on the
 //! way round, the loop lets go there and the car falls (the sim then respawns it before the loop).
 //!

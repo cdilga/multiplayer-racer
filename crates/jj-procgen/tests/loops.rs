@@ -382,3 +382,218 @@ fn every_roster_vehicle_completes_every_generated_loop_at_its_posted_speed() {
     );
     assert!(bad.is_empty(), "{}", bad.join("\n"));
 }
+
+// ---- br-8h3u.5: the exit throws the car off the track (owner 2026-10-24: "The loop the loop boost was so powerful I
+// always went off the edge of the track right afterwards!").
+
+/// What a car did after a loop's exit, hands off the wheel.
+#[derive(Debug, Clone, Copy)]
+struct RunOut {
+    entry_mps: f32,
+    exit_mps: Option<f32>,
+    /// What the same car on the throttle reaches over the same distance on the flat (its engine, power and drag), with
+    /// the height it lost from entry to exit given back: the loop itself adds nothing.
+    flat_mps: f32,
+    /// The straight after the exit the car was judged on, m.
+    straight_m: f32,
+    /// How far along it the car got, m.
+    along_m: f32,
+    /// The furthest the car's centre strayed from the road's centre line, m, and the road's half width there.
+    worst_off_m: f32,
+    half_width_m: f32,
+    respawned: bool,
+}
+
+/// The straight after a loop's exit: route points from the exit until the road has turned more than 10 degrees from the
+/// exit's heading (capped at 120 m: that is "the following straight").
+fn straight_after(m: &LoadedMap, exit: usize) -> Vec<usize> {
+    let n = m.map.route.points.len();
+    let g = heading_between(m, exit, (exit + 1) % n);
+    let x0 = route_point(m, exit);
+    let mut out = vec![exit];
+    for k in 1..n {
+        let i = (exit + k) % n;
+        let (a, b) = (out[out.len() - 1], i);
+        let h = heading_between(m, a, b);
+        let p = route_point(m, i);
+        let along = (p.0 - x0.0) * g.0 + (p.2 - x0.2) * g.1;
+        if h.0 * g.0 + h.1 * g.1 < 10f32.to_radians().cos() || along > 120.0 {
+            break;
+        }
+        out.push(i);
+    }
+    out
+}
+
+/// Plan distance from `p` to the polyline through route points `pts`, and the half width at the nearest point.
+fn off_road(m: &LoadedMap, pts: &[usize], p: (f32, f32)) -> (f32, f32) {
+    let mut best = (f32::INFINITY, 0.0);
+    for w in pts.windows(2) {
+        let (a, b) = (route_point(m, w[0]), route_point(m, w[1]));
+        let (dx, dz) = (b.0 - a.0, b.2 - a.2);
+        let len2 = dx * dx + dz * dz;
+        let t = (((p.0 - a.0) * dx + (p.1 - a.2) * dz) / len2).clamp(0.0, 1.0);
+        let (cx, cz) = (a.0 + dx * t, a.2 + dz * t);
+        let d = ((p.0 - cx).powi(2) + (p.1 - cz).powi(2)).sqrt();
+        if d < best.0 {
+            best = (d, m.map.route.points[w[0]].width as f32 / 2000.0);
+        }
+    }
+    best
+}
+
+/// Starts `profile` 5 m before the loop's entry at `speed`, throttle held and the wheel straight throughout, and follows
+/// it out of the exit to the end of the straight after it.
+fn run_out(
+    m: &LoadedMap,
+    d: &jj_map::looping::LoopDesign,
+    profile: VehicleProfile,
+    seed: u64,
+    speed: f32,
+) -> RunOut {
+    let e = route_point(m, d.entry);
+    let f = heading_between(m, d.entry - 1, d.entry);
+    let straight = straight_after(m, d.exit);
+    let x = route_point(m, d.exit);
+    let g = heading_between(m, d.exit, d.exit + 1);
+    let last = route_point(m, *straight.last().unwrap());
+    let straight_m = (last.0 - x.0) * g.0 + (last.2 - x.2) * g.1;
+    let t = profile.tuning.clone();
+    let mut sim = Sim::with_profiles(m, &jj_procgen::registry(), seed, vec![profile]);
+    let car = sim.spawn_grid(1)[0];
+    let mut path_m = 0.0f32;
+    let mut entry_y = None;
+    sim.place_car(
+        car,
+        jj_sim::SpawnPose {
+            x: e.0 - 5.0 * f.0,
+            y: e.1 + 0.3,
+            z: e.2 - 5.0 * f.1,
+            heading: f.0.atan2(f.1),
+        },
+        0.0,
+        [speed * f.0, 0.0, speed * f.1],
+    );
+    sim.set_input(
+        car,
+        jj_sim::DriveInput {
+            throttle: i16::MAX,
+            ..Default::default()
+        },
+    );
+    let life = sim.car_life(car);
+    let mut r = RunOut {
+        entry_mps: speed,
+        exit_mps: None,
+        flat_mps: 0.0,
+        straight_m,
+        along_m: f32::MIN,
+        worst_off_m: 0.0,
+        half_width_m: m.map.route.points[d.exit].width as f32 / 2000.0,
+        respawned: false,
+    };
+    for _ in 0..20 * u64::from(TICK_HZ) {
+        sim.step();
+        let st = sim.car_state(car).unwrap();
+        let p = st.position;
+        if sim.car_life(car) != life {
+            r.respawned = true;
+            break;
+        }
+        let past = (p[0] - x.0) * g.0 + (p[2] - x.2) * g.1;
+        let into = (p[0] - e.0) * f.0 + (p[2] - e.2) * f.1;
+        if past < 0.0 {
+            if into >= 0.0 {
+                entry_y.get_or_insert(p[1]);
+                let v = st.linvel;
+                path_m += (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt() / TICK_HZ as f32;
+            }
+            continue;
+        }
+        if r.exit_mps.is_none() {
+            r.exit_mps = Some(st.forward_speed);
+            let drop = entry_y.unwrap_or(p[1]) - p[1];
+            r.flat_mps = flat_speed(&t, speed, path_m, drop);
+        }
+        r.along_m = r.along_m.max(past);
+        let (off, half) = off_road(m, &straight, (p[0], p[2]));
+        if off - half > r.worst_off_m - r.half_width_m {
+            r.worst_off_m = off;
+            r.half_width_m = half;
+        }
+        if past >= straight_m {
+            break;
+        }
+    }
+    r
+}
+
+#[test]
+fn a_car_leaves_every_generated_loop_onto_the_road_and_stays_on_the_straight() {
+    let roster =
+        VehicleProfile::roster(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+            .unwrap();
+    let (mut bad, mut rows) = (Vec::new(), Vec::new());
+    for biome in BIOMES {
+        let mut found = 0;
+        for seed in 0..BANK_SEEDS {
+            if cfg!(debug_assertions) && found >= 1 {
+                break;
+            }
+            let (m, _) = prepared(seed, biome);
+            let designs: Vec<_> = m
+                .map
+                .features
+                .iter()
+                .filter_map(jj_map::looping::LoopDesign::of)
+                .collect();
+            found += designs.len();
+            for d in &designs {
+                let v = jj_map::looping::posted_entry_mps(d, 9.81) as f32;
+                for (name, profile) in &roster {
+                    let r = run_out(&m, d, profile.clone(), seed, v);
+                    rows.push(format!(
+                        "{biome:?} seed {seed} R {:.1} {name}: {r:?}",
+                        d.radius_m
+                    ));
+                    let exit = r.exit_mps.unwrap_or(0.0);
+                    if r.respawned
+                        || r.along_m < r.straight_m
+                        || r.worst_off_m > r.half_width_m - CAR_HALF_WIDTH_M
+                        || exit > r.flat_mps + EXIT_SPEED_BAND_MPS
+                        || exit < r.entry_mps - EXIT_SPEED_BAND_MPS
+                    {
+                        bad.push(format!(
+                            "{biome:?} seed {seed} R {:.1} m {name}: {r:?}",
+                            d.radius_m
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    eprintln!("{}", rows.join("\n"));
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
+}
+
+/// A car leaves a loop no faster than its flat-road speed over the same distance (`RunOut::flat_mps`) and no slower than
+/// it went in, give or take this, m/s: gravity gives back what the climb took and the engine adds what it would on the
+/// road. The reference integrates the ride's own model in a straight line over the sampled path; on the 2026-11-01 bank
+/// the roster left 0.9-3.0 m/s over it (under 8 %). Before br-8h3u.5 the ride ignored the body's drag and cars left at
+/// about twice their entry speed (24 m/s in, 46-52 out, 12-15 m/s over the reference).
+const EXIT_SPEED_BAND_MPS: f32 = 3.5;
+/// The widest roster car's half width, m: its centre this far inside the edge keeps its wheels on the road.
+const CAR_HALF_WIDTH_M: f32 = 1.0;
+
+/// A car at `v0` on the throttle covering `dist_m` on the flat (the engine's force capped by its power, less its body's
+/// drag), then given back `drop_m` of height: its speed, m/s.
+fn flat_speed(t: &jj_sim::profile::Tuning, v0: f32, dist_m: f32, drop_m: f32) -> f32 {
+    let (mut v, mut x, dt) = (v0, 0.0f32, 1.0 / TICK_HZ as f32);
+    while x < dist_m {
+        let a = t.max_engine_force.min(t.max_engine_power_w / v.max(1.0)) / t.mass
+            - t.linear_damping * v;
+        v += a * dt;
+        x += v * dt;
+    }
+    (v * v + 2.0 * 9.81 * drop_m).max(0.0).sqrt()
+}

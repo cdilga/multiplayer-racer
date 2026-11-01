@@ -1,11 +1,14 @@
 //! Loops in generated maps (br-xlvx.6.4, R124: "longer, higher, crossings, loops"). A vertical loop (jj-map
-//! `looping`) takes a long straight: the road runs straight for `runInM` into its entry, the deck carries the car up and
-//! over, and comes down at its exit `shift` metres to one side (so the two decks clear each other), from where the road
-//! eases back onto its old line over `backM`.
+//! `looping`) takes a long straight: the road eases `shift` metres to one side over `backM`, runs straight for `runInM`
+//! into the loop's entry, and the deck carries the car up and over and sets it down at its exit back on the course's own
+//! line (the two decks `shift` apart, clearing each other), where the road runs straight on for at least
+//! `exitStraightM`. The jog comes before the loop, not after it: a car leaving the loop with the wheel straight stays on
+//! the road (br-8h3u.5: easing back after the exit threw it off the edge).
 //!
 //! Two steps, either side of the terrain:
 //! - [`jog`], on the course's centreline before the map is assembled: picks a site on a beat straight and moves the
-//!   points from the entry to the exit onto the diagonal under the deck and the next `backM` onto the eased return. The
+//!   `backM` before the run-in onto the eased step aside, the run-in onto the shifted line and the points from the
+//!   entry to the exit onto the diagonal under the deck back to the course's line. The
 //!   road bed, surfaces and biomes are then laid along the jogged line like any other.
 //! - [`place`], on the assembled map: cuts the ground under the loop's footprint down to a ramp from its entry to its
 //!   exit wherever it stands higher (refusing a cut deeper than `maxReliefM`), stands the route and everything placed on it, takes gates and recovery off
@@ -38,6 +41,7 @@ pub struct LoopData {
     pub run_out_radii: [f64; 2],
     pub shift_m: [f64; 2],
     pub run_in_m: f64,
+    pub exit_straight_m: f64,
     pub back_m: f64,
     pub max_relief_m: f64,
     pub thickness_m: f64,
@@ -122,17 +126,23 @@ pub fn jog(
             .range(data.shift_m[0], data.shift_m[1])
             .max(least_shift(width_m / 2.0, data));
         let side = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
-        let need = data.run_in_m + run_out + data.back_m;
+        // A point's spacing past the exit: the exit is the first point at or past the run-out.
+        let need =
+            data.back_m + data.run_in_m + run_out + data.exit_straight_m + crate::course::STEP_M;
         // A straight across the lap's seam would jog the start corridor.
         if lo < 0.0 || hi > total || hi - lo < need {
             reject("short");
             continue;
         }
-        let s_entry = lo + data.run_in_m + rng.unit() * (hi - lo - need);
-        let (Some(a), Some(e), Some(b)) = (
+        // At the start of the straight, so whatever it has to spare runs on straight after the exit (the draw that once
+        // placed it along the straight is kept, so the loop draws after it stay as they were).
+        let _ = rng.unit();
+        let s_entry = lo + data.back_m + data.run_in_m;
+        let (Some(a), Some(r), Some(e), Some(b)) = (
+            index_at(s_entry - data.run_in_m - data.back_m),
             index_at(s_entry - data.run_in_m),
             index_at(s_entry),
-            index_at(s_entry + run_out + data.back_m),
+            index_at(s_entry + run_out + data.exit_straight_m + crate::course::STEP_M),
         ) else {
             reject("short");
             continue;
@@ -141,7 +151,7 @@ pub fn jog(
             reject("seam");
             continue;
         }
-        let (pa, pe) = (centerline[a], centerline[e]);
+        let (pa, pe) = (centerline[r], centerline[e]);
         let len = dot(sub(pe, pa), sub(pe, pa)).sqrt();
         if len < 1e-6 {
             reject("short");
@@ -154,19 +164,31 @@ pub fn jog(
             reject("bent");
             continue;
         }
-        let along: Vec<f64> = (e..=b).map(|k| dot(sub(centerline[k], pe), f)).collect();
-        let Some(x) = along.iter().position(|&v| v >= run_out).map(|k| e + k) else {
+        // Every point from the start of the step aside to the exit, m along the line from the entry (negative before it).
+        let along: Vec<f64> = (a..=b).map(|k| dot(sub(centerline[k], pe), f)).collect();
+        let Some(x) = along
+            .iter()
+            .position(|&v| v >= run_out)
+            .map(|k| a + k)
+            .filter(|&x| x >= e)
+        else {
             reject("short");
             continue;
         };
-        let run_out = along[x - e];
+        let run_out = along[x - a];
+        // The road's offset from the course's line, m (+ left): stepping aside to -shift, the run-in on it, the diagonal
+        // under the deck back to the line at the exit, and the line after it.
         let jogged = |side: f64| -> Vec<(f64, f64)> {
             let lateral = |u: f64| {
-                if u <= run_out {
-                    side * shift * u / run_out
+                if u < -data.run_in_m {
+                    let t = ((u + data.run_in_m + data.back_m) / data.back_m).clamp(0.0, 1.0);
+                    -side * shift * (1.0 - libm::cos(core::f64::consts::PI * t)) / 2.0
+                } else if u <= 0.0 {
+                    -side * shift
+                } else if u <= run_out {
+                    -side * shift * (1.0 - u / run_out)
                 } else {
-                    let t = ((u - run_out) / data.back_m).min(1.0);
-                    side * shift * (1.0 + libm::cos(core::f64::consts::PI * t)) / 2.0
+                    0.0
                 }
             };
             along
@@ -182,7 +204,7 @@ pub fn jog(
         // 93, br-xlvx.6.5). The other side, else no loop here.
         let clear = |pts: &[(f64, f64)]| {
             pts.iter().enumerate().all(|(o, &p)| {
-                let k = e + o;
+                let k = a + o;
                 (0..n).all(|j| {
                     let along = (s[k] - s[j]).abs().min(total - (s[k] - s[j]).abs());
                     along <= crate::course::NEIGHBOUR_WINDOW_M
@@ -205,7 +227,7 @@ pub fn jog(
             }
         };
         for (o, p) in pts.into_iter().enumerate() {
-            centerline[e + o] = p;
+            centerline[a + o] = p;
         }
         sites.push(Site {
             entry: e,
@@ -335,8 +357,8 @@ pub fn place(
         }
         map.features.push(feature);
         placed.push(Placed {
-            from_s: s[site.entry] - data.run_in_m,
-            to_s: s[site.exit] + data.back_m,
+            from_s: s[site.entry] - data.run_in_m - data.back_m,
+            to_s: s[site.exit] + data.exit_straight_m,
         });
     }
     if !placed.is_empty() {
