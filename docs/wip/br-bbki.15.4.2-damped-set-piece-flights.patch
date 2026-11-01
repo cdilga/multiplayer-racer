@@ -1,8 +1,57 @@
+diff --git a/crates/jj-map/src/fork.rs b/crates/jj-map/src/fork.rs
+index 3d1bb268..e4a5253c 100644
+--- a/crates/jj-map/src/fork.rs
++++ b/crates/jj-map/src/fork.rs
+@@ -259,7 +259,9 @@ pub fn road_bed_m(map: &Map) -> f64 {
+ 
+ /// The branch's height (m) at each of its points. Where it splits from and merges into the road it rides the road's bed
+ /// and takes its ground; between the last point on the bed after the split and the first before the merge it ramps
+-/// straight, by distance along the branch. The generator stamps the ground off the bed to it.
++/// smoothly, by distance along the branch, leaving and arriving at the bed's own grade (a cubic Hermite): a straight
++/// ramp met a merge on a steep grade at a crest, and a car coming off the branch at speed flew off it across the main
++/// road (br-glso). The generator stamps the ground off the bed to it.
+ pub fn heights(map: &Map, d: &Fork, path: &[[f64; 2]]) -> Vec<f64> {
+     let pts = &map.route.points;
+     let n = pts.len();
+@@ -292,12 +294,32 @@ pub fn heights(map: &Map, d: &Fork, path: &[[f64; 2]]) -> Vec<f64> {
+     }
+     let (y_in, y_out) = (ground(&path[k_in]), ground(&path[k_out]));
+     let span = (u[k_out] - u[k_in]).max(1e-9);
++    // The bed's grade along the branch where the ramp leaves it and where it arrives (flat at a path's own end).
++    let slope = |a: usize, b: usize| {
++        let run = u[b] - u[a];
++        if run > 1e-9 {
++            (ground(&path[b]) - ground(&path[a])) / run
++        } else {
++            0.0
++        }
++    };
++    let s_in = if k_in > 0 { slope(k_in - 1, k_in) } else { 0.0 };
++    let s_out = if k_out < last {
++        slope(k_out, k_out + 1)
++    } else {
++        0.0
++    };
+     (0..path.len())
+         .map(|k| {
+             if k <= k_in || k >= k_out {
+                 ground(&path[k])
+             } else {
+-                y_in + (y_out - y_in) * (u[k] - u[k_in]) / span
++                let t = (u[k] - u[k_in]) / span;
++                let (t2, t3) = (t * t, t * t * t);
++                (2.0 * t3 - 3.0 * t2 + 1.0) * y_in
++                    + (t3 - 2.0 * t2 + t) * span * s_in
++                    + (-2.0 * t3 + 3.0 * t2) * y_out
++                    + (t3 - t2) * span * s_out
+             }
+         })
+         .collect()
 diff --git a/crates/jj-map/src/setpiece.rs b/crates/jj-map/src/setpiece.rs
-index e8e13e41..db69041a 100644
+index e8e13e41..b2edff2a 100644
 --- a/crates/jj-map/src/setpiece.rs
 +++ b/crates/jj-map/src/setpiece.rs
-@@ -236,7 +236,7 @@ pub fn take_off(map: &Map, f: &Feature, d: &GapLeap) -> ([f64; 3], [f64; 2], f64
+@@ -236,15 +236,26 @@ pub fn take_off(map: &Map, f: &Feature, d: &GapLeap) -> ([f64; 3], [f64; 2], f64
  }
  
  /// Where a car's centre leaving the lip at `speed` m/s comes back down to the ground: the horizontal distance past the
@@ -10,27 +59,59 @@ index e8e13e41..db69041a 100644
 +/// lip (m) and the ground's height there, by marching the ballistic flight (the cars' air damping, g = 9.81) over the heightfield
  /// along the lip's heading. `None` if it never comes down within 8 s.
  pub fn touchdown(map: &Map, f: &Feature, d: &GapLeap, speed: f64) -> Option<(f64, f64)> {
++    touchdown_with(map, f, d, speed, flight_damping(d))
++}
++
++/// [`touchdown`] flown with `damping` per second.
++pub fn touchdown_with(
++    map: &Map,
++    f: &Feature,
++    d: &GapLeap,
++    speed: f64,
++    damping: f64,
++) -> Option<(f64, f64)> {
      let (lip, t, _) = take_off(map, f, d);
-@@ -370,14 +370,11 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
+     let a = d.launch_angle();
+     let (mut vh, mut vy) = (speed * libm::cos(a), speed * libm::sin(a));
+     let (mut x, mut y) = (0.0, lip[1] + limits::RIDE_HEIGHT_M);
+     let dt = 1.0 / 240.0;
+-    let damp = 1.0 / (1.0 + dt * flight_damping(d));
++    let damp = 1.0 / (1.0 + dt * damping);
+     for _ in 0..(8 * 240) {
+         vy -= 9.81 * dt;
+         vh *= damp;
+@@ -353,7 +364,10 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
+             d.gap_m + limits::RIM_MARGIN_M
+         )),
+     }
+-    match touchdown(map, f, &d, d.max_speed) {
++    // The fastest car's landing is judged on the longest flight it could fly: undamped for the shorter leaps (a less
++    // damped car than the Ute, off a kicker that pitches it up, flies past the damped prediction), the overpass leap's
++    // long damped flight as its contract stands (br-bbki.15.4.2).
++    match touchdown_with(map, f, &d, d.max_speed, end_damping(&d)) {
+         Some((x, _)) if x <= d.gap_m + d.landing_m - limits::END_MARGIN_M => {}
+         other => out.push(format!(
+             "at {:.1} m/s a car comes down {} past the lip: the landing ends at {:.1} m",
+@@ -370,9 +384,16 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
      out
  }
  
 -/// The damping a piece's flight is flown with, per second: an overpass leap's long flight with the cars' own
 -/// ([`limits::FLIGHT_DAMPING_PER_S`]); the shorter gap leaps without (their contract as it stands).
 -pub fn flight_damping(d: &GapLeap) -> f64 {
--    if d.kind == PieceKind::OverpassLeap {
--        limits::FLIGHT_DAMPING_PER_S
--    } else {
--        0.0
--    }
 +/// The damping a piece's flight is flown with, per second: every gap leap's with the cars' own
 +/// ([`limits::FLIGHT_DAMPING_PER_S`]: Rapier slows a flying body by its `linear_damping`; undamped, a 1 s flight was
 +/// predicted 7 % long and a 2.3 s one 25 %, br-bbki.15.4.2).
 +pub fn flight_damping(_d: &GapLeap) -> f64 {
 +    limits::FLIGHT_DAMPING_PER_S
- }
- 
- /// The height (m) of a car's centre `x` m past the lip, leaving it at `speed` m/s (the flight [`touchdown`] marches;
++}
++
++/// The damping the landing's far end is judged with, per second: the overpass leap's long flight with the cars' own, the
++/// shorter gap leaps' undamped (the longest any car flies).
++pub fn end_damping(d: &GapLeap) -> f64 {
+     if d.kind == PieceKind::OverpassLeap {
+         limits::FLIGHT_DAMPING_PER_S
+     } else {
 diff --git a/crates/jj-procgen/src/lib.rs b/crates/jj-procgen/src/lib.rs
 index 021e9d46..9c34c851 100644
 --- a/crates/jj-procgen/src/lib.rs
@@ -45,25 +126,150 @@ index 021e9d46..9c34c851 100644
  /// Rooftop lots keep this far (m along the road) from a set piece's span.
  const ROOF_PIECE_MARGIN_M: f64 = 10.0;
 diff --git a/crates/jj-procgen/src/setpieces/mod.rs b/crates/jj-procgen/src/setpieces/mod.rs
-index 50ecaed6..c972c451 100644
+index 50ecaed6..44a38689 100644
 --- a/crates/jj-procgen/src/setpieces/mod.rs
 +++ b/crates/jj-procgen/src/setpieces/mod.rs
-@@ -338,10 +338,14 @@ impl Draw {
+@@ -329,19 +329,30 @@ impl Draw {
+             .gap
+             .min(reach_min - setpiece::limits::RIM_MARGIN_M - 1.0);
+         self.slope = slope;
+-        self.landing =
+-            (self.flight(self.p.speed_band[1]).0 - self.gap + setpiece::limits::END_MARGIN_M + 6.0)
+-                .max(jj_map::limits::MIN_LANDING_LENGTH_MM as f64 / 1000.0);
++        self.landing = (self.flight_with(self.p.speed_band[1], 0.0).0 - self.gap
++            + setpiece::limits::END_MARGIN_M
++            + 6.0)
++            .max(jj_map::limits::MIN_LANDING_LENGTH_MM as f64 / 1000.0);
+     }
+ 
+     /// Where a car leaving the lip at `v` comes down over this piece's pit, rim and landing slope: metres past the lip,
      /// and how steeply it is falling then (fall over run).
      fn flight(&self, v: f64) -> (f64, f64) {
++        self.flight_with(v, setpiece::limits::FLIGHT_DAMPING_PER_S)
++    }
++
++    /// [`Self::flight`] with `damping` per second: the gap is sized on the cars' air damping (the slowest car must clear
++    /// the rim, as the contract's touchdown flies it), the landing on the undamped flight, the longest any car flies
++    /// (br-bbki.15.4.2).
++    fn flight_with(&self, v: f64, damping: f64) -> (f64, f64) {
          let a = libm::atan(self.lip / (self.ramp - self.blend / 2.0));
 -        let (vh, mut vy) = (v * libm::cos(a), v * libm::sin(a));
 +        let (mut vh, mut vy) = (v * libm::cos(a), v * libm::sin(a));
          let (mut x, mut y) = (0.0, self.lip);
          let dt = 1.0 / 240.0;
-+        // Flown with the cars' air damping, as the contract's touchdown is (br-bbki.15.4.2).
-+        let damp = 1.0 / (1.0 + dt * setpiece::limits::FLIGHT_DAMPING_PER_S);
++        let damp = 1.0 / (1.0 + dt * damping);
          for _ in 0..(8 * 240) {
 +            vh *= damp;
 +            vy *= damp;
              x += vh * dt;
              vy -= 9.81 * dt;
              y += vy * dt;
+diff --git a/crates/jj-procgen/tests/bank.rs b/crates/jj-procgen/tests/bank.rs
+index 009c6528..5d05a463 100644
+--- a/crates/jj-procgen/tests/bank.rs
++++ b/crates/jj-procgen/tests/bank.rs
+@@ -601,3 +601,35 @@ fn diag_grid_launch() {
+     }
+     eprintln!("SLOW {} of {}: {slow:?}", slow.len(), seeds());
+ }
++
++#[test]
++#[ignore = "diagnostic (br-glso)"]
++fn diag_fork_merge_profile() {
++    let seed: u64 = std::env::var("JJ_SEEDS").ok().and_then(|s| s.parse().ok()).unwrap_or(27);
++    let p = jj_procgen::playtest::prepare(seed);
++    let map = &p.map;
++    let n = map.route.points.len();
++    for f in map.features.iter().filter(|f| f.kind == jj_map::model::FeatureKind::Fork) {
++        let d = jj_map::fork::Fork::of(f).unwrap();
++        let path = jj_map::fork::path_of(map, &d);
++        let hs = jj_map::fork::heights(map, &d, &path);
++        eprintln!("fork {}..{} bed {:.2} m, {} points", d.from, d.to, jj_map::fork::road_bed_m(map), path.len());
++        for k in path.len().saturating_sub(26)..path.len() {
++            let q = path[k];
++            let g = jj_map::jump::ground_height_m(&map.terrain, q[0], q[1]);
++            let (j, dist) = (0..n)
++                .map(|j| {
++                    let r = &map.route.points[j];
++                    (j, (f64::from(r.x) / 1000.0 - q[0]).hypot(f64::from(r.z) / 1000.0 - q[1]))
++                })
++                .min_by(|a, b| a.1.total_cmp(&b.1))
++                .unwrap();
++            eprintln!(
++                "k {k} planned {:.2} ground {:.2} nearest route pt {j} at {dist:.1} m, route y {:.2}",
++                hs[k],
++                g,
++                f64::from(map.route.points[j].y) / 1000.0
++            );
++        }
++    }
++}
+diff --git a/crates/jj-procgen/tests/forks.rs b/crates/jj-procgen/tests/forks.rs
+index 17d14350..6354f20d 100644
+--- a/crates/jj-procgen/tests/forks.rs
++++ b/crates/jj-procgen/tests/forks.rs
+@@ -119,6 +119,61 @@ fn generated_forks_validate_and_most_courses_get_one() {
+     eprintln!("forks on {with} of {maps} courses");
+ }
+ 
++/// br-glso: a branch's ground changes grade smoothly all along it, ends included, so a car coming off it at speed onto a
++/// main road on a steep grade isn't thrown (seed 27's straight ramp met a 12 % downhill at a crest and launched a bot
++/// across the road). The change of grade between consecutive 5 m spans of the stamped ground under the branch, on the
++/// race-prepared courses the bot bank drives.
++#[test]
++fn every_branch_meets_the_road_without_a_crest_or_a_dip() {
++    let mut worst = (0.0f64, String::new());
++    let mut forks_seen = 0;
++    for seed in 0..PLAYTEST_SEEDS {
++        let p = jj_procgen::playtest::prepare(seed);
++        let map = &p.map;
++        for f in map.features.iter().filter(|f| f.kind == FeatureKind::Fork) {
++            let d = Fork::of(f).unwrap();
++            let path = fork::path_of(map, &d);
++            let g = |q: &[f64; 2]| jj_map::jump::ground_height_m(&map.terrain, q[0], q[1]);
++            // Two path steps (5 m) a span, as the validator measures grade.
++            let grade = |k: usize| {
++                let (a, b) = (&path[k], &path[k + 2]);
++                (g(b) - g(a)) / (b[0] - a[0]).hypot(b[1] - a[1]).max(1e-9)
++            };
++            forks_seen += 1;
++            for k in 0..path.len().saturating_sub(4) {
++                let change = (grade(k + 2) - grade(k)).abs();
++                if change > worst.0 {
++                    worst = (
++                        change,
++                        format!(
++                            "seed {seed} fork {}..{} at branch point {k} of {}",
++                            d.from,
++                            d.to,
++                            path.len()
++                        ),
++                    );
++                }
++            }
++        }
++    }
++    eprintln!(
++        "{forks_seen} forks; the largest change of grade between 5 m spans: {:.3} ({})",
++        worst.0, worst.1
++    );
++    assert!(forks_seen > 0);
++    assert!(
++        worst.0 <= MAX_GRADE_CHANGE,
++        "a branch changes grade by {:.3} between 5 m spans: {}",
++        worst.0,
++        worst.1
++    );
++}
++
++/// The bot bank's seeds (bank.rs).
++const PLAYTEST_SEEDS: u64 = 30;
++/// The most a branch's grade may change between consecutive 5 m spans.
++const MAX_GRADE_CHANGE: f64 = 0.08;
++
+ /// The first seeds of a biome whose courses have a fork, `count` of them.
+ fn forked(biome: Biome, count: usize) -> Vec<u64> {
+     (0..SEEDS * 4)
 diff --git a/crates/jj-procgen/tests/setpieces.rs b/crates/jj-procgen/tests/setpieces.rs
 index 42a9e568..e4f94969 100644
 --- a/crates/jj-procgen/tests/setpieces.rs

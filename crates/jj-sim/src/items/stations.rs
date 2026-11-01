@@ -31,6 +31,10 @@ pub const ARENA_BASE: u32 = 1_000_000;
 pub const ARENA_AREA_PER_BOX_M2: f32 = 100.0;
 /// Arena boxes stay inside this share of the floor radius.
 pub const ARENA_SPREAD: f32 = 0.88;
+/// An arena box stands only where the ground within this of it (m, each way) rises and falls by no more than
+/// `BOX_FLAT_RISE_M`: never on a jump's ramp or table (a dip's gentle edge is flat enough).
+pub const BOX_FLAT_M: f32 = 2.0;
+pub const BOX_FLAT_RISE_M: f32 = 0.2;
 
 /// The snapshot kind of a ready box holding `item`.
 pub fn ready_kind(item: ItemId) -> u32 {

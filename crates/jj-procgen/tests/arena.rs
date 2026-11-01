@@ -1211,3 +1211,36 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
         "scenarios/derby/arena-jumps.json is stale: re-bless with JJ_BLESS=1"
     );
 }
+
+/// P1-W04: a derby's item boxes never block a jump: no box overlaps a jump's ramps, table or side slopes (the box's
+/// 1.3 m cube, `generic/item-station`), on arenas that carry the field; and there are still plenty of them. (A box may
+/// stand on a dip's gentle edge: it never collides.)
+#[test]
+fn derby_item_boxes_never_block_a_jump() {
+    for (seed, cars) in [(1, 8), (2, 16), (3, 32), (4, 24), (5, 8)] {
+        let map = arena(seed, cars);
+        let f = field(seed, cars);
+        let mut sim = sim(&map);
+        sim.spawn_grid(1);
+        sim.start_derby(180 * S);
+        let boxes = sim.stations();
+        let jumps = f.relief.iter().filter(|p| p.kind.is_jump()).count();
+        eprintln!("{seed}/{cars}: {} boxes, {jumps} jumps", boxes.len());
+        assert!(
+            boxes.len() >= 12,
+            "{seed}/{cars}: plenty of boxes: {}",
+            boxes.len()
+        );
+        for b in boxes {
+            let (x, z) = (f64::from(b.position[0]), f64::from(b.position[2]));
+            for p in f.relief.iter().filter(|p| p.kind.is_jump()) {
+                let pad = 0.65;
+                assert!(
+                    !p.covers(x, z, pad),
+                    "{seed}/{cars}: a box at ({x:.1}, {z:.1}) is on a {}",
+                    p.kind.name()
+                );
+            }
+        }
+    }
+}

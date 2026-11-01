@@ -709,6 +709,7 @@ impl Sim {
                     x: b.cx as f32,
                     z: b.cz as f32,
                     floor_r: b.floor_r as f32,
+                    floor_y: b.base_y as f32,
                     obstacle: island(m, registry, &b),
                 }),
             assist_profile: AssistProfile::standard(),
@@ -1534,7 +1535,8 @@ impl Sim {
     /// journalled `StartDerby`), one per `ARENA_AREA_PER_BOX_M2`, clear of the island. Each is a recharging station.
     fn scatter_arena_boxes(&mut self) {
         use crate::items::stations::{
-            ARENA_AREA_PER_BOX_M2, ARENA_BASE, ARENA_SPREAD, HOVER_M, Station,
+            ARENA_AREA_PER_BOX_M2, ARENA_BASE, ARENA_SPREAD, BOX_FLAT_M, BOX_FLAT_RISE_M, HOVER_M,
+            Station,
         };
         let Some(arena) = self.hunt_arena else {
             return;
@@ -1559,8 +1561,44 @@ impl Sim {
                     continue;
                 }
             }
-            let y = jj_map::jump::ground_height_m(&self.terrain, f64::from(x), f64::from(z)) as f32
-                + HOVER_M;
+            // On the floor only (P1-W04: a box never blocks a jump): never over a jump's ramp or table, or a steep mound,
+            // judged by how much the ground varies round the spot and its height over the floor.
+            let g = |dx: f32, dz: f32| {
+                jj_map::jump::ground_height_m(&self.terrain, f64::from(x + dx), f64::from(z + dz))
+            };
+            let around = [
+                g(0.0, 0.0),
+                g(BOX_FLAT_M, 0.0),
+                g(-BOX_FLAT_M, 0.0),
+                g(0.0, BOX_FLAT_M),
+                g(0.0, -BOX_FLAT_M),
+                g(
+                    BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                    BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                ),
+                g(
+                    -BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                    BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                ),
+                g(
+                    BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                    -BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                ),
+                g(
+                    -BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                    -BOX_FLAT_M * core::f32::consts::FRAC_1_SQRT_2,
+                ),
+            ];
+            let (lo, hi) = around
+                .iter()
+                .fold((f64::MAX, f64::MIN), |(lo, hi), &h| (lo.min(h), hi.max(h)));
+            // ... and at the floor's own height: a table-top is flat too.
+            if hi - lo > f64::from(BOX_FLAT_RISE_M)
+                || (around[0] as f32 - arena.floor_y).abs() > BOX_FLAT_RISE_M
+            {
+                continue;
+            }
+            let y = around[0] as f32 + HOVER_M;
             self.stations.push(Station {
                 dressing: ARENA_BASE + placed,
                 position: [x, y, z],

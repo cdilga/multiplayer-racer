@@ -435,6 +435,8 @@ pub struct Arena {
     pub x: f32,
     pub z: f32,
     pub floor_r: f32,
+    /// The floor's height, m.
+    pub floor_y: f32,
     /// The arena's island or spine (P1-M-arena-features), which a bot steers round instead of grinding into it.
     pub obstacle: Option<Obstacle>,
 }
