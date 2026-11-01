@@ -1,6 +1,6 @@
 {
   "scenario": "air-pitch-crash",
-  "what": "R129 / R16 crash and self-righting (P1-FL07) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s, lifts at the lip and then floors it in the air from tick 90 and keeps it floored, which raises the nose all the way (br-bbki.24: throttle spins the wheels up and drops the rear): it comes down far off the landing's angle, a bad landing or a crash, and rights itself.",
+  "what": "R129 / R16 crash and self-righting (P1-FL07) on the Feel Lab's canyon leap: a Cruz Missile takes the kicker flat out at 22 m/s, lifts at the lip and then floors it in the air from tick 90 and keeps it floored, which raises the nose all the way (br-bbki.24: throttle spins the wheels up and drops the rear): it comes down far off the landing's angle, a bad landing or a crash, and rights itself. forwardSpeed min 10 -> 8 (br-g5bg, 2026-11-01: with air responseS 0.14 the righted car carries 9.0 m/s at the check; it still self-rights and drives on).",
   "map": "maps/lab/canyon-leap.json",
   "seed": 1,
   "ticks": 600,
@@ -68,7 +68,7 @@
     {
       "car": 0,
       "metric": "forwardSpeed",
-      "min": 10,
+      "min": 8,
       "max": 60
     }
   ]

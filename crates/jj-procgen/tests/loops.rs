@@ -226,3 +226,159 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
     }
     eprintln!("{}", lines.join("\n"));
 }
+
+// ---- br-8h3u.3: every roster vehicle rides every generated loop (owner 2026-10-24: "loop the loops are too small
+// radius"). The radius is `assets/profiles/loops.json` `radiusM`; the posted speed (jj_map::looping::posted_entry_mps)
+// grows with it, so a bigger loop must still be completed by every car at its posted speed, and a car too slow for it
+// must still fall off and respawn before it.
+
+/// What a run at a generated loop did.
+#[derive(Debug, Clone, Copy)]
+struct Ride {
+    completed: bool,
+    min_up_y: f32,
+    max_rise_m: f32,
+    respawned: bool,
+    /// Where a respawn put the car, m along the loop's forward from its entry (negative: before it).
+    respawn_along_m: Option<f32>,
+}
+
+/// A point of the route, m.
+fn route_point(m: &LoadedMap, i: usize) -> (f32, f32, f32) {
+    let p = &m.map.route.points[i];
+    (
+        p.x as f32 / 1000.0,
+        p.y as f32 / 1000.0,
+        p.z as f32 / 1000.0,
+    )
+}
+
+/// The unit direction (x, z) from route point `a` to `b`.
+fn heading_between(m: &LoadedMap, a: usize, b: usize) -> (f32, f32) {
+    let (pa, pb) = (route_point(m, a), route_point(m, b));
+    let (dx, dz) = (pb.0 - pa.0, pb.2 - pa.2);
+    let len = (dx * dx + dz * dz).sqrt();
+    (dx / len, dz / len)
+}
+
+/// Starts `profile` 5 m before the loop's entry, heading into it at `speed` with the wheel straight (the throttle held or
+/// not), and runs it up to 12 s: out of the exit and 25 m on along the road, upright and moving, or respawned.
+fn ride(
+    m: &LoadedMap,
+    d: &jj_map::looping::LoopDesign,
+    profile: VehicleProfile,
+    seed: u64,
+    speed: f32,
+    throttle: bool,
+) -> Ride {
+    let e = route_point(m, d.entry);
+    let f = heading_between(m, d.entry - 1, d.entry);
+    let x = route_point(m, d.exit);
+    let g = heading_between(m, d.exit, d.exit + 1);
+    let mut sim = Sim::with_profiles(m, &jj_procgen::registry(), seed, vec![profile]);
+    let car = sim.spawn_grid(1)[0];
+    let pose = jj_sim::SpawnPose {
+        x: e.0 - 5.0 * f.0,
+        y: e.1 + 0.3,
+        z: e.2 - 5.0 * f.1,
+        heading: f.0.atan2(f.1),
+    };
+    sim.place_car(car, pose, 0.0, [speed * f.0, 0.0, speed * f.1]);
+    sim.set_input(
+        car,
+        jj_sim::DriveInput {
+            throttle: if throttle { i16::MAX } else { 0 },
+            ..Default::default()
+        },
+    );
+    let life = sim.car_life(car);
+    let mut r = Ride {
+        completed: false,
+        min_up_y: 1.0,
+        max_rise_m: f32::MIN,
+        respawned: false,
+        respawn_along_m: None,
+    };
+    for _ in 0..12 * u64::from(TICK_HZ) {
+        sim.step();
+        let st = sim.car_state(car).unwrap();
+        let p = st.position;
+        if sim.car_life(car) != life {
+            r.respawned = true;
+            r.respawn_along_m = Some((p[0] - e.0) * f.0 + (p[2] - e.2) * f.1);
+            break;
+        }
+        r.min_up_y = r.min_up_y.min(st.up_y);
+        r.max_rise_m = r.max_rise_m.max(p[1] - e.1);
+        let past = (p[0] - x.0) * g.0 + (p[2] - x.2) * g.1;
+        let off = ((p[0] - x.0) * g.1 - (p[2] - x.2) * g.0).abs();
+        if past > 25.0 && off < 6.0 && st.up_y > 0.9 && st.forward_speed > 3.0 {
+            r.completed = true;
+            break;
+        }
+    }
+    r
+}
+
+/// AC2: on the bank's generated loops (every biome; a debug build takes the first seed that has one), every roster vehicle
+/// arriving at the posted speed on the throttle completes the loop upside down at the top, and a Cruz coasting in well
+/// under it falls off and is respawned. Prints each loop's radius and posted speed (the radius pick's record).
+#[test]
+fn every_roster_vehicle_completes_every_generated_loop_at_its_posted_speed() {
+    let roster =
+        VehicleProfile::roster(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+            .unwrap();
+    let (mut bad, mut rows, mut loops_ridden) = (Vec::new(), Vec::new(), 0);
+    for biome in BIOMES {
+        let mut found = 0;
+        for seed in 0..BANK_SEEDS {
+            if cfg!(debug_assertions) && found >= 1 {
+                break;
+            }
+            let (m, _) = prepared(seed, biome);
+            let designs: Vec<_> = m
+                .map
+                .features
+                .iter()
+                .filter_map(jj_map::looping::LoopDesign::of)
+                .collect();
+            found += designs.len();
+            for d in &designs {
+                loops_ridden += 1;
+                let v = jj_map::looping::posted_entry_mps(d, 9.81) as f32;
+                // Over the top: the car hangs inside the loop at its crown (under the deck), and the helix's exit
+                // height moves the crown, so the bar is well past half way up rather than the full 2R.
+                let top = 2.0 * d.radius_m as f32;
+                let over = 1.5 * d.radius_m as f32;
+                for (name, profile) in &roster {
+                    let r = ride(&m, d, profile.clone(), seed, v, true);
+                    if !(r.completed && r.min_up_y < -0.9 && r.max_rise_m > over && !r.respawned) {
+                        bad.push(format!(
+                            "{biome:?} seed {seed} R {:.1} m posted {v:.1} m/s: {name} {r:?}",
+                            d.radius_m
+                        ));
+                    }
+                }
+                let slow = ride(&m, d, VehicleProfile::cruz(), seed, v - 7.0, false);
+                // No race runs here, so the respawn is the start grid's anchor (wherever it is round the lap; the
+                // race's own anchor before the loop is jj-sim tests/loops.rs's): it falls off and is put back.
+                if !(slow.respawned && !slow.completed) {
+                    bad.push(format!(
+                        "{biome:?} seed {seed}: too slow ({:.1} m/s) {slow:?}",
+                        v - 7.0
+                    ));
+                }
+                rows.push(format!(
+                    "{biome:?} seed {seed}: R {:.1} m, height {top:.1} m, posted {v:.1} m/s",
+                    d.radius_m
+                ));
+            }
+        }
+    }
+    eprintln!("{}", rows.join("\n"));
+    assert!(
+        loops_ridden >= BIOMES.len() - 1,
+        "only {loops_ridden} generated loops to ride"
+    );
+    assert!(bad.is_empty(), "{}", bad.join("\n"));
+}

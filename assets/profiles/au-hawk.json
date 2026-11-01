@@ -5301,7 +5301,7 @@
       "yaw_max_deg_s": 125.0,
       "turn_in_s": 0.06,
       "yaw_accel_deg_s2": 750.0,
-      "grip_g": 6.0,
+      "grip_g": 5.0,
       "carry": 0.9,
       "transfer_s": 0.3,
       "lift_tuck": 0.25,
