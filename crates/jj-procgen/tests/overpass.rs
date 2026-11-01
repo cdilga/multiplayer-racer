@@ -52,6 +52,15 @@ fn leap(seed: u64, biome: Biome) -> Result<LoadedMap, String> {
         .map_err(|r| format!("invalid: {:?}", r.violations))
 }
 
+/// The first seed from `seed` whose eight lays an overpass leap, and its map: a generator change that moves one seed's
+/// crossing out of a leap's reach must not fail the band tests (br-ndei; the lay rate is
+/// `overpass_leaps_lay_and_validate_on_generated_eights`'s).
+fn laying(seed: u64, biome: Biome) -> (u64, LoadedMap) {
+    (seed..seed + 20)
+        .find_map(|s| leap(s, biome).ok().map(|m| (s, m)))
+        .unwrap_or_else(|| panic!("{biome:?}: no eight from seed {seed} lays an overpass leap"))
+}
+
 fn piece(m: &LoadedMap) -> (usize, GapLeap) {
     m.map
         .features
@@ -87,7 +96,7 @@ fn overpass_leaps_lay_and_validate_on_generated_eights() {
     eprintln!("{}", rows.join("\n"));
     // The self-review's map (docs/evidence/br-xlvx.5): JJ_EVIDENCE_DIR=<dir> writes Town seed 1's.
     if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
-        let m = leap(1, Biome::Town).expect("an overpass leap");
+        let (_, m) = laying(1, Biome::Town);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
             format!("{dir}/overpass-town-1.json"),
@@ -205,7 +214,7 @@ fn take_with(m: &LoadedMap, speed: f32, boost: bool) -> Run {
 #[test]
 fn a_car_in_the_band_clears_the_lower_road_and_lands_upright() {
     for (biome, seed) in [(Biome::OutbackDirt, 0), (Biome::Town, 1), (Biome::Rocks, 2)] {
-        let m = leap(seed, biome).expect("an overpass leap");
+        let (seed, m) = laying(seed, biome);
         let (_, d) = piece(&m);
         let mut in_band = 0;
         // The kicker costs a car some speed: start it faster, and judge each run by its speed at the lip.
@@ -245,7 +254,7 @@ fn a_car_in_the_band_clears_the_lower_road_and_lands_upright() {
 #[test]
 fn a_car_on_boost_from_the_band_top_clears_and_lands_upright() {
     for (biome, seed) in [(Biome::OutbackDirt, 0), (Biome::Town, 1), (Biome::Rocks, 2)] {
-        let m = leap(seed, biome).expect("an overpass leap");
+        let (seed, m) = laying(seed, biome);
         let (_, d) = piece(&m);
         let r = take_with(&m, d.max_speed as f32, true);
         let what = format!(
@@ -266,7 +275,7 @@ fn a_car_on_boost_from_the_band_top_clears_and_lands_upright() {
 #[test]
 fn a_car_well_under_the_band_falls_and_respawns() {
     for (biome, seed) in [(Biome::OutbackDirt, 0), (Biome::Town, 1)] {
-        let m = leap(seed, biome).expect("an overpass leap");
+        let (seed, m) = laying(seed, biome);
         let (_, d) = piece(&m);
         let r = take(&m, (d.min_speed * 0.55) as f32);
         assert!(
@@ -283,7 +292,7 @@ fn a_car_well_under_the_band_falls_and_respawns() {
 
 #[test]
 fn the_validator_keeps_the_lower_road_clear_and_out_from_under_the_ramps() {
-    let m = leap(1, Biome::Town).expect("an overpass leap");
+    let (_, m) = laying(1, Biome::Town);
     let (k, d) = piece(&m);
     let (a, b) = d.lower.expect("a lower road");
     let problems = |map: &Map| jj_map::setpiece::problems(map, &map.features[k]);
@@ -318,7 +327,7 @@ fn the_validator_keeps_the_lower_road_clear_and_out_from_under_the_ramps() {
 
 #[test]
 fn a_car_on_the_lower_road_drives_under_the_leap_and_is_never_taken_as_fallen_in() {
-    let m = leap(1, Biome::Town).expect("an overpass leap");
+    let (_, m) = laying(1, Biome::Town);
     let (_, d) = piece(&m);
     let (a, b) = d.lower.expect("a lower road");
     let n = m.map.route.points.len();
