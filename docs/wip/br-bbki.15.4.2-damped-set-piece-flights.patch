@@ -1,0 +1,226 @@
+diff --git a/crates/jj-map/src/setpiece.rs b/crates/jj-map/src/setpiece.rs
+index e8e13e41..db69041a 100644
+--- a/crates/jj-map/src/setpiece.rs
++++ b/crates/jj-map/src/setpiece.rs
+@@ -236,7 +236,7 @@ pub fn take_off(map: &Map, f: &Feature, d: &GapLeap) -> ([f64; 3], [f64; 2], f64
+ }
+ 
+ /// Where a car's centre leaving the lip at `speed` m/s comes back down to the ground: the horizontal distance past the
+-/// lip (m) and the ground's height there, by marching the ballistic flight (no drag, g = 9.81) over the heightfield
++/// lip (m) and the ground's height there, by marching the ballistic flight (the cars' air damping, g = 9.81) over the heightfield
+ /// along the lip's heading. `None` if it never comes down within 8 s.
+ pub fn touchdown(map: &Map, f: &Feature, d: &GapLeap, speed: f64) -> Option<(f64, f64)> {
+     let (lip, t, _) = take_off(map, f, d);
+@@ -370,14 +370,11 @@ pub fn problems(map: &Map, f: &Feature) -> Vec<String> {
+     out
+ }
+ 
+-/// The damping a piece's flight is flown with, per second: an overpass leap's long flight with the cars' own
+-/// ([`limits::FLIGHT_DAMPING_PER_S`]); the shorter gap leaps without (their contract as it stands).
+-pub fn flight_damping(d: &GapLeap) -> f64 {
+-    if d.kind == PieceKind::OverpassLeap {
+-        limits::FLIGHT_DAMPING_PER_S
+-    } else {
+-        0.0
+-    }
++/// The damping a piece's flight is flown with, per second: every gap leap's with the cars' own
++/// ([`limits::FLIGHT_DAMPING_PER_S`]: Rapier slows a flying body by its `linear_damping`; undamped, a 1 s flight was
++/// predicted 7 % long and a 2.3 s one 25 %, br-bbki.15.4.2).
++pub fn flight_damping(_d: &GapLeap) -> f64 {
++    limits::FLIGHT_DAMPING_PER_S
+ }
+ 
+ /// The height (m) of a car's centre `x` m past the lip, leaving it at `speed` m/s (the flight [`touchdown`] marches;
+diff --git a/crates/jj-procgen/src/lib.rs b/crates/jj-procgen/src/lib.rs
+index 021e9d46..9c34c851 100644
+--- a/crates/jj-procgen/src/lib.rs
++++ b/crates/jj-procgen/src/lib.rs
+@@ -51,7 +51,7 @@ use crate::seed::Streams;
+ 
+ pub const GENERATOR_ID: &str = "jj.procgen.course";
+ /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
+-pub const GENERATOR_VERSION: &str = "35";
++pub const GENERATOR_VERSION: &str = "36";
+ const STEP_M: f64 = 2.5;
+ /// Rooftop lots keep this far (m along the road) from a set piece's span.
+ const ROOF_PIECE_MARGIN_M: f64 = 10.0;
+diff --git a/crates/jj-procgen/src/setpieces/mod.rs b/crates/jj-procgen/src/setpieces/mod.rs
+index 50ecaed6..c972c451 100644
+--- a/crates/jj-procgen/src/setpieces/mod.rs
++++ b/crates/jj-procgen/src/setpieces/mod.rs
+@@ -338,10 +338,14 @@ impl Draw {
+     /// and how steeply it is falling then (fall over run).
+     fn flight(&self, v: f64) -> (f64, f64) {
+         let a = libm::atan(self.lip / (self.ramp - self.blend / 2.0));
+-        let (vh, mut vy) = (v * libm::cos(a), v * libm::sin(a));
++        let (mut vh, mut vy) = (v * libm::cos(a), v * libm::sin(a));
+         let (mut x, mut y) = (0.0, self.lip);
+         let dt = 1.0 / 240.0;
++        // Flown with the cars' air damping, as the contract's touchdown is (br-bbki.15.4.2).
++        let damp = 1.0 / (1.0 + dt * setpiece::limits::FLIGHT_DAMPING_PER_S);
+         for _ in 0..(8 * 240) {
++            vh *= damp;
++            vy *= damp;
+             x += vh * dt;
+             vy -= 9.81 * dt;
+             y += vy * dt;
+diff --git a/crates/jj-procgen/tests/setpieces.rs b/crates/jj-procgen/tests/setpieces.rs
+index 42a9e568..e4f94969 100644
+--- a/crates/jj-procgen/tests/setpieces.rs
++++ b/crates/jj-procgen/tests/setpieces.rs
+@@ -225,6 +225,155 @@ fn take(map: &LoadedMap, k: usize, speed: f32, pilot: bool, back: usize, launch:
+     }
+ }
+ 
++/// br-bbki.15.4.2: every gap-leap kind's predicted touchdown (`setpiece::touchdown`, flown with
++/// `FLIGHT_DAMPING_PER_S`, the roster's most damped car's: the Tradie Ute's 0.19/s) against the Ute's real one, leaving
++/// the lip at the bottom, middle and top of the piece's band, on 10 seeds per biome; and the least damped car (0.14/s)
++/// at the top of the band still comes down on the landing.
++#[test]
++fn every_gap_leap_lands_where_its_flight_predicts_across_its_band() {
++    let roster =
++        VehicleProfile::roster(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
++            .unwrap();
++    let damping = |p: &VehicleProfile| p.tuning.linear_damping;
++    let most = roster
++        .iter()
++        .max_by(|a, b| damping(&a.1).total_cmp(&damping(&b.1)))
++        .unwrap();
++    let least = roster
++        .iter()
++        .min_by(|a, b| damping(&a.1).total_cmp(&damping(&b.1)))
++        .unwrap();
++    assert!(
++        (f64::from(damping(&most.1)) - jj_map::setpiece::limits::FLIGHT_DAMPING_PER_S).abs() < 1e-6,
++        "FLIGHT_DAMPING_PER_S is the roster's largest linear_damping ({} {})",
++        most.0,
++        damping(&most.1)
++    );
++    let mut table = String::from(
++        "biome seed piece kind lip_mps predicted_m real_m (most damped) least_damped_at_top_m landing_end_m\n",
++    );
++    let (mut bad, mut kinds) = (Vec::new(), BTreeMap::new());
++    for biome in BIOMES {
++        for seed in 0..10 {
++            let map = loaded(seed, biome);
++            let pieces: Vec<_> = map
++                .map
++                .features
++                .iter()
++                .filter(|f| GapLeap::of(f).is_some())
++                .collect();
++            for (k, f) in pieces.iter().enumerate() {
++                let d = GapLeap::of(f).unwrap();
++                for v in [d.min_speed, (d.min_speed + d.max_speed) / 2.0, d.max_speed] {
++                    let Some((predicted, _)) = jj_map::setpiece::touchdown(&map.map, f, &d, v)
++                    else {
++                        bad.push(format!(
++                            "{biome:?} {seed} {k}: no predicted touchdown at {v:.1} m/s"
++                        ));
++                        continue;
++                    };
++                    let Some(real) = flown(&map, f, &d, v, &most.1) else {
++                        bad.push(format!(
++                            "{biome:?} {seed} {k} {} at {v:.1} m/s: never came down",
++                            d.kind.name()
++                        ));
++                        continue;
++                    };
++                    let top = if v == d.max_speed {
++                        flown(&map, f, &d, v, &least.1)
++                    } else {
++                        None
++                    };
++                    writeln!(
++                        table,
++                        "{biome:?} {seed} {k} {} {v:.1} {predicted:.1} {real:.1} {} {:.1}",
++                        d.kind.name(),
++                        top.map_or("-".into(), |x| format!("{x:.1}")),
++                        d.gap_m + d.landing_m
++                    )
++                    .unwrap();
++                    if let Some(x) = top
++                        && x > d.gap_m + d.landing_m
++                    {
++                        bad.push(format!("{biome:?} seed {seed} piece {k} ({}): {} at {v:.1} m/s comes down at {x:.1} m, past the landing's end {:.1} m", d.kind.name(), least.0, d.gap_m + d.landing_m));
++                    }
++                    *kinds.entry(d.kind.name()).or_insert(0) += 1;
++                    if (real - predicted).abs() > TOUCHDOWN_TOLERANCE_M {
++                        bad.push(format!("{biome:?} seed {seed} piece {k} ({}) at {v:.1} m/s: predicted {predicted:.1} m, real {real:.1} m", d.kind.name()));
++                    }
++                }
++            }
++        }
++    }
++    evidence("touchdowns.txt", &table);
++    eprintln!("{kinds:?}");
++    for kind in [
++        PieceKind::CanyonLeap,
++        PieceKind::MesaDrop,
++        PieceKind::CreekWashout,
++    ] {
++        assert!(
++            kinds.contains_key(kind.name()),
++            "{} never measured: {kinds:?}",
++            kind.name()
++        );
++    }
++    assert!(bad.is_empty(), "{}\n{table}", bad.join("\n"));
++}
++
++/// `profile` leaving piece `f`'s lip at `speed` along the ramp's angle, neutral in the air (a pinned throttle pitches the
++/// nose into the far rim, br-bbki.24): where its wheels first touch down, m past the lip along the flight line (a brush
++/// of the lip itself, in the first 2 m, isn't the touchdown).
++fn flown(
++    map: &LoadedMap,
++    f: &jj_map::model::Feature,
++    d: &GapLeap,
++    speed: f64,
++    profile: &VehicleProfile,
++) -> Option<f64> {
++    let (lip, t, _) = jj_map::setpiece::take_off(&map.map, f, d);
++    let mut sim = Sim::new(map, &jj_procgen::registry(), 7, profile.clone());
++    let car = sim.spawn_grid(1)[0];
++    let heading = libm::atan2(t[0], t[1]) as f32;
++    let (a, v) = (d.launch_angle() as f32, speed as f32);
++    let pose = jj_sim::SpawnPose {
++        x: lip[0] as f32,
++        y: (lip[1] + jj_map::setpiece::limits::RIDE_HEIGHT_M) as f32,
++        z: lip[2] as f32,
++        heading,
++    };
++    sim.place_car(
++        car,
++        pose,
++        0.0,
++        [
++            v * a.cos() * heading.sin(),
++            v * a.sin(),
++            v * a.cos() * heading.cos(),
++        ],
++    );
++    let mut flying = false;
++    for _ in 0..8 * S {
++        sim.step();
++        let st = sim.car_state(car).unwrap();
++        let u = (f64::from(st.position[0]) - lip[0]) * t[0]
++            + (f64::from(st.position[2]) - lip[2]) * t[1];
++        if st.wheels_in_contact == 0 {
++            flying = true;
++        } else if flying && u > 2.0 {
++            return Some(
++                (f64::from(st.position[0]) - lip[0]) * t[0]
++                    + (f64::from(st.position[2]) - lip[2]) * t[1],
++            );
++        }
++    }
++    None
++}
++
++/// How far a real touchdown may be from the predicted one, m (the prediction is the car's centre at ride height; the
++/// wheels' rays reach the ground a little sooner).
++const TOUCHDOWN_TOLERANCE_M: f64 = 2.0;
++
+ #[test]
+ fn the_autopilot_lands_every_placed_piece_at_design_speed_on_10_seeds_per_biome() {
+     let mut table = String::from("biome seed piece kind gap_m lip_mps flight_m end_up\n");
