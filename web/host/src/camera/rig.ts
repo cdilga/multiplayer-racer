@@ -129,6 +129,8 @@ export class CameraRig {
   private q = new Quaternion();
   private loopPos = new Vector3();
   private loopLook = new Vector3();
+  private offA = new Vector3();
+  private offB = new Vector3();
 
   private seat(id: number): SeatState {
     let s = this.seats.get(id);
@@ -277,10 +279,19 @@ export class CameraRig {
     const easing = s.lastLoop !== null ? this.loopShots[s.lastLoop] : undefined;
     if (s.loopIn > 0 && easing) {
       this.loopFrame(car, easing, this.loopPos, this.loopLook);
+      // A straight blend between behind and beside passes close to the car (it cut in to 7 m and lost the car easing out
+      // of a 12-14 m loop): the camera stays at least the nearer framing's distance from the car, pushed out along its
+      // own line from the car.
+      const near = Math.min(this.offA.copy(s.pos).sub(car.pos).length(), this.offB.copy(this.loopPos).sub(car.pos).length());
       s.pos.lerp(this.loopPos, s.loopIn);
+      const off = this.offA.copy(s.pos).sub(car.pos), d = off.length();
+      // Only easing out, past the exit: easing in, the straight blend is the one that clears the deck.
+      if (loop === null && d < near && d > 1e-6) s.pos.copy(car.pos).addScaledVector(off, near / d);
       // Part way between the two, neither aim need hold the car: the aim comes onto the car over the first quarter of
       // the ease and goes on to the loop's aim over the rest.
-      s.look.lerp(this.v.copy(car.pos).setY(car.pos.y + profile.rig.pullInEyeUpM), Math.min(1, 4 * s.loopIn));
+      // Easing out the camera still stands partly beside the car, so the aim stays on it longer (full until 0.1 of the
+      // ease) before it swings back down the road.
+      s.look.lerp(this.v.copy(car.pos).setY(car.pos.y + profile.rig.pullInEyeUpM), Math.min(1, (loop === null ? 10 : 4) * s.loopIn));
       s.look.lerp(this.loopLook, Math.max(0, (4 * s.loopIn - 1) / 3));
       // Zoom in: the car fills the frame as it would from `loop.zoomM` away at the preset's FOV (never under `loop.minFovDeg`).
       const tan0 = Math.tan((R.fovDeg * Math.PI) / 360);

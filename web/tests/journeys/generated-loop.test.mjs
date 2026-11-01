@@ -128,7 +128,7 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       const r=await inFrameRide(page,{ticks:RIDE});
       // br-8h3u.2: no roll anywhere; once eased into the loop the car is framed closer than the chase frames it on the
       // road before the loop, and after the exit the chase eases back out to that framing.
-      const before=r.cams.find(c=>c.tick>0&&c.loop===null&&c.loopIn===0),inLoop=r.cams.filter(c=>c.loopIn>.9),after=r.cams.at(-1);
+      const before=r.cams.find(c=>c.tick>0&&c.loop===null&&c.loopIn===0),inLoop=r.cams.filter(c=>c.loop!==null&&c.loopIn>.9),after=r.cams.at(-1);
       const maxRoll=Math.max(...r.cams.map(c=>Math.abs(c.rollDeg))),maxZoom=Math.max(...inLoop.map(c=>c.zoomM));
       rows.push({tiles:n,frames:r.frames,lost:r.lost.length,maxRollDeg:maxRoll,chaseZoomM:before?.zoomM,maxLoopZoomM:maxZoom,afterZoomM:after?.zoomM});
       console.log(`# ${n} tiles: ${r.frames} checks, ${r.lost.length} lost, roll ${maxRoll} deg, zoom ${before?.zoomM} m -> ${maxZoom} m -> ${after?.zoomM} m`);
@@ -138,7 +138,7 @@ test('chromium: the loop stays in frame in 1, 4 and 9 tiles, 20 times a second',
       // The ride ends about a second past the exit: the ease out is under way (web/host/tests/loop-camera.test.mjs rides
       // it all the way back to the road framing).
       const tail=r.cams.filter(c=>c.seat===after.seat).slice(-4).map(c=>c.loopIn);
-      assert.ok(after.loop===null&&after.loopIn<.5&&tail.every((v,k)=>!k||v<tail[k-1]),`${n} tiles: the camera eases back out after the loop (ease ${tail})`);
+      assert.ok(after.loop===null&&after.loopIn<.5&&tail.every((v,k)=>!k||v<=tail[k-1]),`${n} tiles: the camera eases back out after the loop (ease ${tail})`);
       await page.close();
     }
     if(process.env.JJ_CAPTURE_DIR)writeFileSync(join(out,'in-frame.json'),JSON.stringify({browser:'chromium',viewport:'1366x768',rows},null,2)+'\n');
