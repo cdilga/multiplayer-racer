@@ -141,6 +141,8 @@ struct Bot {
     wrecks: u32,
     oob_ticks: u64,
     sim_s: f64,
+    /// Times the race told it it had missed a gate (br-8h3u.18): a bot on its own line never is.
+    missed_gates: u32,
 }
 
 fn play(map: &LoadedMap, seed: u64, laps: u32, limit_s: u64) -> Bot {
@@ -152,6 +154,7 @@ fn play(map: &LoadedMap, seed: u64, laps: u32, limit_s: u64) -> Bot {
     let (mut slow, mut stuck_windows, mut oob_ticks) = (0u64, 0u32, 0u64);
     let mut seen = 0usize;
     let mut lap_ticks = vec![0u64];
+    let mut missed_gates = 0u32;
     while !sim.race().is_finished(car.0) && sim.tick() < limit_s * S {
         sim.step();
         let st = sim.car_state(car).unwrap();
@@ -184,6 +187,11 @@ fn play(map: &LoadedMap, seed: u64, laps: u32, limit_s: u64) -> Bot {
             {
                 lap_ticks.push(*tick);
             }
+            if let Event::MissedGate { car: c, .. } = e
+                && *c == car.0
+            {
+                missed_gates += 1;
+            }
         }
         seen = events.len();
     }
@@ -199,6 +207,7 @@ fn play(map: &LoadedMap, seed: u64, laps: u32, limit_s: u64) -> Bot {
         wrecks: rc.wrecks,
         oob_ticks,
         sim_s: sim.tick() as f64 / S as f64,
+        missed_gates,
     }
 }
 
@@ -208,6 +217,7 @@ fn the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock() {
         "seed plan            refLap(s)  laps  lapTimes(s)            spread  autopilot/ref  stuck  recov  wreck  oobTicks  softlock\n",
     );
     let mut softlocks = Vec::new();
+    let mut missed = Vec::new();
     let mut ratios = Vec::new();
     for seed in 0..seeds() {
         let p = jj_procgen::playtest::prepare(seed);
@@ -254,6 +264,9 @@ fn the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock() {
             if softlock { "FLAGGED" } else { "-" }
         );
         let _ = bot.sim_s;
+        if bot.missed_gates > 0 {
+            missed.push(seed);
+        }
         if seed < 3 {
             // The autopilot laps these seeds unaided.
             assert!(
@@ -286,6 +299,8 @@ fn the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock() {
         .copied()
         .filter(|s| !KNOWN_JUMP_LANDING_ROLLS.contains(s))
         .collect();
+    // br-8h3u.18: no bot is ever told it missed a gate (and so never drives a lap more to take it).
+    assert!(missed.is_empty(), "told they missed a gate: {missed:?}");
     assert!(unexpected.is_empty(), "softlocks: {unexpected:?}\n{table}");
 }
 
@@ -330,6 +345,10 @@ fn the_autopilot_laps_a_sample_of_every_mix_and_length_class() {
         let bot = play(&map, seed, 1, (ref_s * 4.0) as u64 + 30);
         // Finishing is the bar; stuck windows are shown (the jump-landing gap above can cost a second or two).
         assert!(bot.finished, "{key} seed {seed}: the autopilot didn't lap");
+        assert_eq!(
+            bot.missed_gates, 0,
+            "{key} seed {seed}: told it missed a gate (br-8h3u.18)"
+        );
         let lap = bot.lap_s[0];
         let k = d.course.classes.get(p.course.class);
         let race = lap * f64::from(k.laps);

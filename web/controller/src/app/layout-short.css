@@ -83,3 +83,10 @@
 .round-banner[data-launch=takedown] { background: var(--c-danger); --bz-fill: var(--c-danger); color: var(--c-white); }
 /* Owner playtest 2026-10-17: your car finished. */
 .round-banner[data-launch=finished] { background: var(--c-saffron); --bz-fill: var(--c-saffron); }
+/* br-8h3u.18: you missed a gate. The arrow turns to point the way back from where the car is facing; it stays up until
+   the car takes the gate. Not tilted (the arrow's angle is the message). */
+.round-banner[data-launch=missed] { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; transform: translate(-50%, -50%); background: var(--c-warning); --bz-fill: var(--c-warning); color: var(--c-ink); white-space: nowrap; }
+.round-banner[data-launch=missed][hidden] { display: none; }
+.round-banner[data-launch=missed] .missed-arrow { grid-row: 1 / span 2; width: 52px; height: 52px; fill: var(--c-ink); transition: transform 120ms linear; }
+.round-banner[data-launch=missed] .missed-text { font-size: 24px; font-weight: 900; line-height: 1.05; }
+.round-banner[data-launch=missed] .missed-hint { font-size: 15px; font-weight: 700; opacity: 0.85; }

@@ -54,9 +54,10 @@ fn drive(
     // Per car and fork: the tick it reached the split, and whether it has been on the branch's middle since.
     let mut open: Vec<Vec<Option<(u64, bool)>>> = vec![vec![None; forks.len()]; cars];
     let mut passes: Vec<Vec<Pass>> = (0..forks.len()).map(|_| Vec::new()).collect();
-    // A lap's headroom over the laps asked: in a pack a bot shoved or run wide misses a gate's window (Rocks seed 0
-    // car 2 crossed rp 860's gate 10.6 m off centre) and drives a whole lap more to take it, which isn't the fork's doing.
-    let limit = 300 * u64::from(laps + 1) * u64::from(jj_sim::TICK_HZ);
+    // No lap of headroom (br-8h3u.18): a gate's window is its whole corridor, so a bot shoved or run wide no longer
+    // misses one and drives a lap more (Rocks seed 0 car 2 once crossed rp 860's gate 10.6 m off centre); a bot told it
+    // missed a gate is a failure below.
+    let limit = 300 * u64::from(laps) * u64::from(jj_sim::TICK_HZ);
     while ids.iter().any(|c| !sim.race().is_finished(c.0)) && sim.tick() < limit {
         sim.step();
         for (k, &c) in ids.iter().enumerate() {
@@ -82,6 +83,14 @@ fn drive(
         }
     }
     let mut bad = Vec::new();
+    for (tick, e) in sim.race().events() {
+        if let jj_sim::race::Event::MissedGate { car, gate } = e {
+            bad.push(format!(
+                "{biome:?} seed {seed} car {car}: told it missed gate {gate} (route point {}) at tick {tick}",
+                sim.race().course.gate_route_point(*gate as usize)
+            ));
+        }
+    }
     for c in &ids {
         let r = sim.race().car(c.0).unwrap();
         if r.finished_at.is_none() || (clean && (r.recoveries > 0 || r.wrecks > 0)) {

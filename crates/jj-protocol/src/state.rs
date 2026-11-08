@@ -19,7 +19,8 @@ pub const HUD_UPDATE: u8 = 0x20;
 /// The minor version this build writes. Readers accept any minor: a minor bump only adds meaning to unused flag
 /// bits or HUD fields' trailing options, never moves a byte.
 /// 2: the HUD's derby facts (P1-S10).
-pub const STATE_MINOR: u8 = 2;
+/// 3: the HUD's missed gate (br-8h3u.18).
+pub const STATE_MINOR: u8 = 3;
 pub const BATCH_HEADER_LEN: usize = 7;
 pub const RECORD_LEN: usize = 13;
 /// The `count` field is a `u8`; more sources split into more batches (never truncated).
@@ -236,6 +237,9 @@ pub struct Hud {
     pub tick: Tick,
     /// This seat's derby facts while a derby round is on (P1-S10); `None` in a race.
     pub derby: Option<DerbyHud>,
+    /// The car missed a gate and must go back (br-8h3u.18): the way to it, as a bearing from the car's heading in
+    /// 1/256ths of a turn clockwise seen from above (0 straight ahead, 64 right, 128 behind, 192 left). `None`: on course.
+    pub missed: Option<u8>,
 }
 
 /// A seat's derby standing on its phone (P1-S10, master §10.12): raw points, rank and the round's game time left.

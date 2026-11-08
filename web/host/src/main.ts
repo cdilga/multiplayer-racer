@@ -178,6 +178,9 @@ async function boot(): Promise<void> {
     /** Cars showing a gated-start callout now, and every callout put up (car, outcome), oldest first (R127). */
     launchCallouts: () => world.launchCallouts.active(),
     launchCalloutsShown: () => world.launchCallouts.shown.slice(),
+    /** Cars being pointed back to a gate they missed now (car, gate x/y/z), and every one so far (br-8h3u.18). */
+    missedGates: () => world.missedGates.active(),
+    missedGatesShown: () => world.missedGates.shown.slice(),
     /** Per tile: on-screen size of the other cars (the far car's N px). */
     farCars: () => world.farCars(),
     /** Per tile: which of the world points (x, y, z) its camera has in view (P1-G05: is the debris visible there). */
@@ -339,6 +342,12 @@ async function boot(): Promise<void> {
       // Takedowns (R134, P1-FL19): over the car that wrecked or spun another (its boost just filled).
       const td = (e as { Takedown?: { attacker: number } }).Takedown;
       if (td) world.launchCallouts.pop(td.attacker, 'Takedown', TAKEDOWN_SHOWN_MS);
+      // br-8h3u.18: a car that missed a gate is pointed back to it until it takes it (or the race ends).
+      const mg = (e as { MissedGate?: { car: number; x_mm: number; y_mm: number; z_mm: number } }).MissedGate;
+      if (mg) world.missedGates.show(mg.car, [mg.x_mm / 1000, mg.y_mm / 1000, mg.z_mm / 1000]);
+      const back = (e as { BackOnCourse?: { car: number } }).BackOnCourse;
+      if (back) world.missedGates.clear(back.car);
+      if ('Results' in e || 'PrepareRequested' in e) world.missedGates.clearAll();
       const dist = e.CameraDistanceSet;
       if (dist) {
         if (dist.distance === 'Near') distOfSeat.set(Number(dist.seat), 'near');

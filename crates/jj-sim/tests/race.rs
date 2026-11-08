@@ -324,6 +324,53 @@ fn a_shortcut_across_the_infield_doesnt_count_progress() {
     assert!(legal < 45.0, "legal progress {legal}");
 }
 
+/// br-8h3u.18: a car that turns up on another part of the lap (a cut across the infield, or a gate missed by more than the
+/// catch-up) is told which gate it missed, and the flag clears when it goes back and takes it: never a silently
+/// stranded lap.
+#[test]
+fn a_car_on_another_part_of_the_lap_is_told_it_missed_a_gate_until_it_goes_back() {
+    let map = greybox();
+    let mut s = sim(&map, 3);
+    let car = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    s.start_race(3);
+    steps(&mut s, S);
+    drive_through(&map, &mut s, car, 0);
+    assert_eq!(s.race().missed_gate(0), None);
+    // Half a lap round: well past the catch-up from gate 1, and nowhere near behind the start line.
+    let far = s.race().course.gate_count() / 2;
+    drive_through(&map, &mut s, car, far);
+    let told = |s: &Sim| {
+        s.race()
+            .events()
+            .iter()
+            .filter(|(_, e)| matches!(e, Event::MissedGate { car: 0, gate: 1 }))
+            .count()
+    };
+    assert_eq!(told(&s), 1, "told once it missed gate 1");
+    assert_eq!(s.race().missed_gate(0), Some(1));
+    assert_eq!(
+        s.race().car(0).unwrap().gates_passed,
+        1,
+        "and the far gate counted nothing"
+    );
+    // Crossing more far gates doesn't tell it again.
+    drive_through(&map, &mut s, car, far + 1);
+    assert_eq!(told(&s), 1);
+    drive_through(&map, &mut s, car, 1);
+    assert_eq!(
+        s.race().missed_gate(0),
+        None,
+        "back on course once it takes the gate"
+    );
+    assert!(
+        s.race()
+            .events()
+            .iter()
+            .any(|(_, e)| matches!(e, Event::BackOnCourse { car: 0 }))
+    );
+    assert_eq!(s.race().car(0).unwrap().gates_passed, 2);
+}
+
 #[test]
 fn the_first_finisher_opens_the_30_s_window() {
     let map = greybox();

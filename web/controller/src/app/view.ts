@@ -5,6 +5,7 @@
 import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
 import { TAKEDOWN_SHOWN_MS, TAKEDOWN_TEXT } from '../../../shared/src/takedown';
+import { MISSED_GATE_HINT, MISSED_GATE_TEXT, missedGateDegrees } from '../../../shared/src/missed-gate';
 import { applySeatPattern, icon, paintKit, seatColor } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
@@ -698,6 +699,25 @@ function roundBanner(app: HTMLElement, session: Session): void {
     // R134 (P1-FL19): you took someone down, and your boost is full.
     text = TAKEDOWN_TEXT.Takedown;
     tag = 'takedown';
+  } else if (session.roomPhase === 'Racing' && session.hud?.missed != null) {
+    // br-8h3u.18: the car missed a gate and its lap won't count until it goes back; the arrow points the way, from
+    // where the car is facing (the TV marks the gate and points the car to it too).
+    text = MISSED_GATE_TEXT;
+    tag = 'missed';
+    if (b.dataset.launch !== 'missed' || !b.querySelector('.missed-arrow')) {
+      b.innerHTML =
+        '<svg class="missed-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 13h-5.5v9h-7v-9H3z"/></svg>' +
+        `<span class="missed-text"></span><span class="missed-hint"></span>`;
+    }
+    b.dataset.launch = tag;
+    b.querySelector<SVGElement>('.missed-arrow')!.style.transform = `rotate(${missedGateDegrees(session.hud.missed)}deg)`;
+    const t = b.querySelector<HTMLElement>('.missed-text')!;
+    if (t.textContent !== text) t.textContent = text;
+    const h = b.querySelector<HTMLElement>('.missed-hint')!;
+    if (h.textContent !== MISSED_GATE_HINT) h.textContent = MISSED_GATE_HINT;
+    b.setAttribute('aria-label', `${text}. ${MISSED_GATE_HINT}`);
+    b.hidden = false;
+    return;
   } else if (session.roomPhase === 'Racing' && session.hud?.lap && session.hud.lap[0] > session.hud.lap[1]) {
     // Owner playtest 2026-10-17 (finishing gave no feedback): the HUD's lap runs past the total once the car finishes.
     const pos = session.hud.position;
@@ -718,7 +738,8 @@ function roundBanner(app: HTMLElement, session: Session): void {
   }
   if (tag) b.dataset.launch = tag;
   else delete b.dataset.launch;
-  b.textContent = text;
+  b.removeAttribute('aria-label');
+  if (b.textContent !== text || b.childElementCount > 0) b.textContent = text;
   b.hidden = text === '';
 }
 

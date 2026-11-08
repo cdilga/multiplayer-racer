@@ -6,9 +6,14 @@
 //! plan-given or TUNE; nothing caps cars (R36).
 //!
 //! - **Gates in order.** The route's gates, starting at the finish line, must be crossed in order (forward through the
-//!   gate's line, within its window: half way to the nearest other part of the course, [`GATE_MARGIN_M`] to
-//!   [`GATE_CORRIDOR_M`] past the road's edge). Only the next expected gate counts, so a
-//!   shortcut across the infield earns nothing. Teleports (placements, respawns) never cross a gate.
+//!   gate's line, within its window: the whole corridor beside its road, out to half way to the nearest other part of
+//!   the course, and at least [`GATE_MARGIN_M`] past the road's edge). Only the next expected gate counts (or one a
+//!   little further round, [`GATE_CATCH_UP_M`]), so a shortcut across the infield earns nothing. Teleports
+//!   (placements, respawns) never cross a gate.
+//! - **A missed gate shows.** A car that crosses a gate further round than the catch-up has left its stretch (an
+//!   infield cut, or a gate missed by more than the catch-up): it is flagged as having missed the gate it expects
+//!   ([`Event::MissedGate`], [`Race::missed_gate`]) until it goes back and takes it ([`Event::BackOnCourse`]), so the
+//!   TV and its phone show where to go instead of the lap silently never counting (br-8h3u.18).
 //! - **Legal progress** is the route distance at the last gate passed, plus how far along the route the car is towards
 //!   the next one. That second term comes from projecting only onto the route between those two gates, never the
 //!   nearest point of the whole spline, which a crossing or shortcut would fool.
@@ -67,13 +72,14 @@ pub const RESPAWN_ROLL_PLAN: crate::autopilot::SpeedPlan = crate::autopilot::Spe
 pub const ANCHOR_CLEAR_M: f32 = 15.0;
 pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
-/// Lateral slack beyond the road's half-width for a gate crossing: the least a gate's window reaches.
+/// Lateral slack beyond the road's half-width for a gate crossing: the least a gate's window reaches. Past that, each
+/// gate reaches out to half way to the nearest other part of the course (route points more than [`GATE_OTHER_ROAD_M`]
+/// round the lap), with no cap (owner 2026-10-31: wide lines, cut merges and corner cuts at arcade speed lost gates and
+/// laps never counted; a 20 m cap still lost every lap a wide line ran 21-38 m off centre, br-8h3u.18's lap audit). Any
+/// point on a gate's line within its window is nearer that gate's own road than any other part of the course, so a car
+/// anywhere on the ground beside its own road gets it, and a cut across the infield onto another part of the lap still
+/// meets no gate it can take.
 pub const GATE_MARGIN_M: f32 = 2.0;
-/// The most a gate's window reaches beyond the road's half-width, m (owner 2026-10-31: wide lines, cut merges and corner
-/// cuts at arcade speed lost gates and laps never counted). Each gate reaches out to half way to the nearest other part
-/// of the course (route points more than [`GATE_OTHER_ROAD_M`] round the lap), so a car anywhere on the drivable ground
-/// beside its own road gets it, and a cut across the infield onto another part of the lap still meets no gate it can take.
-pub const GATE_CORRIDOR_M: f32 = 20.0;
 /// Route points at least this far round the lap from a gate are another part of the course, m.
 pub const GATE_OTHER_ROAD_M: f32 = 80.0;
 /// A car that misses a gate (ran wide, flew past) still gets it by crossing a later one at most this far round the route
@@ -90,6 +96,8 @@ pub const ASSIST_MAX: f32 = 30_000.0;
 struct Gate {
     at: usize,
     x: f32,
+    /// The road's height at the gate, m.
+    y: f32,
     z: f32,
     /// Only layered courses need a height window: a car under a gate cannot pass it.
     layer_y: Option<f32>,
@@ -98,7 +106,7 @@ struct Gate {
     /// Unit route tangent (x, z) at the gate.
     tx: f32,
     tz: f32,
-    /// How far either side of the route the gate's line counts a car, m (see [`GATE_CORRIDOR_M`]).
+    /// How far either side of the route the gate's line counts a car, m (see [`GATE_MARGIN_M`]).
     reach: f32,
     /// Route distance from the finish line.
     from_finish: f32,
@@ -117,6 +125,9 @@ pub struct Course {
     /// Set pieces' pits: a car that falls in respawns (jj_map::setpiece).
     pits: Vec<jj_map::setpiece::Pit>,
     ref_lap_ticks: u64,
+    /// How far behind the last gate it took a car can be crossing gates again, m: the furthest any gate's respawn anchor
+    /// stands behind it, plus [`GATE_CATCH_UP_M`] (see [`Event::MissedGate`]).
+    behind_m: f32,
 }
 
 impl Course {
@@ -191,8 +202,8 @@ impl Course {
                 .min_by(|a, b| a.0.total_cmp(&b.0))
                 .map(|(_, j)| m.route.points[j].y as f32 / 1000.0)
         };
-        // A gate's window: half way to the nearest other part of the course, between the road's edge plus
-        // GATE_MARGIN_M and plus GATE_CORRIDOR_M.
+        // A gate's window: half way to the nearest other part of the course, and at least the road's edge plus
+        // GATE_MARGIN_M.
         let reach_at = |at: usize| {
             let half = m.route.points[at].width as f32 / 2000.0;
             let clear = (0..n)
@@ -205,9 +216,10 @@ impl Course {
                         - m.route.points[j].width as f32 / 2000.0
                 })
                 .fold(f32::INFINITY, f32::min);
-            (clear / 2.0).clamp(half + GATE_MARGIN_M, half + GATE_CORRIDOR_M)
+            (clear / 2.0).max(half + GATE_MARGIN_M)
         };
-        let gates = sorted
+        let mut behind_m = 0.0f32;
+        let gates: Vec<Gate> = sorted
             .iter()
             .map(|g| {
                 let at = g.at as usize % n;
@@ -217,6 +229,7 @@ impl Course {
                 Gate {
                     at,
                     x: pts[at].0,
+                    y: m.route.points[at].y as f32 / 1000.0,
                     z: pts[at].1,
                     // On either level of a crossing (a bridge or an overpass leap) a gate counts only at its road's height.
                     layer_y: layered
@@ -232,7 +245,11 @@ impl Course {
                     tz: dz / len,
                     reach: reach_at(at),
                     from_finish: (s[at] - finish_s).rem_euclid(total),
-                    anchor: route_spawn(map, anchor_at(at), 0.0, RESPAWN_LIFT_M),
+                    anchor: {
+                        let a = anchor_at(at);
+                        behind_m = behind_m.max((s[at] - s[a]).rem_euclid(total));
+                        route_spawn(map, a, 0.0, RESPAWN_LIFT_M)
+                    },
                 }
             })
             .collect();
@@ -251,6 +268,7 @@ impl Course {
             kill_y: b.kill_y as f32 / 1000.0,
             pits: jj_map::setpiece::pits(m),
             ref_lap_ticks: u64::from(m.header.ref_lap_ms) * SECOND / 1000,
+            behind_m: behind_m + GATE_CATCH_UP_M,
         }
     }
 
@@ -265,6 +283,11 @@ impl Course {
     /// The route point of gate `i` in race order (0 = the finish line).
     pub fn gate_route_point(&self, i: usize) -> usize {
         self.gates[i].at
+    }
+
+    /// Where gate `i` (race order) stands on the route's centreline, (x, y, z) m (y: the road's height there).
+    pub fn gate_point(&self, i: usize) -> [f32; 3] {
+        [self.gates[i].x, self.gates[i].y, self.gates[i].z]
     }
 
     /// How far either side of the route gate `i` counts a car, m.
@@ -435,6 +458,16 @@ pub enum Event {
     RaceOver {
         why: RaceEnd,
     },
+    /// The car crossed a gate further round than [`GATE_CATCH_UP_M`] past the one it expects: it missed `gate` (race
+    /// order) and must go back for it.
+    MissedGate {
+        car: u32,
+        gate: u32,
+    },
+    /// The car took the gate it had missed.
+    BackOnCourse {
+        car: u32,
+    },
     /// R127 gated start: how this car's launch went. `Early` when it snapped during the countdown (the launch is
     /// forfeited for this start); `Perfect` or `Launch` when it fired inside the start window after GO.
     StartLaunch {
@@ -495,6 +528,9 @@ pub struct CarRace {
     slow: u64,
     /// Ticks in a row over a pit it is racing (see [`Course::over_pit_for`]).
     over_pit: u64,
+    /// The gate (race order) this car missed: it has since crossed one further round than the catch-up allows, so it
+    /// must go back. Cleared when it takes a gate.
+    pub missed: Option<usize>,
     last: Option<CarView>,
 }
 
@@ -551,6 +587,7 @@ impl Race {
             rest_inverted: 0,
             slow: 0,
             over_pit: 0,
+            missed: None,
             last: None,
         });
     }
@@ -561,6 +598,7 @@ impl Race {
         let n = self.course.gates.len();
         if let Some(c) = self.cars.get_mut(car as usize) {
             c.gates_passed = gates;
+            c.missed = None;
             c.last_gate = (gates > 0 && n > 0).then(|| (gates as usize - 1) % n);
             // A wreck respawns at the last gate passed, as in a race (not back on the grid).
             if let Some(g) = c.last_gate {
@@ -692,6 +730,11 @@ impl Race {
         self.cars
             .get(car as usize)
             .is_some_and(|c| c.finished_at.is_some())
+    }
+
+    /// The gate (race order) the car missed and must go back for, if any.
+    pub fn missed_gate(&self, car: u32) -> Option<usize> {
+        self.cars.get(car as usize).and_then(|c| c.missed)
     }
 
     /// A placement (setup or respawn) moved the car: the jump never crosses a gate.
@@ -889,6 +932,27 @@ impl Race {
             }
         }
         let Some((skipped, t)) = hit else {
+            // A gate further round than the catch-up, crossed forward on its own level within its window, means the car
+            // has left its stretch, unless it is one the car already took and a respawn (or a turn back) put it behind.
+            if self.cars[car as usize].missed.is_none() {
+                let last = &self.course.gates[((first + n - 1) % n) as usize];
+                for k in 1..n {
+                    let g = &self.course.gates[((first + k) % n) as usize];
+                    let ahead =
+                        (g.from_finish - expected.from_finish).rem_euclid(self.course.total);
+                    let behind_last =
+                        (last.from_finish - g.from_finish).rem_euclid(self.course.total);
+                    if ahead <= GATE_CATCH_UP_M || behind_last <= self.course.behind_m {
+                        continue;
+                    }
+                    if Self::crossing(g, prev, now).is_some() {
+                        let gate = first % n;
+                        self.cars[car as usize].missed = Some(gate as usize);
+                        self.events.push((tick, Event::MissedGate { car, gate }));
+                        break;
+                    }
+                }
+            }
             return;
         };
         // Where in this tick's step the line was crossed, linearly between the two positions.
@@ -910,7 +974,11 @@ impl Race {
         c.gates_passed += 1;
         c.last_gate = Some(gi);
         c.anchor = anchor;
+        let back = c.missed.take().is_some();
         let passed = c.gates_passed;
+        if back {
+            self.events.push((tick, Event::BackOnCourse { car }));
+        }
         self.events.push((
             tick,
             Event::GatePassed {

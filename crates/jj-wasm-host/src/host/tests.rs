@@ -4662,3 +4662,18 @@ fn host_bots_race_at_their_skill_and_take_places_among_the_seats() {
         "bots score nothing"
     );
 }
+
+/// br-8h3u.18: the phone's way back to a missed gate is a bearing from the car's heading, clockwise as its driver sees it.
+#[test]
+fn the_way_back_to_a_missed_gate_is_a_bearing_from_the_cars_heading() {
+    // Heading 0 faces +z; the driver's right is -x.
+    let at = [0.0, 3.0, 0.0];
+    assert_eq!(bearing_256(at, 0.0, 0.0, 10.0), 0, "ahead");
+    assert_eq!(bearing_256(at, 0.0, -10.0, 0.0), 64, "right");
+    assert_eq!(bearing_256(at, 0.0, 0.0, -10.0), 128, "behind");
+    assert_eq!(bearing_256(at, 0.0, 10.0, 0.0), 192, "left");
+    // Facing +x (heading a quarter turn): a gate at +z is to the driver's right.
+    let h = core::f32::consts::FRAC_PI_2;
+    assert_eq!(bearing_256(at, h, 0.0, 10.0), 64);
+    assert_eq!(bearing_256(at, h, 10.0, 0.0), 0);
+}

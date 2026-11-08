@@ -34,6 +34,7 @@ import { CameraRig, PROFILE as CAMERA, type CameraMode, type Obstacle } from '..
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 import { IdentifyMarks } from './identify';
 import { LaunchCallouts } from './launch-callout';
+import { MissedGates } from './missed-gate';
 import { OVERVIEW, OverviewRig, type OverviewPose } from '../camera/overview/rig';
 import { OverviewRings } from '../ui/overview/rings';
 import { Flyover } from '../camera/flyover';
@@ -161,6 +162,8 @@ export class World {
   /** Identify's number over the car, in every view (P1-R06). */
   readonly identifyMarks = new IdentifyMarks(this.scene);
   readonly launchCallouts = new LaunchCallouts(this.scene);
+  /** br-8h3u.18: the way back to a missed gate (a beacon on the gate, an arrow over the car). */
+  readonly missedGates = new MissedGates(this.scene, (car) => this.vehicles?.paintOf(car) ?? '#FF7A1A');
   readonly camera = new PerspectiveCamera(50, 16 / 9, 0.5, 2000);
   readonly interp = new Interpolator();
   vehicles: VehicleRenderer | null = null;
@@ -346,6 +349,8 @@ export class World {
       this.map.dispose();
     }
     this.props?.dispose();
+    // A new track: no car is being pointed back to a gate of the old one.
+    this.missedGates.clearAll();
     this.map = staged.renderer.addTo(this.scene);
     this.props = new PropRenderer(this.scene, map);
     this.mapObstacles = this.map.obstacles();
@@ -650,6 +655,7 @@ export class World {
     this.vehicles?.update(drawn);
     this.identifyMarks.update(drawn);
     this.launchCallouts.update(drawn);
+    this.missedGates.update(drawn);
     const r = this.backend.renderer;
     const st = this.stats;
     r.shadowMap.needsUpdate = true;
@@ -676,6 +682,7 @@ export class World {
       r.setScissorTest(false);
       r.setViewport(0, 0, st.width, st.height);
       this.launchCallouts.fit(this.camera);
+      this.missedGates.fit(this.camera);
       this.backend.render(this.scene, this.camera, this.replayCamera || fly ? undefined : { hazeBeyond: this.overviewDepth });
       if (!fly && this.nameplatesOn) this.nameplates(s, this.camera, { x: 0, y: 0, w: st.width, h: st.height }, 0, -1, overview);
       st.lods = [lod];
@@ -781,6 +788,7 @@ export class World {
         this.stats.practiceShadowPasses = (this.stats.practiceShadowPasses ?? 0) + 1;
       }
       this.launchCallouts.fit(cam);
+      this.missedGates.fit(cam);
       this.backend.render(this.scene, cam);
       if (this.nameplatesOn) this.nameplates(s, cam, t, t.seat, i);
       if (mode === 'fp' && i >= 0) {

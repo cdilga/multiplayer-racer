@@ -681,6 +681,13 @@ impl Host {
                         .min(u64::from(u16::MAX)) as u16,
                 })
             });
+            // br-8h3u.18: the way back to a missed gate, from the car's heading (see `Hud::missed`).
+            let missed = car.filter(|_| race.over.is_none()).and_then(|c| {
+                let gate = race.missed_gate(c.0)?;
+                let st = self.sim.car_state(c)?;
+                let [gx, _, gz] = race.course.gate_point(gate);
+                Some(bearing_256(st.position, st.heading, gx, gz))
+            });
             let hud = Hud {
                 position,
                 lap,
@@ -689,6 +696,7 @@ impl Host {
                 pause,
                 tick: Tick(tick),
                 derby,
+                missed,
             };
             out.push(SimToMain::Outbound {
                 endpoint,
@@ -1829,8 +1837,36 @@ impl Host {
                         });
                     }
                 }
+                // br-8h3u.18: a car that missed a gate is shown the way back on the TV (and its phone, through the HUD).
+                Event::MissedGate { car, gate } => {
+                    let [x, y, z] = self.sim.race().course.gate_point(gate as usize);
+                    let mm = |v: f32| (v * 1000.0).round() as i32;
+                    let seat = self.seat_of_car(car);
+                    self.events.push(SimEvent::MissedGate {
+                        car,
+                        seat,
+                        x_mm: mm(x),
+                        y_mm: mm(y),
+                        z_mm: mm(z),
+                    });
+                }
+                Event::BackOnCourse { car } => {
+                    let seat = self.seat_of_car(car);
+                    self.events.push(SimEvent::BackOnCourse { car, seat });
+                }
                 Event::RaceOver { .. } => {
                     over = true;
+                    // The race is done: no car is still being pointed back to a gate.
+                    let lost: Vec<u32> = self
+                        .sim
+                        .cars()
+                        .map(|c| c.0)
+                        .filter(|&c| self.sim.race().missed_gate(c).is_some())
+                        .collect();
+                    for car in lost {
+                        let seat = self.seat_of_car(car);
+                        self.events.push(SimEvent::BackOnCourse { car, seat });
+                    }
                 }
                 _ => {}
             }
@@ -2033,6 +2069,19 @@ impl Host {
             .and_then(|p| p.geometry.parts.get(usize::from(part)))
             .map_or([0.0; 3], |g| g.pivot)
     }
+}
+
+/// The way from a car at `p` heading `heading` (radians about +y, 0 = +z) to the point (`x`, `z`): 1/256ths of a turn
+/// clockwise as its driver sees it (0 straight ahead, 64 to the right, 128 behind, 192 to the left).
+fn bearing_256(p: [f32; 3], heading: f32, x: f32, z: f32) -> u8 {
+    let (dx, dz) = (x - p[0], z - p[2]);
+    // Not sim state (the phone's arrow only), so the platform's maths is fine here.
+    let (s, c) = heading.sin_cos();
+    // Forward (sin h, cos h); the driver's right is forward × up = (−cos h, sin h).
+    let along = dx * s + dz * c;
+    let right = -dx * c + dz * s;
+    let turn = right.atan2(along) / core::f32::consts::TAU;
+    ((turn * 256.0).round() as i32).rem_euclid(256) as u8
 }
 
 /// `p + q · v` for the unit quaternion `q` = (x, y, z, w).

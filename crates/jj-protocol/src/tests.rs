@@ -114,6 +114,7 @@ fn state_samples() -> Vec<(&'static str, StateMessage)> {
                     pause: None,
                     tick: Tick(7_200),
                     derby: None,
+                    missed: None,
                 },
             }),
         ),
@@ -129,6 +130,7 @@ fn state_samples() -> Vec<(&'static str, StateMessage)> {
                     pause: Some(PauseReason::HostHidden),
                     tick: Tick(9),
                     derby: None,
+                    missed: None,
                 },
             }),
         ),
@@ -148,6 +150,23 @@ fn state_samples() -> Vec<(&'static str, StateMessage)> {
                         rank: 2,
                         left_s: 95,
                     }),
+                    missed: None,
+                },
+            }),
+        ),
+        (
+            "hud-missed-gate",
+            StateMessage::Hud(HudUpdate {
+                minor: STATE_MINOR,
+                hud: Hud {
+                    position: Some(4),
+                    lap: Some((2, 3)),
+                    boost: 40,
+                    connection: Some(Connection::Direct),
+                    pause: None,
+                    tick: Tick(8_400),
+                    derby: None,
+                    missed: Some(150),
                 },
             }),
         ),
@@ -705,6 +724,17 @@ fn event_samples() -> Vec<SimEvent> {
             seat: Some(SeatId(3)),
             wreck: false,
         },
+        SimEvent::MissedGate {
+            car: 4,
+            seat: Some(SeatId(5)),
+            x_mm: -120_500,
+            y_mm: 31_250,
+            z_mm: 88_000,
+        },
+        SimEvent::BackOnCourse {
+            car: 4,
+            seat: Some(SeatId(5)),
+        },
     ]
 }
 
@@ -871,7 +901,7 @@ fn every_variant_has_a_golden() {
     assert_eq!(ui_samples().len(), 15, "every UiCommand variant");
     assert_eq!(
         event_samples().len(),
-        15,
+        17,
         "every SimEvent variant, plus extra episode shapes"
     );
 }

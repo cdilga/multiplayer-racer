@@ -362,6 +362,21 @@ pub enum SimEvent {
         seat: Option<SeatId>,
         wreck: bool,
     },
+    /// br-8h3u.18: car `car` missed a gate (it turned up on the course further round than the race's catch-up allows) and
+    /// must go back: the TV marks the gate at (`x_mm`, `y_mm`, `z_mm`) and points the car to it until
+    /// [`SimEvent::BackOnCourse`]. Every car's shows (a bot's too); `seat` is its player's, if it has one.
+    MissedGate {
+        car: u32,
+        seat: Option<SeatId>,
+        x_mm: i32,
+        y_mm: i32,
+        z_mm: i32,
+    },
+    /// The car took the gate it had missed (or its race ended): the TV's mark for it goes.
+    BackOnCourse {
+        car: u32,
+        seat: Option<SeatId>,
+    },
 }
 
 /// How a landing went (R129, R16): clean boosts, OK costs nothing, bad loses speed, a crash is righted.
