@@ -109,3 +109,13 @@
   7058ebb7), eris's pkg from an earlier run no longer matches the pushed tree.
 - **Fix:** start a browser run on eris with `scripts/build-host-wasm.sh` when the sim, profiles or roster changed since the
   last build there.
+
+## RCH on eris: /tmp cleanup breaks the cargo cache (2026-11-09, br-8h3u.18)
+
+eris's systemd-tmpfiles ages out files in /tmp after 10 days (`q /tmp 1777 root root 10d`), and RCH keeps its cargo
+registry at `/tmp/rch-cargo-cache-eris`. Old extracted crates lose their source files but keep `.cargo-ok`, so cargo
+fails with "failed to parse manifest ... no targets specified" (247 of 787 crates on 2026-11-09). Fix at the time: move
+`/tmp/rch-cargo-cache-eris/registry/src/index.crates.io-*` aside (a literal /tmp path; dcg blocks `rm -rf` and
+variable paths) and cargo re-extracts. Durable fix (owner, root on eris): a tmpfiles exclusion such as
+`x /tmp/rch-*` in `/etc/tmpfiles.d/rch.conf`, or RCH's cache outside /tmp. Also: `ssh eris` (LAN) can time out while
+`ssh eris-remote` works; RCH doesn't forward env vars, so use `rch exec -- env JJ_SEEDS=30 cargo ...`.
