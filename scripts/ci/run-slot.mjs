@@ -21,7 +21,17 @@ try {
   durations = JSON.parse(readFileSync(join(import.meta.dirname, 'durations.json'), 'utf8'));
 } catch {}
 const bin = resolve('.ci-bin');
-const base = { ...process.env, JJ_BIN: `${bin}/jj`, JJ_SERVER_BIN: `${bin}/jj-server`, ...(existsSync(`${bin}/jj-input-helper`) ? { JJ_INPUT_HELPER_BIN: `${bin}/jj-input-helper` } : {}) };
+// A slot on a runner that passes a GPU through (eris-browser, docs/infra/ci-runners.md) renders the journeys on it
+// (JJ_CHROMIUM_GPU=render: same assertions as SwiftShader, rendering off the CPU), so more slots fit on a host.
+const gpuSlot = !process.env.JJ_CHROMIUM_GPU && spawnSync('nvidia-smi', ['-L'], { encoding: 'utf8' }).status === 0;
+if (gpuSlot) console.log(`slot ${slot}: GPU present, journeys render with JJ_CHROMIUM_GPU=render`);
+const base = {
+  ...process.env,
+  ...(gpuSlot ? { JJ_CHROMIUM_GPU: 'render' } : {}),
+  JJ_BIN: `${bin}/jj`,
+  JJ_SERVER_BIN: `${bin}/jj-server`,
+  ...(existsSync(`${bin}/jj-input-helper`) ? { JJ_INPUT_HELPER_BIN: `${bin}/jj-input-helper` } : {}),
+};
 const envFor = (f) => {
   if (f.startsWith('web/host/tests/')) return { JJ_NO_WEBKIT: '1', JJ_NO_CAPTURES: '1' };
   if (f.startsWith('web/shared/transport/tests/')) return { JJ_COTURN_REQUIRED: '1' };

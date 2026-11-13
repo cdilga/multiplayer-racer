@@ -14,6 +14,16 @@ The Gitea Actions runners at `http://192.168.11.12:3001` are instance-wide and s
 | truenas-shared, truenas-general-2 | TrueNAS | ubuntu-latest | 1 each | | none |
 | jammers-docker-truenas | TrueNAS | jammers-docker, jammers-deploy | 1 | host Docker socket | |
 | **eris-gpu** (2026-10-07) | eris, host executor, user systemd unit | gpu, gpu-eris | 2 | none (runs as `cdilga`) | eris's own `~/.cargo`, `~/.cache/jj-ci` |
+| **eris-browser** (2026-11-14) | eris, docker executor, user systemd unit | browser | 4 | `--gpus=all`, 8 GB, shm 2 GB | `~/.cache/eris-browser-cache` (build tarballs only) |
+
+**eris-browser** (br-15gd): four CI browser slots whose containers get eris's RTX 2080 Super (`--gpus=all
+--env=NVIDIA_DRIVER_CAPABILITIES=all`; eris's Docker has the NVIDIA runtime and CDI). `scripts/ci/run-slot.mjs` sees
+`nvidia-smi` and runs the journeys with `JJ_CHROMIUM_GPU=render`: ANGLE on Vulkan, but the files assert exactly what they
+assert on SwiftShader (hardware-only checks stay in gpu.yml). Four SwiftShader slots held triton's 20 cores at 95 % in run
+15095, so CPU slots can't grow; GPU slots can. eris is sometimes off: its slots then queue behind triton-ci and
+truenas-ci. Config `~/.local/share/eris-browser-runner/config.yaml`, unit `eris-browser-runner.service`
+(`systemctl --user …`); the image is built there by `scripts/ci/ci-image.sh eris`. Undo: `systemctl --user disable --now
+eris-browser-runner`, remove the unit, config dir and cache dir, then delete the runner entry.
 
 ## Why `browser` is its own label, a few slots a host, with no CPU quota
 

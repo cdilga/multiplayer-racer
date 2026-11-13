@@ -2,12 +2,15 @@
 // `JJ_CHROMIUM_GPU=1` renders the host through ANGLE on Vulkan instead (eris's RTX 2080 Super headless): timing
 // receipts that depend on host frame time (Identify press-to-visible) are measured that way and say so.
 // `JJ_CHROMIUM_GPU=native` leaves the GL choice to Chromium (a Mac's Metal GPU).
+// `JJ_CHROMIUM_GPU=render` (a CI browser slot that sees a GPU, scripts/ci/run-slot.mjs): the same ANGLE-on-Vulkan pages,
+// but `gpu` stays false, so the file asserts exactly what it asserts on a SwiftShader slot. The GPU only takes the
+// rendering off the runner's CPU; hardware-only checks stay in gpu.yml (br-15gd).
 import { afterEach } from 'node:test';
 const mode = process.env.JJ_CHROMIUM_GPU ?? '0';
 export const gpu = mode === '1' || mode === 'native';
 export const chromiumArgs = [
   '--disable-features=WebRtcHideLocalIpsWithMdns',
-  ...(mode === '1'
+  ...(mode === '1' || mode === 'render'
     ? ['--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist', '--enable-gpu']
     : mode === 'native'
       ? ['--ignore-gpu-blocklist', '--enable-gpu']

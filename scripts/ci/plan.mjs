@@ -262,9 +262,11 @@ const gpu = journeyFiles.filter((f) => GPU.includes(f));
 // Pack the targets into the workflow's static matrix of browser slots (Gitea can't build a matrix from job outputs):
 // longest first onto the least-loaded slot, so with enough slots every file gets its own runner. Durations are the
 // `slot-timing` lines of earlier runs (scripts/ci/durations.json); an unknown file counts as 60 s.
-// 7 slots = the `browser` runners' capacity (4 on triton, 3 on the slower TrueNAS): more SwiftShader pages at once than the
-// hosts have cores made every page 2-4x slower and the timing tests fail (run 1461).
-const SLOTS = Number(opt('--slots') ?? 7);
+// 11 slots = the `browser` runners' capacity: 4 on triton and 3 on the slower TrueNAS (SwiftShader: more pages at once than
+// the hosts have cores made every page 2-4x slower and the timing tests fail, run 1461; four slots alone hold triton's 20
+// cores at 95 %, run 15095), plus 4 on eris, whose slots render on its GPU (br-15gd). When eris is off its 4 slots queue
+// behind the other 7. Keep ci.yml's browser matrix the same length.
+const SLOTS = Number(opt('--slots') ?? 11);
 let durations = {};
 try {
   durations = JSON.parse(readFileSync(join(repoRoot, 'scripts/ci/durations.json'), 'utf8'));

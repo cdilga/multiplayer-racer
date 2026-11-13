@@ -41,6 +41,15 @@ scripts/ci/toolchain.sh >&2
 source scripts/ci/cargo-memory.sh
 
 t() { local s=$SECONDS; "$@"; echo "build-web: $((SECONDS - s))s  $*" >&2; }
+native=(cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server -p jj-input-helper --bin jj-input-helper)
+# The native executables don't depend on the WASM or the pages: with the memory for two compilers (cargo-memory.sh left
+# the job uncapped) they build alongside, in their own target dir (one cargo lock each), saving ~2 min (br-15gd).
+native_dir=$CARGO_TARGET_DIR
+if [[ -z ${CARGO_BUILD_JOBS:-} ]]; then
+    native_dir=$CARGO_TARGET_DIR-native
+    (CARGO_TARGET_DIR=$native_dir t "${native[@]}" >&2) &
+    native_pid=$!
+fi
 t scripts/build-host-wasm.sh >&2
 t npm ci --no-audit --no-fund --prefer-offline >&2
 t npm --prefix web ci --no-audit --no-fund --prefer-offline >&2
@@ -53,11 +62,11 @@ t node web/landing/tests/bundle-check.mjs web/dist >&2
 t npm --prefix web run qualify >&2
 t node scripts/ci/origin-scan.mjs web/dist web/dist-qualify >&2
 t npx --prefix web vite build --config web/host/tests/vite.config.ts >&2
-t cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server -p jj-input-helper --bin jj-input-helper >&2
+if [[ -n ${native_pid:-} ]]; then wait "$native_pid"; else t "${native[@]}" >&2; fi
 mkdir -p .ci-bin
 # Snapshot and validate all three native executables before archiving (br-hytm, br-dsq4).
 # The input helper must use the same explicit read/write path, not a separate filesystem copy.
-t node scripts/ci/native-check.mjs --copy "$CARGO_TARGET_DIR/debug" .ci-bin >&2
+t node scripts/ci/native-check.mjs --copy "$native_dir/debug" .ci-bin >&2
 
 [[ $store == on ]] || { echo "build-web: built in place (JJ_STORE=off)"; exit 0; }
 # mktemp, not $$: jobs are containers sharing this cache dir, and their shell PIDs collide.
