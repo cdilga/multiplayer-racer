@@ -140,6 +140,14 @@ impl Relief {
         let (u, lat) = self.local(x, z);
         u >= -pad && u <= self.length() + pad && libm::fabs(lat) <= self.half + self.side + pad
     }
+
+    /// A circle round (x, z) that holds the whole footprint grown by `pad`: no point outside it is `covers`ed.
+    fn reach(&self, pad: f64) -> f64 {
+        if !self.kind.is_jump() {
+            return self.half + pad;
+        }
+        libm::hypot(self.length() / 2.0 + pad, self.half + self.side + pad)
+    }
 }
 
 /// One of the island's rocks: centre, radius and height, m.
@@ -209,26 +217,45 @@ impl Taken {
         }
     }
 
-    fn cells(&self) -> impl Iterator<Item = (usize, f64, f64)> + '_ {
+    /// The cells within `reach` m (a cell more, for rounding) of (cx, cz): every cell a footprint inside that circle can
+    /// cover. A cell outside it is covered by nothing that `fits`/`take` ask about, so scanning only these is the same
+    /// answer as scanning the whole grid (which cost ~13 min for a 1000-car bowl at the tests' opt-level).
+    fn cells_near(
+        &self,
+        (cx, cz, reach): (f64, f64, f64),
+    ) -> impl Iterator<Item = (usize, f64, f64)> + '_ {
         let side = 2 * self.half + 1;
-        (0..side * side).map(move |k| {
-            let (i, j) = (k / side - self.half, k % side - self.half);
-            (k as usize, i as f64 * CELL_M, j as f64 * CELL_M)
-        })
+        let span = |c: f64| {
+            let lo = (libm::floor((c - reach) / CELL_M) as i64 - 1).max(-self.half);
+            let hi = (libm::ceil((c + reach) / CELL_M) as i64 + 1).min(self.half);
+            lo..=hi
+        };
+        let (is, js) = (span(cx), span(cz));
+        is.flat_map(move |i| js.clone().map(move |j| (i, j)))
+            .map(move |(i, j)| {
+                let k = (i + self.half) * side + (j + self.half);
+                (k as usize, i as f64 * CELL_M, j as f64 * CELL_M)
+            })
     }
 
     /// Whether `covers` fits: its footprint grown by `pad` holds no taken cell and its own footprint stays inside the field.
-    fn fits(&self, pad: f64, covers: impl Fn(f64, f64, f64) -> bool) -> bool {
-        self.cells().all(|(k, x, z)| {
+    /// `near` is (x, z, reach): a circle holding that grown footprint.
+    fn fits(
+        &self,
+        pad: f64,
+        near: (f64, f64, f64),
+        covers: impl Fn(f64, f64, f64) -> bool,
+    ) -> bool {
+        self.cells_near(near).all(|(k, x, z)| {
             let inside = libm::hypot(x, z) <= self.radius;
             (!covers(x, z, pad) || !self.cells[k]) && (inside || !covers(x, z, 0.0))
         })
     }
 
-    /// Marks `covers`'s footprint grown by `pad` (and a cell more) as taken.
-    fn take(&mut self, pad: f64, covers: impl Fn(f64, f64, f64) -> bool) {
+    /// Marks `covers`'s footprint grown by `pad` (and a cell more) as taken. `near` holds that footprint, as for `fits`.
+    fn take(&mut self, pad: f64, near: (f64, f64, f64), covers: impl Fn(f64, f64, f64) -> bool) {
         let marks: Vec<usize> = self
-            .cells()
+            .cells_near(near)
             .filter(|&(_, x, z)| covers(x, z, pad + CELL_M))
             .map(|(k, _, _)| k)
             .collect();
@@ -313,7 +340,8 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
         }]
     };
     for rock in &rocks {
-        taken.take(LANE_M / 2.0, |x, z, pad| {
+        let near = (rock.x, rock.z, rock.r + LANE_M / 2.0 + CELL_M);
+        taken.take(LANE_M / 2.0, near, |x, z, pad| {
             libm::hypot(x - rock.x, z - rock.z) <= rock.r + pad
         });
     }
@@ -348,8 +376,9 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
                 j.x = snap(rho * libm::cos(a), 0.25);
                 j.z = snap(rho * libm::sin(a), 0.25);
                 j.dir = [libm::cos(h), libm::sin(h)];
-                if taken.fits(LANE_M / 2.0, |x, z, pad| j.covers(x, z, pad)) {
-                    taken.take(LANE_M / 2.0, |x, z, pad| j.covers(x, z, pad));
+                let near = (j.x, j.z, j.reach(LANE_M / 2.0 + CELL_M));
+                if taken.fits(LANE_M / 2.0, near, |x, z, pad| j.covers(x, z, pad)) {
+                    taken.take(LANE_M / 2.0, near, |x, z, pad| j.covers(x, z, pad));
                     relief.push(j);
                     placed = true;
                     break;
@@ -408,8 +437,9 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
                 let rho = libm::sqrt(rng.range(lo * lo, hi * hi));
                 m.x = snap(rho * libm::cos(a), 0.25);
                 m.z = snap(rho * libm::sin(a), 0.25);
-                if taken.fits(BUMP_PAD_M, |x, z, pad| m.covers(x, z, pad)) {
-                    taken.take(BUMP_PAD_M, |x, z, pad| m.covers(x, z, pad));
+                let near = (m.x, m.z, m.reach(BUMP_PAD_M + CELL_M));
+                if taken.fits(BUMP_PAD_M, near, |x, z, pad| m.covers(x, z, pad)) {
+                    taken.take(BUMP_PAD_M, near, |x, z, pad| m.covers(x, z, pad));
                     relief.push(m);
                     break 'sizes;
                 }
