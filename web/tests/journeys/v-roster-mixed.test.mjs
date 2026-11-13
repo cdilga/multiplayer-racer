@@ -133,7 +133,14 @@ test('two phones pick a Cruz Missile and a Tradie Ute; each car has its own prof
   await host.locator('.jj-tune-toggle').click();
   await host.locator('[data-tune-vehicle]').selectOption('tradie-ute');
   const field = host.locator('[data-field="max_engine_force"]');
-  await wait(host, (v) => window.__jjTune.inspect().current.max_engine_force === v, byVehicle[1].maxEngineForce, 10_000);
+  // The panel's periodic refresh can take the host's new numbers into `current` before choose() repaints the rows (CI run
+  // 17027 read the input in between): wait for both the state and the row a player sees.
+  await wait(
+    host,
+    (v) => window.__jjTune.inspect().current.max_engine_force === v && Number(document.querySelector('[data-field="max_engine_force"]')?.value) === v,
+    byVehicle[1].maxEngineForce,
+    10_000,
+  );
   assert.equal(Number(await field.inputValue()), byVehicle[1].maxEngineForce, "the rows show the ute's tuning");
   await shot(host, 'tv-tuning-ute-1280x720');
   await field.fill('20000');

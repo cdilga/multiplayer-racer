@@ -475,6 +475,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     resultsObserver?.disconnect();
     resultsObserver = new ResizeObserver(() => relayout?.());
     resultsObserver.observe(screen.querySelector('.rs-side')!);
+    // The foot grows after the first fit (the vote opens, Keep this track and the best laps fill in), which shrinks the list:
+    // fit the rows again, or the last rows run under the vote (owner-size TV, 6 racers: rows 5-6 hidden, 2026-11-14).
+    resultsObserver.observe(screen.querySelector('.rs-foot')!);
   };
 
   const render = (room: RoomView) => {
