@@ -426,6 +426,8 @@ async function boot(): Promise<void> {
   // moment when the room, an event, a setting or the page changes so menus and resizes still show.
   client.onPause = (reasons) => world.hold(reasons.length > 0);
   client.watchRoom(() => world.invalidate());
+  // The Lobby screen is opaque paper over the whole world (round.css .lobby): under it the world draws only on a change.
+  client.watchRoom((room) => world.cover(roundScreens !== null && (room.phase === 'Lobby' || room.phase === 'Disbanded')));
   client.watchEvents(() => world.invalidate());
   for (const t of ['pointerdown', 'keydown', 'input', 'resize'] as const) addEventListener(t, () => world.invalidate(), { passive: true });
   // Audio (P1-A03/A05/A07) taps the client's snapshot, event and room feeds last, so it wraps whatever the page set.

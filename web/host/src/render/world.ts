@@ -182,6 +182,8 @@ export class World {
   tickTrace: Array<{ at: number; tick: number; newest: number }> | null = null;
   /** Paused (any pause reason): frames are drawn only until `heldUntil` after the last change, then the loop idles. */
   private held = false;
+  /** The Lobby screen covers the whole world (br-15gd): drawn only after a change, as a held world, but not a pause. */
+  private covered = false;
   private heldUntil = 0;
   /** Frames skipped while held (introspection for the pause probe, R90). */
   heldSkips = 0;
@@ -542,6 +544,15 @@ export class World {
     this.invalidate();
   }
 
+  /** An opaque screen (the Lobby) covers the world, or no longer does. Covered, it draws like a held world: only for a
+   *  moment after a change. Drawing at full rate under the Lobby's paper starved software-GL hosts (a lobby layout check
+   *  took 592 s in CI run 15095) and spends a laptop host's battery on frames nobody sees. */
+  cover(on: boolean): void {
+    if (on === this.covered) return;
+    this.covered = on;
+    this.invalidate();
+  }
+
   /** Something visible changed (a resize, a setting, the room, an event): a held world draws for the next 600 ms. */
   invalidate(): void {
     this.heldUntil = performance.now() + 600;
@@ -554,7 +565,7 @@ export class World {
   start(): void {
     const loop = (now: number) => {
       this.raf = requestAnimationFrame(loop);
-      if (this.held && now > this.heldUntil && this.identifyMarks.active().length === 0) {
+      if ((this.held || this.covered) && now > this.heldUntil && this.identifyMarks.active().length === 0) {
         // Idle: no draw, and the gap isn't fed to the frame budget when drawing resumes.
         this.heldSkips++;
         this.lastRaf = 0;
