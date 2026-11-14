@@ -8,10 +8,13 @@
 import { afterEach } from 'node:test';
 const mode = process.env.JJ_CHROMIUM_GPU ?? '0';
 export const gpu = mode === '1' || mode === 'native';
+const GPU_ARGS = ['--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist', '--enable-gpu'];
+/** For files that launch Chromium with its defaults: nothing added, except on a CI slot with a GPU (`render`, br-15gd). */
+export const slotArgs = mode === 'render' ? GPU_ARGS : [];
 export const chromiumArgs = [
   '--disable-features=WebRtcHideLocalIpsWithMdns',
   ...(mode === '1' || mode === 'render'
-    ? ['--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist', '--enable-gpu']
+    ? GPU_ARGS
     : mode === 'native'
       ? ['--ignore-gpu-blocklist', '--enable-gpu']
       : ['--use-gl=swiftshader', '--enable-unsafe-swiftshader']),

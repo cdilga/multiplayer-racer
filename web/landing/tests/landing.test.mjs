@@ -8,6 +8,7 @@ import { after, before, describe, test } from 'node:test';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { analyse } from './bundle-check.mjs';
 import { build, serve } from './lib/site.mjs';
 
@@ -18,7 +19,7 @@ const sites = {};
 let browser;
 
 before(async () => {
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
   const dist = build('./', 'c01-any');
   for (const base of BASES) sites[base] = { dist, ...(await serve(dist, base)) };
 });

@@ -10,6 +10,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { assertTestable, openHost, serve, serveReal, track } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
@@ -39,7 +40,7 @@ async function hostPage(server, query) {
 }
 
 before(async () => {
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
   preview = await serve(dist, 'preview');
 });
 

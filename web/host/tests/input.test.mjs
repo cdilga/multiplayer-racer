@@ -8,6 +8,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { openHost, serve } from './lib/surface.mjs';
 import clusterData from '../src/input/clusters.json' with { type: 'json' };
 
@@ -48,7 +49,7 @@ const fakePads = () => {
 };
 
 before(async () => {
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
   server = await serve(join(repo, 'web/dist'), 'preview');
 });
 

@@ -9,6 +9,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
@@ -18,7 +19,7 @@ let browser;
 let server;
 
 before(async () => {
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
   server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
 });
 

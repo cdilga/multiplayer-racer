@@ -13,6 +13,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const dist = process.env.JJ_DIST_TEST ?? join(repo, 'web/dist-test');
@@ -38,7 +39,7 @@ before(async () => {
     }
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
   evidence.browser = `Chromium ${browser.version()} (Playwright headless), ${process.platform}/${process.arch}`;
 });
 

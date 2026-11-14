@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { build } from '../../node_modules/vite/dist/node/index.js';
 import { serve } from './lib/surface.mjs';
 
@@ -50,7 +51,7 @@ test('Feel Lab applies every field and vehicle with bounded worker readbacks', a
     `);
     await build({ root: dir, configFile: false, publicDir: false, logLevel: 'silent', build: { outDir: join(dir, 'dist') } });
     server = await serve(join(dir, 'dist'));
-    browser = await chromium.launch();
+    browser = await chromium.launch({ args: slotArgs });
     const page = await browser.newPage();
     await page.goto(server.url);
     await page.waitForFunction(() => window.exercise);

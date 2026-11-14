@@ -17,6 +17,7 @@ import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import jsQR from 'jsqr';
 import { chromium, webkit } from 'playwright';
+import { slotArgs } from '../../../tests/journeys/lib/chromium.mjs';
 import { analyse } from '../../../landing/tests/bundle-check.mjs';
 import { build } from '../../../landing/tests/lib/site.mjs';
 import { serveArtUi } from '../../../../art/ui/lib/serve.mjs';
@@ -56,7 +57,7 @@ before(async () => {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   kit = { base: `http://127.0.0.1:${server.address().port}`, close: () => server.close() };
   art = await serveArtUi();
-  browser = await chromium.launch();
+  browser = await chromium.launch({ args: slotArgs });
 });
 after(async () => {
   await browser?.close();

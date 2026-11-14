@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright';
+import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { build } from '../../node_modules/vite/dist/node/index.js';
 import { serve } from './lib/surface.mjs';
 
@@ -36,7 +37,7 @@ test('crowded nameplates retain every label and batch browser layout on creation
     `);
     await build({ root: dir, configFile: false, publicDir: false, logLevel: 'silent', build: { outDir: join(dir, 'dist') } });
     server = await serve(join(dir, 'dist'));
-    browser = await chromium.launch();
+    browser = await chromium.launch({ args: slotArgs });
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     await page.goto(server.url);
     await page.waitForFunction(() => window.paint);
@@ -92,7 +93,7 @@ test('leaders to cars outside the tile stop at its edge, leaving the empty cell 
     `);
     await build({ root: dir, configFile: false, publicDir: false, logLevel: 'silent', build: { outDir: join(dir, 'dist') } });
     server = await serve(join(dir, 'dist'));
-    browser = await chromium.launch();
+    browser = await chromium.launch({ args: slotArgs });
     for (const [w, h] of [[1920, 1080], [844, 390]]) {
       const page = await browser.newPage({ viewport: { width: w, height: h } });
       await page.goto(server.url);
