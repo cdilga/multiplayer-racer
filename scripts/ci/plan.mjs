@@ -50,7 +50,10 @@ const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // These full-resolution journeys run wholly on hardware, without a second SwiftShader copy. R07b's unchanged matrix
 // passes in 24.6 s on RTX 2080; software stalls for 225.8 s on button stability. CI 9255 also spent 301.6 s in Overview
 // and timed out capturing the DPR-3 phone. Keep every test, viewport, cohort and assertion on the GPU lane.
+// lap-lines (br-8h3u.18): its kinematic driver places each car every few ticks, a page round trip behind a host frame;
+// 49 s on the RTX 2080, past 900 s on SwiftShader even at a quarter resolution (CI 17118, eris).
 const GPU_ONLY = new Set([
+  'web/tests/journeys/lap-lines.test.mjs',
   'web/tests/journeys/r07b-join-card.test.mjs',
   'web/tests/journeys/r08-phone-host.test.mjs',
   'web/tests/journeys/r11-overview.test.mjs',
