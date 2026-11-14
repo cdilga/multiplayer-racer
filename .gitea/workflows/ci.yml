@@ -58,6 +58,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - run: npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
       # The checks lane, one script with the verifier's local runner (scripts/beads/batch-verify.sh).
       - name: Checks (tokens, grid, cues, engine bundle, look recipes, surface strips, vehicle bake)
@@ -74,6 +82,14 @@ jobs:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
@@ -106,6 +122,14 @@ jobs:
       JJ_PARTITION: ${{ matrix.part }}/3
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
@@ -126,6 +150,14 @@ jobs:
       JJ_STORE_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
@@ -148,6 +180,14 @@ jobs:
       JJ_STORE_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
@@ -182,6 +222,14 @@ jobs:
       IMAGE: 127.0.0.1:3001/cdilga/jj-server
     steps:
       - uses: actions/checkout@v4
+        # br-15gd: no job reads docs/evidence (tests write evidence to scratch; plan.mjs treats docs/ as never an input),
+        # and it is most of the tree's bytes (~650 MB, 8000 files): every job skipped ~1-2 min fetching and writing it.
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/evidence/
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
