@@ -254,3 +254,14 @@ probe reproduces it outside the game. It is an unsupported-OS browser-runtime
 failure, not a failed physics assertion. Preserve the evidence, reproduce the
 unchanged complete journey, and use at most the one permitted infrastructure
 retry. Do not disable WebKit or alter gameplay/deadlines to make it disappear.
+
+Sparse/blobless checkouts (br-15gd, run 17080, reverted in 15c4066d): `filter: blob:none` plus a sparse
+checkout that skipped `docs/evidence/` cut actions/checkout from ~2 min to ~10 s, but (1) the checks job
+reads `docs/evidence/P1-V-*/baseline/model.js` (vehicle checks), so docs/ is not "never an input" for every
+job, and (2) in a blobless clone every later `git lfs pull` reads its pointer blobs one lazy fetch at a time:
+build 29 min, image 26 min, checks 27 min. Only a job that neither pulls LFS nor reads docs can take it.
+
+GPU browser slots (br-15gd): four SwiftShader slots hold triton's 20 cores at 95 %, so more CPU slots don't
+help. eris-browser passes its RTX 2080 Super into the job container; run-slot.mjs sets
+`JJ_CHROMIUM_GPU=render` there (GPU rendering, identical assertions). A journey that races in real time
+takes the same wall time on a GPU; the gain is that the host's CPU is free for more slots at once.
