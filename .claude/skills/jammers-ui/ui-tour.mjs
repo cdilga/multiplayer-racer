@@ -52,6 +52,11 @@ try {
     await phone.locator('#name').fill(name);
     await phone.getByRole('button', { name: 'Join the race' }).click();
     await until(phone, () => window.__jjController.inspect().phase === 'playing');
+    // A joined phone opens on the vehicle picker (Use this vehicle) before Ready shows.
+    await shot(phone, `phone-${w}x${h}-picker`);
+    const use = phone.getByRole('button', { name: 'Use this vehicle' });
+    if (await use.isVisible().catch(() => false)) await use.click();
+    await phone.getByRole('button', { name: /^Ready/ }).waitFor({ timeout: 30_000 });
     await shot(phone, `phone-${w}x${h}-joined`);
     phones.push(phone);
   }

@@ -26,8 +26,8 @@ scp 'eris:Work/runs/ui-demo/tour/*.png' <a scratch dir>/    # then Read them
 
 `ui-tour.mjs` (beside this file) opens the host at 1920x1080 with `?room&test=live`, waits for `__jjNet.code()` and
 the Lobby, joins Davo on a 412x915 phone and Shazza on a 915x412 phone through the real Join form, readies both and waits
-for `Running`. Stated result: nine `captured …png` lines (`tv-1920x1080-lobby-empty`, `phone-412x915-join`,
-`phone-412x915-joined`, `phone-915x412-join`, `phone-915x412-joined`, `tv-1920x1080-lobby-two`, `tv-1920x1080-race`,
+for `Running`. Stated result: eleven `captured …png` lines (`tv-1920x1080-lobby-empty`, `phone-412x915-join`, `phone-412x915-picker`,
+`phone-412x915-joined`, `phone-915x412-join`, `phone-915x412-picker`, `phone-915x412-joined`, `tv-1920x1080-lobby-two`, `tv-1920x1080-race`,
 `phone-412x915-race`, `phone-915x412-race`) and `ui-tour: PASS`. The race capture shows two tiles (#1 Davo red, #2
 Shazza blue, "1st Lap 1/3"), the footer with the room code and QR; the portrait phone shows its HUD with "Turn
 sideways" over the sticks (portrait is the fallback, landscape the intended grip); the landscape "joined" capture shows
