@@ -285,8 +285,39 @@ fn generated_crossing_bank_validates_without_flattening_or_discarding_the_family
     }
 }
 
+// Bots lap both levels of every crossing, without recovery, and replay exactly: one test per recipe case (each with every
+// roster vehicle), so the runner spreads the bank over its threads and CI partitions (br-15gd: as one test it ran 685 s).
 #[test]
-fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_eight_town() {
+    crossing_bank(0);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_eight_rocks() {
+    crossing_bank(1);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_eight_outback_dirt() {
+    crossing_bank(2);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_eight_outback_bitumen() {
+    crossing_bank(3);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_eight_all_biomes() {
+    crossing_bank(4);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_flowing_rocks() {
+    crossing_bank(5);
+}
+#[test]
+fn bots_lap_both_levels_without_recovery_and_replay_exactly_flowing_all_biomes() {
+    crossing_bank(6);
+}
+
+/// The crossing bank's case `case` (the seven recipe cases below, every roster vehicle each).
+fn crossing_bank(case: usize) {
     let eight = data();
     // An ordinary family's loop-over crossings (br-xlvx.10.2) as well as the figure eight's.
     let mut flowing = GeneratorData::shipped().clone();
@@ -308,7 +339,7 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
         Biome::OutbackDirt,
         Biome::OutbackBitumen,
     ];
-    for (d, recipe) in [
+    let cases = [
         (&eight, vec![Biome::Town]),
         (&eight, vec![Biome::Rocks]),
         (&eight, vec![Biome::OutbackDirt]),
@@ -316,7 +347,13 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
         (&eight, all.clone()),
         (&flowing, vec![Biome::Rocks]),
         (&flowing, all.clone()),
-    ] {
+    ];
+    assert_eq!(
+        cases.len(),
+        7,
+        "each case has its own test above: add one for a new case"
+    );
+    for (d, recipe) in cases.into_iter().skip(case).take(1) {
         // Every roster vehicle (br-xlvx.10: bots of every roster vehicle lap both levels), each on its own seed of the
         // recipe so the bank covers several courses: from seed `vi % 3`, the first that crosses itself (a loop-over lap
         // crosses on most seeds, not all; the crossing-rate bank above measures that).
@@ -429,7 +466,7 @@ fn bots_lap_both_levels_without_recovery_and_replay_exactly() {
     if let Ok(dir) = std::env::var("JJ_EVIDENCE_DIR") {
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
-            format!("{dir}/crossing-laps.json"),
+            format!("{dir}/crossing-laps-{case}.json"),
             serde_json::to_vec_pretty(&rows).unwrap(),
         )
         .unwrap();
