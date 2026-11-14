@@ -124,8 +124,9 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await shot(host, { path: `${CAPTURE}/race-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Remove player' }).click();
     await host.getByRole('button', { name: 'Resume' }).click();
-    const removedAt = (await host.evaluate(() => window.__jjTest.observe())).tick;
     await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 2), null, 10_000);
+    // Counted from the removal landing, not the click: a fast (GPU) host ran 45 ticks before the seat went (CI 17209).
+    const removedAt = (await host.evaluate(() => window.__jjTest.observe())).tick;
     await paint(host);
     await wait(host, () => document.querySelectorAll('.hud-tile[data-seat]').length === 3);
     assert.deepEqual((await seats(host)).sort(), [1, 3, 4]);
