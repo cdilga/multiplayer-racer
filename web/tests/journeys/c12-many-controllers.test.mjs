@@ -323,9 +323,12 @@ test('24 press-claimed seats on host, two joined laptops and two phones keep inp
   }, 'replug plus press resumes');
   assert.deepEqual(new Map((await seats(host)).map((s) => [s.number, s.car])), carsBefore, 'same seats and cars');
   // Explicit Leave, Remove and leave chord each affect one source, never its carrier's siblings.
+  // Leave and Remove each take a second tap within 3 s.
+  await pages[1].locator('[data-source=pad1] [data-act=leave]').click();
   await pages[1].locator('[data-source=pad1] [data-act=leave]').click();
   await until(host, async () => (await seats(host)).length === 23, 'Leave removes one');
   await pages[2].evaluate(() => window.__padUnplug(0));
+  await pages[2].locator('[data-source=pad1] [data-act=remove]').click();
   await pages[2].locator('[data-source=pad1] [data-act=remove]').click();
   await until(host, async () => (await seats(host)).length === 22, 'Remove removes one');
   await pages[3].evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: true, 9: true }));

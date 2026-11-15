@@ -210,6 +210,7 @@ test('unplug = that seat autopilots, held, never expires; re-plug of the same mo
 
   // Remove on the unplugged row: only that seat and car go.
   await lap.locator('[data-source=pad1] [data-act=remove]').click();
+  await lap.locator('[data-source=pad1] [data-act=remove]').click(); // Remove takes a second tap within 3 s
   await until(host, async () => (await hostSeats(host)).length === 2, 'the removed seat goes at the next tick boundary');
   // Its car stops being driven at once (no input, no autopilot); the body stays as scenery (S04c's rules). B's car is untouched.
   const gone = (await obs(host)).cars.find((c) => c.car === carA);
@@ -217,7 +218,12 @@ test('unplug = that seat autopilots, held, never expires; re-plug of the same mo
   assert.deepEqual((await src(lap)).map((s) => s.id).sort(), ['pad2', 'pad3']);
   assert.equal((await hostSeats(host)).some((s) => s.number === seatA), false);
   assert.equal((await hostSeats(host)).some((s) => s.number === seatB), true, "B's seat stays");
-  // Leave on a plugged row: that seat alone goes.
+  // Leave on a plugged row: one tap only arms it (council review 2026-11-15: a stray thumb took a friend's seat), a second
+  // tap within 3 s leaves, and that seat alone goes.
+  await lap.locator('[data-source=pad3] [data-act=leave]').click();
+  await lap.waitForTimeout(400);
+  assert.equal((await hostSeats(host)).length, 2, 'one tap leaves nobody');
+  assert.match(await lap.locator('[data-source=pad3] [data-act=leave]').innerText(), /tap again/i);
   await lap.locator('[data-source=pad3] [data-act=leave]').click();
   await until(host, async () => (await hostSeats(host)).length === 1, 'the left seat goes');
   assert.equal((await one(lap, 'pad2')).state, 'connected');

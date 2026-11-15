@@ -28,6 +28,8 @@ const RENDER_MS = 250;
 const PATH_MS = 2000;
 const FLASH_MS = 1500;
 const STALL_MS = 12_000;
+/** A row's Leave or Remove needs a second tap within this (ms), as the phone's own Leave does. */
+const LEAVE_CONFIRM_MS = 3000;
 /** The right stick past this, sideways, steps the Lobby's car pick (the host's own pads use the same .6: local.ts). */
 const PICK_FLICK = 0.6;
 /** A seat name is at most 32 graphemes (jj-session `MAX_NAME_GRAPHEMES`); a longer claim is refused, so the carrier's name is cut. */
@@ -107,6 +109,8 @@ const editable = (t: EventTarget | null): boolean => {
 
 export class Sources {
   readonly sources = new Map<string, Source>();
+  /** When a row's Leave or Remove was first tapped (ms): a second tap within LEAVE_CONFIRM_MS confirms it. */
+  private readonly leaveArmed = new Map<string, number>();
   private timers: Array<ReturnType<typeof setInterval>> = [];
   private list: HTMLElement | null = null;
   private lastHtml = '';
@@ -417,7 +421,18 @@ export class Sources {
     this.list!.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
       const s = this.sources.get(b?.closest<HTMLElement>('[data-source]')?.dataset.source ?? '');
-      if (b && s && !s.external) this.leave(s);
+      // Leave and Remove take a second tap within 3 s, as the phone's own Leave does (council review 2026-11-15: the row
+      // sits between the thumbs, and one stray tap took a friend's car and standings away mid-race).
+      if (b && s && !s.external) {
+        const now = Date.now();
+        if (now - (this.leaveArmed.get(s.id) ?? 0) < LEAVE_CONFIRM_MS) {
+          this.leaveArmed.delete(s.id);
+          this.leave(s);
+        } else {
+          this.leaveArmed.set(s.id, now);
+          setTimeout(() => this.render(), LEAVE_CONFIRM_MS + 50);
+        }
+      }
       this.render();
     });
     this.render();
@@ -474,12 +489,13 @@ export class Sources {
         }</span>`
       : '';
     const st = s.session?.stats;
+    const armed = Date.now() - (this.leaveArmed.get(s.id) ?? 0) < LEAVE_CONFIRM_MS;
     const act =
       s.external || s.state === 'left'
         ? ''
         : s.state === 'unplugged'
-          ? '<button type="button" class="btn quiet hub-act" data-act="remove" aria-label="Remove this player">Remove</button>'
-          : '<button type="button" class="btn quiet hub-act" data-act="leave" aria-label="Leave: give up this seat">Leave</button>';
+          ? `<button type="button" class="btn quiet hub-act" data-act="remove" aria-label="Remove this player"${armed ? ' data-armed' : ''}>${armed ? 'Tap again' : 'Remove'}</button>`
+          : `<button type="button" class="btn quiet hub-act" data-act="leave" aria-label="Leave: give up this seat"${armed ? ' data-armed' : ''}>${armed ? 'Tap again' : 'Leave'}</button>`;
     return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${t ? t.fill : 'transparent'};--seat-on:${t ? t.on : 'var(--c-paper)'};" data-icon="${what}" data-chip-icon="${chipIcon}">
       ${seat}<span class="hub-kind" title="${esc(s.label)}"><span class="hub-label">${esc(s.label)}</span></span><span class="hub-state chip ${tone}" data-chip="${s.state}"><span class="hub-state-text">${state}</span></span>${act}
       ${carLine}<span class="hub-path" data-path>${esc(s.session && !s.external ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st && !s.external ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
