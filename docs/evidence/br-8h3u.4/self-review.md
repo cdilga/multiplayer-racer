@@ -34,3 +34,22 @@ front, back, above and low. The hook turns on the same terrain LOD layer a game 
   side.
 
 I looked at every view. Not covered: an owner drive past a loop in a real race (playtest).
+
+## Looked at
+
+Every view in `town-2-before.jpg`, `town-2-after.jpg`, `rocks-4-after.jpg` and `outback-bitumen-4-after.jpg` (left, right,
+front, back, above, low), 1600x900, Chromium on the Mac, local build, generator 36.
+
+## Defects found and fixed
+
+- A town lot's building stood under the loop's arc beside the exit (town seed 2): gone after the fix.
+- The first captures showed "floating" boxes and no road: the capture camera hadn't turned on the terrain LOD layer. Fixed
+  in `peek` (`useLod`), so they were the hook's artefact, not the game's.
+
+## Remaining defects
+
+None seen on the three seeds.
+
+## Not covered
+
+An owner drive past a loop in a real race; a real TV or GPU.
