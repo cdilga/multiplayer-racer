@@ -45,7 +45,8 @@ pub enum UiCommand {
     FreeDrive {
         on: bool,
     },
-    /// Laps per round from the next round (a round rule; journeys use 1).
+    /// Laps per round from the next round (a round rule; journeys use 1). `0` is Auto: the track's length class decides
+    /// (R125), and the room view says which number that is once the next track is ready.
     SetLaps {
         laps: u32,
     },
@@ -120,19 +121,21 @@ pub enum UiCommand {
     SetBots {
         n: u32,
     },
-    /// br-8h3u.14: bot `index`'s skill, 0 Easy, 1 Normal, 2 Hard (`assist.json` `autopilot.botSkills`).
+    /// br-8h3u.14: bot `id`'s skill, 0 Easy, 1 Normal, 2 Hard (`assist.json` `autopilot.botSkills`). A bot is addressed by
+    /// the id the room view gives it (council review round 3: by list position, a press on a stale row hit the next bot).
     SetBotSkill {
-        index: u32,
+        id: u32,
         skill: u8,
     },
-    /// br-8h3u.14: bot `index` drives with learner assists (R125: 0 Off, 1 Some, 2 Lots), an L-plater.
+    /// br-8h3u.14: bot `id` drives with learner assists (R125: 0 Off, 1 Some, 2 Lots), an L-plater.
     SetBotAssist {
-        index: u32,
+        id: u32,
         level: u8,
     },
-    /// br-8h3u.14: take bot `index` out of the next rounds (the ones after it move up).
+    /// br-8h3u.14: take bot `id` out of the next rounds (an unknown id, already removed, does nothing). A bot racing now
+    /// finishes the round under its number.
     RemoveBot {
-        index: u32,
+        id: u32,
     },
     /// br-8h3u.14: the host sets a seat's learner level (R125: 0 Off, 1 Some, 2 Lots), as the seat's phone can.
     SetSeatAssist {

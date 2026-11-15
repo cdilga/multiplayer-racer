@@ -283,6 +283,31 @@ fn session_only(cmd: &ControllerCmd) -> bool {
     }
 }
 
+/// A host UI command that may apply while the race is held (P1-R07c; council review round 3): the host pads' join, leave
+/// and sit-out, and the Host menu's settings, which change the next round's rules and bots, a seat's learner help, or
+/// take a seat out (as its own Leave would). Start, End, Disband, free drive, a reroll, tuning and the lobby's
+/// pick/ready wait for the resumed tick.
+fn host_setting(ui: &UiCommand) -> bool {
+    matches!(
+        ui,
+        UiCommand::LocalJoin { .. }
+            | UiCommand::LocalLeave { .. }
+            | UiCommand::LocalSitOut { .. }
+            | UiCommand::SetLaps { .. }
+            | UiCommand::SetMode { .. }
+            | UiCommand::SetDerbyLength { .. }
+            | UiCommand::SetIntermission { .. }
+            | UiCommand::SetCatchUp { .. }
+            | UiCommand::SetNextTrack { .. }
+            | UiCommand::SetBots { .. }
+            | UiCommand::SetBotSkill { .. }
+            | UiCommand::SetBotAssist { .. }
+            | UiCommand::RemoveBot { .. }
+            | UiCommand::SetSeatAssist { .. }
+            | UiCommand::RemoveSeat { .. }
+    )
+}
+
 /// A launch snap (R127): while the grid is held for the countdown it is a false start that forfeits this start's
 /// launch, unless it arrives in the last `START_GRACE_MS` before GO, when it waits for GO; otherwise the sim's launch
 /// (which decides perfect, normal or refused).
@@ -586,7 +611,10 @@ impl Host {
 
     /// While the sim is held (a pause, or the resume countdown) the session and seat layer keeps running on the host's
     /// own clock (P1-R07c): a Hello and Claim are welcomed and seated, and Leave, Ready, Pick, Identify, menus, cameras
-    /// and tutorials apply as they arrive. Nothing here steps the sim or touches a car: the new seat's car comes from
+    /// and tutorials apply as they arrive. So do the Host menu's settings (`host_setting`: race rules, bots, a seat's
+    /// learner help, Remove player): council review round 3 found every press in a paused race looked like a miss until
+    /// Resume. They apply at the same frozen tick they would at the resumed tick's boundary, so the journal is the same.
+    /// Nothing here steps the sim or drives a car: the new seat's car comes from
     /// the seat reducer's next tick boundary (`CarAdded`, the late-join placement) once the race resumes, and commands
     /// that act on a car (Recover, Action) wait in the queue for the resumed tick like every sample. A fault holds
     /// everything: that room can't continue (R84).
@@ -603,13 +631,7 @@ impl Host {
                     bytes,
                     ..
                 } => ControllerCmd::decode(bytes).is_ok_and(|c| session_only(&c)),
-                MainToSim::Ui {
-                    ui:
-                        UiCommand::LocalJoin { .. }
-                        | UiCommand::LocalLeave { .. }
-                        | UiCommand::LocalSitOut { .. },
-                    ..
-                } => true,
+                MainToSim::Ui { ui, .. } => host_setting(ui),
                 _ => false,
             });
         self.queued = later;

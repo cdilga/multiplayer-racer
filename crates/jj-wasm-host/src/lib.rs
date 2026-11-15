@@ -309,18 +309,18 @@ pub mod codec {
             l if l.starts_with("bots:") => UiCommand::SetBots {
                 n: l[5..].parse().unwrap_or(0),
             },
-            // br-8h3u.14: `bot-skill:<index>:<0|1|2>`, `bot-assist:<index>:<0|1|2>`, `bot-remove:<index>` and
+            // br-8h3u.14: `bot-skill:<id>:<0|1|2>`, `bot-assist:<id>:<0|1|2>`, `bot-remove:<id>` (the room view's bot ids) and
             // `seat-assist:<seat>:<0|1|2>`.
             l if l.starts_with("bot-skill:") => {
-                let (index, skill) = pair(&l[10..]);
-                UiCommand::SetBotSkill { index, skill }
+                let (id, skill) = pair(&l[10..]);
+                UiCommand::SetBotSkill { id, skill }
             }
             l if l.starts_with("bot-assist:") => {
-                let (index, level) = pair(&l[11..]);
-                UiCommand::SetBotAssist { index, level }
+                let (id, level) = pair(&l[11..]);
+                UiCommand::SetBotAssist { id, level }
             }
             l if l.starts_with("bot-remove:") => UiCommand::RemoveBot {
-                index: l[11..].parse().unwrap_or(u32::MAX),
+                id: l[11..].parse().unwrap_or(u32::MAX),
             },
             l if l.starts_with("seat-assist:") => {
                 let (seat, level) = pair(&l[12..]);
@@ -329,6 +329,8 @@ pub mod codec {
             l if l.starts_with("intermission-ms:") => UiCommand::SetIntermission {
                 ms: l[16..].parse().unwrap_or(60_000),
             },
+            // `laps:auto` (or `laps:0`): the track's length class decides.
+            "laps:auto" => UiCommand::SetLaps { laps: 0 },
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

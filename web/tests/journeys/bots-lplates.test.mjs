@@ -56,7 +56,7 @@ test('the host adds bots and L-plates from the menu; one player and the bots rac
     for (let guard = 0; guard < 3; guard++) {
       const now = await host.evaluate(([i, act]) => window.__jjRoom.view().botList[i][act === 'bot-skill' ? 'skill' : 'assist'], [index, act]);
       if (now === want) return;
-      await host.locator(`[data-bots] [data-act=${act}][data-index="${index}"]`).click();
+      await host.locator(`[data-bots] [data-act=${act}][data-id="${index}"]`).click();
       await wait(host, ([i, act, now]) => window.__jjRoom.view().botList[i][act === 'bot-skill' ? 'skill' : 'assist'] !== now, [index, act, now]);
     }
   };
@@ -71,7 +71,7 @@ test('the host adds bots and L-plates from the menu; one player and the bots rac
   // A fifth, then removed again: the list closes up.
   await host.getByRole('button', { name: 'Add a bot', exact: true }).click();
   await wait(host, () => window.__jjRoom.view().botList?.length === 5);
-  await host.locator('[data-bots] [data-act=bot-remove][data-index="4"]').click();
+  await host.locator('[data-bots] [data-act=bot-remove][data-id="4"]').click();
   await wait(host, () => window.__jjRoom.view().botList?.length === 4);
   await host.getByRole('button', { name: 'Back', exact: true }).click();
 
@@ -131,7 +131,7 @@ test('the Bots page and the lobby fit a laptop and a phone-size host', { timeout
       await host.getByRole('button', { name: 'Add a bot', exact: true }).click();
       await wait(host, (n) => window.__jjRoom.view().botList?.length === n, n);
     }
-    await host.locator('[data-bots] [data-act=bot-assist][data-index="2"]').click();
+    await host.locator('[data-bots] [data-act=bot-assist][data-id="2"]').click();
     await wait(host, () => window.__jjRoom.view().botList[2].assist === 1);
     const fits = () => host.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
     assert.ok(await fits(), `${width}x${height}: the Bots page is no wider than the screen`);
@@ -152,4 +152,68 @@ test('the Bots page and the lobby fit a laptop and a phone-size host', { timeout
     assert.deepEqual(errors, []);
     await host.close();
   }
+});
+
+// Council review round 3 (#3, #6): in a paused race every Host menu press showed nothing until Resume (two Add presses added
+// two; a Remove on a stale row was sent by index). Now Remove, Add and Race rules apply in the pause and the menu shows them
+// at once, with the race frozen; a removed bot keeps its car, number and place in the footer to the end of the round.
+test('in a paused race the Host menu shows bots and rules changes at once; a removed bot races on under its number', { timeout: 600_000 }, async () => {
+  const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
+  const errors = [];
+  host.on('pageerror', (e) => errors.push(e.message));
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9`);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
+  await frame(host, 'syn1', { hello: true });
+  await frame(host, 'syn1', { claim: 'Shazza' });
+  await wait(host, () => window.__jjRoom.view().seats.length === 1);
+  await host.getByRole('button', { name: 'Host menu', exact: true }).click();
+  await host.getByRole('button', { name: 'Bots', exact: true }).click();
+  for (let n = 1; n <= 3; n++) {
+    await host.getByRole('button', { name: 'Add a bot', exact: true }).click();
+    await wait(host, (n) => window.__jjRoom.view().botList?.length === n, n);
+  }
+  await host.getByRole('button', { name: 'Back', exact: true }).click();
+  await host.getByRole('button', { name: 'Close', exact: true }).click();
+  await frame(host, 'syn1', { ready: true });
+  await wait(host, () => window.__jjRoom.view().phase === 'Running');
+  await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+  await wait(host, () => document.querySelectorAll('.fp-item.bot').length === 3, undefined, 60_000);
+
+  // The Host menu pauses the race (opened through the chrome's surface, as c03-resume does mid-race); Bots → Remove bot #3
+  // (id 1), then Add a bot.
+  await host.evaluate(() => window.__jjChrome.openMenu());
+  await wait(host, () => window.__jjRoom.view().botCars?.length === 3);
+  const tick = async () => (await host.evaluate(() => window.__jjTest.observe())).tick;
+  await host.waitForTimeout(500);
+  const frozen = await tick();
+  await host.getByRole('button', { name: 'Bots 3', exact: true }).click();
+  assert.deepEqual(await host.$$eval('[data-bots] li', (els) => els.map((e) => e.dataset.number)), ['2', '3', '4']);
+  await host.locator('[data-bots] [data-act=bot-remove][data-id="1"]').click();
+  await wait(host, () => document.querySelectorAll('[data-bots] li').length === 2, undefined, 10_000);
+  assert.deepEqual(await host.$$eval('[data-bots] li', (els) => els.map((e) => e.dataset.botId)), ['0', '2'], 'only bot 1 went, shown in the pause');
+  await host.getByRole('button', { name: 'Add a bot', exact: true }).click();
+  await wait(host, () => document.querySelectorAll('[data-bots] li').length === 3, undefined, 10_000);
+  assert.deepEqual(await host.$$eval('[data-bots] li', (els) => els.map((e) => e.dataset.number)), ['2', '4', '5'], 'the new bot numbers after this round\'s bot cars');
+  await shot(host, 'paused-bots');
+  await host.getByRole('button', { name: 'Back', exact: true }).click();
+  // Race rules: Derby and 1 min light at once.
+  await host.getByRole('button', { name: 'Race rules', exact: true }).click();
+  await host.locator('[data-race-rules] [data-rule=mode][data-value=derby]').click();
+  await wait(host, () => document.querySelector('[data-race-rules] [data-rule=mode][aria-pressed=true]')?.dataset.value === 'derby', undefined, 10_000);
+  await host.locator('[data-race-rules] [data-rule=derbyMs][data-value="60000"]').click();
+  await wait(host, () => document.querySelector('[data-race-rules] [data-rule=derbyMs][aria-pressed=true]')?.dataset.value === '60000', undefined, 10_000);
+  await shot(host, 'paused-rules');
+  assert.equal(await tick(), frozen, 'the race stayed frozen');
+  // Put the next round back to a race (the rules are remembered on this device).
+  await host.locator('[data-race-rules] [data-rule=mode][data-value=race]').click();
+  await wait(host, () => window.__jjRoom.view().nextMode === 'race');
+  await host.getByRole('button', { name: 'Back', exact: true }).click();
+  await host.getByRole('button', { name: 'Resume', exact: true }).click();
+  // The removed bot's car races on under #3: the footer keeps three bots, #2, #3 and #4.
+  await host.waitForTimeout(4000);
+  const footBots = await host.$$eval('.fp-item.bot .badge', (els) => els.map((e) => e.textContent).sort());
+  assert.deepEqual(footBots, ['#2', '#3', '#4'], 'every bot car keeps its place and number in the footer');
+  assert.ok((await tick()) > frozen, 'the race resumed');
+  await shot(host, 'resumed');
+  assert.deepEqual(errors, []);
 });

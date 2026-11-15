@@ -6,8 +6,8 @@ import type { SimInput } from '../worker/messages';
 type Ui = Extract<SimInput, { type: 'ui' }>['ui'];
 export interface Rules {
   mode?: 'race' | 'derby';
-  /** Laps per round; absent: the track's length class decides. */
-  laps?: number;
+  /** Laps per round; absent or 'auto': the track's length class decides. */
+  laps?: number | 'auto';
   derbyMs?: number;
   intermissionMs?: number;
 }
@@ -32,7 +32,7 @@ export function command(rule: keyof Rules, value: number | string): Ui {
     case 'mode':
       return value === 'derby' ? 'mode:derby' : 'mode:race';
     case 'laps':
-      return `laps:${Number(value)}`;
+      return value === 'auto' ? 'laps:auto' : `laps:${Number(value)}`;
     case 'derbyMs':
       return `derby-ms:${Number(value)}`;
     case 'intermissionMs':

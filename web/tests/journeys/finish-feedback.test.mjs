@@ -86,7 +86,8 @@ test('finishing a race shows on the TV tile and the phone, the others see the ra
   const me = view.seats.find((s) => s.name === 'Davo');
   assert.equal(me.position, 1);
   assert.ok(me.finishMs > 0, `the finishing time is in the room view: ${JSON.stringify(me)}`);
-  assert.ok(view.raceEndsInMs > 0 && view.raceEndsInMs <= 30_000, `the race-ends countdown runs: ${view.raceEndsInMs}`);
+  // race.json finishWindow: 30 s + 10 s a lap (1 lap here).
+  assert.ok(view.raceEndsInMs > 30_000 && view.raceEndsInMs <= 40_000, `the race-ends countdown runs: ${view.raceEndsInMs}`);
   assert.equal(view.phase, 'Running', 'the other car is still racing');
   // The TV: Davo's tile says Finished! with 1st and its time; Shazza's counts down to the end of the race.
   const tiles = await wait(host, () => {
@@ -104,7 +105,7 @@ test('finishing a race shows on the TV tile and the phone, the others see the ra
   });
   await shot(phone, 'phone-finished');
   // The window closes the race: on to the results.
-  await host.evaluate(() => window.__jjTest.step(31 * 120)); // 31 s of sim time at 120 Hz (the window is 30 s)
+  await host.evaluate(() => window.__jjTest.step(41 * 120)); // 41 s of sim time at 120 Hz (the 1-lap window is 40 s)
   await wait(host, () => ['Finalising', 'Intermission'].includes(window.__jjRoom.view().phase), undefined, 30_000);
   console.log(`# finish feedback: ${JSON.stringify({ tiles, finishMs: me.finishMs, raceEndsInMs: view.raceEndsInMs })}`);
   assert.deepEqual(errors, []);

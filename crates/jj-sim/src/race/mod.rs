@@ -24,15 +24,22 @@
 //!   like Recover.
 //! - **Recover** is allowed after 1 s under 3 m/s, or when inverted. It respawns at the anchor and holds the car for the
 //!   2 s penalty.
+//! - **Stuck.** A racing car under 3 m/s for 3 s is flagged stuck ([`Race::is_stuck`]: the TV tile tells its player to
+//!   tap Recover), and from 6 s, while its driver is pressing to go (throttle or reverse: [`Race::set_driving`]), the race
+//!   recovers it itself (council review round 3: a wedged car sat at 0 m/s until the race ended). A car parked with no
+//!   input is left where it is (an idle player's car is the autopilot's, which presses Recover itself). The numbers are
+//!   `assets/profiles/race.json` `recover`.
 //! - **Out of bounds.** Below the kill height or outside the map bounds is a wreck, then a respawn. It always recovers.
-//! - **Race end.** `laps` (default 3). The first finisher opens a 30 s window, and the absolute deadline is
-//!   `max(180 s, 2 × laps × refLap)` after the start (countdown completion). Finished cars are ghosted against racers and
-//!   debris, and unfinished cars rank by legal progress.
+//! - **Race end.** `laps` (default 3). The first seated finisher opens the finish window, 30 s plus 10 s a lap
+//!   (`race.json` `finishWindow`); a bot's finish opens nothing while a seat is racing ([`Race::set_bot`]: the humans
+//!   get to finish, council review round 3), and in a room of only bots the first finish opens it. The absolute deadline
+//!   is `max(180 s, 2 × laps × refLap)` after the start (countdown completion). Finished cars are ghosted against
+//!   racers and debris, and unfinished cars rank by legal progress.
 //!
 //! Maths goes through `libm` (not the platform's), so native and WASM decide every crossing identically.
 
 use jj_map::LoadedMap;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::journal::SpawnPose;
 use crate::placement::{
@@ -50,8 +57,6 @@ pub const RIGHTED_UP_Y: f32 = 0.9;
 pub const FLIP_REST_SPEED: f32 = 2.0;
 pub const FLIP_REST_TICKS: u64 = SECOND;
 pub const FLIP_ASSIST_TICKS: u64 = 3 * SECOND;
-pub const RECOVER_SPEED: f32 = 3.0;
-pub const RECOVER_SLOW_TICKS: u64 = SECOND;
 /// The hold after a respawn: the car waits at its anchor this long, then rolls off (R125, 2026-10-10: 1 s, then a rolling
 /// start; was R20's 2 s standing hold).
 pub const RESPAWN_HOLD_TICKS: u64 = SECOND;
@@ -70,7 +75,6 @@ pub const RESPAWN_ROLL_PLAN: crate::autopilot::SpeedPlan = crate::autopilot::Spe
 };
 /// An anchor has at least this much recovery span ahead of it, m (R125: never on, or just before, a hazard).
 pub const ANCHOR_CLEAR_M: f32 = 15.0;
-pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
 /// Lateral slack beyond the road's half-width for a gate crossing: the least a gate's window reaches. Past that, each
 /// gate reaches out to half way to the nearest other part of the course (route points more than [`GATE_OTHER_ROAD_M`]
@@ -91,6 +95,101 @@ pub const RESPAWN_LIFT_M: f32 = crate::placement::SPAWN_LIFT_M;
 pub const ASSIST_K: f32 = 9_000.0;
 pub const ASSIST_D: f32 = 3_000.0;
 pub const ASSIST_MAX: f32 = 30_000.0;
+
+pub const RACE_JSON: &str = include_str!("../../../../assets/profiles/race.json");
+const RACE_CONTRACT: &str = "jj-race/1";
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct FinishWindowFile {
+    base_s: f32,
+    per_lap_s: f32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RecoverFile {
+    speed_below_mps: f32,
+    manual_after_s: f32,
+    stuck_after_s: f32,
+    auto_after_s: f32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RaceFile {
+    contract: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    what: String,
+    finish_window: FinishWindowFile,
+    recover: RecoverFile,
+}
+
+/// `assets/profiles/race.json` in ticks: the finish window and the recovery timings.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RaceRules {
+    pub window_base_ticks: u64,
+    pub window_per_lap_ticks: u64,
+    /// Under this speed a car counts as slow (Recover, stuck), m/s.
+    pub recover_speed: f32,
+    /// Slow this long and the Recover button works.
+    pub recover_slow_ticks: u64,
+    /// Slow this long while racing and the car shows as stuck.
+    pub stuck_ticks: u64,
+    /// Slow this long while racing and the race recovers it itself.
+    pub auto_recover_ticks: u64,
+}
+
+impl RaceRules {
+    pub fn from_json(json: &str) -> Result<Self, String> {
+        let f: RaceFile =
+            serde_json::from_str(json).map_err(|e| format!("bad race profile: {e}"))?;
+        if f.contract != RACE_CONTRACT {
+            return Err(format!(
+                "race contract {:?}, expected {RACE_CONTRACT:?}",
+                f.contract
+            ));
+        }
+        let (w, r) = (f.finish_window, f.recover);
+        for (name, v) in [
+            ("finishWindow.baseS", w.base_s),
+            ("finishWindow.perLapS", w.per_lap_s),
+            ("recover.speedBelowMps", r.speed_below_mps),
+            ("recover.manualAfterS", r.manual_after_s),
+        ] {
+            if !(v.is_finite() && v >= 0.0) {
+                return Err(format!("race {name} = {v}, expected a finite value >= 0"));
+            }
+        }
+        if !(r.stuck_after_s.is_finite() && r.stuck_after_s > 0.0) {
+            return Err(format!(
+                "race recover.stuckAfterS = {}, expected > 0",
+                r.stuck_after_s
+            ));
+        }
+        if !(r.auto_after_s.is_finite() && r.auto_after_s > r.stuck_after_s) {
+            return Err(format!(
+                "race recover.autoAfterS = {}, expected more than stuckAfterS ({}): the player sees the hint first",
+                r.auto_after_s, r.stuck_after_s
+            ));
+        }
+        let ticks = |s: f32| (s * TICK_HZ as f32).round() as u64;
+        Ok(Self {
+            window_base_ticks: ticks(w.base_s),
+            window_per_lap_ticks: ticks(w.per_lap_s),
+            recover_speed: r.speed_below_mps,
+            recover_slow_ticks: ticks(r.manual_after_s),
+            stuck_ticks: ticks(r.stuck_after_s),
+            auto_recover_ticks: ticks(r.auto_after_s),
+        })
+    }
+
+    /// The compiled-in `assets/profiles/race.json`.
+    pub fn standard() -> Self {
+        Self::from_json(RACE_JSON).expect("assets/profiles/race.json is valid")
+    }
+}
 
 #[derive(Clone, Debug)]
 struct Gate {
@@ -522,6 +621,11 @@ pub struct CarRace {
     pub best_progress_tick: u64,
     /// Joined mid-round through drop-in (P1-S06).
     pub late: bool,
+    /// A host's bot (no seat): its finish doesn't open the finish window while a seat races ([`Race::set_bot`]).
+    pub bot: bool,
+    /// Its driver is pressing to go this tick (throttle or reverse), set by the sim from the applied controls before each
+    /// update ([`Race::set_driving`]); derived from journaled input, so it isn't hashed.
+    driving: bool,
     /// Recent legal progress, for placing a drop-in behind this car.
     history: Vec<ProgressSample>,
     rest_inverted: u64,
@@ -550,7 +654,10 @@ pub struct Race {
     pub laps: u32,
     pub started_at: Option<u64>,
     pub first_finish: Option<u64>,
+    /// The tick the finish window opened: the first seated car's finish (any car's in a room of only bots).
+    pub window_from: Option<u64>,
     pub over: Option<(u64, RaceEnd)>,
+    pub rules: RaceRules,
     cars: Vec<CarRace>,
     events: Vec<(u64, Event)>,
 }
@@ -562,7 +669,9 @@ impl Race {
             laps: DEFAULT_LAPS,
             started_at: None,
             first_finish: None,
+            window_from: None,
             over: None,
+            rules: RaceRules::standard(),
             cars: Vec::new(),
             events: Vec::new(),
         }
@@ -583,6 +692,8 @@ impl Race {
             best_progress_mm: 0,
             best_progress_tick: 0,
             late: false,
+            bot: false,
+            driving: false,
             history: Vec::new(),
             rest_inverted: 0,
             slow: 0,
@@ -605,6 +716,56 @@ impl Race {
                 c.anchor = self.course.gates[g].anchor;
             }
             c.last = None;
+        }
+    }
+
+    /// Marks `car` as a host's bot (no seat): while any seated car is in the race, a bot's finish doesn't open the finish
+    /// window (council review round 3: the Hard bot's finish ended a 3-lap race 30 s later with every human DNF).
+    pub fn set_bot(&mut self, car: u32) {
+        if let Some(c) = self.cars.get_mut(car as usize) {
+            c.bot = true;
+        }
+    }
+
+    pub fn is_bot(&self, car: u32) -> bool {
+        self.cars.get(car as usize).is_some_and(|c| c.bot)
+    }
+
+    /// How long the finish window runs: `finishWindow.baseS + perLapS × laps`.
+    pub fn finish_window_ticks(&self) -> u64 {
+        self.rules.window_base_ticks + self.rules.window_per_lap_ticks * u64::from(self.laps)
+    }
+
+    /// The tick the finish window closes, once a finish has opened it.
+    pub fn window_closes_at(&self) -> Option<u64> {
+        self.window_from.map(|f| f + self.finish_window_ticks())
+    }
+
+    /// How long `car` has been slow while racing (ticks): its slow run, counted from no earlier than the start, and zero
+    /// once it has finished, the race is over or it is held.
+    fn racing_slow_ticks(&self, car: u32, tick: u64) -> u64 {
+        let (Some(start), None, Some(c)) =
+            (self.started_at, self.over, self.cars.get(car as usize))
+        else {
+            return 0;
+        };
+        if c.finished_at.is_some() || tick < c.hold_until {
+            return 0;
+        }
+        c.slow.min(tick.saturating_sub(start))
+    }
+
+    /// The car has been under `recover.speedBelowMps` for `recover.stuckAfterS` while racing: its tile and phone tell its
+    /// player to tap Recover (the race recovers it itself at `recover.autoAfterS` if its driver is pressing to go).
+    pub fn is_stuck(&self, car: u32, tick: u64) -> bool {
+        self.racing_slow_ticks(car, tick) >= self.rules.stuck_ticks
+    }
+
+    /// Whether `car`'s driver is pressing to go this tick (throttle or reverse): the sim sets it from the applied controls
+    /// before each [`Race::update`]. A stuck car is recovered automatically only while it is.
+    pub fn set_driving(&mut self, car: u32, driving: bool) {
+        if let Some(c) = self.cars.get_mut(car as usize) {
+            c.driving = driving;
         }
     }
 
@@ -779,7 +940,7 @@ impl Race {
     pub fn recover(&mut self, tick: u64, car: u32) -> Option<Effect> {
         let c = self.cars.get(car as usize)?;
         let inverted = c.last.is_some_and(|v| v.up_y < FLIP_UP_Y);
-        if tick < c.hold_until || !(c.slow >= RECOVER_SLOW_TICKS || inverted) {
+        if tick < c.hold_until || !(c.slow >= self.rules.recover_slow_ticks || inverted) {
             return None;
         }
         Some(self.respawn(tick, car, Respawned::Recover))
@@ -839,12 +1000,18 @@ impl Race {
             } else {
                 c.rest_inverted = 0;
             }
+            let slow_below = self.rules.recover_speed;
             let c = &mut self.cars[i];
-            c.slow = if v.speed < RECOVER_SPEED {
-                c.slow + 1
-            } else {
-                0
-            };
+            c.slow = if v.speed < slow_below { c.slow + 1 } else { 0 };
+            // Stuck too long while racing, its driver still pressing to go: the race recovers it itself (deterministic:
+            // the slow run is race state, the controls journaled input).
+            if self.cars[i].driving
+                && self.racing_slow_ticks(car, tick) >= self.rules.auto_recover_ticks
+            {
+                effects.push(self.respawn(tick, car, Respawned::Recover));
+                continue;
+            }
+            let c = &self.cars[i];
             if self.started_at.is_some()
                 && c.finished_at.is_none()
                 && let Some(prev) = c.last
@@ -996,6 +1163,10 @@ impl Race {
                 c.finished_at = Some(tick);
                 c.finish_fraction = fraction;
                 self.first_finish.get_or_insert(tick);
+                // A seat's finish opens the window; a bot's only when no seat is in the race.
+                if !self.cars[car as usize].bot || self.cars.iter().all(|c| c.bot) {
+                    self.window_from.get_or_insert(tick);
+                }
                 self.events.push((tick, Event::Finished { car }));
                 effects.push(Effect::Ghost { car });
             }
@@ -1011,10 +1182,7 @@ impl Race {
         };
         let why = if !self.cars.is_empty() && self.cars.iter().all(|c| c.finished_at.is_some()) {
             Some(RaceEnd::AllFinished)
-        } else if self
-            .first_finish
-            .is_some_and(|f| tick >= f + FINISH_WINDOW_TICKS)
-        {
+        } else if self.window_closes_at().is_some_and(|t| tick >= t) {
             Some(RaceEnd::Window)
         } else if tick >= deadline {
             Some(RaceEnd::Deadline)
@@ -1102,6 +1270,10 @@ impl Race {
         for v in [self.started_at, self.first_finish] {
             out.extend(v.unwrap_or(u64::MAX).to_le_bytes());
         }
+        // Without bots the window opens at the first finish (already hashed); only a race with bots adds bytes.
+        if self.cars.iter().any(|c| c.bot) {
+            out.extend(self.window_from.unwrap_or(u64::MAX).to_le_bytes());
+        }
         out.extend(self.laps.to_le_bytes());
         for c in &self.cars {
             out.extend(c.gates_passed.to_le_bytes());
@@ -1117,6 +1289,10 @@ impl Race {
             out.extend(c.best_progress_mm.to_le_bytes());
             out.extend(c.best_progress_tick.to_le_bytes());
             out.push(u8::from(c.late));
+            // Only a bot adds bytes, so sims without bots keep their hashes.
+            if c.bot {
+                out.push(0xb0);
+            }
             for s in &c.history {
                 out.extend(s.tick.to_le_bytes());
                 out.extend(s.progress_m.to_bits().to_le_bytes());

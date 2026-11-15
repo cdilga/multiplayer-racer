@@ -195,7 +195,12 @@ export interface RoomView {
   phase: 'Lobby' | 'Preparing' | 'Countdown' | 'Running' | 'Finalising' | 'Intermission' | 'Disbanded';
   remainingMs: number | null;
   round: number | null;
+  /** The race's laps while one runs, else the next race's. */
   laps: number;
+  /** Council review round 3: no laps were chosen (Auto), the track's length class decides; and the next race's laps once
+   *  its track is ready (null until then). */
+  lapsAuto?: boolean;
+  nextLaps?: number | null;
   /** Once the first car finishes: ms until the finish window closes the race (null before, and once it is over). */
   raceEndsInMs?: number | null;
   catchUp?: boolean;
@@ -231,9 +236,12 @@ export interface RoomView {
   seats: Array<{ /** P1-S10: the seat's derby standing while a derby round is on. */ derby?: { points: number; rank: number } | null; seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; /** P1-C14: the host pad, wheel or key cluster (its source id) that holds this seat; null for a joined controller. */ localSource?: number | null; /** The transport endpoint (not for host pads). */ endpoint?: string | null; car: number | null; laps: number | null; position: number | null; finished: boolean; /** R119: ms this seat's pad has been unplugged (null while plugged); the seat is held, nothing expires it. */ unpluggedMs?: number | null; /** br-m1xe: this round's lap times (ms). */ lapMs?: number[]; /** R125: the seat's learner assist, 0 Off, 1 Some, 2 Lots (an L-plate shows on its tile while it is not 0). */ assist?: number; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null; /** P1-C10: practising in its own world (`car` is then its practice car), and its round car if it has one (on the autopilot meanwhile). */ practice?: boolean; roundCar?: number | null; /** P1-W01: the seat's held items (front is what a flick uses). */ inventory?: ItemInventory | null; /** The autopilot holds this seat's car (idle, menu open, dropped out). */ autopilot?: boolean }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
   /** br-8h3u.14: the host's bots (any number): each one's skill (0 Easy, 1 Normal, 2 Hard), learner level (0 Off, 1 Some,
-   *  2 Lots: an L-plater) and race position (null outside a round); and the last race's bot rows (no points). */
+   *  2 Lots: an L-plater) and race position (null outside a round); and the last race's bot rows (no points). Council review
+   *  round 3: a bot is addressed by its `id`; `slot` is its car among this round's bot cars (null if not racing now), and
+   *  `botCars` lists this round's bot cars in slot order, a bot removed mid-round included. A results row's `index` is a slot. */
   bots?: number;
-  botList?: Array<{ skill: number; assist: number; position: number | null }>;
+  botList?: Array<{ id: number; skill: number; assist: number; position: number | null; slot?: number | null }>;
+  botCars?: Array<{ id: number; position: number | null }>;
   botResults?: Array<{ index: number; place: number; timeMs: number | null }>;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

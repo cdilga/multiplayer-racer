@@ -112,7 +112,7 @@ for (const [vpName, vp] of [['1080p', VP['1080p']], ['21x9', VP['21x9']], ['phon
         assertLaidOut(r, n, `results N=${n} ${vpName}`);
         const places = await page.$$eval('[data-results] [data-row]', (els) => els.map((e) => Number(e.dataset.place)));
         assert.deepEqual(places, Array.from({ length: n }, (_, i) => i + 1), `N=${n}: DOM order is place order`);
-        for (const sel of ['.qr-card', '[data-act=start]', '[data-act=lobby]']) assertLaidOut(await rects(page, sel), 1, `results N=${n} ${vpName} ${sel}`);
+        for (const sel of ['.jj-foot .foot-qr', '[data-act=start]', '[data-act=lobby]']) assertLaidOut(await rects(page, sel), 1, `results N=${n} ${vpName} ${sel}`);
         noGame(await page.locator('body').innerText(), `results N=${n}`);
       }
     } finally {
@@ -216,7 +216,7 @@ test('results: countdown labels keep the Start button stationary; captions leave
       assertLaidOut(rows,2,`${vp}: caption placings`);
       const typeSize=await page.locator('[data-row]').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
       assert.ok(typeSize>=12,`${vp}: two placings retain readable text beside a caption (${typeSize}px)`);
-      const actions=await rects(page,'.rs-join .qr-card, [data-act=start], [data-act=lobby]');
+      const actions=await rects(page,'.jj-foot .foot-qr, [data-act=start], [data-act=lobby]');
       assertLaidOut(actions,3,`${vp}: caption controls`);
       for(const row of rows.list) for(const action of actions.list) assert.ok(!overlap(row,action),'caption never collapses placings under the controls');
       assert.deepEqual(page.errors,[]);
@@ -330,7 +330,7 @@ test('Ready states: every card says whether the player is ready; a ready player 
 // Council review 2026-11-15 (#9, #12): back in the lobby the room's points vanished, and a bots-only lobby greyed Start
 // with "Scan to join" as its only word. The head names the leader and every card its place and points once a round has
 // counted (a seat that joined since starts on 0); with bots alone the hint says why Start is off.
-const BOTS = [{ skill: 1, assist: 0, position: null }, { skill: 0, assist: 1, position: null }, { skill: 2, assist: 0, position: null }];
+const BOTS = [{ id: 0, skill: 1, assist: 0, position: null }, { id: 1, skill: 0, assist: 1, position: null }, { id: 2, skill: 2, assist: 0, position: null }];
 test('lobby: the room\'s running points after a round, and why bots alone cannot start', async () => {
   const page = await open('lobby-4', [1366, 768]);
   try {
@@ -395,7 +395,7 @@ test('phone-size host: seven placings beside the vote stay legible rows, lobby h
       const fontPx = await page.locator('[data-results] [data-row]').first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
       for (const r of rows.list) assert.ok(r.h >= 30 && r.w >= 200, `${vp}: a placing is a readable row, not a sliver (${JSON.stringify(r)})`);
       assert.ok(fontPx >= 12, `${vp}: placing text ${fontPx}px`);
-      const actions = await rects(page, '.rs-join .qr-card, [data-vote], [data-act=start], [data-act=lobby]');
+      const actions = await rects(page, '.jj-foot .foot-qr, [data-vote], [data-act=start], [data-act=lobby]');
       assertLaidOut(actions, 4, `${vp} results actions`);
       for (const row of rows.list) for (const a of actions.list) assert.ok(!overlap(row, a), `${vp}: placings clear of the vote and buttons`);
       assert.deepEqual(page.errors, []);
@@ -403,9 +403,81 @@ test('phone-size host: seven placings beside the vote stay legible rows, lobby h
   }
 });
 
+// Council review round 3 (#7): the lobby promised the last map's 5 laps and the race ran the new track's 3. It says the next
+// race's number, "(auto)" when the track chose it, and no number while that track is still being made.
+test('lobby: the laps hint is the next race\'s, marked auto, and waits for the track', async () => {
+  const page = await open('lobby-2', [1366, 768]);
+  try {
+    const hint = async (patch) => {
+      await page.evaluate((p) => window.__jjRoundFixture.set({ ...window.__jjRoundFixture.make('lobby', 2), ...p }), patch);
+      return page.locator('[data-start-hint]').innerText();
+    };
+    assert.match(await hint({ laps: 5, lapsAuto: true, nextLaps: 3 }), /· 3 laps \(auto\)$/);
+    assert.match(await hint({ laps: 5, lapsAuto: true, nextLaps: null }), /· laps to suit the track$/);
+    assert.match(await hint({ laps: 2, lapsAuto: false, nextLaps: 2 }), /· 2 laps$/);
+    assert.match(await hint({ laps: 1, lapsAuto: false, nextLaps: 1 }), /· 1 lap$/);
+    assert.deepEqual(page.errors, []);
+  } finally { await page.close(); }
+});
+
+// Council review round 3 (#4, #6): "+30 · 60 total" cut "Shazza" to "S" (the tier's width budget left the total out), the QR
+// took a third of the screen though everyone had joined, and a bot removed mid-round finished as "#0 Bot". Every name keeps
+// its whole short name beside its time and total at 720p, 1080p and 1024x576, with the vote open; the QR is docked; the
+// removed bot's row keeps the number it raced under.
+test('results: a name with its total and time stays whole, the QR docks, a removed bot keeps its number', async () => {
+  const NAMES = ['Shazza', 'Big Kev', 'Roo Boy', 'Captain Snag', 'Dusty Ute', 'Tiggy', 'Hamish', 'Matilda'];
+  const room = (names) => {
+    const n = names.length;
+    const r = window.__jjRoundFixture.make('results', n);
+    // Bots took 2nd, 6th and 7th: the players fill the other places.
+    const places = Array.from({ length: n + 3 }, (_, i) => i + 1).filter((p) => ![2, 6, 7].includes(p));
+    r.results = r.results.map((row, i) => ({ ...row, name: names[row.number - 1], place: places[i], points: 30 - i * 3 }));
+    r.seats = r.seats.map((s, i) => ({ ...s, name: names[i] }));
+    r.standings = r.seats.map((s, i) => ({ seat: s.seat, place: i + 1, points: 160 - i * 7, wins: 1 }));
+    // Bot 1 was removed mid-round: the list holds 0 and 2, this round's cars 0, 1 and 2.
+    r.botList = [{ id: 0, skill: 1, assist: 0, position: null, slot: 0 }, { id: 2, skill: 2, assist: 0, position: null, slot: 2 }];
+    r.botCars = [{ id: 0, position: null }, { id: 1, position: null }, { id: 2, position: null }];
+    r.botResults = [{ index: 0, place: 6, timeMs: 75_120 }, { index: 1, place: 2, timeMs: 70_740 }, { index: 2, place: 7, timeMs: 76_000 }];
+    r.between = { active: true, resultsLeftMs: 0, voteOpen: true, voteLeftMs: 12_000, votes: { rematch: 1, new: 2, surprise: 0 }, bySeat: {}, leading: 'new', hostChoice: null, decided: null, flyoverLeftMs: null, flyoverMs: 6000, resultsMs: 8000, voteMs: 15_000 };
+    return r;
+  };
+  const out = evidencePath('results-total');
+  await mkdir(out, { recursive: true });
+  for (const [vp, n] of [[1280, 720], [1920, 1080], [1024, 576]].flatMap((vp) => [[vp, 4], [vp, 8]])) {
+    const page = await open(`results-${n}`, vp);
+    try {
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(`window.__jjRoundFixture.set((${room})(${JSON.stringify(NAMES.slice(0, n))}))`);
+      await page.waitForTimeout(150);
+      const rows = await page.$$eval('[data-results] [data-row]', (els) => els.map((e) => ({
+        number: Number(e.dataset.number), bot: e.hasAttribute('data-bot'), text: e.textContent,
+        nm: e.querySelector('.nm')?.textContent, cut: (() => { const n = e.querySelector('.nm'); return !!n && n.scrollWidth > n.clientWidth + 1; })(),
+        over: e.scrollWidth > e.clientWidth + 1, tot: !!e.querySelector('.tot'), fs: parseFloat(getComputedStyle(e).fontSize),
+      })));
+      await page.screenshot({ path: join(out, `results-total-${n}-${vp.join('x')}.png`) });
+      assert.equal(rows.length, n + 3, `${vp}: ${n} players and three bot cars`);
+      for (const r of rows.filter((r) => !r.bot)) {
+        assert.ok(r.tot, `${vp}: ${r.nm} shows the running total: ${r.text}`);
+        assert.ok(!r.cut, `${vp}: "${r.nm}" is whole beside its time and total: ${r.text}`);
+      }
+      for (const r of rows) assert.ok(!r.over, `${vp}: row ${r.text} fits its card`);
+      assert.deepEqual(rows.filter((r) => r.bot).map((r) => r.number).sort((a, b) => a - b), [n + 1, n + 2, n + 3], `${vp}: bots numbered after the seats by their car: ${rows.map((r) => r.text)}`);
+      assert.equal(rows.find((r) => r.bot && r.text.includes('1:10.74'))?.number, n + 2, `${vp}: the removed bot (slot 1) finishes under its own number`);
+      assert.ok(!rows.some((r) => r.number === 0), 'no "#0 Bot"');
+      // Couch-size where the screen allows it; eleven rows on a 1024x576 laptop are bound by its height (two columns).
+      assert.ok(rows[0].fs >= (n > 4 && vp[1] < 700 ? 10 : 14), `${vp} N=${n}: placings are readable (${rows[0].fs}px)`);
+      assert.equal(await page.locator('.rs-join .qr-card').count(), 0, `${vp}: the QR is docked`);
+      assert.ok(await page.locator('.jj-foot .foot-qr').isVisible(), `${vp}: the footer carries the QR`);
+      assert.deepEqual(page.errors, []);
+    } finally { await page.close(); }
+  }
+  console.log(`# results-total screenshots: ${out}`);
+});
+
 test('the lobby QR decodes to the join URL after downscaling to what a phone sees from 3 m (module >= 4 px at 1080p)', async () => {
   for (const [vpName, vp, expectModulePx] of [['1080p', VP['1080p'], 4], ['4k', VP['4k'], 4], ['phone', VP.phone, 3]]) {
-    for (const spec of ['lobby-8', 'results-8']) {
+    // Results with nobody in the room keep the big QR (with a room joined it docks in the footer, council review round 3).
+    for (const spec of ['lobby-8', 'results-0']) {
       const page = await open(spec, vp);
       try {
         const box = await page.locator('.qr-card .qr').boundingBox();

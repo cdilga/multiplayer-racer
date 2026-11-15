@@ -103,6 +103,14 @@ pub struct Seat {
     pending: Option<Pending>,
 }
 
+impl Seat {
+    /// A Leave or the host's Remove is waiting for the next tick boundary (a held race has none until it resumes): the
+    /// seat is on its way out, and a host's screens can say so at once.
+    pub fn is_leaving(&self) -> bool {
+        self.pending == Some(Pending::Leave)
+    }
+}
+
 #[derive(Clone, Debug)]
 struct Endpoint {
     secret_hash: [u8; 32],

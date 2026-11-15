@@ -393,6 +393,7 @@ fn apply(sim: &mut Sim, s: &Setup) {
             sim.false_start(CarId(*car));
         }
         Setup::BotPace { car, milli } => sim.set_bot_pace(CarId(*car), *milli),
+        Setup::Bot { car } => sim.set_bot(CarId(*car)),
         Setup::Utility { car, kind } => {
             sim.utility(CarId(*car), *kind);
         }

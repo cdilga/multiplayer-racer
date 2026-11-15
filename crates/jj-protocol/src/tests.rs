@@ -588,9 +588,9 @@ fn ui_samples() -> Vec<UiCommand> {
             recipe: "rocks,town".into(),
         },
         UiCommand::SetBots { n: 12 },
-        UiCommand::SetBotSkill { index: 3, skill: 2 },
-        UiCommand::SetBotAssist { index: 3, level: 1 },
-        UiCommand::RemoveBot { index: 7 },
+        UiCommand::SetBotSkill { id: 3, skill: 2 },
+        UiCommand::SetBotAssist { id: 3, level: 1 },
+        UiCommand::RemoveBot { id: 7 },
         UiCommand::SetSeatAssist { seat: 2, level: 2 },
     ]
 }

@@ -25,6 +25,8 @@ type SeatView = RoomView['seats'][number] & {
   wreckWhy?: 'outOfBounds' | 'flipped' | 'wheelLoss' | 'recover' | null;
   /** From `room_json`: the seat's finishing time (ms from the start) once its car has finished. */
   finishMs?: number | null;
+  /** From `room_json` (council review round 3): crawling while racing for `race.json` `recover.stuckAfterS`. */
+  stuck?: boolean;
 };
 
 /** m:ss.t */
@@ -132,7 +134,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (promptKey !== null && promptKey !== (since?.key ?? null)) promptSeen.set(seatNo, { key: promptKey, at: performance.now() });
       const quiet = promptKey !== null && performance.now() - (promptSeen.get(seatNo)?.at ?? 0) > QUIET_AFTER_MS;
       const inv = started && s?.inventory?.front ? [s.inventory.front, s.inventory.back ?? null] : null;
-      const key = JSON.stringify([inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
+      const key = JSON.stringify([inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000), !!s?.stuck]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -182,6 +184,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       }
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
+        // Council review round 3: a wedged car sat still with nothing to say so; the sim recovers it itself a few seconds on.
+        (started && s.stuck && !s.finished && !practising ? '<span class="chip chip-warn" data-stuck>Stuck? Tap ↺</span>' : '') +
         (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.

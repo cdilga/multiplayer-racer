@@ -177,6 +177,11 @@ pub enum Setup {
         car: u32,
         milli: u16,
     },
+    /// The car is a host's bot (no seat): its finish doesn't open the finish window while a seat races (council review
+    /// round 3). Appended: variant indices stay stable.
+    Bot {
+        car: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

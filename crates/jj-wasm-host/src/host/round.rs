@@ -73,21 +73,28 @@ pub(super) struct RoundState {
     pub bot_results: Vec<BotResult>,
     /// This round's bot cars, held with the grid through the countdown (P1-FL08).
     pub bot_cars: Vec<CarId>,
+    /// The id of the bot (`BotSpec::id`) driving each of `bot_cars`: a bot the host removes mid-round keeps its car, number
+    /// and place until the round ends (council review round 3: it finished as "#0 Bot").
+    pub bot_ids: Vec<u32>,
+    /// The next bot's id (never reused in a session).
+    pub next_bot_id: u32,
     /// br-m1xe: the tick each seat's laps ended this round (its lap times).
     pub lap_ticks: std::collections::BTreeMap<SeatId, Vec<u64>>,
 }
 
-/// A bot the host added (br-8h3u.14): its skill (0 Easy, 1 Normal, 2 Hard: `assist.json` `autopilot.botSkills`) and
-/// learner level (an L-plater when it isn't Off).
+/// A bot the host added (br-8h3u.14): its id (the host menu addresses it by this, never by its row), skill (0 Easy,
+/// 1 Normal, 2 Hard: `assist.json` `autopilot.botSkills`) and learner level (an L-plater when it isn't Off).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct BotSpec {
+    pub id: u32,
     pub skill: u8,
     pub assist: jj_sim::assist::AssistLevel,
 }
 
-impl Default for BotSpec {
-    fn default() -> Self {
+impl BotSpec {
+    fn new(id: u32) -> Self {
         Self {
+            id,
             skill: 1,
             assist: jj_sim::assist::AssistLevel::Off,
         }
@@ -164,6 +171,8 @@ impl RoundState {
             bots: Vec::new(),
             bot_results: Vec::new(),
             bot_cars: Vec::new(),
+            bot_ids: Vec::new(),
+            next_bot_id: 0,
             standings: Standings::default(),
             laps: None,
             free_drive: false,
@@ -186,6 +195,18 @@ impl RoundState {
     }
 }
 
+/// A track's laps by its length class (R125, `assets/profiles/generator.json`).
+fn laps_for(map: &LoadedMap) -> u32 {
+    let pts = &map.map.route.points;
+    let len_m: f64 = (0..pts.len())
+        .map(|i| {
+            let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
+            f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0
+        })
+        .sum();
+    jj_procgen::tuning::GeneratorData::shipped().laps_for_length(len_m)
+}
+
 pub(super) fn room_phase(p: Phase) -> RoomPhase {
     match p {
         Phase::Lobby | Phase::Disbanded => RoomPhase::Lobby,
@@ -199,16 +220,30 @@ impl Host {
     /// The laps the next race runs: the host's override, else the track's length class (R125: sprint, standard and epic
     /// tracks run more or fewer laps so a race lasts about the same time; the data is `assets/profiles/generator.json`).
     pub(super) fn effective_laps(&self) -> u32 {
-        self.round.laps.unwrap_or_else(|| {
-            let pts = &self.map.map.route.points;
-            let len_m: f64 = (0..pts.len())
-                .map(|i| {
-                    let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
-                    f64::from(b.x - a.x).hypot(f64::from(b.z - a.z)) / 1000.0
-                })
-                .sum();
-            jj_procgen::tuning::GeneratorData::shipped().laps_for_length(len_m)
-        })
+        self.round.laps.unwrap_or_else(|| laps_for(&self.map))
+    }
+
+    /// The laps the next race runs, if that's known: the host's number, else the prepared track's length class (null while
+    /// it's still being made; without main's preparation the start map is every round's).
+    pub(super) fn next_laps(&self) -> Option<u32> {
+        if let Some(l) = self.round.laps {
+            return Some(l);
+        }
+        match &self.round.prepared {
+            Some(map) => Some(laps_for(map)),
+            None if !self.round.prepare_maps => Some(laps_for(&self.map)),
+            None => None,
+        }
+    }
+
+    /// The room view's laps: the running race's own count (a change mid-race is for the next round), else the next race's,
+    /// else the current map's.
+    fn laps_now(&self) -> u32 {
+        let race = self.sim.race();
+        if race.started_at.is_some() && !self.round.derby_now && self.round.round.is_some() {
+            return race.laps;
+        }
+        self.next_laps().unwrap_or_else(|| self.effective_laps())
     }
 
     /// What cars may do now.
@@ -410,10 +445,13 @@ impl Host {
             .iter()
             .map(|&slot| self.sim.spawn_car_as(self.sim.grid_pose(slot), 0))
             .collect();
+        self.round.bot_ids = self.round.bots.iter().map(|b| b.id).collect();
         // br-8h3u.14: each at its skill's pace, an L-plater on its learner level.
         let skills = self.sim.assist_profile().autopilot.bot_skills;
         for (&bot, spec) in self.round.bot_cars.iter().zip(&self.round.bots) {
             self.sim.set_autopilot(bot, true);
+            // Council review round 3: a bot's finish doesn't end the race on the humans (only a seat's opens the window).
+            self.sim.set_bot(bot);
             let pace = skills.pace_milli(spec.skill);
             if pace != 1000 {
                 self.sim.set_bot_pace(bot, pace);
@@ -466,6 +504,7 @@ impl Host {
             input.dropped = false;
         }
         self.round.bot_cars.clear();
+        self.round.bot_ids.clear();
         self.seen_race_events = 0;
         self.seen_utility_events = 0;
         self.seen_damage_events = 0;
@@ -520,18 +559,14 @@ impl Host {
         let result = match committed {
             jj_session::results::Committed::New(r) | jj_session::results::Committed::Again(r) => r,
         };
-        // br-8h3u.14: with bots in the race every car takes its place among all of them, finishers in finish order (an
-        // unfinished car has none); the bots score nothing, and the seats keep their points.
+        // br-8h3u.14: with bots in the race every car takes its place among all of them, finishers in finish order, then
+        // the unfinished by distance covered (council review round 3: every DNF shared "–"); the bots score nothing, and
+        // the seats keep their points.
         let race = self.sim.race();
-        let finishers: Vec<u32> = race
-            .standings()
-            .iter()
-            .filter(|r| r.finished_at.is_some())
-            .map(|r| r.car)
-            .collect();
+        let ranked: Vec<u32> = race.standings().iter().map(|r| r.car).collect();
         let with_bots = !self.round.bot_cars.is_empty();
         let place_of = |car: CarId| {
-            finishers
+            ranked
                 .iter()
                 .position(|&o| o == car.0)
                 .map_or(0, |p| p as u32 + 1)
@@ -728,11 +763,12 @@ impl Host {
         let d = &self.round.director;
         let order: Vec<u32> = self.sim.race().standings().iter().map(|r| r.car).collect();
         // A seat that left is gone from the room (no phantom seats, G02); its standings row stays. The seat itself is
-        // kept only so the same endpoint could return to it.
+        // kept only so the same endpoint could return to it. One leaving (Remove player in a paused race, council review
+        // round 3) is gone from the view at once: its car leaves at the resumed tick.
         let seats: Vec<serde_json::Value> = self
             .seats
             .seats()
-            .filter(|s| s.presence != seats::Presence::Left)
+            .filter(|s| s.presence != seats::Presence::Left && !s.is_leaving())
             .map(|s| {
                 let round_car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
                 // P1-C10: a practising seat's tile follows its practice car (its own id in the snapshot).
@@ -787,6 +823,9 @@ impl Host {
                     "lapMs": self.lap_ms(s.id),
                     "wreckMs": wreck.map(|w| w.0),
                     "wreckWhy": wreck.map(|w| w.1),
+                    // Council review round 3: the car has been crawling for `race.json` `recover.stuckAfterS` while racing;
+                    // the tile says to tap Recover (the race recovers it itself at `autoAfterS`).
+                    "stuck": car.is_some_and(|c| practice.is_none() && self.sim.race().is_stuck(c, tick)),
                     // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
@@ -808,15 +847,22 @@ impl Host {
             .map(|r| serde_json::json!({ "seat": r.seat.0, "place": r.place, "points": r.total.points, "wins": r.total.wins }))
             .collect();
         let race = self.sim.race();
-        let race_ends_in_ms = race.first_finish.filter(|_| race.over.is_none()).map(|f| {
-            super::tick_ms((f + jj_sim::race::FINISH_WINDOW_TICKS).saturating_sub(self.sim.tick()))
-        });
+        let race_ends_in_ms = race
+            .window_closes_at()
+            .filter(|_| race.over.is_none())
+            .map(|t| super::tick_ms(t.saturating_sub(self.sim.tick())));
         serde_json::json!({
             "phase": format!("{:?}", d.phase()),
             "remainingMs": d.remaining_ms(),
             "round": d.round().map(|r| r.0),
-            "laps": self.effective_laps(),
-            // Once the first car finishes, the rest have the finish window to finish (null before, and once it's over).
+            // The race's laps while one runs, else the next race's (council review round 3: the lobby promised the last
+            // map's 5 and the race ran the new track's 3). `lapsAuto`: no number was chosen, the track's length decides;
+            // `nextLaps` is that number once the next track is ready (null until then).
+            "laps": self.laps_now(),
+            "lapsAuto": self.round.laps.is_none(),
+            "nextLaps": self.next_laps(),
+            // Once the first seat finishes (any car in a room of only bots), the rest have the finish window to finish (null
+            // before, and once it's over).
             "raceEndsInMs": race_ends_in_ms,
             // P1-G06: this round's mode, the next round's (the lobby's choice), and the host's derby/intermission lengths.
             "mode": if self.round.derby_now { "derby" } else { "race" },
@@ -831,9 +877,16 @@ impl Host {
             "bots": self.round.bots.len(),
             // br-8h3u.14: each bot's skill (0 Easy, 1 Normal, 2 Hard) and learner level, and the last race's bot rows.
             // A bot's race position (null outside a round) counts every car, as a seat's does.
-            "botList": self.round.bots.iter().enumerate().map(|(i, b)| {
-                let position = self.round.bot_cars.get(i).and_then(|c| order.iter().position(|&o| o == c.0)).map(|p| p + 1);
-                serde_json::json!({ "skill": b.skill, "assist": b.assist.as_u8(), "position": position })
+            // Each bot's id is what the host menu sends back (never its row). `slot`: its car's place among this round's bot
+            // cars (the TV numbers bot cars after the seats', in this order), null if it isn't racing this round.
+            "botList": self.round.bots.iter().map(|b| {
+                let slot = self.round.bot_ids.iter().position(|&id| id == b.id);
+                let position = slot.and_then(|i| self.round.bot_cars.get(i)).and_then(|c| order.iter().position(|&o| o == c.0)).map(|p| p + 1);
+                serde_json::json!({ "id": b.id, "skill": b.skill, "assist": b.assist.as_u8(), "position": position, "slot": slot })
+            }).collect::<Vec<_>>(),
+            // This round's bot cars in slot order, a bot the host removed mid-round included (it races on to the end).
+            "botCars": self.round.bot_ids.iter().zip(&self.round.bot_cars).map(|(&id, c)| {
+                serde_json::json!({ "id": id, "position": order.iter().position(|&o| o == c.0).map(|p| p + 1) })
             }).collect::<Vec<_>>(),
             "botResults": self.round.bot_results.iter().map(|b| serde_json::json!({ "index": b.index, "place": b.place, "timeMs": b.time_ms })).collect::<Vec<_>>(),
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,
@@ -905,7 +958,11 @@ impl Host {
             }
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
-            UiCommand::SetLaps { laps } => self.round.laps = Some(laps.max(1)),
+            // 0 is Auto: the track's length class decides (council review round 3: the menu showed 5 lit, the race ran 3).
+            UiCommand::SetLaps { laps } => {
+                self.round.laps = (laps > 0).then_some(laps);
+                self.session_rev += 1;
+            }
             UiCommand::SetMode { derby } => {
                 self.round.derby_next = derby;
                 let limit = derby.then_some(self.round.derby_ms);
@@ -927,25 +984,29 @@ impl Host {
             }
             UiCommand::SetNextTrack { choice } => self.set_next_track(choice),
             UiCommand::SetBots { n } => {
-                self.round.bots.resize(n as usize, BotSpec::default());
+                self.round.bots.truncate(n as usize);
+                while self.round.bots.len() < n as usize {
+                    let id = self.round.next_bot_id;
+                    self.round.next_bot_id += 1;
+                    self.round.bots.push(BotSpec::new(id));
+                }
                 self.session_rev += 1;
             }
-            UiCommand::SetBotSkill { index, skill } => {
-                if let Some(b) = self.round.bots.get_mut(index as usize) {
+            UiCommand::SetBotSkill { id, skill } => {
+                if let Some(b) = self.round.bots.iter_mut().find(|b| b.id == id) {
                     b.skill = skill.min(2);
                 }
                 self.session_rev += 1;
             }
-            UiCommand::SetBotAssist { index, level } => {
-                if let Some(b) = self.round.bots.get_mut(index as usize) {
+            UiCommand::SetBotAssist { id, level } => {
+                if let Some(b) = self.round.bots.iter_mut().find(|b| b.id == id) {
                     b.assist = jj_sim::assist::AssistLevel::from_u8(level);
                 }
                 self.session_rev += 1;
             }
-            UiCommand::RemoveBot { index } => {
-                if (index as usize) < self.round.bots.len() {
-                    self.round.bots.remove(index as usize);
-                }
+            // A second press on a row that's already gone does nothing (by index it took the next bot down).
+            UiCommand::RemoveBot { id } => {
+                self.round.bots.retain(|b| b.id != id);
                 self.session_rev += 1;
             }
             UiCommand::SetSeatAssist { seat, level } => {

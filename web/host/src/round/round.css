@@ -166,6 +166,11 @@
 .rs-acts { display: flex; flex-direction: column; gap: calc(12px * var(--k)); min-width: 0; padding-bottom: 36px; }
 .rs-acts .tag { align-self: flex-start; flex: none; width: calc(270px * var(--k)); font-size: calc(30px * var(--k)); font-variant-numeric: tabular-nums; }
 .rs-acts .btn { width: 100%; min-height: calc(64px * var(--k)); font-size: calc(30px * var(--k)); }
+/* Council review round 3 (#4): between rounds, with everyone in the room joined, the join QR docks in the footer as in a race
+   (it still opens the big join card) and the placings, the vote and the buttons take its room. */
+html[data-results-qr-docked] .foot-qr { display: inline-flex; }
+.results.qr-docked .rs-join { display: none; }
+.results.qr-docked .rs-foot { grid-template-columns: minmax(0, 1fr); }
 
 /* A phone held sideways (council review 2026-11-15, 915x412): the vote, QR and buttons under the placings left seven rows
    as slivers. Below 500 px tall the placings take the right column's whole height; the QR and actions go under the
@@ -469,6 +474,8 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
   padding-bottom: calc(10px * var(--k)); }
 .mn-rule { display: flex; flex-direction: column; gap: calc(12px * var(--k)); min-width: 0; }
 .mn-rules .mn-acts .btn { flex-basis: calc(110px * var(--k)); }
+/* Six lap choices (Auto and five numbers) share one row instead of the last wrapping to a full-width bar. */
+.mn-rules .mn-acts:has([data-rule=laps]) .btn { flex-basis: calc(70px * var(--k)); }
 .mn-panel .jj-diag { position: static; max-width: 100%; max-height: none; overflow: auto; box-shadow: none; }
 .lb-local-choice { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; min-width: 0; }
 .lb-local-choice label { display: grid; gap: .2em; font-weight: 700; }

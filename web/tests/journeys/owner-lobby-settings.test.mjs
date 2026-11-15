@@ -46,6 +46,16 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: phone, keys and
     await wait(host,()=>window.__jjRoom.view().catchUp===false);
     await host.getByRole('button',{name:'Light',exact:true}).click();
     await wait(host,()=>window.__jjRoom.view().catchUp===true);
+    // Council review round 3 (#7): laps start on Auto (the track's length decides), lit; a chosen number lights in its place.
+    const lapsLit = () => document.querySelector('[data-race-rules] [data-rule=laps][aria-pressed=true]')?.dataset.value;
+    assert.equal(await host.evaluate(lapsLit),'auto');
+    assert.equal(await host.evaluate(()=>window.__jjRoom.view().lapsAuto),true);
+    await host.locator('[data-race-rules] [data-rule=laps][data-value="3"]').click();
+    await wait(host,()=>window.__jjRoom.view().lapsAuto===false&&window.__jjRoom.view().nextLaps===3);
+    await wait(host,()=>document.querySelector('[data-race-rules] [data-rule=laps][aria-pressed=true]')?.dataset.value==='3');
+    await host.locator('[data-race-rules] [data-rule=laps][data-value="auto"]').click();
+    await wait(host,()=>window.__jjRoom.view().lapsAuto===true);
+    await wait(host,()=>document.querySelector('[data-race-rules] [data-rule=laps][aria-pressed=true]')?.dataset.value==='auto');
     await shot(host,`${engine.name()}-race-rules`);
     await host.getByRole('button',{name:'Back',exact:true}).click();
     await host.getByRole('button',{name:'Controllers',exact:true}).click();

@@ -4841,19 +4841,20 @@ fn host_bots_race_at_their_skill_and_take_places_among_the_seats() {
     };
     h.handle(&ui(UiCommand::SetLaps { laps: 1 })).unwrap();
     h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
+    // A fresh host's bots are ids 0..n.
     for (i, skill) in [0u8, 0, 1, 1, 2, 2].into_iter().enumerate() {
         h.handle(&ui(UiCommand::SetBotSkill {
-            index: i as u32,
+            id: i as u32,
             skill,
         }))
         .unwrap();
     }
-    h.handle(&ui(UiCommand::SetBotAssist { index: 1, level: 2 }))
+    h.handle(&ui(UiCommand::SetBotAssist { id: 1, level: 2 }))
         .unwrap();
-    // Removing a bot and adding one back leaves six, the rest in order.
-    h.handle(&ui(UiCommand::RemoveBot { index: 5 })).unwrap();
+    // Removing a bot and adding one back leaves six, the rest in order; the new one has a new id.
+    h.handle(&ui(UiCommand::RemoveBot { id: 5 })).unwrap();
     h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
-    h.handle(&ui(UiCommand::SetBotSkill { index: 5, skill: 2 }))
+    h.handle(&ui(UiCommand::SetBotSkill { id: 6, skill: 2 }))
         .unwrap();
     for c in [
         ControllerCmd::Hello {
@@ -5038,7 +5039,7 @@ fn bot_race(seed: u64, laps: u32) -> BotRace {
     .unwrap();
     for (i, &skill) in skills.iter().enumerate() {
         h.handle(&ui(UiCommand::SetBotSkill {
-            index: i as u32,
+            id: i as u32,
             skill,
         }))
         .unwrap();
@@ -5187,4 +5188,240 @@ fn bots_pick_up_and_use_items_and_pass_so_skill_decides_the_order() {
         mean[2] < mean[1] && mean[1] < mean[0],
         "Hard ahead of Normal ahead of Easy on average: {mean:?}"
     );
+}
+
+/// Council review round 3 (#3, #7): the host menu addresses a bot by its id, so a second press on a row that's already
+/// gone does nothing (by index it took the next bot down); a new bot gets a new id. Laps start on Auto (the track's
+/// length class decides), the room view saying which number that is.
+#[test]
+fn bots_are_addressed_by_id_and_laps_start_on_auto() {
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |h: &mut Host, ui: UiCommand| {
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(1),
+                ui,
+            }
+            .encode(),
+        )
+        .unwrap();
+        let mut now = h.last_us.map_or(0, |t| t + 8_334);
+        for _ in 0..2 {
+            h.advance(now);
+            now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let ids = |h: &Host| -> Vec<u64> {
+        room(h)["botList"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|b| b["id"].as_u64().unwrap())
+            .collect()
+    };
+    let r = room(&h);
+    assert_eq!(r["lapsAuto"], true, "{r}");
+    let auto_laps = h.effective_laps();
+    assert_eq!(r["nextLaps"], auto_laps, "the greybox's own length class");
+    assert_eq!(r["laps"], auto_laps);
+    ui(&mut h, UiCommand::SetLaps { laps: 5 });
+    let r = room(&h);
+    assert_eq!(
+        (r["lapsAuto"].clone(), r["nextLaps"].clone()),
+        (false.into(), 5.into())
+    );
+    ui(&mut h, UiCommand::SetLaps { laps: 0 });
+    let r = room(&h);
+    assert_eq!(
+        (r["lapsAuto"].clone(), r["nextLaps"].clone()),
+        (true.into(), auto_laps.into())
+    );
+
+    ui(&mut h, UiCommand::SetBots { n: 4 });
+    assert_eq!(ids(&h), [0, 1, 2, 3]);
+    ui(&mut h, UiCommand::SetBotSkill { id: 2, skill: 2 });
+    // The host presses Remove on bot 1 twice (the second on a row still drawn from the last room view).
+    ui(&mut h, UiCommand::RemoveBot { id: 1 });
+    ui(&mut h, UiCommand::RemoveBot { id: 1 });
+    assert_eq!(ids(&h), [0, 2, 3], "only bot 1 went");
+    assert_eq!(room(&h)["botList"][1]["skill"], 2, "bot 2 kept its skill");
+    ui(&mut h, UiCommand::SetBots { n: 4 });
+    assert_eq!(ids(&h), [0, 2, 3, 4], "a new bot, a new id");
+    ui(&mut h, UiCommand::SetBotAssist { id: 4, level: 1 });
+    assert_eq!(room(&h)["botList"][3]["assist"], 1);
+}
+
+/// Council review round 3 (#3, #6): in a paused race the Host menu's settings apply at once and show in the room view,
+/// as a joiner's claim already does (they used to wait for Resume, so every press looked like a miss), with the sim
+/// frozen: no tick runs and the race state is untouched. A bot removed mid-race keeps its car, slot and place to the end
+/// of the round; the journal still replays bit for bit to the live hash.
+#[test]
+fn host_menu_settings_apply_while_paused_and_the_journal_still_replays() {
+    use jj_session::director::Phase;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |h: &mut Host, ui: UiCommand| {
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(1),
+                ui,
+            }
+            .encode(),
+        )
+        .unwrap();
+    };
+    let send = |h: &mut Host, p: &str, cmd: ControllerCmd| {
+        h.handle(&net(p, Channel::Cmd, cmd.encode())).unwrap()
+    };
+    let mut now = 0u64;
+    let step = |h: &mut Host, frames: u64, now: &mut u64| {
+        for _ in 0..frames {
+            h.advance(*now);
+            *now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    ui(&mut h, UiCommand::SetLaps { laps: 1 });
+    ui(&mut h, UiCommand::SetBots { n: 3 });
+    for (k, p) in ["pa", "pb"].into_iter().enumerate() {
+        send(
+            &mut h,
+            p,
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId(p.into()),
+                resume: Some(format!("s-{p}")),
+            },
+        );
+        send(
+            &mut h,
+            p,
+            ControllerCmd::Claim {
+                request: RequestId(k as u32 + 1),
+                name: p.to_uppercase(),
+            },
+        );
+        send(&mut h, p, ControllerCmd::Ready { on: true });
+    }
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now);
+        if h.phase() == Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), Phase::Running);
+    step(&mut h, 120, &mut now);
+    let pb = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "PB")
+        .unwrap()["seat"]
+        .as_u64()
+        .unwrap() as u32;
+
+    // The host pauses and works the menu: Race rules, bots and a seat's learner help.
+    ui(&mut h, UiCommand::Pause { on: true });
+    step(&mut h, 2, &mut now);
+    let (frozen, hash) = (h.tick(), h.state_hash());
+    ui(&mut h, UiCommand::SetMode { derby: true });
+    ui(&mut h, UiCommand::SetDerbyLength { ms: 60_000 });
+    ui(&mut h, UiCommand::SetLaps { laps: 0 });
+    ui(&mut h, UiCommand::RemoveBot { id: 1 });
+    ui(&mut h, UiCommand::RemoveBot { id: 1 });
+    ui(&mut h, UiCommand::SetBots { n: 3 });
+    ui(&mut h, UiCommand::SetSeatAssist { seat: pb, level: 2 });
+    step(&mut h, 3, &mut now);
+    let r = room(&h);
+    assert_eq!(r["nextMode"], "derby", "{r}");
+    assert_eq!(r["derbyMs"], 60_000);
+    assert_eq!(r["lapsAuto"], true);
+    assert_eq!(r["laps"], 1, "the race on now keeps its laps");
+    let ids: Vec<u64> = r["botList"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["id"].as_u64().unwrap())
+        .collect();
+    assert_eq!(ids, [0, 2, 3], "bot 1 out once, a new bot 3 in");
+    assert!(
+        r["botList"][2]["slot"].is_null(),
+        "the new bot races from the next round"
+    );
+    let cars: Vec<u64> = r["botCars"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["id"].as_u64().unwrap())
+        .collect();
+    assert_eq!(
+        cars,
+        [0, 1, 2],
+        "bot 1's car races on to the end of the round"
+    );
+    assert!(r["botCars"][1]["position"].is_u64(), "with its place: {r}");
+    let seat_b = |r: &serde_json::Value| {
+        r["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["seat"] == pb)
+            .cloned()
+    };
+    assert_eq!(seat_b(&r).unwrap()["assist"], 2);
+    assert_eq!(h.tick(), frozen, "no tick ran");
+    assert_eq!(h.state_hash(), hash, "the race state is untouched");
+    assert_eq!(h.pause_mask(), Pause::Manual as u32, "still paused");
+
+    // Remove player applies in the pause too (its car stops as a Leave's does).
+    ui(
+        &mut h,
+        UiCommand::RemoveSeat {
+            seat: jj_types::SeatId(pb),
+        },
+    );
+    step(&mut h, 3, &mut now);
+    assert!(
+        seat_b(&room(&h)).is_none(),
+        "PB is out during the pause: {}",
+        room(&h)
+    );
+    assert_eq!(h.tick(), frozen, "still no tick");
+
+    // Resume: the race runs on, and its journal replays to the live hash.
+    ui(&mut h, UiCommand::Pause { on: false });
+    for _ in 0..(120 * 6) {
+        step(&mut h, 1, &mut now);
+        if h.tick() > frozen + 240 {
+            break;
+        }
+    }
+    assert!(h.tick() > frozen + 240, "the race resumed");
+    let replayed = Sim::replay_with(
+        &h.map,
+        &jj_procgen::registry(),
+        h.vehicles.iter().map(|(_, p)| p.clone()).collect(),
+        h.sim.journal(),
+        h.tick(),
+    );
+    assert_eq!(replayed.state_hash(), h.sim.state_hash(), "bit for bit");
+
+    // The removed bot finishes under its own slot (its number on the TV), not "#0".
+    let mut guard = 0;
+    while h.phase() != Phase::Intermission {
+        step(&mut h, 1, &mut now);
+        guard += 1;
+        assert!(guard < 600 * 120, "the race ends");
+    }
+    let r = room(&h);
+    let slots: Vec<u64> = r["botResults"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["index"].as_u64().unwrap())
+        .collect();
+    assert_eq!(slots, [0, 1, 2], "every bot car that raced has a row: {r}");
 }

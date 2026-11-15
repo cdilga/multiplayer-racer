@@ -380,15 +380,19 @@ test('HUD: boost meter and wreck countdown render from the room view; pre-race t
   }
 });
 
-test('results: the next-race caption and buttons never overlap the QR card (address line included) at any aspect', async () => {
+// Council review round 3 (#4): between rounds the room has joined, so the join QR docks in the footer (it opens the big join
+// card) and gives its room to the placings and the vote; with nobody in the room the big one stays.
+test('results: the join QR docks in the footer; the caption and buttons clear it and the footer at any aspect', async () => {
   for (const [name, vp] of Object.entries(VP)) {
     for (const n of [1, 8, 32]) {
       const page = await open(`results-${n}`, vp);
       try {
-        const qr = await box(page, '.rs-join .qr-card');
-        for (const sel of ['[data-next]', '[data-act=start]', '[data-act=lobby]', '.rs-list']) assert.ok(!overlap(qr, await box(page, sel)), `${name} N=${n}: ${sel} clear of the QR card`);
+        assert.equal(await page.locator('.rs-join .qr-card').count(), 0, `${name} N=${n}: no big QR between rounds`);
+        assert.ok(await page.locator('.jj-foot .foot-qr').isVisible(), `${name} N=${n}: the footer's docked QR`);
+        const qr = await box(page, '.jj-foot .foot-qr');
+        for (const sel of ['[data-next]', '[data-act=start]', '[data-act=lobby]', '.rs-list']) assert.ok(!overlap(qr, await box(page, sel)), `${name} N=${n}: ${sel} clear of the QR`);
         const f = await box(page, '.jj-foot');
-        for (const sel of ['.rs-join .qr-card', '[data-act=lobby]']) assert.ok(!overlap(f, await box(page, sel)), `${name} N=${n}: ${sel} clear of the footer`);
+        for (const sel of ['[data-act=start]', '[data-act=lobby]']) assert.ok(!overlap(f, await box(page, sel)), `${name} N=${n}: ${sel} clear of the footer`);
         const cap = await box(page, '[data-next]');
         assert.ok(cap.x >= 0 && cap.x + cap.w <= vp[0] + 0.5, `${name} N=${n}: caption on screen`);
         if (n === 8) await capture(page, `results-8-caption@${name}`);

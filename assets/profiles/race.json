@@ -1,0 +1,14 @@
+{
+  "contract": "jj-race/1",
+  "what": "Race-end and recovery timings (council review round 3, 2026-11-16). finishWindow: once a seated car (a player's, on the autopilot or not) finishes, the rest have baseS + perLapS x laps to finish (3 laps: 60 s); a bot finishing opens nothing while any seat is racing, and a room of only bots opens it on the first finish (the absolute deadline still ends any race). recover: the Recover button works after manualAfterS under speedBelowMps (or at once when inverted); a racing car under that speed for stuckAfterS is shown as stuck (the TV tile says 'Stuck? Tap Recover'), and from autoAfterS, while its driver is pressing to go (throttle or reverse), the race recovers it itself (a car parked with no input stays put; an idle player's car is the autopilot's, which presses Recover itself). Starting values, tunable; crates/jj-sim validates this file at load.",
+  "finishWindow": {
+    "baseS": 30,
+    "perLapS": 10
+  },
+  "recover": {
+    "speedBelowMps": 3.0,
+    "manualAfterS": 1.0,
+    "stuckAfterS": 3.0,
+    "autoAfterS": 6.0
+  }
+}

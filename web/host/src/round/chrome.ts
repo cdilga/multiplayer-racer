@@ -24,11 +24,19 @@ type Seat = RoomView['seats'][number];
 export const SKILLS = ['Easy', 'Normal', 'Hard'];
 export const HELP = ['Off', 'Some', 'Lots'];
 
-/** The room's bots with their car numbers: after every seat's, as the world numbers them (main.ts `botNumber`). */
+/** The number of this round's bot car in `slot`: after every seat's, as the world numbers them (main.ts `botNumber`). */
+export const botNumber = (room: RoomView, slot: number) => Math.max(0, ...room.seats.map((s) => s.number)) + 1 + slot;
+/** The host's bots with their car numbers. A bot racing now has its car's number; one added since the round started numbers
+ *  after this round's bot cars. Each carries its `id`, which the menu sends back (council review round 3: by row, a second
+ *  press on a stale row removed the next bot down). */
 export const botRows = (room: RoomView) => {
-  const first = Math.max(0, ...room.seats.map((s) => s.number)) + 1;
-  return (room.botList ?? []).map((b, index) => ({ ...b, index, number: first + index }));
+  const racing = room.botCars?.length ?? 0;
+  let spare = 0;
+  return (room.botList ?? []).map((b, index) => ({ ...b, index, number: botNumber(room, b.slot ?? racing + spare++) }));
 };
+/** This round's bot cars with their numbers and places: a bot the host removed mid-round races on under its number to the
+ *  end (council review round 3: its place vanished from the footer and it finished as "#0 Bot"). */
+export const botCarRows = (room: RoomView) => (room.botCars ?? []).map((b, slot) => ({ ...b, slot, number: botNumber(room, slot) }));
 type UiInput = Extract<SimInput, { type: 'ui' }>['ui'];
 
 export interface ChromeOptions {
@@ -156,7 +164,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     // place: it stays in the order (council review 2026-11-15: places 2 and 10 went missing from the strip).
     const seatsIn = racing() && room ? room.seats.filter((s) => placeOf(s) !== null) : [];
     // br-8h3u.14: a race's bots take their places among the seats, marked as bots (a derby's ledger ranks seats only).
-    const botsIn = racing() && room && !derby ? botRows(room).filter((b) => b.position !== null) : [];
+    const botsIn = racing() && room && !derby ? botCarRows(room).filter((b) => b.position !== null) : [];
     const order = [
       ...seatsIn.map((s) => ({ place: placeOf(s)!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length, style: colour(s), bot: false })),
       ...botsIn.map((b) => ({ place: b.position!, number: b.number, name: 'Bot', colour: -1, style: '', bot: true })),
@@ -229,7 +237,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
   // What the open menu shows: when this is unchanged, update() leaves the buttons alone (br-b2sv).
-  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${JSON.stringify(r.preparation?.favourite ?? null)}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}${s.assist ?? 0}`).join()}:${JSON.stringify(r.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
+  const menuKey = (r: RoomView) => `${state.confirm}:${state.join}:${state.controls}:${state.page}:${r.catchUp}:${r.phase}:${JSON.stringify(r.preparation?.favourite ?? null)}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}${s.assist ?? 0}`).join()}:${JSON.stringify(r.botList?.map((b) => [b.id, b.skill, b.assist, b.slot ?? null]) ?? [])}:${r.nextMode}:${r.lapsAuto}:${r.laps}:${r.nextLaps}:${r.derbyMs}:${r.intermissionMs}`;
   let pressing = false;
   let redrawLater = false;
   const renderMenu = () => {
@@ -310,10 +318,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       // They have no Ready, never hold up the start and score no points.
       const bots = botRows(room!);
       const rows = bots.length
-        ? bots.map((b) => `<li data-bot="${b.index}" data-number="${b.number}"><span class="badge bot">#${b.number}</span><span class="nm">Bot</span>
-            <button class="btn brush" type="button" data-act="bot-skill" data-index="${b.index}" data-value="${(b.skill + 1) % 3}" aria-label="Bot #${b.number} skill: ${SKILLS[b.skill]}. Change">${SKILLS[b.skill]}</button>
-            <button class="btn brush${b.assist ? ' primary' : ''}" type="button" data-act="bot-assist" data-index="${b.index}" data-value="${(b.assist + 1) % 3}" aria-label="Bot #${b.number} learner help: ${HELP[b.assist]}. Change">L · ${HELP[b.assist]}</button>
-            <button class="btn brush quiet" type="button" data-act="bot-remove" data-index="${b.index}" aria-label="Remove bot #${b.number}">Remove</button></li>`).join('')
+        ? bots.map((b) => `<li data-bot="${b.index}" data-bot-id="${b.id}" data-number="${b.number}"><span class="badge bot">#${b.number}</span><span class="nm">Bot</span>
+            <button class="btn brush" type="button" data-act="bot-skill" data-id="${b.id}" data-value="${(b.skill + 1) % 3}" aria-label="Bot #${b.number} skill: ${SKILLS[b.skill]}. Change">${SKILLS[b.skill]}</button>
+            <button class="btn brush${b.assist ? ' primary' : ''}" type="button" data-act="bot-assist" data-id="${b.id}" data-value="${(b.assist + 1) % 3}" aria-label="Bot #${b.number} learner help: ${HELP[b.assist]}. Change">L · ${HELP[b.assist]}</button>
+            <button class="btn brush quiet" type="button" data-act="bot-remove" data-id="${b.id}" aria-label="Remove bot #${b.number}">Remove</button></li>`).join('')
         : '<li class="none">No bots. Add one to race against.</li>';
       menuEl.innerHTML = `<section class="mn-panel controls" data-bots-view aria-labelledby="mn-t"><h2 id="mn-t" class="display">Bo<span class="acc">ts</span></h2>
         <p>Bots race on the autopilot from the next round. They don't need to ready up, never hold up the start and score no points.</p>
@@ -326,7 +334,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const choice = (rule: string, label: string, values: Array<[number | string, string]>, on: number | string | undefined) =>
         `<div class="mn-rule"><h3 class="display">${label}</h3><div class="mn-acts" role="group" aria-label="${label}">${values.map(([v, t]) => `<button class="btn brush${on === v ? ' primary' : ''}" type="button" data-act="rule" data-rule="${rule}" data-value="${v}" aria-pressed="${on === v}">${t}</button>`).join('')}</div></div>`;
       const rules = choice('mode', 'Next round', [['race', 'Race'], ['derby', 'Derby']], r.nextMode ?? 'race')
-        + choice('laps', 'Laps', LAPS.map((n) => [n, String(n)]), r.laps)
+        // Council review round 3: unset laps follow the track's length; Auto says so (with the number once the track is ready).
+        + choice('laps', 'Laps', [['auto', `Auto${r.lapsAuto && r.nextLaps != null ? ` · ${r.nextLaps}` : ''}`], ...LAPS.map((n): [number, string] => [n, String(n)])], r.lapsAuto === false ? (r.nextLaps ?? r.laps) : 'auto')
         + choice('derbyMs', 'Derby length', DERBY_MS.map((ms) => [ms, `${ms / 60_000} min`]), r.derbyMs ?? 180_000)
         + choice('intermissionMs', 'Results on screen', INTERMISSION_MS.map((ms) => [ms, `${ms / 1000} s`]), r.intermissionMs ?? 10_000);
       // Council review 2026-11-15: the groups sit in columns (round.css .mn-rules) and only they scroll, so every rule and
@@ -527,21 +536,22 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       case 'bot-add':
         send(`bots:${(room?.botList?.length ?? 0) + 1}`);
         return;
+      // By the bot's id: a press on a row drawn from an older room view never reaches another bot.
       case 'bot-skill':
-        send(`bot-skill:${b.dataset.index}:${b.dataset.value}`);
+        send(`bot-skill:${Number(b.dataset.id)}:${Number(b.dataset.value)}`);
         return;
       case 'bot-assist':
-        send(`bot-assist:${b.dataset.index}:${b.dataset.value}`);
+        send(`bot-assist:${Number(b.dataset.id)}:${Number(b.dataset.value)}`);
         return;
       case 'bot-remove':
-        send(`bot-remove:${b.dataset.index}`);
+        send(`bot-remove:${Number(b.dataset.id)}`);
         return;
       case 'seat-assist':
         send(`seat-assist:${b.dataset.seat}:${b.dataset.value}`);
         return;
       case 'rule': {
         const rule = b.dataset.rule as 'mode' | 'laps' | 'derbyMs' | 'intermissionMs';
-        setRule(opts.input, rule, rule === 'mode' ? b.dataset.value! : Number(b.dataset.value));
+        setRule(opts.input, rule, rule === 'mode' || b.dataset.value === 'auto' ? b.dataset.value! : Number(b.dataset.value));
         return;
       }
       case 'diagnostics':

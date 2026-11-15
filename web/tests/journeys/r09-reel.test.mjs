@@ -88,7 +88,7 @@ test('two real controllers: retained damage plays beside results and QR; Hide le
     standingsWidth:document.querySelector('[data-results]').getBoundingClientRect().width}));
   assert.equal(before.reel.player.separateWorld,true);
   assert.equal(before.room.results.length,2);
-  for(const selector of ['[data-results]','.rs-join .qr','.jj-reel canvas']) assert.ok(await host.locator(selector).isVisible(),selector);
+  for(const selector of ['[data-results]','.jj-foot .foot-qr','.jj-reel canvas']) assert.ok(await host.locator(selector).isVisible(),selector);
 
   if(process.env.JJ_CAPTURE_DIR){
     for(const [state,seconds] of [['roo-detach',3.1],['gazza-detach',3.7],['roo-wreck',4.1]]){

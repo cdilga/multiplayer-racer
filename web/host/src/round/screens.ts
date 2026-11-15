@@ -14,7 +14,7 @@ import { onProfileChange, screenScale } from '../layout/profile';
 import { esc, raceTime, secs, shortName } from './format';
 import { bestLaps, currentKey, keepCurrent, kept, keyOf, noteLaps } from './favourites';
 import type { PathStats } from '../../../shared/transport/stats';
-import { type Chrome, type HostStats, HELP, SKILLS, botRows, mountChrome } from './chrome';
+import { type Chrome, type HostStats, HELP, SKILLS, botNumber, botRows, mountChrome } from './chrome';
 import { fitGrid, type Fit, type Tier } from './fit';
 import { mountHud, type Hud } from './hud';
 import './round.css';
@@ -120,6 +120,14 @@ export interface JoinInfo {
   localChoose?: (source: number, vehicle: string, open: boolean) => void;
   localReady?: (source: number) => void;
 }
+
+/** The lobby's laps (council review round 3: it promised the last map's 5 and the race ran 3): the next race's number, "(auto)"
+ *  when the track's length chose it, and no number until that track is ready. */
+const lapsHint = (room: RoomView): string => {
+  const n = room.nextLaps ?? (room.lapsAuto ? null : room.laps);
+  if (n == null) return 'laps to suit the track';
+  return `${n} lap${n === 1 ? '' : 's'}${room.lapsAuto ? ' (auto)' : ''}`;
+};
 
 /** A derby round's length for the lobby hint: whole minutes, or seconds under one. */
 const derbyLength = (ms: number) => (ms >= 60_000 ? `${Math.round(ms / 60_000)} min` : `${Math.round(ms / 1000)} s`);
@@ -304,7 +312,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     if (startLabel.textContent !== startText) startLabel.textContent = startText;
     // Bots alone can't start a round (council review 2026-11-15: with only bots Start was greyed and the hint never said why).
     const joinHow = 'Scan to join on your phone, or press a key cluster or pad';
-    screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : botRows(room).length ? `Needs at least one player: bots don't count\n${joinHow}` : joinHow;
+    screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : lapsHint(room)}` : botRows(room).length ? `Needs at least one player: bots don't count\n${joinHow}` : joinHow;
     const lead = leaderLine(room);
     const standEl = screen.querySelector<HTMLElement>('[data-standings]')!;
     if (standEl.textContent !== lead) standEl.textContent = lead;
@@ -519,18 +527,31 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
 
   // ---------- Round complete ----------
   const results = (room: RoomView) => {
-    // br-8h3u.14: the race's bots in their places among the seats, marked as bots, with no points.
-    const botNos = botRows(room);
+    // br-8h3u.14: the race's bots in their places among the seats, marked as bots, with no points. A row's index is its car's
+    // slot, so a bot the host removed mid-round still finishes under the number it raced with (it was "#0 Bot").
     const rows = [
       ...(room.results ?? []).map((r) => ({ ...r, bot: false })),
-      ...(room.mode === 'derby' ? [] : (room.botResults ?? [])).map((b) => ({ number: botNos[b.index]?.number ?? 0, name: 'Bot', place: b.place, time_ms: b.timeMs, points: 0, bot: true })),
+      ...(room.mode === 'derby' ? [] : (room.botResults ?? [])).map((b) => ({ number: botNumber(room, b.index), name: 'Bot', place: b.place, time_ms: b.timeMs, points: 0, bot: true })),
     ].sort((a, b) => (a.place || 1e9) - (b.place || 1e9));
     const seatOf = (num: number) => room.seats.find((s) => s.number === num);
     const winner = rows[0];
     const ws = winner ? seatOf(winner.number) : undefined;
     // P1-G06: a derby ranks by raw points; it has no times.
     const derby = room.mode === 'derby';
-    screen.innerHTML = `<section class="results" data-screen="results" data-count="${rows.length}">
+    // Council review round 3 (#4): between rounds everyone in the room has joined already, so the join QR docks small in the
+    // footer as it does in a race (it still opens the big join card) and the placings and the vote get its space. An empty
+    // room keeps the big one.
+    const docked = room.seats.length > 0;
+    // The running total beside this round's points once it differs (council review 2026-11-15, round 2).
+    const totalOf = (r: (typeof rows)[number]) => {
+      const s = r.bot ? undefined : seatOf(r.number);
+      const total = s ? standingsOf(room).get(s.seat)?.points : undefined;
+      return total !== undefined && total !== r.points ? total : undefined;
+    };
+    // Council review round 3 (#4): "+30 · 60 total" took the name's room and cut it to "S": the tiers' width budget counts
+    // the total (~5.5 em), so a name keeps ~6 em (a 12-character short name) in the tiers that show one.
+    const totalEm = rows.some((r) => totalOf(r) !== undefined) ? 5.5 : 0;
+    screen.innerHTML = `<section class="results${docked ? ' qr-docked' : ''}" data-screen="results" data-count="${rows.length}">
       <div class="rs-reel" data-reel>
         <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
           <span class="strip">${derby ? 'Most damage dealt wins · same cars, same numbers next round' : `Vote on your phone for the next track · same cars, same numbers${rows.some((r) => r.bot) ? ' · bots don\'t score' : ''}`}</span></header>
@@ -546,7 +567,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
             <button class="btn brush" data-act="lobby" type="button">Return to lobby</button></div></div>
       </div></section>`;
     const list = screen.querySelector<HTMLElement>('[data-results]')!;
-    screen.querySelector<HTMLElement>('.rs-join')!.append(qrCard(Math.min(window.innerHeight * 0.3, 240 * screenK())));
+    if (!docked) screen.querySelector<HTMLElement>('.rs-join')!.append(qrCard(Math.min(window.innerHeight * 0.3, 240 * screenK())));
+    document.documentElement.toggleAttribute('data-results-qr-docked', docked);
     // A derby row's damage dealt beside the points it earned (council review 2026-11-15: the strip said "201" and the
     // results "+25" with nothing to say they were different scales).
     const dmgOf = (r: (typeof rows)[number]) => {
@@ -558,9 +580,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const place = r.place || '–';
       const badge = r.bot ? `<span class="badge bot">#${r.number}</span>` : `<span class="badge" style="${colourVars(s?.colourIndex ?? r.number - 1)}">#${r.number}</span>`;
       // The running total beside this round's points once a total differs (council review 2026-11-15, round 2: the
-      // results gave no reason to stay for one more; the lobby already keeps the table).
-      const total = s ? standingsOf(room).get(s.seat)?.points : undefined;
-      const pts = `<span class="pts">+${r.points}${!r.bot && total !== undefined && total !== r.points ? `<small class="tot"> · ${total} total</small>` : ''}</span>`;
+      // results gave no reason to stay for one more; the lobby already keeps the table). The seat tier has no room for it.
+      const total = tier === 'row' || tier === 'name' ? totalOf(r) : undefined;
+      const pts = `<span class="pts">+${r.points}${total !== undefined ? `<small class="tot"> · ${total} total</small>` : ''}</span>`;
       const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>${r.bot ? '<span class="bot-tag">Bot</span>' : ''}`;
       const body =
         tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? dmgOf(r) : raceTime(r.time_ms)}</span>${pts}`
@@ -580,12 +602,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       side.classList.toggle('compact-foot', compact);
       // The small portrait results region cannot stack a full QR above all its actions and placings.
       // Keep the QR's whole modules and minimum pitch, while using the adjacent column for actions.
-      const card = side.querySelector<HTMLElement>('.qr-card')!;
+      const card = side.querySelector<HTMLElement>('.rs-join .qr-card');
       const desired = split ? Math.min(sideRect.width * .3, window.innerHeight * .34) : compact ? Math.min(sideRect.width * .44, sideRect.height * .52) : Math.min(window.innerHeight * .3, 240 * k);
-      card.style.setProperty('--qr-size', qrCard(desired).style.getPropertyValue('--qr-size'));
+      card?.style.setProperty('--qr-size', qrCard(desired).style.getPropertyValue('--qr-size'));
       const rect = list.getBoundingClientRect();
       const gap = 6 * k;
-      const tiers = PLACINGS.map((t) => ({ ...t, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
+      const tiers = PLACINGS.map((t) => ({ ...t, em: t.id === 'row' || t.id === 'name' ? t.em + totalEm : t.em, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
       const f = fitGrid(rows.length, rect.width, rect.height, gap, tiers, 34 * k);
       applyFit(list, f, gap, true);
       list.dataset.tier = f.tier.id;
@@ -618,12 +640,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     hud.update(room);
     chrome.update(room);
     const phase = room.phase;
-    if (phase !== 'Intermission') { resultsObserver?.disconnect(); resultsObserver = null; }
+    if (phase !== 'Intermission') { resultsObserver?.disconnect(); resultsObserver = null; document.documentElement.removeAttribute('data-results-qr-docked'); }
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
     // The lobby's Race/Derby choice, its hint (laps or derby length) and the results' derby layout are part of what's drawn.
-    const key = `${phase}:${room.round}:${JSON.stringify(room.standings ?? [])}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}:${JSON.stringify(room.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
+    const key = `${phase}:${room.round}:${JSON.stringify(room.standings ?? [])}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${room.lapsAuto}:${room.nextLaps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}:${JSON.stringify(room.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (room.between?.flyoverLeftMs != null) return flyover(room);

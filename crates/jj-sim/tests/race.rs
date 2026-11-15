@@ -2,7 +2,9 @@
 //! - Out of bounds always recovers (0.1's oob-recovery spec, re-expressed).
 //! - A flip from 12 inverted poses rights itself or is wrecked within 4 s of coming to rest.
 //! - A shortcut across the infield doesn't count progress.
-//! - The first finisher opens the 30 s window; an all-stuck race ends at `max(180 s, 2 × laps × refLap)`.
+//! - The first seated finisher opens the finish window (30 s + 10 s a lap); a bot's finish doesn't while a seat races; an
+//!   all-stuck race ends at `max(180 s, 2 × laps × refLap)`.
+//! - A car wedged against a barrier is flagged stuck at 3 s and recovered by the race at 6 s, bit for bit on replay.
 //! - Finished cars are ghosts to racers; Recover's rules and 2 s hold; races replay from the journal.
 
 use jj_map::{LoadedMap, Registry, load_json};
@@ -371,8 +373,197 @@ fn a_car_on_another_part_of_the_lap_is_told_it_missed_a_gate_until_it_goes_back(
     assert_eq!(s.race().car(0).unwrap().gates_passed, 2);
 }
 
+fn finish(map: &LoadedMap, s: &mut Sim, car: CarId) -> u64 {
+    let n = s.race().course.gate_count();
+    let from = s.race().car(car.0).unwrap().gates_passed as usize;
+    for i in from..=n {
+        drive_through(map, s, car, i % n);
+    }
+    s.race()
+        .car(car.0)
+        .unwrap()
+        .finished_at
+        .expect("finished its lap")
+}
+
+/// Council review round 3: with bots in the room the Hard bot's finish opened the window and every human read DNF. A bot
+/// finishing first opens nothing while a seat races; the seat's own finish does.
 #[test]
-fn the_first_finisher_opens_the_30_s_window() {
+fn a_bot_finishing_first_doesnt_start_the_window_while_a_seat_races() {
+    let map = greybox();
+    let mut s = sim(&map, 4);
+    let human = s.spawn_car(route_spawn(&map, 30, -3.0, 0.6));
+    let bot = s.spawn_car(route_spawn(&map, 30, 3.0, 0.6));
+    s.set_bot(bot);
+    s.start_race(1);
+    steps(&mut s, S);
+    let bot_done = finish(&map, &mut s, bot);
+    assert_eq!(s.race().first_finish, Some(bot_done));
+    assert_eq!(s.race().window_from, None, "a bot's finish opens no window");
+    // Far longer than any window: the seat is still racing.
+    let window = s.race().finish_window_ticks();
+    steps(&mut s, window + 5 * S);
+    assert_eq!(s.race().over, None, "the seat still gets to finish");
+    let human_done = finish(&map, &mut s, human);
+    assert_eq!(s.race().window_from, Some(human_done));
+    // Both finished: the race is over at once.
+    assert_eq!(s.race().over, Some((human_done, RaceEnd::AllFinished)));
+    // A replay with the journaled bot mark decides the same.
+    let journal = Journal::from_bytes(&s.journal().to_bytes()).unwrap();
+    let replay = Sim::replay(
+        &map,
+        &Registry::generic(),
+        VehicleProfile::cruz(),
+        &journal,
+        s.tick(),
+    );
+    assert_eq!(replay.state_hash(), s.state_hash());
+    assert_eq!(replay.race().events(), s.race().events());
+}
+
+/// In a room of only bots the first finish still opens the window, so the race ends.
+#[test]
+fn a_room_of_only_bots_opens_the_window_on_the_first_finish() {
+    let map = greybox();
+    let mut s = sim(&map, 4);
+    let a = s.spawn_car(route_spawn(&map, 30, -3.0, 0.6));
+    let b = s.spawn_car(route_spawn(&map, 30, 3.0, 0.6));
+    s.set_bot(a);
+    s.set_bot(b);
+    s.start_race(1);
+    steps(&mut s, S);
+    let done = finish(&map, &mut s, a);
+    assert_eq!(s.race().window_from, Some(done));
+    while s.race().over.is_none() {
+        s.step();
+    }
+    assert_eq!(
+        s.race().over,
+        Some((done + s.race().finish_window_ticks(), RaceEnd::Window))
+    );
+}
+
+/// The window grows with the race: `race.json` `finishWindow` is 30 s plus 10 s a lap.
+#[test]
+fn the_finish_window_grows_with_laps() {
+    let map = greybox();
+    let mut s = sim(&map, 4);
+    s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    let lengths: Vec<u64> = [1, 3, 5]
+        .iter()
+        .map(|&laps| {
+            s.start_race(laps);
+            s.race().finish_window_ticks()
+        })
+        .collect();
+    assert_eq!(lengths, vec![40 * S, 60 * S, 80 * S]);
+}
+
+/// Council review round 3: a car wedged against the scenery sat at 0 m/s until the race ended. Throttle held into the
+/// hairpin's first barrier, it is flagged stuck after `recover.stuckAfterS` (3 s) and the race recovers it at
+/// `recover.autoAfterS` (6 s); a replay decides the same, bit for bit.
+#[test]
+fn a_car_pinned_against_a_barrier_is_flagged_stuck_then_recovered() {
+    let map = greybox();
+    let mut s = sim(&map, 11);
+    let car = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    steps(&mut s, S);
+    // The barrier stands along x at z = -8.7 (0.4 m thick): the car's nose is about half a metre off it, facing it.
+    s.place_car(
+        car,
+        SpawnPose {
+            x: 170.0,
+            y: 0.3,
+            z: -5.9,
+            heading: std::f32::consts::PI,
+        },
+        0.0,
+        [0.0; 3],
+    );
+    s.start_race(3);
+    let start = s.tick();
+    let rules = s.race().rules;
+    let (mut stuck_at, mut recovered_at) = (None, None);
+    let mut max_speed = 0.0f32;
+    while recovered_at.is_none() && s.tick() < start + 10 * S {
+        s.set_input(
+            car,
+            DriveInput {
+                throttle: 32_767,
+                ..Default::default()
+            },
+        );
+        s.step();
+        if recovered_at.is_none() {
+            let v = s.car_state(car).unwrap().linvel;
+            max_speed = max_speed.max((v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt());
+        }
+        if stuck_at.is_none() && s.race().is_stuck(car.0, s.tick()) {
+            stuck_at = Some(s.tick());
+        }
+        if respawns(&s, car.0, Respawned::Recover) > 0 {
+            recovered_at = Some(s.tick());
+        }
+    }
+    assert!(max_speed < 3.0, "pinned: never above 3 m/s ({max_speed})");
+    let stuck_at = stuck_at.expect("flagged stuck");
+    let recovered_at = recovered_at.expect("recovered by the race");
+    assert!(
+        stuck_at >= start + rules.stuck_ticks && stuck_at <= start + rules.stuck_ticks + 2,
+        "stuck from {} ticks after the start, at {}",
+        rules.stuck_ticks,
+        stuck_at - start
+    );
+    assert_eq!(
+        recovered_at - stuck_at,
+        rules.auto_recover_ticks - rules.stuck_ticks,
+        "recovered at autoAfterS"
+    );
+    assert!(
+        !s.race().is_stuck(car.0, s.tick()),
+        "not stuck once respawned"
+    );
+    assert!(s.race().is_held(car.0, s.tick()));
+    assert_eq!(s.race().car(car.0).unwrap().recoveries, 1);
+    let journal = Journal::from_bytes(&s.journal().to_bytes()).unwrap();
+    let replay = Sim::replay(
+        &map,
+        &Registry::generic(),
+        VehicleProfile::cruz(),
+        &journal,
+        s.tick(),
+    );
+    assert_eq!(replay.state_hash(), s.state_hash());
+    assert_eq!(replay.race().events(), s.race().events());
+}
+
+/// race.json is validated at load: the hint comes before the automatic recovery.
+#[test]
+fn the_race_profile_loads_and_rejects_a_recovery_before_the_hint() {
+    let rules = jj_sim::race::RaceRules::standard();
+    assert_eq!(rules.stuck_ticks, 3 * S);
+    assert_eq!(rules.auto_recover_ticks, 6 * S);
+    let bad = jj_sim::race::RACE_JSON.replace("\"autoAfterS\": 6.0", "\"autoAfterS\": 2.0");
+    assert_ne!(bad, jj_sim::race::RACE_JSON);
+    assert!(jj_sim::race::RaceRules::from_json(&bad).is_err());
+}
+
+/// A car parked with no input is flagged stuck but left where it is: only a driver pressing to go is recovered for them.
+#[test]
+fn a_parked_car_with_no_input_is_flagged_but_not_moved() {
+    let map = greybox();
+    let mut s = sim(&map, 12);
+    let car = s.spawn_car(route_spawn(&map, 30, 0.0, 0.6));
+    steps(&mut s, S);
+    s.start_race(3);
+    let auto = s.race().rules.auto_recover_ticks;
+    steps(&mut s, auto + 2 * S);
+    assert!(s.race().is_stuck(car.0, s.tick()));
+    assert_eq!(s.race().car(car.0).unwrap().recoveries, 0);
+}
+
+#[test]
+fn the_first_finisher_opens_the_finish_window() {
     let map = greybox();
     let mut s = sim(&map, 4);
     let a = s.spawn_car(route_spawn(&map, 30, -3.0, 0.6));
@@ -395,7 +586,8 @@ fn the_first_finisher_opens_the_30_s_window() {
     while s.race().over.is_none() {
         s.step();
     }
-    assert_eq!(s.race().over, Some((finished + 30 * S, RaceEnd::Window)));
+    // One lap: 30 s + 10 s.
+    assert_eq!(s.race().over, Some((finished + 40 * S, RaceEnd::Window)));
     let standings = s.race().standings();
     assert_eq!(
         standings.iter().map(|r| r.car).collect::<Vec<_>>(),

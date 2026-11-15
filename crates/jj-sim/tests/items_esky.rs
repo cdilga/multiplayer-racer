@@ -76,7 +76,10 @@ fn a_dropped_esky_hits_the_follower_and_stays_forever() {
         "the esky knocked the follower about"
     );
     // 60 s on: it is still there, still a dynamic body.
-    // Nothing is taken away; a part the hit loosened may come off the follower meanwhile and join them (R58).
+    // Nothing is taken away; a part the hit loosened may come off the follower meanwhile and join them (R58). The follower
+    // lets go of the throttle: a wrecked car still pushing would be recovered by the race (race.json `recover`) and
+    // drive on to more wrecks, which is another test's business.
+    sim.set_input(b, DriveInput::default());
     let before: Vec<PropKind> = sim.prop_kinds().to_vec();
     for _ in 0..(60 * S) {
         sim.step();

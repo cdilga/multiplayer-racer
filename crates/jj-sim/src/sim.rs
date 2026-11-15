@@ -1970,6 +1970,15 @@ impl Sim {
         }
     }
 
+    /// Marks `car` as a host's bot (no seat; council review round 3): while a seated car races, a bot's finish doesn't open
+    /// the finish window. A journaled setup command.
+    pub fn set_bot(&mut self, car: CarId) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::Bot { car: car.0 }));
+        self.race.set_bot(car.0);
+    }
+
     /// A car's pace, per mille of the autopilot's speed plan (1000 unless [`Sim::set_bot_pace`] set it).
     pub fn bot_pace(&self, car: CarId) -> Option<u16> {
         self.cars.get(car.0 as usize).map(|c| c.bot_pace_milli)
@@ -2970,6 +2979,12 @@ impl Sim {
                 }
             })
             .collect();
+        // A stuck car is recovered automatically only while its driver presses to go (race.json `recover`).
+        for (i, c) in self.cars.iter().enumerate() {
+            let (throttle, down) = vehicle::stick(c.applied);
+            self.race
+                .set_driving(i as u32, throttle > 0.0 || down > 0.0);
+        }
         for effect in self.race.update(self.tick, &views) {
             self.apply(effect);
         }
@@ -4381,6 +4396,7 @@ impl Sim {
                         sim.false_start(CarId(*car));
                     }
                     Setup::BotPace { car, milli } => sim.set_bot_pace(CarId(*car), *milli),
+                    Setup::Bot { car } => sim.set_bot(CarId(*car)),
                     Setup::Utility { car, kind } => {
                         sim.utility(CarId(*car), *kind);
                     }
