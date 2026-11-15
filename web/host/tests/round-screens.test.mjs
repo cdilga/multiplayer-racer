@@ -121,6 +121,77 @@ for (const [vpName, vp] of [['1080p', VP['1080p']], ['21x9', VP['21x9']], ['phon
   });
 }
 
+// Council review 2026-11-15 (fable #12, sonnet #9): at 32 seats the 1080p TV lobby fell to number-only cards while 1366x768
+// kept names, and a few cards sat in one column beside a wide empty middle. Per profile, a bigger screen never picks a
+// poorer card tier than a smaller one for the same room; 32 seats keep their names on a 1080p TV, also with 30 host pads'
+// controls cards under the roster; a few cards spread across the roster column; the hints still clear the footer.
+const LOBBY_TIERS = ['full', 'name', 'seat', 'num', 'tiny'];
+test('lobby: a bigger screen never shows poorer cards; 32 seats keep their names at 1080p; few cards use the width', { timeout: 300_000 }, async () => {
+  const sizes = [[915, 412], [1366, 768], [1920, 1080], [3840, 2160]];
+  const tiers = {};
+  for (const profile of ['tv', 'auto']) {
+    for (const vp of sizes) {
+      const page = await open(`lobby-2&profile=${profile}`, vp);
+      try {
+        await page.evaluate(() => document.fonts.ready);
+        for (const n of [2, 4, 8, 16, 32, 64]) {
+          await page.evaluate((c) => window.__jjRoundFixture.set(window.__jjRoundFixture.make('lobby', c)), n);
+          const tier = await page.locator('.lb-roster').getAttribute('data-tier');
+          tiers[`${profile} ${vp} ${n}`] = LOBBY_TIERS.indexOf(tier);
+          assertLaidOut(await rects(page, '.lcard'), n, `lobby N=${n} ${vp} ${profile}`);
+          const foot = (await rects(page, '.jj-foot')).list[0];
+          const hints = await page.$$eval('.lobby .lb-hint', (els) => els.filter((e) => e.checkVisibility() && e.textContent).map((e) => ({ b: e.getBoundingClientRect().bottom, t: e.textContent })));
+          // Under 500 px tall the side column scrolls by design (round.css); the 915x412 hints are checked in the phone-size test.
+          if (vp[1] > 500) for (const h of hints) assert.ok(h.b <= foot.y + 0.5, `${vp} ${profile} lobby N=${n}: "${h.t}" ends at ${h.b}, footer starts at ${foot.y}`);
+          if (vp[0] === 1920 && profile === 'auto') {
+            if (n === 32) {
+              assert.ok(['full', 'name'].includes(tier), `1080p, 32 seats: names show (tier ${tier})`);
+              const names = await page.$$eval('.lcard .nm', (els) => els.filter((e) => e.checkVisibility()).map((e) => e.getBoundingClientRect().width));
+              assert.equal(names.length, 32, 'every card names its player');
+              for (const w of names) assert.ok(w >= 40, `a name has room to read (${w} px)`);
+            }
+            if (n <= 8) {
+              const cols = new Set((await rects(page, '.lcard')).list.map((r) => Math.round(r.x)));
+              assert.ok(cols.size >= 2, `N=${n}: the cards spread over the roster column, not one stack (${cols.size} column)`);
+            }
+            const roster = (await rects(page, '.lb-rwrap')).list[0];
+            const side = (await rects(page, '.lb-side')).list[0];
+            assert.ok(side.w <= 560 && roster.w >= 2 * side.w, `the roster takes the middle (roster ${roster.w}, side ${side.w})`);
+          }
+        }
+        if (vp[0] === 1920 && profile === 'auto') {
+          // 30 host pads' controls cards under the roster: they take what the roster's best tier leaves, so 32 keep names.
+          await page.evaluate(() => {
+            const el = document.querySelector('[data-controls]');
+            el.innerHTML = Array.from({ length: 30 }, (_, i) => `<div class="lb-cc" style="height:150px;width:420px">pad ${i}</div>`).join('');
+            el.hidden = false;
+            window.__jjRoundFixture.set(window.__jjRoundFixture.make('lobby', 32));
+          });
+          const tier = await page.locator('.lb-roster').getAttribute('data-tier');
+          assert.ok(['full', 'name'].includes(tier), `1080p, 32 seats and 30 pads' cards: names show (tier ${tier})`);
+          assertLaidOut(await rects(page, '.lcard'), 32, 'lobby 32 with controls cards');
+          const ctl = (await rects(page, '[data-controls]')).list[0];
+          assert.ok(ctl.h >= 149, `the controls cards keep at least their first row (${ctl.h} px)`);
+          for (const c of (await rects(page, '.lcard')).list) assert.ok(!overlap(c, ctl), 'cards clear of the controls cards');
+        }
+        assert.deepEqual(page.errors, []);
+      } finally {
+        await page.close();
+      }
+    }
+  }
+  // Within a profile, a screen at least as big both ways never picks a poorer tier.
+  for (const profile of ['tv', 'auto']) for (const a of sizes) for (const b of sizes) {
+    if (!(b[0] >= a[0] && b[1] >= a[1]) || a === b) continue;
+    if (profile === 'auto' && a[0] < 1366) continue; // 915x412 auto is the handheld profile; compared under tv above
+    for (const n of [2, 4, 8, 16, 32, 64]) {
+      const small = tiers[`${profile} ${a} ${n}`];
+      const big = tiers[`${profile} ${b} ${n}`];
+      assert.ok(big <= small, `${profile} N=${n}: ${b} picks ${LOBBY_TIERS[big]}, poorer than ${a}'s ${LOBBY_TIERS[small]}`);
+    }
+  }
+});
+
 test('results: countdown labels keep the Start button stationary; captions leave every placing and action visible', async () => {
   for (const vp of [[1280,720],[375,667],[412,915],[915,412]]) {
     const joinUrl='https://jammers-preview.dilger.dev/p/v02-cc9b2c81/j/ROO7';

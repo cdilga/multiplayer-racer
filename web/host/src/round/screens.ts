@@ -39,8 +39,10 @@ export interface RoundScreens {
 }
 
 // Card tiers, richest first (CSS px at 1080p; scaled by k). The last has no floor: below the legible size it is still drawn.
+// The full tier's floor sets its text where the name tier's floor does (~22.5 px: 384/17 against 270/12; it was 400, which
+// cost 32 seats on a 1080p TV their state words by 16 px of roster width, council review 2026-11-15).
 const LOBBY: Tier[] = [
-  { id: 'full', minW: 400, minH: 56, maxW: 560, maxH: 100, em: 17 },
+  { id: 'full', minW: 384, minH: 56, maxW: 560, maxH: 100, em: 17 },
   { id: 'name', minW: 270, minH: 44, maxW: 460, maxH: 84, em: 12 },
   { id: 'seat', minW: 120, minH: 40, maxW: 220, maxH: 72, em: 5.6 },
   { id: 'num', minW: 70, minH: 34, maxW: 140, maxH: 64, em: 3.8 },
@@ -351,12 +353,31 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const k = screenK();
       const portrait = window.innerWidth / window.innerHeight <= 1.1;
       joinCard.style.setProperty('--qr-size', qrCard(Math.min(window.innerHeight * (portrait ? .18 : .44), 380 * k)).style.getPropertyValue('--qr-size'));
-      const r = box.getBoundingClientRect();
       const gap = 8 * k;
       const tiers = LOBBY.map((t) => ({ ...t, minW: t.minW * k, minH: t.minH * k, maxW: t.maxW * k, maxH: t.maxH * k }));
       // br-8h3u.14: the host's bots line up after the seats, marked as bots (no Ready: they never hold up the start).
       const bots = botRows(room);
-      const f = fitGrid(n + bots.length, r.width, r.height, gap, tiers, 40 * k);
+      const total = n + bots.length;
+      // Council review 2026-11-15 (#12): with 30 host pads the controls cards took their full 45 % of the roster column and
+      // 32 seats lost their names. The cards get what the roster's best tier leaves over, and never less than their first
+      // row (the rest scrolls, and each seat's card still names the car it is browsing).
+      const wrap = box.parentElement!;
+      const ctl = wrap.querySelector<HTMLElement>('[data-controls]');
+      if (ctl && !ctl.hidden) {
+        ctl.style.maxHeight = '';
+        const wh = wrap.clientHeight;
+        const whole = fitGrid(total, box.clientWidth, wh, gap, tiers, 40 * k);
+        const need = whole.rows * whole.tier.minH + (whole.rows - 1) * gap + (parseFloat(getComputedStyle(wrap).rowGap) || 0);
+        const firstRow = (ctl.firstElementChild as HTMLElement | null)?.offsetHeight ?? 0;
+        ctl.style.maxHeight = `${Math.min(wh * 0.45, Math.max(firstRow, wh - need))}px`;
+      }
+      const r = box.getBoundingClientRect();
+      const f0 = fitGrid(total, r.width, r.height, gap, tiers, 40 * k);
+      // Council review 2026-11-15 (sonnet #9): a few cards at their largest stacked in one column and left the middle of the
+      // screen empty. At the same card size they spread over every column that fits, balanced so no column is near empty.
+      const across = Math.min(Math.max(1, total), Math.max(f0.cols, Math.floor((r.width + gap) / (f0.cw + gap))));
+      const rows = Math.ceil(Math.max(1, total) / across);
+      const f = { ...f0, rows, cols: Math.ceil(Math.max(1, total) / rows) };
       applyFit(box, f, gap);
       box.className = `lb-roster t-${f.tier.id}`;
       box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('') + bots.map((b) => botCardHtml(b, f.tier.id)).join('');

@@ -30,7 +30,10 @@
   position: absolute; inset: 0; box-sizing: border-box; padding: max(16px, 3.2vh) max(16px, 4vw) max(16px, 3vh); overflow: hidden;
   background: radial-gradient(circle at 1px 1px, rgb(21 32 58 / .09) 1.2px, transparent 1.5px) 0 0 / calc(14px * var(--k)) calc(14px * var(--k)), var(--c-paper);
   display: grid; gap: calc(14px * var(--k)) calc(28px * var(--k));
-  grid-template-columns: minmax(0, 1fr) minmax(calc(440px * var(--k)), auto); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head side" "roster side";
+  /* The side column is as wide as the QR card needs (min-content), with room for the hints to wrap in a few lines; the
+     roster takes the rest (council review 2026-11-15: `auto` let the hints widen it to 710 px at 1080p, leaving the roster a
+     1028 px column and 32 seats without names). */
+  grid-template-columns: minmax(0, 1fr) minmax(calc(520px * var(--k)), min-content); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head side" "roster side";
 }
 .lb-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: center; gap: calc(12px * var(--k)) calc(20px * var(--k)); min-width: 0; }
 .lb-head .bn { font-size: calc(64px * var(--k)); }
@@ -110,6 +113,9 @@
 /* A phone held sideways (council review 2026-11-15, 915x412): the side column's last hint ran under the footer. Below
    500 px tall the pad hint goes (the Controllers page still says it) and the column scrolls rather than hide Start's hint. */
 @media (max-height: 500px) and (min-aspect-ratio: 11/10) {
+  /* A wider side column so Start's hint stays two lines above the footer (2026-11-15: at 520 it wrapped to three); the
+     roster's tier is set by its height on such a screen, so 64 seats keep the seat tier. */
+  .lobby { grid-template-columns: minmax(0, 1fr) minmax(calc(620px * var(--k)), min-content); }
   .lb-side { overflow: auto; }
   .lobby .lb-pads { display: none; }
 }
