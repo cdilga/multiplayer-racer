@@ -478,6 +478,12 @@ img.carimg.big { aspect-ratio: 3 / 2; object-fit: contain; }
 .join-card { text-align: left; }
 .join-card input { min-height: 52px; padding: 0 12px; border: 3px solid var(--c-ink); border-radius: 10px; font-size: 22px; background: #fff; color: var(--c-ink); user-select: text; -webkit-user-select: text; touch-action: manipulation; }
 .join-card .note { font-size: 14px; }
+/* Council review 2026-11-15: with this page's pads or keys seated and no touch player (body[data-hub-only], sources.ts) the card
+   folds to its heading and "Add a touch player", and the players' list has the page; the button opens the full card. */
+.join-card .touch-add { display: none; }
+body[data-hub-only] .join-card:not([data-open]) > :not(h1, .touch-add) { display: none; }
+body[data-hub-only] .join-card:not([data-open]) .touch-add { display: inline-flex; }
+body[data-hub-only] .join-card:not([data-open]) { width: min(92vw, 560px); padding-block: 12px; text-align: center; }
 .screen.play { border: 4px solid var(--seat); }
 .screen[data-paused] .sticks { opacity: .4; }
 .cooee { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 10; }

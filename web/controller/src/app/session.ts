@@ -394,7 +394,8 @@ export class Session {
       seated: mine.seated ?? false,
     };
     this.save();
-    this.carChoice = parent.carChoice;
+    // The source picks its own car (council review 2026-11-15: it inherited the carrier's, or none): `Sources` sends it.
+    this.carChoice = '';
     parent.kids.set(source, this);
     if (parent.helloed) this.afterHello();
     else this.set('connecting');
@@ -427,7 +428,8 @@ export class Session {
     if (!this.stored) return;
     this.removed = false;
     this.name = name;
-    this.saveName(name);
+    // A hub source's name ("Davo's pad") is not this device's name: only the page's own player remembers its name.
+    if (!this.parent) this.saveName(name);
     this.set('joining');
     this.send('cmd', wasm.encodeClaim(this.stored.requestId, name));
   }
@@ -691,6 +693,12 @@ export class Session {
     this.pickOpen = open;
     this.carChoice = vehicle;
     this.send('cmd', wasm.encodePick(vehicle, open));
+  }
+
+  /** A new name for this seat (`SetName`): a hub source follows its carrier's name ("Davo's pad"). */
+  setName(name: string): void {
+    this.name = name;
+    this.send('cmd', wasm.encodeSetName(name));
   }
 
   /** br-qw28: my vote for the next track (a later one replaces it). */

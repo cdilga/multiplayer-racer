@@ -64,6 +64,22 @@ body:has(.coaching):has(.hub-tray .hub-row + .hub-row) .coach { max-height: calc
 .conn.chip { min-height: 2em; margin-right: 10px; padding: 0 .9em .3em; font-size: var(--fs-caption); font-style: normal; text-transform: none; letter-spacing: 0; }
 .conn.chip .ic { width: 1.1em; height: 1.1em; }
 
+/* The seat's car in the Lobby (council review 2026-11-15): the pick being stepped through, then the chosen car and how to be Ready. */
+.hub-car { grid-column: 2 / -1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; font-size: var(--fs-label); color: var(--c-paper); }
+.hub-car b { font-family: var(--font-display); font-style: italic; color: var(--c-saffron); }
+.hub-car[data-car=chosen] b { color: var(--c-paper); }
+.hub-car kbd { font: 800 .9em/1 var(--font-body); padding: 0 .35em .1em; color: var(--c-ink); background: var(--c-paper-shade); border-radius: .25em; }
+body:has(.screen.play) .hub-tray .hub-car { font-size: 12px; }
+/* Between the thumbs the line keeps the car and how to choose it; the stick hint is on the controls card off the driving screen. */
+body:has(.screen.play) .hub-tray .hub-car-how { display: none; }
+/* Each seated source's controls card (the host's own pads get the same card on their tile): off the driving screen only. */
+.hub-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; }
+.hub-cards[hidden] { display: none; }
+.hub-cards .jj-cc { flex: 1 1 15rem; max-width: 22rem; background: var(--c-paper); color: var(--c-ink); border: var(--outline) solid var(--c-ink); border-radius: var(--radius); padding: var(--sp-2); font-size: 14px; }
+body:has(.screen.play) .hub-tray .hub-cards { display: none; }
+/* A page carrying only pads and keys (the touch player has no seat): the list and the cards get the page, not 42 %. */
+body[data-hub-only] .hub-tray { max-height: calc(100% - 9rem); width: min(880px, 96%); }
+
 .hub-tray .hub-add { pointer-events: auto; min-height: 2em; padding: 0 .8em; font-size: var(--fs-label); margin-left: .5em; }
 .hub-tray [data-adding] { color: var(--c-saffron); }
 body:has(.screen.play) .hub-tray[data-armed=true] .hub-hint { display: block; }

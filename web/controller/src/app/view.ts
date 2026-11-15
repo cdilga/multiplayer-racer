@@ -160,7 +160,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   const joinCard = () => {
     // A redraw (the round started or ended meanwhile) keeps the name being typed.
     const typed = app.querySelector<HTMLInputElement>('form.join-card #name')?.value;
-    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card card"><div class="state-icon ok"><i data-ico="users"></i></div>${session.removed ? '<h1 class="display italic" data-note="removed">The host removed you</h1><p>Join again whenever you like: you will be a new player, with a new number.</p>' : `<h1 class="display italic">You’re in ${esc(session.code)}</h1><p>Pick a name, then join the race.</p>`}<div class="field name-field"><input id="name" name="name" aria-label="Your name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(typed ?? (session.name || prefillName()))}"><button type="button" class="btn icon" data-act="dice" aria-label="New random name"><i data-ico="dices"></i></button><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn brush primary big" type="submit">${session.removed ? 'Join again' : 'Join the race'}</button>${practiceOfferHtml(session)}${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card card"><div class="state-icon ok"><i data-ico="users"></i></div>${session.removed ? '<h1 class="display italic" data-note="removed">The host removed you</h1><p>Join again whenever you like: you will be a new player, with a new number.</p>' : `<h1 class="display italic">You’re in ${esc(session.code)}</h1><p>Pick a name, then join the race.</p>`}<button type="button" class="btn brush big touch-add" data-act="touch-add">Add a touch player</button><div class="field name-field"><input id="name" name="name" aria-label="Your name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(typed ?? (session.name || prefillName()))}"><button type="button" class="btn icon" data-act="dice" aria-label="New random name"><i data-ico="dices"></i></button><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn brush primary big" type="submit">${session.removed ? 'Join again' : 'Join the race'}</button>${practiceOfferHtml(session)}${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
     dress(app);
     paintKit(app);
     app.querySelector('[data-act=dice]')!.addEventListener('click', () => {
@@ -169,6 +169,12 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     });
     // The Australian name button: only on a tap, and one tap of Undo puts back what was typed.
     const nameEl = app.querySelector<HTMLInputElement>('#name')!;
+    // Council review 2026-11-15: on a page whose pads and keys already have seats (body[data-hub-only], sources.ts) the card folds
+    // to this one button; it opens the name and Join for a touch player of this screen.
+    app.querySelector('[data-act=touch-add]')!.addEventListener('click', () => {
+      app.querySelector('form.join-card')!.toggleAttribute('data-open', true);
+      nameEl.focus();
+    });
     const aussieBtn = app.querySelector<HTMLButtonElement>('[data-act=aussie]')!;
     const aussieNote = app.querySelector<HTMLElement>('[data-note=aussie]')!;
     aussieBtn.addEventListener('click', async () => {

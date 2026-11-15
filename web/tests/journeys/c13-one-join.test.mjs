@@ -457,3 +457,76 @@ test('six sources on one page (four pads, two clusters) hold six seats over ONE 
   await wait(lap, () => window.__jjSources.inspect().find((s) => s.id === 'pad2').state === 'connected', undefined, 60_000);
   await shot(lap, 'c13-laptop-six-sources');
 });
+
+test('a pad on a joined page is a first-class player: it picks its car on the page, is named after its carrier, is coached on its tile; a pads-only laptop gives its players the page', { timeout: 600_000 }, async () => {
+  // Council review 2026-11-15: a pad on a phone or laptop sat at "Choosing car…" with no car, its joining press made it READY,
+  // it was "Pad 1" on the TV (three seats of that name), it got no first-drive prompts, and a laptop of pads showed a join card.
+  const { readFileSync } = await import('node:fs');
+  const cars = JSON.parse(readFileSync(new URL('../../shared/src/roster.json', import.meta.url), 'utf8')).cars.map((c) => c.id);
+  const { host, joinUrl } = await openHost('room');
+  const phoneCtx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const phone = await phoneCtx.newPage();
+  await phone.addInitScript(PADS);
+  await phone.goto(joinUrl);
+  await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  await phone.locator('#name').fill('Davo');
+  await phone.getByRole('button', { name: 'Join the race' }).click();
+  await wait(phone, () => window.__jjController.inspect().phase === 'playing');
+  await phone.evaluate(() => {
+    window.__padAdd(0);
+    window.__padSet(0, [0, 0, 1, 0]);
+  });
+  await wait(phone, () => window.__jjSources.inspect().find((s) => s.kind === 'pad')?.seat != null, undefined, 90_000);
+  const n = (await one(phone, 'pad1')).seat;
+  const tv = (num) => host.evaluate((x) => window.__jjRoom.view().seats.find((s) => s.number === x), num);
+  // The joining press (stick held through the welcome) neither steps the car nor readies the seat.
+  await until(host, async () => (await tv(n))?.vehicle === cars[0] && (await tv(n)).choosing === true, 'the pad seat opens on the first car, choosing');
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0]));
+  let seat = await tv(n);
+  assert.equal(seat.name, 'Davo’s pad', 'named after its carrier');
+  assert.equal(seat.ready, false, 'the joining press is not Ready');
+  await until(host, async () => (await tv(n))?.prompt != null, "the pad's tile gets the first-drive prompts, as a host pad's does");
+  await phone.locator('[data-source=pad1] [data-car=choosing]').waitFor({ timeout: 10_000 });
+  // The right stick steps the pick on the TV.
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 1, 0]));
+  await until(host, async () => (await tv(n))?.vehicle === cars[1], 'the right stick steps to the next car');
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0]));
+  await phone.waitForTimeout(600);
+  await shot(phone, 'c13-phone-pad-choosing-car');
+  // Menu chooses it (not Ready); Menu again is Ready.
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: true }));
+  await until(host, async () => (await tv(n))?.choosing === false, 'Menu chooses the car');
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: false }));
+  await phone.waitForTimeout(300);
+  seat = await tv(n);
+  assert.equal(seat.vehicle, cars[1]);
+  assert.equal(seat.ready, false, 'choosing the car is not Ready as well');
+  await phone.locator('[data-source=pad1] [data-car=chosen]').waitFor({ timeout: 5000 });
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: true }));
+  await until(host, async () => (await tv(n))?.ready === true, 'Menu again is Ready');
+  await phone.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 9: false }));
+  await shot(host, 'c13-tv-lobby-phone-pad-named-and-picked');
+
+  // A laptop with only a pad: no name on it yet, so the seat is "Player <n>" as the host's own pads are; the join card folds to
+  // "Add a touch player" and the page shows the players and the pad's controls card.
+  const lap = await joinPage(joinUrl, { width: 1280, height: 720 });
+  await lap.evaluate(() => {
+    window.__padAdd(0, 'Pad model A');
+    window.__padSet(0, [0, 0, 1, 0]);
+  });
+  await seated(lap);
+  await lap.evaluate(() => window.__padSet(0, [0, 0, 0, 0]));
+  const m = (await one(lap, 'pad1')).seat;
+  await until(host, async () => (await tv(m))?.vehicle === cars[0], 'the laptop pad has a car');
+  assert.equal((await tv(m)).name, `Player ${m}`);
+  await wait(lap, () => document.body.hasAttribute('data-hub-only'), undefined, 5000);
+  assert.equal(await lap.locator('#name').isVisible(), false, 'the name field is folded away');
+  assert.equal(await lap.locator('[data-act=touch-add]').isVisible(), true);
+  assert.equal(await lap.locator('.hub-cards [data-kind=pad]').isVisible(), true, "the pad's controls card shows");
+  await lap.locator('[data-source=pad1] [data-car=choosing]').waitFor({ timeout: 5000 });
+  await lap.waitForTimeout(600);
+  await shot(lap, 'c13-laptop-pads-only');
+  await lap.locator('[data-act=touch-add]').click();
+  assert.equal(await lap.locator('#name').isVisible(), true, 'Add a touch player opens the card');
+  await shot(lap, 'c13-laptop-pads-only-add-touch');
+});

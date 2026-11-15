@@ -10,9 +10,11 @@ import { applySeatPattern } from '../../../shared/ui/patterns';
 // TRANSPORT: ONE connection per page (protocol 3). The page's own session owns the endpoint and the WebRTC link; each source
 // is a `Session` attached to it (`Session.attach`) that claims, identifies, readies, leaves and drops out under its own source
 // handle (`ForSource`), and all their input shares the carrier's batches.
-import { icon, tokenData } from '../../../shared/ui';
+import { controlsCard, icon, tokenData, type ControlsSource } from '../../../shared/ui';
 import { keyLabel } from '../../../shared/ui';
+import words from '../../../shared/ui/controls.json';
 import { morePadsHint } from '../../../shared/ui/controller-options';
+import { ROSTER } from '../app/carsheet';
 import { Session } from '../app/session';
 import { pathLabel } from './badge';
 import { CLUSTERS, KeyCluster, LEAVE_HOLD_MS, NEUTRAL, isPress, padSample, type Sample } from './input';
@@ -26,12 +28,20 @@ const RENDER_MS = 250;
 const PATH_MS = 2000;
 const FLASH_MS = 1500;
 const STALL_MS = 12_000;
+/** The right stick past this, sideways, steps the Lobby's car pick (the host's own pads use the same .6: local.ts). */
+const PICK_FLICK = 0.6;
+/** A seat name is at most 32 graphemes (jj-session `MAX_NAME_GRAPHEMES`); a longer claim is refused, so the carrier's name is cut. */
+const MAX_NAME = 32;
 /** Source handles on the page's connection: the touch player is 1; key clusters next; pads from 16 up, one fresh handle per pad seat. */
 const KEYS_HANDLE = 2;
 const PAD_HANDLE = 16;
 
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+const graphemes = (t: string): string[] => (segmenter ? [...segmenter.segment(t)].map((g) => g.segment) : [...t]);
+/** The controls cards' data: this page's clusters (the host's clusters.json); a hub has no wheels (they map on the host). */
+const CONTROLS = { clusters: CLUSTERS, wheels: [] };
 const clustersHint = CLUSTERS.map((c) => Object.values(c.drive).map(keyLabel).join(' ')).join(' or ');
 
 export class Source {
@@ -61,6 +71,16 @@ export class Source {
   external = false;
   /** This source's handle on the page's one connection (the touch player is 1). */
   handle = 0;
+  /** The seat whose arrival this source last saw: a new seat starts its edges from the buttons as they are (the joining press is
+   *  never Ready as well), and a pad's seat starts with the first-drive prompts on, as a host pad's does. */
+  seatSeen = -1;
+  /**
+   * The Lobby's car pick for this seat (council review 2026-11-15: a pad on a phone or laptop could not choose a car, and its
+   * joining press made it READY with none). The host pads' steps (web/host/src/input/local.ts `lobbyChoice`): the remembered car
+   * opens, the right stick sideways steps through the roster, READY (Menu, or the cluster's Ready key) chooses it, and READY
+   * again is Ready.
+   */
+  pick: { seat: number; vehicle: string; confirmed: boolean; direction: number } | null = null;
 
   constructor(
     readonly id: string,
@@ -90,6 +110,7 @@ export class Sources {
   private timers: Array<ReturnType<typeof setInterval>> = [];
   private list: HTMLElement | null = null;
   private lastHtml = '';
+  private lastCards = '';
   private nextPad = 0;
   private nextHandle = PAD_HANDLE;
   private traySize: ResizeObserver | null = null;
@@ -131,6 +152,7 @@ export class Sources {
     this.traySize?.disconnect();
     this.traySize = null;
     document.body.style.removeProperty('--jj-source-tray-height');
+    document.body.removeAttribute('data-hub-only');
     for (const t of this.timers) clearInterval(t);
     this.timers = [];
     removeEventListener('keydown', this.onKey);
@@ -245,14 +267,95 @@ export class Sources {
       }
       s.state = s.session.idleCueAt !== null && s.session.idleCueMs - (now - s.session.idleCueAt) <= 0 ? 'autopilot' : 'connected';
       s.session.setSticks({ ...smp.drive, touch: Math.hypot(smp.drive.x, smp.drive.y) > 0 }, { ...smp.action, touch: Math.hypot(smp.action.x, smp.action.y) > 0 });
+      const you = s.session.you;
+      if (you && s.seatSeen !== you.seat) {
+        s.seatSeen = you.seat;
+        s.prevIdentify = smp.identify;
+        s.prevReady = smp.ready;
+        // Council review 2026-11-15: a pad on a phone or laptop got no first-drive prompts on its TV tile, where a host pad's seat
+        // starts with them on. A pad's sticks are the phone's sticks, so the tile's wording fits; a key cluster's would not (the
+        // host has no field saying a remote seat is keys), so a cluster's seat is left without.
+        if (s.kind === 'pad') s.session.tutorial(true);
+      }
       if (smp.identify && !s.prevIdentify) s.session.identify();
-      if (smp.ready && !s.prevReady && !smp.identify) s.session.ready(!s.session.isReady);
+      const readyPress = smp.ready && !s.prevReady && !smp.identify;
+      const picked = !!you && s.session.roomPhase === 'Lobby' && this.lobbyPick(s, you.seat, smp, readyPress);
+      // A press that chose the car is not Ready as well.
+      if (readyPress && !picked) s.session.ready(!s.session.isReady);
       s.prevIdentify = smp.identify;
       s.prevReady = smp.ready;
       if (smp.identify && smp.ready) {
         s.holdSince ??= now;
         if (now - s.holdSince >= LEAVE_HOLD_MS) this.leave(s);
       } else s.holdSince = null;
+    }
+  }
+
+  /** The Lobby's car pick (see `Source.pick`); true when this tick's READY press went to it. */
+  private lobbyPick(s: Source, seat: number, smp: Sample, readyPress: boolean): boolean {
+    const dir = Math.abs(smp.action.x) > PICK_FLICK ? Math.sign(smp.action.x) : 0;
+    if (s.pick?.seat !== seat) {
+      let saved = '';
+      try {
+        saved = localStorage.getItem(this.vehicleKey(s)) ?? '';
+      } catch {
+        // No storage: the roster's first car.
+      }
+      // A stick already pushed (the joining press) steps nothing until it comes back.
+      s.pick = { seat, vehicle: ROSTER.find((c) => c.id === saved)?.id ?? ROSTER[0]!.id, confirmed: false, direction: dir };
+      this.choose(s, s.pick.vehicle, true);
+      return false;
+    }
+    const p = s.pick;
+    if (p.confirmed) return false;
+    if (dir && dir !== p.direction) {
+      const i = ROSTER.findIndex((c) => c.id === p.vehicle);
+      this.choose(s, ROSTER[(i + dir + ROSTER.length) % ROSTER.length]!.id, true);
+    }
+    p.direction = dir;
+    if (!readyPress) return false;
+    this.choose(s, p.vehicle, false);
+    return true;
+  }
+
+  private choose(s: Source, vehicle: string, open: boolean): void {
+    if (!s.pick || !s.session) return;
+    s.pick.vehicle = vehicle;
+    s.pick.confirmed = !open;
+    s.session.pick(vehicle, open);
+    try {
+      localStorage.setItem(this.vehicleKey(s), vehicle);
+    } catch {
+      // This visit only.
+    }
+  }
+
+  /** A pad's car is remembered per model (as the host's own pads, `jj.hostVehicle.<padId>`), a cluster's per cluster. */
+  private vehicleKey(s: Source): string {
+    return `jj.hubVehicle.${s.padId || s.id}`;
+  }
+
+  /**
+   * The seat's name on the TV (council review 2026-11-15: three seats were "Pad 1", one with a "#6" beside badge #6): the
+   * carrier's name and the source, "Davo's pad", "Davo's pad 2", "Davo's keys A". With no name on this device yet it is blank,
+   * so the host names it "Player <n>" as it names its own pads; it follows when the carrier's name arrives or changes.
+   */
+  private nameFor(s: Source): string {
+    const owner = this.carrier.name.trim();
+    if (!owner) return '';
+    const what = s.kind === 'pad' ? (s.label === 'Pad 1' ? 'pad' : s.label.replace(/^Pad/, 'pad')) : s.label.replace(/^Keys/, 'keys');
+    const tail = `’s ${what}`;
+    const g = graphemes(owner);
+    const room = MAX_NAME - graphemes(tail).length;
+    return `${g.length > room ? g.slice(0, room).join('').trimEnd() : owner}${tail}`;
+  }
+
+  /** Every seated source keeps its carrier-based name (the carrier joined, or renamed, after the source claimed). */
+  private rename(): void {
+    for (const s of this.sources.values()) {
+      if (s.external || !s.session?.you) continue;
+      const want = this.nameFor(s);
+      if (want !== s.session.name) s.session.setName(want);
     }
   }
 
@@ -268,7 +371,7 @@ export class Sources {
     s.session?.stop();
     const session = new Session({ iceTransportPolicy: this.o.ice ?? 'all' });
     session.onChange = () => {
-      if (session.phase === 'ready-to-join') session.claim(s.label);
+      if (session.phase === 'ready-to-join') session.claim(this.nameFor(s));
     };
     session.onIdentify = () => {
       s.flashUntil = performance.now() + FLASH_MS;
@@ -285,6 +388,8 @@ export class Sources {
     s.released = false;
     s.holdSince = null;
     s.prevIdentify = s.prevReady = false;
+    s.seatSeen = -1;
+    s.pick = null;
     s.path = '';
     // A removed unplugged pad has nothing left to show; a plugged one stays as "Left: press to rejoin".
     if (s.kind === 'pad' && !s.plugged) this.sources.delete(s.id);
@@ -303,7 +408,8 @@ export class Sources {
     this.root.innerHTML = `<section class="hub tray" data-sources>
       <p class="hub-hint" data-hint>Plug in a pad, or press a key cluster (${clustersHint}), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
       <p class="hub-hint" data-more-pads hidden></p>
-      <div class="panel panel-ink hub-panel" data-sources-panel hidden><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div></section>`;
+      <div class="panel panel-ink hub-panel" data-sources-panel hidden><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div>
+      <div class="hub-cards" data-hub-cards hidden></div></section>`;
     this.list = this.root.querySelector('[data-hub-list]');
     // One player per touchscreen (R65): "Add a player" cannot make a second touch player. It says how to add one (a pad or a key
     // cluster) and waits for that source's press; the claim is the press itself.
@@ -350,9 +456,23 @@ export class Sources {
     const what = s.kind === 'keys' ? 'keyboard' : s.kind === 'pad' ? 'gamepad-2' : 'smartphone';
     const ready = s.state === 'connected' && s.session?.isReady;
     const gone = s.unpluggedAt === null ? 0 : performance.now() - s.unpluggedAt;
-    const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : 'Connected', unplugged: `Unplugged for ${sinceText(gone)}`, autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
-    const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : '';
-    const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : s.state === 'connected' ? 'zap' : '';
+    // In the Lobby the row is the seat's car picker (the host pads' tile line, on the carrier's own screen).
+    const pick = s.pick && s.session?.roomPhase === 'Lobby' && s.state === 'connected' ? s.pick : null;
+    const choosing = !!pick && !pick.confirmed;
+    const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : choosing ? 'Choosing car' : 'Connected', unplugged: `Unplugged for ${sinceText(gone)}`, autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
+    const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : choosing ? 'chip-choosing' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : '';
+    const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : choosing ? 'car' : s.state === 'connected' ? 'zap' : '';
+    const car = pick ? ROSTER.find((c) => c.id === pick.vehicle) : undefined;
+    const keys = s.keys?.cluster;
+    const step = keys ? `${keyLabel(keys.drive.left)} ${keyLabel(keys.drive.right)}` : 'Right stick';
+    const readyName = keys ? keyLabel(keys.ready) : words.pad.ready;
+    const carLine = car
+      ? `<span class="hub-car" data-car="${choosing ? 'choosing' : 'chosen'}" data-vehicle="${esc(car.id)}">${
+          choosing
+            ? `<b>‹ ${esc(car.name)} ›</b> <span class="tnum">${ROSTER.indexOf(car) + 1}/${ROSTER.length}</span><span class="hub-car-how"> · ${esc(step)}: change</span> · <kbd>${esc(readyName)}</kbd>: choose`
+            : `<b>${esc(car.name)}</b> · ${ready ? 'ready to race' : `<kbd>${esc(readyName)}</kbd>: Ready`}`
+        }</span>`
+      : '';
     const st = s.session?.stats;
     const act =
       s.external || s.state === 'left'
@@ -362,11 +482,27 @@ export class Sources {
           : '<button type="button" class="btn quiet hub-act" data-act="leave" aria-label="Leave: give up this seat">Leave</button>';
     return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${t ? t.fill : 'transparent'};--seat-on:${t ? t.on : 'var(--c-paper)'};" data-icon="${what}" data-chip-icon="${chipIcon}">
       ${seat}<span class="hub-kind" title="${esc(s.label)}"><span class="hub-label">${esc(s.label)}</span></span><span class="hub-state chip ${tone}" data-chip="${s.state}"><span class="hub-state-text">${state}</span></span>${act}
-      <span class="hub-path" data-path>${esc(s.session && !s.external ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st && !s.external ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
+      ${carLine}<span class="hub-path" data-path>${esc(s.session && !s.external ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st && !s.external ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
   }
 
   private render(): void {
     if (!this.list) return;
+    this.rename();
+    // Council review 2026-11-15: a laptop carrying only pads and keys showed "Pick a name, then join the race" over its players.
+    // While a source here has a seat and the touch player has none, the join card folds to "Add a touch player" and the
+    // list (with each source's controls card) has the page.
+    const seated = [...this.sources.values()].filter((s) => !s.external && !!s.session?.you && s.state !== 'left');
+    document.body.toggleAttribute('data-hub-only', seated.length > 0 && !this.carrier.you);
+    const kinds: ControlsSource[] = [];
+    if (seated.some((s) => s.kind === 'pad')) kinds.push({ kind: 'pad' });
+    for (const s of seated) if (s.keys) kinds.push({ kind: 'keys', cluster: s.keys.cluster.id });
+    const cards = this.root.querySelector<HTMLElement>('[data-hub-cards]')!;
+    const cardsHtml = kinds.map((k) => controlsCard(k, CONTROLS, { compact: true })).join('');
+    cards.hidden = !cardsHtml;
+    if (this.lastCards !== cardsHtml) {
+      this.lastCards = cardsHtml;
+      cards.innerHTML = cardsHtml;
+    }
     const hint = this.root.querySelector<HTMLElement>('[data-more-pads]')!;
     const text = morePadsHint([...(navigator.getGamepads?.() ?? [])]);
     hint.hidden = !text;
@@ -409,6 +545,9 @@ export class Sources {
       source: s.session?.you?.source ?? null,
       endpoint: (s.session?.link?.inspect().endpointId as string | undefined) ?? null,
       ready: s.session?.isReady ?? false,
+      name: s.external ? null : (s.session?.name ?? null),
+      vehicle: s.pick?.vehicle ?? null,
+      choosing: !!s.pick && !s.pick.confirmed,
       path: s.path,
       stats: s.session ? { ...s.session.stats } : null,
       drive: s.session?.inspect().drive ?? null,
