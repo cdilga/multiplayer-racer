@@ -640,3 +640,47 @@ test('captures: lobby, countdown, race and results across sizes and counts (docs
     }
   }
 });
+
+// Council review round 3 (#8): after a derby the vote asked "Rematch · Same track / New track · Same style", and nothing on
+// Round complete went back to racing. With a derby next the cards speak of arenas; Round complete has a Race/Derby switch
+// (it sends the same rule as the Lobby's) and the cards follow it.
+test('Round complete after a derby: arena words on the vote, a Race/Derby switch that changes the next round', async () => {
+  const room = (next) => {
+    const r = window.__jjRoundFixture.make('results', 6);
+    r.mode = 'derby';
+    r.nextMode = next;
+    r.between = { active: true, resultsLeftMs: 0, voteOpen: true, voteLeftMs: 12_000, votes: { rematch: 1, new: 2, surprise: 0 }, bySeat: {}, leading: 'new', hostChoice: null, decided: null, flyoverLeftMs: null, flyoverMs: 6000, resultsMs: 8000, voteMs: 15_000 };
+    return r;
+  };
+  const out = evidencePath('results-mode');
+  await mkdir(out, { recursive: true });
+  for (const vp of [[1920, 1080], [1280, 720], [1024, 576], [915, 412]]) {
+    const page = await open('results-6', vp);
+    try {
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(`window.__jjRoundFixture.set((${room})('derby'))`);
+      await page.waitForTimeout(150);
+      const cards = () => page.$$eval('[data-vote] .vcard', (els) => els.map((e) => `${e.querySelector('b').textContent} · ${e.querySelector('small').textContent}`));
+      assert.deepEqual(await cards(), ['Rematch · Same arena', 'New arena · A fresh bowl', 'Surprise me · Any arena'], `${vp}: arena words`);
+      assert.equal(await page.locator('.rs-mode [data-mode=derby]').getAttribute('aria-pressed'), 'true', `${vp}: Derby is next`);
+      await page.screenshot({ path: join(out, `results-mode-derby-${vp.join('x')}.png`) });
+      // The switch, the vote, the placings and the buttons don't overlap, and the switch is on screen.
+      const sw = await page.locator('.rs-mode').boundingBox();
+      assert.ok(sw && sw.width > 0 && sw.y + sw.height <= vp[1] && sw.x + sw.width <= vp[0], `${vp}: the switch is on screen: ${JSON.stringify(sw)}`);
+      const rects = await page.$$eval('[data-results] [data-row], [data-vote], [data-act=start], [data-act=lobby]', (els) => els.map((e) => e.getBoundingClientRect().toJSON()));
+      const hit = (a, b) => a.left < b.x + b.width && a.right > b.x && a.top < b.y + b.height && a.bottom > b.y;
+      for (const r of rects) assert.ok(!hit(r, sw), `${vp}: the switch overlaps nothing: ${JSON.stringify(r)}`);
+      await page.locator('.rs-mode [data-mode=race]').click();
+      assert.deepEqual((await page.evaluate(() => window.__jjRoundFixture.inputs())).filter((i) => i.ui?.startsWith('mode:')), [{ type: 'ui', ui: 'mode:race' }], `${vp}: Race sends the rule`);
+      // The sim's room view comes back with Race next: the cards and the switch follow (the screen isn't rebuilt).
+      await page.evaluate(`window.__jjRoundFixture.set((${room})('race'))`);
+      await page.waitForTimeout(150);
+      assert.deepEqual(await cards(), ['Rematch · Same track', 'New track · Same style', 'Surprise me · Any style'], `${vp}: track words`);
+      assert.equal(await page.locator('.rs-mode [data-mode=race]').getAttribute('aria-pressed'), 'true', `${vp}: Race is next`);
+      await page.screenshot({ path: join(out, `results-mode-race-${vp.join('x')}.png`) });
+      assert.deepEqual(page.errors, []);
+    } finally {
+      await page.close();
+    }
+  }
+});

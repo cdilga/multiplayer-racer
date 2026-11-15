@@ -368,6 +368,7 @@ async function boot(): Promise<void> {
   const seatPaint = new Map<number, string>();
   const seatNumber = new Map<number, number>();
   const seatName = new Map<number, string>();
+  const seatOfCar = new Map<number, number>();
   let identityRound: number | null = null;
   let painted = false;
   client.watchRoom((room) => {
@@ -377,7 +378,7 @@ async function boot(): Promise<void> {
     else if (world.flyoverOn) world.stopFlyover();
     if (identityRound !== room.round) {
       identityRound = room.round;
-      seatPaint.clear(); seatNumber.clear(); seatName.clear();
+      seatPaint.clear(); seatNumber.clear(); seatName.clear(); seatOfCar.clear();
     }
     // The page knows the round's phase (the input drawer folds away while racing so it covers no tile).
     document.body.dataset.jjPhase = room.phase;
@@ -396,7 +397,12 @@ async function boot(): Promise<void> {
       seatPaint.set(st.car, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`);
       seatNumber.set(st.car, st.number);
       seatName.set(st.car, st.name || 'Player');
+      seatOfCar.set(st.car, st.seat);
     }
+    // Council review round 3 (#5): a player who left (or the host removed) is gone from the room, but their car stays as a
+    // wreck for the round (R58). It keeps its paint and number and loses their name: "#2 Wreck", not "#2 Shazza".
+    const inRoom = new Set(room.seats.map((st) => st.seat));
+    for (const [car, seat] of seatOfCar) if (!inRoom.has(seat)) seatName.set(car, 'Wreck');
     const v = world.vehicles;
     // The cars the seats picked in the lobby load their models now, so they are ready when the grid forms (R123).
     for (const st of room.seats) if (st.vehicle) void v?.ensureId(st.vehicle);

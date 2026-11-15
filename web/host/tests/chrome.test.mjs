@@ -244,7 +244,7 @@ test('Remove (G07) mid-race: the menu pauses the race, a removal leaves the paus
     await untilHud(page, 8);
     await page.locator('[data-act=menu]').click();
     await page.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
-    assert.match(await page.locator('[data-confirm=remove]').innerText(), /debris stays/i);
+    assert.match(await page.locator('[data-confirm=remove]').innerText(), /nameless wreck, debris and all/i);
     await page.getByRole('button', { name: 'Remove player' }).click();
     await page.getByRole('button', { name: 'Resume' }).click();
     assert.deepEqual(await inputs(page), [{ type: 'ui', ui: 'pause', on: true }, { type: 'ui', ui: 'remove-seat:2' }, { type: 'ui', ui: 'pause', on: false }]);
@@ -430,5 +430,23 @@ test('captures: menu, confirmations and diagnostics on a phone and a 4K TV', { s
     } finally {
       await page.close();
     }
+  }
+});
+
+// Council review round 3 (#5): the dialog said "Their car leaves the track at the next tick", but the car stays (R58: a
+// husk is never despawned mid-round). Mid-race it says what happens: a nameless wreck, out of this round's results.
+test('Remove mid-race says the car stays as a nameless wreck and they are out of this round\'s results', async () => {
+  const page = await open('race-8');
+  try {
+    await page.locator('[data-act=menu]').click();
+    await page.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
+    const text = await page.locator('[data-confirm=remove]').innerText();
+    assert.match(text, /nameless wreck/i);
+    assert.match(text, /left out of this round's results/i);
+    assert.doesNotMatch(text, /leaves the track/i);
+    await capture(page, 'confirm-remove-racing@1080p');
+    assert.deepEqual(page.errors, []);
+  } finally {
+    await page.close();
   }
 });

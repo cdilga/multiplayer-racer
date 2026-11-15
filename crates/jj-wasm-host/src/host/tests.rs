@@ -5425,3 +5425,275 @@ fn host_menu_settings_apply_while_paused_and_the_journal_still_replays() {
         .collect();
     assert_eq!(slots, [0, 1, 2], "every bot car that raced has a row: {r}");
 }
+
+/// Council review rounds 2-3: host pads were "Player 1, 2, 3, 8, 9, 10" all night. A host pad's seat is named from the join
+/// card's name list (`names.json`), never a name a seat already has (a phone's "Davo" stays the only Davo), the same room
+/// replays the same names (R90), and the seats keep them into the next round.
+#[test]
+fn host_pads_get_names_from_the_name_list_and_keep_them_across_rounds() {
+    let names_of = |h: &Host| -> Vec<String> {
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["name"].as_str().unwrap().to_string())
+            .collect()
+    };
+    let seat_up = |phone_name: &str| {
+        let mut h = Host::new(&init()).unwrap();
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("ph".into()),
+            resume: Some("s-ph".into()),
+        }
+        .encode();
+        h.handle(&net("ph", Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: phone_name.into(),
+        }
+        .encode();
+        h.handle(&net("ph", Channel::Cmd, claim)).unwrap();
+        h.step_one();
+        for source in [1, 2, 3] {
+            h.handle(&pad(source, [0, 32_767], 0)).unwrap();
+            h.step_one();
+            h.handle(&pad(source, [0, 0], 0)).unwrap();
+            h.step_one();
+        }
+        h
+    };
+    let list = local_names();
+    assert!(list.len() > 12, "the name list loads: {list:?}");
+    let mut h = seat_up("Davo");
+    let names = names_of(&h);
+    assert_eq!(names.len(), 4, "a phone and three pads: {names:?}");
+    for n in &names[1..] {
+        assert!(!n.starts_with("Player"), "a host pad has a name: {names:?}");
+        assert!(list.contains(n), "from the name list: {n}");
+    }
+    let mut folded: Vec<String> = names.iter().map(|n| n.to_lowercase()).collect();
+    folded.sort();
+    folded.dedup();
+    assert_eq!(folded.len(), 4, "every name differs: {names:?}");
+    // The same room and the same pads replay the same names, whatever the phone is called.
+    let again = names_of(&seat_up("Davo"));
+    assert_eq!(again, names, "replayed bit for bit");
+    // Into the next round: the seats keep their names.
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(1),
+            ui: UiCommand::StartRound,
+        }
+        .encode(),
+    )
+    .unwrap();
+    let mut now = 0u64;
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+        guard += 1;
+        assert!(guard < 120 * 30, "the round starts: {:?}", h.phase());
+    }
+    assert!(h.sim.end_race_now());
+    while h.phase() != jj_session::director::Phase::Intermission {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+        guard += 1;
+        assert!(guard < 120 * 60, "the results: {:?}", h.phase());
+    }
+    assert_eq!(names_of(&h), names, "the names hold into the next round");
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let result_names: Vec<&str> = room["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["name"].as_str().unwrap())
+        .collect();
+    for n in &names {
+        assert!(
+            result_names.contains(&n.as_str()),
+            "{n} in the results: {result_names:?}"
+        );
+    }
+}
+
+/// Council review round 3 (#5): a player the host removes mid-race isn't in that round's results as if they raced to the
+/// end ("– #2 Shazza +0"): the one still racing is. Their standings row (earlier points) stays.
+#[test]
+fn a_player_removed_mid_race_is_not_in_that_rounds_results() {
+    let mut h = Host::new(&init()).unwrap();
+    for (k, p) in ["pa", "pb"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s-{p}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(k as u32 + 1),
+            name: p.to_uppercase(),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    let mut now = 0u64;
+    let mut step = |h: &mut Host| {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+    };
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        step(&mut h);
+        guard += 1;
+        assert!(guard < 120 * 30, "the race starts");
+    }
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let seat_b = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "PB")
+        .unwrap()["seat"]
+        .as_u64()
+        .unwrap() as u32;
+    for _ in 0..120 {
+        step(&mut h);
+    }
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(9),
+            ui: UiCommand::RemoveSeat {
+                seat: jj_types::SeatId(seat_b),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    for _ in 0..3 {
+        step(&mut h);
+    }
+    assert!(h.sim.end_race_now());
+    while h.phase() != jj_session::director::Phase::Intermission {
+        step(&mut h);
+        guard += 1;
+        assert!(guard < 120 * 60, "the results: {:?}", h.phase());
+    }
+    let r = room(&h);
+    let names: Vec<&str> = r["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["PA"], "only the player still racing: {r}");
+}
+
+/// Council review round 3 (#8): after a derby, Round complete's Race switch makes the next round a race. The arena already
+/// preparing in the background is prepared again as a course, so the next round is on a course, not in the bowl.
+#[test]
+fn switching_to_race_on_round_complete_after_a_derby_races_next() {
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetMode { derby: true })).unwrap();
+    h.handle(&ui(UiCommand::SetDerbyLength { ms: 30_000 }))
+        .unwrap();
+    h.handle(&ui(UiCommand::SetIntermission { ms: 5_000 }))
+        .unwrap();
+    for (k, p) in ["p1", "p2"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    let mut now = 0u64;
+    let mut step = |h: &mut Host| {
+        h.advance(now);
+        now += 8_334;
+        while h.next_message().is_some() {}
+    };
+    let bowl = |h: &Host| {
+        h.map
+            .map
+            .features
+            .iter()
+            .any(|f| f.kind == jj_map::model::FeatureKind::Bowl)
+    };
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Intermission {
+        step(&mut h);
+        guard += 1;
+        assert!(
+            guard < 120 * 90,
+            "the derby runs to its results: {:?}",
+            h.phase()
+        );
+    }
+    assert!(bowl(&h), "the derby was in the bowl");
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(
+        room["nextMode"], "derby",
+        "the next round would be a derby again"
+    );
+    // The next round's arena prepared in the background while the results play.
+    let arena_prep = h.round.director.preparation().map(|(id, _)| id);
+    assert!(
+        arena_prep.is_some() && h.round.prepared.is_some(),
+        "an arena is ready for a derby next"
+    );
+    // The host presses Race on Round complete.
+    h.handle(&ui(UiCommand::SetMode { derby: false })).unwrap();
+    step(&mut h);
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["nextMode"], "race");
+    // The arena is dropped and the next map prepared again as a course (in the browser, main builds it: `arenaCars` none;
+    // without main, this test host keeps its own map, so the course itself isn't checked here).
+    let course_prep = h.round.director.preparation().map(|(id, _)| id);
+    assert!(
+        course_prep > arena_prep,
+        "prepared again: {arena_prep:?} -> {course_prep:?}"
+    );
+    assert!(h.round.prepared.is_none(), "no arena waits for the race");
+    while !(h.phase() == jj_session::director::Phase::Running && h.sim.race().started_at.is_some())
+    {
+        step(&mut h);
+        guard += 1;
+        assert!(guard < 120 * 200, "a race follows: {:?}", h.phase());
+    }
+    assert!(h.sim.derby().is_none(), "the next round is a race");
+}

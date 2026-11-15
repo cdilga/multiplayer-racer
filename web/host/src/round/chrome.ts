@@ -258,7 +258,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const s = target === null ? undefined : seatOf(target);
       menuEl.innerHTML = s
         ? `<section class="mn-panel confirm" data-confirm="remove" aria-labelledby="mn-t"><h2 id="mn-t" class="display">Remove <span class="acc">#${s.number} ${esc(shortName(seatName(s), 16))}</span>?</h2>
-            <p>${racing() ? 'Their car leaves the track at the next tick; the debris stays.' : 'Their card goes from the room.'} Their points stay in the standings. They can join again as a new player.</p>
+            <p>${racing() ? "Their car stops where it is and stays as a nameless wreck, debris and all. They're left out of this round's results." : 'Their card goes from the room.'} Their points so far stay in the standings. They can join again as a new player.</p>
             <div class="mn-acts"><button class="btn brush danger" type="button" data-act="do-remove" data-seat="${s.seat}">Remove player</button>
             <button class="btn brush" type="button" data-act="back" data-autofocus>Keep them</button></div></section>`
         : `<section class="mn-panel confirm" data-confirm="remove"><h2 class="display">Already gone</h2><div class="mn-acts"><button class="btn brush" type="button" data-act="back" data-autofocus>Back</button></div></section>`;

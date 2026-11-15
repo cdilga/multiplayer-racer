@@ -162,6 +162,26 @@ struct LocalButtons {
     generation: u32,
 }
 
+/// The join card's curated names (P1-C03 data, validated by web/tests/journeys/c03-names.test.mjs): a host pad's seat is
+/// named from its family-friendly rows.
+const NAMES_JSON: &str = include_str!("../../../web/controller/src/app/names.json");
+
+fn local_names() -> &'static [String] {
+    static NAMES: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    NAMES.get_or_init(|| {
+        let v: serde_json::Value = serde_json::from_str(NAMES_JSON).unwrap_or_default();
+        v["names"]
+            .as_array()
+            .map(|rows| {
+                rows.iter()
+                    .filter(|r| r["familyFriendly"] == true)
+                    .filter_map(|r| r["name"].as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default()
+    })
+}
+
 /// The controller HUD's cadence: 12 ticks at 120 Hz is 10 Hz.
 const HUD_EVERY_TICKS: u64 = 12;
 
@@ -1490,6 +1510,32 @@ impl Host {
         }
     }
 
+    /// A host pad or key cluster's seat name: a family-friendly name from the join card's list (`names.json`, P1-C03) that
+    /// no seat in the room has had, starting from a place the session seed and the source pick, so the same room and source
+    /// replay the same name (R90). Every name taken (no cap on seats): the list's first name, which the room's duplicate
+    /// rule numbers.
+    fn local_name(&self, source: LocalSourceId) -> String {
+        let names = local_names();
+        let Some(first) = names.first() else {
+            return String::new();
+        };
+        let taken: BTreeSet<String> = self
+            .seats
+            .seats()
+            .map(|s| seats::names::fold(s.name.as_deref().unwrap_or_default()))
+            .collect();
+        let start = self
+            .round
+            .seed
+            .wrapping_add(u64::from(source.0).wrapping_mul(0x9E37_79B9))
+            % names.len() as u64;
+        (0..names.len())
+            .map(|k| &names[(start as usize + k) % names.len()])
+            .find(|n| !taken.contains(&seats::names::fold(n)))
+            .unwrap_or(first)
+            .clone()
+    }
+
     fn local_seat(&mut self, source: LocalSourceId) -> Option<SeatId> {
         let conn = match self.locals.get(&source) {
             Some(&c) => c,
@@ -1507,11 +1553,14 @@ impl Host {
                     endpoint: endpoint.clone(),
                     secret_hash: sha(endpoint.0.as_bytes()),
                 });
+                // Council review rounds 2-3: a host pad was "Player N" all night. It gets a name people can shout
+                // ("Gazza wins"), drawn from the join card's own name list; the seat keeps it every round.
+                let name = self.local_name(source);
                 outs.extend(self.seats.apply(seats::Input::Claim {
                     conn: c,
                     source: seats::PRIMARY_SOURCE,
                     request: jj_types::RequestId(1),
-                    name: String::new(),
+                    name,
                 }));
                 for o in outs {
                     self.seat_output(o);

@@ -136,11 +136,14 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     // mouse clicks at the button without that check; the menu's own presses are covered in chrome.test.mjs.
     await host.locator('[data-act=menu]').click({ force: true });
     await host.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
-    assert.match(await host.locator('[data-confirm=remove]').innerText(), /debris stays/i);
+    assert.match(await host.locator('[data-confirm=remove]').innerText(), /nameless wreck, debris and all/i);
     await shot(host, { path: `${CAPTURE}/race-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Remove player' }).click();
     await host.getByRole('button', { name: 'Resume' }).click();
     await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 2), null, 10_000);
+    // The room view drops a leaving seat at once (council round 3: a paused menu shows its result); the sim lets go of the
+    // seat when the resumed race ticks again, after the countdown: count from then.
+    await until(host, async (car) => !(await window.__jjTest.observe()).host.seats.some((x) => x.car === car), car2, 20_000);
     // Counted from the removal landing, not the click: a fast (GPU) host ran 45 ticks before the seat went (CI 17209).
     const removedAt = (await host.evaluate(() => window.__jjTest.observe())).tick;
     await paint(host);

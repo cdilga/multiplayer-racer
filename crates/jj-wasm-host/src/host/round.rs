@@ -315,6 +315,9 @@ impl Host {
                     .take()
                     .unwrap_or_else(|| self.round.seed.wrapping_add(u64::from(id.0)));
                 self.round.prepared_seed = Some(seed);
+                // A race keeps this host's own map: an arena prepared for a derby before the host switched to Race
+                // doesn't wait for it.
+                self.round.prepared = None;
                 if self.round.derby_next {
                     let cars = (self.inputs.len() + self.round.bots.len()).max(2);
                     self.round.prepared =
@@ -590,6 +593,9 @@ impl Host {
                 } else {
                     c.place.unwrap_or(0)
                 };
+                if left_unplaced(seat, place) {
+                    return None;
+                }
                 Some(ResultRow {
                     number: seat.number,
                     name: self.seats.display_name(c.seat).unwrap_or_default(),
@@ -661,6 +667,9 @@ impl Host {
             .iter()
             .filter_map(|c| {
                 let seat = self.seats.seat(c.seat)?;
+                if left_unplaced(seat, c.place.unwrap_or(0)) {
+                    return None;
+                }
                 Some(ResultRow {
                     number: seat.number,
                     name: self.seats.display_name(c.seat).unwrap_or_default(),
@@ -964,7 +973,20 @@ impl Host {
                 self.session_rev += 1;
             }
             UiCommand::SetMode { derby } => {
+                let changed = self.round.derby_next != derby;
                 self.round.derby_next = derby;
+                // Council review round 3 (#8): Round complete switches Race/Derby for the next round. The next map is
+                // already preparing in the background (a course or an arena, by the old mode): prepare it again in the
+                // new one. A countdown's map is committed; the switch applies from the round after.
+                if changed
+                    && self.round.director.preparation().is_some()
+                    && matches!(
+                        self.round.director.phase(),
+                        Phase::Lobby | Phase::Intermission | Phase::Preparing
+                    )
+                {
+                    self.director_apply(DirIn::Reroll);
+                }
                 let limit = derby.then_some(self.round.derby_ms);
                 self.director_apply(DirIn::SetGameLimit(limit));
                 self.session_rev += 1;
@@ -1208,6 +1230,12 @@ impl Host {
         self.session_rev += 1;
         self.room_state(seat);
     }
+}
+
+/// Council review round 3 (#5): a seat that left the round (the host removed it, or it left) before it placed is not in
+/// that round's results as if it raced to the end ("– #2 Shazza +0"); its standings row keeps its points.
+fn left_unplaced(seat: &seats::Seat, place: u32) -> bool {
+    seat.presence == seats::Presence::Left && place == 0
 }
 
 /// Keep the authoritative same-tick finish and unfinished-progress tie-breaks at the session boundary.

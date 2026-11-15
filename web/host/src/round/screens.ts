@@ -437,7 +437,22 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     ['new', 'New track', 'Same style'],
     ['surprise', 'Surprise me', 'Any style'],
   ] as const;
-  const choiceName = (c: string | null | undefined) => CHOICES.find(([k]) => k === c)?.[1] ?? 'Rematch';
+  // Council review round 3 (#8): a derby next is in an arena, not on a track (a derby's arena has no biome style).
+  const ARENA_CHOICES: Record<(typeof CHOICES)[number][0], readonly [string, string]> = {
+    rematch: ['Rematch', 'Same arena'],
+    new: ['New arena', 'A fresh bowl'],
+    surprise: ['Surprise me', 'Any arena'],
+  };
+  const arenaNext = () => lastRoom?.nextMode === 'derby';
+  const choiceWords = (k: (typeof CHOICES)[number][0]): readonly [string, string] => {
+    if (arenaNext()) return ARENA_CHOICES[k];
+    const [, title, sub] = CHOICES.find(([c]) => c === k)!;
+    return [title, sub];
+  };
+  const choiceName = (c: string | null | undefined) => {
+    const k = CHOICES.find(([key]) => key === c)?.[0] ?? 'rematch';
+    return choiceWords(k)[0];
+  };
   // The room view's times are as of its last change: the seconds count down here between updates.
   let roomAt = performance.now();
   const left = (ms: number | null) => (ms == null ? null : Math.max(0, ms - (performance.now() - roomAt)));
@@ -455,10 +470,21 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       return;
     }
     if (!el.querySelector('.vcards')) {
-      el.innerHTML = `<div class="vhead" data-vote-head></div><div class="vcards">${CHOICES.map(([k, title, sub]) => `<button class="vcard" type="button" data-act="next-track" data-choice="${k}" aria-pressed="false">
-        <b>${title}</b><small>${sub}</small><span class="vn" data-votes="${k}">0</span></button>`).join('')}</div><div class="vfoot"></div>`;
+      el.innerHTML = `<div class="vhead" data-vote-head></div><div class="vcards">${CHOICES.map(([k]) => `<button class="vcard" type="button" data-act="next-track" data-choice="${k}" aria-pressed="false">
+        <b data-choice-title></b><small data-choice-sub></small><span class="vn" data-votes="${k}">0</span></button>`).join('')}</div><div class="vfoot"></div>`;
       paintKit(el);
     }
+    // The cards' words follow the next round's mode: the host can switch Race/Derby here (council review round 3, #8).
+    el.setAttribute('aria-label', arenaNext() ? 'Next arena' : 'Next track');
+    for (const [k] of CHOICES) {
+      const [title, sub] = choiceWords(k);
+      const card = el.querySelector<HTMLElement>(`[data-choice=${k}]`)!;
+      const t = card.querySelector<HTMLElement>('[data-choice-title]')!;
+      const u = card.querySelector<HTMLElement>('[data-choice-sub]')!;
+      if (t.textContent !== title) t.textContent = title;
+      if (u.textContent !== sub) u.textContent = sub;
+    }
+    paintMode(room);
     const head = b.decided
       ? `Next: <b>${choiceName(b.decided)}</b>`
       : b.voteOpen
@@ -477,9 +503,19 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       card.classList.toggle('host', b.hostChoice === k);
       card.setAttribute('aria-pressed', String(b.hostChoice === k));
     }
-    const foot = b.hostChoice ? `Host's pick · ${choiceName(b.hostChoice)} (tap again for the vote)` : 'Most votes wins · a tie is a new track · host: tap to choose';
+    const foot = b.hostChoice ? `Host's pick · ${choiceName(b.hostChoice)} (tap again for the vote)` : `Most votes wins · a tie is a new ${arenaNext() ? 'arena' : 'track'} · host: tap to choose`;
     const footEl = el.querySelector<HTMLElement>('.vfoot')!;
     if (footEl.textContent !== foot) footEl.textContent = foot;
+  };
+  // Round complete's Race/Derby switch for the next round (council review round 3, #8: after a derby nothing on the screen
+  // went back to racing; the switch was only in the Lobby and the Host menu).
+  const paintMode = (room: RoomView) => {
+    const next = room.nextMode ?? 'race';
+    for (const b of screen.querySelectorAll<HTMLButtonElement>('[data-screen=results] [data-act=mode]')) {
+      const on = b.dataset.mode === next;
+      b.classList.toggle('primary', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
   };
   // The flyover: the TV flies along the next track; nothing but a caption over it.
   const flyover = (room: RoomView) => {
@@ -563,6 +599,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
           <div class="rs-acts"><p class="rs-thanks display" data-thanks>Cheers for ${derby ? 'the carnage' : 'racing'}!</p><div class="rs-vote" data-vote role="group" aria-label="Next track"></div>
             <div class="rs-keep" data-keep hidden><button class="btn brush" data-act="keep" type="button">Keep this track</button><span class="rs-code" data-code></span></div>
             <p class="rs-best" data-best hidden></p>
+            <div class="rs-mode" role="group" aria-label="Next round"><span class="rs-mode-k">Next round</span>${(['race', 'derby'] as const).map((m) => `<button class="btn brush" type="button" data-act="mode" data-mode="${m}" aria-pressed="false">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
             <button class="btn brush primary big" data-act="start" type="button">Start next round now</button>
             <button class="btn brush" data-act="lobby" type="button">Return to lobby</button></div></div>
       </div></section>`;
@@ -618,6 +655,8 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     paintKit(screen);
     paintVote(room);
     void paintKeep(room);
+    paintMode(room);
+    screen.querySelectorAll<HTMLButtonElement>('.rs-mode [data-act=mode]').forEach((b) => b.addEventListener('click', () => setRule((i) => client.input(i), 'mode', b.dataset.mode!)));
     screen.querySelector('[data-act=keep]')?.addEventListener('click', () => void keepCurrent().then(() => lastRoom && paintKeep(lastRoom)));
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
     screen.querySelector('[data-act=lobby]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'end' }));
@@ -654,11 +693,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       // The results screen shows the round's results and nothing of the roster's churn: it is rebuilt only when the results
       // themselves change. Keyed on the seats (ready, presence) it rebuilt every time a phone's heartbeat flapped, which on
       // a slow host replaced the "Start next round now" button faster than a click could find it still.
-      const rkey = `${phase}:${room.round}:${(room.results ?? []).map((r) => `${r.number}:${r.place}:${r.points}:${r.time_ms}`).join()}:${JSON.stringify(room.botResults ?? [])}`;
+      const rkey = `${phase}:${room.round}:${room.mode}:${(room.results ?? []).map((r) => `${r.number}:${r.place}:${r.points}:${r.time_ms}`).join()}:${JSON.stringify(room.botResults ?? [])}`;
       if (shown === rkey) {
         const next = screen.querySelector('[data-next]');
         if (next) next.textContent = `Next race in ${secs(room.remainingMs)} s`;
         paintVote(room);
+        paintMode(room);
         return;
       }
       shown = rkey;

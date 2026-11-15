@@ -547,3 +547,9 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .lcard.bot { border-style: dashed; }
 .lcard.bot .chip { --cbg: var(--c-paper-shade); }
 .rcard.bot .pts { visibility: hidden; }
+/* Council review round 3 (#8): Round complete's Race/Derby switch for the next round. */
+.rs-mode { display: flex; align-items: center; gap: calc(8px * var(--k)); pointer-events: auto; }
+.rs-mode .rs-mode-k { flex: none; font: 800 var(--fs-caption)/1.2 var(--font-body); }
+.rs-acts .rs-mode .btn { flex: 1 1 0; width: auto; min-height: calc(48px * var(--k)); font-size: calc(24px * var(--k)); }
+.rs-side.compact-foot .rs-acts .rs-mode .btn { min-height: 32px; font-size: max(13px, calc(22px * var(--k))); }
+@container (max-width: 560px) { .rs-acts .rs-mode { flex: 1 1 100%; } }
