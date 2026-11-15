@@ -106,18 +106,23 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   await host.evaluate(() => window.__jjTest.hold(true));
   // A sanga queued in front is eaten by the first flick; the boomerang goes with the next.
   if ((await queueOf(holder)).front?.item !== 'boomerang') await flickCar(holder);
+  // The autopilot throws items too (fun pass 941c16e5): the round's list keeps every earlier flight, so the journey
+  // follows the one this flick throws, and the TV draws every flight still in the air.
+  const before = (await items(host)).boomerangs.length;
   await flickCar(holder);
   const thrown = await items(host);
-  assert.equal(thrown.boomerangs.length, 1, `the boomerang is in the air: ${JSON.stringify(thrown.refusals)}`);
+  const mine = thrown.boomerangs.slice(before).filter((f) => f.car === holder);
+  assert.equal(mine.length, 1, `the boomerang is in the air: ${JSON.stringify(thrown.refusals)}`);
+  const flying = thrown.boomerangs.filter((f) => !f.ended).length;
   // A held clock does not guarantee the renderer has consumed the final stepped snapshot. Once a frame returns
   // its buffers, publish the same tick again; wait for the drawn fact, without consuming the flight's lifetime.
   await host.evaluate(async () => { await new Promise(requestAnimationFrame); await window.__jjTest.step(0); });
-  await wait(host, () => window.__jjRender.props()['item/boomerang'] === 1, undefined, 15_000);
+  await wait(host, (n) => window.__jjRender.props()['item/boomerang'] === n, flying, 15_000);
   await host.screenshot({ path: join(CAPTURE, 'boomerang-in-flight.png') });
-  // The TV draws it: one boomerang instance in the frame on screen while it flies.
-  assert.equal((await host.evaluate(() => window.__jjRender.props()))['item/boomerang'], 1, 'the TV draws the boomerang in the air');
+  // The TV draws it: one boomerang instance per flight in the air, this one among them.
+  assert.equal((await host.evaluate(() => window.__jjRender.props()))['item/boomerang'], flying, 'the TV draws the boomerang in the air');
   await host.evaluate(() => window.__jjTest.untilFact(() => false, { maxTicks: 360, every: 12 }));
-  const landed = (await items(host)).boomerangs[0];
+  const landed = (await items(host)).boomerangs.slice(before).find((f) => f.car === holder);
   assert.ok(landed.ended, `the flight ended: ${JSON.stringify(landed)}`);
   console.log(`# boomerang ${viaStation ? 'from a station' : 'given'}; stations ${first.stations.length}, taken ${picked.stations.filter((s) => s.taken > 0).length}; flight ${JSON.stringify(landed.ended)}, hits ${landed.hits.length}`);
   assert.deepEqual(errors, []);

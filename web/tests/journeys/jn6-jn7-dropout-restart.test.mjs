@@ -76,14 +76,14 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
     // Start the dropout measurement only after the host has received deliberate, fresh input and handed the car
     // back. Startup rendering may already have put it on autopilot; a fixed sleep cannot acknowledge that handback
     // (CI 9217 failed "A drives itself" before disconnecting anything). Match JN3's real-input baseline.
-    await until(host, async (ep) => {
+    // The baseline is the observation that passed (CI 18117: a second observe a moment later could disagree).
+    const before = await until(host, async (ep) => {
       const state = await window.__jjTest.observe();
       const seat = state.host.seats.find((s) => s.endpoint === ep);
       const car = seat && state.cars.find((c) => c.car === seat.car);
-      return seat?.fresh && !seat.inputDropped && !seat.menuOpen && car?.autopilot == null && car?.input.throttle > 0.3;
+      return seat?.fresh && !seat.inputDropped && !seat.menuOpen && car?.autopilot == null && car?.input.throttle > 0.3 && car;
     }, a.ep);
-    const before = carOf(await observe(host), a.ep);
-    assert.ok(before && !before.autopilot, 'A drives itself');
+    assert.ok(before && !before.autopilot, `A drives itself: ${JSON.stringify(before?.autopilot)} ${JSON.stringify(before?.input)}`);
     // The phone drops off (its page and connection gone: a dead network, a locked phone, a crashed tab). Playwright's
     // offline mode doesn't stop WebRTC data channels, so the page itself goes.
     const url = a.page.url();

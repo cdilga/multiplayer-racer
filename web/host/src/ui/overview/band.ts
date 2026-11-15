@@ -140,7 +140,7 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
     /** The callout banner the Overview shows now (car, outcome, CSS rect), or null (council review 2026-11-15). */
     banner: () => world.launchCallouts.banner(),
     /** Puts a callout up over a car, as a takedown or landing event would (settable state for the banner checks). */
-    callout: (car: number, outcome: 'Takedown' | 'Perfect' | 'Clean' | 'BigAir') => world.launchCallouts.pop(car, outcome),
+    callout: (car: number, outcome: 'Takedown' | 'Perfect' | 'Clean' | 'BigAir', ms?: number) => world.launchCallouts.pop(car, outcome, ms),
     trace: (on: boolean) => {
       const frames = world.overviewTrace ?? [];
       world.overviewTrace = on ? [] : null;

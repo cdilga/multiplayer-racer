@@ -120,14 +120,17 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
     const out = [];
     const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
     for (const [k, car] of ids.entries()) {
-      window.__jjOverview.callout(car, 'Takedown');
+      // Up for a minute, not the game's 2.2 s: three frames at 1080p under SwiftShader can outlast a real callout (CI run
+      // 18117), and this checks where the banner sits, not how long it stays.
+      const t0 = performance.now();
+      window.__jjOverview.callout(car, 'Takedown', 60_000);
       // A second car scores while the first is still up: only the newest shows.
-      if (k + 1 < ids.length) window.__jjOverview.callout(ids[k + 1], 'Takedown');
+      if (k + 1 < ids.length) window.__jjOverview.callout(ids[k + 1], 'Takedown', 60_000);
       for (let f = 0; f < 3; f++) { window.__jjRender.frame(); await new Promise((r) => setTimeout(r, 16)); }
       const b = window.__jjOverview.banner(), st = window.__jjOverview.stats();
       const shown = [...document.querySelectorAll('.jj-callout-banner')].filter((e) => !e.hidden).length;
       const labels = [...document.querySelectorAll('.identity-nameplate')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; });
-      out.push({ want: ids[k + 1] ?? car, b, shown, carHit: b ? st.cars.filter((c) => overlap(b.rect, c.box) > 0).map((c) => c.car) : null, labelHit: b ? labels.filter((l) => overlap(b.rect, l) > 0).length : null, inFrame: b ? b.rect[0] >= st.frame.left - 0.5 && b.rect[2] <= st.frame.right + 0.5 && b.rect[1] >= st.frame.top - 0.5 && b.rect[3] <= st.frame.bottom + 0.5 : null });
+      out.push({ want: ids[k + 1] ?? car, b, shown, ms: Math.round(performance.now() - t0), carHit: b ? st.cars.filter((c) => overlap(b.rect, c.box) > 0).map((c) => c.car) : null, labelHit: b ? labels.filter((l) => overlap(b.rect, l) > 0).length : null, inFrame: b ? b.rect[0] >= st.frame.left - 0.5 && b.rect[2] <= st.frame.right + 0.5 && b.rect[1] >= st.frame.top - 0.5 && b.rect[3] <= st.frame.bottom + 0.5 : null });
     }
     return out;
   });
