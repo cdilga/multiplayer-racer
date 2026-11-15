@@ -455,7 +455,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       ? `Next: <b>${choiceName(b.decided)}</b>`
       : b.voteOpen
         ? `Vote on your phone · <b>${secs(left(b.voteLeftMs))} s</b>`
-        : `Vote opens in ${secs(left(b.resultsLeftMs))} s`;
+        : `Get your phone out: the vote opens in ${secs(left(b.resultsLeftMs))} s`;
     const headEl = el.querySelector<HTMLElement>('[data-vote-head]')!;
     if (headEl.innerHTML !== head) headEl.innerHTML = head;
     // The card that will win: the result, else the host's pick, else the vote's leader.
@@ -533,7 +533,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.innerHTML = `<section class="results" data-screen="results" data-count="${rows.length}">
       <div class="rs-reel" data-reel>
         <header class="rs-head"><span class="bn display">${derby ? 'Derby' : 'Round'} ${room.round ?? ''} <span class="acc">complete</span></span>
-          <span class="strip">${derby ? 'Most damage dealt wins · everyone keeps their number' : 'Vote for the next track · everyone keeps their number'}</span></header>
+          <span class="strip">${derby ? 'Most damage dealt wins · same cars, same numbers next round' : 'Vote on your phone for the next track · same cars, same numbers'}</span></header>
         ${winner ? `<div class="rs-winner"><small>Winner</small>${winner.bot ? `<span class="badge bot">#${winner.number}</span><b class="display">Bot</b>` : `<span class="badge" style="${colourVars(ws?.colourIndex ?? winner.number - 1)}">#${winner.number}</span><b class="display">${esc(shortName(winner.name || 'Player', 16))}</b><span class="pts">+${winner.points}</span>`}</div>` : ''}
       </div>
       <div class="rs-side">

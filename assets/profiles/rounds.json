@@ -1,7 +1,7 @@
 {
-  "//": "Between rounds (br-qw28, R125): the results stay up for resultsMs (the host's 'Results on screen' setting replaces it), then the phones vote for voteMs: Rematch (the same track), New track (the same style) or Surprise me. The most votes win; a tie, or no votes, is a Rematch; the host may choose instead. Before the next countdown the TV flies along the new track for flyoverMs; any press skips it, and cars can still be changed until it ends. Starting values, tunable.",
+  "//": "Between rounds (br-qw28, R125): the results stay up for resultsMs (the host's 'Results on screen' setting replaces it), then the phones vote for voteMs: Rematch (the same track), New track (the same style) or Surprise me. The most votes win; a tie, or no votes, is a New track (599f0397); the host may choose instead. voteMs 10000 -> 15000 (council review 2026-11-15: most phones weren't looked at in time). Before the next countdown the TV flies along the new track for flyoverMs; any press skips it, and cars can still be changed until it ends. Starting values, tunable.",
   "format": "jj.rounds.v1",
   "resultsMs": 10000,
-  "voteMs": 10000,
+  "voteMs": 15000,
   "flyoverMs": 6000
 }
