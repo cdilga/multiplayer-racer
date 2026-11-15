@@ -122,6 +122,9 @@ test('pause flow: the menu pauses a race first, Resume lifts it; End round and D
     const endText = await page.locator('[data-confirm=end]').innerText();
     assert.match(endText, /end this round/i);
     assert.ok(!/disband/i.test(endText));
+    // Council review 2026-11-15: End voids the round and returns to the Lobby (director `end`, jn3), and the words say so.
+    assert.match(endText, /back to the lobby/i);
+    assert.ok(!/results/i.test(endText), 'End round does not promise the results');
     assert.equal((await inputs(page)).length, 1, 'asking sends nothing');
     await capture(page, 'confirm-end@1080p');
     await page.getByRole('button', { name: 'Keep racing' }).click();
@@ -201,12 +204,26 @@ test('Remove (G07): from the menu list and from a lobby card, after a confirmati
     await capture(page, 'confirm-remove@1080p');
     await page.getByRole('button', { name: 'Keep them' }).click();
     assert.deepEqual(await inputs(page), []);
-    // The menu's player list (the way during a race) lists every player with a Remove button.
+    // Council review 2026-11-15: opened straight from a card, Keep them closes it; no Host menu is left over the lobby.
+    assert.equal(await page.evaluate(() => window.__jjChrome.state.menu), false, 'Keep them closes a card-opened confirmation');
+    assert.ok(!(await page.locator('.jj-menu').isVisible()));
+    // ...and so do Escape and Remove player.
+    await page.locator('.lcard[data-number="3"]').click();
+    await page.keyboard.press('Escape');
+    assert.ok(!(await page.locator('.jj-menu').isVisible()), 'Escape closes a card-opened confirmation');
+    await page.locator('.lcard[data-number="4"]').click();
+    await page.getByRole('button', { name: 'Remove player' }).click();
+    assert.deepEqual(await inputs(page), [{ type: 'ui', ui: 'remove-seat:4' }]);
+    assert.ok(!(await page.locator('.jj-menu').isVisible()), 'Remove player closes a card-opened confirmation');
+    // The menu's player list (the way during a race) lists every player with a Remove button; from there a confirmation
+    // returns to the menu.
+    await page.locator('[data-act=menu]').click();
     assert.equal(await page.locator('[data-players] li[data-seat]').count(), 8);
     await page.locator('[data-players] li[data-number="5"] [data-act=ask-remove]').click();
     assert.match(await page.locator('[data-confirm=remove]').innerText(), /remove #5/i);
     await page.getByRole('button', { name: 'Remove player' }).click();
-    assert.deepEqual(await inputs(page), [{ type: 'ui', ui: 'remove-seat:5' }]);
+    assert.deepEqual((await inputs(page)).slice(1), [{ type: 'ui', ui: 'remove-seat:5' }]);
+    assert.ok(await page.locator('[data-menu]').isVisible(), 'from the list, back to the menu');
     // The room view drops the seat: the list and card follow.
     await page.evaluate(() => {
       const r = window.__jjRoundFixture.make('lobby', 8);
@@ -233,6 +250,68 @@ test('Remove (G07) mid-race: the menu pauses the race, a removal leaves the paus
     assert.deepEqual(await inputs(page), [{ type: 'ui', ui: 'pause', on: true }, { type: 'ui', ui: 'remove-seat:2' }, { type: 'ui', ui: 'pause', on: false }]);
   } finally {
     await page.close();
+  }
+});
+
+test('a menu left open in the Lobby closes as a round starts on its own; one opened in a race stays, paused', async () => {
+  // Council review 2026-11-15: everyone readied while the Host menu was open; the countdown and the race ran behind a
+  // modal titled "Paused" that paused nothing.
+  const page = await open('lobby-8');
+  try {
+    await page.locator('[data-act=menu]').click();
+    await page.getByRole('button', { name: 'Race rules', exact: true }).click();
+    await page.evaluate(() => window.__jjRoundFixture.set(window.__jjRoundFixture.make('countdown', 8, 3)));
+    await page.waitForFunction(() => !window.__jjChrome.state.menu, null, { timeout: 5000 });
+    assert.ok(!(await page.locator('.jj-menu').isVisible()), 'the countdown is on screen, not under the menu');
+    assert.deepEqual(await inputs(page), [], 'nothing paused or sent');
+    // A card's Remove confirmation, too.
+    await page.evaluate(() => window.__jjRoundFixture.set(window.__jjRoundFixture.make('lobby', 8)));
+    await page.locator('.lcard[data-number="2"]').click();
+    await page.evaluate(() => window.__jjRoundFixture.set(window.__jjRoundFixture.make('countdown', 8, 3)));
+    await page.waitForFunction(() => !window.__jjChrome.state.menu, null, { timeout: 5000 });
+    assert.deepEqual(await inputs(page), []);
+    assert.deepEqual(page.errors, []);
+  } finally {
+    await page.close();
+  }
+  // Opened in a race, the menu paused it and stays through the next room update.
+  const race = await open('race-8');
+  try {
+    await untilHud(race, 8);
+    await race.locator('[data-act=menu]').click();
+    await race.evaluate(() => window.__jjRoundFixture.set(window.__jjRoundFixture.make('race', 8)));
+    await race.waitForTimeout(200);
+    assert.equal(await race.evaluate(() => window.__jjChrome.state.menu), true);
+    assert.match(await race.locator('.mn-panel h2').innerText(), /paused/i);
+    assert.deepEqual(await inputs(race), [{ type: 'ui', ui: 'pause', on: true }]);
+    assert.deepEqual(race.errors, []);
+  } finally {
+    await race.close();
+  }
+});
+
+test('Race rules: every rule and Back fit on screen at TV, laptop and phone sizes; Back never scrolls away', async () => {
+  // Council review 2026-11-15: at 1080p Catch-up was clipped and Back sat below the panel's scroll.
+  for (const [name, vp] of [['1080p', VP['1080p']], ['1366x768', [1366, 768]], ['4k', VP['4k']], ['phone', VP.phone], ['phone-landscape', VP['phone-landscape']]]) {
+    const page = await open('lobby-4', vp);
+    try {
+      await page.locator('[data-act=menu]').click();
+      await page.getByRole('button', { name: 'Race rules', exact: true }).click();
+      const panel = await box(page, '[data-race-rules]');
+      const back = await box(page, '[data-race-rules] [data-act=host-menu]');
+      assert.ok(back.y >= panel.y && back.y + back.h <= panel.y + panel.h + 0.5 && back.y + back.h <= vp[1], `${name}: Back on screen, inside the panel (${JSON.stringify({ back, panel })})`);
+      const fits = await page.$eval('[data-race-rules]', (p) => p.scrollHeight <= p.clientHeight + 1);
+      assert.ok(fits, `${name}: the panel itself never scrolls`);
+      if (vp[0] >= 1366) {
+        // On a TV or a laptop every rule button is visible without scrolling.
+        const scrolls = await page.$eval('.mn-rules', (r) => r.scrollHeight - r.clientHeight);
+        assert.ok(scrolls <= 1, `${name}: the rules scroll ${scrolls}px`);
+      }
+      await capture(page, `race-rules@${name}`);
+      assert.deepEqual(page.errors, []);
+    } finally {
+      await page.close();
+    }
   }
 });
 

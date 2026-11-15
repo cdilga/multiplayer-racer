@@ -97,6 +97,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   // br-m1xe: what the Tracks page last did (added, refused, chosen).
   let tracksNote = '';
   let target: number | null = null;
+  // Council review 2026-11-15: a lobby card opens the Remove confirmation straight, with no menu behind it. Remove, Keep
+  // them and Escape then close it again, instead of leaving the whole Host menu over the lobby.
+  let direct = false;
 
   const footer = document.createElement('footer');
   footer.className = 'jj-foot';
@@ -227,7 +230,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         : `<section class="mn-panel confirm" data-confirm="remove"><h2 class="display">Already gone</h2><div class="mn-acts"><button class="btn brush" type="button" data-act="back" data-autofocus>Back</button></div></section>`;
     } else if (state.confirm === 'end') {
       menuEl.innerHTML = `<section class="mn-panel confirm" data-confirm="end" aria-labelledby="mn-t"><h2 id="mn-t" class="display">End this <span class="acc">round</span>?</h2>
-        <p>The race stops now and the room goes to the results. Everyone stays in the room.</p>
+        <p>The race stops now and nobody scores: the room goes back to the lobby. Everyone stays in the room.</p>
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="do-end">End round</button>
         <button class="btn brush" type="button" data-act="back" data-autofocus>Keep racing</button></div></section>`;
     } else if (state.confirm === 'disband') {
@@ -292,14 +295,17 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       // remembered on this device.
       const r = room!;
       const choice = (rule: string, label: string, values: Array<[number | string, string]>, on: number | string | undefined) =>
-        `<h3 class="display">${label}</h3><div class="mn-acts" role="group" aria-label="${label}">${values.map(([v, t]) => `<button class="btn brush${on === v ? ' primary' : ''}" type="button" data-act="rule" data-rule="${rule}" data-value="${v}" aria-pressed="${on === v}">${t}</button>`).join('')}</div>`;
+        `<div class="mn-rule"><h3 class="display">${label}</h3><div class="mn-acts" role="group" aria-label="${label}">${values.map(([v, t]) => `<button class="btn brush${on === v ? ' primary' : ''}" type="button" data-act="rule" data-rule="${rule}" data-value="${v}" aria-pressed="${on === v}">${t}</button>`).join('')}</div></div>`;
       const rules = choice('mode', 'Next round', [['race', 'Race'], ['derby', 'Derby']], r.nextMode ?? 'race')
         + choice('laps', 'Laps', LAPS.map((n) => [n, String(n)]), r.laps)
         + choice('derbyMs', 'Derby length', DERBY_MS.map((ms) => [ms, `${ms / 60_000} min`]), r.derbyMs ?? 180_000)
         + choice('intermissionMs', 'Results on screen', INTERMISSION_MS.map((ms) => [ms, `${ms / 1000} s`]), r.intermissionMs ?? 10_000);
-      menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>${rules}<p class="mn-hint">They apply from the next round.</p>
-        <h3 class="display">Catch-up</h3><p>Give trailing racers a small speed and boost recharge advantage.</p>
-        <div class="mn-acts" role="group" aria-label="Catch-up">${[false, true].map((on) => `<button class="btn brush${(room!.catchUp !== false) === on ? ' primary' : ''}" type="button" data-act="catch-up" data-on="${on}" aria-pressed="${(room!.catchUp !== false) === on}">${on ? 'Light' : 'Off'}</button>`).join('')}</div>
+      // Council review 2026-11-15: the groups sit in columns (round.css .mn-rules) and only they scroll, so every rule and
+      // Back fit a 1080p TV and Back is always on screen, never below a scroll a remote can't reach.
+      menuEl.innerHTML = `<section class="mn-panel controls" data-race-rules aria-labelledby="mn-t"><h2 id="mn-t" class="display">Race <span class="acc">rules</span></h2>
+        <div class="mn-rules">${rules}<div class="mn-rule"><h3 class="display">Catch-up</h3><p>Give trailing racers a small speed and boost recharge advantage.</p>
+        <div class="mn-acts" role="group" aria-label="Catch-up">${[false, true].map((on) => `<button class="btn brush${(room!.catchUp !== false) === on ? ' primary' : ''}" type="button" data-act="catch-up" data-on="${on}" aria-pressed="${(room!.catchUp !== false) === on}">${on ? 'Light' : 'Off'}</button>`).join('')}</div></div></div>
+        <p class="mn-hint">Laps, mode and timings apply from the next round.</p>
         <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
     } else if (state.page === 'display') {
       const fs = fullscreenSupport();
@@ -370,6 +376,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     state.join = join;
     state.confirm = null;
     target = null;
+    direct = false;
     menuEl.hidden = false;
     menuBtn.setAttribute('aria-expanded', 'true');
     document.documentElement.dataset.jjMenu = 'open';
@@ -384,6 +391,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     state.page = '';
     toggleDiagnostics(false);
     state.confirm = null;
+    direct = false;
     menuEl.hidden = true;
     menuBtn.setAttribute('aria-expanded', 'false');
     delete document.documentElement.dataset.jjMenu;
@@ -393,11 +401,18 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   const confirm = (kind: 'remove' | 'end' | 'disband', seat?: number) => {
     if (!state.menu) {
       state.menu = true;
+      direct = true;
       menuEl.hidden = false;
       if (racing()) setPause(true);
     }
     state.confirm = kind;
     target = seat ?? null;
+    renderMenu();
+  };
+  // Leaving a confirmation: back to the menu, or closed when the confirmation was opened straight (a lobby card).
+  const leaveConfirm = (why: string) => {
+    if (direct) return closeMenu(why);
+    state.confirm = null;
     renderMenu();
   };
   // A room update that changes the open menu redraws it, which replaces the buttons. A press in flight (down, not yet up)
@@ -497,8 +512,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         return renderMenu();
       case 'back':
         // Back from a confirmation returns to the menu, or closes it if it was opened straight to the confirmation.
-        state.confirm = null;
-        return state.menu ? renderMenu() : undefined;
+        return leaveConfirm('back');
       case 'view':
         setProfileChoice(b.dataset.profile as ProfileChoice);
         return renderMenu();
@@ -513,8 +527,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         return confirm('remove', Number(b.dataset.seat));
       case 'do-remove':
         send(`remove-seat:${Number(b.dataset.seat)}`);
-        state.confirm = null;
-        return renderMenu();
+        return leaveConfirm('removed');
       case 'do-end':
         send('end');
         return closeMenu('end');
@@ -601,10 +614,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   });
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (state.menu && state.confirm) {
-      state.confirm = null;
-      renderMenu();
-    } else if (state.menu) closeMenu('escape');
+    if (state.menu && state.confirm) leaveConfirm('escape');
+    else if (state.menu) closeMenu('escape');
     else if (state.diagnostics) toggleDiagnostics(false);
   });
 
@@ -629,7 +640,12 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     update(r) {
       // A screen change (the phase moves) closes diagnostics, so it never hangs half-open over the next screen.
       if (state.diagnostics && room && room.phase !== r.phase) toggleDiagnostics(false);
+      const wasRacing = racing();
       room = r;
+      // Council review 2026-11-15: a menu left open in the Lobby or the results (no pause: nothing races there) never
+      // hides a round that starts on its own when everyone readies. It closes as the countdown begins, so the room sees the
+      // start and no "Paused" title sits over a race that is running. A menu opened in a race paused it and stays.
+      if (state.menu && !paused && !wasRacing && racing()) closeMenu('round-start');
       const n = r.seats.length;
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;
       // P1-C10: a seat practising on its own course isn't racing (yet).
@@ -641,13 +657,16 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       renderPositions();
       // Whatever changed under an open menu or overlay is redrawn (a player left; the phase moved).
       if (state.menu) {
-        // A confirmed removal for a seat that has gone returns to the list.
-        if (state.confirm === 'remove' && (target === null || !seatOf(target))) state.confirm = null;
+        // A confirmed removal for a seat that has gone returns to the list (or closes, opened from a lobby card).
+        if (state.confirm === 'remove' && (target === null || !seatOf(target))) {
+          if (direct) closeMenu('removed');
+          else state.confirm = null;
+        }
         // The race ended or the room went to the lobby while paused: the pause lifts.
         if (paused && !racing()) {
           paused = false;
         }
-        if (menuEl.dataset.key !== menuKey(r)) {
+        if (state.menu && menuEl.dataset.key !== menuKey(r)) {
           if (pressing) redrawLater = true;
           else renderMenu();
         }

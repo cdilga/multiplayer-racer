@@ -77,7 +77,8 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     assert.match(await host.locator('[data-confirm=remove]').innerText(), /remove #3 racer 3/i);
     await shot(host, { path: `${CAPTURE}/lobby-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Keep them' }).click();
-    await host.keyboard.press('Escape');
+    // Council review 2026-11-15: a card's confirmation closes again; no Host menu is left over the lobby.
+    assert.equal(await host.evaluate(() => window.__jjChrome.state.menu), false, 'Keep them closes the card-opened confirmation');
     assert.deepEqual(await seats(host), [1, 2, 3, 4]);
     // The menu's player list removes.
     await host.locator('[data-act=menu]').click();
@@ -96,6 +97,20 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     await frame(host, 'syn5', { claim: 'Racer 5' });
     await wait(host, () => window.__jjRoom.view().seats.length === 4);
     assert.ok(!(await seats(host)).includes(3), 'a fresh claim gets a new number, never #3 again');
+    // Council review 2026-11-15: kick the AFK player from their card, then everyone readies. The confirmation closes on
+    // Remove, and the round starts in view: never behind a menu titled "Paused" that pauses nothing.
+    await host.locator('.lcard[data-number="4"]').click();
+    await host.getByRole('button', { name: 'Remove player' }).click();
+    await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 4), null, 10_000);
+    assert.equal(await host.evaluate(() => window.__jjChrome.state.menu), false, 'Remove player closes the card-opened confirmation');
+    assert.equal(await host.locator('.jj-menu').isVisible(), false);
+    // A Host menu left open in the Lobby closes as the round starts on its own.
+    await host.locator('[data-act=menu]').click();
+    for (const k of [1, 2, 5]) await frame(host, `syn${k}`, { ready: true });
+    await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), null, 120_000);
+    await wait(host, () => !window.__jjChrome.state.menu, null, 5_000);
+    assert.equal(await host.evaluate(() => window.__jjTest.pauseReasons().length), 0, 'nothing paused');
+    await shot(host, { path: `${CAPTURE}/lobby-remove-then-start@1080p.png` });
     assert.deepEqual(host.errors, []);
   } finally {
     await host.context().close();
