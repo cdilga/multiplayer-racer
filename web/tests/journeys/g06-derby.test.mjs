@@ -82,7 +82,62 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   assert.equal((await host.evaluate(() => window.__jjRoom.view())).mode, 'derby');
   // Hold the clock and drive the round in steps (the derby is game time).
   await host.evaluate(() => window.__jjTest.hold(true));
-  await host.evaluate(() => window.__jjTest.step(2 * 120)); // spawn protection over
+  // Council review 2026-11-15 (N1a): 2.5 s after GO the Overview showed bare floor and one car. Every car drives off at
+  // full throttle on its own line from GO, a frame drawn every 6 ticks; at 1, 3 and 10 s every car is inside the frame.
+  const framing = await host.evaluate(async () => {
+    const t = window.__jjTest, out = {};
+    let o = await t.observe();
+    const start = o.tick;
+    for (let k = 0; k * 6 <= 10 * 120; k++) {
+      for (const [i, c] of o.cars.entries()) {
+        const seat = o.host.seats.find((s) => s.car === c.car);
+        if (!seat?.endpoint?.startsWith('s')) continue;
+        t.input({ type: 'controller', endpoint: seat.endpoint, frame: { state: { source: seat.source, seq: (o.tick + 1) & 0xffff, drive: [Math.round(((i % 3) - 1) * 0.35 * 32767), 32767], action: [0, 0] } } });
+      }
+      await t.step(6);
+      window.__jjRender.frame();
+      o = await t.observe();
+      const s = (o.tick - start) / 120;
+      for (const at of [1, 3, 10]) if (!out[at] && s >= at) out[at] = { s, cars: o.cars.length, stats: window.__jjOverview.stats() };
+    }
+    return out;
+  });
+  for (const at of [1, 3, 10]) {
+    const f = framing[at];
+    assert.ok(f?.stats, `the Overview draws at ${at} s`);
+    assert.equal(f.stats.cars.length, f.cars, `every car is framed at ${at} s`);
+    assert.ok(f.stats.cars.every((c) => c.inFrame), `every car inside the Overview frame at ${at} s: ${JSON.stringify(f.stats.cars.filter((c) => !c.inFrame))} frame ${JSON.stringify(f.stats.frame)}`);
+  }
+  // N1c: the strip is readable from the couch (>= 32 px at 1080p) and says what its numbers are.
+  const strip = await host.evaluate(() => ({ band: window.__jjOverview.band(), text: document.querySelector('.jj-ov-band')?.textContent }));
+  assert.ok(strip.band.fontPx >= 32, `the derby strip is at least 32 px at 1080p: ${JSON.stringify(strip)}`);
+  assert.equal(strip.band.title, 'Damage dealt', `the strip is titled: ${JSON.stringify(strip)}`);
+  assert.match(strip.text, /\d+ dmg/, `each standing counts damage: ${strip.text}`);
+  // N1b: callouts in the Overview are one banner at a time, beside its car, never over a car or a name label.
+  const banners = await host.evaluate(async () => {
+    const o = await window.__jjTest.observe();
+    const ids = o.cars.map((c) => c.car);
+    const out = [];
+    const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+    for (const [k, car] of ids.entries()) {
+      window.__jjOverview.callout(car, 'Takedown');
+      // A second car scores while the first is still up: only the newest shows.
+      if (k + 1 < ids.length) window.__jjOverview.callout(ids[k + 1], 'Takedown');
+      for (let f = 0; f < 3; f++) { window.__jjRender.frame(); await new Promise((r) => setTimeout(r, 16)); }
+      const b = window.__jjOverview.banner(), st = window.__jjOverview.stats();
+      const shown = [...document.querySelectorAll('.jj-callout-banner')].filter((e) => !e.hidden).length;
+      const labels = [...document.querySelectorAll('.identity-nameplate')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; });
+      out.push({ want: ids[k + 1] ?? car, b, shown, carHit: b ? st.cars.filter((c) => overlap(b.rect, c.box) > 0).map((c) => c.car) : null, labelHit: b ? labels.filter((l) => overlap(b.rect, l) > 0).length : null, inFrame: b ? b.rect[0] >= st.frame.left - 0.5 && b.rect[2] <= st.frame.right + 0.5 && b.rect[1] >= st.frame.top - 0.5 && b.rect[3] <= st.frame.bottom + 0.5 : null });
+    }
+    return out;
+  });
+  for (const b of banners) {
+    assert.ok(b.b && b.b.car === b.want && b.shown === 1, `one banner, the newest callout's: ${JSON.stringify(b)}`);
+    assert.deepEqual(b.carHit, [], `the banner covers no car: ${JSON.stringify(b)}`);
+    assert.equal(b.labelHit, 0, `the banner covers no name label: ${JSON.stringify(b)}`);
+    assert.ok(b.inFrame, `the banner sits inside the gameplay frame: ${JSON.stringify(b)}`);
+  }
+  if (process.env.JJ_CAPTURE_DIR) await shot(host, 'tv-derby-10s-1920x1080');
   const cars = (await host.evaluate(async () => (await window.__jjTest.observe()).cars.map((c) => c.car)));
   assert.equal(cars.length, 6, 'six cars in the bowl');
   // Rams: car 1 into car 0, car 2 into car 3 (twice), car 4 into car 5.

@@ -136,6 +136,7 @@ export class OverviewRig {
     const tf = Math.max(cfg.minFrameM, this.wanted);
     if (!this.init) {
       Object.assign(this, { cx: tx, cz: tz, frameM: tf, vx: 0, vz: 0, vf: 0, gx: tx, gz: tz, gf: tf, init: true });
+      this.frameM = Math.max(this.frameM, this.holds(cars, pitch, aspect));
       return this.pose(maxFrame);
     }
     // The goal: a soft dead zone (a single car's wobble doesn't move it), then a low-pass, so the spring's acceleration
@@ -146,10 +147,43 @@ export class OverviewRig {
     // Zooming out never waits in the dead zone: a car near the edge is framed at once; zooming in does.
     this.gf += ((tf > this.frameM ? tf : soft(this.frameM, tf, this.frameM * cfg.deadZoneFrame)) - this.gf) * g;
     const s = cfg.smoothTimeS;
-    [this.cx, this.vx] = smoothDamp(this.cx, this.gx, this.vx, s.pan, cfg.maxPanMps, dt);
-    [this.cz, this.vz] = smoothDamp(this.cz, this.gz, this.vz, s.pan, cfg.maxPanMps, dt);
-    [this.frameM, this.vf] = smoothDamp(this.frameM, this.gf, this.vf, this.gf > this.frameM ? s.zoomOut : s.zoomIn, this.gf > this.frameM ? cfg.maxZoomOutMps : cfg.maxZoomMps, dt);
+    // Council review 2026-11-15: a slow host (a few frames a second) used to step the springs by at most 0.1 s a frame
+    // while the game ran on, so the camera fell seconds behind the cars just after GO. The springs take the whole step,
+    // in slices short enough for them to stay smooth.
+    for (let left = dt; left > 1e-6; left -= 1 / 30) {
+      const h = Math.min(left, 1 / 30);
+      [this.cx, this.vx] = smoothDamp(this.cx, this.gx, this.vx, s.pan, cfg.maxPanMps, h);
+      [this.cz, this.vz] = smoothDamp(this.cz, this.gz, this.vz, s.pan, cfg.maxPanMps, h);
+      [this.frameM, this.vf] = smoothDamp(this.frameM, this.gf, this.vf, this.gf > this.frameM ? s.zoomOut : s.zoomIn, this.gf > this.frameM ? cfg.maxZoomOutMps : cfg.maxZoomMps, h);
+    }
+    // A hard floor under the springs (council review 2026-11-15: 2.5 s after GO the frame showed bare floor and one car):
+    // whatever the springs are doing, the frame never shows less than every car's own box plus the margin from where the
+    // centre is now. Zooming out to it is immediate; the springs carry on from there.
+    const hold = this.holds(cars, pitch, aspect);
+    if (this.frameM < hold) [this.frameM, this.vf] = [hold, Math.max(0, this.vf)];
     return this.pose(maxFrame);
+  }
+
+  /** The least frame that shows every car (its centre ± `marginM` across the ground, up to its roof) from the current
+   *  centre, exactly through this rig's camera (fixed pitch, `fovDeg`, the gameplay frame's aspect and share). */
+  holds(cars: ReadonlyArray<readonly [number, number, number, number?]>, pitch: number, aspect: number): number {
+    const cfg = this.cfg, a = this.arena, m = cfg.marginM;
+    const t = Math.tan((cfg.fovDeg * Math.PI) / 360) * this.share, sp = Math.sin(pitch), cp = Math.cos(pitch);
+    // A point (ex, h, ez) from the target at camera distance D: depth D - sp·h + cp·ez, up the screen cp·h + sp·ez,
+    // across ex. It is inside the frame when both offsets fit the half-angle tangents at that depth.
+    let need = 0;
+    for (const [, x, z, y] of cars) {
+      for (const h of [Math.max(0, (y ?? a.y) - a.y), Math.max(0, (y ?? a.y) - a.y) + 1.6]) {
+        for (const ex of [x - this.cx - m, x - this.cx + m]) {
+          for (const ez of [z - this.cz - m, z - this.cz + m]) {
+            const base = sp * h - cp * ez;
+            need = Math.max(need, Math.abs(cp * h + sp * ez) / t + base, Math.abs(ex) / (t * aspect) + base);
+          }
+        }
+      }
+    }
+    // pose(): D = frame / share / 2 / tan(fov / 2) + 6.
+    return Math.max(0, need - 6) * 2 * t;
   }
 
   private pose(maxFrame: number): OverviewPose {

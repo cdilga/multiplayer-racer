@@ -665,6 +665,7 @@ export class World {
     }
     this.vehicles?.update(drawn);
     this.identifyMarks.update(drawn);
+    this.launchCallouts.flat = this.overviewOn && !fly;
     this.launchCallouts.update(drawn);
     this.missedGates.update(drawn);
     const r = this.backend.renderer;
@@ -706,7 +707,31 @@ export class World {
     st.drawCalls = this.backend.drawCalls();
     st.triangles = this.backend.triangles();
     this.onNameplates(this.nameplatePoints);
+    this.placeBanner(overview && !fly);
     this.onFrame(st);
+  }
+
+  /** The arena Overview's callout banner (council review 2026-11-15): beside its car, clear of every car and name label. */
+  private placeBanner(on: boolean): void {
+    const st = this.overviewStats, root = this.canvas.parentElement;
+    if (!on || !st || !root) return this.launchCallouts.place(null);
+    const v = this.vehicles;
+    // The name labels where nameplates.ts just put them (after its reflow), in the canvas's CSS px. Read only while a
+    // banner is up: one layout read a frame then, none otherwise.
+    const labels = () => {
+      const c = this.canvas.getBoundingClientRect();
+      return [...root.querySelectorAll<HTMLElement>('.identity-nameplate')].map((e): [number, number, number, number] => {
+        const r = e.getBoundingClientRect();
+        return [r.left - c.left, r.top - c.top, r.right - c.left, r.bottom - c.top];
+      });
+    };
+    this.launchCallouts.place({
+      root,
+      frame: st.frame,
+      cars: st.cars,
+      labels,
+      badge: (car) => ({ number: v?.numberOf(car) ?? car, paint: v?.paintOf(car) ?? '#15203A' }),
+    });
   }
 
   /** The grid (P1-R04): each seat's tile chases its car with its own camera at its LOD class; spare cells and gutters
@@ -1051,7 +1076,9 @@ export class World {
     const rig = this.overviewRig!;
     const t = s.tick;
     if (this.overviewTick !== null && t < this.overviewTick - TICK_HZ) rig.reset();
-    const dt = this.overviewTick === null ? 0 : Math.max(0, Math.min(0.1, (t - this.overviewTick) / TICK_HZ));
+    // Council review 2026-11-15: the whole game step (up to a second; the rig slices it), not 0.1 s a frame, so a slow
+    // host's camera keeps up with the cars.
+    const dt = this.overviewTick === null ? 0 : Math.max(0, Math.min(1, (t - this.overviewTick) / TICK_HZ));
     this.overviewTick = t;
     const cars: Array<[number, number, number, number]> = [];
     for (let i = 0; i < s.cars; i++) if (!isPractice(s.flags[i]!)) cars.push([s.id[i]!, s.pos[i * 3]!, s.pos[i * 3 + 2]!, s.pos[i * 3 + 1]!]);

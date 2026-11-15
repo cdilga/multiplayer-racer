@@ -23,12 +23,13 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
   band.className = 'jj-ov-band';
   band.hidden = true;
   band.setAttribute('role', 'status');
-  band.innerHTML = '<span class="ov-clock" data-ov-clock></span><span class="ov-standings" data-ov-standings><span class="ov-run"></span></span><button class="ov-suggest" type="button" data-act="ov-grid" hidden>Cars spread out · <b>V</b> for the Grid</button>';
+  band.innerHTML = '<span class="ov-clock" data-ov-clock></span><span class="ov-title" data-ov-title hidden>Damage dealt</span><span class="ov-standings" data-ov-standings><span class="ov-run"></span></span><button class="ov-suggest" type="button" data-act="ov-grid" hidden>Cars spread out · <b>V</b> for the Grid</button>';
   const note = document.createElement('div');
   note.className = 'jj-ov-note';
   note.hidden = true;
   root.append(band, note);
   const clockEl = band.querySelector<HTMLElement>('[data-ov-clock]')!;
+  const titleEl = band.querySelector<HTMLElement>('[data-ov-title]')!;
   const standEl = band.querySelector<HTMLElement>('[data-ov-standings]')!;
   const run = standEl.firstElementChild as HTMLElement;
   const suggest = band.querySelector<HTMLButtonElement>('.ov-suggest')!;
@@ -79,6 +80,9 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
     document.documentElement.toggleAttribute('data-jj-overview', world.overviewOn);
     if (!show || !room) return;
     const derby = room.mode === 'derby';
+    // Council review 2026-11-15: a bare "41 pts" read as the round's points, and the results then said "+25". The strip is
+    // titled and counts damage (seats[].derby.points is raw damage dealt); the results' points are what each place earns.
+    if (titleEl.hidden === derby) titleEl.hidden = !derby;
     clockEl.textContent = derby && room.derbyLeftMs != null ? `Derby · ${clock(room.derbyLeftMs)} left` : derby ? 'Derby' : 'Overview';
     const seats = room.seats.filter((s) => s.presence !== 'Left' && s.car !== null);
     const ranked = derby ? [...seats].sort((a, b) => (a.derby?.rank ?? 1e9) - (b.derby?.rank ?? 1e9) || a.number - b.number) : [...seats].sort((a, b) => (a.position ?? 1e9) - (b.position ?? 1e9));
@@ -89,12 +93,12 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
         .map((s) => {
           const c = s.colourIndex % tokenData.seatColors.length;
           const place = derby ? s.derby?.rank : s.position;
-          return `<span class="ov-item"><b>${place ? ORD(place) : '–'}</b><span class="badge" style="--b:var(--id-${c});--on:var(--id-${c}-on)">#${s.number}</span><span class="nm">${esc(shortName(s.name || 'Player', 12))}</span>${derby ? `<span class="pts">${Math.round(s.derby?.points ?? 0)} pts</span>` : ''}</span>`;
+          return `<span class="ov-item"><b>${place ? ORD(place) : '–'}</b><span class="badge" style="--b:var(--id-${c});--on:var(--id-${c}-on)">#${s.number}</span><span class="nm">${esc(shortName(s.name || 'Player', 12))}</span>${derby ? `<span class="pts">${Math.round(s.derby?.points ?? 0)}<small> dmg</small></span>` : ''}</span>`;
         })
         .join('');
     }
-    // Every seat stays in the band, never cut: the run shrinks a little to fit, and past that scrolls as a ticker (two
-    // copies, so it loops) at a readable size.
+    // Every seat stays in the band, never cut: past its width the run scrolls as a ticker (two copies, so it loops) at a
+    // readable size. Council review 2026-11-15: it no longer shrinks first (a 20 px strip was unreadable from the couch).
     if (key !== fitKey || standEl.clientWidth !== fitW) {
       fitKey = key;
       fitW = standEl.clientWidth;
@@ -102,7 +106,7 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
       run.style.transform = '';
       run.querySelector('.ov-copy')?.remove();
       const w = run.scrollWidth, k = Math.min(1, fitW / Math.max(1, w));
-      if (k >= 0.8) run.style.transform = k < 1 ? `scale(${k.toFixed(3)})` : '';
+      if (k >= 1) run.style.transform = '';
       else {
         const copy = document.createElement('span');
         copy.className = 'ov-copy';
@@ -132,7 +136,11 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
     /** Recorded car positions replayed through a fresh rig on this screen (deterministic motion checks). */
     replay: (samples: Array<Array<[number, number, number, number?]>>, dtS: number) => world.replayOverview(samples, dtS),
     pose: () => world.overviewPose,
-    band: () => ({ shown: !band.hidden, clock: clockEl.textContent, suggest: !suggest.hidden, note: note.hidden ? null : note.textContent, height: band.getBoundingClientRect().height }),
+    band: () => ({ shown: !band.hidden, clock: clockEl.textContent, title: titleEl.hidden ? null : titleEl.textContent, suggest: !suggest.hidden, note: note.hidden ? null : note.textContent, height: band.getBoundingClientRect().height, fontPx: parseFloat(getComputedStyle(run).fontSize) * (run.getBoundingClientRect().height / Math.max(1, run.offsetHeight)) }),
+    /** The callout banner the Overview shows now (car, outcome, CSS rect), or null (council review 2026-11-15). */
+    banner: () => world.launchCallouts.banner(),
+    /** Puts a callout up over a car, as a takedown or landing event would (settable state for the banner checks). */
+    callout: (car: number, outcome: 'Takedown' | 'Perfect' | 'Clean' | 'BigAir') => world.launchCallouts.pop(car, outcome),
     trace: (on: boolean) => {
       const frames = world.overviewTrace ?? [];
       world.overviewTrace = on ? [] : null;
