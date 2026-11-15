@@ -151,7 +151,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     // A derby ranks by damage points (P1-S10), a race by position.
     const derby = room?.mode === 'derby';
     const placeOf = (s: Seat) => (derby ? (s.derby?.rank ?? null) : s.position);
-    const seatsIn = racing() && room ? room.seats.filter((s) => placeOf(s) !== null && s.presence !== 'Left') : [];
+    // A reconnecting seat (presence Left; its tile says "Reconnecting…") still has a car racing on the autopilot and a
+    // place: it stays in the order (council review 2026-11-15: places 2 and 10 went missing from the strip).
+    const seatsIn = racing() && room ? room.seats.filter((s) => placeOf(s) !== null) : [];
     // br-8h3u.14: a race's bots take their places among the seats, marked as bots (a derby's ledger ranks seats only).
     const botsIn = racing() && room && !derby ? botRows(room).filter((b) => b.position !== null) : [];
     const order = [
