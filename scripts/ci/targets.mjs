@@ -67,7 +67,9 @@ export function nodeArgs(durations, target, concurrency = true) {
     args.push('--test-force-exit');
     for (const n of learnedNames(durations, file)) args.push('--test-skip-pattern', anchored(n));
   }
-  else if (name !== null) args.push('--test-name-pattern', anchored(name));
+  // A single-test target too: a name learned before the test was renamed matches nothing, and node then sits on the
+  // file's open browser and server until the slot kills it (CI 18065: grid-dock's old 'many racers' name, 900 s).
+  else if (name !== null) args.push('--test-force-exit', '--test-name-pattern', anchored(name));
   return [...args, file];
 }
 

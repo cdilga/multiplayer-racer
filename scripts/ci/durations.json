@@ -89,7 +89,6 @@
  "web/host/tests/fx.test.mjs::there is no particle cap: a field of 200 sliding cars emits for every one, and the pool grows by doubling": 1,
  "web/host/tests/grid-dock.test.mjs": 131,
  "web/host/tests/grid-dock.test.mjs::a resize re-fills: race-8 from 1920x1080 to 1366x768 and back keeps every tile equal and the grid edge to edge": 11,
- "web/host/tests/grid-dock.test.mjs::many racers: every position is in the footer (a ticker when they do not fit), none cut": 44,
  "web/host/tests/grid-dock.test.mjs::race-2 at 915x412: tiles fill the area above the footer; QR and positions dock in the footer": 6,
  "web/host/tests/grid-dock.test.mjs::race-3 at 412x915: tiles fill the area above the footer; QR and positions dock in the footer": 6,
  "web/host/tests/grid-dock.test.mjs::race-4 at 1920x1080: tiles fill the area above the footer; QR and positions dock in the footer": 11,
