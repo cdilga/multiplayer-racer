@@ -80,14 +80,16 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
     }
     const r = z.getBoundingClientRect();
     const rad = R();
-    origin = fixed
-      ? { ...home }
-      : { x: Math.min(Math.max(e.clientX - r.left, rad + 8), r.width - rad - 8), y: Math.min(Math.max(e.clientY - r.top, rad + 8), r.height - rad - 8) };
-    place(origin.x, origin.y);
+    // A floating stick measures from where the thumb landed, so touching down reads neutral wherever it lands; only the
+    // base art is kept inside the zone. (Measuring from the clamped base made a touch in the outer ~71 px of a 375 px
+    // phone's zone brake or steer before the thumb moved: council review 2026-11-15.) A fixed stick measures from home.
+    const at = { x: e.clientX - r.left, y: e.clientY - r.top };
+    origin = fixed ? { ...home } : at;
+    place(fixed ? home.x : Math.min(Math.max(at.x, rad + 8), r.width - rad - 8), fixed ? home.y : Math.min(Math.max(at.y, rad + 8), r.height - rad - 8));
     z.classList.add('active');
     if (vibrate()) navigator.vibrate?.(8);
     stamp(e);
-    move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
+    move(at.x - origin.x, at.y - origin.y);
   });
   const onMove = (ev: Event) => {
     const e = ev as PointerEvent;
@@ -104,5 +106,11 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
   };
   z.addEventListener('pointerup', end);
   z.addEventListener('pointercancel', end);
+  // A page going hidden (screen lock, app switch) lets go of a held stick even when the browser sends no pointercancel,
+  // so the session's held sample can't overwrite the hidden-page neutral (council review 2026-11-15). The thumb's next
+  // touch takes it again.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && pid !== null) release();
+  });
   return { value, release };
 }

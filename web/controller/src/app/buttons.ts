@@ -143,6 +143,11 @@ export function buttonsArea(area: HTMLElement, layout: ButtonsLayout, onChange: 
     compose();
     onChange();
   };
+  // As the sticks: a page going hidden lets go of every held button even without a pointercancel (council review
+  // 2026-11-15), so a held Gas can't overwrite the hidden-page neutral.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && BUTTON_INPUTS.some(isHeld)) releaseAll();
+  });
   compose();
   return {
     drive: { get value() { return drive; }, release: releaseAll },

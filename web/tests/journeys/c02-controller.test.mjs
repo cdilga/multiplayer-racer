@@ -130,6 +130,40 @@ for (const engine of ['chromium', 'webkit']) {
         await ctx.close();
       }
     });
+
+    // Council review 2026-11-15: a floating stick measures from where the thumb lands, so a touch-down near a zone's edge
+    // reads neutral (it used to brake or steer at once); and a page going hidden lets go of a held stick even with no
+    // pointercancel, so the held sample can't overwrite the hidden-page neutral.
+    test('a touch-down at a stick zone edge reads neutral, and a hidden page lets go of a held stick', { timeout: 60_000 }, async (t) => {
+      if (!eng()) return t.skip('engine not installed');
+      for (const size of [LAND, PORT, { width: 375, height: 667 }]) {
+        const { ctx, page } = await open(eng(), 'playing', size);
+        const at = (kind, id, type, fx, fy, dx = 0, dy = 0) =>
+          page.evaluate(([kind, id, type, fx, fy, dx, dy]) => {
+            const z = document.querySelector(`.zone.${kind}`);
+            const r = z.getBoundingClientRect();
+            z.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: 'touch', bubbles: true, cancelable: true, clientX: r.left + r.width * fx + dx, clientY: r.top + r.height * fy + dy, isPrimary: id === 1 }));
+          }, [kind, id, type, fx, fy, dx, dy]);
+        // Bottom-left corner of DRIVE (brake side) and the outer edge of STEER: neutral on touch-down.
+        await at('drive', 1, 'pointerdown', 0.04, 0.96);
+        await at('action', 2, 'pointerdown', 0.96, 0.5);
+        let s = await sticks(page);
+        assert.ok(s.drive.touch && Math.hypot(s.drive.x, s.drive.y) < 0.05, `${engine} ${size.width}x${size.height}: drive at the corner ${JSON.stringify(s.drive)}`);
+        assert.ok(s.action.touch && Math.hypot(s.action.x, s.action.y) < 0.05, `${engine} ${size.width}x${size.height}: steer at the edge ${JSON.stringify(s.action)}`);
+        // From there the thumb's own movement deflects: up from the corner is throttle.
+        await at('drive', 1, 'pointermove', 0.04, 0.96, 0, -200);
+        s = await sticks(page);
+        assert.ok(s.drive.y < -0.9, `${engine}: moving up from the corner drives: ${JSON.stringify(s.drive)}`);
+        // The page goes hidden with both thumbs still down and no pointercancel: both sticks let go.
+        await page.evaluate(() => {
+          Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+          document.dispatchEvent(new Event('visibilitychange'));
+        });
+        s = await sticks(page);
+        assert.deepEqual([s.drive.touch, s.drive.y, s.action.touch], [false, 0, false], `${engine}: hidden lets go: ${JSON.stringify(s)}`);
+        await ctx.close();
+      }
+    });
   });
 }
 
