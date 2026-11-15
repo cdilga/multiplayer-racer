@@ -675,7 +675,9 @@ function votePanel(app: HTMLElement, session: Session): void {
       if (n.textContent !== String(b.votes[i])) n.textContent = String(b.votes[i]);
     });
   }
-  p.hidden = mode === '';
+  // Once the next round counts down, the decided "Next: …" is old news, and on a portrait phone the countdown's Go! printed
+  // over it (council review 2026-11-15, round 2).
+  p.hidden = mode === '' || (mode === 'done' && (session.roomPhase === 'Countdown' || session.roomPhase === 'Racing'));
   // During the flyover the panel sits low, clear of the car box (cars can still be changed).
   p.classList.toggle('fly', mode === 'fly');
   // The vote's seconds tick down on the phone between messages.
