@@ -47,6 +47,11 @@ html [data-controllers-panel] [data-jj-input-drawer] .dr-bar { display: flex; }
 html [data-controllers-panel] [data-jj-input-drawer] .dr-cards { display: none; }
 html [data-controllers-panel] [data-jj-input-drawer] button { min-height: 36px; margin: 3px; }
 html [data-controllers-panel] [data-jj-input-drawer] .dr-options { max-width: none; }
+/* Readable from the couch (council review 2026-11-15: ~14 px rows on a 1080p TV): body-size rows like the Players list. */
+html [data-controllers-panel] [data-jj-input-drawer] .dr-rows { padding-left: 0; list-style: none; }
+html [data-controllers-panel] [data-jj-input-drawer] .dr-rows li { font-size: max(15px, calc(24px * var(--rk, 1))); padding: calc(6px * var(--rk, 1)) 0; border-bottom: 1px solid rgb(21 32 58 / .15); }
+[data-jj-input-drawer] .dr-more { display: inline-block; margin-left: .3em; }
+[data-jj-input-drawer] .dr-more summary { cursor: pointer; font-size: .85em; text-decoration: underline; }
 /* The old floating drawer's race-time hover fold must never collapse menu actions. */
 html[data-jj-phase][data-jj-menu] [data-controllers-panel] [data-jj-input-drawer] ul {
   width: auto; max-height: none; overflow: visible;

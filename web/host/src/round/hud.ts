@@ -75,7 +75,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     b.dataset.tile = String(tile);
     b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span><span class="hud-lplate" data-lplate hidden aria-label="Driving help on" role="img">L</span></div>
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
-      <div class="hud-bottom"><div class="hud-boost" hidden><i></i></div><div class="hud-status"></div></div>
+      <div class="hud-bottom"><b class="hud-boost-tag display" aria-hidden="true">Boost</b><div class="hud-boost" hidden role="meter" aria-label="Boost"><i></i></div><div class="hud-status"></div></div>
       <div class="hud-prompt" data-prompt hidden></div>
       <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>
       <div class="hud-centre hud-finished" data-finished hidden><div class="display wreck-word">Finished!</div><div class="wreck-back" data-finish-line></div></div>`;
@@ -164,7 +164,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.classList.toggle('practice', practising);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
-        (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>${s.local ? 'Unplugged' : 'Disconnected'} ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
+        (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
         (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.

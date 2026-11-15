@@ -67,7 +67,9 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
         detail = ' · needs mapping';
         controls += btn('calibrate', 'Map as a wheel');
       } else if (s.kind === 'pad' && s.connected && !s.helper && !s.helperOwned) {
-        controls += btn('calibrate', 'Map as a wheel');
+        // A standard pad rarely needs it, and a stray click starts a calibration that hands the player neutral input
+        // (council review 2026-11-15: 32 pads meant 32 of these buttons): it waits behind the row's More.
+        controls += ` <details class="dr-more"><summary>More</summary>${btn('calibrate', 'Map as a wheel')}</details>`;
       }
       const via = s.helper ? ' data-helper' : '';
       // Who this device is in the room: its seat's badge (number, colour) and name lead the row (council review 2026-11-15:
