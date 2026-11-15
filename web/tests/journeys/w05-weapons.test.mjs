@@ -62,6 +62,18 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   const picked = await items(host);
   assert.ok(picked.stations.some((s) => s.taken > 0), `a station gave a box: ${JSON.stringify(picked.stations.map((s) => s.taken))}`);
   assert.ok(picked.events.some((e) => e.kind === 'Picked'), 'a pickup event');
+  // The TV shows who holds what (council review 2026-11-15, round 2): a holder's tile names its front item.
+  const held = picked.queues.find((q) => q.queue.front);
+  if (held) {
+    const name = { boomerang: 'Boomerang', sanga: 'Sanga', tinnie: 'Tinnie', esky: 'Esky' }[held.queue.front.item];
+    const want = (t) => t.some((x) => x.includes(name.toUpperCase()) || x.includes(name));
+    let tiles = [];
+    for (const t0 = Date.now(); !want(tiles); await host.waitForTimeout(200)) {
+      tiles = await host.evaluate(() => [...document.querySelectorAll('[data-hud-item]:not([hidden])')].map((e) => e.textContent));
+      assert.ok(Date.now() - t0 < 10_000, `a tile shows the held ${name}: ${JSON.stringify(tiles)}`);
+    }
+    await host.screenshot({ path: join(CAPTURE, 'race-item-held.png') });
+  }
   // A right-stick flick, applied the way the host applies a phone's Action (the phone's own gesture detection is the
   // controller journeys'; P1-C11/S08).
   const flickCar = async (car) => {

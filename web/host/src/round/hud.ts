@@ -8,6 +8,7 @@ import type { RoomView } from '../worker/client';
 import { applySeatPattern, controlsCard, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
 import { promptHtml } from '../ui/prompts/steps';
+import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
 
 /** How long one first-drive step shows full size before it shrinks to a quiet caption (ms). */
 const QUIET_AFTER_MS = 10_000;
@@ -75,7 +76,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     b.dataset.tile = String(tile);
     b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span><span class="hud-lplate" data-lplate hidden aria-label="Driving help on" role="img">L</span></div>
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
-      <div class="hud-bottom"><b class="hud-boost-tag display" aria-hidden="true">Boost</b><div class="hud-boost" hidden role="meter" aria-label="Boost"><i></i></div><div class="hud-status"></div></div>
+      <div class="hud-bottom"><b class="hud-boost-tag display" aria-hidden="true">Boost</b><div class="hud-boost" hidden role="meter" aria-label="Boost"><i></i></div><span class="hud-item chip" data-hud-item hidden></span><div class="hud-status"></div></div>
       <div class="hud-prompt" data-prompt hidden></div>
       <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>
       <div class="hud-centre hud-finished" data-finished hidden><div class="display wreck-word">Finished!</div><div class="wreck-back" data-finish-line></div></div>`;
@@ -123,7 +124,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const since = promptSeen.get(box);
       if (promptKey !== (since?.key ?? null)) promptSeen.set(box, { key: promptKey, at: performance.now() });
       const quiet = promptKey !== null && performance.now() - (promptSeen.get(box)?.at ?? 0) > QUIET_AFTER_MS;
-      const key = JSON.stringify([quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
+      const inv = started && s?.inventory?.front ? [s.inventory.front, s.inventory.back ?? null] : null;
+      const key = JSON.stringify([inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -163,6 +165,14 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       boost.dataset.boost = boost.hidden ? '' : String(s.boost);
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.classList.toggle('practice', practising);
+      // Council review 2026-11-15 (round 2): a held item showed only on the phone, so the room never saw who had what. The
+      // tile shows the item a flick will use, and +1 when another waits behind it.
+      const itemEl = box.querySelector<HTMLElement>('[data-hud-item]')!;
+      itemEl.hidden = !inv;
+      if (inv) {
+        itemEl.dataset.item = inv[0]!;
+        itemEl.innerHTML = `${ITEM_INFO[inv[0] as ItemId].name}${inv[1] ? ' <b>+1</b>' : ''}`;
+      }
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
         (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +

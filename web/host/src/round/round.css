@@ -202,9 +202,14 @@
 .hud-boost { position: relative; flex: 0 1 28%; min-width: calc(var(--hud) * 3); height: calc(var(--hud) * .5); border: calc(var(--hud) * .12) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
 .hud-boost[hidden] { display: none; }
 /* Council review 2026-11-15: a newcomer couldn't tell the bar was boost. It says so, and goes with the bar. */
-.hud-boost-tag { flex: none; margin-right: calc(var(--hud) * .2); color: var(--c-paper); font-size: calc(var(--hud) * .62); line-height: 1; text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 calc(var(--hud) * .06) 0 var(--c-ink), 0 0 calc(var(--hud) * .12) var(--c-ink); }
+.hud-boost-tag { flex: none; margin-right: calc(var(--hud) * .2); color: var(--c-paper); font-size: calc(var(--hud) * .75); line-height: 1; text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 calc(var(--hud) * .06) 0 var(--c-ink), 0 0 calc(var(--hud) * .12) var(--c-ink); }
 .hud-bottom:has(.hud-boost[hidden]) .hud-boost-tag, .hud-tile.compact .hud-boost-tag { display: none; }
-.hud-boost-tag + .hud-boost { margin-right: auto; }
+.hud-boost-tag + .hud-boost { margin-right: 0; }
+/* The held item beside the boost meter (council review 2026-11-15, round 2): the room sees who has what. */
+.hud-item { flex: none; margin-right: auto; margin-left: calc(var(--hud) * .3); padding: 0 .6em .1em; background: var(--c-paper); color: var(--c-ink); border: calc(var(--hud) * .08) solid var(--c-ink); font: 900 italic calc(var(--hud) * .85)/1.3 var(--font-display); text-transform: uppercase; }
+.hud-item[hidden] { display: none; }
+.hud-bottom:has(.hud-item[hidden]) .hud-boost { margin-right: auto; }
+.hud-tile.compact .hud-item { font-size: calc(var(--hud) * .65); }
 .hud-boost i { display: block; height: 100%; background: var(--c-saffron); }
 .hud-status { margin-left: auto; display: flex; gap: calc(var(--hud) * .3); }
 .hud-status .chip { font-size: var(--hud); min-height: 0; height: 1.5em; padding: 0 .7em .12em; }
