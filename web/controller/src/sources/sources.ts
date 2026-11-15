@@ -45,6 +45,17 @@ const graphemes = (t: string): string[] => (segmenter ? [...segmenter.segment(t)
 /** The controls cards' data: this page's clusters (the host's clusters.json); a hub has no wheels (they map on the host). */
 const CONTROLS = { clusters: CLUSTERS, wheels: [] };
 const clustersHint = CLUSTERS.map((c) => Object.values(c.drive).map(keyLabel).join(' ')).join(' or ');
+/** Whether this device is a phone or tablet (a touchscreen without a mouse): its extra players come on Bluetooth pads, and
+ *  key clusters aren't worth a mention. */
+const touchFirst = (): boolean => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches;
+/** The hub in a guest's words (council review 2026-11-15: "press a key cluster (W S A D or …)" read as noise on a phone, and
+ *  nobody learnt their phone could carry a mate): every controller here is another player. */
+const restingHint = (): string =>
+  touchFirst()
+    ? 'Got a Bluetooth controller? Pair it with this phone and press any button on it: a friend joins as another player.'
+    : `Plug in a controller and press any button, or press ${clustersHint} on the keyboard: each one is another player.`;
+const armedHint = (): string =>
+  `<b data-adding>${touchFirst() ? 'Press any button on the controller paired with this phone' : `Press any button on a controller, or ${clustersHint}`} to add the player.</b> <button type="button" class="btn quiet hub-add" data-add-cancel>Cancel</button>`;
 
 export class Source {
   session: Session | null = null;
@@ -125,7 +136,8 @@ export class Sources {
     private readonly carrier: Session,
     private readonly o: SourcesOptions = {},
   ) {
-    const t = new Source('touch', 'touch', 'This device');
+    // "You" (council review 2026-11-15: "This device" was the engineer's word for the phone's own player).
+    const t = new Source('touch', 'touch', 'You');
     t.session = carrier;
     t.external = true;
     t.handle = 1;
@@ -410,7 +422,7 @@ export class Sources {
 
   private mount(): void {
     this.root.innerHTML = `<section class="hub tray" data-sources>
-      <p class="hub-hint" data-hint>Plug in a pad, or press a key cluster (${clustersHint}), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
+      <p class="hub-hint" data-hint>${restingHint()} <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
       <p class="hub-hint" data-more-pads hidden></p>
       <div class="panel panel-ink hub-panel" data-sources-panel hidden><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div>
       <div class="hub-cards" data-hub-cards hidden></div></section>`;
@@ -442,9 +454,7 @@ export class Sources {
     this.root.dataset.armed = on ? 'true' : 'false';
     const hint = this.root.querySelector<HTMLElement>('[data-hint]');
     if (!hint) return;
-    hint.innerHTML = on
-      ? `<b data-adding>Press a button on a pad, or a key on a cluster (${clustersHint}), to add a player.</b> <button type="button" class="btn quiet hub-add" data-add-cancel>Cancel</button>`
-      : `Plug in a pad, or press a key cluster (${clustersHint}), to add a player on this device. <button type="button" class="btn quiet hub-add" data-add>Add a player</button>`;
+    hint.innerHTML = on ? armedHint() : `${restingHint()} <button type="button" class="btn quiet hub-add" data-add>Add a player</button>`;
     hint.querySelector('[data-add]')?.addEventListener('click', () => this.arm(true));
     hint.querySelector('[data-add-cancel]')?.addEventListener('click', () => this.arm(false));
   }
