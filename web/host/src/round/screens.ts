@@ -547,6 +547,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       </div></section>`;
     const list = screen.querySelector<HTMLElement>('[data-results]')!;
     screen.querySelector<HTMLElement>('.rs-join')!.append(qrCard(Math.min(window.innerHeight * 0.3, 240 * screenK())));
+    // A derby row's damage dealt beside the points it earned (council review 2026-11-15: the strip said "201" and the
+    // results "+25" with nothing to say they were different scales).
+    const dmgOf = (r: (typeof rows)[number]) => {
+      const d = seatOf(r.number)?.derby?.points;
+      return d === undefined || d === null ? '' : `${Math.round(d)} dmg`;
+    };
     const rowHtml = (r: (typeof rows)[number], tier: string, i: number) => {
       const s = seatOf(r.number);
       const place = r.place || '–';
@@ -554,7 +560,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const pts = `<span class="pts">+${r.points}</span>`;
       const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>${r.bot ? '<span class="bot-tag">Bot</span>' : ''}`;
       const body =
-        tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? '' : raceTime(r.time_ms)}</span>${pts}`
+        tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? dmgOf(r) : raceTime(r.time_ms)}</span>${pts}`
         : tier === 'name' ? `<span class="pl display">${place}</span>${badge}${nm}${pts}`
         : tier === 'seat' ? `<span class="pl display">${place}</span>${badge}${pts}`
         : `<span class="pl display">${place}</span>${badge}`;
