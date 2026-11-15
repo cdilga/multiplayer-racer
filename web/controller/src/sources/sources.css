@@ -48,6 +48,28 @@ body:has(.screen.play) .hub-tray .hub-row[data-state=connected] .hub-state { dis
 body:has(.screen.play) .hub-tray .hub-kind { font-size: 14px; }
 body:has(.screen.play) .hub-tray .hub-kind .ic, body:has(.screen.play) .hub-tray .hub-state .ic { display: none; }
 @media (orientation: portrait) { body:has(.screen.play) .hub-tray { width: min(360px, 94%); bottom: 12px; } }
+/* Council round 3 (fable round-2 finding 4): six pads on a phone made a 450 px tray on a 412 px screen. Past two players the
+   driving screen's tray folds to a line of seat badges (each with its state's icon) and "All N players"; that opens the full
+   list as a scrolling sheet, where every row's car, state, Leave and Remove can be reached. No row is ever dropped. */
+.hub-expand { display: none; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-panel.panel-ink { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 6px; padding: 2px; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-list { display: contents; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row { display: flex; align-items: center; gap: 2px; padding: 2px 3px 2px 2px; border-width: 2px; border-left-width: 5px; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row .badge.hub-badge { width: 2.4rem; height: 1.8rem; font-size: 15px; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-kind, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-car, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-act, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-path, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-bytes, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-state-text { display: none; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row .hub-state { min-height: 1.8rem; padding: 0 .35em; }
+/* Folded, a seat choosing its car has a dashed saffron edge and a Ready one a green edge; the exceptions (unplugged,
+   autopilot, paused) keep their icon chip. */
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row .hub-state.chip-choosing, body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row .hub-state.chip-ready { display: none; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row:has(.chip-choosing) { border-color: var(--c-saffron); border-style: dashed; border-left-style: solid; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row:has(.chip-ready) { border-color: var(--c-success); }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-row .hub-state .ic { display: block; width: 14px; height: 14px; }
+body:has(.screen.play) .hub-tray:has(.hub-row:nth-child(3)):not([data-open]) .hub-expand { display: inline-flex; order: 2; pointer-events: auto; min-height: 2rem; padding: 0 .8em; font-size: 13px; white-space: nowrap; }
+body:has(.screen.play) .hub-tray[data-open] { bottom: 8px; max-height: calc(100% - 16px); width: min(560px, calc(100% - 16px)); pointer-events: auto; overflow: hidden auto; overscroll-behavior: contain; touch-action: pan-y; scroll-padding-top: 3rem; }
+body:has(.screen.play) .hub-tray[data-open] .hub.tray { overflow: visible; }
+body:has(.screen.play) .hub-tray[data-open] .hub-expand { display: flex; position: sticky; top: 0; z-index: 1; margin: 0 0 6px auto; min-height: 2.2rem; padding: 0 1em; }
+body:has(.screen.play) .hub-tray[data-open] .hub-row .hub-state { display: inline-flex; }
+
 /* br-nbn2: while the tutorial card is up, a tray of just this device (the strip already shows its badge) steps aside; with
    other players on the device the card stops above the tray instead (the Launch step's dots sat on it at 844x390). */
 body:has(.coaching) .hub-tray:not(:has(.hub-row + .hub-row)) { display: none; }

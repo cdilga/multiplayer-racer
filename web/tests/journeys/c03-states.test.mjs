@@ -103,12 +103,26 @@ test('the next actions do what they say', { timeout: 60_000 }, async () => {
   await page.context().close();
 });
 
-test('host paused is a card with the wording for each reason, and no sticks to touch while the host is away', { timeout: 60_000 }, async () => {
+test('host paused is a card with the wording for each reason, and no fresh touch reaches a stick while the host is away', { timeout: 60_000 }, async () => {
   // Council review 2026-11-15: every PauseReason the HUD carries has its card, not only a hidden host tab.
-  for (const [pause, title] of [['Host', 'Paused by the host'], ['HostHidden', 'Paused by the host'], ['RenderLost', 'The TV is getting its picture back'], ['Fault', 'The TV hit a snag']]) {
-    const { page } = await open(`host-paused&pause=${pause}`, SIZES['phone-landscape-844x390']);
-    const r = await page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length, state: document.querySelector('.card-screen')?.dataset.state }));
-    assert.deepEqual([r.title, r.sticks, r.state], [title, 0, 'host-paused'], pause);
+  // Council round 3 (finding 9): the card lies OVER the driving screen (the sticks stay in the page, so a thumb held through
+  // the pause keeps its stick), and it takes every fresh touch. A Fault ends the race, so it replaces the screen.
+  for (const [pause, title, over] of [['Host', 'Paused by the host', true], ['HostHidden', 'Paused by the host', true], ['RenderLost', 'The TV is getting its picture back', true], ['Fault', 'The TV hit a snag', false]]) {
+    const { page } = await open(`host-paused&round=racing&pause=${pause}`, SIZES['phone-landscape-844x390']);
+    const r = await page.evaluate(() => {
+      const card = document.querySelector('[data-state=host-paused]');
+      const zones = [...document.querySelectorAll('.zone')];
+      // What a fresh thumb would land on at each stick's centre and on the tools.
+      const hits = [...zones, ...document.querySelectorAll('[data-act=recover], [data-act=settings]')].map((z) => {
+        const b = z.getBoundingClientRect();
+        return card?.contains(document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)) ?? false;
+      });
+      return { title: card?.querySelector('h1')?.textContent, over: card?.dataset.overlay === 'paused', zones: zones.length, covered: hits.every(Boolean) };
+    });
+    assert.equal(r.title, title, pause);
+    assert.equal(r.over, over, `${pause}: ${over ? 'a card over the driving screen' : 'a card in place of it'}`);
+    assert.equal(r.zones > 0, over, `${pause}: the sticks ${over ? 'stay in the page' : 'are gone'}`);
+    assert.ok(r.covered, `${pause}: no fresh touch reaches a stick or a tool (${JSON.stringify(r)})`);
     await page.context().close();
   }
 });

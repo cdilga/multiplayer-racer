@@ -21,7 +21,7 @@ import { CLUSTERS, KeyCluster, LEAVE_HOLD_MS, NEUTRAL, isPress, padSample, type 
 import './sources.css';
 
 export type SourceKind = 'pad' | 'keys' | 'touch';
-export type SourceState = 'idle' | 'connecting' | 'connected' | 'unplugged' | 'autopilot' | 'left';
+export type SourceState = 'idle' | 'connecting' | 'connected' | 'paused' | 'unplugged' | 'autopilot' | 'left';
 
 const TICK_MS = 16;
 const RENDER_MS = 250;
@@ -268,7 +268,8 @@ export class Sources {
     this.scanPads(now);
     for (const s of [...this.sources.values()]) {
       if (s.external) {
-        s.state = s.session?.you ? (s.session.phase === 'playing' ? 'connected' : 'connecting') : 'idle';
+        // Council round 3 (fable round-2 finding 10): a seat held by the host's pause reads "Paused", not "Joining…".
+        s.state = s.session?.you ? (s.session.phase === 'playing' ? 'connected' : s.session.phase === 'host-paused' ? 'paused' : 'connecting') : 'idle';
         continue;
       }
       if (s.kind === 'pad' && !s.plugged) continue;
@@ -294,7 +295,7 @@ export class Sources {
         if (now - s.connectingSince > STALL_MS && this.carrier.helloed) this.join(s);
         continue;
       }
-      s.state = s.session.idleCueAt !== null && s.session.idleCueMs - (now - s.session.idleCueAt) <= 0 ? 'autopilot' : 'connected';
+      s.state = s.session.phase === 'host-paused' || this.carrier.phase === 'host-paused' ? 'paused' : s.session.idleCueAt !== null && s.session.idleCueMs - (now - s.session.idleCueAt) <= 0 ? 'autopilot' : 'connected';
       s.session.setSticks({ ...smp.drive, touch: Math.hypot(smp.drive.x, smp.drive.y) > 0 }, { ...smp.action, touch: Math.hypot(smp.action.x, smp.action.y) > 0 });
       const you = s.session.you;
       if (you && s.seatSeen !== you.seat) {
@@ -521,12 +522,15 @@ export class Sources {
     this.root.innerHTML = `<section class="hub tray" data-sources>
       <p class="hub-hint" data-hint>${restingHint()} <button type="button" class="btn quiet hub-add" data-add>Add a player</button></p>
       <p class="hub-hint" data-more-pads hidden></p>
-      <div class="panel panel-ink hub-panel" data-sources-panel hidden><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div>
+      <div class="panel panel-ink hub-panel" data-sources-panel hidden><button type="button" class="btn hub-expand" data-expand aria-expanded="false"></button><ul class="hub-list" data-hub-list aria-label="Players on this device"></ul></div>
       <div class="hub-cards" data-hub-cards hidden></div></section>`;
     this.list = this.root.querySelector('[data-hub-list]');
     // One player per touchscreen (R65): "Add a player" cannot make a second touch player. It says how to add one (a pad or a key
     // cluster) and waits for that source's press; the claim is the press itself.
     this.root.querySelector('[data-add]')!.addEventListener('click', () => this.arm(true));
+    // Council round 3 (fable round-2 finding 4): past two players on the driving screen the tray folds to a row of seat badges
+    // between the thumbs; this button opens the full list (every row's car, state, Leave and Remove) as a scrolling sheet.
+    this.root.querySelector('[data-expand]')!.addEventListener('click', () => this.expand(!this.root.hasAttribute('data-open')));
     this.list!.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
       const s = this.sources.get(b?.closest<HTMLElement>('[data-source]')?.dataset.source ?? '');
@@ -544,6 +548,12 @@ export class Sources {
       }
       this.render();
     });
+    this.render();
+  }
+
+  private expand(open: boolean): void {
+    this.root.toggleAttribute('data-open', open);
+    this.lastHtml = '';
     this.render();
   }
 
@@ -581,9 +591,9 @@ export class Sources {
     // In the Lobby the row is the seat's car picker (the host pads' tile line, on the carrier's own screen).
     const pick = s.pick && pickPhase(s.session?.roomPhase) && s.state === 'connected' ? s.pick : null;
     const choosing = !!pick?.open;
-    const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : choosing ? 'Choosing car' : 'Connected', unplugged: `Unplugged for ${sinceText(gone)}`, autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
-    const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : choosing ? 'chip-choosing' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : '';
-    const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : choosing ? 'car' : s.state === 'connected' ? 'zap' : '';
+    const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : choosing ? 'Choosing car' : 'Connected', paused: 'Paused', unplugged: `Unplugged for ${sinceText(gone)}`, autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
+    const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : choosing ? 'chip-choosing' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : s.state === 'paused' ? 'chip-info' : '';
+    const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : choosing ? 'car' : s.state === 'connected' ? 'zap' : s.state === 'paused' ? 'pause' : '';
     const car = pick ? ROSTER.find((c) => c.id === pick.vehicle) : undefined;
     const keys = s.keys?.cluster;
     const step = keys ? `${keyLabel(keys.drive.left)} ${keyLabel(keys.drive.right)}` : 'Right stick';
@@ -634,6 +644,11 @@ export class Sources {
     const panel = this.list.closest<HTMLElement>('[data-sources-panel]')!;
     panel.hidden = rows.length === 0;
     this.root.dataset.count = String(rows.length);
+    const expand = this.root.querySelector<HTMLButtonElement>('[data-expand]')!;
+    const open = this.root.hasAttribute('data-open');
+    const label = open ? 'Done' : `All ${rows.length} players`;
+    if (expand.textContent !== label) expand.textContent = label;
+    expand.setAttribute('aria-expanded', String(open));
     const html = rows.map((s) => this.row(s)).join('');
     // Repainting only on change keeps a tap on Leave or Remove from landing on a list that was just rebuilt.
     if (html === this.lastHtml) return;

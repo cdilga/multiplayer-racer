@@ -93,7 +93,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let cars: CarSheet | null = null;
   // R90 offline play fixtures show the confirmed controller; &choose=1 explicitly opens the initial vehicle step.
   const fixture = new URLSearchParams(location.hash.slice(1));
-  let chosenSeat: number | null = fixture.get('state') === 'playing' && fixture.get('choose') !== '1'
+  let chosenSeat: number | null = (fixture.get('state') === 'playing' || fixture.get('state') === 'host-paused') && fixture.get('choose') !== '1'
     ? Math.max(1, Number.parseInt(fixture.get('seat') ?? '12', 10) || 12) : null;
   let rehosting = false;
   const fs = new FullscreenControl();
@@ -134,7 +134,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
 
   const render = () => {
     // The join card is redrawn when a round starts or stops racing (P1-C10: it offers Practice first while one runs).
-    const key = session.phase === 'playing' ? `play:${session.you?.number}` : session.phase === 'ready-to-join' ? `${session.phase}:${session.code}:${session.roomPhase === 'Racing'}` : session.phase === 'host-paused' ? `${session.phase}:${session.code}:${session.hud?.pause}` : `${session.phase}:${session.code}`;
+    // Council round 3 (finding 9): a host pause lays its card OVER the driving screen instead of replacing it, so thumbs held
+    // through the pause keep their sticks (their pointers stay captured by zones still in the page) and drive again the
+    // moment the race resumes. Only a Fault, which ends the race, swaps the screen for its card.
+    const pausedPlay = session.phase === 'host-paused' && !!session.you && session.hud?.pause !== 'Fault';
+    const key = session.phase === 'playing' || pausedPlay ? `play:${session.you?.number}` : session.phase === 'ready-to-join' ? `${session.phase}:${session.code}:${session.roomPhase === 'Racing'}` : session.phase === 'host-paused' ? `${session.phase}:${session.code}:${session.hud?.pause}` : `${session.phase}:${session.code}`;
     if (key === shown) return void updateHud();
     shown = key;
     sticks?.drive.release();
@@ -482,7 +486,33 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     paintBuff();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
+    paintPause();
     updateFullscreen();
+  };
+
+  /** The host's pause card over the driving screen (council round 3, finding 9). It covers the whole screen, so no fresh
+   *  touch reaches a stick or a tool while the race is held; a thumb already down keeps its stick under the card. */
+  const paintPause = () => {
+    const screen = app.querySelector<HTMLElement>('.screen.play');
+    let card = screen?.querySelector<HTMLElement>('[data-overlay=paused]') ?? null;
+    if (!screen || session.phase !== 'host-paused') return void card?.remove();
+    const c = CARDS['host-paused']!(session);
+    const words = `${c.title}|${c.body}`;
+    if (card?.dataset.words === words) return;
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'pause-over';
+      card.dataset.overlay = 'paused';
+      card.dataset.state = 'host-paused';
+      card.setAttribute('role', 'alert');
+      // A long press on the card must not open the phone's menus.
+      card.addEventListener('contextmenu', (e) => e.preventDefault());
+      screen.append(card);
+    }
+    card.dataset.words = words;
+    card.innerHTML = `<div class="panel state-card card"><div class="state-icon ${c.tone ?? ''}"><i data-ico="${c.icon ?? 'pause'}"></i></div><h1 class="display italic">${esc(c.title)}</h1>${c.body ? `<p>${esc(c.body)}</p>` : ''}</div>`;
+    dress(card);
+    paintKit(card);
   };
 
   /** The held item (P1-W04/W05): what a flick of the right stick uses, and whether another is queued behind it. */

@@ -174,18 +174,60 @@ test('the host menu pausing a race shows "Paused by the host" on the phone, clea
   await p.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
   await wait(p.page, () => document.querySelectorAll('.zone').length > 0);
+  // Council round 3 (finding 9): a thumb held down through the pause drives again after Resume. A real touch (CDP) lands on
+  // the drive stick before the pause and never lifts.
+  const cdp = await p.ctx.newCDPSession(p.page);
+  const centre = (sel) => p.page.locator(sel).first().evaluate((e) => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  const fingers = new Map();
+  const touch = (type) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: [...fingers.entries()].map(([id, q]) => ({ id, x: q.x, y: q.y })) });
+  const drive = await centre('.zone.drive');
+  fingers.set(1, drive);
+  await touch('touchStart');
+  const carOf = async () => {
+    const o = await host.evaluate(() => window.__jjTest.observe());
+    const seat = o.host.seats.find((s) => s.number === p.you.number);
+    return o.cars.find((c) => c.car === seat?.car) ?? null;
+  };
   await host.evaluate(() => window.__jjChrome.openMenu());
   await wait(host, () => window.__jjTest.pauseReasons().includes('manual'), undefined, 10_000);
   await wait(p.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 10_000);
-  const card = await p.page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length }));
-  assert.deepEqual(card, { title: 'Paused by the host', sticks: 0 }, 'a card says why, and there are no sticks to jab');
+  const card = await p.page.evaluate(() => {
+    const over = document.querySelector('[data-overlay=paused]');
+    const z = document.querySelector('.zone.action').getBoundingClientRect();
+    return { title: over?.querySelector('h1')?.textContent, covered: !!over?.contains(document.elementFromPoint(z.x + z.width / 2, z.y + z.height / 2)) };
+  });
+  assert.deepEqual(card, { title: 'Paused by the host', covered: true }, 'a card says why, over the sticks, so a fresh touch reaches none');
+  // Fable round 2 finding 10: the phone's own row in the players' list reads the seat's real state, not "Joining…".
+  await wait(p.page, () => window.__jjSources.inspect().find((s) => s.kind === 'touch')?.state === 'paused', undefined, 5_000);
+  assert.doesNotMatch(await p.page.evaluate(() => document.querySelector('.hub-tray')?.textContent ?? ''), /Joining/, 'no row says Joining… under a pause');
   if (process.env.JJ_CAPTURE_DIR) {
     await p.page.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-phone.png` });
     await host.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-tv.png` });
   }
   await host.evaluate(() => window.__jjChrome.closeMenu());
   // The card stays through the host's resume countdown and goes with the running race's first HUD.
-  await wait(p.page, () => window.__jjController.inspect().phase === 'playing' && document.querySelectorAll('.zone').length > 0, undefined, 15_000);
+  await wait(p.page, () => window.__jjController.inspect().phase === 'playing' && !document.querySelector('[data-overlay=paused]'), undefined, 15_000);
+  // The thumb that never lifted pushes forward: the car takes the throttle (not the autopilot).
+  fingers.set(1, { x: drive.x, y: drive.y - 90 });
+  await touch('touchMove');
+  for (const t0 = Date.now(); ; await host.waitForTimeout(200)) {
+    const c = await carOf();
+    if ((c?.input?.throttle ?? 0) > 0.5 && c.autopilot == null) break;
+    assert.ok(Date.now() - t0 < 10_000, `the held thumb drives after Resume: ${JSON.stringify({ input: c?.input, autopilot: c?.autopilot, phone: (await inspect(p.page)).drive })}`);
+  }
+  assert.ok(await p.page.evaluate(() => window.__jjSources.inspect().find((s) => s.kind === 'touch')?.state !== 'paused'), 'the row leaves Paused with the race');
+  // A fresh second thumb on the steer stick takes at once.
+  const steer = await centre('.zone.action');
+  fingers.set(2, steer);
+  await touch('touchStart');
+  fingers.set(2, { x: steer.x + 90, y: steer.y });
+  await touch('touchMove');
+  for (const t0 = Date.now(); ; await host.waitForTimeout(200)) {
+    const c = await carOf();
+    if (Math.abs(c?.input?.steer ?? 0) > 0.3) break;
+    assert.ok(Date.now() - t0 < 10_000, `a fresh thumb steers after Resume: ${JSON.stringify(c?.input)}`);
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   if (process.env.JJ_CAPTURE_DIR) await p.page.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-resumed-phone.png` });
 });
 
