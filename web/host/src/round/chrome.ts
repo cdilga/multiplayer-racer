@@ -116,21 +116,37 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   const menuBtn = footer.querySelector<HTMLButtonElement>('[data-act=menu]')!;
 
   // ---------- Docked positions (P1-R04.3, owner POC round 5) ----------
-  // With no spare grid cell for the standings, every racer's position docks here: all of them, scrolling as a ticker
-  // when they don't fit (never cut, no count limit). The grid overlay says what is docked (html[data-grid-dock]).
+  // With no spare grid cell for the standings, the order docks here, still and whole at a glance. Council review
+  // 2026-11-15: the old scrolling ticker hid the leader mid-loop and cut names at 1080p with 7 cars. Now it never moves:
+  // everyone with their name if that fits; else places and numbers only; else the top places that fit, then "+N more"
+  // (the leader is always shown, no count limit). The full order stays in the Players cell and the data (positions()).
   const posEl = footer.querySelector<HTMLElement>('[data-foot-pos]')!;
   const posTrack = posEl.firstElementChild as HTMLElement;
   let posKey = '';
-  const fitTicker = () => {
+  const fitStrip = () => {
     const run = posTrack.firstElementChild as HTMLElement | null;
-    const over = !!run && run.scrollWidth > posEl.clientWidth + 0.5;
-    if (over && posTrack.children.length === 1) posTrack.append(run!.cloneNode(true));
-    if (!over && posTrack.children.length > 1) posTrack.lastElementChild!.remove();
-    posTrack.classList.toggle('tick', over);
-    if (run) posTrack.style.setProperty('--fp-w', `${run.scrollWidth}px`);
-    if (run) posTrack.style.setProperty('--fp-s', `${Math.max(8, run.scrollWidth / 60)}s`);
+    if (!run) return;
+    const items = [...run.querySelectorAll<HTMLElement>('.fp-item')];
+    const more = run.querySelector<HTMLElement>('.fp-more')!;
+    const room = posEl.clientWidth;
+    if (!room) return; // docked away (display: none): measured again when it shows
+    const over = () => run.scrollWidth > room + 0.5;
+    for (const it of items) it.hidden = false;
+    more.hidden = true;
+    posEl.classList.remove('compact');
+    if (!over()) return;
+    posEl.classList.add('compact');
+    if (!over()) return;
+    more.hidden = false;
+    let shown = items.length;
+    while (shown > 1) {
+      shown--;
+      items[shown]!.hidden = true;
+      more.textContent = `+${items.length - shown}`;
+      if (!over()) return;
+    }
   };
-  new ResizeObserver(fitTicker).observe(posEl);
+  new ResizeObserver(fitStrip).observe(posEl);
   const renderPositions = () => {
     // A derby ranks by damage points (P1-S10), a race by position.
     const derby = room?.mode === 'derby';
@@ -149,9 +165,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     setPositions(order.map(({ place, number, name, colour, bot }) => ({ place, number, name, colour, bot })));
     posEl.dataset.count = String(order.length);
     posTrack.innerHTML = order.length
-      ? `<span class="fp-run">${order.map((o) => `<span class="fp-item${o.bot ? ' bot' : ''}"><b>${o.place}</b><span class="badge${o.bot ? ' bot' : ''}" style="${o.style}">#${o.number}</span><span class="nm">${esc(o.name)}</span>${o.bot ? '<span class="bot-tag">Bot</span>' : ''}</span>`).join('')}</span>`
+      ? `<span class="fp-run">${order.map((o) => `<span class="fp-item${o.bot ? ' bot' : ''}"><b>${o.place}</b><span class="badge${o.bot ? ' bot' : ''}" style="${o.style}">#${o.number}</span><span class="nm">${esc(o.name)}</span>${o.bot ? '<span class="bot-tag">Bot</span>' : ''}</span>`).join('')}<span class="fp-more" hidden></span></span>`
       : '';
-    fitTicker();
+    fitStrip();
   };
 
   const send = (ui: string, on?: boolean) => opts.input({ type: 'ui', ui: ui as UiInput, ...(on === undefined ? {} : { on }) });

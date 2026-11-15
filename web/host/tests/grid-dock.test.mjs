@@ -153,20 +153,37 @@ test('the docked QR opens the menu, which pauses the race', async () => {
   }
 });
 
-test('many racers: every position is in the footer (a ticker when they do not fit), none cut', async () => {
-  const page = await open('race-25', [1920, 1080]);
-  try {
-    // 25 at 1080p: 5x5, no spare cell.
-    await grid(page, 25);
-    const seats = await page.evaluate(() => document.querySelector('[data-foot-pos]').dataset.count);
-    const run = page.locator('.jj-foot [data-foot-pos] .fp-run').first();
-    assert.equal(await run.locator('.fp-item').count(), Number(seats), 'every racer has an item');
-    assert.ok(Number(seats) >= 20, `${seats} racers docked`);
-    const ticking = await page.locator('.jj-foot .foot-pos-track.tick').count();
-    const fits = await page.evaluate(() => { const p = document.querySelector('[data-foot-pos]'); return p.firstElementChild.firstElementChild.scrollWidth <= p.clientWidth + 0.5; });
-    assert.ok(ticking === 1 || fits, 'either they all fit or the row scrolls as a ticker');
-    await capture(page, 'race-25-1920x1080');
-  } finally {
-    await page.close();
+test('many racers: the footer order is still (no ticker) and the leader is always shown, nothing cut', async () => {
+  for (const vp of [[1920, 1080], [1366, 768], [915, 412]]) {
+    const page = await open('race-25', vp);
+    try {
+      await grid(page, 25);
+      const seats = Number(await page.evaluate(() => document.querySelector('[data-foot-pos]').dataset.count));
+      assert.ok(seats >= 20, `${seats} racers docked`);
+      const r = await page.evaluate(() => {
+        const p = document.querySelector('[data-foot-pos]');
+        const run = p.querySelector('.fp-run');
+        const shown = [...run.querySelectorAll('.fp-item')].filter((i) => !i.hidden);
+        const more = run.querySelector('.fp-more');
+        const pr = p.getBoundingClientRect();
+        const last = shown[shown.length - 1].getBoundingClientRect();
+        return {
+          places: shown.map((i) => Number(i.querySelector('b').textContent)),
+          all: [...run.querySelectorAll('.fp-item')].map((i) => Number(i.querySelector('b').textContent)),
+          more: more.hidden ? '' : more.textContent,
+          fits: run.scrollWidth <= p.clientWidth + 0.5,
+          inside: last.right <= pr.right + 0.5 && shown[0].getBoundingClientRect().left >= pr.left - 0.5,
+          moving: p.getAnimations({ subtree: true }).length,
+        };
+      });
+      assert.equal(r.places[0], Math.min(...r.all), `${vp}: the leader is shown`);
+      assert.deepEqual(r.places, r.all.slice(0, r.places.length), 'the top places, in order, no gaps');
+      assert.ok(r.fits && r.inside, `${vp}: nothing is cut`);
+      assert.equal(r.moving, 0, 'no marquee motion');
+      assert.equal(r.more, r.places.length < seats ? `+${seats - r.places.length}` : '', 'the rest is counted, not scrolled');
+      await capture(page, `race-25-${vp.join('x')}`);
+    } finally {
+      await page.close();
+    }
   }
 });
