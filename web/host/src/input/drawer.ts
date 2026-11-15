@@ -2,7 +2,7 @@
 // each key cluster's legend. Wheels (P1-C05.2) show their profile and live steering and pedals, and any device can be
 // mapped as a wheel here: the prompts walk the calibration and the profile is saved for that device. Its visual design belongs to the accepted TV mocks (R07); this is the plain version the
 // host shows until then, and the data the designed one will read.
-import { controlsCard, keyLabel, paperQrCard } from '../../../shared/ui';
+import { controlsCard, keyLabel, paperQrCard, tokenData } from '../../../shared/ui';
 import { morePadsHint } from '../../../shared/ui/controller-options';
 import { controlsData } from './controls-data';
 import { downloads, loadDownloads } from './helper';
@@ -70,7 +70,13 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
         controls += btn('calibrate', 'Map as a wheel');
       }
       const via = s.helper ? ' data-helper' : '';
-      return `<li data-source="${s.source}" data-kind="${s.kind}"${via} data-state="${state}">${s.label}${hint && state === 'press to join' ? '' : `: ${state}`}${hint}${detail}${controls}</li>`;
+      // Who this device is in the room: its seat's badge (number, colour) and name lead the row (council review 2026-11-15:
+      // "Pad 5: playing" didn't say it was #7 on the TV, so sitting out or removing the right pad was a guess).
+      const seat = input.seatOf(s.source);
+      const who = seat
+        ? `<span class="dr-seat" data-seat="${seat.number}" style="--b: var(--id-${seat.colourIndex % tokenData.seatColors.length}); --on: var(--id-${seat.colourIndex % tokenData.seatColors.length}-on)">#${seat.number}</span>${seat.name ? ` <b>${esc(seat.name)}</b> · ` : ' '}`
+        : '';
+      return `<li data-source="${s.source}" data-kind="${s.kind}"${via} data-state="${state}">${who}${s.label}${hint && state === 'press to join' ? '' : `: ${state}`}${hint}${detail}${controls}</li>`;
     });
     // The head is what shows while a race collapses the drawer (it expands on hover or keyboard focus).
     const seated = input.list().filter((s) => s.connected && s.claimed && !s.left).length;

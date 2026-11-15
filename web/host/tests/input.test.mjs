@@ -86,6 +86,16 @@ test('any pad button claims a seat; typing in a host text field claims nothing',
     assert.ok(Date.now() - t0 < 10_000, 'A never claimed a seat');
   }
   await page.evaluate(() => window.__pads.buttons(0, []));
+  // The Controllers row says who that pad is in the room: its seat's badge leads the row.
+  const seat = (await page.evaluate(() => window.__jjTest.observe())).host.seats.find((x) => x.endpoint?.startsWith('local:'));
+  for (const t0 = Date.now(); ; await page.waitForTimeout(100)) {
+    const badge = await page.evaluate(() => document.querySelector('[data-jj-input-drawer] li[data-kind=pad] .dr-seat')?.textContent ?? null);
+    if (badge !== null) {
+      assert.equal(badge, `#${seat?.seat ?? 1}`.replace(/#undefined/, '#1'), 'the pad row leads with its seat');
+      break;
+    }
+    assert.ok(Date.now() - t0 < 5_000, 'the pad row never showed its seat');
+  }
   await page.close();
 });
 

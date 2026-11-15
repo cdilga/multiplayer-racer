@@ -58,3 +58,5 @@ html[data-jj-phase][data-jj-menu] [data-controllers-panel] [data-jj-input-drawer
 [data-jj-input-drawer] [data-input-helper] input { font: inherit; width: 9ch; padding: 1px 4px; border: 2px solid var(--c-ink, #15203a); border-radius: 4px; background: var(--c-white, #fff); color: var(--c-ink, #15203a); letter-spacing: .12em; }
 [data-jj-input-drawer] [data-input-helper] .dr-error { color: var(--c-danger, #b3261e); }
 [data-jj-input-drawer] .dr-helper-devices { padding-left: 18px; font-size: 12px; margin: 4px 0; }
+/* The seat a device holds, leading its row (council review 2026-11-15): the TV's badge in the seat's colour. */
+.dr-seat { display: inline-block; min-width: 2.2em; margin-right: .35em; padding: 0 .35em .1em; background: var(--b); color: var(--on); font-weight: 900; text-align: center; border-radius: .2em; }

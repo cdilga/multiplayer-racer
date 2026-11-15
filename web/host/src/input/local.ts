@@ -138,6 +138,13 @@ export class LocalInput {
   }
 
   /** The input drawer's list: every known source, connected or not. */
+  /** The seat a local source holds in the room now (number, name, colour), or null: the Controllers rows lead with it so
+   *  "Pad 5" is visibly "#7 Kylie" (council review 2026-11-15). */
+  seatOf(source: number): { number: number; name: string; colourIndex: number } | null {
+    const seat = this.client.room?.seats.find((x) => x.localSource === source && x.presence !== 'Left');
+    return seat ? { number: seat.number, name: seat.name, colourIndex: seat.colourIndex } : null;
+  }
+
   list(): LocalSourceView[] {
     return [...this.sources.values()].map((s) => ({ ...s.view }));
   }
