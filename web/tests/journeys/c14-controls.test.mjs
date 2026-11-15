@@ -249,6 +249,40 @@ test('AC4: tutorial prompts in a race show the source\'s own glyphs: keys for a 
   await shot(page, 'race-prompts-keys-and-pad-1366x768');
 });
 
+// Council review 2026-11-15: with four host seats the controls strip held only two pickers in view and no pad can scroll it.
+// Each seat's own roster card names the car it is browsing, and follows the stick.
+test('four host seats: every seat\'s roster card names the car it is browsing, and a pad\'s steer changes it there', { timeout: 300_000 }, async () => {
+  const page = await openHost('room', { width: 1920, height: 1080 });
+  await controllers(page);
+  await act(page, 1, 'add').click();
+  await act(page, 2, 'add').click();
+  await page.evaluate(() => window.__jjChrome.closeMenu());
+  await page.evaluate(() => { window.__padAdd(0); window.__padAdd(1); });
+  await hold(page, [0, 0, 1, 0], 300, 0);
+  await hold(page, [0, 0, 1, 0], 300, 1);
+  await until(page, async () => (await live(page)).length === 4, 'four host seats');
+  const names = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-local-vehicle] option')].map((o) => [o.value, o.textContent])));
+  const tiles = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.lcard[data-seat]')].map((c) => {
+    const r = c.getBoundingClientRect();
+    return [c.dataset.seat, { text: c.innerText.replace(/\s+/g, ' '), on: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth }];
+  })));
+  const browsing = async () => {
+    const view = await live(page);
+    const t = await tiles();
+    return view.every((s) => !s.choosing || !s.vehicle || (t[s.seat]?.on && t[s.seat].text.includes(`‹ ${names[s.vehicle]} ›`)));
+  };
+  // Every seat still choosing shows its car on its own card, on screen.
+  await until(page, async () => (await live(page)).every((s) => s.choosing && s.vehicle), `every seat browsing a car: ${JSON.stringify(await live(page))}`);
+  await until(page, browsing, `a card that doesn't name its car: ${JSON.stringify(await tiles())}`);
+  // The second pad steers to the next car: its card follows.
+  const pad = (await live(page)).find((s) => s.localSource === 101) ?? (await live(page)).filter((s) => s.localSource >= 100).at(-1);
+  const was = pad.vehicle;
+  await hold(page, [0, 0, 1, 0], 300, 1);
+  await until(page, async () => (await live(page)).find((s) => s.seat === pad.seat).vehicle !== was, 'the pad\'s steer never changed its car');
+  await until(page, browsing, `the card never followed the steer: ${JSON.stringify(await tiles())}`);
+  await shot(page, 'lobby-four-seats-browsing-1920x1080');
+});
+
 test('AC5: the host menu\'s Controls page has a card per source kind, and its key labels follow clusters.json (a test changes the data and the page changes)', { timeout: 300_000 }, async () => {
   const { readFileSync } = await import('node:fs');
   const file = JSON.parse(readFileSync(new URL('../../host/src/input/clusters.json', import.meta.url), 'utf8'));

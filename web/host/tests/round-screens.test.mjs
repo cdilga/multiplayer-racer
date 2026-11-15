@@ -199,6 +199,36 @@ test('lobby: roster churn preserves Start and mode buttons through a real press,
   } finally { await page.close(); }
 });
 
+// Council review 2026-11-15: the armed lobby never said who it was waiting for, away seats counted as in the room, and a host
+// pad's car choice was only in the controls strip (scrolled away past two host seats). The hint names the first seat holding
+// the start; the header counts away seats; a seat still choosing shows the car it is on in its own card, at full and name tiers.
+test('lobby: says who the start waits for, counts away seats, and shows the car a seat is browsing', async () => {
+  const page = await open('lobby-3', [1366, 768]);
+  try {
+    const set = (patch) => page.evaluate((patch) => {
+      const room = window.__jjRoundFixture.make('lobby', patch.n ?? 3);
+      room.armed = true;
+      room.seats.forEach((s, i) => Object.assign(s, { ready: true, presence: 'Active', unpluggedMs: null, vehicle: null, choosing: false }, patch.seats?.[i] ?? {}));
+      window.__jjRoundFixture.set(room);
+    }, patch);
+    await set({ seats: [{}, { ready: false, name: 'Bruce', unpluggedMs: 4000 }, { ready: false }] });
+    assert.match(await page.locator('[data-waiting]').innerText(), /^Waiting for #2 Bruce \(unplugged\) \+ 1 more$/);
+    assert.match(await page.locator('.lb-head .tag').innerText(), /3 in the room · 1 ready · 1 away/i);
+    await set({ seats: [{}, {}, { ready: false, name: 'Sheila', vehicle: 'cruz-missile', choosing: true }] });
+    assert.match(await page.locator('[data-waiting]').innerText(), /^Waiting for #3 Sheila$/);
+    assert.doesNotMatch(await page.locator('.lb-head .tag').innerText(), /away/i);
+    assert.match(await page.locator('.lcard[data-seat="3"]').innerText(), /‹ Cruz Missile ›/, 'full tier: the browsed car');
+    await set({ seats: [] });
+    assert.equal(await page.locator('[data-waiting]').isHidden(), true, 'everyone ready: nobody is waited for');
+    // A smaller card tier (name) still names the browsed car in place of its tick.
+    await set({ n: 24, seats: [{ ready: false, vehicle: 'cruz-missile', choosing: true }] });
+    const tier = await page.locator('.lb-roster').getAttribute('data-tier');
+    if (tier === 'name' || tier === 'full') assert.match(await page.locator('.lcard[data-seat="1"]').innerText(), /‹ Cruz Missile ›/, `${tier} tier`);
+    else assert.fail(`24 seats at 1366x768 drew the ${tier} tier; pick a count that draws the name tier`);
+    assert.deepEqual(page.errors, []);
+  } finally { await page.close(); }
+});
+
 test('Ready states: every card says whether the player is ready; a ready player is told so in words', async () => {
   const room = await fixture('lobby-8');
   const page = await open('lobby-8');

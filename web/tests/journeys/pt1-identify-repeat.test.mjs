@@ -63,6 +63,15 @@ test('Identify shows on the host on every press, in the Lobby and in a race', { 
   }
   await host.waitForTimeout(3500); // the join's own auto-Identify starts the limit
   const lobby = await pressThrice(host, 'syn1', 'Lobby');
+  // Council review 2026-11-15: in the Lobby the press showed nothing on the TV (the HUD tiles only show in a race). The
+  // seat's roster card pulses "Cooee #N" on every press.
+  for (const o of lobby) assert.ok(o.after.pulses > o.before.pulses, `Lobby: press ${o.press} pulsed the card: ${JSON.stringify(lobby)}`);
+  const syn1 = await seatOf(host, 'syn1');
+  const number = await host.evaluate((seat) => window.__jjRoom.view().seats.find((s) => s.seat === seat).number, syn1);
+  await frame(host, 'syn1', { identify: true });
+  await wait(host, ([seat, n]) => document.querySelector(`.lcard[data-seat="${seat}"].identify .lb-cooee`)?.textContent === `Cooee #${n}`, [syn1, number], 5_000);
+  await wait(host, (seat) => !document.querySelector(`.lcard[data-seat="${seat}"].identify`), syn1, 5_000);
+  await host.waitForTimeout(3500);
   for (let k = 1; k <= 2; k++) await frame(host, `syn${k}`, { ready: true });
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));

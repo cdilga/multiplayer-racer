@@ -64,6 +64,30 @@
 .t-num .lcard.ready, .t-tiny .lcard.ready { box-shadow: inset 0 0 0 calc(3px * var(--k)) var(--c-success), 0 calc(2px * var(--k)) 0 rgb(21 32 58 / .85); }
 .t-tiny .lcard .badge { font-size: .9em; min-width: 0; padding: 0 .1em; }
 .t-seat .lcard { padding: 0 .35em; gap: .25em; }
+/* Who the auto-start is waiting for (council review 2026-11-15). */
+.lb-waiting { font-weight: 800; color: var(--c-ink); }
+.lb-waiting[hidden] { display: none; }
+.lb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Identify in the Lobby (council review 2026-11-15): the seat's card pulses in its colour with "Cooee #N", the race tile's
+   look (.hud-cooee) at card size; a redrawn card resumes the pulse through --cooee-delay. */
+.lcard { position: relative; }
+.lcard.identify, .lb-cc.identify { animation: lb-identify .5s ease-in-out 3; animation-delay: var(--cooee-delay, 0ms); }
+@keyframes lb-identify { 50% { box-shadow: 0 0 0 calc(6px * var(--k)) var(--seat, var(--c-saffron)), 0 calc(3px * var(--k)) 0 rgb(21 32 58 / .85); } }
+.lb-cc.identify { --seat: var(--c-saffron); border-radius: calc(8px * var(--k)); }
+.lcard .lb-cooee {
+  position: absolute; inset: 0; margin: auto; width: max-content; max-width: 92%; height: max-content; box-sizing: border-box;
+  padding: .05em .5em .12em; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: var(--seat); color: var(--seat-on, var(--c-paper)); border: calc(3px * var(--k)) solid var(--c-ink);
+  border-radius: calc(6px * var(--k)); box-shadow: 0 calc(3px * var(--k)) 0 var(--c-ink); font-size: 1.05em; font-style: italic;
+  opacity: 0; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards; animation-delay: var(--cooee-delay, 0ms);
+}
+.t-num .lcard .lb-cooee, .t-tiny .lcard .lb-cooee { font-size: .7em; }
+:root[data-motion="reduced"] .lcard.identify, :root[data-motion="reduced"] .lb-cc.identify { animation: none; box-shadow: 0 0 0 calc(6px * var(--k)) var(--seat, var(--c-saffron)); }
+:root[data-motion="reduced"] .lcard .lb-cooee { transform: none; animation: cooee-held-label 1.5s steps(1, end) forwards; animation-delay: var(--cooee-delay, 0ms); }
+@media (prefers-reduced-motion: reduce) {
+  .lcard.identify, .lb-cc.identify { animation: none; box-shadow: 0 0 0 calc(6px * var(--k)) var(--seat, var(--c-saffron)); }
+  .lcard .lb-cooee { transform: none; animation: cooee-held-label 1.5s steps(1, end) forwards; animation-delay: var(--cooee-delay, 0ms); }
+}
 
 /* portrait (a phone host): head, the join row, the roster, Start race under it */
 @media (max-aspect-ratio: 11/10) {
@@ -316,6 +340,8 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 /* First-drive prompt on a tile (P1-C06): a paper caption low in the tile, above the boost meter; it ticks as the host sees the control. */
 .hud-prompt { position: absolute; left: 50%; top: calc(var(--hud) * 2.8); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: .45em; max-width: 92%; padding: .3em .7em; background: var(--c-paper); color: var(--c-ink); border: .12em solid var(--c-ink); box-shadow: 0 .2em 0 var(--c-ink); font-size: calc(var(--hud) * .75); line-height: 1.15; pointer-events: none; }
 .hud-prompt[hidden] { display: none; }
+/* After ten seconds on one step (council review 2026-11-15) the prompt steps out of the way: small, at the tile's foot. */
+.hud-prompt.quiet { top: auto; bottom: calc(var(--hud) * 1.25); font-size: calc(var(--hud) * .5); opacity: .88; box-shadow: none; }
 .hud-prompt .pn { font-weight: 700; opacity: .65; }
 .hud-prompt .pt { font-size: 1.25em; text-transform: uppercase; font-style: italic; }
 .hud-prompt .pgs { display: inline-flex; gap: calc(var(--hud) * .3); }
@@ -373,7 +399,7 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .lb-controls { flex: 0 1 auto; min-height: 0; max-height: 50%; overflow: auto; }
 .lb-controls[hidden] { display: none; }
 .lb-cc { display: flex; align-items: flex-start; gap: calc(8px * var(--k)); min-width: 0; }
-.lb-cc > .badge { font-size: calc(22px * var(--k)); }
+.lb-local-choice > .badge { font-size: calc(22px * var(--k)); }
 
 /* The host menu's Controls page (P1-C14): wide enough for the cards to sit in columns, at a size a couch can read. */
 .mn-panel.controls { width: min(calc(1420px * var(--k)), 100%); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
@@ -384,20 +410,32 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 /* Host settings pages scroll inside the menu at every display size. */
 .jj-menu { grid-template-rows: minmax(0, 1fr); padding-bottom: calc(3vmin + var(--jj-caption-space, 0px)); }
 .mn-panel { min-height: 0; }
-.mn-panel.controls:is([data-race-rules], [data-controllers-view], [data-display-sound], [data-advanced]) {
+.mn-panel.controls:is([data-controllers-view], [data-display-sound], [data-advanced]) {
   display: flex; overflow: auto;
 }
 /* The whole settings page scrolls. Shrinking a slot lets its buttons spill behind Back. */
-.mn-panel.controls:is([data-race-rules], [data-controllers-view], [data-display-sound], [data-advanced]) > * { flex-shrink: 0; }
+.mn-panel.controls:is([data-controllers-view], [data-display-sound], [data-advanced]) > * { flex-shrink: 0; }
+/* Race rules (council review 2026-11-15: one tall column overflowed 1080p and pushed Back below the scroll). The rule
+   groups sit in as many columns as fit (two on a TV, one on a phone) and only they scroll; the title, the hint and Back
+   stay in the panel, so Back is always on screen. */
+.mn-panel.controls[data-race-rules] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; overflow: hidden; }
+.mn-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(560px * var(--k))), 1fr)); align-content: start; gap: calc(22px * var(--k)) calc(34px * var(--k)); min-height: 0; overflow: auto;
+  /* Room for the brush buttons' ink edge, which draws below the box: without it the last row's edge scrolls. */
+  padding-bottom: calc(10px * var(--k)); }
+.mn-rule { display: flex; flex-direction: column; gap: calc(12px * var(--k)); min-width: 0; }
+.mn-rules .mn-acts .btn { flex-basis: calc(110px * var(--k)); }
 .mn-panel .jj-diag { position: static; max-width: 100%; max-height: none; overflow: auto; box-shadow: none; }
 .lb-local-choice { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; min-width: 0; }
 .lb-local-choice label { display: grid; gap: .2em; font-weight: 700; }
 .lb-local-choice select { font: inherit; max-width: 100%; min-height: 36px; background: var(--c-paper); color: var(--c-ink); border: 2px solid var(--c-ink); border-radius: 4px; }
 .lb-local-choice .btn { min-height: 36px; font-size: inherit; padding: .2em .5em; }
 .lb-local-choice small { flex-basis: 100%; }
-.lb-local-choice .lb-local-count { flex-basis: 100%; font-weight: 700; }
+/* One line per host seat: its badge, the picker (Car N of M over it), Use and Ready, the hint under them (council review 2026-11-15:
+   the stacked label, count and buttons made each seat's picker ~180 px tall, so past two host seats they scrolled away). */
+.lb-local-choice .lb-local-count { font-weight: 700; white-space: nowrap; font-size: .85em; }
 .lb-cc:has(.lb-local-choice) { flex-wrap: wrap; flex: 1 1 18em; }
-.lb-cc .lb-local-choice { flex: 1 1 100%; }
+.lb-local-choice label { align-self: end; }
+.lb-cc .lb-local-choice { flex: 1 1 0; align-items: flex-end; }
 .lb-cc .jj-cc { flex-basis: 100%; }
 /* Source guidance may scroll; the fitted roster always retains space for every player. */
 .lb-controls { max-height: 45%; overflow: auto; align-items: flex-start; }

@@ -66,12 +66,27 @@ type LobbyState = 'ready' | 'choosing' | 'picked' | 'away';
 const stateOf = (s: RoomView['seats'][number]): LobbyState => (s.presence === 'Left' || (s.unpluggedMs ?? null) !== null ? 'away' : s.ready ? 'ready' : s.vehicle && !s.choosing ? 'picked' : 'choosing');
 const LABEL = { ready: 'Ready', choosing: 'Choosing car…', picked: 'Picked', away: 'Away' } as const;
 const CAR_NAMES = new Map((roster.cars as Array<{ id: string; name: string }>).map((c) => [c.id, c.name]));
-/** What the card says: the car's name once it is picked (a roster id the host doesn't know shows tidied up). */
+const carName = (id: string) => CAR_NAMES.get(id) ?? id.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+/** What the card says: the car's name once it is picked (a roster id the host doesn't know shows tidied up), and the car
+ *  under the picker while the seat is still choosing (council review 2026-11-15: a host pad's picker sits in the controls
+ *  strip, which scrolls out of reach past two host seats and no pad can scroll it, so the seat's own card says it). */
 const labelOf = (st: LobbyState, s: RoomView['seats'][number]): string => {
   if (st === 'away' && (s.unpluggedMs ?? null) !== null) return `Unplugged ${unpluggedFor(s.unpluggedMs!)}`;
+  if (st === 'choosing' && s.vehicle) return `‹ ${carName(s.vehicle)} ›`;
   if (st !== 'picked' || !s.vehicle) return LABEL[st];
-  const id = s.vehicle;
-  return CAR_NAMES.get(id) ?? id.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+  return carName(s.vehicle);
+};
+/** The state in words for a title or an aria-label ("Choosing Hawk Dash" rather than the picker's arrows). */
+const sayOf = (st: LobbyState, s: RoomView['seats'][number]): string => (st === 'choosing' && s.vehicle ? `Choosing ${carName(s.vehicle)}` : labelOf(st, s));
+/** Council review 2026-11-15: "Everyone ready starts on its own" never said who it was waiting for, so an unplugged pad or a
+ *  phone that stopped readying stalled the lobby with no clue. The first seat holding the start (a seat that left holds
+ *  nothing) and how many more; every card still shows its own state. */
+const waitingFor = (seats: RoomView['seats']): string => {
+  const held = seats.filter((s) => s.presence !== 'Left' && !s.ready).sort((a, b) => a.number - b.number);
+  const first = held[0];
+  if (!first) return '';
+  const why = (first.unpluggedMs ?? null) !== null ? ' (unplugged)' : '';
+  return `Waiting for #${first.number} ${shortName(nameOf(first))}${why}${held.length > 1 ? ` + ${held.length - 1} more` : ''}`;
 };
 
 export interface JoinInfo {
@@ -155,8 +170,9 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         // Where this pick sits in the roster, as the phone's picker says it (br-bwju.9): every option and how many there are.
         const at = roster.cars.findIndex((c) => c.id === s.vehicle);
         const count = `<span class="lb-local-count tnum" data-local-count>${at >= 0 ? `Car ${at + 1} of ${roster.cars.length}` : `${roster.cars.length} cars`}</span>`;
-        const choice = `<div class="lb-local-choice">${count}<label>Vehicle for #${s.number}<select data-local-vehicle="${s.localSource}" aria-label="Vehicle for #${s.number}">${roster.cars.map((c) => `<option value="${c.id}"${c.id === s.vehicle ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label><button class="btn brush" data-local-use="${s.localSource}">Use vehicle</button><button class="btn brush primary" data-local-ready="${s.localSource}"${!s.vehicle || s.choosing ? ' disabled' : ''}>${s.ready ? 'Ready ✓' : 'Ready'}</button><small>${s.choosing || !s.vehicle ? 'Steer to choose · Ready button to confirm, then Ready again' : 'Vehicle chosen · press Ready when you are'}</small></div>`;
-        return ['<div class="lb-cc" data-seat="' + s.seat + '" data-number="' + s.number + '" data-held="' + held + '"><span class="badge" style="' + colourVars(s.colourIndex) + '">#' + s.number + '</span>' + choice + (!used || held ? controlsCard(src, data, { compact: true }) : '') + '</div>'];
+        const badge = `<span class="badge" style="${colourVars(s.colourIndex)}">#${s.number}</span>`;
+        const choice = `<div class="lb-local-choice">${badge}<label><span class="lb-sr">Vehicle for #${s.number}</span>${count}<select data-local-vehicle="${s.localSource}" aria-label="Vehicle for #${s.number}">${roster.cars.map((c) => `<option value="${c.id}"${c.id === s.vehicle ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label><button class="btn brush" data-local-use="${s.localSource}">Use vehicle</button><button class="btn brush primary" data-local-ready="${s.localSource}"${!s.vehicle || s.choosing ? ' disabled' : ''}>${s.ready ? 'Ready ✓' : 'Ready'}</button><small>${s.choosing || !s.vehicle ? 'Steer to choose · Ready button to confirm, then Ready again' : 'Vehicle chosen · press Ready when you are'}</small></div>`;
+        return ['<div class="lb-cc" data-seat="' + s.seat + '" data-number="' + s.number + '" data-held="' + held + '">' + choice + (!used || held ? controlsCard(src, data, { compact: true }) : '') + '</div>'];
       })
       .join('');
   };
@@ -177,7 +193,54 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     el.querySelectorAll<HTMLButtonElement>('[data-local-ready]').forEach((button) => button.addEventListener('click', () => join.localReady?.(Number(button.dataset.localReady))));
     el.hidden = !html;
     relayout?.();
+    paintCooees();
   };
+
+  // ---------- Identify in the Lobby (P1-R06) ----------
+  // The HUD tiles only show in a race, so in the Lobby an Identify showed nothing on the TV (council review 2026-11-15), just
+  // when a couch of pads asks "which one am I?". The seat's roster card (and its controls card) pulse in its colour with
+  // "Cooee #N", the race's look. The roster is redrawn on every room change, so a redrawn card picks the pulse up where it
+  // was (a negative animation delay) instead of restarting or losing it.
+  const COOEE_MS = 1600;
+  const cooees = new Map<number, number>();
+  const paintCooees = () => {
+    const now = performance.now();
+    for (const [seat, at] of cooees) if (now - at >= COOEE_MS) cooees.delete(seat);
+    for (const el of screen.querySelectorAll<HTMLElement>('.lobby [data-seat]')) {
+      const seat = Number(el.dataset.seat);
+      const at = cooees.get(seat);
+      if (at === undefined) {
+        if (el.classList.contains('identify')) {
+          el.classList.remove('identify');
+          el.querySelector(':scope > .lb-cooee')?.remove();
+        }
+        continue;
+      }
+      if (el.classList.contains('identify') && el.dataset.cooeeAt === String(at)) continue;
+      el.dataset.cooeeAt = String(at);
+      el.style.setProperty('--cooee-delay', `${-(now - at)}ms`);
+      el.querySelector(':scope > .lb-cooee')?.remove();
+      el.classList.remove('identify');
+      void el.offsetWidth; // a second press restarts the pulse
+      el.classList.add('identify');
+      if (el.classList.contains('lcard')) {
+        const label = document.createElement('b');
+        label.className = 'lb-cooee display';
+        label.textContent = `Cooee #${el.dataset.number}`;
+        el.append(label);
+      }
+    }
+  };
+  const lobbyIdentify = (seat: number): boolean => {
+    if (!screen.querySelector('[data-screen=lobby]')) return false;
+    const at = performance.now();
+    cooees.set(seat, at);
+    paintCooees();
+    setTimeout(paintCooees, COOEE_MS + 20);
+    return !!screen.querySelector(`.lcard[data-seat="${seat}"]`);
+  };
+  const raceIdentify = hud.identify;
+  hud.identify = (seat) => raceIdentify(seat) || lobbyIdentify(seat);
 
   // br-m1xe: the lobby says when the next race is a kept track (the host chose it on the Tracks page).
   const nextKept = (room: RoomView) => {
@@ -198,12 +261,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const fresh = !screen.querySelector('[data-screen=lobby]');
     if (fresh) screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
       <header class="lb-head"><span class="bn display">Lob<span class="acc">by</span></span>
-        <span class="tag"><b data-count-label>${n}</b> in the room · <b data-ready-label>${ready}</b> ready</span>
+        <span class="tag"><b data-count-label>${n}</b> in the room · <b data-ready-label>${ready}</b> ready<span data-away-label></span></span>
         <span class="strip">Join → choose your vehicle → Ready</span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
         <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}><span data-start-label>${derby ? 'Start derby' : 'Start race'}</span></button>
-        <p class="lb-hint" data-start-hint></p>
+        <p class="lb-hint" data-start-hint></p><p class="lb-hint lb-waiting" data-waiting hidden></p>
         ${nextKept(room)}<p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
@@ -213,12 +276,19 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     screen.querySelector<HTMLElement>('[data-screen=lobby]')!.dataset.count = String(n);
     screen.querySelector('[data-count-label]')!.textContent = String(n);
     screen.querySelector('[data-ready-label]')!.textContent = String(ready);
+    // Away seats (left, or a pad unplugged) are counted on their own: in the room, not playing (council review 2026-11-15).
+    const away = room.seats.filter((s) => stateOf(s) === 'away').length;
+    screen.querySelector('[data-away-label]')!.textContent = away ? ` · ${away} away` : '';
     const start = screen.querySelector<HTMLButtonElement>('[data-act=start]')!;
     start.disabled = n === 0;
     const startText = derby ? 'Start derby' : 'Start race';
     const startLabel = start.querySelector('[data-start-label]')!;
     if (startLabel.textContent !== startText) startLabel.textContent = startText;
     screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad';
+    const waiting = waitingFor(room.seats);
+    const waitEl = screen.querySelector<HTMLElement>('[data-waiting]')!;
+    if (waitEl.textContent !== waiting) waitEl.textContent = waiting;
+    waitEl.hidden = !waiting;
     for (const b of screen.querySelectorAll<HTMLButtonElement>('[data-act=mode]')) {
       const selected = b.dataset.mode === (room.nextMode ?? 'race');
       b.classList.toggle('primary', selected);
@@ -234,12 +304,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     } else screen.querySelector('[data-start-hint]')!.insertAdjacentHTML('afterend', keptHtml);
     const cardHtml = (s: RoomView['seats'][number], tier: string) => {
       const st = stateOf(s);
-      const tick = `<span class="tick ${st}" aria-label="${esc(labelOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
+      const tick = `<span class="tick ${st}" aria-label="${esc(sayOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
       const badge = `<span class="badge" style="${colourVars(s.colourIndex)}">#${s.number}</span>`;
       const nm = `<span class="nm">${esc(shortName(nameOf(s)))}</span>`;
+      const chip = `<span class="chip lb-state ${st}" aria-label="${esc(sayOf(st, s))}">${esc(labelOf(st, s))}</span>`;
+      // The name tier shows the car being browsed in place of its tick (2026-11-15): the tick alone can't say which car.
       const body =
-        tier === 'full' ? `${badge}${nm}<span class="chip lb-state ${st}">${esc(labelOf(st, s))}</span>` : tier === 'name' ? `${badge}${nm}${tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
-      return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${esc(labelOf(st, s))} (select to remove)">${body}</div>`;
+        tier === 'full' ? `${badge}${nm}${chip}` : tier === 'name' ? `${badge}${nm}${st === 'choosing' && s.vehicle ? chip : tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
+      return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length});--seat-on:var(--id-${s.colourIndex % tokenData.seatColors.length}-on)" title="#${s.number} ${esc(nameOf(s))} · ${esc(sayOf(st, s))} (select to remove)">${body}</div>`;
     };
     const botCardHtml = (b: ReturnType<typeof botRows>[number], tier: string) => {
       const badge = `<span class="badge bot">#${b.number}</span>`;
@@ -263,6 +335,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       box.className = `lb-roster t-${f.tier.id}`;
       box.innerHTML = room.seats.map((s) => cardHtml(s, f.tier.id)).join('') + bots.map((b) => botCardHtml(b, f.tier.id)).join('');
       paintKit(box);
+      paintCooees();
     };
     relayout();
     paintStrip(room, fresh);

@@ -9,6 +9,11 @@ import { applySeatPattern, controlsCard, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
 import { promptHtml } from '../ui/prompts/steps';
 
+/** How long one first-drive step shows full size before it shrinks to a quiet caption (ms). */
+const QUIET_AFTER_MS = 10_000;
+/** Per tile box: which prompt step it shows and since when (performance.now()). */
+const promptSeen = new WeakMap<HTMLElement, { key: string | null; at: number }>();
+
 type SeatView = RoomView['seats'][number] & {
   /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
   boost?: number | null;
@@ -111,7 +116,14 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const src = sourceOf(s?.localSource);
       const held = started && !!src && localView(s?.localSource)?.identifyHeld === true;
       const practising = !!s?.practice;
-      const key = JSON.stringify([practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
+      // Council review 2026-11-15 (Sonnet #6): the first-drive prompt covered the top of every tile for a whole race when a
+      // player never touched the sticks, and printed under FINISHED!. It hides behind a finish, a wreck callout or the
+      // race-ending countdown, and after QUIET_AFTER_MS on one step it shrinks to a quiet caption at the tile's foot.
+      const promptKey = started && s?.prompt ? JSON.stringify(s.prompt) : null;
+      const since = promptSeen.get(box);
+      if (promptKey !== (since?.key ?? null)) promptSeen.set(box, { key: promptKey, at: performance.now() });
+      const quiet = promptKey !== null && performance.now() - (promptSeen.get(box)?.at ?? 0) > QUIET_AFTER_MS;
+      const key = JSON.stringify([quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -157,9 +169,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
-      const prompt = started ? s.prompt : null;
+      const covered = !!s.finished || (s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0) || endsIn !== null;
+      const prompt = started && !covered ? s.prompt : null;
       pr.hidden = !prompt && !held;
       pr.classList.toggle('card', held);
+      pr.classList.toggle('quiet', quiet && !held);
       pr.dataset.card = held ? 'identify' : '';
       pr.innerHTML = held ? controlsCard(src!, controlsData(), { compact: true }) : prompt ? promptHtml(prompt, src, controlsData()) : '';
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
