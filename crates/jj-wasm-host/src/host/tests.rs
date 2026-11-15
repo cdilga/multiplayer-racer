@@ -1290,6 +1290,35 @@ fn pad(source: u32, drive: [i16; 2], buttons: u32) -> Vec<u8> {
     .encode()
 }
 
+/// Council review 2026-11-15: a host pad unplugged in the Lobby (no cars yet, R110) shows as unplugged in the room view, as
+/// it does in a race; it used to stay READY with its pad on the floor.
+#[test]
+fn a_host_pad_unplugged_in_the_lobby_shows_unplugged() {
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(&pad(1, [0, 32_767], 0)).unwrap();
+    h.step_one();
+    h.handle(&pad(1, [0, 0], 0)).unwrap();
+    h.step_one();
+    assert_eq!(h.phase(), jj_session::director::Phase::Lobby);
+    let unplugged = |h: &Host| {
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["unpluggedMs"].as_u64())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(unplugged(&h), vec![None], "a plugged pad's seat");
+    h.handle(&pad(1, [0, 0], LOCAL_UNAVAILABLE)).unwrap();
+    h.step_one();
+    let after = unplugged(&h);
+    assert_eq!(after.len(), 1);
+    assert!(
+        after[0].is_some(),
+        "the Lobby shows the pad unplugged: {after:?}"
+    );
+}
+
 #[test]
 fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
     // P1-C05: two host pads claim two seats on their first press (a neutral pad claims nothing), unplugging one makes

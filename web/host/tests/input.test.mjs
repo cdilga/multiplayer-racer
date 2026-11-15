@@ -58,6 +58,37 @@ after(async () => {
   server?.close();
 });
 
+// Council review 2026-11-15: "press any button to join" (A did nothing; only the sticks, View and Start claimed), and
+// typing a track code into the host's own field claimed, confirmed and readied phantom key-cluster seats.
+test('any pad button claims a seat; typing in a host text field claims nothing', { timeout: 120_000 }, async () => {
+  const page = await browser.newPage();
+  await page.addInitScript(fakePads);
+  assert.equal(await openHost(page, `${server.url}/host/?test=live`), 'test');
+  const seats = async () => (await page.evaluate(() => window.__jjTest.observe())).host.seats.length;
+  // A text field focused and typed into: cluster letters (W, E, T…) are typing, not players.
+  await page.evaluate(() => {
+    const f = document.createElement('input');
+    f.id = 'typing-probe';
+    document.body.append(f);
+    f.focus();
+  });
+  await page.keyboard.type('WEST', { delay: 30 });
+  await page.waitForTimeout(400);
+  assert.equal(await seats(), 0, 'typing claims no seat');
+  assert.equal(await page.inputValue('#typing-probe'), 'WEST', 'and the letters reach the field');
+  await page.evaluate(() => document.getElementById('typing-probe').remove());
+  // A pad plugged in and untouched claims nothing; its A button (0) claims a seat.
+  await page.evaluate(() => window.__pads.connect(0));
+  await page.waitForTimeout(400);
+  assert.equal(await seats(), 0, 'plugged in alone: no seat');
+  await page.evaluate(() => window.__pads.buttons(0, [0]));
+  for (const t0 = Date.now(); (await seats()) < 1; await page.waitForTimeout(50)) {
+    assert.ok(Date.now() - t0 < 10_000, 'A never claimed a seat');
+  }
+  await page.evaluate(() => window.__pads.buttons(0, []));
+  await page.close();
+});
+
 test('two pads and two key clusters claim four seats, each drives its own car; an unplugged pad goes to the autopilot', { timeout: 120_000 }, async () => {
   const page = await browser.newPage();
   await page.addInitScript(fakePads);

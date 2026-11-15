@@ -1015,6 +1015,12 @@ impl Host {
                     let ready = !self.round.director.is_ready(id);
                     self.set_ready(id, ready);
                 }
+                // A host pad unplugged in the Lobby shows as unplugged there too (council review 2026-11-15: it stayed
+                // READY with its pad on the floor, though the race already showed it): the plug state counts with or
+                // without a car.
+                if let Some(input) = seat.and_then(|s| self.inputs.get_mut(&s)) {
+                    input.note_plug(buttons & LOCAL_UNAVAILABLE == 0, now_ms);
+                }
                 // Like the wire (`Seats::input_seat`), a sample only counts once the seat has a car.
                 if let Some(input) = seat
                     .and_then(|s| self.inputs.get_mut(&s))

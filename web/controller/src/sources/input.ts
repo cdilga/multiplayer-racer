@@ -14,6 +14,8 @@ export interface Sample {
   action: Axes2;
   identify: boolean;
   ready: boolean;
+  /** Any other button on a pad (A, B, bumpers, d-pad…): wakes an unclaimed pad, means nothing else. */
+  wake?: boolean;
 }
 
 export const NEUTRAL: Sample = { drive: { x: 0, y: 0 }, action: { x: 0, y: 0 }, identify: false, ready: false };
@@ -56,12 +58,19 @@ export interface PadLike {
 export function padSample(p: PadLike): Sample {
   const [dx, dy] = deadzone(p.axes[0] ?? 0, p.axes[1] ?? 0, PAD_DEADZONE);
   const [ax, ay] = deadzone(p.axes[2] ?? 0, p.axes[3] ?? 0, PAD_DEADZONE);
-  return { drive: { x: dx, y: dy }, action: { x: ax, y: ay }, identify: p.buttons[8]?.pressed ?? false, ready: p.buttons[9]?.pressed ?? false };
+  return {
+    drive: { x: dx, y: dy },
+    action: { x: ax, y: ay },
+    identify: p.buttons[8]?.pressed ?? false,
+    ready: p.buttons[9]?.pressed ?? false,
+    wake: p.buttons.some((b) => b?.pressed),
+  };
 }
 
-/** Whether a sample is a deliberate press (a button, or a stick well past its dead zone): claim-by-press. */
+/** Whether a sample is a deliberate press (any button, or a stick well past its dead zone): claim-by-press. "Press any
+ *  button to join" means any (council review 2026-11-15: A, B and the bumpers did nothing). */
 export function isPress(s: Sample): boolean {
-  return s.identify || s.ready || Math.hypot(s.drive.x, s.drive.y) > 0.5 || Math.hypot(s.action.x, s.action.y) > 0.5;
+  return s.identify || s.ready || s.wake === true || Math.hypot(s.drive.x, s.drive.y) > 0.5 || Math.hypot(s.action.x, s.action.y) > 0.5;
 }
 
 /** One key cluster: held keys in, a sample out. Digital steering ramps (keys can't hold half a stick). */

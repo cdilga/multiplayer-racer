@@ -322,6 +322,9 @@ export class LocalInput {
 
   private readonly onKey = (e: KeyboardEvent): void => {
     if (!this.keysOn || e.ctrlKey || e.metaKey || e.altKey || !this.clusterKeys.has(e.code)) return;
+    // Typing in one of the host's own fields (a track code, the helper's pairing code) is typing, not playing (council
+    // review 2026-11-15: each letter claimed, confirmed and readied a phantom seat, and the field stayed empty).
+    if (editable(e.target)) return;
     e.preventDefault();
     // The helper reads this keyboard by device: the browser's copy of the same keys must not drive a cluster too.
     if (this.helper.owns('keyboard')) return void this.keys.clear();
@@ -420,7 +423,10 @@ export class LocalInput {
       const [ax, ay] = deadzone(pad.axes[2] ?? 0, -(pad.axes[3] ?? 0), map.padDeadzone);
       const identify = pad.buttons[8]?.pressed ?? false;
       const ready = pad.buttons[9]?.pressed ?? false;
-      this.update(s, [dx, dy, ax, ay], identify, ready, now);
+      // "Press any button to join": the first thing anyone does with a pad is press A (council review 2026-11-15), so
+      // any button wakes an unclaimed pad. Only View and Start mean Identify and Ready.
+      const wake = pad.buttons.some((b) => b?.pressed);
+      this.update(s, [dx, dy, ax, ay], identify, ready, now, wake);
     }
   }
 
@@ -501,7 +507,7 @@ export class LocalInput {
     this.update(s, [0, y, steer, flick], keys.has(c.identify), keys.has(c.ready), now);
   }
 
-  private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number): void {
+  private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number, wake = false): void {
     s.axes = axes;
     const lobbyReady = this.lobbyChoice(s, axes, ready);
     let buttons = (identify ? LOCAL_IDENTIFY : 0) | (lobbyReady ? LOCAL_READY : 0);
@@ -516,7 +522,7 @@ export class LocalInput {
     s.view.identifyHeld = identify;
     if (identifyChanged) window.dispatchEvent(new Event('jj-local-controls'));
     this.trackUse(s, axes, now);
-    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || ready;
+    const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0 || ready || wake;
     if (!s.view.claimed && !pressed) return;
     s.view.claimed = true;
     // After leaving: letting go, then pressing again, is a new player (the worker gives it a new seat).
@@ -566,4 +572,10 @@ export class LocalInput {
       sampledAt: performance.timeOrigin + performance.now(),
     });
   }
+}
+
+/** Whether a key event belongs to a text field the host is typing into (input, textarea, select, contenteditable). */
+function editable(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  return t.isContentEditable || t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement;
 }
