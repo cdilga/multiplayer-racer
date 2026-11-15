@@ -22,6 +22,12 @@
 //!   of it that isn't under spawn protection, kept a while so it doesn't dither), drives at where that car will be when it
 //!   gets there (its velocity times the time to close, capped), flat out to ram, and holds inside the bowl: an aim past the
 //!   floor's edge is pulled back in. With nobody to hunt it circles the floor.
+//! - **Never parks** (council review 2026-11-16: idle seats and Easy bots sat slow and tilted on the bowl's rim for most of
+//!   a derby). An aim behind turns at full lock (the pursuit's curvature fades to nothing there); heading out across the
+//!   floor it brakes for the edge; it picks rivals up the bank or against the rock last. Up the bank it heads back down
+//!   to the floor. Stalled for a moment it turns away (reversing down the bank), leaves that pile-up alone a while and
+//!   hunts another; when that doesn't free it, it presses Recover. The numbers are `assist.json` `bots.derby`; all of it
+//!   reads the sim state only, so it isn't journaled and replays bit for bit.
 //!
 //! - **Traffic** (council review 2026-11-15: bots followed one line in grid order, so a faster car sat behind a slower
 //!   one for the whole race). A car closing on one ahead in its lane takes a passing lane beside it, on the side nearer
@@ -40,7 +46,7 @@ use jj_map::LoadedMap;
 use jj_types::axis::{dequantise_axis, quantise_axis};
 use serde::{Deserialize, Serialize};
 
-use crate::assist::{BotItemTuning, BotTuning};
+use crate::assist::{BotItemTuning, BotTuning, DerbyBotTuning};
 use crate::journal::DriveInput;
 use crate::rng::Rng;
 use crate::sim::TICK_HZ;
@@ -558,6 +564,18 @@ pub struct Autopilot {
     holding: Option<(ItemId, u64)>,
     /// Whether the plan sees a straight ahead this tick: `drive`/`hunt` set it, [`Autopilot::item_use`] reads it after.
     straight: bool,
+    /// Derby: how long it has been stalled (ticks), the tick its back-off ends and what it backs away from (x, z), and
+    /// the place (x, z) whose cars it leaves alone until a tick (council review 2026-11-16).
+    stall: u64,
+    back_until: u64,
+    back_from: [f32; 2],
+    shun: Option<([f32; 2], u64)>,
+    /// Derby: coming down off the bank to the floor, and the back-offs since it last got clear of where it stalled.
+    descending: bool,
+    tries: u32,
+    stalled_at: [f32; 2],
+    /// Whether this back-off reverses (down the bank) or pivots away under throttle (on the floor).
+    reversing: bool,
 }
 
 /// Seconds as whole ticks.
@@ -608,6 +626,14 @@ impl Autopilot {
             lane_until: 0,
             holding: None,
             straight: false,
+            stall: 0,
+            back_until: 0,
+            back_from: [0.0; 2],
+            shun: None,
+            descending: false,
+            tries: 0,
+            stalled_at: [0.0; 2],
+            reversing: false,
         }
     }
 
@@ -621,13 +647,49 @@ impl Autopilot {
         max_steer: f32,
         wheelbase: f32,
         tick: u64,
+        tuning: &DerbyBotTuning,
     ) -> (DriveInput, bool) {
         let (sh, ch) = (libm::sinf(me.heading), libm::cosf(me.heading));
         let local = |x: f32, z: f32| {
             let (dx, dz) = (x - me.x, z - me.z);
             (dx * ch - dz * sh, dx * sh + dz * ch)
         };
-        let hunted = |r: &&Rival| r.car != self.car && !r.protected;
+        let up_bank = |x: f32, z: f32| libm::hypotf(x - arena.x, z - arena.z) > arena.floor_r;
+        if tick < self.back_until {
+            return self.back_off(me, arena, max_steer, wheelbase, tick);
+        }
+        // Up the bank (council review 2026-11-16: bots crept along the rim, tilted, for most of a derby): it heads for
+        // the floor's centre until it is well inside the floor's edge (no dithering on the edge), and when it faces up
+        // the bank without the speed to turn down it backs down first.
+        let (rx, rz) = (me.x - arena.x, me.z - arena.z);
+        let r = libm::hypotf(rx, rz).max(1e-3);
+        let outward = [me.x + rx / r * 10.0, me.z + rz / r * 10.0];
+        if r > arena.floor_r + tuning.rim_m {
+            self.descending = true;
+        } else if r < arena.floor_r - tuning.rim_m {
+            self.descending = false;
+        }
+        if self.descending {
+            let (cl, cf) = local(arena.x, arena.z);
+            if libm::atan2f(cl, cf).abs() > core::f32::consts::FRAC_PI_2
+                && me.forward_speed < tuning.stall_mps
+            {
+                self.back_from = outward;
+                self.back_until = tick + ticks(tuning.back_s).max(1);
+                self.reversing = true;
+                self.stall = 0;
+                return self.back_off(me, arena, max_steer, wheelbase, tick);
+            }
+        }
+        // Not the pile-up it just backed out of (a pinned rival, or two wedged on the rock).
+        let shun = self
+            .shun
+            .filter(|&(_, until)| tick < until)
+            .map(|(at, _)| at);
+        let shunned = |r: &Rival| {
+            shun.is_some_and(|at| libm::hypotf(r.x - at[0], r.z - at[1]) < tuning.shun_m)
+        };
+        let hunted = |r: &&Rival| r.car != self.car && !r.protected && !shunned(r);
         // Keep the prey a while; look again when it's protected, gone, or the time is up.
         let keep = self.prey.and_then(|(car, since)| {
             (tick < since + HUNT_KEEP_TICKS)
@@ -635,11 +697,20 @@ impl Autopilot {
                 .flatten()
         });
         let prey = keep.or_else(|| {
-            // The nearest rival, counting one behind as farther (a bot charges what it's facing).
+            // The nearest rival, counting one behind as farther (a bot charges what it's facing) and one up the bank or
+            // against the rock as farther still (council review 2026-11-16: a ram there pinned both cars).
             let pick = rivals.iter().filter(hunted).min_by(|a, b| {
                 let cost = |r: &Rival| {
                     let (l, f) = local(r.x, r.z);
-                    libm::hypotf(l, f) + 12.0 * libm::atan2f(l, f).abs()
+                    let on_rock = arena.obstacle.is_some_and(|o| {
+                        o.nearest(r.x, r.z).1 < o.r + ISLAND_CLEAR_M + ISLAND_PREY_M
+                    });
+                    let pinned = if up_bank(r.x, r.z) || on_rock {
+                        tuning.rim_penalty_m
+                    } else {
+                        0.0
+                    };
+                    libm::hypotf(l, f) + 12.0 * libm::atan2f(l, f).abs() + pinned
                 };
                 cost(a).total_cmp(&cost(b))
             });
@@ -647,8 +718,10 @@ impl Autopilot {
             pick
         });
         let speed = me.forward_speed.max(0.0);
-        // Aim: where the prey will be when this car gets there; else round the floor ahead.
+        // Aim: the floor's centre coming down off the bank; where the prey will be when this car gets there; else round
+        // the floor ahead.
         let (mut ax, mut az) = match prey {
+            _ if self.descending => (arena.x, arena.z),
             Some(r) => {
                 let d = libm::hypotf(r.x - me.x, r.z - me.z);
                 let t = (d / speed.max(8.0)).min(HUNT_LEAD_S);
@@ -682,15 +755,44 @@ impl Autopilot {
         let (l, f) = local(ax, az);
         let dist = libm::hypotf(l, f).max(1.0);
         let alpha = libm::atan2f(l, f);
+        // The pursuit's curvature, 2 sin α / d, fades to nothing as the aim swings behind: an aim behind turns at full
+        // lock (council review 2026-11-16: a bot whose prey was behind it drove on, up the bank, barely turning).
+        let behind = alpha.abs() > core::f32::consts::FRAC_PI_2;
         let curvature = 2.0 * libm::sinf(alpha) / dist.max(MIN_LOOK_AHEAD_M);
         let wheel = libm::atanf(curvature * wheelbase);
         if tick.is_multiple_of(NOISE_EVERY_TICKS) {
             self.noise_target = (self.noise.next_f32() * 2.0 - 1.0) * NOISE_STEER;
         }
         self.noise_now += (self.noise_target - self.noise_now) * 0.05;
-        let steer = (wheel / max_steer + self.noise_now).clamp(-1.0, 1.0);
-        // Flat out at the prey; lifting to turn when it's well behind at speed.
-        let (throttle, brake) = if alpha.abs() > 2.0 && speed > 8.0 {
+        let steer = if behind {
+            alpha.signum()
+        } else {
+            (wheel / max_steer + self.noise_now).clamp(-1.0, 1.0)
+        };
+        // Flat out at the prey, but on the floor no faster than stops on its edge from where it's heading out, at
+        // `edgeBrakeMps2` (never slower than `minMps`: flat-out charges ran up the bank, council review 2026-11-16).
+        // Coming down off the bank, until it faces down it goes no faster than twice `minMps`: faster, a quick car
+        // orbited the bowl on the bank instead of turning down.
+        let cap = if self.descending {
+            if alpha.abs() < core::f32::consts::FRAC_PI_4 {
+                f32::MAX
+            } else {
+                2.0 * tuning.min_mps
+            }
+        } else {
+            let out_dot = rx * sh + rz * ch;
+            let edge_m = -out_dot
+                + libm::sqrtf(
+                    (out_dot * out_dot - (r * r - arena.floor_r * arena.floor_r)).max(0.0),
+                );
+            libm::sqrtf(2.0 * tuning.edge_brake_mps2 * edge_m.max(0.0)).max(tuning.min_mps)
+        };
+        let (throttle, brake) = if speed > cap + 2.0 {
+            (0.0, 1.0)
+        } else if speed > cap {
+            (0.0, 0.0)
+        } else if alpha.abs() > 2.0 && speed > 8.0 {
+            // Lifting to turn when the aim is well behind at speed.
             (0.3, 0.0)
         } else {
             (1.0, 0.0)
@@ -702,9 +804,36 @@ impl Autopilot {
         } else {
             0
         };
-        let recover = self.stuck >= STUCK_TICKS;
+        let mut recover = self.stuck >= STUCK_TICKS;
+        // Never parks (council review 2026-11-16): a bot that has made no way for a moment (pinning a rival against the
+        // bank, grinding up it, nosed into the rock) backs off, away from it and towards the floor, then hunts another.
+        // When backing off hasn't freed it `backTries` times running (beached on debris, a wheel gone), it recovers.
+        self.stall = if me.forward_speed.abs() < tuning.stall_mps {
+            self.stall + 1
+        } else {
+            0
+        };
+        // Got away: well clear of where it last stalled.
+        if libm::hypotf(me.x - self.stalled_at[0], me.z - self.stalled_at[1]) > tuning.shun_m {
+            self.tries = 0;
+        }
+        if !recover && self.stall >= ticks(tuning.stall_s) && self.tries >= tuning.back_tries {
+            recover = true;
+        } else if !recover && self.stall >= ticks(tuning.stall_s) {
+            self.stall = 0;
+            self.tries += 1;
+            self.stalled_at = [me.x, me.z];
+            self.back_until = tick + ticks(tuning.back_s).max(1);
+            // What stopped it is what it's driving into: whatever is ahead of it.
+            self.back_from = [me.x + sh * 10.0, me.z + ch * 10.0];
+            self.reversing = false;
+            let at = prey.map_or([me.x, me.z], |p| [p.x, p.z]);
+            self.shun = Some((at, tick + ticks(tuning.shun_s)));
+            self.prey = None;
+        }
         if recover {
             self.stuck = 0;
+            self.stall = 0;
             self.prey = None;
         }
         let out = DriveInput {
@@ -719,6 +848,76 @@ impl Autopilot {
             route_point: prey.map_or(u32::MAX, |r| r.car),
             target: [ax, az],
             look_ahead_m: dist,
+            target_speed: f32::MAX,
+            stuck_ticks: self.stuck,
+            steer,
+            throttle,
+            brake,
+            lane_m: 0.0,
+        });
+        (out, recover)
+    }
+
+    /// A stalled derby bot getting away (council review 2026-11-16). With what stopped it ahead: on the floor it turns
+    /// away at full lock under throttle (at a crawl the arcade car pivots round, `pivotMps`, and drives off: much quicker
+    /// than reversing); facing up the bank it reverses down with the wheel over. Either way the nose swings away, to the
+    /// floor's centre when it's dead ahead. With it behind, it drives for the centre. Still presses Recover when even
+    /// that makes no way.
+    fn back_off(
+        &mut self,
+        me: Pose2,
+        arena: Arena,
+        max_steer: f32,
+        wheelbase: f32,
+        tick: u64,
+    ) -> (DriveInput, bool) {
+        let (bl, bf) = local_of(me, self.back_from[0], self.back_from[1]);
+        let away = libm::atan2f(bl, bf);
+        let (cl, cf) = local_of(me, arena.x, arena.z);
+        let centre = libm::atan2f(cl, cf);
+        // Which way the nose should swing: away from it, or to the centre when it's dead ahead.
+        let swing = if away.abs() < 0.2 {
+            centre.signum()
+        } else {
+            -away.signum()
+        };
+        let (steer, throttle, brake) = if away.abs() < core::f32::consts::FRAC_PI_2 {
+            if self.reversing {
+                // Reversing, the wheel turned the other way swings the nose.
+                (-swing, 0.0, 1.0)
+            } else {
+                (swing, 1.0, 0.0)
+            }
+        } else if centre.abs() > core::f32::consts::FRAC_PI_2 {
+            (centre.signum(), 1.0, 0.0)
+        } else {
+            let dist = libm::hypotf(cl, cf).max(MIN_LOOK_AHEAD_M);
+            let wheel = libm::atanf(2.0 * libm::sinf(centre) / dist * wheelbase);
+            ((wheel / max_steer).clamp(-1.0, 1.0), 1.0, 0.0)
+        };
+        self.straight = false;
+        self.stuck = if me.forward_speed.abs() < STUCK_SPEED {
+            self.stuck + 1
+        } else {
+            0
+        };
+        let recover = self.stuck >= STUCK_TICKS;
+        if recover {
+            self.stuck = 0;
+            self.back_until = tick;
+        }
+        let out = DriveInput {
+            throttle: quantise_axis(throttle),
+            steer: quantise_axis(steer),
+            brake: quantise_axis(brake),
+            ..DriveInput::default()
+        };
+        self.last_out = out;
+        self.state = Some(AutopilotState {
+            mode: self.mode,
+            route_point: u32::MAX,
+            target: self.back_from,
+            look_ahead_m: libm::hypotf(bl, bf),
             target_speed: f32::MAX,
             stuck_ticks: self.stuck,
             steer,
@@ -1088,6 +1287,23 @@ impl Autopilot {
             let (item, since) = self.holding.map_or((u8::MAX, 0), |(i, s)| (i as u8, s));
             out.push(item);
             out.extend(since.to_le_bytes());
+        }
+        // Derby back-offs (2026-11-16), likewise only once used.
+        if self.stall != 0 || self.back_until != 0 || self.shun.is_some() || self.descending {
+            out.extend(b"ap-derby");
+            out.push(u8::from(self.descending));
+            out.push(u8::from(self.reversing));
+            out.extend(self.tries.to_le_bytes());
+            out.extend(self.stalled_at[0].to_bits().to_le_bytes());
+            out.extend(self.stalled_at[1].to_bits().to_le_bytes());
+            out.extend(self.stall.to_le_bytes());
+            out.extend(self.back_until.to_le_bytes());
+            out.extend(self.back_from[0].to_bits().to_le_bytes());
+            out.extend(self.back_from[1].to_bits().to_le_bytes());
+            let (at, until) = self.shun.unwrap_or(([0.0; 2], 0));
+            out.extend(at[0].to_bits().to_le_bytes());
+            out.extend(at[1].to_bits().to_le_bytes());
+            out.extend(until.to_le_bytes());
         }
     }
 }

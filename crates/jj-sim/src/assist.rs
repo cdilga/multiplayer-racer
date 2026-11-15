@@ -202,6 +202,34 @@ impl BotSkills {
 pub struct BotTuning {
     pub pass: PassTuning,
     pub items: BotItemTuning,
+    pub derby: DerbyBotTuning,
+}
+
+/// How a derby bot keeps hunting instead of parking (council review 2026-11-16: idle seats and Easy bots sat pinned on
+/// the bowl's rim, grinding against a rival or the bank, for most of a minute).
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DerbyBotTuning {
+    /// A bot under this speed (m/s) for `stallS` has stalled: against a rival, the bank or the rock.
+    pub stall_mps: f32,
+    pub stall_s: f32,
+    /// A stalled bot backs off this long (s), away from what stopped it and towards the floor's centre ...
+    pub back_s: f32,
+    /// ... and for `shunS` hunts none of the cars within `shunM` of where it stalled (the rival it pinned, a pile-up).
+    pub shun_s: f32,
+    pub shun_m: f32,
+    /// After this many back-offs without getting `shunM` clear of where it stalled, it presses Recover instead.
+    pub back_tries: u32,
+    /// A rival up the bank or against the rock costs this much more (m) to pick than one in the open: rams on the floor,
+    /// not into the rim.
+    pub rim_penalty_m: f32,
+    /// A bot more than this far (m, in plan) up the bank heads for the floor's centre until it is this far inside the
+    /// floor's edge, then hunts again.
+    pub rim_m: f32,
+    /// Heading out across the floor, a bot goes no faster than brakes at `edgeBrakeMps2` to a stop on its edge, and never
+    /// slower than `minMps` for it; coming down off the bank it goes no faster than twice `minMps` until it faces down.
+    pub edge_brake_mps2: f32,
+    pub min_mps: f32,
 }
 
 /// Overtaking: a car closing on one ahead in its lane moves to a side of the road to pass it.
@@ -251,6 +279,7 @@ struct BotsFile {
     what: String,
     pass: PassTuning,
     items: BotItemTuning,
+    derby: DerbyBotTuning,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -331,6 +360,7 @@ impl AssistProfile {
             bots: BotTuning {
                 pass: f.bots.pass,
                 items: f.bots.items,
+                derby: f.bots.derby,
             },
         };
         p.validate()?;
@@ -400,6 +430,17 @@ impl AssistProfile {
             .any(|&k| !(k > 0.0 && k <= 1.5))
         {
             return Err("assist autopilot needs positive grip, skill, planBrake, minSpeed, 0 < topSpeedShare <= 1.5, takeoffMps > minSpeed and botSkills in 0..1.5".into());
+        }
+        let bd = &self.bots.derby;
+        if [bd.stall_mps, bd.stall_s, bd.back_s, bd.shun_s, bd.shun_m]
+            .iter()
+            .any(|&v| v <= 0.0)
+            || bd.rim_penalty_m < 0.0
+            || bd.rim_m < 0.0
+            || bd.min_mps < 0.0
+            || bd.edge_brake_mps2 <= 0.0
+        {
+            return Err("assist bots.derby needs positive stallMps, stallS, backS, shunS and shunM, rimPenaltyM, rimM and minMps >= 0 and edgeBrakeMps2 > 0".into());
         }
         let (bp, bi) = (&self.bots.pass, &self.bots.items);
         if [

@@ -1244,3 +1244,131 @@ fn derby_item_boxes_never_block_a_jump() {
         }
     }
 }
+
+/// A minute of derby, per car: shares of the time it was slow (under 3 m/s, not held for a respawn), on the bank (past
+/// the floor's edge), tilted (up < 0.7), and parked on the rim (on the bank and slow or tilted: the review's finding).
+#[derive(Debug, Default, Clone, Copy)]
+struct Minute {
+    slow: f64,
+    bank: f64,
+    tilted: f64,
+    rim_parked: f64,
+}
+
+/// A 60 s derby as the host runs one: six cars on a 6-car bowl, a player's idle seat (the autopilot at the idle pace, in
+/// a roster car that changes with the seed) and Easy, Normal, Hard, Normal and Hard bots (the host's bots drive roster
+/// car 0), all hunting. Per car its minute, and the derby's score events.
+fn derby_minute(seed: u64) -> (Vec<Minute>, usize) {
+    let cars = 6;
+    let map = arena(seed, cars);
+    let d = design(&map);
+    let roster: Vec<VehicleProfile> =
+        VehicleProfile::roster(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+            .unwrap()
+            .into_iter()
+            .map(|(_, p)| p)
+            .collect();
+    let seat_car = seed as usize % roster.len();
+    let mut sim = Sim::with_profiles(&map, &jj_procgen::registry(), seed, roster);
+    let ids = sim.spawn_grid_as(&[seat_car, 0, 0, 0, 0, 0]);
+    sim.start_derby(180 * S);
+    // The idle seat (botSkills.idle), then the bots.
+    for (&id, pace) in ids.iter().zip([700u16, 800, 900, 1000, 900, 1000]) {
+        sim.set_autopilot(id, true);
+        sim.set_bot_pace(id, pace);
+    }
+    let mut out = vec![Minute::default(); cars];
+    let mut samples = 0.0;
+    for t in 0..(60 * S) {
+        sim.step();
+        if t % (S / 10) != 0 {
+            continue;
+        }
+        samples += 1.0;
+        for (k, &id) in ids.iter().enumerate() {
+            let st = sim.car_state(id).unwrap();
+            let r = f64::from(st.position[0] - d.cx as f32)
+                .hypot(f64::from(st.position[2] - d.cz as f32));
+            let held = sim.race().is_held(id.0, sim.tick());
+            let slow = !held && st.forward_speed.abs() < 3.0;
+            let (bank, tilted) = (r > d.floor_r, st.up_y < 0.7);
+            let m = &mut out[k];
+            m.slow += f64::from(u8::from(slow));
+            m.bank += f64::from(u8::from(bank));
+            m.tilted += f64::from(u8::from(tilted));
+            m.rim_parked += f64::from(u8::from(!held && bank && (slow || tilted)));
+        }
+    }
+    for m in &mut out {
+        *m = Minute {
+            slow: m.slow / samples,
+            bank: m.bank / samples,
+            tilted: m.tilted / samples,
+            rim_parked: m.rim_parked / samples,
+        };
+    }
+    let hits = sim.derby().expect("the derby is on").events().len();
+    (out, hits)
+}
+
+/// Council review 2026-11-16 (#5): in a 60 s derby an idle player's autopilot and the Easy bot sat under 3 m/s for most
+/// of it, tilted on the bowl's rim, and by the end every car was pressed against the bottom of the bank. A derby is the
+/// round where everyone smashes. Six seeds of a six-car derby (each with a different roster car in the idle seat):
+/// measured before the fix, the field spent 21 % of the minute parked on the rim, 19 % tilted and 53 % on the bank, with
+/// 113 score events a minute; after it, 8 %, 4 % and 25 %, with 126. No car spends a third of the minute slow (the worst
+/// is a car rammed and pinned: 28 % before, 30 % after, where a back-off or a ram is a slow moment on the floor).
+#[test]
+fn derby_bots_keep_off_the_rim_and_never_park() {
+    let (mut all, mut hits) = (Vec::new(), 0);
+    for seed in 1u64..=6 {
+        let (cars, h) = derby_minute(seed);
+        let pct = |v: f64| (v * 100.0).round();
+        let row: Vec<String> = cars
+            .iter()
+            .map(|m| {
+                format!(
+                    "{}/{}/{}/{}",
+                    pct(m.slow),
+                    pct(m.bank),
+                    pct(m.tilted),
+                    pct(m.rim_parked)
+                )
+            })
+            .collect();
+        eprintln!(
+            "seed {seed}: slow/bank/tilted/rim-parked % (idle seat, then bots) {row:?}; {h} score events"
+        );
+        all.extend(cars);
+        hits += h;
+    }
+    let mean = |f: fn(&Minute) -> f64| all.iter().map(f).sum::<f64>() / all.len() as f64;
+    let (rim_parked, tilted, bank) = (mean(|m| m.rim_parked), mean(|m| m.tilted), mean(|m| m.bank));
+    let per_minute = hits as f64 / 6.0;
+    eprintln!(
+        "field: rim-parked {:.1} %, tilted {:.1} %, on the bank {:.1} %; {per_minute:.0} score events a minute",
+        rim_parked * 100.0,
+        tilted * 100.0,
+        bank * 100.0
+    );
+    assert!(
+        rim_parked < 0.12,
+        "the field parks on the rim: {rim_parked:.3}"
+    );
+    assert!(
+        tilted < 0.08,
+        "the field sits tilted on the bank: {tilted:.3}"
+    );
+    assert!(
+        bank < 0.3,
+        "the field hunts on the floor, not the bank: {bank:.3}"
+    );
+    let worst = all.iter().map(|m| m.slow).fold(0.0, f64::max);
+    assert!(
+        worst < 1.0 / 3.0,
+        "a car spent {worst:.2} of the derby slow"
+    );
+    assert!(
+        per_minute >= 110.0,
+        "everyone smashes: {per_minute:.0} score events a minute"
+    );
+}

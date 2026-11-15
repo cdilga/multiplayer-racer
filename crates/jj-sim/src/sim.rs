@@ -2177,6 +2177,7 @@ impl Sim {
                             p.steer_lock(pose.forward_speed),
                             wheelbase,
                             tick,
+                            &self.assist_profile.bots.derby,
                         ),
                         _ => ap.drive(
                             &self.path,
