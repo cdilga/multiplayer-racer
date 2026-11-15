@@ -94,6 +94,7 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, o: { everyMs?:
         <p>Use a different cluster on each keyboard:</p><ul class="dr-legends">${legends}</ul>
         ${o.joinUrl ? `<p>Or plug it into a phone or laptop and <a href="${esc(o.joinUrl)}" target="_blank" rel="noopener">join this room there</a>.</p>${qr}` : ''}
       </details>
+      ${input.list().some((s) => s.kind === 'pad' || s.kind === 'wheel') ? '' : '<p class="dr-nopad" data-no-pad>No pad found yet: plug one in (or pair it with this computer) and press any button on it.</p>'}
       <ul class="dr-rows">${rows.join('')}</ul><div class="dr-cards">${input
       .clusters()
       .map((c) => controlsCard({ kind: 'keys', cluster: c.id }, data, { compact: true }))
