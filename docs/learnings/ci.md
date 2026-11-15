@@ -265,3 +265,14 @@ GPU browser slots (br-15gd): four SwiftShader slots hold triton's 20 cores at 95
 help. eris-browser passes its RTX 2080 Super into the job container; run-slot.mjs sets
 `JJ_CHROMIUM_GPU=render` there (GPU rendering, identical assertions). A journey that races in real time
 takes the same wall time on a GPU; the gain is that the host's CPU is free for more slots at once.
+
+Gitea repo corruption (2026-11-15, CI run 18006, every job: "pack has bad object ... inflate returned -3"; earlier
+runs: "packed object f64cac53... is corrupt", an LFS OID mismatch). One pack in Gitea's bare repo
+(`/mnt/vessel/apps/gitea/data/git/repositories/cdilga/multiplayer-racer.git`, container `gitea`, user `git`) had a
+bad entry (`0d19f4f7`, an old docs PNG); ZFS showed no errors. Repair, without losing anything: ZFS snapshot of
+`vessel/apps/gitea`; `git fsck --full` names the object; move the bad `pack-*.{pack,idx,rev}` and
+`multi-pack-index` to `/data/git/quarantine-<date>/`; `git unpack-objects -r < <bad pack>` recovers everything
+else as loose objects; `git cat-file blob <id> | … git hash-object -w --stdin` from an intact clone (a copy written
+while the bad pack is still present is skipped as "already exists"); fsck clean; `git repack -a -d`. `repack -F`
+does not work around it: it dies on the bad CRC. Serving reuses packed bytes, so a loose good copy alone doesn't fix
+clones.
