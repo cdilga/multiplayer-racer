@@ -12,8 +12,10 @@ import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
 
 /** How long one first-drive step shows full size before it shrinks to a quiet caption (ms). */
 const QUIET_AFTER_MS = 10_000;
-/** Per tile box: which prompt step it shows and since when (performance.now()). */
-const promptSeen = new WeakMap<HTMLElement, { key: string | null; at: number }>();
+/** Per seat number: which prompt step it shows and since when (performance.now()). Keyed by seat, not tile, so a step
+ *  already shown in an earlier round stays quiet when the next round's tiles are built (council review 2026-11-15,
+ *  round 2: it came back full size every round). */
+const promptSeen = new Map<number, { key: string | null; at: number }>();
 
 type SeatView = RoomView['seats'][number] & {
   /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
@@ -124,9 +126,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // player never touched the sticks, and printed under FINISHED!. It hides behind a finish, a wreck callout or the
       // race-ending countdown, and after QUIET_AFTER_MS on one step it shrinks to a quiet caption at the tile's foot.
       const promptKey = started && s?.prompt ? JSON.stringify(s.prompt) : null;
-      const since = promptSeen.get(box);
-      if (promptKey !== (since?.key ?? null)) promptSeen.set(box, { key: promptKey, at: performance.now() });
-      const quiet = promptKey !== null && performance.now() - (promptSeen.get(box)?.at ?? 0) > QUIET_AFTER_MS;
+      const seatNo = s?.number ?? -1;
+      const since = promptSeen.get(seatNo);
+      // A step change restarts the clock; a seat without a prompt (between rounds) keeps its last step's clock.
+      if (promptKey !== null && promptKey !== (since?.key ?? null)) promptSeen.set(seatNo, { key: promptKey, at: performance.now() });
+      const quiet = promptKey !== null && performance.now() - (promptSeen.get(seatNo)?.at ?? 0) > QUIET_AFTER_MS;
       const inv = started && s?.inventory?.front ? [s.inventory.front, s.inventory.back ?? null] : null;
       const key = JSON.stringify([inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000)]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
