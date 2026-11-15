@@ -67,7 +67,8 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
   const render = () => {
     if (btn) {
       const on = world.overviewOn, can = world.overviewAvailable;
-      const label = `Camera: ${on ? 'Overview' : 'Grid'}`;
+      // Council review 2026-11-15: "Camera: Grid" read as a setting name; it says what it is.
+      const label = `Camera view: ${on ? 'Overview' : 'Grid'}`;
       if (btn.textContent !== label) btn.textContent = label;
       btn.setAttribute('aria-disabled', String(!can));
       btn.title = can ? `Switch to the ${on ? 'Grid' : 'Overview'} (V)` : TRACK_EXPLAIN;

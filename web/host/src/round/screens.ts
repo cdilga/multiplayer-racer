@@ -85,8 +85,24 @@ const waitingFor = (seats: RoomView['seats']): string => {
   const held = seats.filter((s) => s.presence !== 'Left' && !s.ready).sort((a, b) => a.number - b.number);
   const first = held[0];
   if (!first) return '';
-  const why = (first.unpluggedMs ?? null) !== null ? (first.local ? ' (unplugged)' : ' (disconnected)') : '';
+  const why = (first.unpluggedMs ?? null) !== null ? ' (unplugged)' : '';
   return `Waiting for #${first.number} ${shortName(nameOf(first))}${why}${held.length > 1 ? ` + ${held.length - 1} more` : ''}`;
+};
+const ORD = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+/** Council review 2026-11-15: back in the lobby the room's running points vanished, so nothing said who was ahead or why to
+ *  play another round. Once a round has counted, each card carries its seat's points and place, and the head names the
+ *  leader (a leader who left keeps their row in the standings but has no card, so the line names who is here). */
+const standingsOf = (room: RoomView) => new Map((room.standings ?? []).map((r) => [r.seat, r]));
+const leaderLine = (room: RoomView): string => {
+  const table = standingsOf(room);
+  if (!table.size) return '';
+  const here = room.seats.filter((s) => s.presence !== 'Left' && table.has(s.seat));
+  const top = Math.min(...here.map((s) => table.get(s.seat)!.place));
+  const leaders = here.filter((s) => table.get(s.seat)!.place === top).sort((a, b) => a.number - b.number);
+  if (!leaders.length) return '';
+  const who = leaders.map((s) => `#${s.number} ${shortName(nameOf(s))}`).join(' & ');
+  const pts = table.get(leaders[0]!.seat)!.points;
+  return `${room.round ? `After round ${room.round}: ` : ''}${who} ${leaders.length > 1 ? 'lead' : 'leads'} on ${pts} pts`;
 };
 
 export interface JoinInfo {
@@ -262,12 +278,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     if (fresh) screen.innerHTML = `<section class="lobby" data-screen="lobby" data-count="${n}">
       <header class="lb-head"><span class="bn display">Lob<span class="acc">by</span></span>
         <span class="tag"><b data-count-label>${n}</b> in the room · <b data-ready-label>${ready}</b> ready<span data-away-label></span></span>
-        <span class="strip">Join → choose your vehicle → Ready</span></header>
+        <span class="strip">Join → choose your vehicle → Ready</span><span class="strip lb-standings" data-standings hidden></span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><div class="lb-mode" role="group" aria-label="Next round">${(['race', 'derby'] as const).map((m) => `<button class="btn brush${derby === (m === 'derby') ? ' primary' : ''}" type="button" data-act="mode" data-mode="${m}" aria-pressed="${derby === (m === 'derby')}">${m === 'derby' ? 'Derby' : 'Race'}</button>`).join('')}</div>
         <button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}><span data-start-label>${derby ? 'Start derby' : 'Start race'}</span></button>
         <p class="lb-hint" data-start-hint></p><p class="lb-hint lb-waiting" data-waiting hidden></p>
-        ${nextKept(room)}<p class="lb-hint">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
+        ${nextKept(room)}<p class="lb-hint lb-pads">Got a pad or keyboard? Press any button to join · Host menu → Controllers</p></div></div>
       <div class="lb-rwrap"><div class="lb-roster" data-players></div><div class="lb-controls" data-controls hidden></div></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
@@ -284,7 +300,13 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const startText = derby ? 'Start derby' : 'Start race';
     const startLabel = start.querySelector('[data-start-label]')!;
     if (startLabel.textContent !== startText) startLabel.textContent = startText;
-    screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : 'Scan to join on your phone, or press a key cluster or pad';
+    // Bots alone can't start a round (council review 2026-11-15: with only bots Start was greyed and the hint never said why).
+    const joinHow = 'Scan to join on your phone, or press a key cluster or pad';
+    screen.querySelector('[data-start-hint]')!.textContent = n ? `${room.armed ? `Everyone ready starts the ${derby ? 'derby' : 'race'} on its own` : `Start the ${derby ? 'derby' : 'race'} when everyone's ready`} · ${derby ? `${derbyLength(room.derbyMs ?? 180_000)} in the bowl, most damage dealt wins` : `${room.laps} lap${room.laps === 1 ? '' : 's'}`}` : botRows(room).length ? `Needs at least one player: bots don't count\n${joinHow}` : joinHow;
+    const lead = leaderLine(room);
+    const standEl = screen.querySelector<HTMLElement>('[data-standings]')!;
+    if (standEl.textContent !== lead) standEl.textContent = lead;
+    standEl.hidden = !lead;
     const waiting = waitingFor(room.seats);
     const waitEl = screen.querySelector<HTMLElement>('[data-waiting]')!;
     if (waitEl.textContent !== waiting) waitEl.textContent = waiting;
@@ -302,15 +324,19 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       template.innerHTML = keptHtml;
       keptEl.textContent = template.content.textContent;
     } else screen.querySelector('[data-start-hint]')!.insertAdjacentHTML('afterend', keptHtml);
+    const table = standingsOf(room);
     const cardHtml = (s: RoomView['seats'][number], tier: string) => {
       const st = stateOf(s);
+      const row = table.get(s.seat);
+      // A seat that joined since the last round has no row yet: it starts on nothing.
+      const pts = table.size && (tier === 'full' || tier === 'name') ? `<span class="lb-pts tnum" aria-label="${row ? `${ORD(row.place)}, ` : ''}${row?.points ?? 0} points">${tier === 'full' && row ? `<small>${ORD(row.place)}</small> ` : ''}${row?.points ?? 0}<small> pts</small></span>` : '';
       const tick = `<span class="tick ${st}" aria-label="${esc(sayOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
       const badge = `<span class="badge" style="${colourVars(s.colourIndex)}">#${s.number}</span>`;
       const nm = `<span class="nm">${esc(shortName(nameOf(s)))}</span>`;
       const chip = `<span class="chip lb-state ${st}" aria-label="${esc(sayOf(st, s))}">${esc(labelOf(st, s))}</span>`;
       // The name tier shows the car being browsed in place of its tick (2026-11-15): the tick alone can't say which car.
       const body =
-        tier === 'full' ? `${badge}${nm}${chip}` : tier === 'name' ? `${badge}${nm}${st === 'choosing' && s.vehicle ? chip : tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
+        tier === 'full' ? `${badge}${nm}${chip}${pts}` : tier === 'name' ? `${badge}${nm}${st === 'choosing' && s.vehicle ? chip : tick}${pts}` : tier === 'seat' ? `${badge}${tick}` : badge;
       return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length});--seat-on:var(--id-${s.colourIndex % tokenData.seatColors.length}-on)" title="#${s.number} ${esc(nameOf(s))} · ${esc(sayOf(st, s))} (select to remove)">${body}</div>`;
     };
     const botCardHtml = (b: ReturnType<typeof botRows>[number], tier: string) => {
@@ -516,13 +542,16 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     relayout = () => {
       const k = screenK();
       const side = screen.querySelector<HTMLElement>('.rs-side')!;
-      const sideRect = side.getBoundingClientRect();
-      const compact = sideRect.width < 560 && sideRect.height < 500;
+      // On a short landscape screen (round.css, council review 2026-11-15) the side's list and foot sit in the results grid
+      // itself: the QR and actions under the replay, sized to share that column with it.
+      const split = getComputedStyle(side).display === 'contents';
+      const sideRect = split ? screen.querySelector<HTMLElement>('.rs-reel')!.getBoundingClientRect() : side.getBoundingClientRect();
+      const compact = split || (sideRect.width < 560 && sideRect.height < 500);
       side.classList.toggle('compact-foot', compact);
       // The small portrait results region cannot stack a full QR above all its actions and placings.
       // Keep the QR's whole modules and minimum pitch, while using the adjacent column for actions.
       const card = side.querySelector<HTMLElement>('.qr-card')!;
-      const desired = compact ? Math.min(sideRect.width * .44, sideRect.height * .52) : Math.min(window.innerHeight * .3, 240 * k);
+      const desired = split ? Math.min(sideRect.width * .3, window.innerHeight * .34) : compact ? Math.min(sideRect.width * .44, sideRect.height * .52) : Math.min(window.innerHeight * .3, 240 * k);
       card.style.setProperty('--qr-size', qrCard(desired).style.getPropertyValue('--qr-size'));
       const rect = list.getBoundingClientRect();
       const gap = 6 * k;
@@ -564,7 +593,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
     // The lobby's Race/Derby choice, its hint (laps or derby length) and the results' derby layout are part of what's drawn.
-    const key = `${phase}:${room.round}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}:${JSON.stringify(room.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
+    const key = `${phase}:${room.round}:${JSON.stringify(room.standings ?? [])}:${room.armed}:${room.catchUp}:${room.nextMode}:${room.mode}:${room.derbyMs}:${room.laps}:${JSON.stringify(room.preparation?.favourite ?? null)}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}:${JSON.stringify(room.botList?.map((b) => [b.skill, b.assist]) ?? [])}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (room.between?.flyoverLeftMs != null) return flyover(room);

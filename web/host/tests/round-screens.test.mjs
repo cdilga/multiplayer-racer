@@ -256,6 +256,82 @@ test('Ready states: every card says whether the player is ready; a ready player 
   }
 });
 
+// Council review 2026-11-15 (#9, #12): back in the lobby the room's points vanished, and a bots-only lobby greyed Start
+// with "Scan to join" as its only word. The head names the leader and every card its place and points once a round has
+// counted (a seat that joined since starts on 0); with bots alone the hint says why Start is off.
+const BOTS = [{ skill: 1, assist: 0, position: null }, { skill: 0, assist: 1, position: null }, { skill: 2, assist: 0, position: null }];
+test('lobby: the room\'s running points after a round, and why bots alone cannot start', async () => {
+  const page = await open('lobby-4', [1366, 768]);
+  try {
+    assert.equal(await page.locator('[data-standings]').isHidden(), true, 'no round played: no standings');
+    assert.equal(await page.locator('.lb-pts').count(), 0);
+    await page.evaluate((bots) => {
+      const room = window.__jjRoundFixture.make('lobby', 5);
+      room.round = 2; room.seats[1].name = 'Davo'; room.botList = bots;
+      // Seat 5 joined after the last round: no row yet. A seat that left keeps its row but has no card.
+      room.standings = [{ seat: 9, place: 1, points: 60, wins: 2 }, { seat: 2, place: 2, points: 53, wins: 1 }, { seat: 4, place: 3, points: 41, wins: 0 }, { seat: 1, place: 4, points: 30, wins: 0 }, { seat: 3, place: 5, points: 22, wins: 0 }];
+      window.__jjRoundFixture.set(room);
+    }, BOTS);
+    assert.equal(await page.locator('[data-standings]').innerText(), 'After round 2: #2 Davo leads on 53 pts', 'the leader here, not the one who left');
+    const pts = await page.$$eval('.lcard[data-seat]', (els) => els.map((e) => [Number(e.dataset.seat), e.querySelector('.lb-pts')?.getAttribute('aria-label')]));
+    assert.deepEqual(pts, [[1, '4th, 30 points'], [2, '2nd, 53 points'], [3, '5th, 22 points'], [4, '3rd, 41 points'], [5, '0 points']]);
+    assert.equal(await page.locator('.lcard.bot .lb-pts').count(), 0, 'bots score no points');
+    await page.evaluate((bots) => {
+      const room = window.__jjRoundFixture.make('lobby', 0);
+      room.botList = bots;
+      window.__jjRoundFixture.set(room);
+    }, BOTS);
+    assert.equal(await page.locator('[data-act=start]').isDisabled(), true);
+    assert.match(await page.locator('[data-start-hint]').innerText(), /^Needs at least one player: bots don't count\s+Scan to join/);
+    await page.evaluate(() => window.__jjRoundFixture.set(window.__jjRoundFixture.make('lobby', 0)));
+    assert.match(await page.locator('[data-start-hint]').innerText(), /^Scan to join/, 'an empty room just says how to join');
+    assert.deepEqual(page.errors, []);
+  } finally { await page.close(); }
+});
+
+// Council review 2026-11-15 (#4, #11): at 915x412 (a phone held sideways) seven placings under the vote were slivers and
+// the lobby's hints ran under the footer; at 1080p the footer and hint lines were ~22-24 px. Placings stay legible rows
+// clear of the vote and buttons, every shown hint is above the footer, and 1080p text is >= 28 px in the same 5 % band.
+test('phone-size host: seven placings beside the vote stay legible rows, lobby hints clear the footer; couch-size text at 1080p', async () => {
+  const sevenWithVote = (bots) => {
+    const room = window.__jjRoundFixture.make('results', 4);
+    room.results = room.results.map((r, i) => ({ ...r, place: [1, 3, 4, 6][i] }));
+    room.botList = bots;
+    room.botResults = [{ index: 0, place: 2, timeMs: 93_000 }, { index: 1, place: 5, timeMs: 97_000 }, { index: 2, place: 7, timeMs: 99_000 }];
+    room.between = { active: true, resultsLeftMs: 0, voteOpen: true, voteLeftMs: 12_000, votes: { rematch: 1, new: 2, surprise: 0 }, bySeat: {}, leading: 'new', hostChoice: null, decided: null, flyoverLeftMs: null, flyoverMs: 6000, resultsMs: 8000, voteMs: 15_000 };
+    return room;
+  };
+  for (const vp of [[915, 412], [1366, 768], [1920, 1080]]) {
+    const page = await open('lobby-4', vp);
+    try {
+      await page.evaluate(() => document.fonts.ready);
+      for (const n of [0, 4]) {
+        await page.evaluate((n) => window.__jjRoundFixture.set(window.__jjRoundFixture.make('lobby', n)), n);
+        const foot = (await rects(page, '.jj-foot')).list[0];
+        const hints = await page.$$eval('.lobby .lb-hint', (els) => els.filter((e) => e.checkVisibility() && e.textContent).map((e) => ({ b: e.getBoundingClientRect().bottom, t: e.textContent })));
+        assert.ok(hints.length >= 1);
+        for (const h of hints) assert.ok(h.b <= foot.y + 0.5, `${vp} lobby N=${n}: "${h.t}" ends at ${h.b}, footer starts at ${foot.y}`);
+        if (vp[1] === 1080) {
+          assert.ok(Math.abs(foot.h - 54) < 1, `the footer band stays 5 % of 1080 (${foot.h})`);
+          const sizes = await page.evaluate(() => [...document.querySelectorAll('.foot-count, .foot-code, .lobby .lb-hint')].map((e) => parseFloat(getComputedStyle(e).fontSize)));
+          for (const px of sizes) assert.ok(px >= 28, `1080p status and hint text >= 28 px (${sizes})`);
+        }
+      }
+      await page.evaluate(`window.__jjRoundFixture.set((${sevenWithVote})(${JSON.stringify(BOTS)}))`);
+      await page.waitForTimeout(100);
+      const rows = await rects(page, '[data-results] [data-row]');
+      assertLaidOut(rows, 7, `${vp} results 7 + vote`);
+      const fontPx = await page.locator('[data-results] [data-row]').first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+      for (const r of rows.list) assert.ok(r.h >= 30 && r.w >= 200, `${vp}: a placing is a readable row, not a sliver (${JSON.stringify(r)})`);
+      assert.ok(fontPx >= 12, `${vp}: placing text ${fontPx}px`);
+      const actions = await rects(page, '.rs-join .qr-card, [data-vote], [data-act=start], [data-act=lobby]');
+      assertLaidOut(actions, 4, `${vp} results actions`);
+      for (const row of rows.list) for (const a of actions.list) assert.ok(!overlap(row, a), `${vp}: placings clear of the vote and buttons`);
+      assert.deepEqual(page.errors, []);
+    } finally { await page.close(); }
+  }
+});
+
 test('the lobby QR decodes to the join URL after downscaling to what a phone sees from 3 m (module >= 4 px at 1080p)', async () => {
   for (const [vpName, vp, expectModulePx] of [['1080p', VP['1080p'], 4], ['4k', VP['4k'], 4], ['phone', VP.phone, 3]]) {
     for (const spec of ['lobby-8', 'results-8']) {

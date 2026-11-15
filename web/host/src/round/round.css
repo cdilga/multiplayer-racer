@@ -43,6 +43,15 @@
 .lb-go .lb-mode { display: flex; gap: calc(8px * var(--k)); justify-content: center; }
 .lb-go .lb-mode .btn { width: auto; flex: 0 1 calc(180px * var(--k)); min-height: calc(48px * var(--k)); font-size: calc(22px * var(--k)); }
 .lb-hint { margin: 0; font: 600 calc(24px * var(--k))/1.25 var(--font-body); color: var(--c-ink-soft); text-align: center; }
+/* Couch distance (council review 2026-11-15: ~24 px, soft ink, unreadable at 3 m): the hints are 28 px at 1080p, full ink. */
+.lobby .lb-hint { font-size: calc(28px * var(--k)); color: var(--c-ink); max-width: calc(860px * var(--k)); margin-inline: auto; text-wrap: balance; }
+.lobby [data-start-hint] { white-space: pre-line; }
+/* The room's running points once a round has counted (council review 2026-11-15): the leader in the head, each card's
+   place and points at its right edge. */
+.lb-standings { background: var(--c-saffron); color: var(--c-ink); font-weight: 800; }
+.lb-standings[hidden] { display: none; }
+.lcard .lb-pts { flex: none; margin-left: auto; font: 900 italic 1em/1 var(--font-display); color: var(--c-cobalt-deep); white-space: nowrap; }
+.lcard .lb-pts small { font-size: .62em; font-style: normal; font-family: var(--font-body); font-weight: 800; color: var(--c-ink-soft); }
 .lb-rwrap { grid-area: roster; display: flex; flex-direction: column; gap: calc(14px * var(--k)); min-height: 0; min-width: 0; }
 .lb-roster { flex: 1 1 auto; display: grid; grid-auto-flow: column; justify-content: start; align-content: start; min-height: 0; min-width: 0; font-size: var(--fs, 24px); }
 .lcard {
@@ -98,6 +107,13 @@
   .lb-head .bn { font-size: calc(56px * var(--k)); }
 }
 
+/* A phone held sideways (council review 2026-11-15, 915x412): the side column's last hint ran under the footer. Below
+   500 px tall the pad hint goes (the Controllers page still says it) and the column scrolls rather than hide Start's hint. */
+@media (max-height: 500px) and (min-aspect-ratio: 11/10) {
+  .lb-side { overflow: auto; }
+  .lobby .lb-pads { display: none; }
+}
+
 /* ---------- Countdown (R99): one full-screen 3-2-1-GO ---------- */
 .countdown { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none !important; background: radial-gradient(circle, rgb(21 32 58 / .35), rgb(21 32 58 / 0) 65%); }
 .cd-num { font-size: min(30vh, 30vw); line-height: .9; color: var(--c-saffron); -webkit-text-stroke: calc(10px * var(--k)) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(14px * var(--k)) 0 var(--c-ink); animation: jj-pop .9s cubic-bezier(.2, .7, .3, 1) both; }
@@ -145,6 +161,19 @@
 .rs-acts .tag { align-self: flex-start; flex: none; width: calc(270px * var(--k)); font-size: calc(30px * var(--k)); font-variant-numeric: tabular-nums; }
 .rs-acts .btn { width: 100%; min-height: calc(64px * var(--k)); font-size: calc(30px * var(--k)); }
 
+/* A phone held sideways (council review 2026-11-15, 915x412): the vote, QR and buttons under the placings left seven rows
+   as slivers. Below 500 px tall the placings take the right column's whole height; the QR and actions go under the
+   replay on the left, and the replay keeps what is left there (a strip, its title on it). */
+@media (max-height: 500px) and (min-aspect-ratio: 11/10) {
+  .results { grid-template-columns: minmax(0, 55fr) minmax(0, 45fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "reel list" "foot list"; gap: calc(14px * var(--k)); }
+  .results .rs-reel { grid-area: reel; padding: calc(10px * var(--k)); }
+  .results .rs-side { display: contents; }
+  .results .rs-list { grid-area: list; }
+  .results .rs-foot { grid-area: foot; }
+  .results .rs-head .strip, .results .rs-thanks { display: none; }
+  .results .rs-acts { padding-bottom: 0; }
+}
+
 /* ---------- Per-tile HUD (the accepted POC "Per-tile HUD"): one layer over the canvas, one box per tile ---------- */
 .jj-hud { position: fixed; inset: 0; z-index: 3; pointer-events: none; --k: var(--rk, 1); }
 .jj-round > .jj-hud { z-index: 0; }
@@ -166,6 +195,10 @@
 .hud-bottom { position: absolute; left: calc(var(--hud) * .55); right: calc(var(--hud) * .55); bottom: calc(var(--hud) * .55); display: flex; align-items: center; justify-content: space-between; gap: calc(var(--hud) * .4); height: calc(var(--hud) * 1.5); }
 .hud-boost { position: relative; flex: 0 1 28%; min-width: calc(var(--hud) * 3); height: calc(var(--hud) * .5); border: calc(var(--hud) * .12) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
 .hud-boost[hidden] { display: none; }
+/* Council review 2026-11-15: a newcomer couldn't tell the bar was boost. It says so, and goes with the bar. */
+.hud-boost-tag { flex: none; margin-right: calc(var(--hud) * .2); color: var(--c-paper); font-size: calc(var(--hud) * .62); line-height: 1; text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 calc(var(--hud) * .06) 0 var(--c-ink), 0 0 calc(var(--hud) * .12) var(--c-ink); }
+.hud-bottom:has(.hud-boost[hidden]) .hud-boost-tag, .hud-tile.compact .hud-boost-tag { display: none; }
+.hud-boost-tag + .hud-boost { margin-right: auto; }
 .hud-boost i { display: block; height: 100%; background: var(--c-saffron); }
 .hud-status { margin-left: auto; display: flex; gap: calc(var(--hud) * .3); }
 .hud-status .chip { font-size: var(--hud); min-height: 0; height: 1.5em; padding: 0 .7em .12em; }
@@ -251,6 +284,8 @@
   position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot); box-sizing: border-box; z-index: 3; pointer-events: auto;
   display: flex; align-items: center; gap: calc(var(--foot) * .35); padding: 0 max(8px, 1.4vw) 0 max(56px, 1.4vw); overflow: hidden; /* clears the mute button (fixed, left 12 + 36 wide) */
   background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot) * .46), 3.6vw)/1.35 var(--font-body); white-space: nowrap;
+  /* The room's status line at couch distance (council review 2026-11-15: ~22 px at 1080p): ~29 px in the same 5 % band. */
+  font-size: min(calc(var(--foot) * .54), 3.6vw);
 }
 .foot-btn {
   flex: none; height: 76%; padding: 0 .9em .1em; font: inherit; color: var(--c-ink); background: var(--c-saffron); border: calc(var(--foot) * .06) solid var(--c-paper); border-radius: calc(var(--foot) * .14); cursor: pointer;
@@ -259,7 +294,8 @@
 .foot-btn[aria-pressed=true] { background: var(--c-paper); color: var(--c-ink); }
 .foot-btn:focus-visible { outline: calc(var(--foot) * .1) solid var(--c-cobalt); outline-offset: 2px; }
 .foot-code b { font: 900 italic 1.1em/1 var(--font-display); letter-spacing: .06em; color: var(--c-saffron); }
-.foot-domain { opacity: .8; font-weight: 600; }
+.foot-domain { opacity: .9; font-weight: 600; }
+.foot-btn { line-height: 1; }
 .foot-count { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .foot-readouts { margin-left: auto; display: inline-flex; align-items: center; min-width: 0; }
 .foot-logo { flex: none; font-size: 1em; opacity: .9; color: var(--c-paper); }
@@ -339,7 +375,7 @@ body:has(#jj-caption .capt) .jj-drive-qr { bottom: calc(max(5vh, 30px) + 12px + 
 .hud-prompt { position: absolute; left: 50%; top: calc(var(--hud) * 2.8); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: .45em; max-width: 92%; padding: .3em .7em; background: var(--c-paper); color: var(--c-ink); border: .12em solid var(--c-ink); box-shadow: 0 .2em 0 var(--c-ink); font-size: calc(var(--hud) * .75); line-height: 1.15; pointer-events: none; }
 .hud-prompt[hidden] { display: none; }
 /* After ten seconds on one step (council review 2026-11-15) the prompt steps out of the way: small, at the tile's foot. */
-.hud-prompt.quiet { top: auto; bottom: calc(var(--hud) * 1.25); font-size: calc(var(--hud) * .5); opacity: .88; box-shadow: none; }
+.hud-prompt.quiet { top: auto; bottom: calc(var(--hud) * 2.25); font-size: calc(var(--hud) * .5); opacity: .88; box-shadow: none; }
 .hud-prompt .pn { font-weight: 700; opacity: .65; }
 .hud-prompt .pt { font-size: 1.25em; text-transform: uppercase; font-style: italic; }
 .hud-prompt .pgs { display: inline-flex; gap: calc(var(--hud) * .3); }
