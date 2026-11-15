@@ -13,6 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
@@ -113,7 +114,7 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     // Racer 2's bumper comes off before the removal: debris, a dynamic body of the world.
     const car2 = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.number === 2).car);
     await host.evaluate((car) => window.__jjTest.command({ cmd: 'damage', car, part: 'front', health: 0 }), car2);
-    await wait(host, async () => (await window.__jjTest.observe()).debris.some((d) => d.kind === 'Part'), null, 20_000);
+    await until(host, async () => (await window.__jjTest.observe()).debris.some((d) => d.kind === 'Part'), null, 20_000);
     const debrisBefore = (await host.evaluate(() => window.__jjTest.observe())).debris.filter((d) => d.kind === 'Part').length;
     // br-q8i4/br-dqzf: on a loaded SwiftShader runner the racing (or results-reel) host's frames run seconds apart, and
     // Playwright's "stable" check (two animation frames) timed out on a visible, still button. These presses are real
@@ -133,12 +134,21 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race goes on');
     // The withdrawal hands the car's controls back to neutral over the autopilot's quarter-second (30 ticks) blend: wait on sim
     // ticks, not wall time (a slow host runs fewer in the same second).
-    await wait(host, async (t) => (await window.__jjTest.observe()).tick >= t + 45, removedAt, 60_000);
+    // Stopped within a second of sim time (120 ticks) of the removal landing, polled from here: waitForFunction resolves at
+    // once on an async predicate (its Promise is truthy), so the old 45-tick wait never waited and a fast host sampled the
+    // car mid-handback (CI 17209; br-63l3: the car goes 0.9 -> 0 over ~38 ticks and stays stopped).
+    for (const deadline = Date.now() + 60_000; ; ) {
+      const o = await host.evaluate(() => window.__jjTest.observe());
+      if ((o.cars.find((c) => c.car === car2)?.input?.throttle ?? 0) === 0 || o.tick > removedAt + 120) break;
+      assert.ok(Date.now() < deadline, 'the sim kept ticking after the removal');
+      await host.waitForTimeout(50);
+    }
     // Debris stays: the removed car's bumper is still in the world after the removal (the sim's own test asserts it is a dynamic body).
     const after = await host.evaluate(() => window.__jjTest.observe());
     // Withdrawn: no seat owns the car any more and it stops driving (the body stays in the world until S04c's withdrawal rules).
     assert.equal(after.host.seats.some((x) => x.car === car2), false, 'no seat owns the withdrawn car');
     assert.equal(after.cars.find((c) => c.car === car2)?.input?.throttle ?? 0, 0, 'and it no longer drives');
+    assert.ok(after.tick <= removedAt + 120 + 30, `it stopped within a second of the removal (tick ${after.tick}, removed at ${removedAt})`);
     // Nothing is deleted or merged by the removal (the others, racing on, may shed parts of their own meanwhile: never fewer).
     assert.ok(after.debris.filter((d) => d.kind === 'Part').length >= debrisBefore, "the removed car's debris stays");
     await shot(host, { path: `${CAPTURE}/race-after-remove@1080p.png` });

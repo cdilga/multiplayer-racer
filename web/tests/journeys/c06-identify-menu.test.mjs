@@ -6,6 +6,7 @@ import { confirmInitialVehicle } from './lib/vehicle.mjs';
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
@@ -127,7 +128,7 @@ test("keys A's Identify key (Q) in a race sends an Identify event and pulses tha
   // A busy renderer can deliver both queued key events before the next input timer. Exercise that ordering in
   // one browser task: neither the press nor its release may disappear between periodic samples.
   const tick = await host.evaluate(async () => (await window.__jjTest.observe()).tick);
-  await wait(host, async (t) => (await window.__jjTest.observe()).tick >= t + 360, tick);
+  await until(host, async (t) => (await window.__jjTest.observe()).tick >= t + 360, tick);
   const tapped = (await identifies(host)).length;
   const flashed = await host.evaluate(() => window.__jjRoom.identified().length);
   await host.evaluate(() => {

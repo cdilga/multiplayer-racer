@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, gpu } from './lib/chromium.mjs';
 
@@ -75,13 +76,13 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   // Startup rendering or the tutorial can already have handed a car to autopilot. The idle-cue scenario
   // starts from two freshly player-driven cars: deliberate input earns the real handback, then both let go.
   for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: -0.5, touch: true }, { x: 0, y: 0, touch: false }));
-  await wait(host, async () => {
+  await until(host, async () => {
     const o = await window.__jjTest.observe();
     return o.host.seats.length === 2 && o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
       && o.cars.every((c) => c.autopilot == null && c.input.throttle > 0.3);
   });
   for (const { page } of [a, b]) await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
-  await wait(host, async () => {
+  await until(host, async () => {
     const o = await window.__jjTest.observe();
     return o.host.seats.every((s) => s.fresh && !s.inputDropped && !s.menuOpen)
       && o.cars.every((c) => c.autopilot == null && c.input.throttle < 0.05);

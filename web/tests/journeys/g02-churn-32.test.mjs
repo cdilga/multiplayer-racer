@@ -8,6 +8,7 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 
@@ -89,7 +90,7 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   // The race: all 32 Ready, all 32 on the grid.
   await frames(host, [...inRoom.keys()].map((ep) => [ep, { ready: true }]));
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 180_000);
-  await wait(host, async () => (await window.__jjTest.observe()).cars.length === 32, undefined, 180_000);
+  await until(host, async () => (await window.__jjTest.observe()).cars.length === 32, undefined, 180_000);
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 180_000);
 
   // Mid-race churn: ten leave, ten drop in and each gets a car; a 33rd as well.
@@ -97,10 +98,13 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   await join(11);
   await settle('race churn');
   assert.equal((await seatsOf(host)).length, 33, 'no cap at 32: a 33rd seat');
-  await wait(host, async () => {
+  // Every controller in the room has a seat with a car (the host's list also keeps the seats that left mid-race).
+  const eps = await until(host, async (eps) => {
     const o = await window.__jjTest.observe();
-    return o.host.seats.length === 33 && o.host.seats.every((s) => s.car !== undefined && s.car !== null);
-  }, undefined, 60_000);
+    const mine = eps.map((ep) => o.host.seats.find((s) => s.endpoint === ep));
+    return mine.every((s) => s && s.car !== undefined && s.car !== null) ? { ok: true, seats: o.host.seats.length } : false;
+  }, [...inRoom.keys()], 60_000);
+  assert.ok(eps.ok);
   const o = await host.evaluate(() => window.__jjTest.observe());
   const mine = [...inRoom.keys()].map((ep) => o.host.seats.find((x) => x.endpoint === ep));
   assert.ok(mine.every(Boolean), 'every controller in the room has a seat');

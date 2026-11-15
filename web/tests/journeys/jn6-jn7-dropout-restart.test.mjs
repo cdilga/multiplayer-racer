@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
@@ -75,7 +76,7 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
     // Start the dropout measurement only after the host has received deliberate, fresh input and handed the car
     // back. Startup rendering may already have put it on autopilot; a fixed sleep cannot acknowledge that handback
     // (CI 9217 failed "A drives itself" before disconnecting anything). Match JN3's real-input baseline.
-    await wait(host, async (ep) => {
+    await until(host, async (ep) => {
       const state = await window.__jjTest.observe();
       const seat = state.host.seats.find((s) => s.endpoint === ep);
       const car = seat && state.cars.find((c) => c.car === seat.car);
@@ -122,7 +123,7 @@ test('JN7: jj-server restarts mid-race, play continues, the host keeps its code 
     // let the sim and phone run in real time, and acknowledge the player's handback before cutting signalling.
     await host.evaluate(() => window.__jjRender.hold());
     await drive(a, -1);
-    await wait(host, async (ep) => {
+    await until(host, async (ep) => {
       const state = await window.__jjTest.observe();
       const seat = state.host.seats.find((s) => s.endpoint === ep);
       const car = seat && state.cars.find((c) => c.car === seat.car);

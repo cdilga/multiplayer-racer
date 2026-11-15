@@ -3466,6 +3466,103 @@ fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
     assert_eq!(prompt(&h)["step"], 0);
 }
 
+/// br-63l3: the host removes a player from the pause menu (pause, Remove player, Resume), as the G07 journey does. The
+/// withdrawn car must stop, whatever drove it before: the journey saw it racing on the autopilot after a fast host's resume.
+#[test]
+fn a_player_removed_from_the_pause_menu_stops_driving_after_the_resume() {
+    let mut h = Host::new(&init()).unwrap();
+    let mut now = 0u64;
+    let step = |h: &mut Host, ticks: u64, now: &mut u64| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    for (k, p) in ["pa", "pb", "pc", "pd"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s-{p}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(k as u32 + 1),
+            name: p.to_uppercase(),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now);
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    let room = serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let pb = room["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "PB")
+        .unwrap()
+        .clone();
+    let (seat_b, car_b) = (
+        pb["seat"].as_u64().unwrap() as u32,
+        CarId(pb["car"].as_u64().unwrap() as u32),
+    );
+    // The journey turns the autopilot on for every car first (its seats send no sticks).
+    for c in h.sim.cars().collect::<Vec<_>>() {
+        h.sim.set_autopilot(c, true);
+    }
+    step(&mut h, 60, &mut now);
+    // The journey knocks the car's front off first (debris that must stay).
+    h.sim.set_part_health(car_b, 1, 0.0);
+    step(&mut h, 10, &mut now);
+    let ui = |h: &mut Host, id: u32, ui: UiCommand| {
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(id),
+                ui,
+            }
+            .encode(),
+        )
+        .unwrap();
+    };
+    ui(&mut h, 20, UiCommand::Pause { on: true });
+    step(&mut h, 10, &mut now);
+    ui(
+        &mut h,
+        21,
+        UiCommand::RemoveSeat {
+            seat: jj_types::SeatId(seat_b),
+        },
+    );
+    // A fast host: Resume lands right after Remove player, with no tick between them (the G07 journey on a GPU host).
+    ui(&mut h, 22, UiCommand::Pause { on: false });
+    // The resume countdown (3 s), then the journey's 45 ticks: the withdrawn car is on no autopilot and drives nothing.
+    step(&mut h, 120 * 3 + 45, &mut now);
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    assert!(
+        !h.sim.has_autopilot(car_b),
+        "a removed car is on no autopilot"
+    );
+    assert_eq!(
+        h.sim.applied_input(car_b).unwrap().throttle,
+        0,
+        "a removed car stops driving"
+    );
+}
+
 /// P1-G07: a controller can't remove anyone. The controller protocol has no `RemoveSeat`; the host's own command
 /// (`UiCommand::RemoveSeat`) sent as controller bytes, on either channel, is refused and counted, and every message a
 /// controller does have only ever touches its own seat.

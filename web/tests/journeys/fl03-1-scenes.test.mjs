@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
@@ -55,12 +56,12 @@ for (const scene of SCENES) {
     // Keep the loaded scene's clock independent of renderer/readback latency. The room can be Running while its
     // worker is still in the race countdown; no drive measurement starts before the worker actually reaches GO.
     await host.evaluate(() => window.__jjTest.hold(true));
-    await host.waitForFunction(async () => {
+    await until(host, async () => {
       const o = await window.__jjTest.observe();
       if (o.host.phase === 'Running' && o.host.countdownMs === 0) return true;
       await window.__jjTest.step(12);
       return false;
-    }, undefined, { timeout: 90_000, polling: 100 });
+    }, undefined, 90_000);
     const plan = await host.evaluate(() => window.__jjPrepare.seeds().at(-1));
     assert.equal(plan.plan, `lab:${scene}`, `the round's track is the scene: ${JSON.stringify(plan)}`);
     const route = await host.evaluate(() => window.__jjPrepare.mapInfo()?.route.length);

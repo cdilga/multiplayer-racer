@@ -8,6 +8,7 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
+import { until } from './lib/until.mjs';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 import { confirmInitialVehicle } from './lib/vehicle.mjs';
@@ -128,10 +129,10 @@ test('W05: a phone shows the item it holds and the flick that uses it', { timeou
     const skip = phone.getByRole('button', { name: 'Skip tutorial' });
     if (await skip.count()) await skip.click();
     const endpoint = (await phone.evaluate(() => window.__jjController.inspect())).link.endpointId;
-    const car = await (await wait(host, async (ep) => (await window.__jjTest.observe()).host.seats.find((s) => s.endpoint === ep)?.car ?? false, endpoint)).jsonValue();
+    const { car } = await until(host, async (ep) => { const c = (await window.__jjTest.observe()).host.seats.find((s) => s.endpoint === ep)?.car; return c === undefined || c === null ? false : { car: c }; }, endpoint);
     // Spawn protection refuses offensive items: let it end (it does once the car is clear), then a boomerang in front and
     // a sanga queued behind it, given through the host's journalled pickup.
-    await wait(host, async (car) => !(await window.__jjTest.observe()).cars.find((c) => c.car === car)?.protected, car, 30_000).catch(() => {});
+    await until(host, async (car) => !(await window.__jjTest.observe()).cars.find((c) => c.car === car)?.protected, car, 30_000).catch(() => {});
     await host.evaluate(() => window.__jjTest.step(240));
     for (const item of ['boomerang', 'sanga']) await host.evaluate(([car, item]) => window.__jjTest.command({ cmd: 'pickupItem', car, item }), [car, item]);
     await host.evaluate(() => window.__jjTest.step(6));
