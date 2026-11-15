@@ -100,3 +100,20 @@ test('keep a track at Round complete, pick it from the Tracks page, and race the
   assert.deepEqual(again.route, first.route, 'the same track, point for point');
   assert.deepEqual(errors, []);
 });
+
+// Council review 2026-11-15, round 2: a group couldn't choose a track style from the TV. Host menu → Tracks → Town draws
+// the next track in the town biome, remembered on this host device.
+test('Tracks: choosing a style draws the next track in it and is remembered', { timeout: 300_000 }, async () => {
+  const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=1`);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
+  await host.locator('[data-act=menu]').click();
+  await host.getByRole('button', { name: 'Tracks', exact: true }).click();
+  const before = await host.evaluate(() => window.__jjPrepare.seeds().length);
+  await host.getByRole('button', { name: 'Town', exact: true }).click();
+  await wait(host, (n) => window.__jjPrepare.seeds().length > n && window.__jjPrepare.seeds().at(-1).recipe === 'town', before, 120_000);
+  assert.equal(await host.getByRole('button', { name: 'Town', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await host.evaluate(() => localStorage.getItem('jj-track-style')), 'town', 'remembered on this host device');
+  await shot(host, 'tracks-style-town');
+  await host.context().close();
+});

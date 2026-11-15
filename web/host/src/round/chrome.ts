@@ -16,6 +16,7 @@ import { controlsPage } from '../../../shared/ui';
 import { controlsData } from '../input/controls-data';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
 import { addCode, forget, kept, keyOf } from './favourites';
+import { chooseTrackStyle, currentTrackStyle, TRACK_STYLES } from './track-style';
 
 type Seat = RoomView['seats'][number];
 
@@ -285,6 +286,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       menuEl.innerHTML = `<section class="mn-panel controls" data-tracks aria-labelledby="mn-t"><h2 id="mn-t" class="display">Kept <span class="acc">tracks</span></h2>
         <ul class="mn-tracks">${rows}</ul>
         ${fav ? '<div class="mn-acts"><button class="btn brush" type="button" data-act="fav-clear">Back to new tracks</button></div>' : ''}
+        <h3 class="display">Track style</h3><div class="mn-acts" role="group" aria-label="Track style">${TRACK_STYLES.map(([r, label]) => `<button class="btn brush${currentTrackStyle() === r ? ' primary' : ''}" type="button" data-act="track-style" data-style="${r}" aria-pressed="${currentTrackStyle() === r}">${label}</button>`).join('')}</div>
         <h3 class="display">Add a track code</h3><form class="mn-acts tk-add" data-act-form="fav-add"><input name="code" autocomplete="off" spellcheck="false" placeholder="Track code, e.g. T29-08-Z" aria-label="Track code"><button class="btn brush" type="submit">Add</button></form>
         <p class="mn-hint" data-tracks-note>${esc(tracksNote)}</p>
         <div class="mn-acts"><button class="btn brush" data-act="host-menu" data-autofocus>Back</button></div></section>`;
@@ -508,6 +510,12 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       case 'fav-forget':
         forget(b.dataset.key!);
         return renderMenu();
+      case 'track-style': {
+        const r = b.dataset.style ?? '';
+        chooseTrackStyle(r);
+        tracksNote = `Next track: ${TRACK_STYLES.find(([x]) => x === r)?.[1] ?? 'Any style'}.`;
+        return renderMenu();
+      }
       case 'fav-clear':
         send('favourite:none');
         tracksNote = 'Back to new tracks.';

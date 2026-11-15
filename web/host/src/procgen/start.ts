@@ -1,6 +1,7 @@
 // Wires round preparation into the host page (P1-M08a): the procgen worker, the preparer, the dev-map import and the
 // R90 readout on `window.__jjPrepare`. Loaded lazily by main.ts, only on the real room path (not `?drive`, not plain `?test`).
 import { setTrackSource } from '../round/favourites';
+import { savedTrackStyle } from '../round/track-style';
 import type { World } from '../render/world';
 import type { SimClient } from '../worker/client';
 import { ProcgenClient } from './client';
@@ -34,7 +35,8 @@ export async function startPreparation(client: SimClient, world: World, params: 
     host: client,
     presenter: world,
     procgen,
-    recipe: params.get('recipe') ?? undefined,
+    // A `?recipe=` wins; else the style chosen on Host menu → Tracks, remembered on this host device.
+    recipe: params.get('recipe') ?? savedTrackStyle(),
     // br-qw28: Surprise me draws from the game's biomes (the greybox is the placeholder, never drawn).
     biomes: ['town', 'rocks', 'outback-dirt', 'outback-bitumen'],
     devMap,
@@ -45,6 +47,8 @@ export async function startPreparation(client: SimClient, world: World, params: 
     onFailed: (m) => failure.show(m),
   });
   preparer.attach();
+  // Host menu → Tracks' style choice (chrome.ts): the next tracks in it, the pending one drawn again.
+  addEventListener('jj-track-style', (e) => preparer.setRecipe((e as CustomEvent<string | null>).detail || undefined));
   // A dev map is judged now, not at the first round, so a broken one is named while the host is still in the Lobby.
   if (devMap) {
     void devMap()

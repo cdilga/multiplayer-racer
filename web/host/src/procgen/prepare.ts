@@ -114,6 +114,14 @@ export class RoundPreparer {
     this.o.host.input({ type: 'ui', ui: 'reroll' });
   }
 
+  /** The host's track style for the tracks it draws from now on (comma-separated biomes; undefined is each seed's own
+   *  mix), chosen on Host menu → Tracks (council review 2026-11-15: a group couldn't ask for "the canyon one" from the
+   *  TV). The pending track is drawn again in it. */
+  setRecipe(recipe: string | undefined): void {
+    this.o.recipe = recipe;
+    this.reroll();
+  }
+
   /** Loads a Feel Lab scene's map as the next track (the director asks for a new preparation), or `null` for
    *  generated tracks again. */
   loadScene(scene: { name: string; json: string } | null): void {
