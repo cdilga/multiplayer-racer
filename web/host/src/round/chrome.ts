@@ -238,6 +238,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     if (room) menuEl.dataset.key = menuKey(room);
     note(`render:${state.page || (state.controls ? 'controls' : state.confirm ? `confirm-${state.confirm}` : 'main')}`);
     if (!room) return;
+    // Council review 2026-11-15: a player joining while the host typed a track code rebuilt the page, which emptied the
+    // field and put focus on Back, where the next letters were Keys A again. What is typed in a field, its caret and its
+    // focus survive the repaint (as the helper's pairing code does, input/drawer.ts).
+    const textFields = (): HTMLInputElement[] => [...menuEl.querySelectorAll<HTMLInputElement>('input[name]')].filter((i) => i.type === 'text' || i.type === 'search');
+    const typed = new Map(textFields().map((i) => [i.name, i.value]));
+    const active = document.activeElement;
+    const focusedField = active instanceof HTMLInputElement && textFields().includes(active) ? { name: active.name, from: active.selectionStart, to: active.selectionEnd } : null;
     if (state.confirm === 'remove') {
       const s = target === null ? undefined : seatOf(target);
       menuEl.innerHTML = s
@@ -287,6 +294,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         void addCode(input.value)
           .then((k) => {
             tracksNote = `Added ${k.code}.`;
+            // Added: the field starts empty again (a repaint keeps what is typed).
+            input.value = '';
             renderMenu();
           })
           .catch((err: unknown) => {
@@ -377,7 +386,12 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     diagEl.hidden = !state.diagnostics || state.page !== 'advanced';
     paint(menuEl);
     if (state.join && !state.confirm) fitJoinCard();
-    menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
+    for (const i of textFields()) if (typed.get(i.name)) i.value = typed.get(i.name)!;
+    const again = focusedField && textFields().find((i) => i.name === focusedField.name);
+    if (again) {
+      again.focus({ preventScroll: true });
+      again.setSelectionRange(focusedField.from, focusedField.to);
+    } else menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
   };
 
   const setPause = (on: boolean) => {
