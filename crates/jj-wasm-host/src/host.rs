@@ -1144,6 +1144,10 @@ impl Host {
                     for seat in gone {
                         if let Some(input) = self.inputs.get_mut(&seat) {
                             input.state.neutralise(Neutralise::Disconnected);
+                            // Council review 2026-11-15: a phone that's gone looked like a live player in the Lobby. Its
+                            // seats read as unplugged (the room view's `unpluggedMs`: away in the Lobby, the tile's chip)
+                            // until a fresh sample from it arrives.
+                            input.note_plug(false, tick_ms(tick));
                         }
                     }
                 }

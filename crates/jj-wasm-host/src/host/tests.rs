@@ -1153,6 +1153,50 @@ fn a_held_throttle_survives_a_300_ms_sample_gap_and_a_closed_peer_is_neutral_at_
     assert_eq!(throttle(&h), 0, "a closed peer is neutral at once");
 }
 
+/// Council review 2026-11-15: a phone that's gone (`PeerGone`) looked like a live player in the Lobby. Its seat reads as
+/// unplugged in the room view (away in the Lobby, the waiting line, the tile chip) until a fresh sample from it arrives.
+#[test]
+fn a_gone_phone_reads_unplugged_in_the_lobby_until_it_sends_again() {
+    let mut h = Host::new(&init()).unwrap();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Phone".into(),
+        },
+    ] {
+        h.handle(&net("phone", Channel::Cmd, c.encode())).unwrap();
+    }
+    h.step_one();
+    let unplugged = |h: &Host| {
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"][0]["unpluggedMs"].as_u64()
+    };
+    assert_eq!(h.phase(), jj_session::director::Phase::Lobby);
+    assert_eq!(unplugged(&h), None, "a connected phone");
+    h.handle(
+        &MainToSim::PeerGone {
+            endpoint: EndpointId("phone".into()),
+        }
+        .encode(),
+    )
+    .unwrap();
+    h.step_one();
+    assert!(unplugged(&h).is_some(), "a gone phone reads unplugged");
+    h.handle(&net(
+        "phone",
+        Channel::State,
+        record(SourceHandle(1), 1, [0, 0]),
+    ))
+    .unwrap();
+    h.step_one();
+    assert_eq!(unplugged(&h), None, "and back once it sends again");
+}
+
 #[test]
 fn the_old_layouts_action_stick_still_boosts_then_lets_go() {
     // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.

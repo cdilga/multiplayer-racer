@@ -164,7 +164,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.classList.toggle('practice', practising);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
-        (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
+        (state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>${s.local ? 'Unplugged' : 'Disconnected'} ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '') +
         (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.

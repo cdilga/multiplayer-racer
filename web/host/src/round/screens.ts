@@ -85,7 +85,7 @@ const waitingFor = (seats: RoomView['seats']): string => {
   const held = seats.filter((s) => s.presence !== 'Left' && !s.ready).sort((a, b) => a.number - b.number);
   const first = held[0];
   if (!first) return '';
-  const why = (first.unpluggedMs ?? null) !== null ? ' (unplugged)' : '';
+  const why = (first.unpluggedMs ?? null) !== null ? (first.local ? ' (unplugged)' : ' (disconnected)') : '';
   return `Waiting for #${first.number} ${shortName(nameOf(first))}${why}${held.length > 1 ? ` + ${held.length - 1} more` : ''}`;
 };
 
