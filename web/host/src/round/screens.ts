@@ -557,7 +557,10 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
       const s = seatOf(r.number);
       const place = r.place || '–';
       const badge = r.bot ? `<span class="badge bot">#${r.number}</span>` : `<span class="badge" style="${colourVars(s?.colourIndex ?? r.number - 1)}">#${r.number}</span>`;
-      const pts = `<span class="pts">+${r.points}</span>`;
+      // The running total beside this round's points once a total differs (council review 2026-11-15, round 2: the
+      // results gave no reason to stay for one more; the lobby already keeps the table).
+      const total = s ? standingsOf(room).get(s.seat)?.points : undefined;
+      const pts = `<span class="pts">+${r.points}${!r.bot && total !== undefined && total !== r.points ? `<small class="tot"> · ${total} total</small>` : ''}</span>`;
       const nm = `<span class="nm">${esc(shortName(r.name || 'Player', 12))}</span>${r.bot ? '<span class="bot-tag">Bot</span>' : ''}`;
       const body =
         tier === 'row' ? `<span class="pl display">${place}</span>${badge}${nm}<span class="tm">${derby ? dmgOf(r) : raceTime(r.time_ms)}</span>${pts}`
