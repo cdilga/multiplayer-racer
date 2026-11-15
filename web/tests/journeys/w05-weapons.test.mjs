@@ -86,6 +86,10 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   const queueOf = async (car) => (await items(host)).queues.find((q) => q.car === car).queue;
   // The draws are a fair coin per box: if no box held a boomerang this run, a car eats a sanga (a flick) to make room
   // and is handed a boomerang through the host's journalled pickup (the stations are proven above; this is the throw).
+  // Held from here: an unheld room runs on, and the holder's autopilot could use the boomerang before the flick.
+  await host.evaluate(() => window.__jjTest.hold(true));
+  const heldNow = await items(host);
+  if (holder !== null && !['front', 'back'].some((k) => (heldNow.queues.find((q) => q.car === holder)?.queue[k]?.item) === 'boomerang')) holder = null;
   const viaStation = holder !== null;
   if (!viaStation) {
     holder = picked.queues[0].car;
@@ -105,14 +109,14 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   // test room runs ahead of real time and the 2 s flight would be over before a screenshot).
   await host.evaluate(() => window.__jjTest.hold(true));
   // A sanga queued in front is eaten by the first flick; the boomerang goes with the next.
-  if ((await queueOf(holder)).front?.item !== 'boomerang') await flickCar(holder);
-  // The autopilot throws items too (fun pass 941c16e5): the round's list keeps every earlier flight, so the journey
-  // follows the one this flick throws, and the TV draws every flight still in the air.
+  // The autopilot throws items too (fun pass 941c16e5): the round's list keeps every earlier flight, and the holder's own
+  // autopilot may throw its boomerang between the flicks (CI 18229), so the journey follows the holder's newest flight.
   const before = (await items(host)).boomerangs.length;
-  await flickCar(holder);
+  if ((await queueOf(holder)).front?.item !== 'boomerang') await flickCar(holder);
+  if (!(await items(host)).boomerangs.slice(before).some((f) => f.car === holder && !f.ended)) await flickCar(holder);
   const thrown = await items(host);
   const mine = thrown.boomerangs.slice(before).filter((f) => f.car === holder);
-  assert.equal(mine.length, 1, `the boomerang is in the air: ${JSON.stringify(thrown.refusals)}`);
+  assert.ok(mine.length >= 1, `the boomerang is in the air: ${JSON.stringify(thrown.refusals)}`);
   const flying = thrown.boomerangs.filter((f) => !f.ended).length;
   // A held clock does not guarantee the renderer has consumed the final stepped snapshot. Once a frame returns
   // its buffers, publish the same tick again; wait for the drawn fact, without consuming the flight's lifetime.
@@ -122,7 +126,7 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   // The TV draws it: one boomerang instance per flight in the air, this one among them.
   assert.equal((await host.evaluate(() => window.__jjRender.props()))['item/boomerang'], flying, 'the TV draws the boomerang in the air');
   await host.evaluate(() => window.__jjTest.untilFact(() => false, { maxTicks: 360, every: 12 }));
-  const landed = (await items(host)).boomerangs.slice(before).find((f) => f.car === holder);
+  const landed = (await items(host)).boomerangs.slice(before).filter((f) => f.car === holder).at(-1);
   assert.ok(landed.ended, `the flight ended: ${JSON.stringify(landed)}`);
   console.log(`# boomerang ${viaStation ? 'from a station' : 'given'}; stations ${first.stations.length}, taken ${picked.stations.filter((s) => s.taken > 0).length}; flight ${JSON.stringify(landed.ended)}, hits ${landed.hits.length}`);
   assert.deepEqual(errors, []);

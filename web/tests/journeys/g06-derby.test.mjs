@@ -98,14 +98,15 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
       window.__jjRender.frame();
       o = await t.observe();
       const s = (o.tick - start) / 120;
-      for (const at of [1, 3, 10]) if (!out[at] && s >= at) out[at] = { s, cars: o.cars.length, stats: window.__jjOverview.stats() };
+      for (const at of [1, 3, 10]) if (!out[at] && s >= at) out[at] = { s, cars: window.__jjRender.stats().cars, sim: o.cars.length, stats: window.__jjOverview.stats() };
     }
     return out;
   });
   for (const at of [1, 3, 10]) {
     const f = framing[at];
     assert.ok(f?.stats, `the Overview draws at ${at} s`);
-    assert.equal(f.stats.cars.length, f.cars, `every car is framed at ${at} s`);
+    // The frame's own cars (CI 18229: the sim's count, read after the frame, was a car ahead of the drawn snapshot).
+    assert.equal(f.stats.cars.length, f.cars, `every car is framed at ${at} s (sim ${f.sim})`);
     assert.ok(f.stats.cars.every((c) => c.inFrame), `every car inside the Overview frame at ${at} s: ${JSON.stringify(f.stats.cars.filter((c) => !c.inFrame))} frame ${JSON.stringify(f.stats.frame)}`);
   }
   // N1c: the strip is readable from the couch (>= 32 px at 1080p) and says what its numbers are.
@@ -114,6 +115,8 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   assert.equal(strip.band.title, 'Damage dealt', `the strip is titled: ${JSON.stringify(strip)}`);
   assert.match(strip.text, /\d+ dmg/, `each standing counts damage: ${strip.text}`);
   // N1b: callouts in the Overview are one banner at a time, beside its car, never over a car or a name label.
+  // The sim's clock is held: a real takedown (the derby bots ram) would put its own, newer banner up mid-check.
+  await host.evaluate(() => window.__jjTest.hold(true));
   const banners = await host.evaluate(async () => {
     const o = await window.__jjTest.observe();
     const ids = o.cars.map((c) => c.car);
