@@ -2111,27 +2111,34 @@ impl Sim {
                 crate::items::boost::active_gain(&self.items, c as u32, tick, throttle)
             })
             .collect();
-        // br-bbki.11: in a derby the bots hunt: every car's place and motion, and whether a hit on it would score.
-        let rivals: Vec<crate::autopilot::Rival> = match (self.derby.as_ref(), self.hunt_arena) {
-            (Some(l), Some(_)) => self
-                .cars
-                .iter()
-                .enumerate()
-                .filter_map(|(i, c)| {
-                    let b = self.world.bodies.get(c.body)?;
-                    let (t, v) = (b.position().translation, b.linvel());
-                    Some(crate::autopilot::Rival {
-                        car: i as u32,
-                        x: t.x,
-                        z: t.z,
-                        vx: v.x,
-                        vz: v.z,
-                        protected: l.protected_at(i as u32, tick),
+        // br-bbki.11: in a derby the bots hunt: every car's place and motion, and whether a hit on it would score. In a
+        // race the same view is the traffic an autopilot passes and aims its items at (council review 2026-11-15).
+        let rivals: Vec<crate::autopilot::Rival> =
+            if self.cars.iter().any(|c| c.autopilot.is_some()) {
+                self.cars
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, c)| {
+                        let b = self.world.bodies.get(c.body)?;
+                        let (t, v) = (b.position().translation, b.linvel());
+                        Some(crate::autopilot::Rival {
+                            car: i as u32,
+                            x: t.x,
+                            z: t.z,
+                            vx: v.x,
+                            vz: v.z,
+                            protected: match self.derby.as_ref() {
+                                Some(l) => l.protected_at(i as u32, tick),
+                                None => c.protected_since.is_some(),
+                            },
+                        })
                     })
-                })
-                .collect(),
-            _ => Vec::new(),
-        };
+                    .collect()
+            } else {
+                Vec::new()
+            };
+        // The items the autopilots decide to use this tick (applied after the controls, as a host's Utility would be).
+        let mut item_uses: Vec<(u32, UtilityKind)> = Vec::new();
         let hunt_arena = self.derby.as_ref().and(self.hunt_arena);
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
@@ -2185,8 +2192,20 @@ impl Sim {
                                     / 1000.0,
                                 ..self.assist_profile.speed_plan(p)
                             },
+                            &rivals,
+                            &self.assist_profile.bots,
                         ),
                     };
+                    // Not journaled: like Recover, a consequence of the state (the queue, the cars' places, the plan).
+                    if let Some(kind) = ap.item_use(
+                        pose,
+                        self.items.queue(id).front.map(|h| h.item),
+                        &rivals,
+                        &self.assist_profile.bots.items,
+                        tick,
+                    ) {
+                        item_uses.push((id, kind));
+                    }
                     // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
                     // boost rides on the autopilot's line. Only DRIVE moving counts as taking back over.
                     // In the air the stick pitches and rolls the car (R129): the autopilot levels its nose to the road's
@@ -2891,6 +2910,10 @@ impl Sim {
             if let Some(effect) = self.race.recover(tick, id) {
                 self.apply(effect);
             }
+        }
+        // An autopilot's item use (council review 2026-11-15): the same use a player's ACTION makes, refused the same way.
+        for (id, kind) in item_uses {
+            self.use_held_item(CarId(id), kind);
         }
         self.pre_step.capture(&self.world.bodies);
         // P1-FL12: cars whose nose climbs a bank this step (`crate::climb`); the belt's work is authorised below.

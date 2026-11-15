@@ -14,6 +14,9 @@
 //! rules' round-over, and acts on the outputs: prepare or cancel a map, warn not-ready phones, start the round.
 //!
 //! - **Start policy:** with the ready-based start armed, the round starts when every eligible seat is Ready (nonempty).
+//!   A seat whose source is away (unplugged, R119: [`Input::SetAway`]) stays eligible (it is in the cohort and races on
+//!   the autopilot) but is not source-fresh, so it never holds that start (council review 2026-11-15: a pad on the floor
+//!   kept a ready room in the Lobby). At least one fresh seat must be Ready.
 //!   **Start now** starts anyway: not-ready seats get a warning (5 s, R137; host-configurable 3–15 s), then everyone plays with
 //!   their current car; pressing it again skips the countdown. Force overrides Ready only, never map readiness.
 //! - **Cohort freeze:** the start cohort freezes when a start begins. New seats join with their current selection and
@@ -127,6 +130,12 @@ pub enum Input {
     SetEligible {
         seat: SeatId,
         eligible: bool,
+    },
+    /// A seat's source went away (an unplugged pad, a phone that dropped) or came back. An away seat is not waited for by
+    /// the all-Ready start; it keeps its place in the cohort.
+    SetAway {
+        seat: SeatId,
+        away: bool,
     },
     /// A Ready tap, under the Ready revision the controller was showing; another revision is stale and ignored.
     SetReady {
@@ -276,6 +285,8 @@ pub struct Director {
     now: u64,
     phase: Phase,
     eligible: BTreeSet<SeatId>,
+    /// Seats whose source is away ([`Input::SetAway`]): the all-Ready start doesn't wait for them.
+    away: BTreeSet<SeatId>,
     ready: BTreeSet<SeatId>,
     ready_revision: u32,
     armed: bool,
@@ -308,6 +319,7 @@ impl Director {
             now: 0,
             phase: Phase::Lobby,
             eligible: BTreeSet::new(),
+            away: BTreeSet::new(),
             ready: BTreeSet::new(),
             ready_revision: 0,
             armed,
@@ -376,6 +388,11 @@ impl Director {
         self.ready.contains(&seat)
     }
 
+    /// Whether the seat's source is away ([`Input::SetAway`]).
+    pub fn is_away(&self, seat: SeatId) -> bool {
+        self.away.contains(&seat)
+    }
+
     pub fn armed(&self) -> bool {
         self.armed
     }
@@ -415,6 +432,15 @@ impl Director {
         match input {
             Input::Elapsed { ms } => self.advance(u64::from(ms), &mut out),
             Input::SetEligible { seat, eligible } => self.set_eligible(seat, eligible, &mut out),
+            Input::SetAway { seat, away } => {
+                if away {
+                    self.away.insert(seat);
+                    // The seat everyone was waiting for has gone: the rest may start.
+                    self.check_ready_start(&mut out);
+                } else {
+                    self.away.remove(&seat);
+                }
+            }
             Input::SetReady {
                 seat,
                 ready,
@@ -518,6 +544,7 @@ impl Director {
             return;
         }
         self.eligible.remove(&seat);
+        self.away.remove(&seat);
         self.ready.remove(&seat);
         if self.start.is_some() && self.eligible.is_empty() {
             self.settle(out);
@@ -558,7 +585,11 @@ impl Director {
 
     /// An all-ready start: armed in Lobby, always in Intermission (Party Mix starts early when everyone is Ready).
     fn check_ready_start(&mut self, out: &mut Vec<Output>) {
-        if self.start.is_some() || self.eligible.is_empty() || !self.eligible.is_subset(&self.ready)
+        // The seats the start waits for: eligible and source-fresh (an away seat neither holds it nor completes it).
+        let mut waited = self.eligible.difference(&self.away).peekable();
+        if self.start.is_some()
+            || waited.peek().is_none()
+            || !waited.all(|s| self.ready.contains(s))
         {
             return;
         }

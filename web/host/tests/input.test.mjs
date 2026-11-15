@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { slotArgs } from '../../tests/journeys/lib/chromium.mjs';
-import { openHost, serve } from './lib/surface.mjs';
+import { openHost, serve, serveReal } from './lib/surface.mjs';
 import clusterData from '../src/input/clusters.json' with { type: 'json' };
 
 const repo = resolve(import.meta.dirname, '../../..');
@@ -356,4 +356,97 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
     seats: final.host.seats.map(({ seat, number, endpoint, presence }) => ({ seat, number, endpoint, presence })),
   };
   await writeFile(join(evidenceDir, 'seats.json'), `${JSON.stringify(record, null, 2)}\n`);
+});
+
+// Council review 2026-11-15: a join while the host typed a track code rebuilt the Host menu, which emptied the field and put
+// focus on Back, where the next letters (W, E…) made a phantom Keys A player.
+test('a pad joining while the host types a track code keeps the field, its focus, and makes no key player', { timeout: 240_000 }, async (t) => {
+  // The Host menu is the room's: a real room on the real game server.
+  const game = await serveReal(join(repo, 'web/dist'));
+  t.after(() => game.close());
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  t.after(() => ctx.close());
+  const page = await ctx.newPage();
+  await page.addInitScript(fakePads);
+  await page.goto(`${game.url}/host?room&test=live`);
+  await page.waitForFunction(() => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, { timeout: 180_000 });
+  const seats = async () => (await page.evaluate(() => window.__jjRoom.view().seats.length));
+  await page.locator('[data-act=menu]').click();
+  await page.locator('[data-act=tracks]').click();
+  const field = page.locator('[data-tracks] input[name=code]');
+  await field.click();
+  await page.keyboard.type('T29-08', { delay: 30 });
+  // A pad joins: the room changes, so the menu repaints.
+  await page.evaluate(() => {
+    window.__pads.connect(0);
+    window.__pads.buttons(0, [0]);
+  });
+  for (const t0 = Date.now(); (await seats()) < 1; await page.waitForTimeout(50)) assert.ok(Date.now() - t0 < 10_000, 'the pad never joined');
+  await page.evaluate(() => window.__pads.buttons(0, []));
+  await page.waitForTimeout(400);
+  assert.equal(await field.inputValue(), 'T29-08', 'the typed code survives the repaint');
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('name')), 'code', 'and keeps the focus');
+  await page.keyboard.type('-WE', { delay: 30 });
+  await page.waitForTimeout(400);
+  assert.equal(await field.inputValue(), 'T29-08-WE', 'the next letters land in the field');
+  assert.equal(await seats(), 1, 'and make no key-cluster player');
+});
+
+// Council review 2026-11-15: a host pad chose its car once, in the first Lobby: a confirmed pick could not be reopened, and a
+// pad that joined mid-race raced with no car of its own.
+test('a host pad reopens its car pick with a flick; one that joins mid-race brings its remembered car', { timeout: 180_000 }, async () => {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.addInitScript(fakePads);
+  assert.equal(await openHost(page, `${server.url}/host/?test=live`), 'test');
+  const cars = (await import('../../shared/src/roster.json', { with: { type: 'json' } })).default.cars.map((c) => c.id);
+  const seatOf = (source) => page.evaluate((src) => window.__jjRoom.view()?.seats.find((s) => s.localSource === src) ?? null, source);
+  const until = async (what, ok, ms = 10_000) => {
+    for (const t0 = Date.now(); ; await page.waitForTimeout(50)) {
+      const v = await ok();
+      if (v) return v;
+      assert.ok(Date.now() - t0 < ms, what);
+    }
+  };
+  // Hold each press across a few host frames (a software-rendered host samples slowly).
+  const press = async (i, buttons, axes = [0, 0, 0, 0]) => {
+    await page.evaluate(([i, b, a]) => {
+      window.__pads.buttons(i, b);
+      window.__pads.axes(i, a);
+    }, [i, buttons, axes]);
+    await page.waitForTimeout(400);
+    await page.evaluate((i) => {
+      window.__pads.buttons(i, []);
+      window.__pads.axes(i, [0, 0, 0, 0]);
+    }, i);
+    await page.waitForTimeout(400);
+  };
+  await page.evaluate(() => window.__pads.connect(0));
+  await press(0, [0]);
+  await until('pad 1 picks its car', async () => (await seatOf(100))?.choosing === true);
+  const first = (await seatOf(100)).vehicle;
+  await press(0, [9]);
+  await until('Start chooses it', async () => (await seatOf(100))?.choosing === false);
+  // The pick was confirmed: a flick opens it again on the next car, and Start chooses that.
+  await press(0, [], [0, 0, 1, 0]);
+  const next = cars[(cars.indexOf(first) + 1) % cars.length];
+  await until('a flick reopens the pick on the next car', async () => {
+    const s = await seatOf(100);
+    return s?.choosing === true && s.vehicle === next;
+  });
+  await press(0, [9]);
+  await until('Start chooses the new car', async () => (await seatOf(100))?.choosing === false);
+  assert.equal((await seatOf(100)).ready, false, 'choosing is not Ready');
+  // A round starts; pad 2 joins mid-round with its remembered car (none yet: the roster's first), and no open picker.
+  await page.evaluate(() => window.__jjRoom.start());
+  await until('the round starts', async () => (await page.evaluate(() => window.__jjRoom.view()?.phase)) === 'Running', 60_000);
+  await page.evaluate(() => window.__pads.connect(1));
+  await press(1, [0]);
+  const late = await until('pad 2 joins mid-race with a car', async () => {
+    const s = await seatOf(101);
+    return s?.vehicle ? s : null;
+  });
+  assert.equal(late.vehicle, cars[0]);
+  assert.equal(late.choosing, false, 'no picker over a race');
+  await ctx.close();
 });

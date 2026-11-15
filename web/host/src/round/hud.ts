@@ -105,7 +105,10 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const unplugged = s?.unpluggedMs ?? null;
       // Owner playtest 2026-10-17 (finishing gave no feedback): once the first car finishes, the rest see the window close.
       const endsIn = room?.raceEndsInMs ?? null;
-      const state = s ? (unplugged !== null ? 'unplugged' : s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
+      // The Autopilot chip also shows while the autopilot holds a racing seat's car (idle, menu, dropout; council review
+      // 2026-11-15: a put-down phone won races unmarked).
+      const autopiloted = !!s?.autopilot && (room?.phase === 'Running' || room?.phase === 'Finalising');
+      const state = s ? (unplugged !== null ? 'unplugged' : s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' || autopiloted ? 'autopilot' : '') : '';
       // Placing rewrote the inline style, so the seat colour (border, Identify pulse) goes back on every paint.
       if (s) {
         box.style.setProperty('--seat', `var(--id-${s.colourIndex % tokenData.seatColors.length})`);

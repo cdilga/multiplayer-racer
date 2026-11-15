@@ -55,7 +55,8 @@
     "minSpeed": 4.0,
     "topSpeedShare": 0.85,
     "takeoffMps": 34.0,
-    "botSkills": { "easy": 0.8, "normal": 0.9, "hard": 1.0 }
+    "botSkills": { "easy": 0.8, "normal": 0.9, "hard": 1.0,
+      "idle": 0.7 }
   },
   "catchUp": {
     "referenceSpeedMps": 20.0,
@@ -63,5 +64,28 @@
     "fullS": 12.0,
     "topSpeedGain": 0.06,
     "boostRefill": 1.5
+  },
+  "bots": {
+    "what": "How every autopilot car (bots and a player's idle car) races in traffic and uses items (council review 2026-11-15: bots on one line made processions and never touched an item). pass: a car closing on one ahead within lookS of its speed (at least minLookM) and widthM of its lane takes a lane gapM beside it, at most to edgeM inside the road, moving laneRateMps sideways, held holdS after the last car in the way. items: a new front item waits reactS; a boomerang goes forward at a car within boomerangAheadM in the aim cone (aimCos is the boomerang's own auto-aim, 30 degrees; its aimed loop reaches ~49 m) or back at one within boomerangBehindM; an esky drops for a car within eskyBehindM behind and eskyWidthM of the line; a sanga or tinnie goes on a straight (nothing within straightM slows the plan); anything held holdMaxS is used anyway so the queue keeps taking boxes. Decisions read the sim state only (no RNG, no clock), so replays stay bit-exact.",
+    "pass": {
+      "lookS": 1.2,
+      "minLookM": 10.0,
+      "widthM": 2.6,
+      "closingMps": 0.5,
+      "gapM": 3.2,
+      "edgeM": 1.5,
+      "laneRateMps": 2.5,
+      "holdS": 1.5
+    },
+    "items": {
+      "reactS": 0.8,
+      "holdMaxS": 12.0,
+      "boomerangAheadM": 45.0,
+      "boomerangBehindM": 15.0,
+      "aimCos": 0.866,
+      "eskyBehindM": 18.0,
+      "eskyWidthM": 3.0,
+      "straightM": 70.0
+    }
   }
 }

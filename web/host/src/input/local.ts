@@ -63,6 +63,13 @@ export interface LocalSourceView {
 }
 
 const AXIS_MAX = 32767;
+
+/** A seat's car pick on its pad or cluster: `open` while the TV says "Choosing car…", `confirmed` once READY chose it. */
+type Pick = { seat: number; vehicle: string; confirmed: boolean; open: boolean; readyHeld: boolean; suppressReady: boolean; direction: number };
+
+/** Where a seat chooses its car: the Lobby, and between rounds (council review 2026-11-15: a pad chose once, in the first
+ *  Lobby, and never again; a pad that joined mid-race raced with no car of its own). */
+export const pickPhase = (phase: string | undefined): boolean => phase === 'Lobby' || phase === 'Intermission';
 const clusters = map.clusters as Cluster[];
 
 /** Quantises −1..1 the way the wire does (`jj_types::axis`). */
@@ -115,7 +122,7 @@ export class LocalInput {
   /** Profiles saved by calibration (read once, written on save). */
   private saved: Record<string, WheelProfile> = savedProfiles();
   private keysOn = readKeysOn();
-  private lobbyPicks = new Map<number, { seat: number; vehicle: string; confirmed: boolean; readyHeld: boolean; suppressReady: boolean; direction: number }>();
+  private lobbyPicks = new Map<number, Pick>();
   private readonly clusterKeys = new Set(
     clusters.flatMap((c) => [...Object.values(c.drive), ...Object.values(c.action), c.identify, c.ready]),
   );
@@ -153,7 +160,7 @@ export class LocalInput {
     return clusters;
   }
 
-  vehicleChoices(): Array<{ source: number; seat: number; vehicle: string; confirmed: boolean; readyHeld: boolean; suppressReady: boolean; direction: number }> {
+  vehicleChoices(): Array<{ source: number } & Pick> {
     return [...this.lobbyPicks].map(([source, pick]) => ({ source, ...pick }));
   }
 
@@ -188,6 +195,7 @@ export class LocalInput {
     if (!pick || !roster.cars.some((c) => c.id === vehicle)) return;
     pick.vehicle = vehicle;
     pick.confirmed = !open;
+    pick.open = open;
     pick.suppressReady = !open && pick.readyHeld;
     this.client.input({ type: 'ui', ui: `pick-local:${source}:${vehicle}`, on: open });
     try { localStorage.setItem(this.vehicleKey(source), vehicle); } catch { /* This visit only. */ }
@@ -204,28 +212,47 @@ export class LocalInput {
   }
 
   private lobbyChoice(s: Source, axes: Axes, ready: boolean): boolean {
-    if (this.client.room?.phase !== 'Lobby') return ready && !this.readyEvents.has(s.view.source);
-    const seat = this.client.room.seats.find((st) => st.localSource === s.view.source && st.presence !== 'Left');
-    if (!seat) return false; // The joining press is never Ready as well.
-    let pick = this.lobbyPicks.get(s.view.source);
-    if (!pick || pick.seat !== seat.seat) {
+    const room = this.client.room;
+    const source = s.view.source;
+    const seat = room?.seats.find((st) => st.localSource === source && st.presence !== 'Left');
+    const choosing = pickPhase(room?.phase);
+    let pick = this.lobbyPicks.get(source);
+    // The right stick sideways (steering, in a race) is tracked in every phase, so a stick still held as the race ends (or
+    // through the joining press) is not a flick.
+    const direction = Math.abs(axes[2]) > .6 ? Math.sign(axes[2]) : 0;
+    if (seat && (!pick || pick.seat !== seat.seat)) {
       let saved = '';
-      try { saved = localStorage.getItem(this.vehicleKey(s.view.source)) ?? ''; } catch { /* This visit only. */ }
-      pick = { seat: seat.seat, vehicle: roster.cars.find((c) => c.id === saved)?.id ?? roster.cars[0]!.id, confirmed: false, readyHeld: ready, suppressReady: ready, direction: 0 };
-      this.lobbyPicks.set(s.view.source, pick);
-      this.choose(s.view.source, pick.vehicle);
+      try { saved = localStorage.getItem(this.vehicleKey(source)) ?? ''; } catch { /* This visit only. */ }
+      pick = { seat: seat.seat, vehicle: roster.cars.find((c) => c.id === saved)?.id ?? roster.cars[0]!.id, confirmed: false, open: false, readyHeld: ready, suppressReady: ready, direction };
+      this.lobbyPicks.set(source, pick);
+      // The remembered car reaches the host at once, so a seat that joins mid-race races it; the picker itself opens in the
+      // Lobby or between rounds.
+      if (!choosing) this.client.input({ type: 'ui', ui: `pick-local:${source}:${pick.vehicle}`, on: false });
     }
+    const flick = !!pick && direction !== 0 && direction !== pick.direction;
+    if (pick) pick.direction = direction;
+    if (!choosing) {
+      // A pick still open when the round starts closes on the TV (the car is the one it showed) and opens again next time.
+      if (pick?.open) {
+        pick.open = false;
+        this.client.input({ type: 'ui', ui: `pick-local:${source}:${pick.vehicle}`, on: false });
+      }
+      return ready && !this.readyEvents.has(source);
+    }
+    if (!pick) return false; // The joining press is never Ready as well.
     const pressed = ready && !pick.readyHeld;
     pick.readyHeld = ready;
     if (!ready) pick.suppressReady = false;
+    // Not chosen yet (a new seat, or one that joined mid-race): the picker opens. A flick steps the car, and on a car already
+    // chosen it opens the picker again, so a pad can change car in any Lobby or between rounds, not only its first.
+    if (!pick.confirmed && !pick.open) this.choose(source, pick.vehicle);
+    if (flick) {
+      const i = roster.cars.findIndex((c) => c.id === pick!.vehicle);
+      this.choose(source, roster.cars[(i + direction + roster.cars.length) % roster.cars.length]!.id);
+      return false;
+    }
     if (!pick.confirmed) {
-      const direction = Math.abs(axes[2]) > .6 ? Math.sign(axes[2]) : 0;
-      if (direction && direction !== pick.direction) {
-        const i = roster.cars.findIndex((c) => c.id === pick!.vehicle);
-        this.choose(s.view.source, roster.cars[(i + direction + roster.cars.length) % roster.cars.length]!.id);
-      }
-      pick.direction = direction;
-      if (pressed) this.choose(s.view.source, pick.vehicle, false);
+      if (pressed) this.choose(source, pick.vehicle, false);
       return false;
     }
     // Keyboard Ready is delivered from its key event, so a short press survives a long renderer frame.
@@ -343,7 +370,7 @@ export class LocalInput {
     if (identifyCluster && !e.repeat) this.sampleCluster(identifyCluster, 0, performance.now());
     const cluster = clusters.find(c => c.ready === e.code);
     if (cluster && e.type === 'keyup') this.readyEvents.delete(cluster.id);
-    if (cluster && this.client.room?.phase === 'Lobby' && !e.repeat) {
+    if (cluster && pickPhase(this.client.room?.phase) && !e.repeat) {
       const confirmed = this.lobbyPicks.get(cluster.id)?.confirmed === true;
       if (e.type === 'keydown' && confirmed) this.readyEvents.add(cluster.id);
       // Sample the press/release immediately for joining and confirmation; Ready itself takes the reliable UI lane.
@@ -487,7 +514,7 @@ export class LocalInput {
     const was = before.has(c.ready);
     const is = down.has(c.ready);
     if (was && !is) this.readyEvents.delete(source);
-    if (!s || !this.keysOn || was === is || this.client.room?.phase !== 'Lobby') return;
+    if (!s || !this.keysOn || was === is || !pickPhase(this.client.room?.phase)) return;
     const confirmed = this.lobbyPicks.get(source)?.confirmed === true;
     if (is && confirmed) this.readyEvents.add(source);
     this.sampleKeys(s, c, down, 0, performance.now());

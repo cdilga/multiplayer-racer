@@ -37,6 +37,18 @@ const MAX_NAME = 32;
 /** Source handles on the page's connection: the touch player is 1; key clusters next; pads from 16 up, one fresh handle per pad seat. */
 const KEYS_HANDLE = 2;
 const PAD_HANDLE = 16;
+/** Where a seat chooses its car: the Lobby, and between rounds (council review 2026-11-15: a pad chose once, in the first
+ *  Lobby, and never again; one that joined mid-race raced with no car of its own). The wire calls the intermission `Results`. */
+const pickPhase = (phase: string | null | undefined): boolean => phase === 'Lobby' || phase === 'Results';
+
+/** A pad seat this page holds in a room, kept across a reload: its source handle, the pad model and its number ("pad 2"). */
+interface PadSlot {
+  handle: number;
+  padId: string;
+  n: number;
+  /** Given up (Leave, Remove): its handle is never reused, and no pad takes it back. */
+  left?: boolean;
+}
 
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -93,12 +105,13 @@ export class Source {
    * opens, the right stick sideways steps through the roster, READY (Menu, or the cluster's Ready key) chooses it, and READY
    * again is Ready.
    */
-  pick: { seat: number; vehicle: string; confirmed: boolean; direction: number } | null = null;
+  pick: { seat: number; vehicle: string; confirmed: boolean; open: boolean; direction: number } | null = null;
 
   constructor(
     readonly id: string,
     readonly kind: SourceKind,
-    readonly label: string,
+    /** "Pad 2": a pad's number is settled when it first claims (a reloaded page gives it the number it had). */
+    public label: string,
   ) {}
 }
 
@@ -225,10 +238,10 @@ export class Sources {
         continue;
       }
       const n = ++this.nextPad;
-      const s = new Source(`pad${n}`, 'pad', `Pad ${n}`);
+      const s = new Source(`pad${n}`, 'pad', 'Pad');
       s.padIndex = p.index;
       s.padId = p.id;
-      s.handle = this.nextHandle++;
+      // Its handle and number are settled by its first press (`place`), when the room is known.
       this.sources.set(s.id, s);
       pads.push(s);
     }
@@ -295,7 +308,7 @@ export class Sources {
       }
       if (smp.identify && !s.prevIdentify) s.session.identify();
       const readyPress = smp.ready && !s.prevReady && !smp.identify;
-      const picked = !!you && s.session.roomPhase === 'Lobby' && this.lobbyPick(s, you.seat, smp, readyPress);
+      const picked = !!you && this.carPick(s, you.seat, smp, readyPress);
       // A press that chose the car is not Ready as well.
       if (readyPress && !picked) s.session.ready(!s.session.isReady);
       s.prevIdentify = smp.identify;
@@ -307,29 +320,39 @@ export class Sources {
     }
   }
 
-  /** The Lobby's car pick (see `Source.pick`); true when this tick's READY press went to it. */
-  private lobbyPick(s: Source, seat: number, smp: Sample, readyPress: boolean): boolean {
+  /**
+   * The seat's car pick (see `Source.pick`); true when this tick's READY press went to it. It opens in the Lobby and between
+   * rounds, for a new seat and for one that joined mid-race; a flick on a car already chosen opens it again, so a pad can
+   * change car before any round, as a phone's "Change car" can. Outside those phases an open pick closes (the car is the one
+   * it showed) until the next.
+   */
+  private carPick(s: Source, seat: number, smp: Sample, readyPress: boolean): boolean {
+    const session = s.session!;
     const dir = Math.abs(smp.action.x) > PICK_FLICK ? Math.sign(smp.action.x) : 0;
     if (s.pick?.seat !== seat) {
-      let saved = '';
-      try {
-        saved = localStorage.getItem(this.vehicleKey(s)) ?? '';
-      } catch {
-        // No storage: the roster's first car.
-      }
       // A stick already pushed (the joining press) steps nothing until it comes back.
-      s.pick = { seat, vehicle: ROSTER.find((c) => c.id === saved)?.id ?? ROSTER[0]!.id, confirmed: false, direction: dir };
-      this.choose(s, s.pick.vehicle, true);
-      return false;
+      s.pick = { seat, vehicle: this.remembered(s), confirmed: false, open: false, direction: dir };
     }
     const p = s.pick;
-    if (p.confirmed) return false;
-    if (dir && dir !== p.direction) {
+    const flick = dir !== 0 && dir !== p.direction;
+    p.direction = dir;
+    if (!pickPhase(session.roomPhase)) {
+      if (p.open) {
+        p.open = false;
+        session.pick(p.vehicle, false);
+      }
+      return false;
+    }
+    if (!p.confirmed && !p.open) {
+      this.choose(s, p.vehicle, true);
+      return false;
+    }
+    if (flick) {
       const i = ROSTER.findIndex((c) => c.id === p.vehicle);
       this.choose(s, ROSTER[(i + dir + ROSTER.length) % ROSTER.length]!.id, true);
+      return readyPress;
     }
-    p.direction = dir;
-    if (!readyPress) return false;
+    if (p.confirmed || !readyPress) return false;
     this.choose(s, p.vehicle, false);
     return true;
   }
@@ -338,12 +361,24 @@ export class Sources {
     if (!s.pick || !s.session) return;
     s.pick.vehicle = vehicle;
     s.pick.confirmed = !open;
+    s.pick.open = open;
     s.session.pick(vehicle, open);
     try {
       localStorage.setItem(this.vehicleKey(s), vehicle);
     } catch {
       // This visit only.
     }
+  }
+
+  /** The car this source chose last time, or the roster's first. */
+  private remembered(s: Source): string {
+    let saved = '';
+    try {
+      saved = localStorage.getItem(this.vehicleKey(s)) ?? '';
+    } catch {
+      // No storage: the roster's first car.
+    }
+    return ROSTER.find((c) => c.id === saved)?.id ?? ROSTER[0]!.id;
   }
 
   /** A pad's car is remembered per model (as the host's own pads, `jj.hostVehicle.<padId>`), a cluster's per cluster. */
@@ -385,19 +420,81 @@ export class Sources {
     s.state = 'connecting';
     s.connectingSince = performance.now();
     s.session?.stop();
+    if (s.kind === 'pad') this.place(s);
     const session = new Session({ iceTransportPolicy: this.o.ice ?? 'all' });
+    let claimed = false;
     session.onChange = () => {
-      if (session.phase === 'ready-to-join') session.claim(this.nameFor(s));
+      // A source that held a seat before this page reloaded comes up 'joining' (its stored seat), waiting for a Welcome the
+      // reload already spent (council review 2026-11-15: its pads sat at "Joining…" for good). It claims as a new one does:
+      // the host's claim is idempotent per source, so it gets that seat back.
+      if (session.phase === 'ready-to-join' || (session.phase === 'joining' && !session.you && !claimed)) {
+        claimed = true;
+        session.claim(this.nameFor(s));
+      }
     };
     session.onIdentify = () => {
       s.flashUntil = performance.now() + FLASH_MS;
     };
     s.session = session;
     session.attach(carrier, s.handle);
+    // The remembered car goes with the Welcome, so a seat that joins mid-race races it; the pick opens in the next Lobby or
+    // between rounds.
+    session.carChoice = this.remembered(s);
+  }
+
+  /** This room's pad seats on this page, as stored (a reload reads them back). */
+  private slotsKey(): string {
+    return `jj.hubPads.${this.carrier.realm}.${this.carrier.code}`;
+  }
+
+  private slots(): PadSlot[] {
+    try {
+      const v = JSON.parse(localStorage.getItem(this.slotsKey()) ?? '[]') as unknown;
+      return Array.isArray(v) ? (v as PadSlot[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private keepSlots(slots: PadSlot[]): void {
+    try {
+      localStorage.setItem(this.slotsKey(), JSON.stringify(slots));
+    } catch {
+      // This page only: a reload then starts the pads over as new players.
+    }
+  }
+
+  /**
+   * A pad's handle and number on its first press (council review 2026-11-15: handles restarted at 16 on every page load, so a
+   * reloaded phone's pads claimed handles whose seats were still held and were never answered). A pad of the same model as a
+   * seat this page held before a reload takes that seat's handle back (the Gamepad API has no serial numbers: the first such
+   * seat); any other gets a handle no seat here has ever had.
+   */
+  private place(s: Source): void {
+    const slots = this.slots();
+    const live = [...this.sources.values()].filter((x) => x !== s && x.kind === 'pad');
+    if (!s.handle) {
+      const busy = new Set(live.map((x) => x.handle));
+      const back = slots.find((x) => !x.left && x.padId === s.padId && !busy.has(x.handle));
+      if (back) {
+        s.handle = back.handle;
+        s.label = `Pad ${back.n}`;
+      } else {
+        s.handle = Math.max(this.nextHandle, ...slots.map((x) => x.handle + 1));
+        const taken = new Set([...live.map((x) => Number(x.label.slice(4)) || 0), ...slots.filter((x) => !x.left).map((x) => x.n)]);
+        let n = 1;
+        while (taken.has(n)) n++;
+        s.label = `Pad ${n}`;
+      }
+      this.nextHandle = Math.max(this.nextHandle, s.handle + 1);
+    }
+    const n = Number(s.label.slice(4)) || 1;
+    this.keepSlots([...slots.filter((x) => x.handle !== s.handle), { handle: s.handle, padId: s.padId, n }]);
   }
 
   /** Leaving is a choice (chord, Leave, Remove): that seat and its car go at the next tick boundary; the others play on. */
   private leave(s: Source): void {
+    if (s.kind === 'pad' && s.handle) this.keepSlots(this.slots().map((x) => (x.handle === s.handle ? { ...x, left: true } : x)));
     s.session?.leave();
     s.session = null;
     s.state = 'left';
@@ -482,8 +579,8 @@ export class Sources {
     const ready = s.state === 'connected' && s.session?.isReady;
     const gone = s.unpluggedAt === null ? 0 : performance.now() - s.unpluggedAt;
     // In the Lobby the row is the seat's car picker (the host pads' tile line, on the carrier's own screen).
-    const pick = s.pick && s.session?.roomPhase === 'Lobby' && s.state === 'connected' ? s.pick : null;
-    const choosing = !!pick && !pick.confirmed;
+    const pick = s.pick && pickPhase(s.session?.roomPhase) && s.state === 'connected' ? s.pick : null;
+    const choosing = !!pick?.open;
     const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : choosing ? 'Choosing car' : 'Connected', unplugged: `Unplugged for ${sinceText(gone)}`, autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
     const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : choosing ? 'chip-choosing' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : '';
     const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : choosing ? 'car' : s.state === 'connected' ? 'zap' : '';
@@ -573,7 +670,7 @@ export class Sources {
       ready: s.session?.isReady ?? false,
       name: s.external ? null : (s.session?.name ?? null),
       vehicle: s.pick?.vehicle ?? null,
-      choosing: !!s.pick && !s.pick.confirmed,
+      choosing: !!s.pick?.open,
       path: s.path,
       stats: s.session ? { ...s.session.stats } : null,
       drive: s.session?.inspect().drive ?? null,

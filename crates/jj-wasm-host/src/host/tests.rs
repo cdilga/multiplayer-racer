@@ -1363,6 +1363,132 @@ fn a_host_pad_unplugged_in_the_lobby_shows_unplugged() {
     );
 }
 
+/// Council review 2026-11-15: three seats Ready and a fourth's pad on the floor held the all-Ready start for good, though the
+/// director's contract counts only source-fresh seats. An unplugged seat no longer holds it (it still rides in the round).
+#[test]
+fn an_unplugged_host_pad_never_holds_the_all_ready_start() {
+    let mut h = Host::new(&init()).unwrap();
+    for source in [1, 2] {
+        h.handle(&pad(source, [0, 32_767], 0)).unwrap();
+    }
+    h.step_one();
+    for source in [1, 2] {
+        h.handle(&pad(source, [0, 0], 0)).unwrap();
+    }
+    h.step_one();
+    h.handle(&pad(1, [0, 0], LOCAL_READY)).unwrap();
+    h.step_one();
+    h.handle(&pad(1, [0, 0], 0)).unwrap();
+    for _ in 0..30 {
+        h.step_one();
+    }
+    assert_eq!(
+        h.phase(),
+        jj_session::director::Phase::Lobby,
+        "pad 2 is plugged in and not Ready"
+    );
+    h.handle(&pad(2, [0, 0], LOCAL_UNAVAILABLE)).unwrap();
+    for _ in 0..3 {
+        h.step_one();
+    }
+    assert_ne!(
+        h.phase(),
+        jj_session::director::Phase::Lobby,
+        "pad 2 on the floor: the Ready room starts"
+    );
+    let cohort = h.round.director.cohort().unwrap_or_default();
+    assert_eq!(
+        cohort.len(),
+        2,
+        "the unplugged seat is in the start: {cohort:?}"
+    );
+}
+
+/// Council review 2026-11-15: a phone that reloads gets its own seat back at once, but the seats of the pads it carries sat
+/// "Active" on the TV with nothing driving them, and the pads' new claims were never answered. Until a pad is pressed on
+/// the new page its seat reads unplugged (so it holds nothing); its claim under the same source is that seat again.
+#[test]
+fn a_reloaded_phones_pads_read_unplugged_until_pressed_then_get_their_own_seats_back() {
+    let mut h = Host::new(&init()).unwrap();
+    let send = |h: &mut Host, cmd: ControllerCmd| {
+        h.handle(&net("hub-reload", Channel::Cmd, cmd.encode()))
+            .unwrap();
+    };
+    let wrapped = |source: u16, cmd| ControllerCmd::ForSource {
+        source: SourceHandle(source),
+        cmd: Box::new(cmd),
+    };
+    let hello = || ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("hub-reload".into()),
+        resume: Some("secret".into()),
+    };
+    let claim = |request: u32, name: &str| ControllerCmd::Claim {
+        request: RequestId(request),
+        name: name.into(),
+    };
+    send(&mut h, hello());
+    send(&mut h, claim(1, "Davo"));
+    send(&mut h, wrapped(16, claim(16, "Davo's pad")));
+    send(&mut h, wrapped(17, claim(17, "Davo's pad 2")));
+    h.step_one();
+    h.step_one();
+    let seats_by_source = |h: &Host| {
+        h.seats
+            .seats()
+            .map(|s| (s.source.0, s.id))
+            .collect::<std::collections::BTreeMap<_, _>>()
+    };
+    let before = seats_by_source(&h);
+    assert_eq!(before.len(), 3);
+    let unplugged = |h: &Host| {
+        let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        let by_seat: std::collections::BTreeMap<u64, bool> = room["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| (s["seat"].as_u64().unwrap(), s["unpluggedMs"].is_u64()))
+            .collect();
+        seats_by_source(h)
+            .into_iter()
+            .map(|(src, seat)| (src, by_seat[&u64::from(seat.0)]))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(unplugged(&h), vec![(1, false), (16, false), (17, false)]);
+    // The reload: a new connection's Hello. The phone's own seat is back; the pads' read unplugged.
+    send(&mut h, hello());
+    h.step_one();
+    assert_eq!(unplugged(&h), vec![(1, false), (16, true), (17, true)]);
+    // Pad 1 pressed on the new page: its claim (a new request id) is the same seat, and its first sample plugs it back in.
+    while h.next_message().is_some() {}
+    send(&mut h, wrapped(16, claim(99, "Davo's pad")));
+    h.step_one();
+    let mut welcomed = Vec::new();
+    while let Some(m) = h.next_message() {
+        if let SimToMain::Outbound {
+            channel: Channel::Cmd,
+            bytes,
+            ..
+        } = m
+            && let Ok(HostCmd::ForSource { source, cmd }) = HostCmd::decode(&bytes)
+            && let HostCmd::Welcome { seat, .. } = *cmd
+        {
+            welcomed.push((source.0, seat));
+        }
+    }
+    assert_eq!(welcomed, vec![(16, before[&16])], "the same seat");
+    h.handle(&net(
+        "hub-reload",
+        Channel::State,
+        record(SourceHandle(16), 1, [0, 0]),
+    ))
+    .unwrap();
+    h.step_one();
+    assert_eq!(unplugged(&h), vec![(1, false), (16, false), (17, true)]);
+    assert_eq!(seats_by_source(&h), before, "no new seats");
+}
+
 #[test]
 fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
     // P1-C05: two host pads claim two seats on their first press (a neutral pad claims nothing), unplugging one makes
@@ -4846,4 +4972,219 @@ fn the_way_back_to_a_missed_gate_is_a_bearing_from_the_cars_heading() {
     let h = core::f32::consts::FRAC_PI_2;
     assert_eq!(bearing_256(at, h, 0.0, 10.0), 64);
     assert_eq!(bearing_256(at, h, 10.0, 0.0), 0);
+}
+
+/// Council review 2026-11-15 (#3): the grid runs slowest first, Easy bots at the front, the seats alternating with the
+/// Normal bots, the Hard bots at the back; every car gets its own slot.
+#[test]
+fn the_grid_puts_easy_bots_in_front_and_hard_bots_at_the_back() {
+    // One seat, bots Easy, Hard, Normal, Normal, Easy: E0 E4 N2 seat N3 H1.
+    let slots = round::grid_slots(1, &[0, 2, 1, 1, 0]);
+    assert_eq!(slots, [3, 0, 5, 2, 4, 1]);
+    // Two seats, no bots: seat order.
+    assert_eq!(round::grid_slots(2, &[]), [0, 1]);
+    let mut all = round::grid_slots(3, &[2, 2, 1, 0, 1, 0, 2]);
+    all.sort_unstable();
+    assert_eq!(all, (0..10).collect::<Vec<_>>(), "one car to a slot");
+}
+
+/// What one bot race did: each bot's skill and place (0 = didn't finish), the race's place changes after its first
+/// 30 s, and the items bots and the seat's car picked and used.
+#[derive(Debug, Default)]
+struct BotRace {
+    places: Vec<(u8, u64)>,
+    changes_after_30s: u32,
+    /// Place changes over the whole race, and its length (s from GO to the end).
+    changes: u32,
+    race_s: u64,
+    bot_picked: u32,
+    bot_used: u32,
+    seat_picked: u32,
+    seat_used: u32,
+    /// Wrecks and recoveries over every car (a recovery reshuffles places without a pass).
+    wrecks: u32,
+    recoveries: u32,
+}
+
+/// A race on generated track `seed`: one seat that never touches its phone (its car goes to the idle autopilot) and six
+/// bots, two at each skill, added Easy first.
+fn bot_race(seed: u64, laps: u32) -> BotRace {
+    use jj_session::director::Phase;
+    let p = jj_procgen::playtest::prepare(seed);
+    assert!(p.valid, "seed {seed} prepares");
+    let mut h = Host::new(
+        &MainToSim::Init {
+            abi_version: ABI_VERSION,
+            rules_hash: [0; 32],
+            map_bytes: jj_map::canonical_bytes(&p.map),
+            vehicle_sidecars: vec![],
+            seed,
+        }
+        .encode(),
+    )
+    .unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetLaps { laps })).unwrap();
+    let skills = [0u8, 0, 1, 1, 2, 2];
+    h.handle(&ui(UiCommand::SetBots {
+        n: skills.len() as u32,
+    }))
+    .unwrap();
+    for (i, &skill) in skills.iter().enumerate() {
+        h.handle(&ui(UiCommand::SetBotSkill {
+            index: i as u32,
+            skill,
+        }))
+        .unwrap();
+    }
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("p1".into()),
+            resume: Some("s".into()),
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&net("p1", Channel::Cmd, c.encode())).unwrap();
+    }
+    let mut now = 0u64;
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    let (mut started, mut last): (Option<u64>, Vec<u32>) = (None, Vec::new());
+    let mut out = BotRace::default();
+    let mut guard = 0u64;
+    while h.phase() != Phase::Intermission {
+        now += 8_334;
+        h.advance(now);
+        while h.next_message().is_some() {}
+        guard += 1;
+        assert!(guard < 900 * 120, "seed {seed}: the race ends");
+        if h.phase() != Phase::Running {
+            continue;
+        }
+        let t = h.sim.tick();
+        let go = *started.get_or_insert(t);
+        if (t - go).is_multiple_of(60) {
+            let order: Vec<u32> = h.sim.race().standings().iter().map(|r| r.car).collect();
+            if !last.is_empty() {
+                // Each pair of cars that swapped since the last sample is a place change.
+                let pos = |o: &[u32], c: u32| o.iter().position(|&x| x == c);
+                for (i, &a) in order.iter().enumerate() {
+                    for &b in &order[i + 1..] {
+                        if let (Some(pa), Some(pb)) = (pos(&last, a), pos(&last, b))
+                            && pa > pb
+                        {
+                            out.changes += 1;
+                            out.changes_after_30s += u32::from(t - go > 30 * 120);
+                        }
+                    }
+                }
+            }
+            last = order;
+            out.race_s = (t - go) / 120;
+        }
+    }
+    for c in 0..=skills.len() as u32 {
+        if let Some(rc) = h.sim.race().car(c) {
+            out.wrecks += rc.wrecks;
+            out.recoveries += rc.recoveries;
+        }
+    }
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    out.places = room["botResults"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| {
+            let i = b["index"].as_u64().unwrap() as usize;
+            (skills[i], b["place"].as_u64().unwrap_or(0))
+        })
+        .collect();
+    for e in h.sim.items().events() {
+        let bot = e.owner.seat.0 > u32::MAX - 1000;
+        let (picked, used) = match e.kind {
+            jj_sim::items::EventKind::Picked => (1, 0),
+            jj_sim::items::EventKind::Used { .. } => (0, 1),
+            jj_sim::items::EventKind::Expired => (0, 0),
+        };
+        if bot {
+            out.bot_picked += picked;
+            out.bot_used += used;
+        } else {
+            out.seat_picked += picked;
+            out.seat_used += used;
+        }
+    }
+    out
+}
+
+/// Council review 2026-11-15 (#2, #3): on generated tracks, bots take boxes and use what they get (so does an idle
+/// player's car), the order still changes after the first 30 s, and skill shows: on average over the seeds the Hard
+/// bots finish ahead of the Normal ones and the Normal ones ahead of the Easy ones, though the Easy bots start in front.
+/// Prints each race (`--nocapture`).
+#[test]
+fn bots_pick_up_and_use_items_and_pass_so_skill_decides_the_order() {
+    let seeds: Vec<u64> = (0..40u64)
+        .filter(|&s| {
+            let p = jj_procgen::playtest::prepare(s);
+            p.valid && p.course.class.name() == "standard"
+        })
+        .take(4)
+        .collect();
+    assert_eq!(seeds.len(), 4, "standard tracks in the first 40 seeds");
+    let mut mean = [0.0f64; 3];
+    let mut n = [0u32; 3];
+    let (mut picked, mut used, mut changes) = (0, 0, 0);
+    for &seed in &seeds {
+        let r = bot_race(seed, 2);
+        eprintln!(
+            "seed {seed}: race {} s, places {:?}, changes {} (after 30 s {}), bots picked {} used {}, idle seat picked {} used {}, wrecks {} recoveries {}",
+            r.race_s,
+            r.places,
+            r.changes,
+            r.changes_after_30s,
+            r.bot_picked,
+            r.bot_used,
+            r.seat_picked,
+            r.seat_used,
+            r.wrecks,
+            r.recoveries
+        );
+        for &(skill, place) in &r.places {
+            // A bot that didn't finish counts as last of the seven.
+            mean[skill as usize] += if place == 0 { 8.0 } else { place as f64 };
+            n[skill as usize] += 1;
+        }
+        picked += r.bot_picked;
+        used += r.bot_used;
+        changes += r.changes_after_30s;
+    }
+    for k in 0..3 {
+        mean[k] /= f64::from(n[k].max(1));
+    }
+    eprintln!(
+        "mean place easy {:.2} normal {:.2} hard {:.2}; bots picked {picked} used {used}; changes after 30 s {changes}",
+        mean[0], mean[1], mean[2]
+    );
+    assert!(
+        picked >= 4 && used >= 4,
+        "bots take and use items: {picked} / {used}"
+    );
+    assert!(
+        changes >= 4,
+        "the order still changes after 30 s: {changes}"
+    );
+    assert!(
+        mean[2] < mean[1] && mean[1] < mean[0],
+        "Hard ahead of Normal ahead of Easy on average: {mean:?}"
+    );
 }

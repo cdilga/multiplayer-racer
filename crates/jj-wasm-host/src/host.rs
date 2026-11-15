@@ -732,6 +732,7 @@ impl Host {
         {
             self.seat_output(o);
         }
+        self.sync_away();
         // A loaded fixture's events and scripted inputs come before the seats' controls, as in `jj sim`.
         #[cfg(feature = "testing")]
         if let Some(h) = &mut self.test.harness {
@@ -750,6 +751,9 @@ impl Host {
             }
         }
         let mut cues = Vec::new();
+        // A player's car the autopilot holds (idle, menu, dropout) runs at the idle pace, under the easy bots'; its own
+        // pace (1000) comes back with the handback.
+        let idle_pace = self.sim.assist_profile().autopilot.bot_skills.idle_milli();
         for (&seat, input) in self.inputs.iter_mut() {
             let Some(car) = input.car else { continue };
             let age = input.state.age_ms(now_ms);
@@ -769,6 +773,7 @@ impl Host {
             }
             if racing && !input.dropped && idle_for >= IDLE_MS + IDLE_CUE_MS {
                 self.sim.set_autopilot(car, true);
+                self.sim.set_bot_pace(car, idle_pace);
                 input.dropped = true;
             }
             // P1-C10: a seat practising drives its practice car; its round car stays with the autopilot until it joins.
@@ -779,6 +784,7 @@ impl Host {
             if input.menu_open && racing {
                 if !input.dropped {
                     self.sim.set_autopilot(car, true);
+                    self.sim.set_bot_pace(car, idle_pace);
                     input.dropped = true;
                 }
                 continue;
@@ -791,6 +797,7 @@ impl Host {
             if age.is_some_and(|a| a > DROPOUT_MS) || unplugged_for > DROPOUT_MS {
                 if !input.dropped && !self.sim.has_autopilot(car) {
                     self.sim.set_autopilot(car, true);
+                    self.sim.set_bot_pace(car, idle_pace);
                     input.dropped = true;
                 }
             } else if input.dropped
@@ -801,6 +808,7 @@ impl Host {
                 )
             {
                 self.sim.set_autopilot(car, false);
+                self.sim.set_bot_pace(car, 1000);
                 input.dropped = false;
                 input.idle_cued = false;
                 input.active_ms = now_ms.max(1);
@@ -887,11 +895,16 @@ impl Host {
         self.step_practice();
     }
 
-    /// P1-W04: each box a car is driving through goes to that car's seat; only a successful pickup takes the box.
+    /// P1-W04: each box a car is driving through goes to that car's seat; only a successful pickup takes the box. A bot's
+    /// box goes to its item owner (council review 2026-11-15: bots have no seat, so they drove through every box).
     fn claim_station_offers(&mut self) {
         let offers: Vec<_> = self.sim.station_offers().to_vec();
         for o in offers {
-            let Some(seat) = self.seat_of_car(o.car) else {
+            let bot = self.round.bot_cars.iter().position(|c| c.0 == o.car);
+            let Some(seat) = self
+                .seat_of_car(o.car)
+                .or_else(|| bot.map(|i| round::bot_item_owner(i as u32)))
+            else {
                 continue;
             };
             if self.sim.pickup_item(CarId(o.car), seat, o.item).is_ok() {
@@ -1228,6 +1241,19 @@ impl Host {
                     endpoint: claimed,
                     secret_hash: sha(secret.as_bytes()),
                 });
+                // Council review 2026-11-15: a phone that reloaded got its own seat back at once, but the seats of the pads it
+                // carries stayed "Active" on the TV with nothing driving them. Those come back only when their pad is
+                // pressed again on the new page (its claim is welcomed back to the same seat), so until a fresh sample
+                // arrives they read as unplugged, as a dropped phone's do.
+                let now_ms = tick_ms(self.sim.tick());
+                for o in &outs {
+                    if let seats::Output::Welcome { seat, .. } = o
+                        && self.wrapped.contains(seat)
+                        && let Some(input) = self.inputs.get_mut(seat)
+                    {
+                        input.note_plug(false, now_ms);
+                    }
+                }
                 // P1-C10: a phone not seated yet hears the room's phase, so its join screen can offer Practice while a
                 // round runs.
                 if !outs
@@ -1608,6 +1634,21 @@ impl Host {
                 }
             }
             _ => {}
+        }
+    }
+
+    /// The round director hears which seats' sources are away (unplugged, R119; a phone's pads before it has them again): an
+    /// away seat keeps its place and its car on the autopilot but never holds the all-Ready start (council review
+    /// 2026-11-15: a pad on the floor kept a ready room in the Lobby, against the director's "source-fresh" contract).
+    fn sync_away(&mut self) {
+        let changed: Vec<(SeatId, bool)> = self
+            .inputs
+            .iter()
+            .map(|(&seat, i)| (seat, i.unplugged_since_ms.is_some()))
+            .filter(|&(seat, away)| self.round.director.is_away(seat) != away)
+            .collect();
+        for (seat, away) in changed {
+            self.director_apply(jj_session::director::Input::SetAway { seat, away });
         }
     }
 

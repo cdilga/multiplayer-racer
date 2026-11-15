@@ -23,6 +23,16 @@
 //!   gets there (its velocity times the time to close, capped), flat out to ram, and holds inside the bowl: an aim past the
 //!   floor's edge is pulled back in. With nobody to hunt it circles the floor.
 //!
+//! - **Traffic** (council review 2026-11-15: bots followed one line in grid order, so a faster car sat behind a slower
+//!   one for the whole race). A car closing on one ahead in its lane takes a passing lane beside it, on the side nearer
+//!   its own and inside the road's edge, moving sideways at a lane change's rate; it holds the lane a moment after the
+//!   pass and eases back to the line. The pursuit aims at the line moved sideways by the lane. A car alone never leaves
+//!   the line, so a solo lap is unchanged.
+//! - **Items** (same review: bots never used one). [`Autopilot::item_use`] decides on the front item from what the car
+//!   can see: a boomerang at a car ahead in its aim cone (or behind), an esky for a car close behind, a sanga or tinnie on
+//!   a straight, after a reaction time, and anything held too long anyway. The numbers are `assist.json` `bots`.
+//!   Like Recover it reads only the sim's state, so it isn't journaled and replays bit for bit.
+//!
 //! Everything it decides is in [`AutopilotState`] for introspection (target point, look-ahead, target speed, stuck
 //! time).
 
@@ -30,9 +40,12 @@ use jj_map::LoadedMap;
 use jj_types::axis::{dequantise_axis, quantise_axis};
 use serde::{Deserialize, Serialize};
 
+use crate::assist::{BotItemTuning, BotTuning};
 use crate::journal::DriveInput;
 use crate::rng::Rng;
 use crate::sim::TICK_HZ;
+use crate::utility::UtilityKind;
+use jj_types::items::ItemId;
 
 const SECOND: u64 = TICK_HZ as u64;
 pub const LOOK_AHEAD_S: f32 = 0.8;
@@ -96,6 +109,8 @@ impl SpeedPlan {
 pub struct Path {
     pts: Vec<(f32, f32)>,
     heights: Vec<f32>,
+    /// Half the road's drivable width at each route point, m (how far a passing lane may go).
+    half_width: Vec<f32>,
     layered: bool,
     s: Vec<f32>,
     curvature: Vec<f32>,
@@ -208,6 +223,13 @@ impl Path {
                 .points
                 .iter()
                 .map(|p| p.y as f32 / 1000.0)
+                .collect(),
+            half_width: map
+                .map
+                .route
+                .points
+                .iter()
+                .map(|p| p.width as f32 / 2000.0)
                 .collect(),
             // A bridge or an overpass leap: two roads at one place, told apart by height.
             layered: !jj_map::bridge::layered_points(&map.map).is_empty(),
@@ -415,10 +437,13 @@ pub struct AutopilotState {
     pub steer: f32,
     pub throttle: f32,
     pub brake: f32,
+    /// The lane it drives, m to the left of the line (negative right): 0 unless it is passing.
+    #[serde(default)]
+    pub lane_m: f32,
 }
 
-/// A rival a derby bot can hunt (br-bbki.11): where it is and how it's moving, and whether hitting it scores (spawn
-/// protection).
+/// Another car as an autopilot sees it: a rival a derby bot can hunt (br-bbki.11), or traffic to pass and aim items at.
+/// Where it is and how it's moving, and whether hitting it scores (spawn protection).
 #[derive(Clone, Copy, Debug)]
 pub struct Rival {
     pub car: u32,
@@ -525,6 +550,26 @@ pub struct Autopilot {
     choice_seed: u64,
     /// The derby rival it's hunting and when it chose it (br-bbki.11).
     prey: Option<(u32, u64)>,
+    /// Traffic: the lane it drives and the one it moves to (m left of the line), and the tick it holds a passing lane to.
+    lane: f32,
+    lane_target: f32,
+    lane_until: u64,
+    /// The front item it holds and since when (its use waits a reaction).
+    holding: Option<(ItemId, u64)>,
+    /// Whether the plan sees a straight ahead this tick: `drive`/`hunt` set it, [`Autopilot::item_use`] reads it after.
+    straight: bool,
+}
+
+/// Seconds as whole ticks.
+fn ticks(s: f32) -> u64 {
+    (s * TICK_HZ as f32) as u64
+}
+
+/// Another car in this car's frame: (m to its left, m ahead).
+fn local_of(me: Pose2, x: f32, z: f32) -> (f32, f32) {
+    let (sh, ch) = (libm::sinf(me.heading), libm::cosf(me.heading));
+    let (dx, dz) = (x - me.x, z - me.z);
+    (dx * ch - dz * sh, dx * sh + dz * ch)
 }
 
 /// A split this close ahead (m) is decided about.
@@ -558,6 +603,11 @@ impl Autopilot {
             car,
             choice_seed: mix(seed ^ 0xF04C),
             prey: None,
+            lane: 0.0,
+            lane_target: 0.0,
+            lane_until: 0,
+            holding: None,
+            straight: false,
         }
     }
 
@@ -645,6 +695,8 @@ impl Autopilot {
         } else {
             (1.0, 0.0)
         };
+        // A bowl has no straights: a self-use boost goes on a charge at prey dead ahead.
+        self.straight = prey.is_some() && alpha.abs() < 0.3;
         self.stuck = if me.forward_speed.abs() < STUCK_SPEED {
             self.stuck + 1
         } else {
@@ -672,6 +724,7 @@ impl Autopilot {
             steer,
             throttle,
             brake,
+            lane_m: 0.0,
         });
         (out, recover)
     }
@@ -717,7 +770,8 @@ impl Autopilot {
     }
 
     /// The controls for this tick, and whether it wants to press Recover (stuck for 3 s), on `plan` (its `scale` is the
-    /// catch-up).
+    /// catch-up), passing the cars in `traffic` that are in its way (`bots.pass`).
+    #[allow(clippy::too_many_arguments)]
     pub fn drive(
         &mut self,
         path: &Path,
@@ -726,6 +780,8 @@ impl Autopilot {
         wheelbase: f32,
         tick: u64,
         plan: &SpeedPlan,
+        traffic: &[Rival],
+        bots: &BotTuning,
     ) -> (DriveInput, bool) {
         let n = path.n();
         // On a branch: follow it to its last point, then the route from its merge.
@@ -794,7 +850,15 @@ impl Autopilot {
         };
         let speed = car.forward_speed.max(0.0);
         let look = (LOOK_AHEAD_S * speed).max(MIN_LOOK_AHEAD_M);
-        let target = path.at(walk(look, &mut |_, _| {})).0;
+        self.pass(path, idx, car, traffic, bots, tick);
+        let target = {
+            // The line at the look-ahead, moved sideways by the lane (left of the line's direction there).
+            let c = walk(look, &mut |_, _| {});
+            let (p, q) = (path.at(c).0, path.at(path.next(c, takes)).0);
+            let len = libm::hypotf(q.0 - p.0, q.1 - p.1).max(1e-3);
+            let (lx, lz) = ((q.1 - p.1) / len, -(q.0 - p.0) / len);
+            (p.0 + lx * self.lane, p.1 + lz * self.lane)
+        };
         // Pure pursuit: the angle to the target in the car's frame (+ = to its left, +x when facing +z).
         let (sh, ch) = (libm::sinf(car.heading), libm::cosf(car.heading));
         let (dx, dz) = (target.0 - car.x, target.1 - car.z);
@@ -814,6 +878,12 @@ impl Autopilot {
         walk(horizon, &mut |v, d| {
             cap = cap.min(libm::sqrtf(v * v + 2.0 * plan.plan_brake * d));
         });
+        // A straight: nothing within `straightM` asks the plan for less than its ceiling (a sanga or tinnie's place).
+        let mut straight = cap >= plan.max_speed;
+        walk(bots.items.straight_m, &mut |v, _| {
+            straight &= v >= plan.max_speed
+        });
+        self.straight = straight;
         let mut target_speed = cap * plan.scale;
         if self.mode == Mode::CoolDown {
             target_speed *= COOL_DOWN;
@@ -855,8 +925,127 @@ impl Autopilot {
             steer,
             throttle,
             brake,
+            lane_m: self.lane,
         });
         (out, recover)
+    }
+
+    /// Traffic (council review 2026-11-15): the nearest car ahead within the look and the car's own width of its lane,
+    /// that it's closing on, is in the way; the car takes a lane `gapM` beside it, on the side nearer its own lane that
+    /// fits inside the road (else the roomier side), and holds it `holdS` after the last car in the way. The lane moves at
+    /// `laneRateMps`. Off the route's line (a fork's branch) it eases back to the line.
+    fn pass(
+        &mut self,
+        path: &Path,
+        idx: usize,
+        me: Pose2,
+        traffic: &[Rival],
+        bots: &BotTuning,
+        tick: u64,
+    ) {
+        let p = &bots.pass;
+        let speed = me.forward_speed.max(0.0);
+        let look = (p.look_s * speed).max(p.min_look_m);
+        let (sh, ch) = (libm::sinf(me.heading), libm::cosf(me.heading));
+        let room = (path.half_width[idx] - p.edge_m).max(0.0);
+        let blocker = traffic
+            .iter()
+            .filter(|r| r.car != self.car)
+            .filter_map(|r| {
+                let (l, f) = local_of(me, r.x, r.z);
+                let closing = speed - (r.vx * sh + r.vz * ch);
+                (f > 0.0 && f < look && l.abs() < p.width_m && closing > p.closing_mps)
+                    .then_some((f, l))
+            })
+            .min_by(|a, b| a.0.total_cmp(&b.0));
+        if self.on.is_some() {
+            self.lane_target = 0.0;
+        } else if let Some((_, l)) = blocker {
+            let theirs = self.lane + l;
+            let sides = [theirs + p.gap_m, theirs - p.gap_m];
+            let fits = |v: f32| v.abs() <= room;
+            let near = |a: &f32, b: &f32| (a - self.lane).abs().total_cmp(&(b - self.lane).abs());
+            self.lane_target = match sides.iter().copied().filter(|&v| fits(v)).min_by(near) {
+                Some(v) => v,
+                None => sides
+                    .iter()
+                    .map(|v| v.clamp(-room, room))
+                    .max_by(|a, b| (a - theirs).abs().total_cmp(&(b - theirs).abs()))
+                    .unwrap_or(0.0),
+            };
+            self.lane_until = tick + ticks(p.hold_s);
+        } else if tick >= self.lane_until {
+            self.lane_target = 0.0;
+        }
+        let step = p.lane_rate_mps / TICK_HZ as f32;
+        let target = self.lane_target.clamp(-room, room);
+        self.lane += (target - self.lane).clamp(-step, step);
+    }
+
+    /// Whether to use the front item this tick, and which way (council review 2026-11-15: bots never used one, an idle
+    /// player's car hoarded). Only a driving autopilot uses items. A new front item waits `reactS`; then a boomerang goes
+    /// forward at a car ahead in its aim cone within `boomerangAheadM` (or back at one behind within `boomerangBehindM`),
+    /// an esky drops for a car within `eskyBehindM` behind and `eskyWidthM` of this car's line, a sanga or tinnie goes on
+    /// a straight, and anything held `holdMaxS` goes anyway. The sim makes the use (and may refuse it).
+    pub fn item_use(
+        &mut self,
+        me: Pose2,
+        front: Option<ItemId>,
+        traffic: &[Rival],
+        t: &BotItemTuning,
+        tick: u64,
+    ) -> Option<UtilityKind> {
+        let Some(item) = front.filter(|_| self.mode == Mode::Driving) else {
+            self.holding = None;
+            return None;
+        };
+        let since = match self.holding {
+            Some((held, since)) if held == item => since,
+            _ => {
+                self.holding = Some((item, tick));
+                tick
+            }
+        };
+        if tick < since + ticks(t.react_s) {
+            return None;
+        }
+        let overdue = tick >= since + ticks(t.hold_max_s);
+        let others = || {
+            traffic
+                .iter()
+                .filter(|r| r.car != self.car && !r.protected)
+                .map(|r| local_of(me, r.x, r.z))
+        };
+        let in_cone = |ahead: bool, range: f32| {
+            others().any(|(l, f)| {
+                let d = libm::hypotf(l, f);
+                let along = if ahead { f } else { -f };
+                d <= range && along > 0.0 && along >= t.aim_cos * d
+            })
+        };
+        let kind = match item {
+            ItemId::Boomerang if in_cone(true, t.boomerang_ahead_m) || overdue => {
+                Some(UtilityKind::Forward)
+            }
+            ItemId::Boomerang if in_cone(false, t.boomerang_behind_m) => Some(UtilityKind::Rear),
+            ItemId::Esky
+                if overdue
+                    || others().any(|(l, f)| {
+                        f < 0.0 && -f <= t.esky_behind_m && l.abs() <= t.esky_width_m
+                    }) =>
+            {
+                Some(UtilityKind::Rear)
+            }
+            ItemId::Sanga | ItemId::Tinnie if self.straight || overdue => {
+                Some(UtilityKind::Forward)
+            }
+            _ => None,
+        };
+        if kind.is_some() {
+            // The next front item, even one the same, waits its own reaction.
+            self.holding = None;
+        }
+        kind
     }
 
     /// Bytes for the full-state hash.
@@ -885,6 +1074,21 @@ impl Autopilot {
         out.extend(pb.to_le_bytes());
         out.push(u8::from(take));
         out.extend(self.forks_met.to_le_bytes());
+        // Traffic and items (2026-11-15), only once they leave their defaults: a car that never met traffic or held an
+        // item hashes as before.
+        if self.lane != 0.0
+            || self.lane_target != 0.0
+            || self.lane_until != 0
+            || self.holding.is_some()
+        {
+            out.extend(b"ap-traffic");
+            out.extend(self.lane.to_bits().to_le_bytes());
+            out.extend(self.lane_target.to_bits().to_le_bytes());
+            out.extend(self.lane_until.to_le_bytes());
+            let (item, since) = self.holding.map_or((u8::MAX, 0), |(i, s)| (i as u8, s));
+            out.push(item);
+            out.extend(since.to_le_bytes());
+        }
     }
 }
 

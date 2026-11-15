@@ -174,10 +174,18 @@ pub struct BotSkills {
     pub easy: f32,
     pub normal: f32,
     pub hard: f32,
+    /// A player's car while the autopilot holds it (idle, menu open, dropped out): under `easy`, so putting the phone
+    /// down never beats steering (council review 2026-11-15: idle phones won 5 of 6 races at `hard`'s pace).
+    pub idle: f32,
 }
 
 impl BotSkills {
     /// A skill level's pace per mille for [`crate::Sim::set_bot_pace`]: 0 easy, 1 normal, 2 hard (others hard).
+    /// The idle pace per mille for [`crate::Sim::set_bot_pace`] on a player's car the autopilot holds.
+    pub fn idle_milli(&self) -> u16 {
+        (self.idle * 1000.0).round() as u16
+    }
+
     pub fn pace_milli(&self, level: u8) -> u16 {
         let share = match level {
             0 => self.easy,
@@ -186,6 +194,63 @@ impl BotSkills {
         };
         (share * 1000.0).round() as u16
     }
+}
+
+/// How an autopilot car races in traffic (council review 2026-11-15: bots formed a procession on one line and never
+/// touched an item). Plain data from `assist.json` `bots`; [`crate::autopilot`] uses it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BotTuning {
+    pub pass: PassTuning,
+    pub items: BotItemTuning,
+}
+
+/// Overtaking: a car closing on one ahead in its lane moves to a side of the road to pass it.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PassTuning {
+    /// A car ahead within this many seconds at the passer's speed (at least `minLookM`) is in the way.
+    pub look_s: f32,
+    pub min_look_m: f32,
+    /// ... when it is within this of the passer's lane, sideways (m), and the passer closes on it faster than `closingMps`.
+    pub width_m: f32,
+    pub closing_mps: f32,
+    /// The passing lane is this far to the side of the car being passed (m).
+    pub gap_m: f32,
+    /// The passing lane stays this far inside the road's edge (m).
+    pub edge_m: f32,
+    /// How fast the lane moves sideways (m/s): a lane change, not a swerve.
+    pub lane_rate_mps: f32,
+    /// The lane is held this long after the last car in the way (s), then eases back to the line.
+    pub hold_s: f32,
+}
+
+/// When an autopilot car uses the item at the front of its queue.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BotItemTuning {
+    /// A new front item waits this long first (s): a reaction, not a reflex.
+    pub react_s: f32,
+    /// One held this long with nothing to use it on is used anyway (s), so the queue keeps taking boxes.
+    pub hold_max_s: f32,
+    /// A boomerang is thrown forward at a car up to this far ahead (m) in the throw's aim cone (`aimCos`), back at one
+    /// up to `boomerangBehindM` behind.
+    pub boomerang_ahead_m: f32,
+    pub boomerang_behind_m: f32,
+    pub aim_cos: f32,
+    /// An esky is dropped when a car is up to this far behind (m) and within `eskyWidthM` of this car's line sideways.
+    pub esky_behind_m: f32,
+    pub esky_width_m: f32,
+    /// A sanga or a tinnie is used on a straight: nothing within this far ahead (m) asks the plan to slow.
+    pub straight_m: f32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BotsFile {
+    #[allow(dead_code)]
+    what: String,
+    pass: PassTuning,
+    items: BotItemTuning,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -208,6 +273,7 @@ struct AssistFile {
     flip: FlipTuning,
     catch_up: CatchUpTuning,
     autopilot: AutopilotTuning,
+    bots: BotsFile,
 }
 
 /// The assist data, validated.
@@ -221,6 +287,7 @@ pub struct AssistProfile {
     pub flip: FlipTuning,
     pub catch_up: CatchUpTuning,
     pub autopilot: AutopilotTuning,
+    pub bots: BotTuning,
 }
 
 impl AssistProfile {
@@ -261,6 +328,10 @@ impl AssistProfile {
             flip: f.flip,
             catch_up: f.catch_up,
             autopilot: f.autopilot,
+            bots: BotTuning {
+                pass: f.bots.pass,
+                items: f.bots.items,
+            },
         };
         p.validate()?;
         Ok(p)
@@ -319,11 +390,44 @@ impl AssistProfile {
             || a.min_speed <= 0.0
             || !(a.top_speed_share > 0.0 && a.top_speed_share <= 1.5)
             || a.takeoff_mps <= a.min_speed
-            || [a.bot_skills.easy, a.bot_skills.normal, a.bot_skills.hard]
-                .iter()
-                .any(|&k| !(k > 0.0 && k <= 1.5))
+            || [
+                a.bot_skills.easy,
+                a.bot_skills.normal,
+                a.bot_skills.hard,
+                a.bot_skills.idle,
+            ]
+            .iter()
+            .any(|&k| !(k > 0.0 && k <= 1.5))
         {
             return Err("assist autopilot needs positive grip, skill, planBrake, minSpeed, 0 < topSpeedShare <= 1.5, takeoffMps > minSpeed and botSkills in 0..1.5".into());
+        }
+        let (bp, bi) = (&self.bots.pass, &self.bots.items);
+        if [
+            bp.look_s,
+            bp.min_look_m,
+            bp.width_m,
+            bp.gap_m,
+            bp.lane_rate_mps,
+        ]
+        .iter()
+        .any(|&v| v <= 0.0)
+            || [bp.closing_mps, bp.edge_m, bp.hold_s]
+                .iter()
+                .any(|&v| v < 0.0)
+            || [
+                bi.boomerang_ahead_m,
+                bi.boomerang_behind_m,
+                bi.esky_behind_m,
+                bi.esky_width_m,
+                bi.straight_m,
+            ]
+            .iter()
+            .any(|&v| v <= 0.0)
+            || bi.react_s < 0.0
+            || bi.hold_max_s <= bi.react_s
+            || !(bi.aim_cos > 0.0 && bi.aim_cos < 1.0)
+        {
+            return Err("assist bots needs positive pass distances and rates, non-negative closing, edge and hold, positive item ranges, holdMaxS > reactS >= 0 and 0 < aimCos < 1".into());
         }
         let c = &self.catch_up;
         if c.reference_speed_mps <= 0.0

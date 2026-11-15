@@ -246,3 +246,66 @@ fn autopilot_takeovers_and_handbacks_replay_to_the_same_hash() {
     assert_eq!(replay.state_hash(), live.state_hash());
     assert_eq!(replay.applied_input(CarId(0)), live.applied_input(CarId(0)));
 }
+
+/// Council review 2026-11-15: a faster autopilot behind a slower one passes it (it takes a lane beside it, then comes
+/// back to the line) without a wreck or a recovery; an autopilot uses the items it holds (a boomerang at the car ahead,
+/// an esky for the car behind, a tinnie on a straight); and all of it replays to the same hash (none of it is journaled).
+#[test]
+fn a_faster_autopilot_passes_a_slower_one_and_uses_its_items_and_it_replays() {
+    use jj_sim::items::EventKind;
+    use jj_types::{SeatId, items::ItemId};
+    let map = greybox();
+    let mut live = sim(&map, 12);
+    // Grid slot 0 is the front: the slow car starts ahead.
+    let cars = live.spawn_grid(2);
+    let (slow, fast) = (cars[0], cars[1]);
+    live.start_race(3);
+    live.set_autopilot(slow, true);
+    live.set_autopilot(fast, true);
+    live.set_bot_pace(slow, 600);
+    let (mut max_lane, mut passed_at) = (0.0f32, None);
+    let mut given = 0;
+    while live.tick() < 120 * S && !live.race().is_finished(fast.0) {
+        // Both hold the grid until GO; then each gets a box now and then, as a host gives a bot its station's.
+        let t = live.tick();
+        if live.race().started_at.is_some_and(|go| t > go + 2 * S) && t.is_multiple_of(8 * S) {
+            let item = [ItemId::Boomerang, ItemId::Esky, ItemId::Tinnie][given % 3];
+            let car = if given % 3 == 1 { slow } else { fast };
+            let _ = live.pickup_item(car, SeatId(u32::MAX - car.0), item);
+            given += 1;
+        }
+        live.step();
+        max_lane = max_lane.max(live.autopilot_state(fast).map_or(0.0, |a| a.lane_m.abs()));
+        let order: Vec<u32> = live.race().standings().iter().map(|r| r.car).collect();
+        if passed_at.is_none() && order.first() == Some(&fast.0) {
+            passed_at = Some(live.tick());
+        }
+    }
+    assert!(passed_at.is_some(), "the fast car passes the slow one");
+    assert!(max_lane > 1.0, "it took a passing lane: {max_lane} m");
+    let rc = live.race().car(fast.0).unwrap();
+    assert_eq!((rc.wrecks, rc.recoveries), (0, 0), "a clean pass");
+    let used: Vec<ItemId> = live
+        .items()
+        .events()
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::Used { .. }))
+        .map(|e| e.item)
+        .collect();
+    for item in [ItemId::Boomerang, ItemId::Esky, ItemId::Tinnie] {
+        assert!(
+            used.contains(&item),
+            "the autopilots used a {item:?}: {used:?}"
+        );
+    }
+    let journal = Journal::from_bytes(&live.journal().to_bytes()).unwrap();
+    let replay = Sim::replay(
+        &map,
+        &Registry::generic(),
+        VehicleProfile::cruz(),
+        &journal,
+        live.tick(),
+    );
+    assert_eq!(replay.state_hash(), live.state_hash());
+    assert_eq!(replay.items().events(), live.items().events());
+}

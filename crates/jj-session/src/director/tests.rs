@@ -669,11 +669,70 @@ fn game_time_outside_a_running_round_counts_for_nothing() {
     assert_eq!((d.phase(), d.game_ms()), (Phase::Countdown, 0));
 }
 
+// Council review 2026-11-15: an unplugged pad (R119) held the all-Ready start. Its seat stays in the party and the round
+// (on the autopilot) but the start doesn't wait for it; it comes back into the gate when it is plugged in again.
+#[test]
+fn an_away_seat_never_holds_the_all_ready_start_but_still_rides_in_the_round() {
+    let mut d = director();
+    join(&mut d, &[A, B, C]);
+    ready(&mut d, A, true);
+    ready(&mut d, B, true);
+    assert_eq!(d.phase(), Phase::Lobby, "C isn't Ready yet");
+    let out = d.apply(Input::SetAway {
+        seat: C,
+        away: true,
+    });
+    assert!(d.is_away(C));
+    assert_eq!(
+        d.phase(),
+        Phase::Preparing,
+        "C's pad went away: the rest start"
+    );
+    let id = requested(&out).expect("the start requests the map");
+    d.apply(Input::PrepareFinished { id, ok: true });
+    let (_, _, seats) = started(&elapse(&mut d, 3_000)).expect("the countdown runs out");
+    assert_eq!(
+        seats,
+        vec![A, B, C],
+        "the away seat races (its car on the autopilot)"
+    );
+    // Between rounds it holds nothing either; back, it is waited for again.
+    through_round(&mut d);
+    ready(&mut d, A, true);
+    ready(&mut d, B, true);
+    assert_eq!(
+        d.phase(),
+        Phase::Preparing,
+        "the intermission starts early without the away seat"
+    );
+    let mut d = director();
+    join(&mut d, &[A, C]);
+    d.apply(Input::SetAway {
+        seat: C,
+        away: true,
+    });
+    d.apply(Input::SetAway {
+        seat: C,
+        away: false,
+    });
+    ready(&mut d, A, true);
+    assert_eq!(d.phase(), Phase::Lobby, "plugged back in, C is waited for");
+    // Only away seats: nobody fresh is Ready, so nothing starts.
+    let mut d = director();
+    join(&mut d, &[A]);
+    d.apply(Input::SetAway {
+        seat: A,
+        away: true,
+    });
+    assert_eq!(d.phase(), Phase::Lobby, "no start with every seat away");
+}
+
 fn arb_input() -> impl Strategy<Value = Input> {
     let seat = (1u32..=4).prop_map(SeatId);
     prop_oneof![
         4 => (0u32..20_000).prop_map(|ms| Input::Elapsed { ms }),
         3 => (seat.clone(), any::<bool>()).prop_map(|(seat, eligible)| Input::SetEligible { seat, eligible }),
+        2 => (seat.clone(), any::<bool>()).prop_map(|(seat, away)| Input::SetAway { seat, away }),
         // Revision 0..4: some taps are current, some stale.
         4 => (seat, any::<bool>(), 0u32..4).prop_map(|(seat, ready, revision)| Input::SetReady { seat, ready, revision }),
         2 => Just(Input::StartNow),

@@ -536,3 +536,70 @@ test('a pad on a joined page is a first-class player: it picks its car on the pa
   assert.equal(await lap.locator('#name').isVisible(), true, 'Add a touch player opens the card');
   await shot(lap, 'c13-laptop-pads-only-add-touch');
 });
+
+test('a phone that reloads gets its pads back on their own seats; a pad that joins mid-race races a car and picks in the next Lobby; a chosen car reopens with a flick', { timeout: 900_000 }, async () => {
+  // Council review 2026-11-15: after a reload the phone's own player came back but its pads sat at "Joining…" for good, their
+  // seats "Active" on the TV with nothing driving them; a pad that joined mid-race raced with no car; a pad chose once, in its
+  // first Lobby, and never again.
+  const { readFileSync } = await import('node:fs');
+  const cars = JSON.parse(readFileSync(new URL('../../shared/src/roster.json', import.meta.url), 'utf8')).cars.map((c) => c.id);
+  const { host, joinUrl } = await openHost('room');
+  const phoneCtx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const phone = await phoneCtx.newPage();
+  await phone.addInitScript(PADS);
+  await phone.goto(joinUrl);
+  await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  await phone.locator('#name').fill('Davo');
+  await phone.getByRole('button', { name: 'Join the race' }).click();
+  await wait(phone, () => window.__jjController.inspect().phase === 'playing');
+  const tv = (num) => host.evaluate((x) => window.__jjRoom.view().seats.find((s) => s.number === x), num);
+  const phase = () => host.evaluate(() => window.__jjRoom.view().phase);
+  const byModel = async (model) => (await src(phone)).find((s) => s.padId === model);
+  /** A press held across a few ticks of the page, then let go. */
+  const press = async (i, buttons, axes = [0, 0, 0, 0]) => {
+    await phone.evaluate(([i, a, b]) => window.__padSet(i, a, b), [i, axes, Object.fromEntries(buttons.map((n) => [n, true]))]);
+    await phone.waitForTimeout(300);
+    await phone.evaluate(([i, b]) => window.__padSet(i, [0, 0, 0, 0], b), [i, Object.fromEntries(buttons.map((n) => [n, false]))]);
+    await phone.waitForTimeout(300);
+  };
+  const plugAndPress = async (i, model) => {
+    await phone.evaluate(([i, m]) => window.__padAdd(i, m), [i, model]);
+    await press(i, [0]);
+    await until(host, async () => (await byModel(model))?.seat != null, `${model} has a seat`, 90_000);
+    return (await byModel(model)).seat;
+  };
+  const a = await plugAndPress(0, 'Model A');
+  const b = await plugAndPress(1, 'Model B');
+  const seatsBefore = (await host.evaluate(() => window.__jjRoom.view().seats.length));
+
+  // The reload: the phone's own player resumes; until pressed again its pads' seats read unplugged on the TV (they hold nothing).
+  await phone.reload();
+  await wait(phone, () => window.__jjController?.inspect().phase === 'playing');
+  await until(host, async () => (await tv(a))?.unpluggedMs != null && (await tv(b))?.unpluggedMs != null, "the reloaded phone's pads read unplugged");
+  await shot(host, 'c13-tv-phone-reloaded-pads-unplugged');
+  // Pressed again, B first: the model, not the order, finds each seat. No new seats.
+  assert.equal(await plugAndPress(1, 'Model B'), b, 'Model B is back on its own seat');
+  assert.equal(await plugAndPress(0, 'Model A'), a, 'Model A is back on its own seat');
+  await until(host, async () => (await tv(a))?.unpluggedMs == null && (await tv(b))?.unpluggedMs == null, 'both plugged back in on the TV');
+  assert.equal(await host.evaluate(() => window.__jjRoom.view().seats.length), seatsBefore, 'no new seats');
+  assert.deepEqual((await src(phone)).filter((s) => s.kind === 'pad').map((s) => s.state).sort(), ['connected', 'connected'], 'nothing sits at Joining…');
+  await shot(phone, 'c13-phone-reloaded-pads-back');
+
+  // A round runs; a third pad joins mid-race and races a car of its own (the remembered one: the roster's first), no picker.
+  await host.evaluate(() => window.__jjRoom.start());
+  await until(host, async () => (await phase()) === 'Running', 'the round starts', 240_000);
+  const c = await plugAndPress(2, 'Model C');
+  await until(host, async () => (await tv(c))?.vehicle === cars[0] && (await tv(c)).choosing === false, 'the mid-race pad races a car, no picker over the race');
+  // Back in the Lobby its pick opens; Menu chooses; a flick on the chosen car opens it again on the next.
+  await host.evaluate(() => window.__jjRoom.end());
+  await until(host, async () => (await phase()) === 'Lobby', 'back to the Lobby', 60_000);
+  await until(host, async () => (await tv(c))?.choosing === true, "the mid-race pad's pick opens in the next Lobby");
+  await press(2, [9]);
+  await until(host, async () => (await tv(c))?.choosing === false, 'Menu chooses it');
+  await press(2, [], [0, 0, 1, 0]);
+  await until(host, async () => (await tv(c))?.choosing === true && (await tv(c)).vehicle === cars[1], 'a flick reopens the chosen car on the next');
+  await phone.waitForTimeout(600);
+  await shot(phone, 'c13-phone-pad-repick-next-lobby');
+  await press(2, [9]);
+  await until(host, async () => (await tv(c))?.choosing === false && (await tv(c)).vehicle === cars[1], 'Menu chooses the new car');
+});

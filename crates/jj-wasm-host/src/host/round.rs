@@ -102,6 +102,40 @@ pub(super) struct BotResult {
     pub time_ms: Option<u32>,
 }
 
+/// The item owner of bot `index` (council review 2026-11-15): bots have no seat, so their item ledger entries name a
+/// seat id counted down from the top of the range, which the room's seats (counted up from 1) never reach. Nothing is
+/// sent to it: an item command to a seat with no connection goes nowhere.
+pub(super) fn bot_item_owner(index: u32) -> SeatId {
+    SeatId(u32::MAX - index)
+}
+
+/// The start grid's order (council review 2026-11-15: seats first and bots in the order added made a procession, Hard
+/// bots stuck behind Easy ones and a player's idle car ahead of every bot). Slowest first: the Easy bots at the front,
+/// then the seats alternating with the Normal bots, then the Hard bots at the back, so pace has to show by passing.
+/// `seats` cars and one bot per entry of `bot_skills`; returns each one's grid slot (seats first, then bots).
+pub(super) fn grid_slots(seats: usize, bot_skills: &[u8]) -> Vec<usize> {
+    // (group, rank within the group, which: seat index or seats + bot index)
+    let mut order: Vec<(u8, usize, usize)> = (0..seats).map(|s| (1, 2 * s + 1, s)).collect();
+    let mut normals = 0;
+    for (b, &skill) in bot_skills.iter().enumerate() {
+        let (group, rank) = match skill {
+            0 => (0, b),
+            1 => {
+                normals += 1;
+                (1, 2 * (normals - 1))
+            }
+            _ => (2, b),
+        };
+        order.push((group, rank, seats + b));
+    }
+    order.sort_unstable();
+    let mut slots = vec![0; order.len()];
+    for (slot, &(_, _, who)) in order.iter().enumerate() {
+        slots[who] = slot;
+    }
+    slots
+}
+
 /// The shortest derby round the host may set (a round of a few hits), ms.
 pub(super) const MIN_DERBY_MS: u32 = 30_000;
 
@@ -356,7 +390,14 @@ impl Host {
             .filter(|s| self.inputs.contains_key(s))
             .collect();
         let models: Vec<usize> = seats.iter().map(|&s| self.vehicle_of_seat(s)).collect();
-        let cars = self.sim.spawn_grid_as(&models);
+        let skills: Vec<u8> = self.round.bots.iter().map(|b| b.skill).collect();
+        let slots = grid_slots(seats.len(), &skills);
+        // Car ids stay seats first, then bots (the TV numbers a bot's car after the seats'); only the grid slots mix.
+        let cars: Vec<CarId> = models
+            .iter()
+            .zip(&slots)
+            .map(|(&m, &slot)| self.sim.spawn_car_as(self.sim.grid_pose(slot), m))
+            .collect();
         for (seat, car) in seats.iter().zip(cars) {
             if let Some(input) = self.inputs.get_mut(seat) {
                 input.car = Some(car);
@@ -365,7 +406,10 @@ impl Host {
         }
         // br-bbki.11: the bots, on the grid after the seats, each on the autopilot (no seat: they're in the world and the
         // derby ledger, not the results).
-        self.round.bot_cars = self.sim.spawn_grid_as(&vec![0; self.round.bots.len()]);
+        self.round.bot_cars = slots[seats.len()..]
+            .iter()
+            .map(|&slot| self.sim.spawn_car_as(self.sim.grid_pose(slot), 0))
+            .collect();
         // br-8h3u.14: each at its skill's pace, an L-plater on its learner level.
         let skills = self.sim.assist_profile().autopilot.bot_skills;
         for (&bot, spec) in self.round.bot_cars.iter().zip(&self.round.bots) {
@@ -747,6 +791,9 @@ impl Host {
                     "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     // R125: 0 Off, 1 Some, 2 Lots; the tile shows an L-plate while it isn't 0.
                     "assist": self.inputs.get(&s.id).map_or(0, |i| i.assist.as_u8()),
+                    // The autopilot holds this seat's car (idle, menu open, dropped out): the tile says so (council review
+                    // 2026-11-15: an idle phone won races with nothing on screen to say nobody was driving).
+                    "autopilot": self.inputs.get(&s.id).is_some_and(|i| i.dropped),
                     "inventory": self.inventory_for(s.id),
                     "prompt": self.inputs.get(&s.id).filter(|i| i.prompt.showing()).map(|i| serde_json::json!({ "step": i.prompt.step, "of": super::prompts::STEPS.len(), "done": i.prompt.done() })),
                 })
