@@ -51,7 +51,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "35";
+pub const GENERATOR_VERSION: &str = "36";
 const STEP_M: f64 = 2.5;
 /// Rooftop lots keep this far (m along the road) from a set piece's span.
 const ROOF_PIECE_MARGIN_M: f64 = 10.0;
@@ -457,7 +457,7 @@ fn generate_course_gated(
     // their dressing references; no earlier placement pass may fill the approach afterwards.
     crossings::clear_corridors(&mut map, &registry);
     setpieces::clear_footprints(&mut map, &registry);
-    loops::clear_footprints(&mut map);
+    loops::clear_footprints(&mut map, &registry);
     forks::clear_corridors(&mut map, &registry);
     biome::wayfinding::fork_gores(&mut map);
     // Remove blocked furniture BEFORE roofTarget indices exist, and keep roof kickers

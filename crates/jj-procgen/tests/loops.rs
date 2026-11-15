@@ -97,7 +97,7 @@ fn generated(seed: u64) -> (LoadedMap, usize) {
         &terrain::params(Biome::OutbackDirt),
     );
     let (placed, rejects) = loops::place(&mut map, &sites, data);
-    loops::clear_footprints(&mut map);
+    loops::clear_footprints(&mut map, &jj_procgen::registry());
     let placed = placed.len();
     assert!(
         placed > 0 || !rejects.is_empty(),
@@ -225,6 +225,35 @@ fn loops_appear_in_the_prepared_maps_and_every_one_validates() {
         );
     }
     eprintln!("{}", lines.join("\n"));
+}
+
+// ---- br-8h3u.4 (owner 2026-10-24: "weird geometry bits off the edges of the loop"): nothing placed beside the road
+// reaches into a loop's footprint. A building or rock dome posed just outside it used to stand through the deck and its
+// barriers (only the pose was checked); every piece's reach is now.
+#[test]
+fn nothing_placed_beside_the_road_reaches_into_a_loop() {
+    let registry = jj_procgen::registry();
+    let mut checked = 0;
+    for biome in BIOMES {
+        let mut with = 0;
+        for seed in 0..BANK_SEEDS {
+            if cfg!(debug_assertions) && seed >= QUICK_SEEDS && with >= 1 {
+                break;
+            }
+            let (m, _) = prepared(seed, biome);
+            if !m.map.features.iter().any(|f| f.kind == FeatureKind::Loop) {
+                continue;
+            }
+            with += 1;
+            checked += 1;
+            let hits = loops::intrusions(&m.map, &registry);
+            assert!(
+                hits.is_empty(),
+                "{biome:?} seed {seed}: pieces reach into a loop: {hits:?}"
+            );
+        }
+    }
+    assert!(checked > 0, "no generated loop to check");
 }
 
 // ---- br-8h3u.3: every roster vehicle rides every generated loop (owner 2026-10-24: "loop the loops are too small

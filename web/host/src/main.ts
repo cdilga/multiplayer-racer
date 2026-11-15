@@ -114,6 +114,8 @@ async function boot(): Promise<void> {
     /** Capture hook (P1-R12): stops the frame loop, so the canvas keeps the frame just drawn (a short-lived flash included)
      *  for a screenshot that takes longer than the effect lives. */
     hold: () => world.stop(),
+    /** br-8h3u.4: one frame from any eye at any target (m), for looking at a map piece from every side. */
+    peek: (eye: [number, number, number], target: [number, number, number], fov?: number) => world.peek(eye, target, fov),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
     setIdentityPatterns: (on: boolean) => { world.vehicles?.setPatternsEnabled(on); world.invalidate(); },
     identityNumberChunks: (number: number) => numberData(number),

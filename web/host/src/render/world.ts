@@ -583,6 +583,22 @@ export class World {
     this.observer.disconnect();
   }
 
+  /** Capture hook (br-8h3u.4): stops the frame loop and draws the whole canvas once from `eye` looking at `target` (m), so
+   *  a self-review can look at any piece of the map from any side; `frame()` or a reload goes back to the game's cameras. */
+  peek(eye: [number, number, number], target: [number, number, number], fov = 50): void {
+    this.stop();
+    const { width: w, height: h } = this.stats;
+    const cam = new PerspectiveCamera(fov, w / Math.max(1, h), 0.3, 4000);
+    cam.position.set(...eye);
+    cam.lookAt(...target);
+    cam.updateMatrixWorld();
+    useLod(cam, lodForTileHeight(h));
+    const r = this.backend.renderer;
+    r.setScissorTest(false);
+    r.setViewport(0, 0, w, h);
+    this.backend.render(this.scene, cam);
+  }
+
   /** Release an independently owned playback world and its renderer. Shared vehicle assets stay cache-owned. */
   dispose(): void {
     this.stop();

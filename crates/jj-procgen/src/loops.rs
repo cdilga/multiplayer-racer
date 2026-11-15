@@ -561,24 +561,68 @@ pub fn clear_of<T: Copy>(
 }
 
 /// Dressing and props on a loop's footprint leave (rails along the route under the deck, signs, scatter): the deck is
-/// there.
-pub fn clear_footprints(map: &mut Map) {
-    let prints: Vec<Footprint> = map
-        .features
-        .iter()
-        .filter_map(LoopDesign::of)
-        .filter_map(|d| Footprint::of(map, &d))
-        .collect();
+/// there. A piece goes when any of it reaches within `FURNITURE_CLEAR_M` of the footprint, not only its pose (br-8h3u.4,
+/// owner 2026-10-24: "weird geometry bits off the edges of the loop": a building or rock posed just outside stood
+/// through the deck and its barriers).
+pub fn clear_footprints(map: &mut Map, registry: &jj_map::Registry) {
+    let prints = footprints(map);
     if prints.is_empty() {
         return;
     }
-    let on = |x: i32, z: i32| {
+    let on = |kit: &str, params: &jj_map::Params, x: i32, z: i32| {
+        let r = reach(registry, kit, params);
         prints
             .iter()
-            .any(|fp| fp.at(f64::from(x) / 1000.0, f64::from(z) / 1000.0).0 < FURNITURE_CLEAR_M)
+            .any(|fp| fp.at(f64::from(x) / 1000.0, f64::from(z) / 1000.0).0 < FURNITURE_CLEAR_M + r)
     };
-    map.dressing.retain(|d| !on(d.pose.x, d.pose.z));
-    map.props.retain(|q| !on(q.pose.x, q.pose.z));
+    map.dressing
+        .retain(|d| !on(&d.kit_piece, &d.params, d.pose.x, d.pose.z));
+    map.props
+        .retain(|q| !on(&q.kit_piece, &q.params, q.pose.x, q.pose.z));
+}
+
+/// The dressing and props that reach within `FURNITURE_CLEAR_M` of a loop's footprint (none once
+/// [`clear_footprints`] ran): each one's kit piece and how far its pose is outside the footprint, m.
+pub fn intrusions(map: &Map, registry: &jj_map::Registry) -> Vec<(String, f64)> {
+    let prints = footprints(map);
+    let pieces = map
+        .dressing
+        .iter()
+        .map(|d| (&d.kit_piece, &d.params, d.pose))
+        .chain(map.props.iter().map(|q| (&q.kit_piece, &q.params, q.pose)));
+    let mut out = Vec::new();
+    for (kit, params, pose) in pieces {
+        let r = reach(registry, kit, params);
+        for fp in &prints {
+            let d = fp
+                .at(f64::from(pose.x) / 1000.0, f64::from(pose.z) / 1000.0)
+                .0;
+            if d < FURNITURE_CLEAR_M + r {
+                out.push((kit.clone(), d));
+            }
+        }
+    }
+    out
+}
+
+fn footprints(map: &Map) -> Vec<Footprint> {
+    map.features
+        .iter()
+        .filter_map(LoopDesign::of)
+        .filter_map(|d| Footprint::of(map, &d))
+        .collect()
+}
+
+/// A kit piece's reach from its pose, m: half its footprint's diagonal (the registry's mm), as
+/// `setpieces::clear_footprints` reads it.
+fn reach(registry: &jj_map::Registry, kit: &str, params: &jj_map::Params) -> f64 {
+    registry
+        .get(kit)
+        .and_then(|k| k.footprint(params))
+        .map_or(1.0, |fp| match fp {
+            jj_map::Footprint::Rect { x, z, .. } => libm::hypot(x, z) / 2000.0,
+            jj_map::Footprint::Circle { radius, .. } => radius / 1000.0,
+        })
 }
 
 /// Whether `p` (x, z, m) is on a loop's footprint, within `margin` m of where [`clear_footprints`] takes the dressing off:
