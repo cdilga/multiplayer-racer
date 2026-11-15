@@ -1,6 +1,6 @@
 import { confirmInitialVehicle } from './lib/vehicle.mjs';
 // P1-C03: the lobby's car pick on the wire. A phone's picker tells the host (`Pick{vehicle, open}`), and the TV's lobby shows
-// that seat as "Choosing car…" while the picker is open and the car's name once it's picked. Works for any roster size
+// that seat with the car being looked at ("‹ Cruz Missile ›") while the picker is open and the car's name once it's picked. Works for any roster size
 // (`#roster=N` stands extra cars in on the phone), survives a reload (the saved pick is resent on Welcome), and Ready is
 // never behind it. Real host page and phones over WebRTC: run on eris.
 //   node --test web/tests/journeys/c03-pick.test.mjs
@@ -68,7 +68,7 @@ const card = async (host, name, want) => {
   throw new Error(`no ${want ?? ''} lobby card for ${name}`);
 };
 
-test('the picker opening is "Choosing car…" on the TV; Done shows the car by name; a long roster and a reload keep working', { timeout: 240_000 }, async () => {
+test('the picker opening shows the car being looked at on the TV; Done shows the car by name; a long roster and a reload keep working', { timeout: 240_000 }, async () => {
   const { host, joinUrl } = await room();
   const p = await phone(`${joinUrl}#roster=200`, 'Marlene');
   // The visible initial choice has been confirmed by the phone helper.
@@ -81,7 +81,9 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   await p.page.locator('[data-overlay=cars]').waitFor();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === true);
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
-  assert.equal((await card(host, 'Marlene', 'choosing')).label, 'Choosing car…');
+  // The TV names the car being looked at (council review 2026-11-15: every choosing card shows its car, as the phone
+  // promises: "The big screen shows your pick as you choose").
+  assert.equal((await card(host, 'Marlene', 'choosing')).label, '‹ Cruz Missile ›');
   await shot(host, 'c03-pick-tv-choosing-1280x720');
   // Walk to a car far down a 200-car roster: each look reaches the host.
   assert.equal(await p.page.locator('.thumb').count(), 200, 'two hundred cars, no cap');

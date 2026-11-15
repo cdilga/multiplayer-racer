@@ -149,7 +149,9 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race goes on');
     // The withdrawal hands the car's controls back to neutral over the autopilot's quarter-second (30 ticks) blend: wait on sim
     // ticks, not wall time (a slow host runs fewer in the same second).
-    // Stopped within a second of sim time (120 ticks) of the removal landing, polled from here: waitForFunction resolves at
+    // Stopped, polled from here (how fast is the host unit test's call:
+    // a_player_removed_from_the_pause_menu_stops_driving_after_the_resume; a slow host's poll lands hundreds of ticks
+    // apart, CI 18040): waitForFunction resolves at
     // once on an async predicate (its Promise is truthy), so the old 45-tick wait never waited and a fast host sampled the
     // car mid-handback (CI 17209; br-63l3: the car goes 0.9 -> 0 over ~38 ticks and stays stopped).
     for (const deadline = Date.now() + 60_000; ; ) {
@@ -163,7 +165,6 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     // Withdrawn: no seat owns the car any more and it stops driving (the body stays in the world until S04c's withdrawal rules).
     assert.equal(after.host.seats.some((x) => x.car === car2), false, 'no seat owns the withdrawn car');
     assert.equal(after.cars.find((c) => c.car === car2)?.input?.throttle ?? 0, 0, 'and it no longer drives');
-    assert.ok(after.tick <= removedAt + 120 + 30, `it stopped within a second of the removal (tick ${after.tick}, removed at ${removedAt})`);
     // Nothing is deleted or merged by the removal (the others, racing on, may shed parts of their own meanwhile: never fewer).
     assert.ok(after.debris.filter((d) => d.kind === 'Part').length >= debrisBefore, "the removed car's debris stays");
     await shot(host, { path: `${CAPTURE}/race-after-remove@1080p.png` });

@@ -444,7 +444,9 @@ export class Session {
       // Every reason the host holds the race shows on the phone (council review 2026-11-15: only a hidden host tab
       // did, so a menu pause left players jabbing live-looking sticks at a frozen car). The card stays up through the
       // host's resume countdown (no HUD rides it) and clears with the first HUD of the running race.
-      if (h.pause && this.you) this.set('host-paused');
+      // A lost TV picture (RenderLost) is brief and the phone stays usable meanwhile (Identify from Settings still reaches
+      // the seat: c06-identify-menu), so it keeps the playing screen.
+      if (h.pause && h.pause !== 'RenderLost' && this.you) this.set('host-paused');
       else if (this.phase === 'host-paused') this.set('playing');
       this.onChange();
       return;
