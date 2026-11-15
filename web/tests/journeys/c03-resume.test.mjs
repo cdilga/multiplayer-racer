@@ -166,6 +166,29 @@ test('a Claim retried with the same request id (a lost reply) yields one seat', 
   assert.equal((await seats(host)).length, 1, 'one seat from four claims');
 });
 
+test('the host menu pausing a race shows "Paused by the host" on the phone, cleared when the race resumes', { timeout: 180_000 }, async () => {
+  // Council review 2026-11-15: only a hidden host tab reached the phone; the menu's pause (`PauseReason::Host`) left a
+  // live-looking HUD over a frozen car.
+  const { host, joinUrl } = await openHost();
+  const p = await joined(joinUrl, 'Kylie');
+  await p.page.getByRole('button', { name: /^Ready/ }).click();
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
+  await wait(p.page, () => document.querySelectorAll('.zone').length > 0);
+  await host.evaluate(() => window.__jjChrome.openMenu());
+  await wait(host, () => window.__jjTest.pauseReasons().includes('manual'), undefined, 10_000);
+  await wait(p.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 10_000);
+  const card = await p.page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length }));
+  assert.deepEqual(card, { title: 'Paused by the host', sticks: 0 }, 'a card says why, and there are no sticks to jab');
+  if (process.env.JJ_CAPTURE_DIR) {
+    await p.page.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-phone.png` });
+    await host.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-tv.png` });
+  }
+  await host.evaluate(() => window.__jjChrome.closeMenu());
+  // The card stays through the host's resume countdown and goes with the running race's first HUD.
+  await wait(p.page, () => window.__jjController.inspect().phase === 'playing' && document.querySelectorAll('.zone').length > 0, undefined, 15_000);
+  if (process.env.JJ_CAPTURE_DIR) await p.page.screenshot({ path: `${process.env.JJ_CAPTURE_DIR}/menu-pause-resumed-phone.png` });
+});
+
 test('every §11 state is reached by a scripted cause and shows its wording', { timeout: 600_000 }, async () => {
   const text = (page) => page.evaluate(() => document.body.textContent);
   const phoneAt = async (url, route) => {
@@ -217,7 +240,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
     document.dispatchEvent(new Event('visibilitychange'));
   });
   await wait(watcher.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 20_000);
-  assert.match(await text(watcher.page), /Host paused/i);
+  assert.match(await text(watcher.page), /Paused by the host/i);
   await free.host.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));

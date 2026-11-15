@@ -9,6 +9,7 @@
 //   &choose=1                          playing in the lobby before vehicle confirmation
 //   &ready=1                            this seat is Ready
 //   &name=<text>                        the player's name
+//   &pause=Host|HostHidden|RenderLost|Fault   why host-paused holds the race (the HUD's PauseReason; default Host)
 import { seatColor } from '../../../shared/ui';
 import type { Phase, Session } from './session';
 
@@ -38,7 +39,7 @@ export function applyState(session: Session, p: URLSearchParams): void {
     session.isReady = p.get('ready') === '1';
     // The launch's cooldown, 0 (ready) to 1 (just launched), so the pod's cooling look can be drawn (P1-FL14).
     if (p.has('cool')) session.launchCooldownFixture = Math.min(1, Math.max(0, Number(p.get('cool')) || 0));
-    session.hud = { position: round === 'racing' ? 3 : null, lap: round === 'racing' ? [2, 3] : null, boost: Number.parseInt(p.get('boost') ?? '0', 10), pause: phase === 'host-paused' ? 'HostHidden' : null, derby: null, missed: p.has('missed') ? Number(p.get('missed')) & 255 : null };
+    session.hud = { position: round === 'racing' ? 3 : null, lap: round === 'racing' ? [2, 3] : null, boost: Number.parseInt(p.get('boost') ?? '0', 10), pause: phase === 'host-paused' ? (p.get('pause') ?? 'Host') : null, derby: null, missed: p.has('missed') ? Number(p.get('missed')) & 255 : null };
   }
   session.onChange();
 }

@@ -439,7 +439,10 @@ export class Session {
       if (!j) return;
       const h = (JSON.parse(j) as { hud: { position: number | null; lap: [number, number] | null; boost: number; pause: string | null; derby?: Hud['derby']; missed?: number | null } }).hud;
       this.hud = { position: h.position, lap: h.lap, boost: h.boost, pause: h.pause, derby: h.derby ?? null, missed: h.missed ?? null };
-      if (h.pause === 'HostHidden' && this.you) this.set('host-paused');
+      // Every reason the host holds the race shows on the phone (council review 2026-11-15: only a hidden host tab
+      // did, so a menu pause left players jabbing live-looking sticks at a frozen car). The card stays up through the
+      // host's resume countdown (no HUD rides it) and clears with the first HUD of the running race.
+      if (h.pause && this.you) this.set('host-paused');
       else if (this.phase === 'host-paused') this.set('playing');
       this.onChange();
       return;

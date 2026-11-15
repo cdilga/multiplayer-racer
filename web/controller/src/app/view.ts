@@ -49,7 +49,12 @@ const CARDS: Partial<Record<Phase, (s: Session) => Card>> = {
   joining: () => ({ spin: true, title: 'Joining…', body: 'Saving you a number.' }),
   reconnecting: (s) => ({ spin: true, title: `Reconnecting as #${s.you?.number ?? ''}…`, body: 'Your car is on autopilot until you’re back.' }),
   'host-gone': () => ({ icon: 'triangle-alert', tone: 'warn', title: 'The host seems to have gone', body: 'Ask them for a new code. We’ll keep trying quietly.', actions: [['edit', 'Enter a new code', 'quiet']] }),
-  'host-paused': () => ({ icon: 'pause', title: 'Host paused', body: 'Back in a moment.' }),
+  // Why the host is holding the race (the HUD's `PauseReason`, §5.4). Council review 2026-11-15: every reason gets a card,
+  // not only a hidden host tab.
+  'host-paused': (s) =>
+    s.hud?.pause === 'RenderLost' ? { icon: 'pause', title: 'The TV is getting its picture back', body: 'Hang on, the race carries on in a moment.' }
+    : s.hud?.pause === 'Fault' ? { icon: 'triangle-alert', tone: 'warn', title: 'The TV hit a snag', body: 'This race can’t carry on. The host can start a new room.' }
+    : { icon: 'pause', title: 'Paused by the host', body: s.hud?.pause === 'HostHidden' ? 'The room is hidden on the TV. Back when it’s showing again.' : 'Hang tight, the race carries on when they’re done.' },
   'another-tab': () => ({ icon: 'smartphone', title: 'Playing in another tab', body: 'You can only drive from one tab at a time.', actions: [['takeover', 'Use this one']] }),
   'update-needed': () => ({ spin: true, title: 'Updating…', body: 'A newer build is out. Reloading once.' }),
 };
@@ -129,7 +134,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
 
   const render = () => {
     // The join card is redrawn when a round starts or stops racing (P1-C10: it offers Practice first while one runs).
-    const key = session.phase === 'playing' ? `play:${session.you?.number}` : session.phase === 'ready-to-join' ? `${session.phase}:${session.code}:${session.roomPhase === 'Racing'}` : `${session.phase}:${session.code}`;
+    const key = session.phase === 'playing' ? `play:${session.you?.number}` : session.phase === 'ready-to-join' ? `${session.phase}:${session.code}:${session.roomPhase === 'Racing'}` : session.phase === 'host-paused' ? `${session.phase}:${session.code}:${session.hud?.pause}` : `${session.phase}:${session.code}`;
     if (key === shown) return void updateHud();
     shown = key;
     sticks?.drive.release();

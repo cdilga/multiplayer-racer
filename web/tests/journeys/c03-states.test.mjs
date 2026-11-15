@@ -35,7 +35,7 @@ const STATES = {
   joining: ['joining', /Joining/i, null],
   reconnecting: ['reconnecting&seat=12', /Reconnecting as #12/i, null],
   'host-gone': ['host-gone', /The host seems to have gone/i, 'Enter a new code'],
-  'host-paused': ['host-paused&seat=12', /Host paused/i, null],
+  'host-paused': ['host-paused&seat=12', /Paused by the host/i, null],
   'another-tab': ['another-tab', /Playing in another tab/i, 'Use this one'],
   'update-needed': ['update-needed', /Updating/i, null],
   playing: ['playing&seat=12', /#12/i, 'Ready'],
@@ -47,7 +47,7 @@ async function open(state, [width, height]) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('response', (r) => r.status() >= 400 && errors.push(`${r.status()} ${r.url()}`));
-  await page.goto(`${server.origin}${BASE}j/ABCD#state=${STATES[state][0]}`);
+  await page.goto(`${server.origin}${BASE}j/ABCD#state=${STATES[state]?.[0] ?? state}`);
   await page.waitForFunction(() => document.documentElement.dataset.jjController === 'ready', undefined, { timeout: 30_000 });
   await page.waitForTimeout(200);
   return { page, errors };
@@ -103,8 +103,12 @@ test('the next actions do what they say', { timeout: 60_000 }, async () => {
   await page.context().close();
 });
 
-test('host paused is a card with the wording, and no sticks to touch while the host is away', { timeout: 60_000 }, async () => {
-  const { page } = await open('host-paused', SIZES['phone-landscape-844x390']);
-  const r = await page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length, state: document.querySelector('.card-screen')?.dataset.state }));
-  assert.deepEqual([r.title, r.sticks, r.state], ['Host paused', 0, 'host-paused']);
+test('host paused is a card with the wording for each reason, and no sticks to touch while the host is away', { timeout: 60_000 }, async () => {
+  // Council review 2026-11-15: every PauseReason the HUD carries has its card, not only a hidden host tab.
+  for (const [pause, title] of [['Host', 'Paused by the host'], ['HostHidden', 'Paused by the host'], ['RenderLost', 'The TV is getting its picture back'], ['Fault', 'The TV hit a snag']]) {
+    const { page } = await open(`host-paused&pause=${pause}`, SIZES['phone-landscape-844x390']);
+    const r = await page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length, state: document.querySelector('.card-screen')?.dataset.state }));
+    assert.deepEqual([r.title, r.sticks, r.state], [title, 0, 'host-paused'], pause);
+    await page.context().close();
+  }
 });
