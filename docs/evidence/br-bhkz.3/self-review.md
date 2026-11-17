@@ -52,5 +52,7 @@ the TV stills are the whole page at 1920x1080 (stored at 1440 wide). Every car i
 - A person aiming a bunger or shaking a magpie: bots only. Whether the magpie is fair (20 of 20 pecks landed on bots
   in a minute) is a playtest question; its turn rate (`TURN_RAD_S`) is the number to move.
 - The weapons in a race (they are in the race pool too): fixtures only, no race capture.
-- The published preview, a real phone, Safari or WebKit.
+- The stills are a local build. The same capture ran against the published preview `v02-16624885` and passed with no
+  page errors (24 bungers and 27 magpies used in its round); the tinnie print fix is not in a published preview yet.
+- A real phone, Safari or WebKit.
 - A bike wearing a roo bar (the bar is 1.8 m wide whatever the vehicle).

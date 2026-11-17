@@ -61,7 +61,9 @@ first-drive cards in the stills are that, not the feature).
 ## Not covered
 
 - A real phone, Safari or WebKit: Chromium's phone emulation on a Mac only.
-- The published preview: these stills are a local build (the preview of this commit was still building).
+- The stills are a local build. The same capture ran against the published preview `v02-16624885` (the commit before
+  the wreck-by banner and the card/callout fix): it passed with no page errors and one still was looked at (Grid,
+  mid-carnage: diagrams and callouts as here). The wreck-by banner is not in a published preview yet.
 - A person holding the phone: every car in the stills is on the autopilot, so the "tip until your first hit" line
   (`Ram at speed · hit doors and wheels`) had already gone by the first still; g06-derby asserts the diagram on a real
   phone page, not the tip.
