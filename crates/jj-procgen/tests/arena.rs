@@ -628,7 +628,7 @@ fn the_carnage_bowl_lab_scene_is_the_generators_output() {
     }
     let fixture = serde_json::json!({
         "scenario": "carnage-bowl",
-        "what": "br-bbki.11 (R131 lab scene): the carnage bowl. The player's car (0) and twelve bots on the autopilot in the 13-car bowl hunt each other for a minute of derby: the player's car scores by ramming, nobody leaves the bowl. The Feel Lab's scene of the same map (maps/lab/carnage-bowl.json) runs it live with Bots 12.",
+        "what": "br-bbki.11 (R131 lab scene): the carnage bowl. The player's car (0) and twelve bots on the autopilot in the 13-car bowl hunt each other for a minute of derby: the player's car scores by ramming, nobody leaves the bowl. The Feel Lab's scene of the same map (maps/lab/carnage-bowl.json) runs it live with Bots 12. Re-pinned for br-bhkz.4 (arena generator 4: a floor 3 m bigger in radius, the crossover and 20 degree jumps): the grid follows the new floor; the envelope is unchanged.",
         "map": "maps/lab/carnage-bowl.json",
         "seed": 7,
         "ticks": 60 * S,
@@ -690,7 +690,7 @@ fn arenas_at_8_24_and_32_cars_carry_jumps_relief_and_an_island() {
         "mnd",
         "dips",
         "rocks",
-        "maxLip",
+        "lips (crossover first)",
         "m2/car"
     )];
     for cars in FIELD_CARS {
@@ -700,11 +700,38 @@ fn arenas_at_8_24_and_32_cars_carry_jumps_relief_and_an_island() {
             let d = design(&map);
             let jumps = f.relief.iter().filter(|p| p.kind.is_jump()).count();
             let bumps = f.count(ReliefKind::Mound) + f.count(ReliefKind::Dip);
+            // br-bhkz.4: the crossover in every arena, and at least two more jumps round it, a table-top among them.
             assert!(
-                jumps >= 2 && f.count(ReliefKind::TableTop) >= 1,
-                "{cars}/{seed}: jumps {jumps}, table-tops {}",
+                f.count(ReliefKind::Crossover) == 1
+                    && jumps >= 3
+                    && f.count(ReliefKind::TableTop) >= 1,
+                "{cars}/{seed}: crossovers {}, jumps {jumps}, table-tops {}",
+                f.count(ReliefKind::Crossover),
                 f.count(ReliefKind::TableTop)
             );
+            // Launches worth taking: the crossover's lips stand 1.5 m or more, no lip under a metre, none over the
+            // validator's 2 m, and every launch ramp is the measured 20 degrees or the table-top's gentler end.
+            for j in f.relief.iter().filter(|p| p.kind.is_jump()) {
+                let least = if j.kind == ReliefKind::Crossover {
+                    1.5
+                } else {
+                    0.7
+                };
+                assert!(
+                    j.height >= least && j.height <= 2.0,
+                    "{cars}/{seed}: a {} lip of {} m",
+                    j.kind.name(),
+                    j.height
+                );
+                for run in [j.up, j.down] {
+                    let slope = j.height / run;
+                    assert!(
+                        slope <= jj_procgen::arena::field::LAUNCH_SLOPE + 1e-9 && slope > 0.2,
+                        "{cars}/{seed}: a {} ramp of slope {slope:.3}",
+                        j.kind.name()
+                    );
+                }
+            }
             assert!(bumps >= 2, "{cars}/{seed}: {bumps} mounds and dips");
             assert!(!f.rocks.is_empty(), "{cars}/{seed}: something to ram round");
             // The field is in the map: every jump's top stands in the terrain, the rocks are solid dressing.
@@ -736,7 +763,8 @@ fn arenas_at_8_24_and_32_cars_carry_jumps_relief_and_an_island() {
             assert_eq!(solid, f.rocks.len(), "{cars}/{seed}: the island's rocks");
             assert!(f.rocks.iter().all(|r| r.h <= MAX_ISLAND_H_M));
             // Pieces keep their lanes (sampled on a 0.5 m grid): a jump or the island has half a lane round it, a mound or
-            // dip half its pad, and no point is inside two of those.
+            // dip half its pad, and no point is inside two of those. The crossover and its gate's rocks are one piece
+            // (br-bhkz.4: the rocks stand against the deck on purpose).
             let n = (f.radius * 2.0) as i64;
             for i in -n..=n {
                 for k in -n..=n {
@@ -748,24 +776,32 @@ fn arenas_at_8_24_and_32_cars_carry_jumps_relief_and_an_island() {
                             BUMP_PAD_M
                         }) - 0.05
                     };
-                    let on = f.relief.iter().filter(|p| p.covers(x, z, pad(p))).count()
-                        // The island's rocks are one piece (a spine's overlap on purpose).
-                        + usize::from(
-                            f.rocks
-                                .iter()
-                                .any(|r| (x - r.x).hypot(z - r.z) <= r.r + LANE_M / 2.0 - 0.05),
-                        );
+                    let rock = f
+                        .rocks
+                        .iter()
+                        .any(|r| (x - r.x).hypot(z - r.z) <= r.r + LANE_M / 2.0 - 0.05);
+                    let on =
+                        f.relief
+                            .iter()
+                            .filter(|p| p.kind != ReliefKind::Crossover && p.covers(x, z, pad(p)))
+                            .count()
+                            + usize::from(
+                                rock || f.relief.iter().any(|p| {
+                                    p.kind == ReliefKind::Crossover && p.covers(x, z, pad(p))
+                                }),
+                            );
                     assert!(on <= 1, "{cars}/{seed}: pieces crowd ({x}, {z})");
                 }
             }
-            let max_lip = f
+            let lips: Vec<String> = f
                 .relief
                 .iter()
                 .filter(|p| p.kind.is_jump())
-                .map(|p| p.height)
-                .fold(0.0, f64::max);
+                .map(|p| format!("{:.1}", p.height))
+                .collect();
+            let max_lip = lips.join("/");
             rows.push(format!(
-                "{cars:>4} {seed:>5} {:>7.1} {:>7.1} {jumps:>5} {:>7} {:>6} {:>4} {:>5} {:>6} {max_lip:>6.1} {:>8.0}",
+                "{cars:>4} {seed:>5} {:>7.1} {:>7.1} {jumps:>5} {:>7} {:>6} {:>4} {:>5} {:>6} {max_lip:>6} {:>8.0}",
                 d.floor_r,
                 f.radius,
                 f.count(ReliefKind::TableTop),
@@ -912,16 +948,23 @@ fn nothing_in_the_field_traps_a_stopped_car() {
                     }
                     _ => {
                         let top = p.up + p.table / 2.0 - p.length() / 2.0;
-                        // Across the jump, both ways (the worst way off a table).
-                        for (k, h) in [
-                            (0, out + core::f32::consts::FRAC_PI_2),
-                            (1, out - core::f32::consts::FRAC_PI_2),
-                            (2, out),
-                        ] {
+                        // Across the jump, both ways (the worst way off a table). Across the crossover's deck stand the
+                        // gate's rocks (br-bhkz.4: a car nose-on to a rock is the island's case, below), so from its
+                        // middle a car drives out along it, both ways.
+                        let across: Vec<(f64, f32)> = if p.kind == ReliefKind::Crossover {
+                            vec![(top, out), (top, out + core::f32::consts::PI)]
+                        } else {
+                            vec![
+                                (top, out + core::f32::consts::FRAC_PI_2),
+                                (top, out - core::f32::consts::FRAC_PI_2),
+                                (top, out),
+                            ]
+                        };
+                        for (k, (u, h)) in across.into_iter().enumerate() {
                             spots.push((
                                 format!("{} top {k}", p.kind.name()),
-                                p.x + p.dir[0] * top,
-                                p.z + p.dir[1] * top,
+                                p.x + p.dir[0] * u,
+                                p.z + p.dir[1] * u,
                                 h,
                                 Some(*p),
                             ));
@@ -957,7 +1000,9 @@ fn nothing_in_the_field_traps_a_stopped_car() {
                 } else {
                     0.7
                 };
-                let (x, z) = (r.x + (r.r + 1.6) * a.cos(), r.z + (r.r + 1.6) * a.sin());
+                // A car's half-length and a hand off the rock (br-bhkz.4: it was 1.6 m, the car's tail 0.6 m inside
+                // the rock, which pushed it out over a clear floor; with a jump's side slope a lane away it wedged).
+                let (x, z) = (r.x + (r.r + 2.4) * a.cos(), r.z + (r.r + 2.4) * a.sin());
                 spots.push((
                     "island".into(),
                     x,
@@ -1018,6 +1063,10 @@ fn nothing_in_the_field_traps_a_stopped_car() {
 /// The bots hunting round a featured bowl meet the jumps, fly and land: a minute of a 13-car derby on the carnage bowl's
 /// arena, counting every judged landing whose flight took off over a jump. Landings are judged (P1-FL07) and a crash is
 /// righted at once: every car keeps moving and stays in the bowl.
+///
+/// br-bhkz.4: with the 12 degree hops the bots' lines skirted, this measured 5 landings by 3 bots a minute (and asked
+/// for 3 by 2). With 20 degree launches and the crossover on the bots' line through the island's gate it measures 18
+/// landings by 10 of the 13 bots, 8 of them off the crossover, none a crash; the floors below are about half of that.
 #[test]
 fn derby_bots_fly_the_jumps_and_land() {
     let (cars, seed) = (13, BANK_SEED);
@@ -1035,6 +1084,8 @@ fn derby_bots_fly_the_jumps_and_land() {
     let mut last = vec![None; cars];
     let mut tiers = [0u32; 4];
     let (mut jump_landings, mut fliers) = (0u32, std::collections::BTreeSet::new());
+    let mut by_kind = std::collections::BTreeMap::<&str, u32>::new();
+    let mut airtime = Vec::<f32>::new();
     let mut max_r = 0.0f64;
     let mut upright = vec![0u64; cars];
     for t in 0..(60 * S) {
@@ -1077,6 +1128,23 @@ fn derby_bots_fly_the_jumps_and_land() {
                         jump_landings += 1;
                         fliers.insert(k);
                         tiers[l.tier.as_u8() as usize] += 1;
+                        let kind = f
+                            .relief
+                            .iter()
+                            .find(|p| p.kind.is_jump() && p.covers(x0, z0, 4.0))
+                            .map_or("?", |p| p.kind.name());
+                        *by_kind.entry(kind).or_insert(0u32) += 1;
+                        airtime.push(l.airtime_s);
+                        if std::env::var_os("JJ_TRACE").is_some() {
+                            eprintln!(
+                                "t {:.1} car {k} flew a {kind}: {:.2} s, {:.1} m, tier {} ({:.0} deg)",
+                                t as f64 / S as f64,
+                                l.airtime_s,
+                                (x - x0).hypot(z - z0),
+                                l.tier.as_u8(),
+                                l.angle_deg
+                            );
+                        }
                     }
                     last[k] = air.last;
                 }
@@ -1087,25 +1155,30 @@ fn derby_bots_fly_the_jumps_and_land() {
     // Every car spends its time on the floor on its wheels (a crash landing is righted at once): upright in 90 % of the
     // samples (a car on the bank leans with it and counts as upright).
     let least = upright.iter().copied().min().unwrap_or(0) as f64 / (60 * S / 6) as f64;
+    airtime.sort_by(f32::total_cmp);
     eprintln!(
-        "jump landings {jump_landings} by {} of {cars} cars; tiers clean/ok/bad/crash {tiers:?}; max r {max_r:.1} of wall {:.1}",
+        "jump landings {jump_landings} by {} of {cars} cars ({by_kind:?}); tiers clean/ok/bad/crash {tiers:?}; airtime median {:.2} s, longest {:.2} s; least upright {least:.2}; max r {max_r:.1} of wall {:.1}",
         fliers.len(),
+        airtime.get(airtime.len() / 2).copied().unwrap_or(0.0),
+        airtime.last().copied().unwrap_or(0.0),
         d.wall_r()
     );
     assert!(
         max_r < d.wall_r() + ESCAPE_MARGIN_M,
         "no car leaves the bowl"
     );
-    // Bots hunt cars, not jumps: they fly a jump when one lies on the way to a rival (measured: 5 by 3 bots a minute).
+    // Bots hunt cars, not jumps: they fly a jump when one lies on the way to a rival, the crossover among them.
     assert!(
-        jump_landings >= 3,
+        jump_landings >= 10,
         "the bots fly the jumps: {jump_landings}"
     );
     assert!(
-        fliers.len() >= 2,
-        "more than one bot flies: {}",
+        fliers.len() >= 6,
+        "most bots fly: {} of {cars}",
         fliers.len()
     );
+    let crossed = by_kind.get("crossover").copied().unwrap_or(0);
+    assert!(crossed >= 3, "the bots fly the crossover: {crossed}");
     assert!(
         least > 0.9,
         "every car is on its wheels most of the time ({least:.2})"
@@ -1113,10 +1186,18 @@ fn derby_bots_fly_the_jumps_and_land() {
     assert_eq!(tiers[3], 0, "no crash landings off the jumps");
 }
 
-/// P1-M-arena-features: the jumps fixture (`scenarios/derby/arena-jumps.json`) on the 8-car bank arena
-/// (`maps/derby-bowl-8.json`). For each of its jumps a bot on the autopilot hunts a parked rival on the far side, so its
-/// line runs over the jump: once up the launch ramp, then (re-placed) the other way. The envelope: every hunter flies and
-/// lands on its wheels (judged clean or ok, never bad or a crash), both ways round, and rams its rival; no car leaves the bowl.
+/// P1-M-arena-features, br-bhkz.4: the jumps fixture (`scenarios/derby/arena-jumps.json`) on the 8-car bank arena
+/// (`maps/derby-bowl-8.json`). Two bots take turns over every jump, the crossover first: one hunts the other, parked on
+/// the far side, so its line runs over the jump; then they swap and the other bot flies it the other way. The envelope:
+/// each flight is a real one (the hunter's landings and time in the air go up every round), both bots land on their
+/// wheels (judged clean or ok, never bad or a crash) and ram their rival, and neither leaves the bowl.
+///
+/// Two cars, not a pair per jump: a hunter picks the nearest rival it faces, so with other pairs on the floor the
+/// crossover's bot chased a neighbour instead of the rival across the island.
+const FIXTURE_ROUND_TICKS: u64 = 600;
+/// Every flight in the jumps fixture adds at least this much time off the ground, s (measured 1.0-1.2 s each).
+const FIXTURE_AIR_S: f64 = 0.8;
+
 #[test]
 fn the_arena_jumps_fixture_is_the_generators_output() {
     let cars = 8;
@@ -1124,7 +1205,7 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
     let f = field(BANK_SEED, cars);
     let d = design(&map);
     let jumps: Vec<_> = f.relief.iter().filter(|p| p.kind.is_jump()).collect();
-    assert!(jumps.len() >= 2);
+    assert!(jumps.len() >= 3 && jumps[0].kind == ReliefKind::Crossover);
     let root = format!("{}/../..", env!("CARGO_MANIFEST_DIR"));
     // Is (x, z) clear floor: on the floor, off every piece and rock by a car's half-length?
     let clear = |x: f64, z: f64| {
@@ -1140,21 +1221,28 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
             "headingDeg": (heading.to_degrees() * 10.0).round() / 10.0,
         })
     };
-    let (mut fixture_cars, mut place, mut autopilot, mut expect) =
-        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut place, mut autopilot, mut expect) = (Vec::new(), Vec::new(), Vec::new());
     let wall = ((d.wall_r() + ESCAPE_MARGIN_M) * 10.0).round() / 10.0;
-    // Two rounds: the hunters run up each launch ramp, then the other way.
-    // (tick, which way along the jump, start speed m/s): the gentle way down is a gentler launch, so it's taken faster.
-    const ROUNDS: [(u64, f64, f64); 2] = [(200, 1.0, 16.0), (800, -1.0, 22.0)];
-    for (j, p) in jumps.iter().enumerate() {
-        let (hunter, prey) = (2 * j, 2 * j + 1);
-        // Parked on the spawn ring until the first round.
-        for car in [hunter, prey] {
-            let a = core::f64::consts::TAU * car as f64 / (2 * jumps.len()) as f64;
+    // Parked across the spawn ring from each other until the first round.
+    let fixture_cars: Vec<serde_json::Value> = (0..2)
+        .map(|car| {
+            let a = core::f64::consts::PI * f64::from(car);
             let r = d.floor_r - 5.5;
-            fixture_cars.push(serde_json::json!({ "pose": pose(r * a.cos(), r * a.sin(), a) }));
-        }
-        for (tick, way, speed) in ROUNDS {
+            serde_json::json!({ "pose": pose(r * a.cos(), r * a.sin(), a) })
+        })
+        .collect();
+    // The hunter starts at this speed, 12 m before the ramp. br-bhkz.4: it was 16 then 22 m/s over 12-degree hops; a
+    // 20-degree launch from 14 m/s (about 17 at the ramp's foot) flies over a second and 18 m, and faster would carry a
+    // bot past the floor the 8-car bowl has beyond its jumps.
+    let speed = 14.0f64;
+    let mut flights = [0u32; 2];
+    for (j, p) in jumps.iter().enumerate() {
+        // Up the jump's launch ramp, then the other way (the crossover from its other end): car 0 flies the first,
+        // car 1 the second.
+        for (hunter, way) in [(0usize, 1.0), (1usize, -1.0)] {
+            let round = (2 * j + hunter) as u64;
+            let tick = 200 + FIXTURE_ROUND_TICKS * round;
+            let prey = 1 - hunter;
             let (tx, tz) = (p.dir[0] * way, p.dir[1] * way);
             let heading = libm::atan2(tx, tz);
             let half = p.length() / 2.0;
@@ -1172,28 +1260,32 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
                 "linvel": [((speed * tx) * 100.0f64).round() / 100.0, 0, ((speed * tz) * 100.0f64).round() / 100.0] }));
             place.push(serde_json::json!({ "car": prey, "tick": tick, "pose": pose(px, pz, heading + core::f64::consts::FRAC_PI_2),
                 "linvel": [0, 0, 0] }));
+            autopilot.push(serde_json::json!({ "tick": tick, "car": hunter, "on": true }));
+            autopilot.push(serde_json::json!({ "tick": tick, "car": prey, "on": false }));
+            // By the end of its round the hunter has flown this jump: one more landing, and real air under it.
+            flights[hunter] += 1;
+            let at = tick + FIXTURE_ROUND_TICKS - 10;
+            expect.extend([
+                serde_json::json!({ "car": hunter, "atTick": at, "metric": "landings", "min": flights[hunter], "max": 1000 }),
+                serde_json::json!({ "car": hunter, "atTick": at, "metric": "airtimeS",
+                    "min": (FIXTURE_AIR_S * f64::from(flights[hunter]) * 10.0).round() / 10.0, "max": 600 }),
+            ]);
         }
-        autopilot.push(serde_json::json!({ "tick": ROUNDS[0].0, "car": hunter, "on": true }));
+    }
+    for car in 0..2 {
         expect.extend([
-            // br-7htf: since the br-bbki.26 handling pass (2026-10-31) car 2's 22 m/s return pass hunts its rival on a
-            // line inside the jump and lands once; the others still fly both ways round.
-            serde_json::json!({ "car": hunter, "metric": "landings", "min": if hunter == 2 { 1 } else { 2 }, "max": 1000 }),
-            serde_json::json!({ "car": hunter, "metric": "landingTier", "min": 0, "max": 1 }),
-            serde_json::json!({ "car": hunter, "metric": "derbyPoints", "min": 0.1, "max": 100000 }),
-            serde_json::json!({ "car": hunter, "metric": "landingUpY", "min": 0.7, "max": 1.001 }),
+            serde_json::json!({ "car": car, "metric": "landingTier", "min": 0, "max": 1 }),
+            serde_json::json!({ "car": car, "metric": "landingUpY", "min": 0.7, "max": 1.001 }),
+            serde_json::json!({ "car": car, "metric": "derbyPoints", "min": 0.1, "max": 100000 }),
+            serde_json::json!({ "car": car, "metric": "maxRadiusM", "min": 0, "max": wall }),
         ]);
-        for car in [hunter, prey] {
-            expect.push(
-                serde_json::json!({ "car": car, "metric": "maxRadiusM", "min": 0, "max": wall }),
-            );
-        }
     }
     let fixture = serde_json::json!({
         "scenario": "arena-jumps",
-        "what": "P1-M-arena-features: bots fly the derby arena's jumps and land. On the 8-car bank arena (maps/derby-bowl-8.json, seed 11) each jump has a bot on the autopilot and a parked rival: at tick 200 the bot starts about 12 m before the jump's launch ramp at 16 m/s and the rival waits about 20 m past its far end, beyond the flight (the nearest clear floor), so the bot's hunting line runs over the jump; at tick 800 both are placed again the other way round (the bot at 22 m/s: the way down is the gentler launch). Every bot flies and lands on its wheels (its first landing judged clean or ok by the landing judge, never bad or a crash), flies both ways round, and rams its rival; the rivals end on their wheels and no car leaves the bowl. Generated by crates/jj-procgen/tests/arena.rs (JJ_BLESS=1).",
+        "what": "P1-M-arena-features, br-bhkz.4: bots fly the derby arena's jumps and land. On the 8-car bank arena (maps/derby-bowl-8.json, seed 11) two bots take turns over every jump, the crossover through the island's gate first, then the jumps either side of it. Each round (every 600 ticks from tick 200) one bot is put on the autopilot about 12 m before a jump's launch ramp at 14 m/s and the other is parked about 20 m past its far end, beyond the flight (the nearest clear floor), so the hunter's line runs over the jump (for the crossover, through the gate between the island's rocks, which the bots take instead of going round); the next round they swap and the other bot flies the same jump the other way. Every flight is a real one (by the end of its round the hunter has one more landing and at least 0.8 s more time in the air), both bots land on their wheels (the first landing judged clean or ok by the landing judge, never bad or a crash) and ram their rival, and neither leaves the bowl. Re-pinned for br-bhkz.4 (generator 4: 20 degree launches to 1-2 m lips and the crossover; the old fixture flew 12 degree hops at 16 and 22 m/s with a pair of cars per jump, and car 2 was let off its second flight, br-7htf: that relaxation is removed; two cars because a hunter picks the nearest rival it faces, and with other pairs on the floor that wasn't the one across the jump). Generated by crates/jj-procgen/tests/arena.rs (JJ_BLESS=1).",
         "map": "maps/derby-bowl-8.json",
         "seed": 7,
-        "ticks": 1400,
+        "ticks": 200 + FIXTURE_ROUND_TICKS * 2 * jumps.len() as u64,
         "derby": { "atTick": 0 },
         "cars": fixture_cars,
         "place": place,
@@ -1212,9 +1304,13 @@ fn the_arena_jumps_fixture_is_the_generators_output() {
     );
 }
 
-/// P1-W04: a derby's item boxes never block a jump: no box overlaps a jump's ramps, table or side slopes (the box's
-/// 1.3 m cube, `generic/item-station`), on arenas that carry the field; and there are still plenty of them. (A box may
-/// stand on a dip's gentle edge: it never collides.)
+/// P1-W04: a derby's item boxes never block a jump: no box stands on a jump's ramps, table or side slopes, and the
+/// box's 1.3 m cube (`generic/item-station`) reaches nowhere a jump stands more than the sim's flat-ground allowance
+/// (`BOX_FLAT_RISE_M`, 0.2 m) over the floor, on arenas that carry the field; and there are still plenty of them. (A box
+/// may stand on a dip's gentle edge: it never collides.) br-bhkz.4: the check was the cube against the whole footprint;
+/// the sim's placement reads the ground 2 m round a spot in eight directions, which can miss the corner of a ramp's
+/// foot, where the ramp is a few centimetres high (seed 5/8 put a box 0.4 m off one). That blocks nothing, so the
+/// check is now the ground under the cube.
 #[test]
 fn derby_item_boxes_never_block_a_jump() {
     for (seed, cars) in [(1, 8), (2, 16), (3, 32), (4, 24), (5, 8)] {
@@ -1234,10 +1330,19 @@ fn derby_item_boxes_never_block_a_jump() {
         for b in boxes {
             let (x, z) = (f64::from(b.position[0]), f64::from(b.position[2]));
             for p in f.relief.iter().filter(|p| p.kind.is_jump()) {
-                let pad = 0.65;
+                let under = [
+                    (0.0, 0.0),
+                    (0.65, 0.65),
+                    (-0.65, 0.65),
+                    (0.65, -0.65),
+                    (-0.65, -0.65),
+                ]
+                .iter()
+                .map(|&(dx, dz)| p.height_at(x + dx, z + dz))
+                .fold(0.0, f64::max);
                 assert!(
-                    !p.covers(x, z, pad),
-                    "{seed}/{cars}: a box at ({x:.1}, {z:.1}) is on a {}",
+                    !p.covers(x, z, 0.0) && under <= 0.2,
+                    "{seed}/{cars}: a box at ({x:.1}, {z:.1}) is on a {} (the jump stands {under:.2} m under it)",
                     p.kind.name()
                 );
             }
@@ -1371,4 +1476,582 @@ fn derby_bots_keep_off_the_rim_and_never_park() {
         per_minute >= 110.0,
         "everyone smashes: {per_minute:.0} score events a minute"
     );
+}
+
+// ---- br-bhkz.4: launches worth taking ----
+
+/// One measured flight off a jump.
+#[derive(Debug, Clone, Copy)]
+struct Flight {
+    /// Speed as its nose reached the ramp's foot, m/s.
+    foot_mps: f32,
+    /// Speed as the last wheel left the ground, m/s.
+    lip_mps: f32,
+    airtime_s: f32,
+    /// Ground distance from takeoff to touchdown, m.
+    dist_m: f64,
+    /// Highest the chassis got above the floor, m.
+    peak_m: f32,
+    tier: u8,
+    angle_deg: f32,
+    /// Least up_y in the half second after touchdown.
+    min_up: f32,
+    /// Where it came down, along the launch direction from the piece's middle, m.
+    down_u: f64,
+}
+
+/// Sends a car at `speed` m/s along `dir` from `run` m before `(x, z)`, where the ramp's foot is: it holds that speed
+/// to the foot, takes the ramp with the throttle down and flies as an autopilot's car does (neutral). Reports its
+/// first judged landing; `down_u` is how far past `(x, z)` it came down.
+fn fly(map: &LoadedMap, at: (f64, f64), dir: [f64; 2], run: f64, speed: f32) -> Option<Flight> {
+    let mut sim = sim(map);
+    let car = sim.spawn_grid(1)[0];
+    sim.start_derby(180 * S);
+    for _ in 0..(4 * S) {
+        sim.step();
+    }
+    let heading = libm::atan2(dir[0], dir[1]) as f32;
+    let (x0, z0) = (at.0 - dir[0] * run, at.1 - dir[1] * run);
+    sim.place_car(
+        car,
+        jj_sim::SpawnPose {
+            x: x0 as f32,
+            y: 0.12,
+            z: z0 as f32,
+            heading,
+        },
+        0.0,
+        [speed * dir[0] as f32, 0.0, speed * dir[1] as f32],
+    );
+    let before = sim.air_state(car).unwrap().landings;
+    let (mut off, mut peak, mut lip, mut foot) = (None, 0.0f32, 0.0f32, 0.0f32);
+    let mut out = None;
+    let mut after = 0u64;
+    let mut grounded_for = 0u64;
+    let mut min_up = 1.0f32;
+    for _ in 0..(8 * S) {
+        let st = sim.car_state(car).unwrap();
+        let grounded = st.wheels_in_contact > 0;
+        // Neutral in the air (an autopilot's car flies neutral, R14). On the ground it holds `speed` up to the ramp's
+        // foot (`run` m on), then the throttle is down until it has landed.
+        let gone = (f64::from(st.position[0]) - x0).hypot(f64::from(st.position[2]) - z0);
+        let throttle = grounded && out.is_none() && (gone >= run - 0.5 || st.forward_speed < speed);
+        // Read a car's half-length before the foot: at the foot its front wheels are already on the ramp.
+        if gone < run - 2.2 {
+            foot = st.forward_speed;
+        }
+        sim.set_input(
+            car,
+            DriveInput {
+                throttle: if throttle { 32767 } else { 0 },
+                ..DriveInput::default()
+            },
+        );
+        sim.step();
+        let st = sim.car_state(car).unwrap();
+        let (x, z) = (f64::from(st.position[0]), f64::from(st.position[2]));
+        if out.is_none() {
+            if st.wheels_in_contact == 0 {
+                if off.is_none() {
+                    off = Some((x, z));
+                    lip = f32::hypot(f32::hypot(st.linvel[0], st.linvel[2]), st.linvel[1]);
+                }
+                peak = peak.max(st.position[1]);
+                grounded_for = 0;
+            } else if sim.air_state(car).unwrap().landings == before {
+                // A hop that wasn't judged: forget it once the car has been down a moment (a landing is judged a few
+                // ticks after first contact).
+                grounded_for += 1;
+                if grounded_for > S / 4 {
+                    off = None;
+                    peak = 0.0;
+                }
+            }
+            let air = sim.air_state(car).unwrap();
+            if air.landings > before
+                && let (Some(l), Some((ox, oz))) = (air.last, off)
+            {
+                out = Some(Flight {
+                    foot_mps: foot,
+                    lip_mps: lip,
+                    airtime_s: l.airtime_s,
+                    dist_m: (x - ox).hypot(z - oz),
+                    peak_m: peak,
+                    tier: l.tier.as_u8(),
+                    angle_deg: l.angle_deg,
+                    min_up: 1.0,
+                    down_u: (x - at.0) * dir[0] + (z - at.1) * dir[1],
+                });
+            }
+        } else {
+            after += 1;
+            min_up = min_up.min(st.up_y);
+            if after >= S / 2 {
+                break;
+            }
+        }
+    }
+    out.map(|f| Flight { min_up, ..f })
+}
+
+/// A bare 16-car arena carrying only `relief` and `rocks` (hand-laid: a piece measured on its own).
+fn lab(relief: Vec<jj_procgen::arena::Relief>, rocks: Vec<jj_procgen::arena::Rock>) -> LoadedMap {
+    let cars = 32;
+    let floor_r = jj_procgen::arena::arena_floor_radius(cars);
+    let f = Field {
+        radius: jj_procgen::arena::field::radius_for(floor_r),
+        rocks,
+        relief,
+    };
+    let map = jj_procgen::arena::build(1, cars, &f);
+    let registry = jj_procgen::registry();
+    let bad = check(&map, &registry);
+    assert!(bad.is_empty(), "{bad:?}");
+    jj_map::load_json(&serde_json::to_vec(&map).unwrap(), &registry).unwrap()
+}
+
+/// A way onto a jump: the jump, which end ("up" its `dir`, or "back"), the ramp's foot, the way along it and the
+/// run-up's length.
+type Launch = (
+    jj_procgen::arena::Relief,
+    &'static str,
+    (f64, f64),
+    [f64; 2],
+    f64,
+);
+
+/// Every way onto every jump of `f` that has a clear run-up.
+fn launches(d: &BowlDesign, f: &Field) -> Vec<Launch> {
+    let mut out = Vec::new();
+    for (k, p) in f
+        .relief
+        .iter()
+        .enumerate()
+        .filter(|(_, p)| p.kind.is_jump())
+    {
+        for (name, way) in [("up", 1.0), ("back", -1.0)] {
+            let dir = [p.dir[0] * way, p.dir[1] * way];
+            let half = p.length() / 2.0;
+            let foot = (p.x - dir[0] * half, p.z - dir[1] * half);
+            // The run-up is on the floor and clear of every other piece and the rocks.
+            let clear = |x: f64, z: f64| {
+                x.hypot(z) < d.floor_r - 2.0
+                    && f.relief
+                        .iter()
+                        .enumerate()
+                        .all(|(i, q)| i == k || !q.covers(x, z, 1.0))
+                    && f.rocks.iter().all(|r| (x - r.x).hypot(z - r.z) > r.r + 1.5)
+            };
+            let run = [14.0, 12.0, 10.0].into_iter().find(|&run| {
+                (0..=28).all(|i| {
+                    let m = run * f64::from(i) / 28.0;
+                    clear(foot.0 - dir[0] * m, foot.1 - dir[1] * m)
+                })
+            });
+            if let Some(run) = run {
+                out.push((*p, name, foot, dir, run));
+            }
+        }
+    }
+    out
+}
+
+/// Where a flight off `p` from `foot` along `dir` came down: on its own deck, on its far ramp's back, on the floor
+/// beyond it, on another piece of the field, or past the floor's edge on the bank.
+fn came_down(
+    d: &BowlDesign,
+    field: &Field,
+    p: &jj_procgen::arena::Relief,
+    launch_ramp: f64,
+    (foot, dir): ((f64, f64), [f64; 2]),
+    f: &Flight,
+) -> &'static str {
+    let (x, z) = (foot.0 + dir[0] * f.down_u, foot.1 + dir[1] * f.down_u);
+    if f.down_u < launch_ramp + p.table {
+        "deck"
+    } else if f.down_u < p.length() {
+        "far ramp"
+    } else if x.hypot(z) > d.floor_r - 1.0 {
+        "bank"
+    } else if field.relief.iter().any(|q| q != p && q.covers(x, z, 1.0)) {
+        "another piece"
+    } else {
+        "floor"
+    }
+}
+
+/// The speeds the flights are measured at, m/s at the ramp's foot: a derby's bots hunt at 12-22 m/s and a Cruz reaches
+/// 23 m/s in 6 s.
+const FLIGHT_SPEEDS: [f32; 4] = [12.0, 16.0, 20.0, 24.0];
+/// A jump with a lip this high is one of the big ones, m.
+const BIG_LIP_M: f64 = 1.5;
+
+/// br-bhkz.4 (owner 2026-11-17: "the jumps were really not good enough"): launches worth taking. Every jump of the 8, 24
+/// and 32-car bank arenas, flown both ways at 12, 16, 20 and 24 m/s by a car that flies as an autopilot's does (neutral,
+/// R14: the lip decides its landing). The envelope:
+///
+/// - every flight is judged and lands on its wheels, upright after it: clean or OK on the floor or a deck, at worst bad
+///   (never a crash) where it meets a slope (a far ramp's back when it came up short; another piece or the bank when it
+///   flew that far);
+/// - the big ones (lips of 1.5 m and more) fly at least a second from 16 m/s up (measured 1.2-1.5 s) and 0.9 s at
+///   12 m/s (measured 1.0 s);
+/// - the crossover is in every arena with a clear run-up at both ends; from 14 m/s a car clears its deck, the gate and
+///   the far ramp, flies over a second and comes down on the floor beyond; at 12 m/s it mostly comes up short, onto
+///   the far ramp's back.
+///
+/// `JJ_EVIDENCE=1` writes the table to `docs/evidence/br-bhkz.4/flights.txt`.
+#[test]
+fn the_jumps_fly_a_second_and_land_on_their_wheels() {
+    let mut rows = vec![format!(
+        "{:>4} {:>9} {:>4} {:>4} {:>5} {:>5} {:>5} {:>5} {:>6} {:>5} {:>5} {:>5}  {}",
+        "cars",
+        "jump",
+        "way",
+        "lip",
+        "slope",
+        "foot",
+        "off",
+        "air s",
+        "dist m",
+        "peak",
+        "tier",
+        "deg",
+        "came down on"
+    )];
+    let tiers = ["clean", "ok", "bad", "crash"];
+    let mut wrong = Vec::<String>::new();
+    for cars in FIELD_CARS {
+        let map = arena(BANK_SEED, cars);
+        let f = field(BANK_SEED, cars);
+        let d = design(&map);
+        let ways = launches(&d, &f);
+        assert_eq!(
+            ways.iter()
+                .filter(|w| w.0.kind == ReliefKind::Crossover)
+                .count(),
+            2,
+            "{cars}: the crossover has a clear run-up at both ends"
+        );
+        for (p, name, foot, dir, run) in ways {
+            let ramp = if name == "up" { p.up } else { p.down };
+            let big = p.height >= BIG_LIP_M - 1e-9;
+            // The crossover is flown at 14 m/s too: about where it starts to clear.
+            let speeds: Vec<f32> = if p.kind == ReliefKind::Crossover {
+                vec![12.0, 14.0, 16.0, 20.0, 24.0]
+            } else {
+                FLIGHT_SPEEDS.to_vec()
+            };
+            for v in speeds {
+                let what = format!("{cars}: a {} ({name}) at {v} m/s", p.kind.name());
+                let fl = fly(&map, foot, dir, run, v)
+                    .unwrap_or_else(|| panic!("{what}: no judged landing"));
+                let on = came_down(&d, &f, &p, ramp, (foot, dir), &fl);
+                rows.push(format!(
+                    "{cars:>4} {:>9} {name:>4} {:>4.1} {:>5.2} {:>5.1} {:>5.1} {:>5.2} {:>6.1} {:>5.1} {:>5} {:>5.1}  {on}",
+                    p.kind.name(),
+                    p.height,
+                    p.height / ramp,
+                    fl.foot_mps,
+                    fl.lip_mps,
+                    fl.airtime_s,
+                    fl.dist_m,
+                    fl.peak_m,
+                    tiers[fl.tier as usize],
+                    fl.angle_deg,
+                ));
+                // On the floor or a deck a neutral flight lands clean or OK. On a far ramp's back (a flight that came up
+                // short) the ground falls away under a nose still up from the launch: at worst bad (a quarter of its
+                // speed), never a crash, and the driver who noses down lands it clean (R14: the pitch is the skill).
+                // A flight fast enough to reach the bank or another piece of the field meets a slope, like one that
+                // came up short: the same allowance.
+                let worst = if on == "floor" || on == "deck" { 1 } else { 2 };
+                if fl.tier > worst || fl.min_up <= 0.7 {
+                    wrong.push(format!(
+                        "{what}: lands on its wheels (tier {}, {:.1} deg, up {:.2}, on the {on})",
+                        tiers[fl.tier as usize], fl.angle_deg, fl.min_up
+                    ));
+                }
+                if p.kind == ReliefKind::Crossover
+                    && v >= 14.0
+                    && (on == "deck" || on == "far ramp")
+                {
+                    wrong.push(format!(
+                        "{what}: clears the crossover (came down on the {on})"
+                    ));
+                }
+                let least = if v >= 14.0 { 1.0 } else { 0.9 };
+                if big && (v >= 14.0 || p.kind != ReliefKind::Crossover) && fl.airtime_s < least {
+                    wrong.push(format!(
+                        "{what}: flies {:.2} s, at least {least}",
+                        fl.airtime_s
+                    ));
+                }
+            }
+        }
+    }
+    let table = rows.join("\n") + "\n";
+    println!("{table}");
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+    if std::env::var_os("JJ_EVIDENCE").is_some() {
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/evidence/br-bhkz.4");
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(format!("{dir}/flights.txt"), table).unwrap();
+    }
+}
+
+/// br-bhkz.4: nothing about the crossover traps a slow car. From 4 to 12 m/s at the ramp's foot (too slow to clear it) a
+/// car rolls or hops onto the deck, runs between the gate's rocks and leaves by the far ramp, on its wheels, at both
+/// ends of every sampled arena's crossover: there is no gap to drop into.
+#[test]
+fn a_slow_car_drives_over_the_crossover() {
+    for cars in FIELD_CARS {
+        for seed in [BANK_SEED, 2] {
+            let map = arena(seed, cars);
+            let f = field(seed, cars);
+            let d = design(&map);
+            for (p, name, foot, dir, run) in launches(&d, &f) {
+                if p.kind != ReliefKind::Crossover {
+                    continue;
+                }
+                for v in [4.0f32, 6.0, 8.0, 10.0, 12.0] {
+                    let mut sim = sim(&map);
+                    let car = sim.spawn_grid(1)[0];
+                    sim.start_derby(180 * S);
+                    for _ in 0..(4 * S) {
+                        sim.step();
+                    }
+                    let heading = libm::atan2(dir[0], dir[1]) as f32;
+                    let (x0, z0) = (foot.0 - dir[0] * run, foot.1 - dir[1] * run);
+                    sim.place_car(
+                        car,
+                        jj_sim::SpawnPose {
+                            x: x0 as f32,
+                            y: 0.12,
+                            z: z0 as f32,
+                            heading,
+                        },
+                        0.0,
+                        [v * dir[0] as f32, 0.0, v * dir[1] as f32],
+                    );
+                    // Past the far ramp's foot by a car's length, m from this ramp's foot.
+                    let far = p.length() + 4.5;
+                    let (mut over, mut up) = (false, 1.0f32);
+                    for _ in 0..(10 * S) {
+                        let st = sim.car_state(car).unwrap();
+                        let on = (f64::from(st.position[0]) - foot.0) * dir[0]
+                            + (f64::from(st.position[2]) - foot.1) * dir[1];
+                        if on > far {
+                            over = true;
+                            break;
+                        }
+                        up = up.min(st.up_y);
+                        // It holds its speed (a slow car, not one that floors it up the ramp).
+                        sim.set_input(
+                            car,
+                            DriveInput {
+                                throttle: if st.forward_speed < v { 32767 } else { 0 },
+                                ..DriveInput::default()
+                            },
+                        );
+                        sim.step();
+                    }
+                    assert!(
+                        over && up > 0.7,
+                        "{cars}/{seed}: at {v} m/s ({name}) a car didn't get over the crossover on its wheels (over {over}, up {up:.2})"
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// br-bhkz.4: a stomp is the lander's hit. In a derby the car that brought the closing speed is the striker and keeps
+/// `strikerTake` of its own damage (assets/profiles/derby.json, `jj_sim::derby::rules`), and the ground costs `junkTake`:
+/// so a car that flies a table-top and comes down on a standing rival loses much less health than the rival it lands
+/// on, scores more off the hit than the rival does, and drives on. The table-top is laid by hand (a 1.6 m lip, the
+/// generator's slopes) so the rival can stand exactly where the flight comes down.
+#[test]
+fn a_car_landing_on_a_rival_off_a_jump_takes_much_less_than_it_gives() {
+    use jj_procgen::arena::{Relief, Rock};
+    use jj_sim::damage::{DamageEvent, OtherBody};
+    let jump = Relief {
+        kind: ReliefKind::TableTop,
+        x: -6.0,
+        z: 0.0,
+        dir: [1.0, 0.0],
+        height: 1.6,
+        up: 4.5,
+        table: 3.0,
+        down: 5.75,
+        half: 3.0,
+        side: 3.75,
+    };
+    let map = lab(
+        vec![jump],
+        vec![Rock {
+            x: 0.0,
+            z: 16.0,
+            r: 3.0,
+            h: 2.0,
+        }],
+    );
+    let foot = (jump.x - jump.length() / 2.0, jump.z);
+    let (run, speed) = (14.0, 16.0f32);
+    // Where the flight comes down with nothing in the way.
+    let clear = fly(&map, foot, jump.dir, run, speed).expect("the table-top flies");
+    assert!(clear.airtime_s > 1.0, "{clear:?}");
+
+    let mut sim = sim(&map);
+    let ids = sim.spawn_grid(2);
+    let (flier, rival) = (ids[0], ids[1]);
+    sim.start_derby(180 * S);
+    for _ in 0..(4 * S) {
+        sim.step();
+    }
+    assert!(!sim.is_protected(flier) && !sim.is_protected(rival));
+    // The rival stands on the line, tail to the jump, 3 m short of the touchdown: the flier comes down on its tail and
+    // roof (measured from 4 m short to 4 m past: the lander loses 3-19 HP and the car under it 14-49). A rival standing
+    // across the line with the flier coming down square on its roof used to lose nothing (the roof is no part) and score
+    // the lander's damage (docs/evidence/br-bhkz.4/jumps.md); since b83f481f a derby charges a roof hit to the nearest
+    // part (jj-sim tests/derby_hits.rs, a_car_that_lands_on_a_rivals_roof_damages_it_and_scores).
+    let at = foot.0 + clear.down_u - 3.0;
+    let rival_heading = core::f32::consts::FRAC_PI_2;
+    sim.place_car(
+        rival,
+        jj_sim::SpawnPose {
+            x: at as f32,
+            y: 0.12,
+            z: foot.1 as f32,
+            heading: rival_heading,
+        },
+        0.0,
+        [0.0; 3],
+    );
+    sim.place_car(
+        flier,
+        jj_sim::SpawnPose {
+            x: (foot.0 - run) as f32,
+            y: 0.12,
+            z: foot.1 as f32,
+            heading: core::f32::consts::FRAC_PI_2,
+        },
+        0.0,
+        [speed, 0.0, 0.0],
+    );
+    let (mut high, mut flew) = (0.0f32, 0u64);
+    for _ in 0..(5 * S) {
+        let st = sim.car_state(flier).unwrap();
+        let gone = f64::from(st.position[0]) - (foot.0 - run);
+        let throttle = st.wheels_in_contact > 0 && (gone >= run - 0.5 || st.forward_speed < speed);
+        sim.set_input(
+            flier,
+            DriveInput {
+                throttle: if throttle && gone < run + jump.up {
+                    32767
+                } else {
+                    0
+                },
+                ..DriveInput::default()
+            },
+        );
+        sim.step();
+        let st = sim.car_state(flier).unwrap();
+        if st.wheels_in_contact == 0 {
+            flew += 1;
+            high = high.max(st.position[1]);
+        }
+    }
+    // Health lost to the other car, per car.
+    let lost = |car: u32| -> f32 {
+        sim.damage_events()
+            .iter()
+            .filter_map(|(_, e)| match e {
+                DamageEvent::Episode(r)
+                    if r.car == car && matches!(r.other, OtherBody::Car { .. }) =>
+                {
+                    Some(r.damage)
+                }
+                _ => None,
+            })
+            .sum()
+    };
+    let (lander, landed_on) = (lost(flier.0), lost(rival.0));
+    let ledger = sim.derby().expect("a derby");
+    eprintln!(
+        "stomp off a 1.6 m table-top at {speed} m/s: flew {:.2} s to {high:.1} m; the lander lost {lander:.1} HP, the car it landed on {landed_on:.1} HP; points {:.1} vs {:.1}",
+        flew as f64 / S as f64,
+        ledger.points(flier.0),
+        ledger.points(rival.0)
+    );
+    assert!(flew > S / 2 && high > 2.0, "the flier came off the jump");
+    assert!(
+        landed_on > 10.0,
+        "it landed on the rival: {landed_on:.1} HP"
+    );
+    assert!(
+        lander * 2.0 < landed_on,
+        "a stomp is the lander's hit: it lost {lander:.1} HP, the car it landed on {landed_on:.1}"
+    );
+    assert!(
+        ledger.points(flier.0) > 2.0 * ledger.points(rival.0),
+        "and the lander's points: {} vs {}",
+        ledger.points(flier.0),
+        ledger.points(rival.0)
+    );
+    let st = sim.car_state(flier).unwrap();
+    assert!(
+        st.up_y > 0.7,
+        "the lander is on its wheels after it ({})",
+        st.up_y
+    );
+}
+
+/// br-bhkz.4: the bots' crossover numbers are the generator's. A derby's bots know the island only as its two rocks
+/// (`jj_sim::autopilot::Obstacle`); they take the gap between them for a gate when it is `GATE_MIN_M` wide, and expect
+/// the crossover's ramps to end within `GATE_RUN_M` of its middle. Every generated arena's gate is that wide, its
+/// crossover that short, and it lies across the island: along the line the bots drive.
+#[test]
+fn the_bots_gate_is_the_generators_crossover() {
+    use jj_procgen::arena::field::{GATE_DECK_M, GATE_HALF_M};
+    assert_eq!(
+        f64::from(jj_sim::autopilot::GATE_MIN_M),
+        jj_procgen::arena::GATE_OPEN_M,
+        "the validator holds open the gate the bots drive through"
+    );
+    for (seed, cars) in (0..FIELD_SEEDS)
+        .flat_map(|s| FIELD_CARS.map(|c| (s, c)))
+        .chain([(9, 1000)])
+    {
+        let f = field(seed, cars);
+        let p = f
+            .relief
+            .iter()
+            .find(|p| p.kind == ReliefKind::Crossover)
+            .unwrap_or_else(|| panic!("{cars}/{seed}: no crossover"));
+        let [a, b] = f.rocks.as_slice() else {
+            panic!(
+                "{cars}/{seed}: the gate is two rocks, not {}",
+                f.rocks.len()
+            );
+        };
+        let across = ((b.x - a.x).hypot(b.z - a.z), a.r.max(b.r));
+        let clear = across.0 - 2.0 * across.1;
+        assert!(
+            clear >= f64::from(jj_sim::autopilot::GATE_MIN_M)
+                && (clear - 2.0 * GATE_HALF_M).abs() < 1e-6,
+            "{cars}/{seed}: the gate is {clear} m wide"
+        );
+        assert!(
+            p.length() / 2.0 <= f64::from(jj_sim::autopilot::GATE_RUN_M) && p.table == GATE_DECK_M,
+            "{cars}/{seed}: the crossover runs {} m each side of the gate",
+            p.length() / 2.0
+        );
+        // Its line is the perpendicular through the middle of the two rocks.
+        let mid = ((a.x + b.x) / 2.0, (a.z + b.z) / 2.0);
+        let along = ((b.x - a.x) * p.dir[0] + (b.z - a.z) * p.dir[1]).abs() / across.0;
+        assert!(
+            (mid.0 - p.x).hypot(mid.1 - p.z) < 1e-6 && along < 1e-6,
+            "{cars}/{seed}: the crossover runs through the gate's middle, across the island"
+        );
+    }
 }

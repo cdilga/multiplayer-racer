@@ -1,0 +1,71 @@
+cars      jump  way  lip slope  foot   off air s dist m  peak  tier   deg  came down on
+   8 crossover   up  1.6  0.36  12.0  12.3  0.68    8.5   2.4    ok  13.3  far ramp
+   8 crossover   up  1.6  0.36  14.1  13.4  1.08   12.9   2.6    ok  16.0  floor
+   8 crossover   up  1.6  0.36  16.0  14.6  1.16   15.0   2.8    ok  10.5  floor
+   8 crossover   up  1.6  0.36  20.0  17.1  1.30   19.6   3.2    ok  11.0  floor
+   8 crossover   up  1.6  0.36  24.0  19.3  1.45   24.4   3.8    ok  14.0  floor
+   8 crossover back  1.6  0.36  12.0  12.6  0.82    8.8   2.5   bad  28.8  far ramp
+   8 crossover back  1.6  0.36  14.1  13.7  1.12   13.9   2.7    ok  10.7  floor
+   8 crossover back  1.6  0.36  16.0  14.9  1.20   16.0   3.0    ok  11.9  floor
+   8 crossover back  1.6  0.36  20.0  17.2  1.33   20.2   3.4    ok  12.8  floor
+   8 crossover back  1.6  0.36  24.0  19.9  1.50   26.0   4.0    ok  14.0  floor
+   8 table-top back  1.0  0.27  12.0  12.7  0.79    8.6   1.5 clean   6.2  another piece
+   8 table-top back  1.0  0.27  16.0  15.3  0.93   12.6   1.8    ok   8.4  another piece
+   8 table-top back  1.0  0.27  20.0  18.1  1.07   17.3   2.1    ok  10.1  floor
+   8 table-top back  1.0  0.27  24.0  21.2  1.22   23.4   2.6    ok  12.3  floor
+   8 table-top   up  1.2  0.34  12.0  11.4  0.88    8.5   1.8 clean   7.0  floor
+   8 table-top   up  1.2  0.34  16.1  14.1  1.04   12.9   2.2    ok   9.7  floor
+   8 table-top   up  1.2  0.34  20.0  16.7  1.23   18.2   2.7    ok  14.5  floor
+   8 table-top   up  1.2  0.34  24.0  19.6  1.40   24.2   3.3    ok  16.9  floor
+   8 table-top back  1.2  0.27  12.0  13.8  0.89   11.2   1.9 clean   5.5  floor
+   8 table-top back  1.2  0.27  16.1  16.3  1.01   15.0   2.2 clean   7.5  floor
+   8 table-top back  1.2  0.27  20.0  18.9  1.14   19.9   2.6    ok   9.9  floor
+   8 table-top back  1.2  0.27  24.0  21.8  1.29   25.5   3.0    ok  11.7  bank
+  24 crossover   up  1.8  0.36  12.0  12.5  0.73    9.0   2.7    ok  15.3  far ramp
+  24 crossover   up  1.8  0.36  14.1  13.7  1.16   14.1   2.9    ok  10.7  floor
+  24 crossover   up  1.8  0.36  16.0  14.9  1.23   16.3   3.1    ok  12.3  floor
+  24 crossover   up  1.8  0.36  20.0  17.3  1.38   20.8   3.6    ok  13.4  floor
+  24 crossover   up  1.8  0.36  24.0  19.6  1.54   26.2   4.2    ok  17.2  floor
+  24 crossover back  1.8  0.36  12.0  13.0  1.07   11.8   2.9    ok  10.5  floor
+  24 crossover back  1.8  0.36  14.1  14.0  1.17   14.8   3.0    ok  11.4  floor
+  24 crossover back  1.8  0.36  16.0  15.1  1.24   16.8   3.2    ok  11.6  floor
+  24 crossover back  1.8  0.36  20.0  17.2  1.38   21.0   3.7    ok  13.3  floor
+  24 crossover back  1.8  0.36  24.0  19.3  1.51   25.4   4.1    ok  15.9  floor
+  24 table-top   up  1.6  0.36  12.0  12.4  1.04   11.5   2.5    ok   9.6  floor
+  24 table-top   up  1.6  0.36  16.1  14.9  1.19   15.7   2.9    ok  10.8  floor
+  24 table-top   up  1.6  0.36  20.0  17.3  1.34   20.5   3.4    ok  12.8  floor
+  24 table-top   up  1.6  0.36  24.0  19.8  1.49   25.8   3.9    ok  14.3  floor
+  24 table-top back  1.6  0.28  12.0  13.8  0.98   11.9   2.3 clean   7.1  floor
+  24 table-top back  1.6  0.28  16.0  16.3  1.09   16.1   2.6    ok   8.7  floor
+  24 table-top back  1.6  0.28  20.0  19.1  1.23   21.0   3.0    ok   9.4  floor
+  24 table-top back  1.6  0.28  24.0  20.9  1.33   24.8   3.3    ok  12.0  floor
+  24    kicker back  0.9  0.36  12.0  11.1  0.80    8.9   1.6    ok  11.1  another piece
+  24    kicker back  0.9  0.36  16.0  13.4  0.97   12.3   2.0    ok  17.4  another piece
+  24    kicker back  0.9  0.36  20.0  16.3  1.12   17.1   2.4    ok  14.9  floor
+  24    kicker back  0.9  0.36  24.0  18.9  1.31   22.6   3.0    ok  17.0  floor
+  32 crossover   up  1.8  0.36  12.0  12.5  0.73    9.0   2.7    ok  15.3  far ramp
+  32 crossover   up  1.8  0.36  14.1  13.8  1.16   14.1   2.9    ok  11.1  floor
+  32 crossover   up  1.8  0.36  16.0  14.9  1.23   16.2   3.1    ok  12.4  floor
+  32 crossover   up  1.8  0.36  20.0  17.4  1.38   20.9   3.6    ok  12.1  floor
+  32 crossover   up  1.8  0.36  24.0  19.6  1.54   26.2   4.2    ok  17.2  floor
+  32 crossover back  1.8  0.36  12.0  13.0  1.07   11.8   2.9    ok  10.5  floor
+  32 crossover back  1.8  0.36  14.1  14.0  1.17   14.8   3.0    ok  11.4  floor
+  32 crossover back  1.8  0.36  16.0  15.1  1.24   16.8   3.2    ok  11.6  floor
+  32 crossover back  1.8  0.36  20.0  17.2  1.38   21.0   3.6    ok  13.3  floor
+  32 crossover back  1.8  0.36  24.0  19.6  1.52   26.1   4.2    ok  14.8  floor
+  32 table-top   up  1.8  0.36  12.0  12.1  1.00   11.0   2.6    ok   9.6  floor
+  32 table-top   up  1.8  0.36  16.0  14.5  1.18   15.4   3.0    ok  12.0  another piece
+  32 table-top   up  1.8  0.36  20.1  16.9  1.33   19.8   3.5    ok  12.8  another piece
+  32 table-top   up  1.8  0.36  24.0  19.3  1.48   24.9   4.0    ok  14.9  floor
+  32    kicker   up  1.3  0.35  12.0  11.8  0.90    9.7   2.0 clean   7.2  floor
+  32    kicker   up  1.3  0.35  16.0  14.4  1.09   13.9   2.4    ok  10.4  floor
+  32    kicker   up  1.3  0.35  20.0  16.5  1.23   18.0   2.8    ok  12.9  floor
+  32    kicker   up  1.3  0.35  24.0  20.0  1.43   25.3   3.5    ok  15.9  floor
+  32    kicker back  1.3  0.35  12.0  12.1  0.96   10.4   2.1    ok   9.4  floor
+  32    kicker back  1.3  0.35  16.0  14.5  1.09   14.1   2.4    ok   9.1  floor
+  32    kicker back  1.3  0.35  20.0  17.3  1.28   19.9   3.1    ok  14.5  floor
+  32    kicker back  1.3  0.35  24.0  19.7  1.43   24.8   3.5    ok  15.0  floor
+  32 table-top   up  1.3  0.35  12.0  12.3  0.89   10.2   2.0 clean   7.2  floor
+  32 table-top   up  1.3  0.35  16.0  14.2  1.08   14.1   2.5    ok  13.4  floor
+  32 table-top   up  1.3  0.35  20.0  16.7  1.23   18.6   3.0    ok  10.2  another piece
+  32 table-top   up  1.3  0.35  24.0  19.1  1.29   22.7   3.6   bad  27.5  another piece

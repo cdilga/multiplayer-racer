@@ -201,8 +201,33 @@ try {
   await step(6);
   await settle(700);
   await shot(host, 'tv-1920x1080-overview-magpie');
-  // A minute of everyone on the autopilot: the strip and the phones mid-carnage.
+  // Everyone on the autopilot from here.
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+  // br-bhkz.4: the next car in the air over the middle of the bowl (the crossover), from the side and from its own tile.
+  const flier = await host.evaluate(async () => {
+    const s = window.__jjTest;
+    for (let k = 0; k < 1500; k++) {
+      await s.step(4);
+      const c = (await s.observe()).cars.find((c) => c.wheelsInContact === 0 && c.position[1] > 1.9 && Math.hypot(c.position[0], c.position[2]) < 9 && c.speed > 9);
+      if (c) return { car: c.car, p: c.position, v: c.linvel, y: c.position[1] };
+    }
+    return null;
+  });
+  console.log('flier', JSON.stringify(flier));
+  if (flier) {
+    const [vx, vz] = [flier.v[0], flier.v[2]];
+    const n = Math.hypot(vx, vz) || 1;
+    // From ahead of it, just off its line: the car coming through the gate between the rocks.
+    await peek('crossover-flight-ahead', [flier.p[0] + (vx / n) * 21 - (vz / n) * 4, 2.4, flier.p[2] + (vz / n) * 21 + (vx / n) * 4], [flier.p[0], 2.0, flier.p[2]], 42);
+    await peek('crossover-flight-above', [flier.p[0] - (vx / n) * 22, 17, flier.p[2] - (vz / n) * 22], [flier.p[0], 0.5, flier.p[2]], 50);
+    await host.evaluate(() => window.__jjOverview.set('grid'));
+    await settle(700);
+    await shot(host, 'tv-1920x1080-grid-crossover-flight');
+    await host.evaluate(() => window.__jjOverview.set('overview'));
+    await settle(500);
+    await shot(host, 'tv-1920x1080-overview-crossover-flight');
+  }
+  // A minute of everyone on the autopilot: the strip and the phones mid-carnage.
   for (let k = 0; k < 10; k++) await step(360);
   await settle(800);
   await shot(host, 'tv-1920x1080-overview-carnage');

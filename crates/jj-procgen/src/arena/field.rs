@@ -1,17 +1,28 @@
 //! The arena's field (P1-M-arena-features): what stands on the floor inside the spawn ring. The owner asked for the race
 //! tracks' kind of variety in the derby: jumps to fly, relief to bounce over and something to ram round.
 //!
-//! - **Jumps**: table-tops (an up-ramp to a flat table and a gentler down-ramp, so a car meets either end as a launch) and
-//!   kickers (a short ramp with a steep back). Set roughly tangential round the middle, so cars circling the island or
-//!   cutting across after a rival meet them.
+//! - **The crossover** (br-bhkz.4, owner 2026-11-17: "the jumps were really not good enough"): the centrepiece of every
+//!   arena. Two launch ramps face each other across the middle, joined by a deck, and the island's two rocks stand either
+//!   side of the deck as a gate. A car launches off either ramp, flies the deck between the rocks and comes down on the
+//!   far ramp's back or the floor beyond; two cars from opposite ends meet in the air. A slow car lands on the deck and
+//!   drives off the far end: nothing to fall into.
+//! - **Jumps**: table-tops (a launch ramp to a flat table and a gentler ramp down, so a car meets either end as a launch)
+//!   and kickers (short, the same launch both ways). Set roughly tangential round the middle, the first two in the room
+//!   either side of the gate, so cars circling the island or cutting across after a rival meet them.
 //! - **Relief**: mounds and shallow dips, smooth cosine bumps.
-//! - **Island or spine**: a squat red rock (`rocks/dome`, solid) at the middle, or three in a line (a spine) on the bigger
-//!   floors. Low (at most [`MAX_ISLAND_H_M`]) so it hides nobody from the Overview.
+//! - **The island**: the gate's two squat red rocks (`rocks/dome`, solid). Low (at most [`MAX_ISLAND_H_M`]) so they hide
+//!   nobody from the Overview.
+//!
+//! Launches are sized from measured flights (`docs/evidence/br-bhkz.4/jumps.md`): a 20 degree ramp to a 1.5-2 m lip flies
+//! a Cruz 1.0-1.5 s at 12-24 m/s and lands it on its wheels. A lip is a crease a stopped car has to drive off: up to
+//! [`LAUNCH_SLOPE`] with flat deck beyond it a car drives off any way; a sharper or a peaked one high-centres it, which
+//! is why no ramp here is steeper and every lip has a deck.
 //!
 //! Everything is height in the terrain grid (1.25 m cells in an arena, so a lip is one cell wide) except the rocks, which
 //! are dressing. Jumps and rocks keep a [`LANE_M`] lane round their footprints (mounds and dips, which are driven over,
-//! keep [`BUMP_PAD_M`]), so every part of the floor stays reachable; the relief limits (`jj_map::arena::limits`) hold every slope and height, so nothing traps or hides a
-//! car. Sizes and counts follow the floor's area (any N). `f64` and `libm` only: identical natively and in WASM.
+//! keep [`BUMP_PAD_M`]; the gate's rocks stand against the crossover's deck, one piece with it), so every part of the
+//! floor stays reachable; the relief limits (`jj_map::arena::limits`) hold every slope and height, so nothing traps or
+//! hides a car. Sizes and counts follow the floor's area (any N). `f64` and `libm` only: identical natively and in WASM.
 
 use jj_map::arena::limits::{FLAT_RIM_M, MAX_RELIEF_SLOPE, MAX_RISE_CM};
 
@@ -33,13 +44,27 @@ const _: () = assert!(BUILD_SLOPE < MAX_RELIEF_SLOPE);
 /// A mound's crest and a dip's rim bend no tighter than this (1/m): over a car's half-wheelbase (1.35 m) the ground
 /// falls away 9 cm, inside its belly's clearance.
 const MAX_CREST_CURVATURE: f64 = 0.1;
-/// A table-top's launch and landing slopes (rise over run).
-const UP_SLOPE: f64 = 0.22;
-const DOWN_SLOPE: f64 = 0.15;
-/// A kicker's slopes, both ways.
-const KICKER_SLOPE: f64 = 0.23;
-/// Floor area per jump and per mound or dip, m² of field.
-const AREA_PER_JUMP_M2: f64 = 500.0;
+/// The launch ramps' slope (rise over run), 19.8 degrees: the crossover's and a kicker's both ways, and a table-top's
+/// steep end. Measured (`docs/evidence/br-bhkz.4/jumps.md`): a stopped Cruz astride a lip this sharp, with deck beyond
+/// it, drives off either way at any angle to the grid; at 0.40 it high-centres. Steeper also flies no longer: the ramp's
+/// foot costs more speed than the angle gives back.
+pub const LAUNCH_SLOPE: f64 = 0.36;
+/// A table-top's gentle end, 15.6 degrees: the same jump the other way round, lower and longer.
+const GENTLE_SLOPE: f64 = 0.28;
+/// A jump's side slopes, 24 degrees.
+const SIDE_SLOPE: f64 = 0.45;
+/// The flat beyond a lip is at least this long, m: a car is never astride two creases.
+const MIN_DECK_M: f64 = 2.5;
+/// The crossover's deck, m: the gate's rocks (6 m across) stand beside its middle, with a metre of deck clear of them at
+/// each end, where a car can still turn off sideways.
+pub const GATE_DECK_M: f64 = 8.0;
+/// The crossover's deck is this wide each side of its line, m: the gate between the rocks is twice it.
+pub const GATE_HALF_M: f64 = 3.5;
+/// The gate's rocks: the kit's smallest footprint.
+const GATE_ROCK_R_M: f64 = 3.0;
+/// Floor area per jump (beside the crossover) and per mound or dip, m² of field. A full-size table-top with its lanes
+/// takes about 400 m² (the old hops took half that, and stood one to 500 m²).
+const AREA_PER_JUMP_M2: f64 = 750.0;
 const AREA_PER_RELIEF_M2: f64 = 350.0;
 /// Placement tries per piece.
 const TRIES: usize = 80;
@@ -47,6 +72,8 @@ const TRIES: usize = 80;
 /// What a piece of relief is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReliefKind {
+    /// The centrepiece: a launch ramp at each end of a deck that runs between the island's two rocks.
+    Crossover,
     TableTop,
     Kicker,
     Mound,
@@ -55,11 +82,15 @@ pub enum ReliefKind {
 
 impl ReliefKind {
     pub fn is_jump(self) -> bool {
-        matches!(self, ReliefKind::TableTop | ReliefKind::Kicker)
+        matches!(
+            self,
+            ReliefKind::Crossover | ReliefKind::TableTop | ReliefKind::Kicker
+        )
     }
 
     pub fn name(self) -> &'static str {
         match self {
+            ReliefKind::Crossover => "crossover",
             ReliefKind::TableTop => "table-top",
             ReliefKind::Kicker => "kicker",
             ReliefKind::Mound => "mound",
@@ -265,33 +296,38 @@ impl Taken {
     }
 }
 
-/// A jump of `kind` drawn at `scale` (1 = full size) facing `dir` at (x, z).
+/// Rounds up to `step`: a ramp's run, so its slope is never over the one asked for.
+fn snap_up(v: f64, step: f64) -> f64 {
+    libm::ceil(v / step - 1e-9) * step
+}
+
+/// A jump of `kind` drawn at `scale` (1 = full size), at the origin facing +x.
 fn draw_jump(rng: &mut Rng, kind: ReliefKind, scale: f64) -> Relief {
     let (height, up, table, down, half) = match kind {
         ReliefKind::TableTop => {
-            // A 12 degree kick to a 0.8-1.3 m table and an 8 degree way down. A car flies neutral (R14: its attitude is
-            // the lip's), so the two slopes together (20 degrees) keep a landing on the far ramp inside the judge's
-            // OK band (25), and one on the table or the floor beyond nearer clean. From the other end it's the same
-            // jump the other way round.
-            let h = snap(rng.range(0.8, 1.3) * scale.max(0.75), 0.1);
+            // A 20 degree launch to a 1.4-2 m table and a 15.6 degree way down: from the other end it's the same jump
+            // lower and longer. A car flies neutral (R14: its attitude is the lip's, eased a little as its tail leaves),
+            // and at arena speeds either flight carries past the far ramp to the floor, where that lands OK.
+            let h = snap(rng.range(1.4, 2.0) * scale, 0.1);
             (
                 h,
-                snap(h / UP_SLOPE, 0.25),
-                snap(rng.range(2.0, 4.0) * scale, 0.5),
-                snap(h / DOWN_SLOPE, 0.25),
-                snap(rng.range(2.5, 3.5) * scale, 0.25),
+                snap_up(h / LAUNCH_SLOPE, 0.25),
+                snap(rng.range(3.0, 5.0) * scale, 0.5).max(MIN_DECK_M),
+                snap_up(h / GENTLE_SLOPE, 0.25),
+                snap(rng.range(2.5, 3.25) * scale, 0.25).max(2.25),
             )
         }
         _ => {
-            // A kicker: short and punchy, a 13 degree launch to a short deck and the same way down (a car stopped on any
-            // crease keeps its wheels down: a peaked kicker high-centred one).
-            let h = snap(rng.range(0.6, 0.9), 0.1);
+            // A kicker: short and punchy, the launch slope both ways off a short deck (a car stopped on either crease
+            // keeps its wheels down: a peaked kicker high-centred one).
+            let h = snap(rng.range(1.2, 1.6) * scale, 0.1);
+            let run = snap_up(h / LAUNCH_SLOPE, 0.25);
             (
                 h,
-                snap(h / KICKER_SLOPE, 0.25),
-                snap(rng.range(1.5, 2.5), 0.5),
-                snap(h / KICKER_SLOPE, 0.25),
-                snap(rng.range(2.0, 2.5) * scale.max(0.8), 0.25),
+                run,
+                snap(rng.range(MIN_DECK_M, 3.0), 0.5),
+                run,
+                snap(rng.range(2.25, 2.75), 0.25),
             )
         }
     };
@@ -305,8 +341,43 @@ fn draw_jump(rng: &mut Rng, kind: ReliefKind, scale: f64) -> Relief {
         table,
         down,
         half,
-        side: snap(height / 0.45, 0.25),
+        side: snap_up(height / SIDE_SLOPE, 0.25),
     }
+}
+
+/// The crossover through (x, z) along `axis` (radians) for a field of `radius` m, and the gate's two rocks: one either
+/// side of the deck's middle, against its edge.
+fn draw_crossover(rng: &mut Rng, radius: f64, x: f64, z: f64, axis: f64) -> (Relief, [Rock; 2]) {
+    // Lips of 1.5-1.8 m, and 1.7-2 m where the floor has the run-up for them.
+    let h = snap(
+        rng.range(1.5, 1.8) + if radius >= 26.0 { 0.2 } else { 0.0 },
+        0.1,
+    );
+    let run = snap_up(h / LAUNCH_SLOPE, 0.25);
+    let dir = [libm::cos(axis), libm::sin(axis)];
+    let ramp = Relief {
+        kind: ReliefKind::Crossover,
+        x,
+        z,
+        dir,
+        height: h,
+        up: run,
+        table: GATE_DECK_M,
+        down: run,
+        half: GATE_HALF_M,
+        side: snap_up(h / SIDE_SLOPE, 0.25),
+    };
+    // The rocks stand over the deck: a wall beside a car on it, and beside one flying it.
+    let off = GATE_HALF_M + GATE_ROCK_R_M;
+    let rock = |sign: f64, h: f64| Rock {
+        x: x - sign * dir[1] * off,
+        z: z + sign * dir[0] * off,
+        r: GATE_ROCK_R_M,
+        h,
+    };
+    let tall = |rng: &mut Rng| snap(rng.range(h + 0.3, MAX_ISLAND_H_M), 0.1).min(MAX_ISLAND_H_M);
+    let (a, b) = (tall(rng), tall(rng));
+    (ramp, [rock(1.0, a), rock(-1.0, b)])
 }
 
 /// The field for a floor of `floor_r` m, from `rng`.
@@ -315,43 +386,44 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
     let radius = radius_for(floor_r);
     let area = PI * radius * radius;
     let mut taken = Taken::new(radius);
-    // The island: one rock in the middle, or on a bigger floor (a seeded half of them) a spine of three in a line.
-    let spine = radius >= 24.0 && rng.unit() < 0.5;
-    let rocks: Vec<Rock> = if spine {
-        let r = snap(rng.range(3.0, 3.5), 0.25);
-        let a = rng.range(0.0, PI);
-        let step = 1.4 * r;
-        (-1..=1)
-            .map(|k| Rock {
-                x: f64::from(k) * step * libm::cos(a),
-                z: f64::from(k) * step * libm::sin(a),
-                r,
-                h: snap(rng.range(1.6, 2.2) + if k == 0 { 0.3 } else { 0.0 }, 0.1),
-            })
-            .collect()
-    } else {
+    // The centrepiece: the crossover through the middle (a little off it, at any angle) and its gate.
+    let (cx, cz) = {
         let a = rng.range(0.0, TAU);
         let off = rng.range(0.0, 1.0);
-        vec![Rock {
-            x: snap(off * libm::cos(a), 0.25),
-            z: snap(off * libm::sin(a), 0.25),
-            r: snap(2.5 + 0.06 * radius, 0.25),
-            h: snap(rng.range(1.8, MAX_ISLAND_H_M), 0.1),
-        }]
+        (
+            snap(off * libm::cos(a), 0.25),
+            snap(off * libm::sin(a), 0.25),
+        )
     };
+    let axis = rng.range(0.0, PI);
+    let (crossover, gate) = draw_crossover(rng, radius, cx, cz, axis);
+    let rocks = gate.to_vec();
+    // One piece: the rocks' lanes and the crossover's are taken together (the rocks stand against the deck).
+    let near = (
+        crossover.x,
+        crossover.z,
+        crossover.reach(LANE_M / 2.0 + CELL_M),
+    );
+    taken.take(LANE_M / 2.0, near, |x, z, pad| crossover.covers(x, z, pad));
     for rock in &rocks {
         let near = (rock.x, rock.z, rock.r + LANE_M / 2.0 + CELL_M);
         taken.take(LANE_M / 2.0, near, |x, z, pad| {
             libm::hypot(x - rock.x, z - rock.z) <= rock.r + pad
         });
     }
-    let island = rocks
-        .iter()
-        .map(|r| libm::hypot(r.x, r.z) + r.r)
-        .fold(0.0, f64::max);
+    // Its run-ups, which are its landings the other way: the floor before each ramp stays clear to the field's edge, as
+    // wide as the gate (no jump across the way in, no dip to unsettle a car before the ramp).
+    let whole = (crossover.x, crossover.z, 2.0 * radius);
+    taken.take(0.0, whole, |x, z, pad| {
+        let (u, lat) = crossover.local(x, z);
+        (u < 0.0 || u > crossover.length()) && libm::fabs(lat) <= GATE_HALF_M + pad
+    });
+    // The gate's reach from the middle: no jump is tried nearer than a lane off it (the occupancy grid holds the rest).
+    let island = GATE_HALF_M + 2.0 * GATE_ROCK_R_M;
 
-    let mut relief = Vec::new();
-    // Jumps, tangential round the middle (either way round), a little off.
+    let mut relief = vec![crossover];
+    // Jumps, tangential round the middle (either way round), a little off. The first two go in the room either side of
+    // the gate, where a small floor has it.
     let jumps = ((area / AREA_PER_JUMP_M2) as usize).max(2);
     for k in 0..jumps {
         let kind = if k == 0 || rng.unit() < 0.65 {
@@ -360,10 +432,14 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
             ReliefKind::Kicker
         };
         let mut placed = false;
-        for scale in [1.0, 0.85, 0.7] {
+        for scale in [1.0, 0.85, 0.7, 0.6] {
             let mut j = draw_jump(rng, kind, scale);
             for _ in 0..TRIES {
-                let a = rng.range(0.0, TAU);
+                let a = if k < 2 {
+                    axis + PI / 2.0 + PI * k as f64 + rng.range(-0.25, 0.25)
+                } else {
+                    rng.range(0.0, TAU)
+                };
                 let reach = j.half + j.side;
                 let lo = island + LANE_M + reach;
                 let hi = radius - reach;
@@ -429,7 +505,8 @@ pub fn generate(rng: &mut Rng, floor_r: f64) -> Field {
             };
             for _ in 0..TRIES {
                 let a = rng.range(0.0, TAU);
-                let lo = island + LANE_M + half;
+                // Anywhere the occupancy grid has room (a bump keeps only its pad off the crossover's ramps).
+                let lo = half + BUMP_PAD_M;
                 let hi = radius - half;
                 if hi <= lo {
                     break;

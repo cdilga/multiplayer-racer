@@ -1,15 +1,15 @@
 {
  "scenario": "bowl-containment",
- "what": "P1-M10: rams at the rim from many angles and speeds, boosted and airborne, never put a car outside the bowl. 24 floor cars (every 15 degrees on two rings, 0/25/55 degrees off the radial, 12..50 m/s, boost on alternate cars) and 12 airborne (3 m up, 6..14 m/s upward, 15..45 m/s outward): each stays within 0.75 m of the wall's face for 7 s, however the pile-up falls.",
+ "what": "P1-M10: rams at the rim from many angles and speeds, boosted and airborne, never put a car outside the bowl. 24 floor cars (every 15 degrees on two rings, 0/25/55 degrees off the radial, 12..50 m/s, boost on alternate cars) and 12 airborne (3 m up, 6..14 m/s upward, 15..45 m/s outward): each stays within 0.75 m of the wall's face for 7 s, however the pile-up falls. Re-pinned for br-bhkz.4 (arena generator 4: a floor 3 m bigger in radius, the crossover and 20 degree jumps): the cars' places follow the new floor; the envelope is unchanged.",
  "map": "maps/derby-bowl-16.json",
  "seed": 11,
  "ticks": 840,
  "cars": [
   {
    "pose": {
-    "x": 8.668,
+    "x": 9.507,
     "y": 0.5,
-    "z": 0.454,
+    "z": 0.498,
     "headingDeg": 87.0
    },
    "linvel": [
@@ -20,9 +20,9 @@
   },
   {
    "pose": {
-    "x": 16.216,
+    "x": 17.785,
     "y": 0.5,
-    "z": 5.269,
+    "z": 5.779,
     "headingDeg": 97.0
    },
    "linvel": [
@@ -33,9 +33,9 @@
   },
   {
    "pose": {
-    "x": 7.28,
+    "x": 7.984,
     "y": 0.5,
-    "z": 4.727,
+    "z": 5.185,
     "headingDeg": 32.0
    },
    "linvel": [
@@ -46,9 +46,9 @@
   },
   {
    "pose": {
-    "x": 11.409,
+    "x": 12.513,
     "y": 0.5,
-    "z": 12.671,
+    "z": 13.897,
     "headingDeg": 97.0
    },
    "linvel": [
@@ -59,9 +59,9 @@
   },
   {
    "pose": {
-    "x": 3.941,
+    "x": 4.322,
     "y": 0.5,
-    "z": 7.734,
+    "z": 8.482,
     "headingDeg": -28.0
    },
    "linvel": [
@@ -72,9 +72,9 @@
   },
   {
    "pose": {
-    "x": 3.545,
+    "x": 3.888,
     "y": 0.5,
-    "z": 16.677,
+    "z": 18.291,
     "headingDeg": 12.0
    },
    "linvel": [
@@ -85,9 +85,9 @@
   },
   {
    "pose": {
-    "x": -0.454,
+    "x": -0.498,
     "y": 0.5,
-    "z": 8.668,
+    "z": 9.507,
     "headingDeg": -3.0
    },
    "linvel": [
@@ -98,9 +98,9 @@
   },
   {
    "pose": {
-    "x": -5.269,
+    "x": -5.779,
     "y": 0.5,
-    "z": 16.216,
+    "z": 17.785,
     "headingDeg": 7.0
    },
    "linvel": [
@@ -111,9 +111,9 @@
   },
   {
    "pose": {
-    "x": -4.727,
+    "x": -5.185,
     "y": 0.5,
-    "z": 7.28,
+    "z": 7.984,
     "headingDeg": -58.0
    },
    "linvel": [
@@ -124,9 +124,9 @@
   },
   {
    "pose": {
-    "x": -12.671,
+    "x": -13.897,
     "y": 0.5,
-    "z": 11.409,
+    "z": 12.513,
     "headingDeg": 7.0
    },
    "linvel": [
@@ -137,9 +137,9 @@
   },
   {
    "pose": {
-    "x": -7.734,
+    "x": -8.482,
     "y": 0.5,
-    "z": 3.941,
+    "z": 4.322,
     "headingDeg": -118.0
    },
    "linvel": [
@@ -150,9 +150,9 @@
   },
   {
    "pose": {
-    "x": -16.677,
+    "x": -18.291,
     "y": 0.5,
-    "z": 3.545,
+    "z": 3.888,
     "headingDeg": -78.0
    },
    "linvel": [
@@ -163,9 +163,9 @@
   },
   {
    "pose": {
-    "x": -8.668,
+    "x": -9.507,
     "y": 0.5,
-    "z": -0.454,
+    "z": -0.498,
     "headingDeg": -93.0
    },
    "linvel": [
@@ -176,9 +176,9 @@
   },
   {
    "pose": {
-    "x": -16.216,
+    "x": -17.785,
     "y": 0.5,
-    "z": -5.269,
+    "z": -5.779,
     "headingDeg": -83.0
    },
    "linvel": [
@@ -189,9 +189,9 @@
   },
   {
    "pose": {
-    "x": -7.28,
+    "x": -7.984,
     "y": 0.5,
-    "z": -4.727,
+    "z": -5.185,
     "headingDeg": -148.0
    },
    "linvel": [
@@ -202,9 +202,9 @@
   },
   {
    "pose": {
-    "x": -11.409,
+    "x": -12.513,
     "y": 0.5,
-    "z": -12.671,
+    "z": -13.897,
     "headingDeg": -83.0
    },
    "linvel": [
@@ -215,9 +215,9 @@
   },
   {
    "pose": {
-    "x": -3.941,
+    "x": -4.322,
     "y": 0.5,
-    "z": -7.734,
+    "z": -8.482,
     "headingDeg": -208.0
    },
    "linvel": [
@@ -228,9 +228,9 @@
   },
   {
    "pose": {
-    "x": -3.545,
+    "x": -3.888,
     "y": 0.5,
-    "z": -16.677,
+    "z": -18.291,
     "headingDeg": -168.0
    },
    "linvel": [
@@ -241,9 +241,9 @@
   },
   {
    "pose": {
-    "x": 0.454,
+    "x": 0.498,
     "y": 0.5,
-    "z": -8.668,
+    "z": -9.507,
     "headingDeg": 177.0
    },
    "linvel": [
@@ -254,9 +254,9 @@
   },
   {
    "pose": {
-    "x": 5.269,
+    "x": 5.779,
     "y": 0.5,
-    "z": -16.216,
+    "z": -17.785,
     "headingDeg": 187.0
    },
    "linvel": [
@@ -267,9 +267,9 @@
   },
   {
    "pose": {
-    "x": 4.727,
+    "x": 5.185,
     "y": 0.5,
-    "z": -7.28,
+    "z": -7.984,
     "headingDeg": 122.0
    },
    "linvel": [
@@ -280,9 +280,9 @@
   },
   {
    "pose": {
-    "x": 12.671,
+    "x": 13.897,
     "y": 0.5,
-    "z": -11.409,
+    "z": -12.513,
     "headingDeg": 187.0
    },
    "linvel": [
@@ -293,9 +293,9 @@
   },
   {
    "pose": {
-    "x": 7.734,
+    "x": 8.482,
     "y": 0.5,
-    "z": -3.941,
+    "z": -4.322,
     "headingDeg": 62.0
    },
    "linvel": [
@@ -306,9 +306,9 @@
   },
   {
    "pose": {
-    "x": 16.677,
+    "x": 18.291,
     "y": 0.5,
-    "z": -3.545,
+    "z": -3.888,
     "headingDeg": 102.0
    },
    "linvel": [
@@ -319,9 +319,9 @@
   },
   {
    "pose": {
-    "x": 12.172,
+    "x": 13.35,
     "y": 3.0,
-    "z": 2.366,
+    "z": 2.595,
     "headingDeg": 79.0
    },
    "linvel": [
@@ -332,9 +332,9 @@
   },
   {
    "pose": {
-    "x": 14.506,
+    "x": 15.909,
     "y": 3.0,
-    "z": 12.609,
+    "z": 13.83,
     "headingDeg": 49.0
    },
    "linvel": [
@@ -345,9 +345,9 @@
   },
   {
    "pose": {
-    "x": 4.037,
+    "x": 4.428,
     "y": 3.0,
-    "z": 11.724,
+    "z": 12.859,
     "headingDeg": 19.0
    },
    "linvel": [
@@ -358,9 +358,9 @@
   },
   {
    "pose": {
-    "x": -3.667,
+    "x": -4.022,
     "y": 3.0,
-    "z": 18.867,
+    "z": 20.693,
     "headingDeg": -11.0
    },
    "linvel": [
@@ -371,9 +371,9 @@
   },
   {
    "pose": {
-    "x": -8.135,
+    "x": -8.922,
     "y": 3.0,
-    "z": 9.358,
+    "z": 10.264,
     "headingDeg": -41.0
    },
    "linvel": [
@@ -384,9 +384,9 @@
   },
   {
    "pose": {
-    "x": -18.173,
+    "x": -19.932,
     "y": 3.0,
-    "z": 6.257,
+    "z": 6.863,
     "headingDeg": -71.0
    },
    "linvel": [
@@ -397,9 +397,9 @@
   },
   {
    "pose": {
-    "x": -12.172,
+    "x": -13.35,
     "y": 3.0,
-    "z": -2.366,
+    "z": -2.595,
     "headingDeg": -101.0
    },
    "linvel": [
@@ -410,9 +410,9 @@
   },
   {
    "pose": {
-    "x": -14.506,
+    "x": -15.909,
     "y": 3.0,
-    "z": -12.609,
+    "z": -13.83,
     "headingDeg": -131.0
    },
    "linvel": [
@@ -423,9 +423,9 @@
   },
   {
    "pose": {
-    "x": -4.037,
+    "x": -4.428,
     "y": 3.0,
-    "z": -11.724,
+    "z": -12.859,
     "headingDeg": -161.0
    },
    "linvel": [
@@ -436,9 +436,9 @@
   },
   {
    "pose": {
-    "x": 3.667,
+    "x": 4.022,
     "y": 3.0,
-    "z": -18.867,
+    "z": -20.693,
     "headingDeg": 169.0
    },
    "linvel": [
@@ -449,9 +449,9 @@
   },
   {
    "pose": {
-    "x": 8.135,
+    "x": 8.922,
     "y": 3.0,
-    "z": -9.358,
+    "z": -10.264,
     "headingDeg": 139.0
    },
    "linvel": [
@@ -462,9 +462,9 @@
   },
   {
    "pose": {
-    "x": 18.173,
+    "x": 19.932,
     "y": 3.0,
-    "z": -6.257,
+    "z": -6.863,
     "headingDeg": 109.0
    },
    "linvel": [
@@ -721,217 +721,217 @@
    "car": 0,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 1,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 2,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 3,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 4,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 5,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 6,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 7,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 8,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 9,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 10,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 11,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 12,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 13,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 14,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 15,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 16,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 17,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 18,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 19,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 20,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 21,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 22,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 23,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 24,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 25,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 26,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 27,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 28,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 29,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 30,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 31,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 32,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 33,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 34,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   },
   {
    "car": 35,
    "metric": "maxRadiusM",
    "min": 0,
-   "max": 39.75
+   "max": 42.75
   }
  ]
 }

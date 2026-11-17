@@ -3,15 +3,17 @@
 //!
 //! - The world geometry is the `bowl` feature (`jj_map::arena`): the floor, a quarter-circle bank, a vertical top wall and
 //!   a flat lip, a closed shell; the floor is the map's heightfield. Passive containment only: nothing closes in.
-//! - Inside the spawn ring the floor is the *field* ([`field`], P1-M-arena-features): table-top jumps and kickers, mounds
-//!   and dips in the heightfield, and a squat solid rock island (or a spine of three) to ram round. The floor grows by
-//!   [`FIELD_GROWTH_M`] to make room for it, so the cars' share of the floor stays a ramming crowd.
+//! - Inside the spawn ring the floor is the *field* ([`field`], P1-M-arena-features, br-bhkz.4): the crossover (two launch
+//!   ramps facing each other across the middle, through a gate of two squat solid rocks: the island), table-top jumps and
+//!   kickers, mounds and dips in the heightfield. The floor grows by [`FIELD_GROWTH_M`] to make room for it, so the cars'
+//!   share of the floor stays a ramming crowd.
 //! - The route is the arena's *spawn ring* (the map format has one route, so the arena uses it for placement): a closed
 //!   ring on the floor, a few metres in from the foot of the bank, whose start corridor runs round nearly all of it. The
 //!   placement service fills it for any N and, once it is full, staggers the overflow inside it under spawn protection.
 //!   Gates exist only because the format wants them; the derby never reads them.
 //! - Dressing is the rocks look outside the bowl: red banded domes (the Olgas) and ledges round the rim. Inside, only the
-//!   field's island stands, with a lane all round it, so every part of the floor is reachable and no corner is dead.
+//!   field's island stands (the crossover's gate), with a lane all round it and the crossover's deck through it, so
+//!   every part of the floor is reachable and no corner is dead.
 //! - Everything draws from a named `arena` stream and uses integers and `libm`, so the canonical bytes are identical
 //!   natively and in WASM. The bowl is centred on the world origin.
 
@@ -31,14 +33,16 @@ pub use field::{Field, Relief, ReliefKind, Rock};
 pub const GENERATOR_ID: &str = "jj.procgen.arena";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/arena.txt`).
 /// 3: the field (jumps, relief, an island or spine), a bigger floor and 1.25 m terrain cells.
-pub const GENERATOR_VERSION: &str = "3";
+/// 4: launches worth taking (br-bhkz.4): the crossover through a gate of two rocks, 20 degree ramps to 1.2-2 m lips, and
+/// 3 m more floor for their run-ups and landings.
+pub const GENERATOR_VERSION: &str = "4";
 
 /// 1.25 m: half the race tracks' cells, so a jump's lip and a table's edge are one sharp crease at any angle.
 const TERRAIN_SPACING_M: f64 = 1.25;
 /// The floor grows this much past the cars' own share ([`floor_radius_for`]) to hold the field, m.
-pub const FIELD_GROWTH_M: f64 = 8.0;
-/// The smallest arena floor whatever N, m: a field with room for two full table-tops round the island.
-pub const MIN_FLOOR_RADIUS_M: f64 = 31.0;
+pub const FIELD_GROWTH_M: f64 = 11.0;
+/// The smallest arena floor whatever N, m: a field with room for the crossover and a jump either side of its gate.
+pub const MIN_FLOOR_RADIUS_M: f64 = 34.0;
 /// The spawn ring sits this far in from the foot of the bank (the ring's centreline), m.
 const RING_INSET_M: f64 = 5.5;
 const RING_WIDTH_M: f64 = 8.0;
@@ -51,6 +55,9 @@ const GATE_EVERY_M: f64 = 60.0;
 /// The reference speed for the format's lap time (the derby never reads it), m/s.
 const REF_SPEED_MPS: f64 = 15.0;
 const MARGIN_M: f64 = 8.0;
+/// An island whose two farthest rocks stand this far apart or more (m, clear between them) is a gate to the derby's
+/// bots (`jj_sim::autopilot::GATE_MIN_M`; `tests/arena.rs` holds the two equal).
+pub const GATE_OPEN_M: f64 = 5.0;
 
 fn mm(v: f64) -> i32 {
     libm::round(v * 1000.0) as i32
@@ -93,6 +100,16 @@ pub fn generate(seed: u64, cars: usize) -> Map {
 
 /// [`generate`], with the field it laid out (what the jumps, relief and island are: for tests and fixtures).
 pub fn generate_with_field(seed: u64, cars: usize) -> (Map, Field) {
+    let field = field::generate(
+        &mut Rng::stream(seed, "arena-field"),
+        arena_floor_radius(cars),
+    );
+    (build(seed, cars, &field), field)
+}
+
+/// The arena for `seed` and `cars` carrying `field` (the generator's own, or one a fixture lays out by hand to measure a
+/// piece on its own).
+pub fn build(seed: u64, cars: usize, field: &Field) -> Map {
     let mut rng = Rng::stream(seed, "arena");
     // The bank's radius, the wall's height and the lip's width vary a little with the seed (whole metres).
     let bank = 8 + (rng.unit() * 4.0) as i64; // 8..=11 m
@@ -115,7 +132,6 @@ pub fn generate_with_field(seed: u64, cars: usize) -> (Map, Field) {
     };
     let design = BowlDesign::of(&feature).expect("the params are complete");
     let outer = design.outer_r();
-    let field = field::generate(&mut Rng::stream(seed, "arena-field"), floor_r);
 
     // Rocks outside: domes whose footprints clear the lip.
     let mut dressing = Vec::new();
@@ -238,7 +254,7 @@ pub fn generate_with_field(seed: u64, cars: usize) -> (Map, Field) {
         .collect();
     // Rows round nearly the whole ring; the overflow stacks inside it under spawn protection (placement, S06).
     let length = libm::floor(circumference * 0.95 / ROW_SPACING_M) * ROW_SPACING_M;
-    let map = Map {
+    Map {
         header: Header {
             version: MAP_VERSION.into(),
             generator: Generator {
@@ -280,8 +296,7 @@ pub fn generate_with_field(seed: u64, cars: usize) -> (Map, Field) {
         features: vec![feature],
         dressing,
         props: Vec::new(),
-    };
-    (map, field)
+    }
 }
 
 /// A validated, canonical arena for `seed` and `cars`, or what the validators found wrong.
@@ -303,8 +318,9 @@ pub fn prepare(seed: u64, cars: usize, registry: &Registry) -> Result<LoadedMap,
 /// Every arena check (empty when sound): the format's validator (which holds the floor's relief: flat near the bank, no
 /// rise that hides a car, no dip or slope that traps one), plus the arena's own: one bowl; the spawn ring and the cars'
 /// spread across it on the floor; solid rocks clear of the lip, except the island's, which stand inside the field (clear
-/// of the flat rim) and squat enough to hide nobody; every floor cell reachable from the ring round the island (a flood
-/// fill on a 2 m grid, so no dead corner and no walled-off pocket); a closed shell no car can leave.
+/// of the flat rim) and squat enough to hide nobody; no rock in the island's gate, which the bots drive through; every
+/// floor cell reachable from the ring round the island (a flood fill on a 2 m grid, so no dead corner and no walled-off
+/// pocket); a closed shell no car can leave.
 pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
     let mut bad: Vec<String> = validate(map, registry)
         .violations
@@ -378,6 +394,28 @@ pub fn check(map: &Map, registry: &Registry) -> Vec<String> {
             f64::from(dr.pose.z) / 1000.0 - d.cz,
             reach,
         ));
+    }
+    // The gate (br-bhkz.4): the derby's bots drive the crossover through the middle of an island whose two farthest
+    // rocks stand [`GATE_OPEN_M`] or more apart, so no other rock may stand in that gap.
+    let far = blocks
+        .iter()
+        .flat_map(|p| blocks.iter().map(move |q| (*p, *q)))
+        .max_by(|(p, q), (s, t)| {
+            libm::hypot(p.0 - q.0, p.1 - q.1).total_cmp(&libm::hypot(s.0 - t.0, s.1 - t.1))
+        });
+    if let Some((p, q)) = far {
+        let widest = blocks.iter().map(|b| b.2).fold(0.0, f64::max);
+        let clear = libm::hypot(p.0 - q.0, p.1 - q.1) - 2.0 * widest;
+        let (mx, mz) = ((p.0 + q.0) / 2.0, (p.1 + q.1) / 2.0);
+        if clear >= GATE_OPEN_M
+            && blocks
+                .iter()
+                .any(|b| libm::hypot(b.0 - mx, b.1 - mz) - b.2 < clear / 2.0 - 0.01)
+        {
+            bad.push(
+                "a rock stands in the island's gate (the bots drive the crossover through its middle)".into(),
+            );
+        }
     }
     // Reachability: flood the floor disc from the ring on a 2 m grid, round the island (a car's half-width off its rocks).
     let cell = 2.0;

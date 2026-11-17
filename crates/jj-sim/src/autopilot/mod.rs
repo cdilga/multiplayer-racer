@@ -487,7 +487,81 @@ const ISLAND_PREY_M: f32 = 3.0;
 /// Samples along a bot's line when checking it against the island.
 const ISLAND_SAMPLES: usize = 16;
 
+/// The crossover (br-bhkz.4): an island of two rocks with at least this much clear between them is a gate, and the
+/// arena's crossover runs through it, across the island: a launch ramp each side of a deck between the rocks
+/// (`jj_procgen::arena::field`; the arena validator holds the gate open).
+pub const GATE_MIN_M: f32 = 5.0;
+/// The crossover's ramps end within this of the gate's middle, each side, m.
+pub const GATE_RUN_M: f32 = 10.0;
+/// A bot whose prey is across the island takes the crossover when it is within the gate's own width of its line, or
+/// within this share of its distance from the ramp's foot (a cone of 24 degrees a side: it has room to line up).
+const GATE_CONE: f32 = 0.45;
+/// On the crossover a bot follows its line, aiming this far along it, m.
+const GATE_LOOK_M: f32 = 8.0;
+
+/// The gate through an island of two rocks: its middle, the unit vector across the island (the crossover's line) and
+/// half the clear width between the rocks, m.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Gate {
+    pub mid: [f32; 2],
+    pub axis: [f32; 2],
+    pub half: f32,
+}
+
+impl Gate {
+    /// (x, z) in the gate's frame: m along the crossover's line from the gate's middle, and m across it.
+    fn local(&self, x: f32, z: f32) -> (f32, f32) {
+        let (dx, dz) = (x - self.mid[0], z - self.mid[1]);
+        (
+            dx * self.axis[0] + dz * self.axis[1],
+            -dx * self.axis[1] + dz * self.axis[0],
+        )
+    }
+
+    /// The aim for a car taking the crossover, if it is: a point on the crossover's line [`GATE_LOOK_M`] ahead of it.
+    /// It takes it when it is on it and facing along it (it carries on over, whatever its prey does), or when its prey
+    /// is across the island, its straight line there is `blocked` by the island, and it is in the cone before a ramp
+    /// facing the gate. Everything else goes round ([`Obstacle::detour`]).
+    pub fn through(&self, me: Pose2, ax: f32, az: f32, blocked: bool) -> Option<(f32, f32)> {
+        let (s, l) = self.local(me.x, me.z);
+        let (aim_s, _) = self.local(ax, az);
+        // How much of the car's heading runs along the crossover's line (1 = straight along it, towards +axis).
+        let along = libm::sinf(me.heading) * self.axis[0] + libm::cosf(me.heading) * self.axis[1];
+        let on = s.abs() <= GATE_RUN_M && l.abs() <= self.half + 1.0;
+        let way = if on && along.abs() > core::f32::consts::FRAC_1_SQRT_2 {
+            along.signum()
+        } else if blocked
+            && s.abs() > GATE_RUN_M
+            && s * aim_s < 0.0
+            && l.abs() <= (self.half - 1.0).max(GATE_CONE * (s.abs() - GATE_RUN_M))
+            && -s.signum() * along > 0.5
+        {
+            -s.signum()
+        } else {
+            return None;
+        };
+        let to = s + way * GATE_LOOK_M;
+        Some((
+            self.mid[0] + self.axis[0] * to,
+            self.mid[1] + self.axis[1] * to,
+        ))
+    }
+}
+
 impl Obstacle {
+    /// The gate between the island's two rocks, when there is one: the rocks' centres (the capsule's ends) stand at
+    /// least [`GATE_MIN_M`] apart beyond their own radii.
+    pub fn gate(&self) -> Option<Gate> {
+        let (dx, dz) = (self.b[0] - self.a[0], self.b[1] - self.a[1]);
+        let len = libm::hypotf(dx, dz);
+        let clear = len - 2.0 * self.r;
+        (clear >= GATE_MIN_M).then(|| Gate {
+            mid: [(self.a[0] + self.b[0]) / 2.0, (self.a[1] + self.b[1]) / 2.0],
+            axis: [-dz / len, dx / len],
+            half: clear / 2.0,
+        })
+    }
+
     /// The point of the capsule's axis nearest (x, z), and how far that is.
     fn nearest(&self, x: f32, z: f32) -> ([f32; 2], f32) {
         let (dx, dz) = (self.b[0] - self.a[0], self.b[1] - self.a[1]);
@@ -748,9 +822,14 @@ impl Autopilot {
                 arena.z + oz / out_r * keep_in,
             );
         }
-        // Round the island, not into it.
+        // Round the island, not into it; or over the crossover through its gate, when that is the way to the prey
+        // (br-bhkz.4: the bots' lines skirted every jump).
         if let Some(o) = arena.obstacle {
-            (ax, az) = o.detour(me.x, me.z, ax, az);
+            let round = o.detour(me.x, me.z, ax, az);
+            (ax, az) = o
+                .gate()
+                .and_then(|g| g.through(me, ax, az, round != (ax, az)))
+                .unwrap_or(round);
         }
         let (l, f) = local(ax, az);
         let dist = libm::hypotf(l, f).max(1.0);

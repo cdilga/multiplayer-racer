@@ -6,42 +6,76 @@
       "tick": 200
     },
     {
-      "car": 2,
-      "on": true,
+      "car": 1,
+      "on": false,
       "tick": 200
+    },
+    {
+      "car": 1,
+      "on": true,
+      "tick": 800
+    },
+    {
+      "car": 0,
+      "on": false,
+      "tick": 800
+    },
+    {
+      "car": 0,
+      "on": true,
+      "tick": 1400
+    },
+    {
+      "car": 1,
+      "on": false,
+      "tick": 1400
+    },
+    {
+      "car": 1,
+      "on": true,
+      "tick": 2000
+    },
+    {
+      "car": 0,
+      "on": false,
+      "tick": 2000
+    },
+    {
+      "car": 0,
+      "on": true,
+      "tick": 2600
+    },
+    {
+      "car": 1,
+      "on": false,
+      "tick": 2600
+    },
+    {
+      "car": 1,
+      "on": true,
+      "tick": 3200
+    },
+    {
+      "car": 0,
+      "on": false,
+      "tick": 3200
     }
   ],
   "cars": [
     {
       "pose": {
         "headingDeg": 0.0,
-        "x": 25.5,
+        "x": 28.5,
         "y": 0.12,
         "z": 0.0
-      }
-    },
-    {
-      "pose": {
-        "headingDeg": 90.0,
-        "x": 0.0,
-        "y": 0.12,
-        "z": 25.5
       }
     },
     {
       "pose": {
         "headingDeg": 180.0,
-        "x": -25.5,
+        "x": -28.5,
         "y": 0.12,
         "z": 0.0
-      }
-    },
-    {
-      "pose": {
-        "headingDeg": 270.0,
-        "x": -0.0,
-        "y": 0.12,
-        "z": -25.5
       }
     }
   ],
@@ -50,22 +84,94 @@
   },
   "expect": [
     {
+      "atTick": 790,
+      "car": 0,
+      "max": 1000,
+      "metric": "landings",
+      "min": 1
+    },
+    {
+      "atTick": 790,
+      "car": 0,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 0.8
+    },
+    {
+      "atTick": 1390,
+      "car": 1,
+      "max": 1000,
+      "metric": "landings",
+      "min": 1
+    },
+    {
+      "atTick": 1390,
+      "car": 1,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 0.8
+    },
+    {
+      "atTick": 1990,
       "car": 0,
       "max": 1000,
       "metric": "landings",
       "min": 2
     },
     {
+      "atTick": 1990,
+      "car": 0,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 1.6
+    },
+    {
+      "atTick": 2590,
+      "car": 1,
+      "max": 1000,
+      "metric": "landings",
+      "min": 2
+    },
+    {
+      "atTick": 2590,
+      "car": 1,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 1.6
+    },
+    {
+      "atTick": 3190,
+      "car": 0,
+      "max": 1000,
+      "metric": "landings",
+      "min": 3
+    },
+    {
+      "atTick": 3190,
+      "car": 0,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 2.4
+    },
+    {
+      "atTick": 3790,
+      "car": 1,
+      "max": 1000,
+      "metric": "landings",
+      "min": 3
+    },
+    {
+      "atTick": 3790,
+      "car": 1,
+      "max": 600,
+      "metric": "airtimeS",
+      "min": 2.4
+    },
+    {
       "car": 0,
       "max": 1,
       "metric": "landingTier",
       "min": 0
-    },
-    {
-      "car": 0,
-      "max": 100000,
-      "metric": "derbyPoints",
-      "min": 0.1
     },
     {
       "car": 0,
@@ -75,49 +181,37 @@
     },
     {
       "car": 0,
-      "max": 39.8,
+      "max": 100000,
+      "metric": "derbyPoints",
+      "min": 0.1
+    },
+    {
+      "car": 0,
+      "max": 42.8,
       "metric": "maxRadiusM",
       "min": 0
     },
     {
       "car": 1,
-      "max": 39.8,
-      "metric": "maxRadiusM",
-      "min": 0
-    },
-    {
-      "car": 2,
-      "max": 1000,
-      "metric": "landings",
-      "min": 1
-    },
-    {
-      "car": 2,
       "max": 1,
       "metric": "landingTier",
       "min": 0
     },
     {
-      "car": 2,
-      "max": 100000,
-      "metric": "derbyPoints",
-      "min": 0.1
-    },
-    {
-      "car": 2,
+      "car": 1,
       "max": 1.001,
       "metric": "landingUpY",
       "min": 0.7
     },
     {
-      "car": 2,
-      "max": 39.8,
-      "metric": "maxRadiusM",
-      "min": 0
+      "car": 1,
+      "max": 100000,
+      "metric": "derbyPoints",
+      "min": 0.1
     },
     {
-      "car": 3,
-      "max": 39.8,
+      "car": 1,
+      "max": 42.8,
       "metric": "maxRadiusM",
       "min": 0
     }
@@ -127,15 +221,15 @@
     {
       "car": 0,
       "linvel": [
-        11.19,
+        13.92,
         0,
-        -11.43
+        1.52
       ],
       "pose": {
-        "headingDeg": 135.6,
-        "x": -24.01,
+        "headingDeg": 83.8,
+        "x": -19.63,
         "y": 0.12,
-        "z": 4.79
+        "z": -1.73
       },
       "tick": 200
     },
@@ -147,27 +241,57 @@
         0
       ],
       "pose": {
-        "headingDeg": 225.6,
-        "x": 5.71,
+        "headingDeg": 173.8,
+        "x": 29.08,
         "y": 0.12,
-        "z": -25.58
+        "z": 3.6
       },
       "tick": 200
+    },
+    {
+      "car": 1,
+      "linvel": [
+        -13.92,
+        0,
+        -1.52
+      ],
+      "pose": {
+        "headingDeg": -96.2,
+        "x": 21.13,
+        "y": 0.12,
+        "z": 2.73
+      },
+      "tick": 800
     },
     {
       "car": 0,
       "linvel": [
-        -15.39,
         0,
-        15.72
+        0,
+        0
       ],
       "pose": {
-        "headingDeg": -44.4,
-        "x": 2.91,
+        "headingDeg": -6.2,
+        "x": -27.58,
         "y": 0.12,
-        "z": -22.72
+        "z": -2.6
       },
       "tick": 800
+    },
+    {
+      "car": 0,
+      "linvel": [
+        -13.98,
+        0,
+        0.83
+      ],
+      "pose": {
+        "headingDeg": -86.6,
+        "x": 19.34,
+        "y": 0.12,
+        "z": 16.64
+      },
+      "tick": 1400
     },
     {
       "car": 1,
@@ -177,76 +301,106 @@
         0
       ],
       "pose": {
-        "headingDeg": 45.6,
-        "x": -25.41,
+        "headingDeg": 3.4,
+        "x": -22.34,
         "y": 0.12,
-        "z": 6.22
+        "z": 19.1
       },
-      "tick": 800
+      "tick": 1400
     },
     {
-      "car": 2,
+      "car": 1,
       "linvel": [
-        0.8,
+        13.98,
         0,
-        -15.98
+        -0.83
       ],
       "pose": {
-        "headingDeg": 177.1,
-        "x": 13.87,
+        "headingDeg": 93.4,
+        "x": -16.35,
         "y": 0.12,
-        "z": 19.48
+        "z": 18.75
       },
-      "tick": 200
+      "tick": 2000
     },
     {
-      "car": 3,
-      "linvel": [
-        0,
-        0,
-        0
-      ],
-      "pose": {
-        "headingDeg": 267.1,
-        "x": 15.83,
-        "y": 0.12,
-        "z": -19.97
-      },
-      "tick": 200
-    },
-    {
-      "car": 2,
-      "linvel": [
-        -1.1,
-        0,
-        21.97
-      ],
-      "pose": {
-        "headingDeg": -2.9,
-        "x": 15.63,
-        "y": 0.12,
-        "z": -15.98
-      },
-      "tick": 800
-    },
-    {
-      "car": 3,
+      "car": 0,
       "linvel": [
         0,
         0,
         0
       ],
       "pose": {
-        "headingDeg": 87.1,
-        "x": 13.77,
+        "headingDeg": 183.4,
+        "x": 23.34,
         "y": 0.12,
-        "z": 21.48
+        "z": 16.4
       },
-      "tick": 800
+      "tick": 2000
+    },
+    {
+      "car": 0,
+      "linvel": [
+        -13.97,
+        0,
+        0.93
+      ],
+      "pose": {
+        "headingDeg": -86.2,
+        "x": 17.21,
+        "y": 0.12,
+        "z": -18.92
+      },
+      "tick": 2600
+    },
+    {
+      "car": 1,
+      "linvel": [
+        0,
+        0,
+        0
+      ],
+      "pose": {
+        "headingDeg": 3.8,
+        "x": -23.7,
+        "y": 0.12,
+        "z": -16.18
+      },
+      "tick": 2600
+    },
+    {
+      "car": 1,
+      "linvel": [
+        13.97,
+        0,
+        -0.93
+      ],
+      "pose": {
+        "headingDeg": 93.8,
+        "x": -19.71,
+        "y": 0.12,
+        "z": -16.45
+      },
+      "tick": 3200
+    },
+    {
+      "car": 0,
+      "linvel": [
+        0,
+        0,
+        0
+      ],
+      "pose": {
+        "headingDeg": 183.8,
+        "x": 21.2,
+        "y": 0.12,
+        "z": -19.18
+      },
+      "tick": 3200
     }
   ],
   "scenario": "arena-jumps",
   "seed": 7,
-  "ticks": 1400,
-  "what": "P1-M-arena-features: bots fly the derby arena's jumps and land. On the 8-car bank arena (maps/derby-bowl-8.json, seed 11) each jump has a bot on the autopilot and a parked rival: at tick 200 the bot starts about 12 m before the jump's launch ramp at 16 m/s and the rival waits about 20 m past its far end, beyond the flight (the nearest clear floor), so the bot's hunting line runs over the jump; at tick 800 both are placed again the other way round (the bot at 22 m/s: the way down is the gentler launch). Every bot flies and lands on its wheels (its first landing judged clean or ok by the landing judge, never bad or a crash), flies both ways round, and rams its rival; the rivals end on their wheels and no car leaves the bowl. Generated by crates/jj-procgen/tests/arena.rs (JJ_BLESS=1)."
+  "ticks": 3800,
+  "what": "P1-M-arena-features, br-bhkz.4: bots fly the derby arena's jumps and land. On the 8-car bank arena (maps/derby-bowl-8.json, seed 11) two bots take turns over every jump, the crossover through the island's gate first, then the jumps either side of it. Each round (every 600 ticks from tick 200) one bot is put on the autopilot about 12 m before a jump's launch ramp at 14 m/s and the other is parked about 20 m past its far end, beyond the flight (the nearest clear floor), so the hunter's line runs over the jump (for the crossover, through the gate between the island's rocks, which the bots take instead of going round); the next round they swap and the other bot flies the same jump the other way. Every flight is a real one (by the end of its round the hunter has one more landing and at least 0.8 s more time in the air), both bots land on their wheels (the first landing judged clean or ok by the landing judge, never bad or a crash) and ram their rival, and neither leaves the bowl. Re-pinned for br-bhkz.4 (generator 4: 20 degree launches to 1-2 m lips and the crossover; the old fixture flew 12 degree hops at 16 and 22 m/s with a pair of cars per jump, and car 2 was let off its second flight, br-7htf: that relaxation is removed; two cars because a hunter picks the nearest rival it faces, and with other pairs on the floor that wasn't the one across the jump). Generated by crates/jj-procgen/tests/arena.rs (JJ_BLESS=1)."
 }

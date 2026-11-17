@@ -65,7 +65,7 @@ for j in range(12):
 
 containment = {
     "scenario": "bowl-containment",
-    "what": "P1-M10: rams at the rim from many angles and speeds, boosted and airborne, never put a car outside the bowl. 24 floor cars (every 15 degrees on two rings, 0/25/55 degrees off the radial, 12..50 m/s, boost on alternate cars) and 12 airborne (3 m up, 6..14 m/s upward, 15..45 m/s outward): each stays within 0.75 m of the wall's face for 7 s, however the pile-up falls.",
+    "what": "P1-M10: rams at the rim from many angles and speeds, boosted and airborne, never put a car outside the bowl. 24 floor cars (every 15 degrees on two rings, 0/25/55 degrees off the radial, 12..50 m/s, boost on alternate cars) and 12 airborne (3 m up, 6..14 m/s upward, 15..45 m/s outward): each stays within 0.75 m of the wall's face for 7 s, however the pile-up falls. Re-pinned for br-bhkz.4 (arena generator 4: a floor 3 m bigger in radius, the crossover and 20 degree jumps): the cars' places follow the new floor; the envelope is unchanged.",
     "map": "maps/derby-bowl-16.json",
     "seed": 11,
     "ticks": 840,
@@ -88,7 +88,7 @@ for i, (angle, speed) in enumerate([(20, 6), (140, 10), (260, 15)]):
     ]
 transition = {
     "scenario": "bowl-transition",
-    "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor's flat rim at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car\'s up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back; a dip in the field, up to 1 m deep, is floor).",
+    "what": "P1-M10: driving from the floor up the bank never catches or launches a car. Three cars coast up the bank from the floor's flat rim at 6, 10 and 15 m/s with no throttle: each reaches the bank (past the floor's edge), is airborne for no more than 0.15 s (no launch off the transition), never tips over (the car\'s up axis stays above 0.4: it leans with the bank, no more), and is back down on the floor after 12 s (not caught on the way back; a dip in the field, up to 1 m deep, is floor). Re-pinned for br-bhkz.4 (arena generator 4: a floor 3 m bigger in radius, the crossover and 20 degree jumps): the cars' places follow the new floor; the envelope is unchanged.",
     "map": "maps/derby-bowl-16.json",
     "seed": 11,
     "ticks": 1440,

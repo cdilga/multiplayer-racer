@@ -404,3 +404,31 @@ bilinear sample. The dressing-invariance fixture then passes without changing it
   so it lands at the lip's pitch: a 15 degree kick onto an 11 degree down-ramp landed at 26 degrees (bad). A table-top's
   two slopes together stay under the judge's OK band (12 + 8 = 20 degrees). `nothing_in_the_field_traps_a_stopped_car`
   drops a car on every crease, crest, dip and beside every rock; run it after any change to the field's shapes.
+
+## 2026-11-17 · Derby jumps worth taking (br-bhkz.4)
+
+Numbers and the flight table: `docs/evidence/br-bhkz.4/jumps.md`.
+
+- **A lip is a crease a stopped car must drive off, and that caps the launch angle before the validator does.** A Cruz
+  astride a lip drives off creases up to 0.36 (19.8 degrees) when there is 1.5 m or more of deck beyond; at 0.40 it
+  high-centres, and any peaked lip (no deck) does at every slope down to 0.23. `MAX_RELIEF_SLOPE` (0.6) is about climbing
+  a slope, not about a convex crease: a 0.55 face meeting a deck traps a car every time.
+- **So a gap jump with a rock in the gap does not fit a small bowl.** Lanes, the kit's smallest rock (6 m across) and
+  trap-free lips make the gap about 24 m (19 m/s off the lip). The crossover is a deck between two ramps with the rocks
+  beside it instead.
+- **Steeper launches fly no longer.** The ramp's foot costs speed: from the same start a 0.445 ramp left the lip 3 m/s
+  slower than a 0.36 one and flew a shorter time. Size a jump from measured flights, not from the ballistic formula.
+- **A neutral flight lands at about 0.6 of the lip's pitch** (10-19 degrees off a 20 degree lip, more at speed): OK on
+  flat ground at every speed from 12 to 24 m/s, bad on a down-ramp. Keep far ramps short enough that arena speeds
+  clear them.
+- **The trap test's island car stood 0.6 m inside the rock.** A clear floor ahead forgave it (the rock pushed the car
+  out); with a jump's side slope a lane away it wedged. It now stands a half-length and a hand off the rock.
+- **The sim's item-box placement can miss the corner of a ramp's foot.** It reads the ground 2 m round a spot in eight
+  directions; a corner where the ramp is a few centimetres high slips between them. The box test now checks the ground
+  under the box's cube.
+- **A derby bot sees the island as one capsule between its two farthest rocks and nothing of the relief.** Routing it
+  over a jump means telling it through that capsule (the gate between two rocks) or adding jump data to
+  `autopilot::Arena`, which is built in `sim.rs`. Bigger jumps alone took the bots from 5 to about 18 landings a minute:
+  every side of a piece is a launch.
+- **A hunter picks the nearest rival it faces, not the one a fixture intends.** A pair of cars per jump on one floor
+  sent the crossover's bot after a neighbour. Fixtures that need a bot on a line use two cars.
