@@ -223,8 +223,14 @@ impl Episodes {
                                 continue;
                             }
                             // Each contact point belongs to its own part: one flat hit can straddle two.
+                            // In a derby a car's hit on the cabin is never free: it lands on the nearest part,
+                            // however far (a car that comes down on a rival's roof damages it: a stomp pays).
+                            let margin = match (rules, kind) {
+                                (Some(_), OtherBody::Car { .. }) => f32::MAX,
+                                _ => t.attribution_margin_m,
+                            };
                             let part = if part == CORE {
-                                attribute_core(world, car, local, t.attribution_margin_m)
+                                attribute_core(world, car, local, margin)
                             } else {
                                 part
                             };

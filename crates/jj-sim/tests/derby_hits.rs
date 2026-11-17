@@ -244,3 +244,44 @@ fn a_car_rammed_into_the_wall_pays_in_full_and_the_rammer_scores_it() {
         "the shove replays exactly"
     );
 }
+
+/// Car 1 comes down flat on the roof of car 0 (standing, across its line) from `drop` m up at 7 m/s.
+fn stomp(sim: &mut Sim) {
+    sim.place_car(CarId(0), pose(0.0, -30.0, 0.0), 0.0, [0.0; 3]);
+    run(sim, 0.5);
+    let mut above = pose(0.0, -30.0, EAST);
+    above.y = 2.6;
+    sim.place_car(CarId(1), above, 0.0, [0.0, -7.0, 0.0]);
+    run(sim, 1.5);
+}
+
+/// br-bhkz.4's jumps make stomps: a car that comes down square on a rival's roof. The cabin has no health, so before
+/// this the car underneath lost nothing and scored off the lander. In a derby the hit lands on its nearest part.
+#[test]
+fn a_car_that_lands_on_a_rivals_roof_damages_it_and_scores() {
+    let map = yard();
+    let mut derby = two_cars(&map, true);
+    stomp(&mut derby);
+    let (under, lander) = (lost(&derby, 0), lost(&derby, 1));
+    eprintln!("stomp: the car underneath lost {under:.1} HP, the lander {lander:.1} HP");
+    assert!(under > 5.0, "the car underneath is damaged: {under:.1}");
+    assert!(
+        lander < under,
+        "the lander brought the speed, so it pays less: {lander:.1} vs {under:.1}"
+    );
+    let ledger = derby.derby().unwrap();
+    assert!(
+        ledger.points(1) > ledger.points(0),
+        "the stomp is the lander's points: {} vs {}",
+        ledger.points(1),
+        ledger.points(0)
+    );
+    // A race is untouched: the roof still costs the car underneath nothing more than its own parts take.
+    let mut race = two_cars(&map, false);
+    stomp(&mut race);
+    assert!(
+        lost(&race, 0) < under,
+        "only a derby moves a roof hit onto a part: race {:.1}, derby {under:.1}",
+        lost(&race, 0)
+    );
+}
