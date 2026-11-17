@@ -14,19 +14,23 @@ const BASE = '/p/derby-fun/';
 const out = process.env.JJ_CAPTURE_DIR;
 if (!out) throw new Error('set JJ_CAPTURE_DIR to where the stills go');
 mkdirSync(out, { recursive: true });
-const server = await serve(process.env.JJ_DIST ?? build('./', 'derby-fun'), BASE, { JJ_STUN_URLS: '' });
+// JJ_BASE_URL=https://jammers-preview.dilger.dev/p/<id>/ captures a published preview (what the owner opens) instead of a
+// local build.
+const remote = process.env.JJ_BASE_URL ? `${process.env.JJ_BASE_URL.replace(/\/$/, '')}/` : null;
+const server = remote ? null : await serve(process.env.JJ_DIST ?? build('./', 'derby-fun'), BASE, { JJ_STUN_URLS: '' });
+const base = remote ?? `${server.origin}${BASE}`;
 // JJ_CHROMIUM_CHANNEL=chrome uses the machine's own Chrome (a Mac without Playwright's browsers installed).
 const browser = await chromium.launch({ args: chromiumArgs, channel: process.env.JJ_CHROMIUM_CHANNEL || undefined });
 const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const shot = async (page, name) => {
-  await page.screenshot({ path: join(out, `${name}.jpg`), type: 'jpeg', quality: 82 });
+  await page.screenshot({ path: join(out, `${name}.jpg`), type: 'jpeg', quality: 72 });
   console.log(`captured ${name}.jpg`);
 };
 const errors = [];
 try {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   host.on('pageerror', (e) => errors.push(`host: ${e.message}`));
-  await host.goto(`${server.origin}${BASE}host?room&test=live&mode=derby&derbyMs=180000`);
+  await host.goto(`${base}host?room&test=live&mode=derby&derbyMs=180000`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const join1 = async (name, viewport) => {
@@ -103,6 +107,8 @@ try {
   if (boxes.length) {
     const b = boxes[Math.floor(boxes.length / 2)];
     await peek('boxes-close-up', [b[0] + 7, b[1] + 4.5, b[2] + 7], b, 45);
+    // A wider look across the floor: one of every print somewhere in it.
+    await peek('boxes-wide', [b[0] + 16, b[1] + 9, b[2] + 16], b, 50);
   }
   // Davo T-bones Shazza on a clear stretch of the flat rim, a third of the way round from the grid: she stands nose to
   // the middle, he comes along the rim 12 m off at 16 m/s into her door.
@@ -206,6 +212,34 @@ try {
   await step(12);
   await settle(800);
   await shot(host, 'tv-1920x1080-grid-carnage');
+  // The next wreck somebody caused: its tile's banner says who.
+  const wrecked = await host.evaluate(async () => {
+    for (let k = 0; k < 600; k++) {
+      await window.__jjTest.step(12);
+      const s = window.__jjRoom.view().seats.find((s) => s.wreckMs > 300 && s.wreckBy !== null && s.wreckBy !== undefined);
+      if (s) return { number: s.number, by: s.wreckBy, why: s.wreckWhy };
+    }
+    return null;
+  });
+  console.log('wrecked', JSON.stringify(wrecked));
+  await settle(500);
+  if (wrecked) await shot(host, 'tv-1920x1080-grid-wrecked-by');
+  // The same round on a laptop and a small phone (a resize mid-round, both ways up).
+  await host.setViewportSize({ width: 1366, height: 768 });
+  // A phone that went full screen on Ready leaves it first (a full-screen window can't be resized).
+  for (const [phone, size] of [[wide, { width: 667, height: 375 }], [tall, { width: 375, height: 667 }]]) {
+    await phone.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
+    await phone.setViewportSize(size).catch((e) => console.log(`resize refused: ${e.message.split('\n')[0]}`));
+  }
+  await step(24);
+  await settle(900);
+  await shot(host, 'laptop-1366x768-grid');
+  await shot(wide, 'phone-667x375-derby');
+  await shot(tall, 'phone-375x667-derby');
+  await host.evaluate(() => window.__jjOverview.set('overview'));
+  await step(12);
+  await settle(900);
+  await shot(host, 'laptop-1366x768-overview');
   const facts = await host.evaluate(async () => {
     const o = await window.__jjTest.observe();
     return { tick: o.tick, bungers: o.items?.bungers?.length ?? 0, magpies: o.items?.magpies?.length ?? 0, seats: window.__jjRoom.view().seats.map((s) => ({ n: s.number, name: s.name, derby: s.derby, inv: s.inventory })) };
@@ -213,7 +247,7 @@ try {
   console.log(JSON.stringify(facts));
 } finally {
   await browser.close();
-  await server.close();
+  await server?.close();
 }
 if (errors.length) {
   console.error(`page errors:\n${errors.join('\n')}`);

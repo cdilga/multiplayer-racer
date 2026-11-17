@@ -41,8 +41,9 @@ function sangaPrint() {
 function tinniePrint() {
   const z = S / 2 + 0.006;
   return [
-    drum(0.1, -0.22, 0.22, '#2f8fd8', 10).translate(0, S / 2 + 0.1, z).scale(1, 1, 0.12),
-    drum(0.1, 0.22, 0.25, '#d9dde2', 10).translate(0, S / 2 + 0.1, z + 0.002).scale(1, 1, 0.12),
+    // Flattened first, then moved out to the face (scaled after the move, the can sat inside the box: a blank box).
+    drum(0.1, -0.22, 0.22, '#2f8fd8', 10).scale(1, 1, 0.12).translate(0, S / 2 + 0.1, z),
+    drum(0.1, 0.22, 0.25, '#d9dde2', 10).scale(1, 1, 0.12).translate(0, S / 2 + 0.1, z + 0.002),
   ];
 }
 

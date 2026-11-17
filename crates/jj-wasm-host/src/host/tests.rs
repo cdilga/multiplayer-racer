@@ -4911,6 +4911,12 @@ fn a_derby_arms_every_car_and_the_bots_use_the_new_weapons() {
         .iter()
         .filter(|(_, e)| matches!(e, jj_sim::damage::DamageEvent::Wrecked { .. }))
         .count();
+    // A wreck names the car whose hit it was (the tile's banner says who): the host keeps it per wrecked car.
+    assert!(
+        wrecks == 0 || h.wrecks_seen.values().any(|w| w.2.is_some()),
+        "a derby's wrecks name who caused them: {:?}",
+        h.wrecks_seen
+    );
     eprintln!(
         "a minute of derby, 7 cars: {bars} roo bars, {bungers} bungers, {magpies} magpies used; {blasted} blast hits, {pecked} pecks; {wrecks} wrecks; {picked} pickups in the first 2 s"
     );

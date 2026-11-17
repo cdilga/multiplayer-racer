@@ -241,7 +241,7 @@ export interface RoomView {
    *  `botCars` lists this round's bot cars in slot order, a bot removed mid-round included. A results row's `index` is a slot. */
   bots?: number;
   botList?: Array<{ id: number; skill: number; assist: number; position: number | null; slot?: number | null }>;
-  botCars?: Array<{ id: number; position: number | null }>;
+  botCars?: Array<{ id: number; /** The bot's car this round (br-bhkz.2: a wreck's `wreckBy` names a car). */ car?: number; position: number | null }>;
   botResults?: Array<{ index: number; place: number; timeMs: number | null }>;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

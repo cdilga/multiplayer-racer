@@ -782,8 +782,9 @@ function roundBanner(app: HTMLElement, session: Session): void {
     // R127 gated start: how your launch went, over the countdown or the first seconds of the race.
     text = LAUNCH_TEXT[launch.outcome];
     tag = launch.outcome.toLowerCase();
-  } else if (session.takedownAt !== null && performance.now() - session.takedownAt < TAKEDOWN_SHOWN_MS && session.roomPhase === 'Racing') {
-    // R134 (P1-FL19): you took someone down, and your boost is full.
+  } else if (session.takedownAt !== null && performance.now() - session.takedownAt < TAKEDOWN_SHOWN_MS && session.roomPhase === 'Racing' && !session.hud?.derby) {
+    // R134 (P1-FL19): you took someone down, and your boost is full. (In a derby the car diagram's own callout says what
+    // the hit earned, and this banner would sit over the diagram: br-bhkz.2.)
     text = TAKEDOWN_TEXT.Takedown;
     tag = 'takedown';
   } else if (session.roomPhase === 'Racing' && session.hud?.missed != null) {

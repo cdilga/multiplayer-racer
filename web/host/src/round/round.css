@@ -258,6 +258,8 @@ html[data-results-qr-docked] .foot-qr { display: inline-flex; }
 .hud-hit[data-what="6"] { color: #ff6a5e; }
 .hud-hit.pop { animation: derby-pop .35s cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes derby-pop { 0% { transform: rotate(-4deg) scale(.4); } }
+/* A seat still on its first-drive card (it hasn't touched the sticks) keeps the card readable: no callout across it. */
+.hud-tile:has(.hud-prompt:not([hidden]):not(.quiet)) .hud-hit { display: none; }
 .hud-tile.compact .hud-derby { top: calc(var(--hud) * 2.1); right: calc(var(--hud) * .3); }
 .hud-tile.compact .hud-derby-car { width: calc(var(--hud) * 1.35); }
 .hud-tile.compact .hud-hit { font-size: var(--hud); }

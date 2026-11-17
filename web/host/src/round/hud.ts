@@ -26,6 +26,8 @@ type SeatView = RoomView['seats'][number] & {
   /** From `room_json` (br-ennm): the respawn hold's time left in ms, and what started it. */
   wreckMs?: number | null;
   wreckWhy?: 'outOfBounds' | 'flipped' | 'wheelLoss' | 'recover' | null;
+  /** br-bhkz.2: the car whose hit wrecked this seat's car (a seat's `car` or a bot's), if anyone's. */
+  wreckBy?: number | null;
   /** From `room_json`: the seat's finishing time (ms from the start) once its car has finished. */
   finishMs?: number | null;
   /** From `room_json` (council review round 3): crawling while racing for `race.json` `recover.stuckAfterS`. */
@@ -144,7 +146,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const hitWas = hitSeen.get(seatNo);
       if (hitKey !== (hitWas?.key ?? '')) hitSeen.set(seatNo, { key: hitKey, at: performance.now() });
       const hitShown = !!hit && performance.now() - (hitSeen.get(seatNo)?.at ?? 0) < DERBY_HIT_SHOWN_MS;
-      const key = JSON.stringify([health, hitShown ? hitKey : '', inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000), !!s?.stuck]);
+      const key = JSON.stringify([s?.wreckBy ?? null, health, hitShown ? hitKey : '', inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000), !!s?.stuck]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -233,7 +235,17 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
         // br-ennm (docs/copy/australianisms.md): a car off the course is out past whoop whoop, with the plain words beside it.
         const oob = s.wreckWhy === 'outOfBounds';
         box.querySelector('.wreck-word')!.textContent = oob ? 'Out past whoop whoop!' : s.wreckWhy === 'recover' ? 'Back on the road' : 'Wrecked!';
-        box.querySelector('.wreck-back')!.innerHTML = `${oob ? 'Back onto the track in' : 'Back in'} <b class="cd">${Math.ceil(s.wreckMs! / 1000)}</b> s`;
+        // br-bhkz.2: whose hit it was (owner 2026-11-17: "I seemed to die more somehow"): a seat by number and name, a bot
+        // by the number the world gives it (after every seat's).
+        const by = s.wreckBy ?? null;
+        const bySeat = by === null ? undefined : room?.seats.find((x) => x.car === by);
+        const byBot = by === null || bySeat ? -1 : (room?.botCars ?? []).findIndex((b) => b.car === by);
+        const who = bySeat ? `#${bySeat.number} ${shortName(bySeat.name || 'Player')}` : byBot >= 0 ? `Bot #${Math.max(0, ...(room?.seats ?? []).map((x) => x.number)) + 1 + byBot}` : null;
+        const back = box.querySelector<HTMLElement>('.wreck-back')!;
+        back.dataset.by = who ?? '';
+        back.replaceChildren();
+        if (who) back.append(Object.assign(document.createElement('span'), { className: 'wreck-by', textContent: `by ${who} · ` }));
+        back.append(oob ? 'Back onto the track in ' : 'Back in ', Object.assign(document.createElement('b'), { className: 'cd', textContent: String(Math.ceil(s.wreckMs! / 1000)) }), ' s');
       }
       // The seat's finish: a banner with its place and time, held to the end of the race.
       const fin = box.querySelector<HTMLElement>('[data-finished]')!;

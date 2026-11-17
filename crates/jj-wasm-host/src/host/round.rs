@@ -795,12 +795,15 @@ impl Host {
                     .and_then(|c| Some((c, self.sim.race().car(c)?.hold_until)))
                     .filter(|&(_, until)| tick < until)
                     .map(|(c, until)| {
-                        let why = self
+                        let seen = self
                             .wrecks_seen
                             .get(&c)
-                            .filter(|(t, _)| *t + jj_sim::race::RESPAWN_HOLD_TICKS >= until)
-                            .map_or("recover", |(_, why)| why);
-                        (super::tick_ms(until - tick), why)
+                            .filter(|(t, ..)| *t + jj_sim::race::RESPAWN_HOLD_TICKS >= until);
+                        (
+                            super::tick_ms(until - tick),
+                            seen.map_or("recover", |(_, why, _)| why),
+                            seen.and_then(|(.., by)| *by),
+                        )
                     });
                 serde_json::json!({
                     "seat": s.id.0,
@@ -843,6 +846,8 @@ impl Host {
                     "lapMs": self.lap_ms(s.id),
                     "wreckMs": wreck.map(|w| w.0),
                     "wreckWhy": wreck.map(|w| w.1),
+                    // br-bhkz.2: the car whose hit wrecked this one (a seat's `car` or a `botCars` entry's), if any.
+                    "wreckBy": wreck.and_then(|w| w.2),
                     // Council review round 3: the car has been crawling for `race.json` `recover.stuckAfterS` while racing;
                     // the tile says to tap Recover (the race recovers it itself at `autoAfterS`).
                     "stuck": car.is_some_and(|c| practice.is_none() && self.sim.race().is_stuck(c, tick)),
@@ -906,7 +911,7 @@ impl Host {
             }).collect::<Vec<_>>(),
             // This round's bot cars in slot order, a bot the host removed mid-round included (it races on to the end).
             "botCars": self.round.bot_ids.iter().zip(&self.round.bot_cars).map(|(&id, c)| {
-                serde_json::json!({ "id": id, "position": order.iter().position(|&o| o == c.0).map(|p| p + 1) })
+                serde_json::json!({ "id": id, "car": c.0, "position": order.iter().position(|&o| o == c.0).map(|p| p + 1) })
             }).collect::<Vec<_>>(),
             "botResults": self.round.bot_results.iter().map(|b| serde_json::json!({ "index": b.index, "place": b.place, "timeMs": b.time_ms })).collect::<Vec<_>>(),
             "catchUp": self.round.catch_up == jj_sim::assist::CatchUp::Light,

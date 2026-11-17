@@ -253,7 +253,7 @@ pub struct Host {
     seen_damage_events: usize,
     /// br-ennm: each car's latest wreck (the tick it was collected and why), so the tile's banner names the cause of the
     /// respawn hold it's in.
-    wrecks_seen: BTreeMap<u32, (u64, &'static str)>,
+    wrecks_seen: BTreeMap<u32, (u64, &'static str, Option<u32>)>,
     seen_item_events: usize,
     /// br-bhkz.3: the life each car was last handed its derby spawn item for (one try per life).
     spawn_items: BTreeMap<u32, u32>,
@@ -1891,13 +1891,20 @@ impl Host {
         self.seen_damage_events += fresh.len();
         // br-ennm: each car's latest wreck and why, for its tile's banner (bots too).
         for (tick, e) in &fresh {
-            if let DamageEvent::Wrecked { car, why, .. } = e {
+            if let DamageEvent::Wrecked {
+                car,
+                why,
+                instigator,
+                ..
+            } = e
+            {
                 let why = match why {
                     jj_sim::damage::WreckWhy::OutOfBounds => "outOfBounds",
                     jj_sim::damage::WreckWhy::Flipped => "flipped",
                     jj_sim::damage::WreckWhy::WheelLoss => "wheelLoss",
                 };
-                self.wrecks_seen.insert(*car, (*tick, why));
+                // br-bhkz.2: and the car whose hit it was, so the banner says who ("I seemed to die more somehow").
+                self.wrecks_seen.insert(*car, (*tick, why, *instigator));
             }
         }
         let body = |o: DamageOther| match o {
