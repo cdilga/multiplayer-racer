@@ -1238,6 +1238,16 @@ impl Autopilot {
             ItemId::Sanga | ItemId::Tinnie if self.straight || overdue => {
                 Some(UtilityKind::Forward)
             }
+            // br-bhkz.3: a bunger at a car ahead (the lob aims itself) or dropped for one close behind; a roo bar when
+            // there is someone ahead to ram; a magpie as soon as it is held (it finds whoever is winning).
+            ItemId::Bunger if in_cone(true, t.bunger_ahead_m) || overdue => {
+                Some(UtilityKind::Forward)
+            }
+            ItemId::Bunger if in_cone(false, t.bunger_behind_m) => Some(UtilityKind::Rear),
+            ItemId::RooBar if in_cone(true, t.roo_bar_ahead_m) || overdue => {
+                Some(UtilityKind::Forward)
+            }
+            ItemId::Magpie => Some(UtilityKind::Forward),
             _ => None,
         };
         if kind.is_some() {

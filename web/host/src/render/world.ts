@@ -986,7 +986,7 @@ export class World {
       grow(a.x + a.r, a.z + a.r);
     }
     const f = s.frame;
-    this.props.update(f);
+    this.props.update(f, s);
     this.practice?.update(f);
     this.map?.updateRails(f);
     if (this.overviewOn && !this.frameArena) return this.placeOverview(s);

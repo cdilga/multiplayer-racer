@@ -4781,6 +4781,141 @@ fn bots_join_a_derby_round_on_the_autopilot_and_score() {
     assert!(scoring_bots >= 3, "the bots hunt and score: {rows:?}");
 }
 
+/// br-bhkz.3 / br-bhkz.2 (owner 2026-11-17: "we didn't have anywhere near enough weapons for the derby"): in a derby
+/// every fresh car is handed an item when its spawn protection ends (the start and each respawn), the bots use the new
+/// weapons (roo bar, bunger, magpie) and their hits score, and the room view and the phone HUD carry each car's health
+/// zones and its latest scoring hit.
+#[test]
+fn a_derby_arms_every_car_and_the_bots_use_the_new_weapons() {
+    use jj_protocol::items::ItemId;
+    use jj_session::director::Phase;
+    use jj_sim::items::EventKind;
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetMode { derby: true })).unwrap();
+    h.handle(&ui(UiCommand::SetBots { n: 6 })).unwrap();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("p1".into()),
+            resume: Some("s".into()),
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&net("p1", Channel::Cmd, c.encode())).unwrap();
+    }
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    let mut now = 0u64;
+    let mut huds = Vec::new();
+    let mut step = |h: &mut Host, n: usize, huds: &mut Vec<jj_protocol::state::Hud>| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Outbound {
+                    channel: Channel::State,
+                    bytes,
+                    ..
+                } = m
+                    && let Ok(u) = HudUpdate::decode(&bytes)
+                {
+                    huds.push(u.hud);
+                }
+            }
+        }
+    };
+    let mut guard = 0;
+    while h.phase() != Phase::Running {
+        step(&mut h, 1, &mut huds);
+        guard += 1;
+        assert!(guard < 120 * 60, "the derby starts");
+    }
+    // Two seconds in, everyone's protection has ended and every car has been handed its item.
+    step(&mut h, 2 * 120, &mut huds);
+    assert_eq!(h.sim.cars().count(), 7);
+    let picked = h
+        .sim
+        .items()
+        .events()
+        .iter()
+        .filter(|e| e.kind == EventKind::Picked)
+        .count();
+    assert!(
+        picked >= 7,
+        "every fresh car was handed an item: {picked} pickups"
+    );
+    // A minute of derby: the bots use what they hold, the new weapons among it, and weapon hits land.
+    step(&mut h, 60 * 120, &mut huds);
+    let used = |item: ItemId| {
+        h.sim
+            .items()
+            .events()
+            .iter()
+            .filter(|e| e.item == item && matches!(e.kind, EventKind::Used { .. }))
+            .count()
+    };
+    let (bars, bungers, magpies) = (
+        used(ItemId::RooBar),
+        used(ItemId::Bunger),
+        used(ItemId::Magpie),
+    );
+    assert!(
+        bars > 0 && bungers > 0 && magpies > 0,
+        "the bots use the new weapons: {bars} roo bars, {bungers} bungers, {magpies} magpies"
+    );
+    let blasted: usize = h.sim.bungers().iter().map(|b| b.hits.len()).sum();
+    let pecked = h.sim.magpies().iter().filter(|m| m.hit.is_some()).count();
+    assert!(
+        blasted + pecked > 0,
+        "weapon hits land: {blasted} blast hits, {pecked} pecks"
+    );
+    // The room view and the phone HUD carry the seat's health zones and its latest scoring hit.
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    let derby = &room["seats"][0]["derby"];
+    let zones = derby["health"].as_array().expect("health zones");
+    assert_eq!(zones.len(), 5, "{derby}");
+    assert!(
+        zones.iter().all(|z| z.as_u64().is_some_and(|z| z <= 100)),
+        "a Cruz has every zone, in percent: {derby}"
+    );
+    assert!(
+        derby["hit"]["seq"].is_u64() && derby["hit"]["what"].is_u64(),
+        "{derby}"
+    );
+    let hud = huds
+        .iter()
+        .rev()
+        .find_map(|u| u.derby)
+        .expect("the phone HUD carries derby facts");
+    assert!(hud.health.iter().all(|&z| z <= 100), "{hud:?}");
+    // The cars' scoring hits are in the host's books with their points.
+    let scorers = h.derby_hits.values().filter(|d| d.seq > 0).count();
+    assert!(scorers >= 3, "scoring hits are tracked: {scorers} cars");
+    assert!(
+        h.derby_hits.values().any(|d| d.half_points() > 0),
+        "and carry their points"
+    );
+    let wrecks = h
+        .sim
+        .damage_events()
+        .iter()
+        .filter(|(_, e)| matches!(e, jj_sim::damage::DamageEvent::Wrecked { .. }))
+        .count();
+    eprintln!(
+        "a minute of derby, 7 cars: {bars} roo bars, {bungers} bungers, {magpies} magpies used; {blasted} blast hits, {pecked} pecks; {wrecks} wrecks; {picked} pickups in the first 2 s"
+    );
+}
+
 /// br-ennm: a wrecked car's tile banner gets the respawn hold's time left and the wreck's cause from the room view, and
 /// the fields clear when the hold ends.
 #[test]

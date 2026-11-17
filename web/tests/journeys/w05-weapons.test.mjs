@@ -65,7 +65,7 @@ test('W05: cars pick boxes up at the stations and a boomerang flicked forward fl
   // The TV shows who holds what (council review 2026-11-15, round 2): a holder's tile names its front item.
   const held = picked.queues.find((q) => q.queue.front);
   if (held) {
-    const name = { boomerang: 'Boomerang', sanga: 'Sanga', tinnie: 'Tinnie', esky: 'Esky' }[held.queue.front.item];
+    const name = { boomerang: 'Boomerang', sanga: 'Sanga', tinnie: 'Tinnie', esky: 'Esky', 'roo-bar': 'Roo bar', bunger: 'Bunger', magpie: 'Magpie' }[held.queue.front.item];
     const want = (t) => t.some((x) => x.includes(name.toUpperCase()) || x.includes(name));
     let tiles = [];
     for (const t0 = Date.now(); !want(tiles); await host.waitForTimeout(200)) {

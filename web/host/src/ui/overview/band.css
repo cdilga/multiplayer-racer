@@ -34,3 +34,13 @@ html[data-jj-overview] .foot-pos { display: none; }
 .ov-copy { display: inline-flex; gap: inherit; padding-left: calc(var(--foot, 5vh) * .6); }
 @keyframes ov-tick { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ov-run.tick { animation-duration: calc(var(--ov-s, 20s) * 3); } }
+/* br-bhkz.2: each standing's car from above (zones toned by health) and, for a moment, what its latest hit earned. */
+.ov-car { flex: none; display: inline-block; width: .72em; line-height: 0; }
+.ov-car .derby-car { display: block; width: 100%; height: auto; overflow: visible; }
+.ov-car .z { stroke: var(--c-paper); stroke-width: 4; paint-order: stroke fill; }
+.ov-car .z.ok { fill: #3ecf6a; }
+.ov-car .z.mid { fill: #f2c230; }
+.ov-car .z.low { fill: #e2382e; }
+.ov-car .z.gone { fill: transparent; stroke-width: 2; stroke-dasharray: 5 4; }
+.ov-car .z.none { display: none; }
+.ov-hit { flex: none; margin-left: .15em; font: 900 italic .9em/1 var(--font-display); color: var(--c-saffron); }

@@ -112,8 +112,8 @@ test('P1-C10: a practising newcomer\'s practice car never reaches the reel (fram
     encodeSnapshot(buf, tick, [
       { id: 100, life: 1, flags: 0, pos: [tick / 10, 1, 0], rot: [0, 0, 0, 1] },
       { id: 101, life: 1, flags: 0, pos: [tick / 10, 1, 3], rot: [0, 0, 0, 1] },
-      // The practice car (flag bit 9) on its course far away, in the air for a while (it would make an `air` highlight).
-      { id: PRACTICE, life: 1, flags: (1 << 9) | (air ? 256 : 0), pos: [0, 2, 20000], rot: [0, 0, 0, 1] },
+      // The practice car (flag bit 11, SNAP_PRACTICE) on its course far away, in the air for a while (it would make an `air` highlight).
+      { id: PRACTICE, life: 1, flags: (1 << 11) | (air ? 256 : 0), pos: [0, 2, 20000], rot: [0, 0, 0, 1] },
     ]);
     return decodeSnapshot(new DataView(buf));
   };

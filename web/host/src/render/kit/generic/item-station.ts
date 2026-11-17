@@ -85,3 +85,47 @@ export const stationPad = (): import('three').BufferGeometry => slab(S, 0, 0.05,
 /** The ready station holding a tinnie, and one holding an esky. */
 export const stationTinnie = (): import('three').BufferGeometry => box(tinniePrint).translate(0, -HALF_COLLIDER, 0);
 export const stationEsky = (): import('three').BufferGeometry => box(eskyPrint).translate(0, -HALF_COLLIDER, 0);
+
+/** A roo bar: three chrome rails on two posts. */
+function rooBarPrint() {
+  const z = S / 2 + 0.006;
+  const y = S / 2 + 0.08;
+  return [
+    slab(0.66, -0.2, -0.13, 0.01, '#d9dde2').translate(0, y, z),
+    slab(0.66, -0.035, 0.035, 0.01, '#d9dde2').translate(0, y, z),
+    slab(0.56, 0.13, 0.2, 0.01, '#d9dde2').translate(0, y, z),
+    slab(0.07, -0.24, 0.24, 0.012, '#9aa1ab').translate(-0.2, y, z + 0.001),
+    slab(0.07, -0.24, 0.24, 0.012, '#9aa1ab').translate(0.2, y, z + 0.001),
+  ];
+}
+
+/** A bunger: a red firecracker with a yellow band, a fuse and its spark. */
+function bungerPrint() {
+  const z = S / 2 + 0.006;
+  const y = S / 2 + 0.02;
+  return [
+    slab(0.3, -0.24, 0.2, 0.01, '#d8452f').translate(0, y, z),
+    slab(0.3, -0.06, 0.04, 0.012, '#f2c230').translate(0, y, z + 0.001),
+    slab(0.05, 0.2, 0.36, 0.01, '#3b3a40').translate(0, y, z),
+    slab(0.14, 0.34, 0.44, 0.012, '#fff3a0').rotateZ(0.78).translate(0, y, z + 0.001),
+  ];
+}
+
+/** A magpie: black, with the white nape and wing bar and a grey beak. */
+function magpiePrint() {
+  const z = S / 2 + 0.006;
+  const y = S / 2 + 0.08;
+  return [
+    slab(0.5, -0.11, 0.11, 0.01, '#17181c').translate(-0.03, y, z),
+    slab(0.2, 0.02, 0.24, 0.01, '#17181c').translate(0.17, y, z),
+    slab(0.22, 0.02, 0.1, 0.012, '#f4f1ea').translate(0.02, y, z + 0.001),
+    slab(0.26, -0.09, -0.03, 0.012, '#f4f1ea').translate(-0.1, y, z + 0.001),
+    slab(0.14, 0.1, 0.15, 0.012, '#c9ccd1').translate(0.33, y, z + 0.001),
+    slab(0.22, -0.02, 0.04, 0.01, '#17181c').rotateZ(0.5).translate(-0.34, y - 0.03, z),
+  ];
+}
+
+/** The ready stations holding a roo bar, a bunger and a magpie (br-bhkz.3). */
+export const stationRooBar = (): import('three').BufferGeometry => box(rooBarPrint).translate(0, -HALF_COLLIDER, 0);
+export const stationBunger = (): import('three').BufferGeometry => box(bungerPrint).translate(0, -HALF_COLLIDER, 0);
+export const stationMagpie = (): import('three').BufferGeometry => box(magpiePrint).translate(0, -HALF_COLLIDER, 0);

@@ -20,7 +20,8 @@ pub const HUD_UPDATE: u8 = 0x20;
 /// bits or HUD fields' trailing options, never moves a byte.
 /// 2: the HUD's derby facts (P1-S10).
 /// 3: the HUD's missed gate (br-8h3u.18).
-pub const STATE_MINOR: u8 = 3;
+/// 4: the derby HUD's car health and latest scoring hit (br-bhkz.2).
+pub const STATE_MINOR: u8 = 4;
 pub const BATCH_HEADER_LEN: usize = 7;
 pub const RECORD_LEN: usize = 13;
 /// The `count` field is a `u8`; more sources split into more batches (never truncated).
@@ -252,6 +253,26 @@ pub struct DerbyHud {
     pub rank: u16,
     /// Game time left in the round, whole seconds.
     pub left_s: u16,
+    /// The car's health in percent (0 gone .. 100 full; 255: the car has no such part): the front, the back, the left
+    /// doors, the right doors and the weakest wheel (a wheel off is a wreck). br-bhkz.2.
+    pub health: [u8; 5],
+    /// This seat's latest scoring hit: one ram, blast or peck and everything it did within half a second. `hit_seq`
+    /// counts them (0: none yet this round), `hit_half_points` is what it has earned so far (points x 2) and
+    /// `hit_what` what it was ([`derby_hit`]).
+    pub hit_seq: u16,
+    pub hit_half_points: u16,
+    pub hit_what: u8,
+}
+
+/// What a scoring hit was, for the callout ([`DerbyHud::hit_what`]): the part that took most of it, or the bigger news.
+pub mod derby_hit {
+    pub const HIT: u8 = 0;
+    pub const FRONT: u8 = 1;
+    pub const BACK: u8 = 2;
+    pub const DOOR: u8 = 3;
+    pub const WHEEL: u8 = 4;
+    pub const PART_OFF: u8 = 5;
+    pub const WRECK: u8 = 6;
 }
 
 /// A HUD update on the state channel.

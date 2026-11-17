@@ -240,6 +240,32 @@ html[data-results-qr-docked] .foot-qr { display: inline-flex; }
 .hud-finished .wreck-back sup { font-size: .6em; vertical-align: .45em; }
 @media (prefers-reduced-motion: reduce) { .cd-num { animation: none; } }
 .hud-tr[hidden] { display: none; }
+/* br-bhkz.2: the derby's car from above (each zone toned by its health) under the place pill, and what the latest hit
+   earned, popped beside it. */
+.hud-derby { z-index: 3; position: absolute; right: calc(var(--hud) * .55); top: calc(var(--hud) * 2.45); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: calc(var(--hud) * .4); pointer-events: none; }
+.hud-derby[hidden], .hud-hit[hidden] { display: none; }
+.hud-derby-car { width: calc(var(--hud) * 1.7); filter: drop-shadow(0 calc(var(--hud) * .1) 0 rgb(21 32 58 / .6)); }
+.derby-car { display: block; width: 100%; height: auto; overflow: visible; }
+.derby-car .z { stroke: var(--c-ink); stroke-width: 3.5; paint-order: stroke fill; }
+.derby-car .z.ok { fill: #3ecf6a; }
+.derby-car .z.mid { fill: #f2c230; }
+.derby-car .z.low { fill: #e2382e; }
+.derby-car .z.gone { fill: rgb(21 32 58 / .35); stroke: var(--c-paper); stroke-width: 2; stroke-dasharray: 4 3; }
+.derby-car .z.none { display: none; }
+.derby-car .z.hurt { animation: derby-hurt .5s ease-out; }
+@keyframes derby-hurt { 0% { fill: #fff; } }
+.hud-hit { margin-top: calc(var(--hud) * .2); font-size: calc(var(--hud) * 1.25); line-height: 1; white-space: nowrap; color: var(--c-saffron); -webkit-text-stroke: calc(var(--hud) * .22) var(--c-ink); paint-order: stroke fill; transform: rotate(-4deg); }
+.hud-hit[data-what="6"] { color: #ff6a5e; }
+.hud-hit.pop { animation: derby-pop .35s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes derby-pop { 0% { transform: rotate(-4deg) scale(.4); } }
+.hud-tile.compact .hud-derby { top: calc(var(--hud) * 2.1); right: calc(var(--hud) * .3); }
+.hud-tile.compact .hud-derby-car { width: calc(var(--hud) * 1.35); }
+.hud-tile.compact .hud-hit { font-size: var(--hud); }
+/* The derby's countdown says how to win (three lines under the number). */
+.cd-tips { position: absolute; left: 50%; bottom: 9vh; transform: translateX(-50%); margin: 0; padding: calc(14px * var(--k)) calc(26px * var(--k)); list-style: none; display: grid; gap: calc(6px * var(--k)); text-align: center; background: var(--c-paper); color: var(--c-ink); border: calc(4px * var(--k)) solid var(--c-ink); border-radius: calc(12px * var(--k)); box-shadow: 0 calc(6px * var(--k)) 0 rgb(21 32 58 / .85); font-size: calc(26px * var(--k)); font-weight: 700; white-space: nowrap; }
+.cd-tips li:first-child { font-size: calc(30px * var(--k)); }
+@media (max-aspect-ratio: 1/1) { .cd-tips { white-space: normal; width: 86vw; font-size: calc(20px * var(--k)); } .cd-tips li:first-child { font-size: calc(23px * var(--k)); } }
+@media (prefers-reduced-motion: reduce) { .derby-car .z.hurt, .hud-hit.pop { animation: none; } }
 
 /* Identify (P1-R06, look P1-R06.style from the accepted poc/tv .cooee, R99): the seat's tile flashes a transparent,
    high-exposure wash in its colour with a hot centre (backdrop brightness over the 3D), its frame pulses, and "Cooee #N"

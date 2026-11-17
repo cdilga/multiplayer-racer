@@ -13,3 +13,9 @@
 - Kit tokens (`--fs-*`, `--sp-*`, `--outline`) are computed at `:root` from `--ui-scale`, so overriding `--ui-scale` on a child does nothing; the round screens re-declare the tokens on `.jj-round` from `--rk`.
 - `fitGrid` (round/fit.ts) is the roster rule: richest tier that stays legible, a floorless last tier, never a cap or scroll. Cards fill column by column.
 - Fixtures: `host/?roundfixture=lobby-32|race-99|results-32|countdown-8-3`; `__jjRoundFixture.set(room)` swaps any RoomView. Only races draw one tile per player; other fixtures use one tile so a 99-player lobby loads fast (a 99-tile world costs ~20 s in software GL).
+
+## Derby reads and captures (br-bhkz.2)
+- The derby's TV view is the Overview (one camera, the strip at the top), not the grid: a per-tile HUD change is unseen there. Health and hits are in both (`ui/overview/band.ts`, `round/hud.ts`), from the same `shared/src/derby.ts`.
+- `__jjRender.peek(eye, target)` stops the frame loop; `frame()` draws one frame and does not restart it. After a peek, a camera change (Grid/Overview, ~300 ms) needs frames pumped over real time or the screenshot shows the old view.
+- For a canvas-only still, hide the DOM (`html.peek body * { visibility: hidden } html.peek canvas { visibility: visible }`): an element screenshot of the canvas includes the HUD layered over it.
+- Playwright's browsers are not installed on the Mac by default (`npx playwright install chromium`); `JJ_CHROMIUM_GPU=native` renders on Metal.

@@ -22,6 +22,7 @@ use rapier3d::prelude::*;
 
 use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner};
 use crate::derby::{ATTRIBUTION_TICKS, DerbyRules};
+use crate::items::roo_bar;
 use crate::profile::DamageTuning;
 use crate::sim::TICK_HZ;
 
@@ -31,6 +32,8 @@ pub const TAG_PROP: u128 = 2 << 32;
 /// Owner's compliant guard rails absorb a hit without costing car parts (br-gw74.9).
 pub const TAG_RAIL: u128 = 3 << 32;
 const TAG_MASK: u128 = 0xffff_ffff << 32;
+/// A sprung trap stays its setter's for this long (0.1 s), so every part the hit touches is one hit.
+const TRAP_SPRING_TICKS: u64 = 12;
 
 /// A body's state just before the step.
 #[derive(Clone, Copy)]
@@ -84,6 +87,8 @@ pub struct CarParts<'a> {
     pub car: u32,
     pub parts: &'a [ColliderHandle],
     pub contact_immune: bool,
+    /// A roo bar is fitted (`items::roo_bar`): a ram this car drives costs it nothing and the car it hits double.
+    pub ram: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -107,12 +112,26 @@ pub struct Episodes {
     /// Derby only: the car that last struck each car (brought most of the closing speed into it), and when. A wall or
     /// junk it meets soon after is that car's doing (a shove).
     struck: BTreeMap<u32, Owner>,
+    /// Traps (a dropped esky): the prop, the car that set it and the tick it was sprung. The first rival to meet it is
+    /// the setter's hit, however long it has sat there (every part it touches within [`TRAP_SPRING_TICKS`] of the
+    /// first); after that it is junk like any other.
+    traps: BTreeMap<u32, (u32, Option<u64>)>,
 }
 
 impl Episodes {
     /// The causal owner of prop `prop` now.
     pub fn owner_of_prop(&self, prop: u32) -> Option<Owner> {
         self.prop_owner.get(&prop).copied()
+    }
+
+    /// `car` threw prop `prop` at `tick` (a blast): it is that car's from now, as if it had rammed it.
+    pub(crate) fn own_prop(&mut self, prop: u32, car: u32, tick: u64) {
+        self.prop_owner.insert(prop, Owner { car, tick });
+    }
+
+    /// `car` set prop `prop` as a trap (a dropped esky).
+    pub(crate) fn set_trap(&mut self, prop: u32, car: u32) {
+        self.traps.insert(prop, (car, None));
     }
 
     /// Reads this step's contacts (call after `step`, with `tick` the counter after it) into the open episodes. `rules`
@@ -212,11 +231,26 @@ impl Episodes {
                             // How much of the closing speed this car brought: 1 it drove into the other, 0 it was hit.
                             let mine = if mine_is_1 { v_me.dot(n) } else { -v_me.dot(n) };
                             let share = (mine / closing).clamp(0.0, 1.0);
+                            // A roo bar: the car that drives the ram pays nothing, the car it rams double.
+                            let bar = match kind {
+                                OtherBody::Car { .. }
+                                    if car.ram && share >= roo_bar::STRIKE_SHARE =>
+                                {
+                                    roo_bar::SELF_SCALE
+                                }
+                                OtherBody::Car { car: by }
+                                    if share < roo_bar::STRIKE_SHARE
+                                        && cars.get(by as usize).is_some_and(|c| c.ram) =>
+                                {
+                                    roo_bar::HIT_SCALE
+                                }
+                                _ => 1.0,
+                            };
                             self.add(
                                 car,
                                 part,
                                 kind,
-                                (pt.data.impulse, closing, share),
+                                (pt.data.impulse, closing, share, bar),
                                 tick,
                                 rules,
                             );
@@ -233,7 +267,7 @@ impl Episodes {
         car: &CarParts<'_>,
         part: usize,
         other: OtherBody,
-        (impulse, closing, share): (f32, f32, f32),
+        (impulse, closing, share, bar): (f32, f32, f32, f32),
         tick: u64,
         rules: Option<&DerbyRules>,
     ) {
@@ -253,7 +287,15 @@ impl Episodes {
         let before = match other {
             OtherBody::Car { car } => Some(Owner { car, tick }),
             OtherBody::Prop { prop } => {
-                let own = self.prop_owner.get(&prop).copied();
+                // A trap springs on the first car to meet it: its setter's hit, as of now.
+                let trap = match self.traps.get_mut(&prop) {
+                    Some((by, sprung)) if *by != car.car => {
+                        let at = *sprung.get_or_insert(tick);
+                        (tick <= at + TRAP_SPRING_TICKS).then_some(Owner { car: *by, tick })
+                    }
+                    _ => None,
+                };
+                let own = trap.or(self.prop_owner.get(&prop).copied());
                 let thrown =
                     own.is_some_and(|o| o.car != car.car && tick <= o.tick + ATTRIBUTION_TICKS);
                 if thrown { own } else { shover.or(own) }
@@ -272,8 +314,8 @@ impl Episodes {
         e.impulse += impulse;
         if !car.contact_immune {
             let scale = match (rules, other) {
-                (None, _) => 1.0,
-                (Some(r), OtherBody::Car { .. }) => r.striker_scale(share),
+                (None, _) => bar,
+                (Some(r), OtherBody::Car { .. }) => r.striker_scale(share) * bar,
                 // Junk and walls bite in full only when a rival threw the junk or shoved this car into them.
                 (Some(r), _) => {
                     let rivals = e
@@ -381,6 +423,14 @@ impl Episodes {
             out.extend(p.to_le_bytes());
             out.extend(o.car.to_le_bytes());
             out.extend(o.tick.to_le_bytes());
+        }
+        if !self.traps.is_empty() {
+            out.extend(b"jj-traps-v1");
+            for (p, (c, sprung)) in &self.traps {
+                out.extend(p.to_le_bytes());
+                out.extend(c.to_le_bytes());
+                out.extend(sprung.unwrap_or(u64::MAX).to_le_bytes());
+            }
         }
         if !self.struck.is_empty() {
             out.extend(b"jj-derby-struck-v1");

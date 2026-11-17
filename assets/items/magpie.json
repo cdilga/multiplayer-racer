@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "magpie",
+  "version": 1,
+  "class": "projectile",
+  "activation": "sector-entry",
+  "direction": "forward-rear",
+  "uses": 1,
+  "offensive": true,
+  "timing": { "arming_ms": 250, "cooldown_ms": 0, "lifetime_ms": 7000, "duration_ms": null },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Eat a sanga", "Turn hard as it dives: it turns only so fast", "Don't be in front"],
+  "presentation": { "vfx": "magpie-swoop", "sfx": "magpie-warble", "comic": "SWOOPED!" },
+  "rationale": "A magpie in swooping season (br-bhkz.3): let go in either direction, it climbs, finds whoever is winning (the most points in a derby, the leader in a race; the next best when that is the thrower) and dives on them: a peck that damages the part it hits and spins the car. One hit, then it flies off. It follows its target for seven seconds and turns only so fast, so a hard turn at the last moment can shake it."
+}

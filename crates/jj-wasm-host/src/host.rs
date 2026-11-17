@@ -184,6 +184,26 @@ fn local_names() -> &'static [String] {
 
 /// The controller HUD's cadence: 12 ticks at 120 Hz is 10 Hz.
 const HUD_EVERY_TICKS: u64 = 12;
+/// br-bhkz.2: a derby's score events this soon after a hit's first (half a second) are the same hit.
+const DERBY_HIT_TICKS: u64 = 60;
+
+/// A car's latest scoring hit in a derby (br-bhkz.2): which one (1 up; 0 none yet), when it began, what it has earned
+/// in the ledger's score units, and what names it ([`jj_protocol::state::derby_hit`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(super) struct DerbyHit {
+    pub seq: u16,
+    start: u64,
+    units: u64,
+    weight: u64,
+    pub what: u8,
+}
+
+impl DerbyHit {
+    /// Points x 2 (an autopilot's half point is exact).
+    pub fn half_points(&self) -> u16 {
+        (self.units * 2 / jj_sim::derby::UNITS_PER_POINT).min(u64::from(u16::MAX)) as u16
+    }
+}
 
 /// How many recent action ids a seat remembers for deduplication.
 const SEEN_ACTIONS: usize = 32;
@@ -235,6 +255,11 @@ pub struct Host {
     /// respawn hold it's in.
     wrecks_seen: BTreeMap<u32, (u64, &'static str)>,
     seen_item_events: usize,
+    /// br-bhkz.3: the life each car was last handed its derby spawn item for (one try per life).
+    spawn_items: BTreeMap<u32, u32>,
+    /// br-bhkz.2: how much of the derby ledger's score events has been read, and each car's latest scoring hit.
+    seen_derby_events: usize,
+    derby_hits: BTreeMap<u32, DerbyHit>,
     sent_inventory: BTreeMap<SeatId, jj_protocol::items::Inventory>,
     /// The seats' clock: every step, never reset. The sim's tick restarts at 0 with each round's new world, and the
     /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
@@ -423,6 +448,9 @@ impl Host {
             seen_damage_events: 0,
             wrecks_seen: BTreeMap::new(),
             seen_item_events: 0,
+            spawn_items: BTreeMap::new(),
+            seen_derby_events: 0,
+            derby_hits: BTreeMap::new(),
             sent_inventory: BTreeMap::new(),
             session_tick: 0,
             paused_session_acc: 0,
@@ -716,11 +744,18 @@ impl Host {
             };
             // P1-S10: in a derby round the seat's raw points, rank and the round's game time left.
             let derby = car.and_then(|c| {
-                self.sim.derby().map(|l| jj_protocol::state::DerbyHud {
-                    half_points: (l.points(c.0) * 2.0).round() as u32,
-                    rank: l.rank_of(c.0).min(u32::from(u16::MAX)) as u16,
-                    left_s: (l.time_left_ticks(tick) / u64::from(jj_sim::TICK_HZ))
-                        .min(u64::from(u16::MAX)) as u16,
+                self.sim.derby().map(|l| {
+                    let (health, hit) = self.derby_reads(c);
+                    jj_protocol::state::DerbyHud {
+                        half_points: (l.points(c.0) * 2.0).round() as u32,
+                        rank: l.rank_of(c.0).min(u32::from(u16::MAX)) as u16,
+                        left_s: (l.time_left_ticks(tick) / u64::from(jj_sim::TICK_HZ))
+                            .min(u64::from(u16::MAX)) as u16,
+                        health,
+                        hit_seq: hit.seq,
+                        hit_half_points: hit.half_points(),
+                        hit_what: hit.what,
+                    }
                 })
             });
             // br-8h3u.18: the way back to a missed gate, from the car's heading (see `Hud::missed`).
@@ -931,6 +966,8 @@ impl Host {
         self.collect_race_events();
         self.collect_utility_events();
         self.collect_damage_events();
+        self.collect_derby_hits();
+        self.hand_spawn_items();
         self.claim_station_offers();
         self.collect_items();
         // P1-C10: the practice worlds step after the round's, on their own (nothing they do reaches the round's sim).
@@ -952,6 +989,96 @@ impl Host {
             if self.sim.pickup_item(CarId(o.car), seat, o.item).is_ok() {
                 self.sim.take_station(o.station);
             }
+        }
+    }
+
+    /// br-bhkz.2: folds the derby ledger's new score events into each scorer's latest hit: one ram, blast or peck and
+    /// everything it did within [`DERBY_HIT_TICKS`] (several parts, a part off, the wreck) is one hit with one total.
+    fn collect_derby_hits(&mut self) {
+        use jj_protocol::state::derby_hit;
+        use jj_sim::derby::ScoreKind;
+        let Some(ledger) = self.sim.derby() else {
+            return;
+        };
+        let fresh = ledger.events()[self.seen_derby_events.min(ledger.events().len())..].to_vec();
+        self.seen_derby_events += fresh.len();
+        for e in fresh {
+            // An event that earned nothing (a hit on a part with no health left) is no news.
+            if e.units == 0 {
+                continue;
+            }
+            let what = match e.kind {
+                ScoreKind::Wreck => derby_hit::WRECK,
+                ScoreKind::Detach => derby_hit::PART_OFF,
+                ScoreKind::Damage { .. } => {
+                    let name = e.part.and_then(|p| {
+                        self.sim
+                            .profile_of(CarId(e.victim))
+                            .map(|v| v.part_name(usize::from(p)).to_owned())
+                    });
+                    match name.as_deref() {
+                        Some("front") => derby_hit::FRONT,
+                        Some("back") => derby_hit::BACK,
+                        Some(n) if n.starts_with("door_") => derby_hit::DOOR,
+                        Some(n) if n.starts_with("wheel_") => derby_hit::WHEEL,
+                        _ => derby_hit::HIT,
+                    }
+                }
+            };
+            let hit = self.derby_hits.entry(e.scorer).or_default();
+            if hit.seq == 0 || e.tick > hit.start + DERBY_HIT_TICKS {
+                *hit = DerbyHit {
+                    seq: hit.seq.wrapping_add(1).max(1),
+                    start: e.tick,
+                    ..DerbyHit::default()
+                };
+            }
+            hit.units += e.units;
+            // The bigger news names the hit; among plain damage, the part that took the most.
+            let weight = match e.kind {
+                ScoreKind::Wreck => u64::MAX,
+                ScoreKind::Detach => u64::MAX - 1,
+                ScoreKind::Damage { .. } => e.units,
+            };
+            if weight >= hit.weight {
+                hit.weight = weight;
+                hit.what = what;
+            }
+        }
+    }
+
+    /// The derby HUD facts of `car` (br-bhkz.2): its health zones and its latest scoring hit.
+    pub(super) fn derby_reads(&self, car: CarId) -> ([u8; 5], DerbyHit) {
+        (
+            self.sim.health_zones(car).unwrap_or([255; 5]),
+            self.derby_hits.get(&car.0).copied().unwrap_or_default(),
+        )
+    }
+
+    /// br-bhkz.3: in a derby every fresh car (the start and each respawn) is handed one item once its spawn protection
+    /// ends, so nobody is unarmed (assets/profiles/derby.json `spawnItem`). One try per life; bots too.
+    fn hand_spawn_items(&mut self) {
+        if self.sim.derby().is_none() {
+            return;
+        }
+        let cars: Vec<CarId> = self.sim.cars().collect();
+        for car in cars {
+            let life = self.sim.car_life(car).unwrap_or(0);
+            if self.spawn_items.get(&car.0) == Some(&life) || self.sim.is_protected(car) {
+                continue;
+            }
+            let Some(item) = self.sim.spawn_item(car) else {
+                continue;
+            };
+            let bot = self.round.bot_cars.iter().position(|c| c.0 == car.0);
+            let Some(seat) = self
+                .seat_of_car(car.0)
+                .or_else(|| bot.map(|i| round::bot_item_owner(i as u32)))
+            else {
+                continue;
+            };
+            self.spawn_items.insert(car.0, life);
+            let _ = self.sim.pickup_item(car, seat, item);
         }
     }
 
@@ -2021,7 +2148,8 @@ impl Host {
             + SNAPSHOT_DEBRIS
                 * (self.sim.debris_poses().len()
                     + self.sim.boomerang_poses().len()
-                    + self.sim.station_poses().len())
+                    + self.sim.station_poses().len()
+                    + self.sim.weapon_poses().len())
             + SNAPSHOT_PART * (self.sim.part_records().len() + self.sim.piece_records().len())
             + if self.sim.rail_count() == 0 {
                 0
@@ -2067,7 +2195,9 @@ impl Host {
         let boomerangs = self.sim.boomerang_poses();
         // ... and item stations (P1-W04), each with its box there or recharging.
         let stations = self.sim.station_poses();
-        w.u32((debris.len() + boomerangs.len() + stations.len()) as u32);
+        // ... and the other weapons in play (br-bhkz.3): magpies, lit bungers and their blasts, fitted roo bars.
+        let weapons = self.sim.weapon_poses();
+        w.u32((debris.len() + boomerangs.len() + stations.len() + weapons.len()) as u32);
         let parts = self.sim.part_records();
         let pieces = self.sim.piece_records();
         w.u32((parts.len() + pieces.len()) as u32);
@@ -2127,6 +2257,10 @@ impl Host {
             p.iter()
                 .chain(&[0.0, 0.0, 0.0, 1.0])
                 .for_each(|&v| w.f32(v));
+            w.u32(*kind);
+        }
+        for (p, r, kind) in &weapons {
+            p.iter().chain(r).for_each(|&v| w.f32(v));
             w.u32(*kind);
         }
         for (car, part, state, angle, body) in parts {

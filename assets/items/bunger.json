@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "bunger",
+  "version": 1,
+  "class": "projectile",
+  "activation": "sector-entry",
+  "direction": "forward-rear",
+  "uses": 1,
+  "offensive": true,
+  "timing": { "arming_ms": 0, "cooldown_ms": 0, "lifetime_ms": 900, "duration_ms": null },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Drive out of the ring before the fuse runs out", "Eat a sanga", "Brake: it is thrown at where you were going"],
+  "presentation": { "vfx": "bunger-blast", "sfx": "bunger-bang", "comic": "KABOOM!" },
+  "rationale": "A bunger (a big firecracker, br-bhkz.3): lobbed ahead at the nearest rival in front (led by its fuse) or dropped behind, it goes off 0.9 seconds later and blasts every rival within its ring: thrown outward, with damage that falls off toward the edge. Junk in the ring is thrown too and is the thrower's for the ledger's three seconds. The thrower's own car is never hit by its own bunger."
+}

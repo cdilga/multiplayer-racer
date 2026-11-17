@@ -172,7 +172,7 @@ fn draws_are_the_run_s_alone_not_the_race_order() {
         got
     };
     assert_eq!(draws(11, 0), draws(11, 1));
-    // Both items come out of the pool across seeds.
-    let all: Vec<_> = (0..16).flat_map(|s| draws(s, 0)).flatten().collect();
+    // Every item comes out of the pool across seeds (spaced so no two seeds share a draw key: seed ^ boxes taken).
+    let all: Vec<_> = (0..16).flat_map(|s| draws(s * 16, 0)).flatten().collect();
     assert!(ItemId::ALL.iter().all(|i| all.contains(i)), "{all:?}");
 }

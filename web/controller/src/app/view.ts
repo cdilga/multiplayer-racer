@@ -3,6 +3,7 @@
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
 import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
+import { DERBY_HIT_SHOWN_MS, DERBY_TIP_SHORT, carDiagram, derbyHitText, healthTone } from '../../../shared/src/derby';
 import { LAUNCH_SHOWN_MS, LAUNCH_TEXT } from '../../../shared/src/launch';
 import { TAKEDOWN_SHOWN_MS, TAKEDOWN_TEXT } from '../../../shared/src/takedown';
 import { MISSED_GATE_HINT, MISSED_GATE_TEXT, missedGateDegrees } from '../../../shared/src/missed-gate';
@@ -70,7 +71,7 @@ function dress(root: ParentNode): void {
 const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
-const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div><div class="pod-car" data-box="car" hidden><span class="pod-car-name display" data-car-pick></span><button class="btn" data-act="car" aria-label="Choose car"></button><span class="pod-car-count tnum" data-car-at></span></div></div>`;
+const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div><div class="pod-car" data-box="car" hidden><span class="pod-car-name display" data-car-pick></span><button class="btn" data-act="car" aria-label="Choose car"></button><span class="pod-car-count tnum" data-car-at></span></div><div class="pod-derby" data-hud="derby" role="status" hidden><div class="derby-fig" data-derby-car></div><div class="derby-say"><span class="derby-hit display" data-derby-hit hidden></span><span class="derby-tip" data-derby-tip hidden>${DERBY_TIP_SHORT}</span><span class="derby-wheels tnum" data-derby-wheels></span></div></div></div>`;
 
 /** Text colour on a seat colour (the kit's table, by luminance). */
 const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
@@ -484,6 +485,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     } else set('lap', h?.lap ? (h.lap[0] > h.lap[1] ? 'Finished' : `Lap ${h.lap[0]}/${h.lap[1]}`) : '');
     paintItem();
     paintBuff();
+    paintDerby();
     paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
     paintPause();
@@ -526,6 +528,48 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     el.dataset.item = front;
     el.setAttribute('aria-label', `${what}: ${how}${back ? ', one more held' : ''}`);
     el.innerHTML = `${what}${back ? ' <b>+1</b>' : ''} <small>${how}</small>`;
+  };
+
+  /** br-bhkz.2: in a derby, the car from above with each zone toned by its health (a zone flashes as it takes a hit),
+   *  the weakest wheel in words (a wheel off is a wreck), what the latest hit earned, and until the first hit lands,
+   *  how to land one. */
+  let derbyBefore: number[] | null = null;
+  let derbyHit = { key: '', at: 0 };
+  const paintDerby = () => {
+    const el = app.querySelector<HTMLElement>('[data-hud=derby]');
+    if (!el) return;
+    const d = session.hud?.derby ?? null;
+    el.hidden = !d;
+    if (!d) {
+      derbyBefore = null;
+      derbyHit = { key: '', at: 0 };
+      return;
+    }
+    const fig = el.querySelector<HTMLElement>('[data-derby-car]')!;
+    const key = d.health.join(',');
+    if (fig.dataset.key !== key) {
+      fig.innerHTML = carDiagram(d.health, derbyBefore);
+      fig.dataset.key = key;
+      derbyBefore = [...d.health];
+    }
+    const wheels = el.querySelector<HTMLElement>('[data-derby-wheels]')!;
+    const tone = healthTone(d.health[4]);
+    wheels.hidden = tone === 'none';
+    wheels.dataset.tone = tone;
+    wheels.textContent = tone === 'gone' ? 'Wheel off!' : `Wheels ${d.health[4]}%`;
+    const hit = el.querySelector<HTMLElement>('[data-derby-hit]')!;
+    const hk = `${d.hit_seq}:${d.hit_half_points}:${d.hit_what}`;
+    if (d.hit_seq > 0 && hk !== derbyHit.key) {
+      derbyHit = { key: hk, at: performance.now() };
+      hit.textContent = derbyHitText(d.hit_half_points / 2, d.hit_what);
+      hit.dataset.what = String(d.hit_what);
+      // Restart the pop for a new hit (or a hit that grew).
+      hit.classList.remove('pop');
+      void hit.offsetWidth;
+      hit.classList.add('pop');
+    }
+    hit.hidden = d.hit_seq === 0 || performance.now() - derbyHit.at > DERBY_HIT_SHOWN_MS;
+    el.querySelector<HTMLElement>('[data-derby-tip]')!.hidden = d.hit_seq !== 0;
   };
 
   /** A tank-up or tinnie in force: its shout and a countdown, from the used-event (the phone counts its own clock). */

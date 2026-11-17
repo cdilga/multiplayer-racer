@@ -9,7 +9,8 @@ import { Soup } from './soup';
 //   them as shapes (P1-M03d). One draw.
 // - Dressing: one InstancedMesh per kit-piece type (render/kit), so draws scale with types, not placements.
 // Props are dynamic: PropRenderer draws them from the snapshot's debris records with the same kit modules.
-import { stationEsky, stationPad, stationSanga, stationTinnie } from '../kit/generic/item-station';
+import { stationBunger, stationEsky, stationMagpie, stationPad, stationRooBar, stationSanga, stationTinnie } from '../kit/generic/item-station';
+import { bungerGeometry, magpieGeometry, rooBarGeometry } from '../kit/generic/weapons';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -907,6 +908,8 @@ export class PropRenderer {
     if (kind === STATION_ESKY) return { id: 'item/station-esky', params: {} };
     if (kind === DEBRIS_ESKY) return { id: 'item/esky', params: {} };
     if (kind === STATION_RECHARGING) return { id: 'item/station-charging', params: {} };
+    const weapon = WEAPON_PIECES[kind];
+    if (weapon) return { id: weapon, params: {} };
     return this.mapProps[i] ?? { id: 'debris', params: {} };
   }
 
@@ -924,6 +927,14 @@ export class PropRenderer {
         'item/station-esky': stationEsky,
         'item/esky': eskyGeometry,
         'item/station-charging': stationPad,
+        'item/station-roo-bar': stationRooBar,
+        'item/station-bunger': stationBunger,
+        'item/station-magpie': stationMagpie,
+        'item/magpie': magpieGeometry,
+        'item/bunger': bungerGeometry,
+        'item/roo-bar': rooBarGeometry,
+        // A blast has no body: the effects draw its ring (fx/emit.ts).
+        'item/blast': () => new BufferGeometry(),
       };
       im = new InstancedMesh(mod ? mod.geometry() : (special[id] ?? debrisGeometry)(), this.material, cap);
       im.name = `prop:${id}`;
@@ -935,7 +946,8 @@ export class PropRenderer {
     return im;
   }
 
-  update(f: Frame | null): void {
+  /** `cars`: the frame's cars as drawn (interpolated), for what rides on a car (a fitted roo bar). */
+  update(f: Frame | null, cars?: { cars: number; id: Uint32Array; pos: Float32Array; rot: Float32Array }): void {
     const groups = new Map<string, number[]>();
     for (let i = 0; f && i < f.debris; i++) {
       const { id } = this.pieceOf(i, f.debrisKind[i]!);
@@ -946,6 +958,15 @@ export class PropRenderer {
       const im = this.mesh(id, list.length);
       const entry = ENTRIES[id];
       list.forEach((i, k) => {
+        if (id === 'item/roo-bar') {
+          // A fitted roo bar's record names its car (x) and the nose's offset along the car (y), not a place: it is drawn
+          // on that car's own interpolated pose, so it never leads or trails the car between snapshots.
+          const car = cars ? cars.id.subarray(0, cars.cars).indexOf(Math.round(f!.debrisPos[i * 3]!)) : -1;
+          if (car < 0) return void im.setMatrixAt(k, this.m.makeScale(0, 0, 0));
+          this.m.compose(this.v.fromArray(cars!.pos, car * 3), this.q.fromArray(cars!.rot, car * 4), this.one);
+          this.local.makeTranslation(0, 0, f!.debrisPos[i * 3 + 1]!);
+          return void im.setMatrixAt(k, this.m.multiply(this.local));
+        }
         const piece = this.pieceOf(i, f!.debrisKind[i]!);
         // The sim's prop body sits at the middle of its proxy; kit geometry stands on its origin.
         const half = entry ? colliderSize(entry, piece.params)[1] / 2 : 0;
@@ -975,6 +996,17 @@ const STATION_SANGA = 7;
 const STATION_TINNIE = 8;
 const STATION_ESKY = 9;
 const DEBRIS_ESKY = 10;
+/** br-bhkz.3: stations ready with a roo bar, a bunger or a magpie (11-13); a magpie in flight (14), a lit bunger (15), its
+ *  blast (16, drawn by the effects) and a roo bar fitted on a car's nose (17). `jj_sim::items`' snapshot kind words. */
+const WEAPON_PIECES: Record<number, string> = {
+  11: 'item/station-roo-bar',
+  12: 'item/station-bunger',
+  13: 'item/station-magpie',
+  14: 'item/magpie',
+  15: 'item/bunger',
+  16: 'item/blast',
+  17: 'item/roo-bar',
+};
 
 /** A dropped esky: a red cooler box with a white lid and a latch, matching the sim's 1.1 x 0.76 x 0.8 m body. */
 function eskyGeometry(): BufferGeometry {

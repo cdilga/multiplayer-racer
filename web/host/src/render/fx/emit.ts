@@ -13,6 +13,12 @@ export const FLAG_SLIDING = 32;
 /** Bit 9: tanked up on a sanga (steam and a hot glow). Bit 10: a tinnie's fizzing blue boost. */
 export const FLAG_TANKED = 512;
 export const FLAG_TINNIE = 1024;
+/** br-bhkz.3: the snapshot's debris kinds for a magpie in flight, a lit bunger and its blast (`jj_sim::items`), and the
+ *  blast ring's radius, m (`bunger::BLAST_RADIUS_M`). */
+export const DEBRIS_MAGPIE = 14;
+export const DEBRIS_BUNGER = 15;
+export const DEBRIS_BLAST = 16;
+export const BLAST_RADIUS_M = 9;
 /** Bits 6-7 of the flags: the ground under the car (0 tarmac, 1 dirt, 2 gravel). */
 export const surfaceOf = (flags: number) => (flags >> 6) & 3;
 
@@ -86,6 +92,8 @@ export class Emitter {
   private hitsNow: number[] = [];
   private cars = new Map<number, CarState>();
   private husks = new Set<number>();
+  /** The blasts in the last frame (by place), so each goes off once. */
+  private blasts = new Set<string>();
   private rand = rng(0x4a4a);
 
   /** Seeds the generator (captures and tests). */
@@ -338,6 +346,44 @@ export class Emitter {
       // The smoulder: a slow pulsing glow over the husk, one sprite per frame.
       if (dt > 0) this.glow([hx, hy + 0.55, hz], 2.6 + 0.4 * Math.sin(f.tick / 14), 0.35, C.flameEnd, dt, 'wreck-fire');
     }
+    // ---- The derby's weapons (br-bhkz.3), from their debris records: a lit bunger's fuse spits sparks, a magpie trails
+    // feathers, and a blast new to the snapshot goes off once: a flash, a ring of puffs out to its radius, sparks. ------
+    const blasts = new Set<string>();
+    for (let i = 0; f && i < f.debris; i++) {
+      const kind = f.debrisKind[i];
+      if (kind !== DEBRIS_MAGPIE && kind !== DEBRIS_BUNGER && kind !== DEBRIS_BLAST) continue;
+      const p: [number, number, number] = [f.debrisPos[i * 3]!, f.debrisPos[i * 3 + 1]!, f.debrisPos[i * 3 + 2]!];
+      if (kind === DEBRIS_BLAST) {
+        const key = `${p[0].toFixed(1)},${p[2].toFixed(1)}`;
+        blasts.add(key);
+        if (!this.blasts.has(key)) this.blast(p, calm);
+      } else if (kind === DEBRIS_BUNGER) {
+        if (this.rand() < dt * 45 * calm) this.spark([p[0], p[1] + 1.0, p[2]], 2.5, [0, 0, 0]);
+      } else if (this.rand() < dt * 24) {
+        this.spawn({
+          family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: this.jitter(0.6), vy: -0.4, vz: this.jitter(0.6),
+          life: 0.5, size0: 0.35, size1: 0.1, c0: this.rand() < 0.5 ? C.dark : C.smoke, c1: C.darkEnd, alpha: 0.9, drag: 0.4, rim: 0.8,
+        });
+      }
+    }
+    this.blasts = blasts;
+  }
+
+  /** A bunger's blast: the flash, a ring of inked puffs that reaches the blast's radius as it fades, sparks and smoke. */
+  private blast(p: [number, number, number], calm: number): void {
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1] + 0.8, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.4, size0: 7 * calm, size1: 3 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: BURST });
+    const ring = Math.round(44 * Math.max(calm, 0.5));
+    for (let k = 0; k < ring; k++) {
+      const a = (k / ring) * Math.PI * 2;
+      const speed = BLAST_RADIUS_M / 0.45;
+      this.spawn({
+        family: 'impact', blend: 'alpha', x: p[0] + Math.cos(a), y: p[1] + 0.5, z: p[2] + Math.sin(a), vx: Math.cos(a) * speed, vy: 0.4, vz: Math.sin(a) * speed,
+        life: 0.45, size0: 1.3, size1: 2.4, c0: C.flash, c1: C.smoke, alpha: 0.9, drag: 0.85, rim: 0.8,
+      });
+    }
+    this.puff([p[0], p[1] + 0.6, p[2]], 2.6, C.dark);
+    const n = Math.round(46 * calm);
+    for (let j = 0; j < n; j++) this.spark([p[0], p[1] + 0.4, p[2]], 13, [0, 0, 0]);
   }
 
   /** One frame's lamp or smoulder glow: a sprite living just past this frame, so it follows its car exactly. */

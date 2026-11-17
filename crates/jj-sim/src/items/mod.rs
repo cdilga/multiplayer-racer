@@ -5,7 +5,10 @@
 
 pub mod boomerang;
 pub mod boost;
+pub mod bunger;
 pub mod esky;
+pub mod magpie;
+pub mod roo_bar;
 pub mod sanga;
 pub mod stations;
 
@@ -20,69 +23,54 @@ use serde::{Deserialize, Serialize};
 
 use crate::utility::UtilityKind;
 
+/// Every item's validated card, in [`ItemId::ALL`]'s order.
 #[derive(Clone, Debug)]
 pub struct Cards {
-    boomerang: Card,
-    sanga: Card,
-    tinnie: Card,
-    esky: Card,
+    cards: Vec<Card>,
 }
+
+/// The shipped cards' bytes, in [`ItemId::ALL`]'s order.
+const SHIPPED: [&[u8]; ItemId::ALL.len()] = [
+    include_bytes!("../../../../assets/items/boomerang.json"),
+    include_bytes!("../../../../assets/items/sanga.json"),
+    include_bytes!("../../../../assets/items/tinnie.json"),
+    include_bytes!("../../../../assets/items/esky.json"),
+    include_bytes!("../../../../assets/items/roo-bar.json"),
+    include_bytes!("../../../../assets/items/bunger.json"),
+    include_bytes!("../../../../assets/items/magpie.json"),
+];
 
 impl Cards {
     /// Load the same validated, versioned cards as `jj validate`, without runtime asset I/O.
     pub fn shipped() -> Result<Self, Vec<String>> {
-        Self::parse_all(
-            include_bytes!("../../../../assets/items/boomerang.json"),
-            include_bytes!("../../../../assets/items/sanga.json"),
-            include_bytes!("../../../../assets/items/tinnie.json"),
-            include_bytes!("../../../../assets/items/esky.json"),
-        )
+        Self::parse_all(&SHIPPED)
     }
 
-    /// The boomerang and sanga cards given, the other two as shipped.
+    /// The boomerang and sanga cards given, the others as shipped.
     pub fn parse(boomerang: &[u8], sanga: &[u8]) -> Result<Self, Vec<String>> {
-        Self::parse_all(
-            boomerang,
-            sanga,
-            include_bytes!("../../../../assets/items/tinnie.json"),
-            include_bytes!("../../../../assets/items/esky.json"),
-        )
+        let mut all = SHIPPED;
+        all[ItemId::Boomerang.index()] = boomerang;
+        all[ItemId::Sanga.index()] = sanga;
+        Self::parse_all(&all)
     }
 
-    pub fn parse_all(
-        boomerang: &[u8],
-        sanga: &[u8],
-        tinnie: &[u8],
-        esky: &[u8],
-    ) -> Result<Self, Vec<String>> {
-        let boomerang = jj_contracts::item::parse(boomerang)?;
-        let sanga = jj_contracts::item::parse(sanga)?;
-        let tinnie = jj_contracts::item::parse(tinnie)?;
-        let esky = jj_contracts::item::parse(esky)?;
-        if boomerang.id != "boomerang"
-            || sanga.id != "sanga"
-            || tinnie.id != "tinnie"
-            || esky.id != "esky"
-        {
-            return Err(vec![
-                "item cards must match their registered identities".into(),
-            ]);
+    /// Every item's card, in [`ItemId::ALL`]'s order: each must carry its registered identity.
+    pub fn parse_all(cards: &[&[u8]; ItemId::ALL.len()]) -> Result<Self, Vec<String>> {
+        let mut out = Vec::with_capacity(cards.len());
+        for (item, bytes) in ItemId::ALL.iter().zip(cards) {
+            let card = jj_contracts::item::parse(bytes)?;
+            if card.id != item.id() {
+                return Err(vec![
+                    "item cards must match their registered identities".into(),
+                ]);
+            }
+            out.push(card);
         }
-        Ok(Self {
-            boomerang,
-            sanga,
-            tinnie,
-            esky,
-        })
+        Ok(Self { cards: out })
     }
 
     pub fn get(&self, item: ItemId) -> &Card {
-        match item {
-            ItemId::Boomerang => &self.boomerang,
-            ItemId::Sanga => &self.sanga,
-            ItemId::Tinnie => &self.tinnie,
-            ItemId::Esky => &self.esky,
-        }
+        &self.cards[item.index()]
     }
 }
 

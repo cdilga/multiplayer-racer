@@ -513,6 +513,9 @@ impl Host {
         self.seen_damage_events = 0;
         self.wrecks_seen.clear();
         self.seen_item_events = 0;
+        self.spawn_items.clear();
+        self.seen_derby_events = 0;
+        self.derby_hits.clear();
         self.sent_inventory.clear();
     }
 
@@ -825,7 +828,15 @@ impl Host {
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
                     // P1-S10: in a derby round, the seat's raw points and rank (ties share).
-                    "derby": car.and_then(|c| self.sim.derby().map(|l| serde_json::json!({ "points": l.points(c), "rank": l.rank_of(c) }))),
+                    // br-bhkz.2: with the car's health zones (percent: front, back, left doors, right doors, weakest
+                    // wheel; 255 none) and its latest scoring hit (its count, points so far and what it was).
+                    "derby": car.and_then(|c| self.sim.derby().map(|l| {
+                        let (health, hit) = self.derby_reads(jj_sim::CarId(c));
+                        serde_json::json!({
+                            "points": l.points(c), "rank": l.rank_of(c), "health": health,
+                            "hit": { "seq": hit.seq, "points": f64::from(hit.half_points()) / 2.0, "what": hit.what },
+                        })
+                    })),
                     // Owner playtest 2026-10-17 (finishing gave no feedback): the finishing time, for the tile's banner.
                     "finishMs": race.and_then(|r| r.finished_at).map(|t| super::tick_ms(t.saturating_sub(self.sim.race().started_at.unwrap_or(t)))),
                     // br-m1xe: each lap's time this round (ms), from GO and lap to lap.

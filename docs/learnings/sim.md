@@ -460,3 +460,16 @@ not feel targets.
   gentle slope, the tail digs in and props the rear tyres off the ground. A climber's contacts wholly behind the rear axle
   now have no friction (`climb.rs`). Bisecting on eris: `git archive` files keep old mtimes, so `touch` the tree before
   `cargo` or a shared target dir hands you a stale build.
+- **A weapon's hit must go through the damage log, or nothing downstream knows it happened (br-bhkz.3).** The boomerang
+  charged its target's health directly, so the derby ledger (which reads `DamageEvent::Episode`) scored its hits zero,
+  a wheel it took wrecked the car with no instigator, and no takedown could follow it. Every weapon now lands through
+  `Sim::weapon_hit` (`sim/weapons.rs`), which writes the episode with the thrower's car as the other body.
+- **A derby's damage is not symmetric any more (br-bhkz.1).** `damage::episodes` scales each contact by the derby's hit
+  rules (`assets/profiles/derby.json`): the striker's share, junk and scenery at `junkTake`, a shove's wall in full. A
+  fixture that compares both sides of a derby hit must expect that; a race is unscaled.
+- **A station's draw key is `seed ^ taken`, so neighbouring seeds share draws.** Sixteen consecutive seeds with four
+  boxes each are only twenty distinct draws: a test that wants "every item appears" must space its seeds
+  (`tests/stations.rs`), or one of seven items will be missing by chance.
+- **Probing a derby by placing cars: mind the bank and the autopilot.** A car placed outside the floor radius is inside
+  the bank's mesh and goes nowhere at speed. In a held browser room the phones read as dropped out and the autopilot
+  drives their cars, so a "standing" car leaves: place both cars in the same call, close together.

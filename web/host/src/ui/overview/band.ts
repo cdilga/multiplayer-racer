@@ -8,6 +8,7 @@ import type { RoomView, SimClient } from '../../worker/client';
 import type { World } from '../../render/world';
 import { esc, shortName } from '../../round/format';
 import { tokenData } from '../../../../shared/ui';
+import { DERBY_HIT_SHOWN_MS, carDiagram, derbyHitText } from '../../../../shared/src/derby';
 import './band.css';
 
 const RACING = new Set(['Countdown', 'Running', 'Finalising']);
@@ -63,6 +64,8 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
   });
 
   let standKey = '';
+  /** br-bhkz.2: each seat's latest derby hit as last seen (its key and when it changed), for its time in the strip. */
+  const hitSeen = new Map<number, { key: string; at: number }>();
   let fitKey = '';
   let fitW = 0;
   const render = () => {
@@ -86,14 +89,24 @@ export function mountOverviewUi(root: HTMLElement, world: World, client: SimClie
     clockEl.textContent = derby && room.derbyLeftMs != null ? `Derby · ${clock(room.derbyLeftMs)} left` : derby ? 'Derby' : 'Overview';
     const seats = room.seats.filter((s) => s.presence !== 'Left' && s.car !== null);
     const ranked = derby ? [...seats].sort((a, b) => (a.derby?.rank ?? 1e9) - (b.derby?.rank ?? 1e9) || a.number - b.number) : [...seats].sort((a, b) => (a.position ?? 1e9) - (b.position ?? 1e9));
-    const key = ranked.map((s) => `${s.number}:${s.derby?.rank}:${Math.round(s.derby?.points ?? 0)}:${s.position}`).join();
+    // br-bhkz.2: each standing carries its car from above (zones toned by health: who is nearly gone is who to hit) and,
+    // for a moment after it lands, what its latest hit earned.
+    const now = performance.now();
+    const hitOf = (s: (typeof ranked)[number]) => {
+      const h = derby && s.derby?.hit && s.derby.hit.seq > 0 ? s.derby.hit : null;
+      const k = h ? `${h.seq}:${h.points}:${h.what}` : '';
+      if (k !== (hitSeen.get(s.number)?.key ?? '')) hitSeen.set(s.number, { key: k, at: now });
+      return h && now - hitSeen.get(s.number)!.at < DERBY_HIT_SHOWN_MS ? h : null;
+    };
+    const hits = new Map(ranked.map((s) => [s.number, hitOf(s)] as const));
+    const key = ranked.map((s) => `${s.number}:${s.derby?.rank}:${Math.round(s.derby?.points ?? 0)}:${s.position}:${derby ? s.derby?.health?.join('.') : ''}:${hits.get(s.number) ? hitSeen.get(s.number)!.key : ''}`).join();
     if (key !== standKey) {
       standKey = key;
       run.innerHTML = ranked
         .map((s) => {
           const c = s.colourIndex % tokenData.seatColors.length;
           const place = derby ? s.derby?.rank : s.position;
-          return `<span class="ov-item"><b>${place ? ORD(place) : '–'}</b><span class="badge" style="--b:var(--id-${c});--on:var(--id-${c}-on)">#${s.number}</span><span class="nm">${esc(shortName(s.name || 'Player', 12))}</span>${derby ? `<span class="pts">${Math.round(s.derby?.points ?? 0)}<small> dmg</small></span>` : ''}</span>`;
+          return `<span class="ov-item"><b>${place ? ORD(place) : '–'}</b><span class="badge" style="--b:var(--id-${c});--on:var(--id-${c}-on)">#${s.number}</span><span class="nm">${esc(shortName(s.name || 'Player', 12))}</span>${derby && s.derby?.health ? `<span class="ov-car">${carDiagram(s.derby.health)}</span>` : ''}${derby ? `<span class="pts">${Math.round(s.derby?.points ?? 0)}<small> dmg</small></span>` : ''}${hits.get(s.number) ? `<span class="ov-hit" data-ov-hit title="${derbyHitText(hits.get(s.number)!.points, hits.get(s.number)!.what)}">+${Math.max(1, Math.round(hits.get(s.number)!.points))}</span>` : ''}</span>`;
         })
         .join('');
     }

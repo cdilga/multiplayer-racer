@@ -9,6 +9,7 @@ import { applySeatPattern, controlsCard, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
 import { promptHtml } from '../ui/prompts/steps';
 import { ITEM_INFO, type ItemId } from '../../../shared/src/items';
+import { DERBY_HIT_SHOWN_MS, carDiagram, derbyHitText, derbyPoints } from '../../../shared/src/derby';
 
 /** How long one first-drive step shows full size before it shrinks to a quiet caption (ms). */
 const QUIET_AFTER_MS = 10_000;
@@ -16,6 +17,8 @@ const QUIET_AFTER_MS = 10_000;
  *  already shown in an earlier round stays quiet when the next round's tiles are built (council review 2026-11-15,
  *  round 2: it came back full size every round). */
 const promptSeen = new Map<number, { key: string | null; at: number }>();
+/** br-bhkz.2: each seat's latest derby hit as last seen (its key and when it changed), for the callout's time on screen. */
+const hitSeen = new Map<number, { key: string; at: number }>();
 
 type SeatView = RoomView['seats'][number] & {
   /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
@@ -51,8 +54,6 @@ export interface Hud {
   identify(seat: number): boolean;
 }
 
-/** Raw derby points: whole, or with the autopilot's half point (17.5). */
-const derbyPoints = (p: number) => (Number.isInteger(p) ? String(p) : p.toFixed(1));
 /** A round clock, m:ss. */
 const clock = (ms: number) => {
   const s = Math.ceil(ms / 1000);
@@ -81,6 +82,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span><span class="hud-lplate" data-lplate hidden aria-label="Driving help on" role="img">L</span></div>
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
       <div class="hud-bottom"><b class="hud-boost-tag display" aria-hidden="true">Boost</b><div class="hud-boost" hidden role="meter" aria-label="Boost"><i></i></div><span class="hud-item chip" data-hud-item hidden></span><div class="hud-status"></div></div>
+      <div class="hud-derby" data-derby hidden><div class="hud-derby-car" data-derby-car></div><span class="display hud-hit" data-derby-hit hidden></span></div>
       <div class="hud-prompt" data-prompt hidden></div>
       <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>
       <div class="hud-centre hud-finished" data-finished hidden><div class="display wreck-word">Finished!</div><div class="wreck-back" data-finish-line></div></div>`;
@@ -134,7 +136,15 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (promptKey !== null && promptKey !== (since?.key ?? null)) promptSeen.set(seatNo, { key: promptKey, at: performance.now() });
       const quiet = promptKey !== null && performance.now() - (promptSeen.get(seatNo)?.at ?? 0) > QUIET_AFTER_MS;
       const inv = started && s?.inventory?.front ? [s.inventory.front, s.inventory.back ?? null] : null;
-      const key = JSON.stringify([inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000), !!s?.stuck]);
+      // br-bhkz.2: in a derby the tile shows the car's health from above and what its latest hit earned. A new hit (or
+      // one that grew: a part off, the wreck) restarts the callout's clock.
+      const health = started && derby?.health ? derby.health : null;
+      const hit = started && derby?.hit && derby.hit.seq > 0 ? derby.hit : null;
+      const hitKey = hit ? `${hit.seq}:${hit.points}:${hit.what}` : '';
+      const hitWas = hitSeen.get(seatNo);
+      if (hitKey !== (hitWas?.key ?? '')) hitSeen.set(seatNo, { key: hitKey, at: performance.now() });
+      const hitShown = !!hit && performance.now() - (hitSeen.get(seatNo)?.at ?? 0) < DERBY_HIT_SHOWN_MS;
+      const key = JSON.stringify([health, hitShown ? hitKey : '', inv, quiet, practising, held, src, controlsData(), started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, s?.finishMs ?? null, endsIn === null ? null : Math.ceil(endsIn / 1000), state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs ? Math.ceil(s.wreckMs / 1000) : null, s?.wreckWhy, started ? s?.prompt : null, s?.assist ?? 0, derby, derbyLeft === null ? null : Math.ceil(derbyLeft / 1000), !!s?.stuck]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -188,6 +198,26 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
         (started && s.stuck && !s.finished && !practising ? '<span class="chip chip-warn" data-stuck>Stuck? Tap ↺</span>' : '') +
         (started && endsIn !== null && !s.finished && !practising ? `<span class="chip chip-warn" data-race-ends>Race ends in ${Math.ceil(endsIn / 1000)} s</span>` : '') +
         (started && derbyLeft !== null ? `<span class="chip" data-derby-left>${clock(derbyLeft)} left</span>` : '');
+      const derbyEl = box.querySelector<HTMLElement>('[data-derby]')!;
+      derbyEl.hidden = !health;
+      if (health) {
+        const fig = derbyEl.querySelector<HTMLElement>('[data-derby-car]')!;
+        const hk = health.join(',');
+        if (fig.dataset.key !== hk) {
+          fig.innerHTML = carDiagram(health, fig.dataset.key ? fig.dataset.key.split(',').map(Number) : null);
+          fig.dataset.key = hk;
+        }
+        const hitEl = derbyEl.querySelector<HTMLElement>('[data-derby-hit]')!;
+        hitEl.hidden = !hitShown;
+        if (hit && hitShown && hitEl.dataset.key !== hitKey) {
+          hitEl.dataset.key = hitKey;
+          hitEl.dataset.what = String(hit.what);
+          hitEl.textContent = derbyHitText(hit.points, hit.what);
+          hitEl.classList.remove('pop');
+          void hitEl.offsetWidth;
+          hitEl.classList.add('pop');
+        }
+      }
       // The first-drive prompt (C06): the next control in the sky below the HUD, above the cars and road.
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
       const covered = !!s.finished || (s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0) || endsIn !== null;

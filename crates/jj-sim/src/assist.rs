@@ -270,6 +270,12 @@ pub struct BotItemTuning {
     pub esky_width_m: f32,
     /// A sanga or a tinnie is used on a straight: nothing within this far ahead (m) asks the plan to slow.
     pub straight_m: f32,
+    /// A bunger is lobbed at a car up to this far ahead (m) in the aim cone, or dropped for one up to `bungerBehindM`
+    /// behind (br-bhkz.3).
+    pub bunger_ahead_m: f32,
+    pub bunger_behind_m: f32,
+    /// A roo bar is fitted when a car is up to this far ahead (m) in the aim cone: something to ram.
+    pub roo_bar_ahead_m: f32,
 }
 
 #[derive(Deserialize)]

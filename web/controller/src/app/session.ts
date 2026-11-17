@@ -42,8 +42,10 @@ export interface Hud {
   lap: [number, number] | null;
   boost: number;
   pause: string | null;
-  /** P1-S10/G06: this seat's derby standing while a derby round is on (raw points × 2, rank, whole seconds left). */
-  derby: { half_points: number; rank: number; left_s: number } | null;
+  /** P1-S10/G06: this seat's derby standing while a derby round is on (raw points × 2, rank, whole seconds left), and
+   *  br-bhkz.2: its car's health zones (percent: front, back, left doors, right doors, weakest wheel; 255 none) and its
+   *  latest scoring hit (its count, points × 2 so far, and what it was: shared/src/derby.ts). */
+  derby: { half_points: number; rank: number; left_s: number; health: number[]; hit_seq: number; hit_half_points: number; hit_what: number } | null;
   /** br-8h3u.18: the car missed a gate; the way back to it (1/256ths of a turn clockwise from straight ahead). */
   missed: number | null;
 }

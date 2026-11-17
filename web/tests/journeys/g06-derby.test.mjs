@@ -78,6 +78,8 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   await done.waitFor({ state: 'visible', timeout: 15_000 }).then(() => done.click(), () => {});
   await phone.getByRole('button', { name: /^Ready/ }).click();
   await frames(host, syn.map((e) => [e, { ready: true }]));
+  // br-bhkz.2: the derby's countdown says how to win (three lines), before anyone moves.
+  await wait(host, () => document.querySelectorAll('[data-screen=countdown] [data-derby-tips] li').length === 3, undefined, 180_000);
   await wait(host, () => window.__jjRoom.view().phase === 'Running' && window.__jjRoom.view().mode === 'derby', undefined, 180_000);
   assert.equal((await host.evaluate(() => window.__jjRoom.view())).mode, 'derby');
   // Hold the clock and drive the round in steps (the derby is game time).
@@ -154,6 +156,13 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
   const mid = await host.evaluate(() => window.__jjRoom.view());
   const scored = mid.seats.filter((s) => s.derby && s.derby.points > 0);
   assert.ok(scored.length >= 2, `rams score raw points: ${JSON.stringify(mid.seats.map((s) => [s.number, s.derby]))}`);
+  // br-bhkz.2: every seat's car health (five zones, percent) and its latest scoring hit are in the room view, the rams
+  // took health off somebody and named a hit, and the Overview's strip draws each car from above.
+  for (const s of mid.seats) assert.ok(s.derby?.health?.length === 5 && s.derby.health.every((z) => z >= 0 && z <= 100), `seat ${s.number} has its health zones: ${JSON.stringify(s.derby)}`);
+  assert.ok(mid.seats.some((s) => s.derby.health.some((z) => z < 100)), `the rams took health off a car: ${JSON.stringify(mid.seats.map((s) => s.derby.health))}`);
+  assert.ok(mid.seats.some((s) => s.derby.hit.seq > 0 && s.derby.hit.points > 0), `a ram is somebody's scoring hit: ${JSON.stringify(mid.seats.map((s) => s.derby.hit))}`);
+  await host.evaluate(async () => { for (let i = 0; i < 20 && document.querySelectorAll('.jj-ov-band .ov-car svg').length === 0; i++) await new Promise((r) => setTimeout(r, 100)); });
+  assert.equal(await host.evaluate(() => document.querySelectorAll('.jj-ov-band .ov-run > .ov-item .ov-car svg').length), mid.seats.length, 'the strip shows every car\'s health');
   assert.ok(mid.derbyLeftMs > 0 && mid.derbyLeftMs <= 40_000, `the derby clock runs: ${mid.derbyLeftMs}`);
   // JN9: a late joiner drops in mid-derby, protected on the edge, and scores.
   await frames(host, [['late', { hello: true }], ['late', { claim: 'Late Lenny' }]]);
@@ -169,14 +178,16 @@ test('JN8 + JN9: a derby round in the bowl to results by raw points, a late join
     if (late.derby?.points > 0) break;
   }
   assert.ok(late.derby && late.derby.points > 0, `the late joiner scores: ${JSON.stringify(late)}`);
+  // The real phone's HUD: its points, and (br-bhkz.2) its car from above with every zone toned by its health.
+  await host.evaluate(() => window.__jjTest.hold(false));
+  await wait(phone, () => /pts/.test(document.querySelector('[data-hud=lap]')?.textContent ?? ''), undefined, 15_000);
+  await wait(phone, () => !document.querySelector('[data-hud=derby]')?.hidden && document.querySelectorAll('[data-hud=derby] .derby-car [data-zone]').length === 8, undefined, 15_000);
   if (process.env.JJ_CAPTURE_DIR) {
     await host.evaluate(async () => { for (let i = 0; i < 10; i++) { window.__jjRender.frame(); await new Promise((r) => setTimeout(r, 16)); } });
     await shot(host, 'tv-derby-running-1920x1080');
-    await host.evaluate(() => window.__jjTest.hold(false));
-    await wait(phone, () => /pts/.test(document.querySelector('[data-hud=lap]')?.textContent ?? ''), undefined, 15_000);
     await shot(phone, 'phone-derby-hud-844x390');
-    await host.evaluate(() => window.__jjTest.hold(true));
   }
+  await host.evaluate(() => window.__jjTest.hold(true));
   // No car leaves the bowl: every car inside the arena's bowl (an arena for seven is ~30 m to its lip) and above its floor.
   const positions = await inBowl(host);
   for (const c of positions.cars) assert.ok(c.r < 45 && c.y > -2, `car ${c.car} stays in the bowl: ${JSON.stringify(c)}`);

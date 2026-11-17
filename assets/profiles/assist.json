@@ -85,7 +85,10 @@
       "aimCos": 0.866,
       "eskyBehindM": 18.0,
       "eskyWidthM": 3.0,
-      "straightM": 70.0
+      "straightM": 70.0,
+      "bungerAheadM": 32.0,
+      "bungerBehindM": 10.0,
+      "rooBarAheadM": 28.0
     },
     "derby": {
       "stallMps": 2.5,

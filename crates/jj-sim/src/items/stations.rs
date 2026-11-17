@@ -34,6 +34,11 @@ pub const ARENA_SPREAD: f32 = 0.88;
 pub const BOX_FLAT_M: f32 = 2.0;
 pub const BOX_FLAT_RISE_M: f32 = 0.2;
 
+/// ... and its box holding a roo bar, a bunger or a magpie (br-bhkz.3; kinds 14-17 are those items in play).
+pub const SNAPSHOT_KIND_READY_ROO_BAR: u32 = 11;
+pub const SNAPSHOT_KIND_READY_BUNGER: u32 = 12;
+pub const SNAPSHOT_KIND_READY_MAGPIE: u32 = 13;
+
 /// The snapshot kind of a ready box holding `item`.
 pub fn ready_kind(item: ItemId) -> u32 {
     match item {
@@ -41,6 +46,9 @@ pub fn ready_kind(item: ItemId) -> u32 {
         ItemId::Sanga => SNAPSHOT_KIND_READY_SANGA,
         ItemId::Tinnie => SNAPSHOT_KIND_READY_TINNIE,
         ItemId::Esky => SNAPSHOT_KIND_READY_ESKY,
+        ItemId::RooBar => SNAPSHOT_KIND_READY_ROO_BAR,
+        ItemId::Bunger => SNAPSHOT_KIND_READY_BUNGER,
+        ItemId::Magpie => SNAPSHOT_KIND_READY_MAGPIE,
     }
 }
 /// Recharge after a pickup: 5 s of game time.

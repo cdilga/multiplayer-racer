@@ -121,7 +121,7 @@ pub struct PickupSpec {
 
 /// Every held queue and causal effect/event/refusal, shared by native fixtures and the host probe.
 pub fn items(sim: &Sim) -> Value {
-    json!({
+    let mut out = json!({
         "queues": sim.cars().map(|car| json!({ "car": car.0, "queue": sim.items().queue(car.0) })).collect::<Vec<_>>(),
         "effects": sim.items().effects().collect::<Vec<_>>(),
         "events": sim.items().events(),
@@ -129,7 +129,15 @@ pub fn items(sim: &Sim) -> Value {
         "stations": sim.stations(),
         "offers": sim.station_offers(),
         "boomerangs": sim.boomerangs(),
-    })
+    });
+    // br-bhkz.3: the bungers and magpies of the round, once there are any (so older outcomes keep their shape).
+    if !sim.bungers().is_empty() {
+        out["bungers"] = json!(sim.bungers());
+    }
+    if !sim.magpies().is_empty() {
+        out["magpies"] = json!(sim.magpies());
+    }
+    out
 }
 
 #[derive(Clone, Debug, Deserialize)]

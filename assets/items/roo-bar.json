@@ -1,0 +1,16 @@
+{
+  "item": "jj.item.v1",
+  "id": "roo-bar",
+  "version": 1,
+  "class": "buff",
+  "activation": "sector-entry",
+  "direction": "self-use",
+  "uses": 1,
+  "offensive": false,
+  "timing": { "arming_ms": 0, "cooldown_ms": 0, "lifetime_ms": null, "duration_ms": 10000 },
+  "cleanup": "natural-expiry-or-round-end",
+  "pickup_compatibility": ["race", "derby"],
+  "counterplay": ["Keep your nose to it: a head-on is even", "Hit it from the side or behind", "Wait out the ten seconds"],
+  "presentation": { "vfx": "roo-bar-chrome", "sfx": "roo-bar-clank", "comic": "ROO BAR!" },
+  "rationale": "A roo bar on the nose for ten seconds (br-bhkz.3): while it is fitted, a ram this car drives (it brought most of the closing speed) costs its own parts nothing and costs the car it hits double. It only pays when this car does the hitting: struck from the side or behind, or met nose to nose at equal speeds, the bar does nothing. A second roo bar refreshes the timer rather than stacking."
+}

@@ -5,6 +5,7 @@
 // worker's room view (`SimClient.onRoom`). Any N, any aspect: the roster and the placings pick the richest card tier that
 // stays legible and never cap, scroll or page (fit.ts). Copy says room and round, never game (R112).
 import { set as setRule } from './rules';
+import { DERBY_TIPS } from '../../../shared/src/derby';
 import roster from '../../../shared/src/roster.json' with { type: 'json' };
 import { controlsCard, installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import { controlsData, localView, sourceOf } from '../input/controls-data';
@@ -413,11 +414,14 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const prep = room.phase === 'Preparing' || room.remainingMs === null;
     const n = secs(room.remainingMs);
     const word = prep ? 'Get set…' : String(n);
-    const key = `cd:${word}`;
+    // br-bhkz.2: a derby's countdown says how to win (owner 2026-11-17: the winning strategy wasn't clear).
+    const derby = room.mode === 'derby';
+    const key = `cd:${word}:${derby}`;
     if (shown === key) return;
     shown = key;
     relayout = null;
-    screen.innerHTML = `<div class="countdown ${prep ? 'prep' : ''}" data-screen="countdown" data-count="${prep ? '' : n}"><span class="display cd-num" key="${word}">${word}</span></div>`;
+    const tips = derby ? `<ul class="cd-tips" data-derby-tips>${DERBY_TIPS.map((t) => `<li>${t}</li>`).join('')}</ul>` : '';
+    screen.innerHTML = `<div class="countdown ${prep ? 'prep' : ''}" data-screen="countdown" data-count="${prep ? '' : n}"><span class="display cd-num" key="${word}">${word}</span>${tips}</div>`;
   };
   const go = () => {
     shown = 'go';

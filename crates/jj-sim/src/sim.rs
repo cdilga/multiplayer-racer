@@ -40,6 +40,8 @@ use crate::surface;
 use crate::utility::{self, PropKind, UtilityEvent, UtilityKind, rules};
 use crate::vehicle;
 
+mod weapons;
+
 pub const TICK_HZ: u32 = 120;
 /// The autopilot's air control (R129): it pitches to the road's grade this many seconds ahead, with this gain from the
 /// pitch error (radians) to the stick.
@@ -278,6 +280,9 @@ pub struct Sim {
     items: crate::items::Items,
     /// Boomerangs in the air and the ones that landed this round (P1-W02a).
     boomerangs: Vec<crate::items::boomerang::Flight>,
+    /// Bungers lit, gone off or dud, and magpies flying or finished, this round (br-bhkz.3).
+    bungers: Vec<crate::items::bunger::Bunger>,
+    magpies: Vec<crate::items::magpie::Swoop>,
     /// The map's item pickup stations and this tick's offers (P1-W04).
     stations: Vec<crate::items::stations::Station>,
     station_offers: Vec<crate::items::stations::Offer>,
@@ -663,6 +668,8 @@ impl Sim {
             item_cards: crate::items::Cards::shipped().expect("shipped item cards validate"),
             items: crate::items::Items::default(),
             boomerangs: Vec::new(),
+            bungers: Vec::new(),
+            magpies: Vec::new(),
             stations: map
                 .map
                 .dressing
@@ -977,13 +984,9 @@ impl Sim {
                     direction,
                     self.tick,
                     |effect| {
-                        match effect.item {
-                            jj_types::items::ItemId::Sanga
-                            | jj_types::items::ItemId::Tinnie
-                            | jj_types::items::ItemId::Esky => Ok(()),
-                            // P1-W02a: the flight starts below, once the use is committed.
-                            jj_types::items::ItemId::Boomerang => Ok(()),
-                        }
+                        // Every item's physical effect starts below, once the use is committed.
+                        let _ = effect;
+                        Ok(())
                     },
                 )
             }
@@ -996,6 +999,12 @@ impl Sim {
                 }
                 if effect.item == jj_types::items::ItemId::Esky {
                     self.drop_esky(car);
+                }
+                if effect.item == jj_types::items::ItemId::Bunger {
+                    self.throw_bunger(car, &effect);
+                }
+                if effect.item == jj_types::items::ItemId::Magpie {
+                    self.release_magpie(car, &effect);
                 }
                 self.sync_sanga_dominance();
                 true
@@ -1047,6 +1056,8 @@ impl Sim {
         if let Some(nb) = self.world.bodies.get(h) {
             self.ledger += f64::from(0.5 * nb.mass() * v.length_squared());
         }
+        // A dropped esky is a trap: the first car to meet it is the dropper's hit, however long it has sat there.
+        self.episodes.set_trap(self.props.len() as u32, car.0);
         self.props.push(h);
         self.prop_kinds.push(PropKind::Esky);
     }
@@ -3005,11 +3016,14 @@ impl Sim {
         self.settle_protection();
         self.update_derby();
         self.step_boomerangs();
+        self.step_bungers();
+        self.step_magpies();
         self.offer_stations();
         self.items.expire(self.tick);
         if self.race.over.is_some() || self.derby.as_ref().is_some_and(|d| d.over(self.tick)) {
             self.items.round_end(self.tick);
             self.drop_boomerangs();
+            self.drop_weapons();
         }
         self.sync_sanga_dominance();
     }
@@ -3277,14 +3291,9 @@ impl Sim {
                     continue;
                 }
                 let body = self.cars[j].body;
-                let (q, rot, mass, linvel) = {
+                let (q, mass) = {
                     let b = &self.world.bodies[body];
-                    (
-                        b.position().translation,
-                        b.position().rotation,
-                        b.mass(),
-                        b.linvel(),
-                    )
+                    (b.position().translation, b.mass())
                 };
                 if libm::hypotf(next.x - q.x, next.z - q.z) > HIT_RADIUS_M
                     || (next.y - q.y).abs() > 2.0
@@ -3298,59 +3307,16 @@ impl Sim {
                 };
                 let dv = HIT_DV_MPS * scale;
                 let impulse = (dir + Vector::Y * HIT_LIFT) * (mass * dv);
-                self.ledger +=
-                    f64::from(impulse.dot(linvel) + impulse.length_squared() / (2.0 * mass));
-                if let Some(b) = self.world.bodies.get_mut(body) {
-                    b.apply_impulse(impulse, true);
-                }
-                // The struck part: the one whose pivot is nearest the boomerang, in the car's frame.
-                let local = rot.inverse() * (next - q);
-                let model = self.cars[j].model;
-                let geo = &self.profiles[model].geometry.parts;
-                let t = self.profiles[model].tuning.damage.clone();
-                let part = (1..self.cars[j].parts.len())
-                    .filter(|&i| self.cars[j].damage.state(i, &t) != PartState::Detached)
-                    .min_by(|&a, &b| {
-                        let d = |i: usize| {
-                            geo.get(i).map_or(f32::MAX, |g| {
-                                (Vector::new(g.pivot[0], g.pivot[1], g.pivot[2]) - local)
-                                    .length_squared()
-                            })
-                        };
-                        d(a).total_cmp(&d(b))
-                    });
-                let damage = HIT_DAMAGE * scale;
-                if let Some(i) = part {
-                    let was = self.cars[j].damage.state(i, &t);
-                    self.cars[j].damage.charge(i, damage);
-                    let now = self.cars[j].damage.state(i, &t);
-                    if now != was {
-                        let (cause, instigator) =
-                            (damage::OtherBody::Car { car: f.car }, Some(f.car));
-                        let e = match now {
-                            PartState::Detached => DamageEvent::PartDetached {
-                                car: j as u32,
-                                part: i as u8,
-                                cause,
-                                instigator,
-                            },
-                            _ => DamageEvent::PartLoose {
-                                car: j as u32,
-                                part: i as u8,
-                                cause,
-                                instigator,
-                            },
-                        };
-                        self.damage_events.push((tick, e));
-                    }
-                }
+                // A hit like a ram's: the damage log's episode names the thrower, so a derby scores it (br-bhkz.3).
+                let (part, damage) =
+                    self.weapon_hit(j, f.car, next, impulse, HIT_DAMAGE * scale, dv);
                 self.boomerangs[k].hits.push(Hit {
                     tick,
                     car: j as u32,
                     leg,
-                    part: part.map_or(0, |i| i as u8),
+                    part,
                     dv_mps: dv,
-                    damage: if part.is_some() { damage } else { 0.0 },
+                    damage,
                 });
             }
         }
@@ -3396,6 +3362,7 @@ impl Sim {
                 car: i as u32,
                 parts: &c.parts,
                 contact_immune: immune[i],
+                ram: crate::items::roo_bar::active(&self.items, i as u32, self.tick - 1),
             })
             .collect();
         let ts: Vec<&crate::profile::DamageTuning> = self
@@ -4294,6 +4261,12 @@ impl Sim {
         // Boomerang flights and taken stations are hashed only once there are any, so sims without them keep their hashes.
         for f in &self.boomerangs {
             f.hash_into(&mut items);
+        }
+        for b in &self.bungers {
+            b.hash_into(&mut items);
+        }
+        for m in &self.magpies {
+            m.hash_into(&mut items);
         }
         for s in self.stations.iter().filter(|s| s.taken > 0) {
             items.extend(s.dressing.to_le_bytes());
