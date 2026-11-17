@@ -18,7 +18,7 @@ use super::*;
 /// A practice car's snapshot id: this plus the seat id (round cars count up from 0, so the two never meet).
 pub const PRACTICE_CAR_BASE: u32 = 0x4000_0000;
 /// Snapshot car flag: a practice car (drawn on the practice course, left out of the round's framing and shadows).
-pub const SNAP_PRACTICE: u32 = 1 << 9;
+pub const SNAP_PRACTICE: u32 = 1 << 11;
 /// Where practice course `slot` is drawn in the host's scene (m): 20 km from the round's map and 3 km apart, so each tile's
 /// camera (2 km far plane) sees only its own course.
 pub const PRACTICE_OFFSET_M: [f32; 3] = [0.0, 0.0, 20_000.0];

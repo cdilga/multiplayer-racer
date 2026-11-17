@@ -25,6 +25,8 @@ COPY assets assets
 COPY maps maps
 COPY scenarios scenarios
 COPY scripts/build-host-wasm.sh scripts/
+# jj-wasm-host includes the join list's names (host pads get names from it).
+COPY web/controller/src/app/names.json web/controller/src/app/
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
     rustup show active-toolchain >/dev/null \

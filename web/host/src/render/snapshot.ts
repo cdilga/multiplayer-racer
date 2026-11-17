@@ -3,7 +3,7 @@
 //
 // Header (40 B): magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32,
 // cars u32, debris u32, parts u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32 (x, y, z, w),
-// linvel 3×f32, steer f32, flags u32 (bit 8: no suspension contacts; bits 16-31: roster vehicle, R123), boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
+// linvel 3×f32, steer f32, flags u32 (bit 8: no suspension contacts; bit 9: tanked up; bit 10: tinnie; bit 11: a practice car; bits 16-31: roster vehicle, R123), boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
 // Part (40 B, P1-R02), one per part that isn't intact: car u32, part u16 (its index in the vehicle sidecar's `parts`
 // order), state u16 (PART_LOOSE, PART_DETACHED), hinge angle f32 (radians, loose), position 3×f32 and rotation 4×f32
 // (the part's pivot frame in the world, detached). A debris record of kind 2 is a detached part's body: the decoder drops
@@ -29,7 +29,7 @@ export const DEBRIS_PART = 2;
 export const PART_PIECE = 3;
 export const PIECE_HUSK = 255;
 /** Car flag (P1-C10): a practice car, on its own course far from the round's map (`jj_wasm_host::host::practice`). */
-export const SNAP_PRACTICE = 1 << 9;
+export const SNAP_PRACTICE = 1 << 11;
 /** A practice car's id is this plus its seat id. */
 export const PRACTICE_CAR_BASE = 0x4000_0000;
 /** Where practice course `slot` is drawn (m), the worker's `practice_offset`. */
