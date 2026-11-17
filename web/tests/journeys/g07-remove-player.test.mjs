@@ -109,7 +109,9 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     for (const k of [1, 2, 5]) await frame(host, `syn${k}`, { ready: true });
     await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), null, 120_000);
     await wait(host, () => !window.__jjChrome.state.menu, null, 5_000);
-    assert.equal(await host.evaluate(() => window.__jjTest.pauseReasons().length), 0, 'nothing paused');
+    // The reasons themselves, not their count: CI 18990 and 19020 failed here with "nothing paused" and no way to tell
+    // what had paused (it passes locally; br-gip2).
+    assert.deepEqual(await host.evaluate(() => window.__jjTest.pauseReasons()), [], 'nothing paused');
     await shot(host, { path: `${CAPTURE}/lobby-remove-then-start@1080p.png` });
     assert.deepEqual(host.errors, []);
   } finally {
