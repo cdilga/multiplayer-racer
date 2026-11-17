@@ -290,6 +290,8 @@ pub struct Sim {
     takedown_profile: crate::takedown::TakedownProfile,
     /// The derby ledger (P1-S10), once a derby round has started.
     derby: Option<crate::derby::Ledger>,
+    /// The derby's hit rules (assets/profiles/derby.json): who pays for a hit while a derby round is on.
+    derby_rules: crate::derby::DerbyRules,
     /// The bodies' state before each step, for the contacts' closing speeds.
     pre_step: PreStep,
     tick: u64,
@@ -693,6 +695,7 @@ impl Sim {
             takedowns: crate::takedown::Takedowns::new(),
             takedown_profile: crate::takedown::TakedownProfile::standard(),
             derby: None,
+            derby_rules: crate::derby::DerbyRules::standard(),
             pre_step: PreStep::default(),
             tick: 0,
             rng: Rng::stream(seed, "sim"),
@@ -1532,17 +1535,16 @@ impl Sim {
     }
 
     /// A derby's item boxes: scattered over the bowl's floor by the run's seed (deterministic; replayed with the
-    /// journalled `StartDerby`), one per `ARENA_AREA_PER_BOX_M2`, clear of the island. Each is a recharging station.
+    /// journalled `StartDerby`), one per the derby rules' `boxAreaM2`, clear of the island. Each is a recharging station.
     fn scatter_arena_boxes(&mut self) {
         use crate::items::stations::{
-            ARENA_AREA_PER_BOX_M2, ARENA_BASE, ARENA_SPREAD, BOX_FLAT_M, BOX_FLAT_RISE_M, HOVER_M,
-            Station,
+            ARENA_BASE, ARENA_SPREAD, BOX_FLAT_M, BOX_FLAT_RISE_M, HOVER_M, Station,
         };
         let Some(arena) = self.hunt_arena else {
             return;
         };
         let reach = arena.floor_r * ARENA_SPREAD;
-        let n = (core::f32::consts::PI * reach * reach / ARENA_AREA_PER_BOX_M2) as u32;
+        let n = (core::f32::consts::PI * reach * reach / self.derby_rules.box_area_m2) as u32;
         let mut rng = Rng::stream(self.journal.seed, "derby-boxes");
         let mut placed = 0u32;
         let mut tries = 0u32;
@@ -1612,6 +1614,16 @@ impl Sim {
     /// The derby ledger: points, ranks, the clock and the scored events. `None` until [`Sim::start_derby`].
     pub fn derby(&self) -> Option<&crate::derby::Ledger> {
         self.derby.as_ref()
+    }
+
+    /// The derby's hit rules in force.
+    pub fn derby_rules(&self) -> &crate::derby::DerbyRules {
+        &self.derby_rules
+    }
+
+    /// Replaces the derby's hit rules (fixtures, the Feel Lab's tuning). Set them before the round starts.
+    pub fn set_derby_rules(&mut self, rules: crate::derby::DerbyRules) {
+        self.derby_rules = rules;
     }
 
     /// The race starts now with `laps` laps (a journaled command: countdown completion, P1-S05).
@@ -3040,7 +3052,13 @@ impl Sim {
         if let Some(s) = self.stations.get_mut(station as usize)
             && s.ready(tick)
         {
-            s.ready_at = tick + crate::items::stations::RECHARGE_TICKS;
+            // A derby's boxes come back on the derby's own recharge (assets/profiles/derby.json).
+            s.ready_at = tick
+                + if self.derby.is_some() {
+                    self.derby_rules.box_recharge_ticks()
+                } else {
+                    crate::items::stations::RECHARGE_TICKS
+                };
             s.taken += 1;
             self.station_offers.retain(|o| o.station != station);
         }
@@ -3385,9 +3403,10 @@ impl Sim {
             .iter()
             .map(|c| &self.profiles[c.model].tuning.damage)
             .collect();
-        let dominance_work = self
-            .episodes
-            .scan(&self.world, &self.pre_step, &cars, &ts, self.tick);
+        let rules = self.derby.as_ref().map(|_| &self.derby_rules);
+        let dominance_work =
+            self.episodes
+                .scan(&self.world, &self.pre_step, &cars, &ts, self.tick, rules);
         if dominance_work != 0.0 {
             self.ledger += dominance_work;
         }

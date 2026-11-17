@@ -1,0 +1,10 @@
+{
+  "contract": "jj-derby/1",
+  "what": "Derby hit rules (owner 2026-11-17: 'easier to intuit how you can damage other cars more without damaging your own car'). In a derby the car that does the hitting wins the hit, and only rivals hurt you. A contact's damage is `k x impulse` as in a race, then scaled: the car that brought the closing speed (its share of it, 0..1) keeps `strikerTake` of its own damage at a full strike, so a ram at speed into a slow or crossing car costs the rammer a third and the rammed car all of it, and a head-on at equal speeds costs both alike. Walls, rocks, the ground and junk nobody threw cost `junkTake` of their damage, unless another car struck this car within `shoveWindowS`: then the wall or the junk bites in full and its damage, detach and wreck are that car's points (a shove into the rocks). Debris a rival pushed into you within the ledger's 3 s is theirs in full, as before. Measured on six-bot 3-minute derbies, seeds 1-3 (crates/jj-procgen/tests/derby_probe.rs): before, 28 wrecks a round (one per car every 38 s) with 44 % of all damage from junk and walls; see docs/evidence/br-bhkz.1/measurements.md for after. `boxAreaM2` is the floor area per item box and `boxRechargeS` a taken box's recharge; `spawnItem` hands every fresh car one item from the pool, so nobody starts or respawns unarmed. Nothing here caps anything.",
+  "strikerTake": 0.3,
+  "junkTake": 0.25,
+  "shoveWindowS": 1.5,
+  "boxAreaM2": 70,
+  "boxRechargeS": 4,
+  "spawnItem": true
+}

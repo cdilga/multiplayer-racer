@@ -27,8 +27,6 @@ pub const SNAPSHOT_KIND_READY_ESKY: u32 = 9;
 
 /// A derby arena box's `dressing` is this plus its index (it is not map dressing).
 pub const ARENA_BASE: u32 = 1_000_000;
-/// One derby item box per this much floor area, m^2, scattered by the run's seed.
-pub const ARENA_AREA_PER_BOX_M2: f32 = 100.0;
 /// Arena boxes stay inside this share of the floor radius.
 pub const ARENA_SPREAD: f32 = 0.88;
 /// An arena box stands only where the ground within this of it (m, each way) rises and falls by no more than

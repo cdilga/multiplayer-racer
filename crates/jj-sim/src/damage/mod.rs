@@ -95,6 +95,7 @@ pub struct EpisodeRecord {
     pub part: u8,
     pub other: OtherBody,
     /// The other body's causal owner: the car itself for a car, the car that last hit it for a prop, none for scenery.
+    /// In a derby a car shoved into scenery or junk by another car's hit names that car (`derby::rules`).
     pub other_owner: Option<Owner>,
     /// Σ of the normal impulses counted in the window, N·s.
     pub impulse: f32,

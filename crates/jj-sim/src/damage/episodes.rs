@@ -21,6 +21,7 @@ use std::collections::BTreeMap;
 use rapier3d::prelude::*;
 
 use super::{CORE, CarDamage, DamageEvent, EpisodeRecord, OtherBody, Owner};
+use crate::derby::{ATTRIBUTION_TICKS, DerbyRules};
 use crate::profile::DamageTuning;
 use crate::sim::TICK_HZ;
 
@@ -103,6 +104,9 @@ pub struct Episodes {
     open: BTreeMap<(u32, u8, (u8, u32)), Open>,
     /// The car that last put a qualifying impulse into a prop, and when.
     prop_owner: BTreeMap<u32, Owner>,
+    /// Derby only: the car that last struck each car (brought most of the closing speed into it), and when. A wall or
+    /// junk it meets soon after is that car's doing (a shove).
+    struck: BTreeMap<u32, Owner>,
 }
 
 impl Episodes {
@@ -111,7 +115,8 @@ impl Episodes {
         self.prop_owner.get(&prop).copied()
     }
 
-    /// Reads this step's contacts (call after `step`, with `tick` the counter after it) into the open episodes.
+    /// Reads this step's contacts (call after `step`, with `tick` the counter after it) into the open episodes. `rules`
+    /// are the derby's hit rules while a derby round is on (who pays for a hit); none in a race.
     pub(crate) fn scan(
         &mut self,
         world: &PhysicsWorld,
@@ -119,6 +124,7 @@ impl Episodes {
         cars: &[CarParts<'_>],
         ts: &[&DamageTuning],
         tick: u64,
+        rules: Option<&DerbyRules>,
     ) -> f64 {
         let mut dominance_work = 0.0;
         for car in cars {
@@ -203,7 +209,17 @@ impl Episodes {
                             } else {
                                 part
                             };
-                            self.add(car, part, kind, pt.data.impulse, closing, tick);
+                            // How much of the closing speed this car brought: 1 it drove into the other, 0 it was hit.
+                            let mine = if mine_is_1 { v_me.dot(n) } else { -v_me.dot(n) };
+                            let share = (mine / closing).clamp(0.0, 1.0);
+                            self.add(
+                                car,
+                                part,
+                                kind,
+                                (pt.data.impulse, closing, share),
+                                tick,
+                                rules,
+                            );
                         }
                     }
                 }
@@ -217,15 +233,32 @@ impl Episodes {
         car: &CarParts<'_>,
         part: usize,
         other: OtherBody,
-        impulse: f32,
-        closing: f32,
+        (impulse, closing, share): (f32, f32, f32),
         tick: u64,
+        rules: Option<&DerbyRules>,
     ) {
         let key = (car.car, part as u8, other.key());
+        if let (Some(_), OtherBody::Car { car: by }) = (rules, other)
+            && share < 0.5
+        {
+            self.struck.insert(car.car, Owner { car: by, tick });
+        }
+        // Derby: the car that struck this one lately owns the wall or the junk it is shoved into.
+        let shover = rules.and_then(|r| {
+            self.struck
+                .get(&car.car)
+                .copied()
+                .filter(|o| tick <= o.tick + r.shove_ticks())
+        });
         let before = match other {
             OtherBody::Car { car } => Some(Owner { car, tick }),
-            OtherBody::Prop { prop } => self.prop_owner.get(&prop).copied(),
-            OtherBody::Scenery => None,
+            OtherBody::Prop { prop } => {
+                let own = self.prop_owner.get(&prop).copied();
+                let thrown =
+                    own.is_some_and(|o| o.car != car.car && tick <= o.tick + ATTRIBUTION_TICKS);
+                if thrown { own } else { shover.or(own) }
+            }
+            OtherBody::Scenery => shover,
         };
         let e = self.open.entry(key).or_insert(Open {
             other,
@@ -238,7 +271,18 @@ impl Episodes {
         });
         e.impulse += impulse;
         if !car.contact_immune {
-            e.damage_impulse += impulse;
+            let scale = match (rules, other) {
+                (None, _) => 1.0,
+                (Some(r), OtherBody::Car { .. }) => r.striker_scale(share),
+                // Junk and walls bite in full only when a rival threw the junk or shoved this car into them.
+                (Some(r), _) => {
+                    let rivals = e
+                        .other_owner
+                        .is_some_and(|o| o.car != car.car && e.start <= o.tick + ATTRIBUTION_TICKS);
+                    if rivals { 1.0 } else { r.junk_take }
+                }
+            };
+            e.damage_impulse += impulse * scale;
         }
         e.closing = e.closing.max(closing);
         e.last = tick;
@@ -337,6 +381,14 @@ impl Episodes {
             out.extend(p.to_le_bytes());
             out.extend(o.car.to_le_bytes());
             out.extend(o.tick.to_le_bytes());
+        }
+        if !self.struck.is_empty() {
+            out.extend(b"jj-derby-struck-v1");
+            for (c, o) in &self.struck {
+                out.extend(c.to_le_bytes());
+                out.extend(o.car.to_le_bytes());
+                out.extend(o.tick.to_le_bytes());
+            }
         }
     }
 }

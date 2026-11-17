@@ -10,7 +10,8 @@
 //!   for a human and 17.5 for the autopilot. The control mode is read **at the causal action** (the instigator's impulse),
 //!   never at display time: the ledger keeps each car's mode and protection history for it.
 //! - **Who scores.** Nobody for self damage, friendly fire (cars sharing a team, none by default), damage taken or dealt
-//!   under spawn protection, or the environment (walls, the ground, debris nobody pushed lately).
+//!   under spawn protection, or the environment (walls, the ground, debris nobody pushed lately). A car shoved into a
+//!   wall or junk by another car's hit is that car's score ([`rules`]: the hit rules decide who pays for a hit).
 //! - **Debris.** A prop or detached part is its last instigator's, for [`ATTRIBUTION_TICKS`] (3 s of game time) after that
 //!   car's last qualifying impulse into it; after that it is environmental.
 //! - **Wrecks.** A wheel-loss wreck is the car that took the wheel. A flip or out-of-bounds wreck is the last car to hit it
@@ -22,6 +23,10 @@
 //!
 //! The director ends the round on this clock (`jj_session::director`'s game clock), fed from the same tick count, so the
 //! session never reaches into the sim.
+
+pub mod rules;
+
+pub use rules::DerbyRules;
 
 use serde::{Deserialize, Serialize};
 
@@ -300,7 +305,12 @@ impl Ledger {
                     .filter(|o| r.start_tick <= o.tick + ATTRIBUTION_TICKS)?;
                 (o.car, o.tick, o.tick)
             }
-            OtherBody::Scenery => return None,
+            // A wall, a rock or the ground: only when another car shoved this one into it (the record's owner, set by
+            // the derby's hit rules while the shove is fresh).
+            OtherBody::Scenery => {
+                let o = r.other_owner?;
+                (o.car, o.tick, o.tick)
+            }
         };
         let victim = r.car;
         if scorer == victim {
