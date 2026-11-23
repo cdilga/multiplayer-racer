@@ -351,6 +351,9 @@ html[data-results-qr-docked] .foot-qr { display: inline-flex; }
    (every phone has Send feedback in its own settings). */
 @media (max-aspect-ratio: 11/10) { .jj-foot:has(.foot-feedback:not([hidden])) { gap: calc(var(--foot) * .14); } .foot-feedback { padding: 0 .45em .1em; } }
 @media (max-aspect-ratio: 11/10) and (max-width: 369px) { .foot-feedback { display: none; } }
+/* The docked standings come first: on an upright host the strip has no room for both, so Feedback steps aside while the
+   positions are docked there (it is back in the Lobby and on Results; CI 21663: it squeezed every badge out at 412 px). */
+@media (max-aspect-ratio: 11/10) { html[data-grid-dock~=positions] .jj-foot:has(.foot-pos:not([data-count="0"])) .foot-feedback { display: none; } }
 .jj-foot .jj-render-chip { position: static !important; font-size: .55em; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
 @media (max-aspect-ratio: 11/10) { .foot-domain, .foot-logo, .foot-count { display: none; } .jj-foot { gap: calc(var(--foot) * .25); } .foot-readouts { min-width: 0; } }
 
