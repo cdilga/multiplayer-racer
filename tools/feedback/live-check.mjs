@@ -79,8 +79,8 @@ try {
   const up = tvUploads.slice(before);
   console.log(`phone: ${ph.id} tv-picture=${tvReady} tv-uploaded=${JSON.stringify(up)} tv-sheet-shown=${await host.locator('[data-gfb=root]').count()}`);
   console.log(`phone details: ${details.replace(/\n+/g, ' | ')}`);
-  if (tvPicture !== 1 || !tvUploads.slice(0, before).some((u) => u.status === 200)) failed = 'the TV sent no picture with its own feedback';
-  else if (tvReady !== 'ready' || !up.some((u) => u.url.includes(ph.id) && u.status === 200)) failed = "the TV did not add its picture to the phone's feedback";
+  if (tvPicture !== 1 || !tvUploads.slice(0, before).some((u) => u.status >= 200 && u.status < 300)) failed = 'the TV sent no picture with its own feedback';
+  else if (tvReady !== 'ready' || !up.some((u) => u.url.includes(ph.id) && u.status >= 200 && u.status < 300)) failed = "the TV did not add its picture to the phone's feedback";
   console.log(`ids: ${tv.id} ${ph.id}`);
 } catch (e) {
   failed = e.message;
