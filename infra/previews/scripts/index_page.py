@@ -1,4 +1,4 @@
-"""The preview index at https://jammers-preview.dilger.dev/ (P1-D05), rendered from the git record (scripts/record.py).
+"""The preview index at https://jammers-index.dilger.dev/ (and jammers-preview.dilger.dev; P1-D05), rendered from the git record (scripts/record.py).
 
 Newest first, pinned builds on top (`pin/<id>` tags; a pin's label such as "Playtest 1" shows on its card). Per preview:
   Build        id, branch, short commit, time (shown in the viewer's local time)
@@ -29,6 +29,11 @@ FONT_BASE = "/"  # the edge serves the design mirror (fonts/…) at the site roo
 CHANGED_SHOWN = 6
 PIN_FORM = "https://git.dilger.dev/cdilga/multiplayer-racer/actions?workflow=deploy-retention.yml"
 PUBLIC = "https://jammers-preview.dilger.dev"
+# The index's own name (owner 2026-11-23: each game's builds index is at <name>-index.dilger.dev). The same edge answers
+# both hosts; previews keep their /p/<id>/ addresses on PUBLIC, where old links and join codes point.
+INDEX = "https://jammers-index.dilger.dev"
+# Player feedback (br-1s9h): the one inbox the owner's party games share; this is its plain send page for this game.
+FEEDBACK = "https://games-feedback.dilger.dev/send?game=jammers"
 
 
 def tokens() -> dict:
@@ -318,7 +323,7 @@ def render(reg: dict, now: datetime | None = None) -> str:
     return f"""<!doctype html>
 <html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jammers previews</title><meta name="description" content="{desc}"><meta name="theme-color" content="#15203A">
-<meta property="og:type" content="website"><meta property="og:url" content="{PUBLIC}/"><meta property="og:site_name" content="Joystick Jammers">
+<meta property="og:type" content="website"><meta property="og:url" content="{INDEX}/"><meta property="og:site_name" content="Joystick Jammers">
 <meta property="og:title" content="Joystick Jammers 0.2: rainbow previews"><meta property="og:description" content="{desc}">
 <meta name="twitter:card" content="summary_large_image">{share}
 <link rel="icon" href="/brand/favicon.svg"><style>{style(tokens())}</style></head>
@@ -329,7 +334,7 @@ def render(reg: dict, now: datetime | None = None) -> str:
 {jump_in(hero_p, green_p)}<h2 class="sec">All builds</h2>
 <p class="foot rules">Newest first, pinned builds on top. A build that fails its smoke test is listed as not playable, with the reason. The {retention.NEWEST_KEPT} newest builds always stay up, and so does anything under 24 hours old; pinned builds stay until unpinned.</p>
 {body}
-<p class="foot"><small>The game you can play today is 0.1 at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>.</small></p>
+<p class="foot"><small>The current release is at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>. <a href="{FEEDBACK}" data-feedback>Send feedback</a> about any build.</small></p>
 </main><script>{SCRIPT}</script></body></html>
 """
 

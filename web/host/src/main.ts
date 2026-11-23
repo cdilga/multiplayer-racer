@@ -36,6 +36,8 @@ import { mountNameplates } from './identity/nameplates';
 import { mountOverviewUi } from './ui/overview/band';
 import { numberData } from './render/vehicles/identity-paint';
 import { SimClient } from './worker/client';
+import { mountHostFeedback } from './feedback';
+import { watchProblems } from '../../shared/src/feedback';
 
 const app = document.querySelector<HTMLElement>('#app')!;
 
@@ -44,6 +46,7 @@ let roundScreens: RoundScreens | null = null;
 
 async function boot(): Promise<void> {
   const params = new URLSearchParams(location.search);
+  watchProblems(); // feedback sent later lists the page's last few errors (br-1s9h); nothing leaves the page until then
   // The walking skeleton (P1-G00): a room, a QR and one marker per controller.
   if (params.has('hello')) {
     (await import('./hello/hello')).mountHello(app);
@@ -480,6 +483,29 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   };
   const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl, paths: () => bridge.hub.paths(), onDisband: () => void bridge.hub.end(), hostStats, controllers, localChoose: (source, vehicle, open) => input.choose(source, vehicle, open), localReady: (source) => input.ready(source) }) : null;
   roundScreens = screens;
+  // Player feedback (br-1s9h): the footer's Feedback button, and this TV's picture for a phone that sends feedback.
+  if (screens) {
+    const feedback = mountHostFeedback({
+      button: screens.chrome.feedback,
+      redraw: () => world.invalidate(),
+      paths: () => bridge.hub.paths(),
+      send: (endpoint, text) => bridge.sendText(endpoint, text),
+      details: () => {
+        const room = client.room;
+        return {
+          Room: bridge.hub.code,
+          Phase: room?.phase ?? null,
+          Mode: room?.mode ?? null,
+          Round: room ? String(room.round) : null,
+          Players: room ? String(room.seats.length) : null,
+          'Track seed': String((window as unknown as { __jjSession?: { seed: number } }).__jjSession?.seed ?? ''),
+          Renderer: world.backend.label,
+          'Frame time': `${world.stats.frameMs.toFixed(1)} ms`,
+        };
+      },
+    });
+    bridge.onText = (endpoint, text) => feedback.note(endpoint, text);
+  }
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);
     // The arena Overview (P1-R11) has no tiles: the per-tile HUD goes with them.

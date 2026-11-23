@@ -64,6 +64,8 @@ export interface Chrome {
   footer: HTMLElement;
   /** Where the renderer's status chip goes (main.ts appends it here). */
   readouts: HTMLElement;
+  /** The footer's quiet Feedback button (br-1s9h): hidden until host/src/feedback.ts takes it. In the footer it covers no tile. */
+  feedback: HTMLButtonElement;
   sound: HTMLElement;
   display: HTMLElement;
   update(room: RoomView): void;
@@ -118,6 +120,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     <span class="foot-code" data-foot-code><b>${esc(opts.code)}</b><span class="foot-domain"> · ${esc(opts.domain)}</span></span>
     <span class="foot-count" data-foot-count></span>
     <span class="foot-pos" data-foot-pos data-count="0" aria-label="Positions"><span class="foot-pos-track"></span></span>
+    <button class="foot-btn quiet foot-feedback" type="button" data-act="feedback" title="Send feedback about this game (Ctrl+Shift+F)" hidden>Feedback</button>
     <span class="foot-logo display">Joystick Jammers</span>`;
   const layer = document.createElement('div');
   layer.className = 'jj-overlays';
@@ -678,6 +681,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   return {
     footer,
     readouts,
+    feedback: footer.querySelector<HTMLButtonElement>('[data-act=feedback]')!,
     sound,
     display,
     state,

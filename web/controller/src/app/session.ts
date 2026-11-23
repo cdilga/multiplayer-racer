@@ -153,6 +153,8 @@ export class Session {
   /** `dropped`: commands sent while the cmd channel wasn't open, which never left the phone (br-b2sv). */
   stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0, records: 0, dropped: 0 };
   onChange: () => void = () => {};
+  /** A text note from the host page (br-1s9h: the TV took its picture for this phone's feedback). Not gameplay. */
+  onText: (text: string) => void = () => {};
   onIdentify: () => void = () => {};
   /** Every stick sample (the tutorial listens). */
   onSticks: (drive: Stick, action: Stick) => void = () => {};
@@ -265,6 +267,7 @@ export class Session {
         onState: (s) => this.onLink(s),
         onOpen: () => this.hello(),
         onMessage: (ch, data) => this.onMessage(ch, data),
+        onText: (text) => this.onText(text),
       },
       this.opts,
       this.stored ? { endpointId: this.stored.endpointId, secret: this.stored.secret } : undefined,
@@ -349,6 +352,14 @@ export class Session {
     }
     c.send(bytes as Uint8Array<ArrayBuffer>);
     if (ch === 'cmd') this.stats.cmds += 1;
+  }
+
+  /** A text note to the host page on the reliable channel (br-1s9h); false when the link isn't up. The sim never sees it. */
+  sendText(text: string): boolean {
+    const c = this.link?.channels?.cmd;
+    if (!c || c.readyState !== 'open') return false;
+    c.send(text);
+    return true;
   }
 
   /** Every (re)connection starts with Hello; a seated controller gets its seat back, a new one waits for Join. */

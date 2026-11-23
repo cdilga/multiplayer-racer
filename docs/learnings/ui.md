@@ -19,3 +19,9 @@
 - `__jjRender.peek(eye, target)` stops the frame loop; `frame()` draws one frame and does not restart it. After a peek, a camera change (Grid/Overview, ~300 ms) needs frames pumped over real time or the screenshot shows the old view.
 - For a canvas-only still, hide the DOM (`html.peek body * { visibility: hidden } html.peek canvas { visibility: visible }`): an element screenshot of the canvas includes the HUD layered over it.
 - Playwright's browsers are not installed on the Mac by default (`npx playwright install chromium`); `JJ_CHROMIUM_GPU=native` renders on Metal.
+
+## Player feedback (br-1s9h, R142)
+- The sheet is the owner's shared widget (`web/shared/src/feedback.ts` loads `games-feedback.dilger.dev/widget.js` on first use, never at boot: several journeys assert no request leaves the page's origin). Tests stub that host with `web/tests/journeys/lib/games-feedback-widget.js`; refresh the copy when the sheet changes.
+- The TV's picture is of the canvases only (`canvas.jj-world`, and the reel on Results): the Lobby's paper and the HUD are page elements, so a Lobby picture shows the world under the paper. `world.invalidate()` before a capture makes a held or covered world draw the frame the picture takes.
+- Phone and TV pages can pass notes without the sim: a string sent on `cmd` arrives as `onText` (`shared/transport/peer.ts`); binary frames are gameplay as before.
+- To process what comes in: `node tools/feedback.mjs pull --game jammers` in the owner's `local-multiplayer-games` repo (its `docs/FEEDBACK.md`).

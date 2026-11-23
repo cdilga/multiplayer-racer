@@ -70,6 +70,8 @@ export interface ControllerEvents {
   onState?: (s: LinkState) => void;
   onOpen?: (ch: Channels) => void;
   onMessage?: (channel: 'state' | 'cmd', data: ArrayBuffer) => void;
+  /** A text frame on `cmd` (br-1s9h): page-to-page notes the sim never sees (feedback's "take the TV's picture"). */
+  onText?: (text: string) => void;
 }
 
 /** One controller endpoint's link to the host. */
@@ -305,7 +307,8 @@ export class ControllerLink {
     this.channels = openChannels(pc);
     for (const name of ['state', 'cmd'] as const) {
       const ch = this.channels[name];
-      ch.onmessage = (e) => this.events.onMessage?.(name, e.data as ArrayBuffer);
+      // Gameplay is binary; a string is a page-to-page note (br-1s9h) and never reaches the decoders.
+      ch.onmessage = (e) => (typeof e.data === 'string' ? this.events.onText?.(e.data) : this.events.onMessage?.(name, e.data as ArrayBuffer));
     }
     const channels = this.channels;
     channels.cmd.onopen = () => {
@@ -525,6 +528,8 @@ export interface HostEvents {
   onPeerOpen?: (peer: HostPeer) => void;
   onPeerState?: (peer: HostPeer, state: RTCPeerConnectionState) => void;
   onMessage?: (peer: HostPeer, channel: 'state' | 'cmd', data: ArrayBuffer) => void;
+  /** A text frame on a peer's `cmd` (br-1s9h): a page-to-page note, kept away from the sim worker. */
+  onText?: (peer: HostPeer, text: string) => void;
   onRoom?: (room: { code: string; joinUrl: string; roomId: string }) => void;
   onStreamState?: (s: StreamState) => void;
 }
@@ -717,7 +722,7 @@ export class HostHub {
       staleIgnored: 0,
     };
     for (const name of ['state', 'cmd'] as const) {
-      peer.channels[name].onmessage = (e) => this.events.onMessage?.(peer, name, e.data as ArrayBuffer);
+      peer.channels[name].onmessage = (e) => (typeof e.data === 'string' ? this.events.onText?.(peer, e.data) : this.events.onMessage?.(peer, name, e.data as ArrayBuffer));
     }
     peer.channels.cmd.onopen = () => this.events.onPeerOpen?.(peer);
     const trigger = new FallbackTrigger((reason) => void this.hostFallback(peer, reason));

@@ -21,6 +21,7 @@ import { watchBadge } from '../sources/badge';
 import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shapeSticks } from './settings';
+import { mountPhoneFeedback } from './feedback';
 import { CarSheet, rosterOf } from './carsheet';
 import { A2HS_TEXT, FullscreenControl } from './fullscreen';
 
@@ -46,7 +47,7 @@ const CARDS: Partial<Record<Phase, (s: Session) => Card>> = {
   'preview-expired': () => ({ icon: 'timer', title: 'This test build has expired', body: 'Preview builds last a day. The preview index has the newest one.', actions: [['index', 'Open the preview index']] }),
   connecting: () => ({ spin: true, title: 'Connecting…', body: 'Linking your controller to the TV.' }),
   'finding-relay': () => ({ spin: true, title: 'Finding a relay…', body: 'Your network is fussy. Still trying on its own.' }),
-  'no-route': () => ({ icon: 'wifi-off', title: 'Can’t reach the host from this network', body: 'Try the host’s Wi-Fi, then tap Retry.', actions: [['retry', 'Retry']] }),
+  'no-route': () => ({ icon: 'wifi-off', title: 'Can’t reach the host from this network', body: 'Try the host’s Wi-Fi, then tap Retry.', actions: [['retry', 'Retry'], ['feedback', 'Send feedback', 'quiet']] }),
   joining: () => ({ spin: true, title: 'Joining…', body: 'Saving you a number.' }),
   reconnecting: (s) => ({ spin: true, title: `Reconnecting as #${s.you?.number ?? ''}…`, body: 'Your car is on autopilot until you’re back.' }),
   'host-gone': () => ({ icon: 'triangle-alert', tone: 'warn', title: 'The host seems to have gone', body: 'Ask them for a new code. We’ll keep trying quietly.', actions: [['edit', 'Enter a new code', 'quiet']] }),
@@ -128,6 +129,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     session.classic = prefs.value.controls !== 'dual';
     return prefs;
   };
+  const feedback = mountPhoneFeedback(session, () => prefsNow().value);
   /** What the driving screen was built for: the controls, the Buttons arrangement and the stick placement (a change in
    *  Settings rebuilds it when the sheet closes). */
   const layoutKey = (v: ControllerPreferences) => JSON.stringify([v.controls, v.controls === 'buttons' ? v.buttons : null, v.layout]);
@@ -159,6 +161,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     app.querySelector('[data-act=scan]')?.addEventListener('click', () => landing('?scan=1'));
     app.querySelector('[data-act=index]')?.addEventListener('click', () => location.assign(new URL('/', location.href).href));
     app.querySelector('[data-act=retry]')?.addEventListener('click', () => location.reload());
+    app.querySelector<HTMLElement>('[data-act=feedback]')?.addEventListener('click', (e) => void sendFeedback(e.currentTarget as HTMLElement));
     app.querySelector('[data-act=takeover]')?.addEventListener('click', () => void session.takeOver());
   };
 
@@ -343,6 +346,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     updateHud();
   };
 
+  /** Send feedback (br-1s9h): the shared sheet; when the inbox can't be reached the button says so for a moment. */
+  const sendFeedback = async (btn: HTMLElement | null) => {
+    if (await feedback.open()) return;
+    if (!btn?.isConnected) return;
+    const label = btn.textContent;
+    btn.textContent = 'Feedback can’t be reached just now';
+    setTimeout(() => btn.isConnected && (btn.textContent = label), 3000);
+  };
+
   /** Settings (C07): neutral first, then `Menu{open:true}` (the host's autopilot drives); closing is neutral, then `Menu{open:false}`. */
   const openSettings = (host: HTMLElement) => {
     if (sheet?.open || tutorial?.open || !session.you) return;
@@ -370,6 +382,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       onSitOut: () => session.sitOut(),
       onLeave: () => session.leave(),
       onIdentify: () => session.identify(),
+      onFeedback: () => void sendFeedback(sheet?.el.querySelector<HTMLElement>('[data-act=feedback]') ?? null),
       fullscreen: fs,
     });
   };

@@ -127,6 +127,8 @@ export interface SettingsDeps {
   onLeave: () => void;
   /** Identify from the menu: the same command as the tools row's button (the sheet stays open). */
   onIdentify?: () => void;
+  /** Send feedback (br-1s9h): opens the shared sheet over this one, which stays open (the autopilot keeps driving). */
+  onFeedback?: () => void;
   you: { number: number; colour: string; name: string };
   /** Whether a reset needs a confirmation the page supplies (default: a second tap). */
   confirm?: (title: string) => Promise<boolean>;
@@ -218,6 +220,7 @@ export class SettingsSheet {
         <button type="button" class="btn" data-act="test">Test these controls</button>
         <button type="button" class="btn" data-act="reset">Reset controls</button>
         <div class="pair"><button type="button" class="btn" data-act="sitout">Sit out</button><button type="button" class="btn danger" data-act="leave">Leave room</button></div>
+        ${this.d.onFeedback ? '<button type="button" class="btn quiet" data-act="feedback">Send feedback</button>' : ''}
         <button type="button" class="btn quiet" data-act="back">Back</button>
       </div></div>`;
     this.wire();
@@ -344,6 +347,7 @@ export class SettingsSheet {
     on('back', () => this.close());
     on('test', () => this.startTest());
     on('identify', () => this.d.onIdentify?.());
+    on('feedback', () => this.d.onFeedback?.());
     on('reset', () => void this.reset());
     on('sitout', () => {
       this.close();

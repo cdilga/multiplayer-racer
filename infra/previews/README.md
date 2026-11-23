@@ -14,7 +14,7 @@ in the checks job).
 | `scripts/record.py` | **git is the record of what is deployed**: tags and commit statuses (below) |
 | `scripts/smoke.mjs` | the fixed public smoke steps (`room`, `join-webrtc`, `input`, `resume`, `drive`, `hud`, `round`), all mandatory since P1-D07 |
 | `scripts/retention.py` | pins, Latest, the three newest (any age) and anything under 24 h stay; the rest are retired (R118) |
-| `scripts/index_page.py` | the index at https://jammers-preview.dilger.dev/ |
+| `scripts/index_page.py` | the index at https://jammers-index.dilger.dev/ (the same page at https://jammers-preview.dilger.dev/) |
 | `scripts/truenas.py` | the middleware's JSON-RPC over wss, as the `jammersdeploy` user (privilege APPS_WRITE only) |
 | `edge/` | the Caddy edge (`/p/<id>/` → `jjp-<id>:8080`, `/poc/`, the index), applied by the publisher |
 | `tests/` | unit tests, run by CI's checks job |
@@ -35,7 +35,7 @@ the workflows **of the tagged commit** on a tag push, and commits older than the
 into tags and statuses (`scripts/migrate_register.py`).
 
 Infrastructure (TrueNAS apps): `jammers-net` owns the `jammers-previews` Docker network; `jammers-preview-edge` is the
-Caddy edge on :30290 behind the Cloudflare Tunnel route `jammers-preview.dilger.dev`; `jammers-runner` is the Gitea runner
+Caddy edge on :30290 behind the Cloudflare Tunnel routes `jammers-preview.dilger.dev` and `jammers-index.dilger.dev`; `jammers-runner` is the Gitea runner
 `jammers-docker-truenas` (labels `jammers-docker`, `jammers-deploy`; its jobs get the host Docker socket); each preview is
 its own app `jjp-<id>`; `jammers-turn-broker` is the TURN broker (`infra/turn-broker/`).
 

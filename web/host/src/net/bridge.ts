@@ -17,6 +17,8 @@ export class NetBridge {
   bytesOut = 0;
   /** Outbound messages for an endpoint whose channel isn't open (yet, or any more); dropped, counted. */
   undeliverable = 0;
+  /** A controller page's text note (br-1s9h, feedback's "take the TV's picture"): never gameplay, never sent to the sim. */
+  onText: (endpoint: string, text: string) => void = () => {};
 
   constructor(
     private readonly client: SimClient,
@@ -31,6 +33,7 @@ export class NetBridge {
           this.bytesIn += bytes.byteLength;
           client.input({ type: 'net', endpoint: peer.endpointId, channel, bytes, arrivedAt: performance.timeOrigin + performance.now() });
         },
+        onText: (peer, text) => this.onText(peer.endpointId, text),
         // A closed or failed peer (not a passing `disconnected`, which ICE can recover): its seats read neutral at once
         // rather than holding the last sample through the sim's held-input window (br-f3rz).
         onPeerState: (peer, state) => {
@@ -48,6 +51,14 @@ export class NetBridge {
       this.bytesOut += bytes.byteLength;
       ch.send(bytes as Uint8Array<ArrayBuffer>);
     };
+  }
+
+  /** A text note to one controller page on its reliable channel; false when that channel isn't open. */
+  sendText(endpoint: string, text: string): boolean {
+    const ch = this.hub.peers.get(endpoint)?.channels?.cmd;
+    if (!ch || ch.readyState !== 'open') return false;
+    ch.send(text);
+    return true;
   }
 
   open(): Promise<void> {

@@ -1,4 +1,5 @@
-# The preview edge (P1-D03) behind the Cloudflare Tunnel route jammers-preview.dilger.dev -> :30290.
+# The preview edge (P1-D03) behind the Cloudflare Tunnel routes jammers-preview.dilger.dev and jammers-index.dilger.dev
+# -> :30290 (one site for both names: the index is the same page on either, and /p/<id>/ works on either).
 # /p/<id>/... goes to that preview's own jj-server (container jjp-<id> on the jammers-previews network), unbuffered for
 # SSE. /poc/ and the design mirror are static from the POC dataset; / is the preview index (register, P1-D05).
 :80 {
@@ -39,6 +40,6 @@
 			header Content-Type application/json
 			respond `{"reason":"preview-expired"}` 410
 		}
-		respond "This test build has expired. The live previews are at https://jammers-preview.dilger.dev/" 410
+		respond "This test build has expired. The live previews are at https://jammers-index.dilger.dev/" 410
 	}
 }
